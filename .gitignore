@@ -81,5 +81,3 @@ $RECYCLE.BIN/
 # Dart stuff
 /pubspec.lock
 /.dart_tool/**/*
-
-# Rust stuff
