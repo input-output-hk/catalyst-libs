@@ -9,9 +9,7 @@
   },
   "files.autoSave": "afterDelay",
   "editor.formatOnType": true,
-  "editor.rulers": [
-    100
-  ],
+  "editor.rulers": [100],
   "editor.tabSize": 4,
   "debug.openDebug": "openOnDebugBreak",
   "debug.internalConsoleOptions": "openOnSessionStart",
@@ -19,9 +17,7 @@
   "[dart]": {
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
-    "editor.rulers": [
-      80
-    ],
+    "editor.rulers": [80],
     "editor.codeActionsOnSave": {
       "source.fixAll": true,
       "source.organizeImports": true
@@ -35,9 +31,6 @@
   "window.title": "${dirty}${activeEditorShort}",
   "conventionalCommits.scopes": [
     "vscode",
-    "hermes",
-    "dashboard",
-    "hermes-lib",
     "mdlint",
     "languages",
     "spelling",
@@ -52,15 +45,8 @@
   "files.associations": {
     "Earthfile": "earthfile"
   },
-  "rust-analyzer.linkedProjects": [
-    "./hermes/Cargo.toml",
-    "./wasm/wasi-hermes-component-adapter/Cargo.toml"
-  ],
-  "rust-analyzer.check.overrideCommand": [
-    "bash",
-    "-c",
-    "cargo lint-vscode"
-  ],
+  "rust-analyzer.linkedProjects": ["crates/*"],
+  "rust-analyzer.check.overrideCommand": ["bash", "-c", "cargo lint-vscode"],
   "yaml.schemas": {
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
   },
@@ -77,8 +63,6 @@
     "files.trimTrailingWhitespace": true,
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
-  "rust-analyzer.rustfmt.extraArgs": [
-    "+nightly"
-  ],
+  "rust-analyzer.rustfmt.extraArgs": ["+nightly"],
   "rust-analyzer.lens.enable": true
 }

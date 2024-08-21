@@ -14,15 +14,15 @@ updates:
       - "stevenj"
 
   - package-ecosystem: "pub"
-    directory: "/dashboard"
+    directory: "/pubs"
     schedule:
       interval: "monthly"
     assignees:
       - "minikin"
 
   - package-ecosystem: "cargo"
-    directory: "/hermes"
+    directory: "/crates"
     schedule:
-        interval: "monthly"
+      interval: "monthly"
     assignees:
       - "stevenj"

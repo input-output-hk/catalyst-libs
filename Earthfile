@@ -30,7 +30,6 @@ spell-list-words:
 
     RUN cspell-cli --words-only --unique "wasm/**" | sort -f
 
-
 # repo-docs : target to store the documentation from the root of the repo.
 repo-docs:
     # Create artifacts of extra files we embed inside the documentation when its built.
