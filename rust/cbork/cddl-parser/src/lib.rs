@@ -1,8 +1,6 @@
-#![allow(missing_docs)] // TODO(apskhem): Temporary, to bo removed in a subsequent PR
-
 //! A parser for CDDL, utilized for parsing in accordance with RFC 8610.
 
-use std::fmt::Debug;
+#![allow(missing_docs)] // TODO(apskhem): Temporary, to bo removed in a subsequent PR
 
 use derive_more::{Display, From};
 pub use pest::Parser;
@@ -60,9 +58,9 @@ pub enum Extension {
 // CDDL Standard Postlude - read from an external file
 pub const POSTLUDE: &str = include_str!("grammar/postlude.cddl");
 
+/// Abstract Syntax Tree (AST) representing parsed CDDL syntax.
 // TODO: this is temporary. need to add more pragmatic nodes
 #[derive(Debug)]
-/// Abstract Syntax Tree (AST) representing parsed CDDL syntax.
 pub enum AST<'a> {
     /// Represents the AST for RFC 8610 CDDL rules.
     RFC8610(Pairs<'a, rfc_8610::Rule>),
@@ -84,7 +82,8 @@ pub enum CDDLErrorType {
 }
 
 /// Represents an error that may occur during CDDL parsing.
-#[derive(Display, Debug, From)]
+#[derive(thiserror::Error, Debug, From)]
+#[error("{0}")]
 pub struct CDDLError(CDDLErrorType);
 
 /// Parses and checks semantically a CDDL input string.
