@@ -1,5 +1,3 @@
-# cspell: words msvc, wasip, RUSTSEC, rustls, libssh, reqwest, tinyvec, Leay, webpki
-
 [graph]
 # cargo-deny is really only ever intended to run on the "normal" tier-1 targets
 targets = [
@@ -58,7 +56,7 @@ allow-git = [
 [licenses]
 version = 2
 # Don't warn if a listed license isn't found
-unused-allowed-license="allow"
+unused-allowed-license = "allow"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.93
 allow = [

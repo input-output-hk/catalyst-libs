@@ -5,8 +5,6 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.1.24 AS cspell-c
 
 FROM debian:stable-slim
 
-# cspell: words livedocs sitedocs
-
 # check-markdown : markdown check using catalyst-ci.
 check-markdown:
     DO mdlint-ci+CHECK
