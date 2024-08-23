@@ -5,11 +5,11 @@
 Welcome to the Catalyst Libs mono repo, where we manage and maintain the interconnected Rust crates,
 Dart and Flutter packages, and other libraries that make up the Catalyst project.
 
-- [Catalyst Libs](#catalyst-libs)
-  - [Overview](#overview)
-  - [Getting Started](#getting-started)
-  - [Contributing](#contributing)
-  - [License](#license)
+* [Catalyst Libs](#catalyst-libs)
+  * [Overview](#overview)
+  * [Getting Started](#getting-started)
+  * [Contributing](#contributing)
+  * [License](#license)
 
 ## Overview
 
@@ -17,8 +17,8 @@ This monorepo serves as a unified codebase for the Catalyst project.
 Using a monorepo simplifies our dependency management, streamlines testing, and fosters code sharing.
 
 ## Getting Started
-TODO
 
+TODO
 
 ## Contributing
 
