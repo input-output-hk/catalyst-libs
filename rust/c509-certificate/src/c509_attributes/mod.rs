@@ -10,7 +10,7 @@
 //!     SubjectDirectoryAttributes = [+Attributes]
 //! ```
 //!
-//! For more information about `Atributes`,
+//! For more information about `Attributes`,
 //! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
 
 use attribute::Attribute;
