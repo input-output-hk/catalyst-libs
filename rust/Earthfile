@@ -4,9 +4,6 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.24 AS rust-ci
 # Use when debugging cat-ci locally.
 # IMPORT ../../catalyst-ci/earthly/rust AS rust-ci
 
-IMPORT ../wasm AS wasm
-IMPORT ../wasm/stub-module AS stub-module
-
 # builder : Set up our target toolchains, and copy our files.
 builder:
     DO rust-ci+SETUP
