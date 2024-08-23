@@ -228,6 +228,7 @@
         "*.excalidraw",
         ".vscode/**",
         "**/.idea/**",
-        "**/.dart_tool/**"
+        "**/.dart_tool/**",
+        "./rust/cardano-chain-follower/examples/snapshot_data/**",
     ]
 }

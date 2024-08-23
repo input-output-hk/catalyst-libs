@@ -3,10 +3,14 @@ abnf
 ABNF
 addrr
 adminer
+anypolicy
 apskhem
+Arissara
 asyncio
+Attributes
 auditability
 backpressure
+bimap
 bindgen
 bkioshn
 blockdiag
@@ -26,6 +30,7 @@ chaincode
 CHAINCODE
 chainsync
 childs
+Chotivichit
 chrono
 cids
 ciphertext
@@ -114,6 +119,7 @@ maindbname
 mapref
 mdlint
 mdns
+minicbor
 miniprotocol
 miniprotocols
 mithril
@@ -131,6 +137,7 @@ nextest
 nolfs
 notadb
 nsec
+OCSP
 oneshot
 openapi
 openat
@@ -145,6 +152,7 @@ plpgsql
 pollable
 Pozhylenkov
 pread
+Precertificate
 preopen
 preopened
 preopens
@@ -152,6 +160,7 @@ preprod
 psql
 pubk
 pubkey
+publickey
 pubspec
 pwrite
 qpsg
@@ -163,6 +172,7 @@ REMOVEDIR
 renameat
 reqwest
 retriggering
+rlib
 rulelist
 rulename
 RULENAME
