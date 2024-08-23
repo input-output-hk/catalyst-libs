@@ -7,9 +7,9 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.24 AS rust-ci
 # builder : Set up our target toolchains, and copy our files.
 builder:
     DO rust-ci+SETUP
-    COPY --dir .cargo .config crates bin .
-    COPY Cargo.toml .
-    COPY clippy.toml deny.toml rustfmt.toml .
+    # COPY --dir .cargo .config crates bin .
+    # COPY Cargo.toml .
+    # COPY clippy.toml deny.toml rustfmt.toml .
 
 ## -----------------------------------------------------------------------------
 ##
