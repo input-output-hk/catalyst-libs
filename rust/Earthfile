@@ -6,8 +6,8 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.21 AS rust-ci
 builder:
     DO rust-ci+SETUP
 
-    COPY Cargo.toml clippy.toml deny.toml rustfmt.toml
-    COPY --dir c509-certificate cardano-chain-follower cbork hermes-ipfs  .
+    COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
+    COPY --dir .cargo .config c509-certificate cardano-chain-follower cbork hermes-ipfs  .
 
 # check : Run basic check.
 check:
@@ -24,4 +24,5 @@ build:
         --args1="--libs=c509-certificate" \
         --args2="--libs=cardano-chain-follower" \
         --args3="--libs=cbork" \
-        --args4="--libs=hermes-ipfs"
+        --args4="--libs=hermes-ipfs" \
+        --docs="true"
