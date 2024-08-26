@@ -1,0 +1,54 @@
+# Compatibility:
+edition = "2021"
+
+# Enable unstable features:
+# * imports_indent
+# * imports_layout
+# * imports_granularity
+# * group_imports
+# * reorder_impl_items
+# * trailing_comma
+# * where_single_line
+# * wrap_comments
+# * comment_width
+# * blank_lines_upper_bound
+# * condense_wildcard_suffixes
+# * force_multiline_blocks
+# * format_code_in_doc_comments
+# * format_generated_files
+# * hex_literal_case
+# * inline_attribute_width
+# * normalize_comments
+# * normalize_doc_attributes
+# * overflow_delimited_expr
+unstable_features = true
+
+blank_lines_upper_bound = 1
+comment_width = 90
+condense_wildcard_suffixes = true
+fn_params_layout = "Compressed"
+force_multiline_blocks = true
+format_code_in_doc_comments = true
+format_generated_files = false
+group_imports = "StdExternalCrate"
+hard_tabs = false
+hex_literal_case = "Upper"
+imports_granularity = "Crate"
+imports_indent = "Block"
+imports_layout = "Mixed"
+inline_attribute_width = 0
+match_block_trailing_comma = true
+max_width = 100
+normalize_comments = true
+normalize_doc_attributes = true
+overflow_delimited_expr = true
+reorder_impl_items = true
+reorder_imports = true
+tab_spaces = 4
+trailing_comma = "Vertical"
+use_field_init_shorthand = true
+use_small_heuristics = "Default"
+where_single_line = true
+wrap_comments = true
+
+ignore = []
