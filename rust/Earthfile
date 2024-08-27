@@ -25,7 +25,7 @@ build:
         --args2="--libs=cardano-chain-follower" \
         --args3="--libs=cbork" \
         --args4="--libs=hermes-ipfs" \
-        --docs="true"
+        --docs="false"
 
 # local-ci-run: This step simulates the full CI run for local purposes only.
 local-ci-run:
