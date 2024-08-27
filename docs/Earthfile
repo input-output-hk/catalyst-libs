@@ -1,0 +1,32 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/docs:v3.1.24 AS docs-ci
+
+IMPORT .. AS repo
+IMPORT ../rust AS rust
+
+# Copy all the source we need to build the docs
+src:
+    DO docs-ci+SRC
+
+    # Now copy into that any artifacts we pull from the builds.
+    COPY --dir repo+repo-docs/repo /docs/includes
+    # Copy Rust docs
+    COPY rust+build/doc /docs/src/api/rust-docs
+
+# Build the docs here.
+docs:
+    FROM +src
+
+    DO docs-ci+BUILD
+
+# Make a locally runable container that can serve the docs.
+local:
+    # Build a self contained service to show built docs locally.
+    DO docs-ci+PACKAGE
+
+    # Copy the static pages into the container
+    COPY +docs/ /usr/share/nginx/html
+
+    # This is a local only image, we do not publish it.
+    SAVE IMAGE rust-docs:latest
