@@ -2,7 +2,7 @@
 icon: material/chat
 ---
 
-#  Catalyst Libraries Documentation
+# Catalyst Libraries Documentation
 
 ## How the docs are built
 
