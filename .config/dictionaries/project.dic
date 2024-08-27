@@ -176,6 +176,7 @@ rlib
 rulelist
 rulename
 RULENAME
+runable
 rustc
 rustdoc
 rustdocflags
