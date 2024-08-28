@@ -12,6 +12,7 @@ Based on: https://books.google.it/books?id=vHlTOVTKHeUC&hl=it&source=gbs_navlink
 
 > :memo: **Note:** This is meant to be only a guideline, the paragraphs can be removed or added as they fit.
 
+<!-- markdownlint-disable MD004-->
 - [Test Plan Template](#test-plan-template)
 - [Test Plan Name](#test-plan-name)
   - [General Information](#general-information)

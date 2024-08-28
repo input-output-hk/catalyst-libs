@@ -6,6 +6,7 @@ Based on: https://books.google.it/books?id=vHlTOVTKHeUC&hl=it&source=gbs_navlink
 
 # [Flutter Cardano Integration](https://github.com/input-output-hk/catalyst-voices/issues/546)
 
+<!-- markdownlint-disable MD004-->
 - [Flutter Cardano Integration](#flutter-cardano-integration)
   - [General Information](#general-information)
     - [Abstract](#abstract)
