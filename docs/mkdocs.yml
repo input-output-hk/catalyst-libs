@@ -1,7 +1,5 @@
 INHERIT: std-theme.yml
 
-# cspell: words cips
-
 # Project Information
 site_name: Project Catalyst - Catalyst Library
 site_url: https://input-output-hk.github.io/catalyst-docs
