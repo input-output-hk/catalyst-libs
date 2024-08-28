@@ -1,0 +1,47 @@
+INHERIT: std-theme.yml
+
+# cspell: words cips
+
+# Project Information
+site_name: Project Catalyst - Catalyst Voices
+site_url: https://input-output-hk.github.io/catalyst-docs
+
+# Repository
+repo_name: input-output-hk/catalyst-voices
+repo_url: https://github.com/input-output-hk/catalyst-voices
+
+# Page tree - is created automatically.
+# See: https://henrywhitaker3.github.io/mkdocs-material-dark-theme/plugins/awesome-pages/
+
+# Tags used in these docs
+extra:
+  tags:
+    HTML5: html
+    JavaScript: js
+    CSS: css
+    Rust: rust
+    Flutter: flutter
+    Dart: dart
+    Python: python
+    Earthly: earthly
+    Github: github
+    Docker: docker
+    arc42: arc42
+    ADR: adr
+
+# Icons associated with the tags
+theme:
+  icon:
+    tag:
+      html: fontawesome/brands/html5
+      js: fontawesome/brands/js
+      css: fontawesome/brands/css3
+      rust: simple/rust
+      flutter: simple/flutter
+      dart: simple/dart
+      python: simple/python
+      earthly: material/earth-plus
+      github: simple/github
+      docker: simple/docker
+      arc42: material/pencil-ruler
+      adr: material/arrow-decision-auto
