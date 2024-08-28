@@ -6,33 +6,33 @@ Based on: https://books.google.it/books?id=vHlTOVTKHeUC&hl=it&source=gbs_navlink
 
 # [Flutter Cardano Integration](https://github.com/input-output-hk/catalyst-voices/issues/546)
 
-* [Flutter Cardano Integration](#flutter-cardano-integration)
-  * [General Informations](#general-informations)
-    * [Abstract](#abstract)
-    * [Stakeholders](#stakeholders)
-    * [Requirements](#requirements)
-    * [Acceptance criteria](#acceptance-criteria)
-    * [Risks](#risks)
-    * [Tools](#tools)
-  * [ACC framework](#acc-framework)
-    * [Attributes](#attributes)
-    * [Components](#components)
-    * [Capabilities](#capabilities)
-  * [Integration tests](#integration-tests)
-    * [Integration tests strategy](#integration-tests-strategy)
-    * [Integration test cases](#integration-test-cases)
-  * [Extensions](#extensions)
-  * [User actions](#user-actions)
-  * [Wallet](#wallet)
+- [Flutter Cardano Integration](#flutter-cardano-integration)
+  - [General Information](#general-information)
+    - [Abstract](#abstract)
+    - [Stakeholders](#stakeholders)
+    - [Requirements](#requirements)
+    - [Acceptance criteria](#acceptance-criteria)
+    - [Risks](#risks)
+    - [Tools](#tools)
+  - [ACC framework](#acc-framework)
+    - [Attributes](#attributes)
+    - [Components](#components)
+    - [Capabilities](#capabilities)
+  - [Integration tests](#integration-tests)
+    - [Integration tests strategy](#integration-tests-strategy)
+    - [Integration test cases](#integration-test-cases)
+  - [Extensions](#extensions)
+  - [User actions](#user-actions)
+  - [Wallet](#wallet)
 
-## General Informations
+## General Information
 
 ### Abstract
 
 Catalyst Cardano is a web application that facilitate interaction with the Cardano blockchain.
 It incorporates CIP-30 (Wallet DAppBridge) and CIP-95 (Message Signing) specifications.
 It requires connection to the wallet third party extensions (e.g Eternl) to be able to perform wallet actions.
-These actions are namely retrieving wallet details, signing data/transactions and submiting transactions.
+These actions are namely retrieving wallet details, signing data/transactions and submitting transactions.
 
 ### Stakeholders
 
@@ -100,17 +100,17 @@ User submit transactions
 
 | \#  | OBJECTIVE | STEPS | EXPECTED RESULTS | TO BE AUTOMATED |
 | --- | --------- | ----- | ---------------- | --------------- |
-| 1   | Eternl extension installation success |  Start application, Download wallet chrome extention  | Displays message when Eternl extension is successfully installed | YES  |
-| 2   | Eternl extension installation failure |  Start application, Download wallet chrome extention  | Displays error message handling when Eternl extension installation fails | YES  |
-| 3   | Eternl extension detection |  Start application, Download wallet chrome extention | Displays message when the app correctly detects the presence of the Eternl extension | YES  |
+| 1   | Eternl extension installation success |  Start application, Download wallet chrome extension  | Displays message when Eternl extension is successfully installed | YES  |
+| 2   | Eternl extension installation failure |  Start application, Download wallet chrome extension  | Displays error message handling when Eternl extension installation fails | YES  |
+| 3   | Eternl extension detection |  Start application, Download wallet chrome extension | Displays message when the app correctly detects the presence of the Eternl extension | YES  |
 
 ## User actions
 
 | \#  | OBJECTIVE | STEPS | EXPECTED RESULTS | TO BE AUTOMATED |
 | --- | --------- | ----- | ---------------- | --------------- |
-| 1   | User can retrieve his wallet details |  Start application, Download wallet chrome extention, Connect wallet extention in the application, Enable wallet  | Wallet details (balance, addresses, etc.) is correctly returned | YES  |
+| 1   | User can retrieve his wallet details |  Start application, Download wallet chrome extension, Connect wallet extension in the application, Enable wallet  | Wallet details (balance, addresses, etc.) is correctly returned | YES  |
 | 2   | User can sign data | Connect the wallet as #1, sign data | No exceptions are thrown, VkeyWitness is valid | YES |
-| 3   | User can sign transactions | Connect the wallet as #1, sign transaction data | No exceptions are thrown, and in TransactionWitnessSet, atleast one VkeyWitness is present | YES |
+| 3   | User can sign transactions | Connect the wallet as #1, sign transaction data | No exceptions are thrown, and in TransactionWitnessSet, at least one VkeyWitness is present | YES |
 | 4   | User can submit transactions | Connect the wallet as #1, submit transaction | No exceptions are thrown, Returned TransactionHash is not empty, Metadata is not included| YES |
 | 5   | User can handle invalid transactions | Connect the wallet as #1, create and submit an invalid transaction (e.g., incorrect signature, insufficient funds, malformed data) | Appropriate error message is returned, Transaction is not processed | YES |
 | 6   | User can submit transactions with metadata | Connect the wallet as #1, submit transaction with metadata | No exceptions are thrown, Returned TransactionHash is not empty, transaction is processed successfully with metadata | YES |
@@ -120,9 +120,9 @@ User submit transactions
 
 | \#  | OBJECTIVE | STEPS | EXPECTED RESULTS | TO BE AUTOMATED |
 | --- | --------- | ----- | ---------------- | --------------- |
-| 1   | Empty wallet list |  Start application, Download wallet chrome extention, Connect wallet extention in the application  | Displays empty message when no wallets are available | YES  |
-| 2   | Wallet enabling success |  Start application, Download wallet chrome extention, Connect wallet extention in the application, Enable wallet  | Displays message is displayed when enabling wallet success | YES  |
-| 3  | Wallet enabling failure |  Start application, Download wallet chrome extention, Connect wallet extention in the application, Enable wallet  | Error message is displayed when enabling wallet fails | YES  |
+| 1   | Empty wallet list |  Start application, Download wallet chrome extension, Connect wallet extension in the application  | Displays empty message when no wallets are available | YES  |
+| 2   | Wallet enabling success |  Start application, Download wallet chrome extension, Connect wallet extension in the application, Enable wallet  | Displays message is displayed when enabling wallet success | YES  |
+| 3  | Wallet enabling failure |  Start application, Download wallet chrome extension, Connect wallet extension in the application, Enable wallet  | Error message is displayed when enabling wallet fails | YES  |
 | 4   | Error while loading wallet details |  Connect the wallet as #1  | Error message is displayed when loading wallet details fails | YES  |
 | 5   | Sign data failure |  Connect the wallet as #1, sign data  | Error message is displayed when signing data fails | YES  |
 | 6   | Sign and submit transaction failure |  Connect the wallet as #1, sign data, submit data  | Error message is displayed when signing and submitting transaction fails | YES  |

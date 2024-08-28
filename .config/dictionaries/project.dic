@@ -50,6 +50,7 @@ DBSTATUS
 dbsync
 dcbor
 delegators
+Dominik
 dockerhub
 dotenv
 dotenvy
@@ -59,6 +60,7 @@ dreps
 earthfile
 Earthfile
 encryptor
+Eternl
 Errno
 excalidraw
 fadvise
@@ -117,6 +119,8 @@ localizable
 lookaside
 maindbname
 mapref
+Metadatum
+metadatum
 mdlint
 mdns
 minicbor
@@ -138,6 +142,7 @@ nolfs
 notadb
 nsec
 OCSP
+Oleksandr
 oneshot
 openapi
 openat
@@ -157,6 +162,7 @@ preopen
 preopened
 preopens
 preprod
+Prokhorenko
 psql
 pubk
 pubkey
@@ -170,6 +176,7 @@ readlinkat
 redoc
 REMOVEDIR
 renameat
+Replayability
 reqwest
 retriggering
 rlib
@@ -205,6 +212,7 @@ testcase
 testcov
 testdocs
 testunit
+testplan
 thiserror
 timelike
 timespec
@@ -220,8 +228,12 @@ unixfs
 unlinkat
 upnp
 userid
+UTXO
 utimensat
 vitss
+Vkey
+vkey
+vkeywitness
 voteplan
 voteplans
 wasi
