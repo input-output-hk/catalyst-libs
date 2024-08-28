@@ -1,6 +1,5 @@
 ---
 icon: material/book-open-page-variant
-title: Library
 ---
 
 # Catalyst Library
