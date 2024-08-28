@@ -2,6 +2,6 @@ nav:
 - 'Home': index.md
 - getting-started
 - catalyst-standards
-- 'Library': lib
 - architecture
+- 'Library': libs
 - appendix

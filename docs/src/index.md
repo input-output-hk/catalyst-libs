@@ -2,7 +2,7 @@
 icon: material/chat
 ---
 
-# Project Catalyst - Catalyst Voices
+# Project Catalyst - Catalyst Library
 
 ## How the docs are built
 

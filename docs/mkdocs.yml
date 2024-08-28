@@ -3,12 +3,12 @@ INHERIT: std-theme.yml
 # cspell: words cips
 
 # Project Information
-site_name: Project Catalyst - Catalyst Voices
+site_name: Project Catalyst - Catalyst Library
 site_url: https://input-output-hk.github.io/catalyst-docs
 
 # Repository
-repo_name: input-output-hk/catalyst-voices
-repo_url: https://github.com/input-output-hk/catalyst-voices
+repo_name: input-output-hk/catalyst-libs
+repo_url: https://github.com/input-output-hk/catalyst-libs
 
 # Page tree - is created automatically.
 # See: https://henrywhitaker3.github.io/mkdocs-material-dark-theme/plugins/awesome-pages/
