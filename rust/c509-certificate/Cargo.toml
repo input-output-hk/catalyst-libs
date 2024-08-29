@@ -6,8 +6,8 @@ version = "0.0.1"
 authors = [
     "Arissara Chotivichit <arissara.chotivichit@iohk.io>"
 ]
-homepage = "https://input-output-hk.github.io/catalyst-voices"
-repository = "https://github.com/input-output-hk/catalyst-voices"
+homepage = "https://input-output-hk.github.io/catalyst-libs"
+repository = "https://github.com/input-output-hk/catalyst-libs"
 license = "MIT OR Apache-2.0"
 edition = "2021"
 
