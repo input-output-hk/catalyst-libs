@@ -1,6 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.21 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:feat/faster-rust-tool-install AS rust-ci
+#IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.21 AS rust-ci
 
 # builder : Set up our target toolchains, and copy our files.
 builder:
@@ -23,8 +24,9 @@ build:
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate" \
         --args2="--libs=cardano-chain-follower" \
-        --args3="--libs=cbork" \
-        --args4="--libs=hermes-ipfs" \
+        --args3="--libs=cbork-cddl-parser" \
+        --args4="--libs=cbork-abnf-parser" \
+        --args5="--libs=hermes-ipfs" \
         --docs="false"
 
 # local-ci-run: This step simulates the full CI run for local purposes only.

@@ -12,7 +12,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-derive_more =  "0.99.17"
+derive_more = {version = "1.0.0", features = ["from"] }
 pest = { version = "2.7.2", features = ["std", "pretty-print", "memchr", "const_prec_climber"] }
 pest_derive = { version = "2.7.2", features = ["grammar-extras"] }
 thiserror = "1.0.56"
