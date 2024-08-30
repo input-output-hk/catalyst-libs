@@ -30,13 +30,14 @@
   },
   "window.title": "${dirty}${activeEditorShort}",
   "conventionalCommits.scopes": [
-    "vscode",
-    "mdlint",
-    "languages",
-    "spelling",
-    "issues",
-    "gateway",
-    "docs"
+    "rust",
+    "rust/c509-certificate",
+    "rust/cardano-chain-follower",
+    "rust/cbork",
+    "rust/hermes-ipfs",
+    "dart",
+    "docs",
+    "general"
   ],
   "conventionalCommits.gitmoji": false,
   "markdown.extension.toc.unorderedList.marker": "*",
