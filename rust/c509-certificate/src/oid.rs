@@ -46,7 +46,8 @@ impl C509oidRegistered {
     }
 
     /// Get the `C509oid`.
-    pub(crate) fn get_c509_oid(&self) -> C509oid {
+    #[must_use]
+    pub fn get_c509_oid(&self) -> C509oid {
         self.oid.clone()
     }
 
@@ -76,7 +77,9 @@ struct Helper {
 
 impl<'de> Deserialize<'de> for C509oid {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where
+        D: Deserializer<'de>,
+    {
         let helper = Helper::deserialize(deserializer)?;
         let oid =
             Oid::from_str(&helper.oid).map_err(|e| serde::de::Error::custom(format!("{e:?}")))?;
@@ -86,7 +89,9 @@ impl<'de> Deserialize<'de> for C509oid {
 
 impl Serialize for C509oid {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    where
+        S: serde::Serializer,
+    {
         let helper = Helper {
             oid: self.oid.to_string(),
         };

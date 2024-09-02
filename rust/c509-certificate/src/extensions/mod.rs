@@ -51,6 +51,12 @@ impl Extensions {
     pub fn add_ext(&mut self, extension: Extension) {
         self.0.push(extension);
     }
+
+    /// Get the inner vector of `Extensions`.
+    #[must_use]
+    pub fn get_inner(&self) -> &Vec<Extension> {
+        &self.0
+    }
 }
 
 impl Encode<()> for Extensions {

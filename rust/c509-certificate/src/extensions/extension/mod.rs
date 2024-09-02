@@ -10,7 +10,7 @@ use serde::{Deserialize, Deserializer, Serialize};
 use strum_macros::EnumDiscriminants;
 
 use super::alt_name::AlternativeName;
-use crate::c509_oid::{C509oid, C509oidRegistered};
+use crate::oid::{C509oid, C509oidRegistered};
 
 /// A struct of C509 `Extension`
 #[derive(Debug, Clone, PartialEq)]

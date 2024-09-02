@@ -4,7 +4,7 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::c509_general_names::{
+use crate::general_names::{
     general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
     GeneralNames,
 };
@@ -19,6 +19,12 @@ impl AlternativeName {
     #[must_use]
     pub fn new(value: GeneralNamesOrText) -> Self {
         Self(value)
+    }
+
+    /// Get the inner of Alternative Name.
+    #[must_use]
+    pub fn get_inner(&self) -> &GeneralNamesOrText {
+        &self.0
     }
 }
 
@@ -55,11 +61,11 @@ impl Encode<()> for GeneralNamesOrText {
         match self {
             GeneralNamesOrText::GeneralNames(gns) => {
                 let gn = gns
-                    .get_gns()
+                    .get_inner()
                     .first()
                     .ok_or(minicbor::encode::Error::message("GeneralNames is empty"))?;
                 // Check whether there is only 1 item in the array which is a DNSName
-                if gns.get_gns().len() == 1 && gn.get_gn_type().is_dns_name() {
+                if gns.get_inner().len() == 1 && gn.get_gn_type().is_dns_name() {
                     gn.get_gn_value().encode(e, ctx)?;
                 } else {
                     gns.encode(e, ctx)?;
@@ -105,7 +111,7 @@ impl Decode<'_, ()> for GeneralNamesOrText {
 #[cfg(test)]
 mod test_alt_name {
     use super::*;
-    use crate::c509_general_names::general_name::{
+    use crate::general_names::general_name::{
         GeneralName, GeneralNameTypeRegistry, GeneralNameValue,
     };
 

@@ -9,6 +9,7 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 /// A struct representing an unwrapped CBOR unsigned bignum.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct UnwrappedBigUint(u64);
 

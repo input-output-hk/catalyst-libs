@@ -8,7 +8,7 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::c509_attributes::attribute::Attribute;
+use crate::attributes::attribute::Attribute;
 
 /// A struct represents a Relative Distinguished Name containing vector of `Attribute`.
 ///
@@ -104,7 +104,7 @@ mod test_relative_distinguished_name {
     use asn1_rs::oid;
 
     use super::*;
-    use crate::c509_attributes::attribute::AttributeValue;
+    use crate::attributes::attribute::AttributeValue;
 
     #[test]
     fn encode_decode_rdn() {

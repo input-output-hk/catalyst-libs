@@ -23,7 +23,7 @@ use rdn::RelativeDistinguishedName;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::c509_attributes::attribute::{Attribute, AttributeValue};
+use crate::attributes::attribute::{Attribute, AttributeValue};
 
 /// OID of `CommonName` attribute.
 const COMMON_NAME_OID: Oid<'static> = oid!(2.5.4 .3);
@@ -73,6 +73,7 @@ impl Decode<'_, ()> for Name {
 // ------------------NameValue----------------------
 
 /// An enum of possible value types for `Name`.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NameValue {
@@ -283,7 +284,7 @@ fn create_rdn_with_cn_attr(text: String) -> NameValue {
 #[cfg(test)]
 pub(crate) mod test_name {
     use super::*;
-    use crate::c509_attributes::attribute::Attribute;
+    use crate::attributes::attribute::Attribute;
 
     // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
     // A.1.1.  Example C509 Certificate Encoding
