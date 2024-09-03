@@ -57,7 +57,7 @@ pub struct ABNFError(Error<abnf::Rule>);
 /// # Examples
 ///
 /// ```rs
-/// use abnf_parser::parse_abnf;
+/// use cbork_abnf_parser::parse_abnf;
 /// use std:fs;
 ///
 /// let input = fs::read_to_string("path/to/your/file.abnf").unwrap();

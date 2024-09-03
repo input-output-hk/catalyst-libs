@@ -1,6 +1,6 @@
 // cspell: words VCHAR vchar
 
-use abnf_parser::{self, abnf_test::Rule};
+use cbork_abnf_parser::{self, abnf_test::Rule};
 
 use crate::common::*;
 

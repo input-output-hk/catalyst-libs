@@ -1,4 +1,4 @@
-use abnf_parser::{
+use cbork_abnf_parser::{
     self,
     abnf_test::{ABNFTestParser, Parser, Rule},
 };

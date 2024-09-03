@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, fs, io::Result};
 
-use abnf_parser::parse_abnf;
+use cbork_abnf_parser::parse_abnf;
 
 #[test]
 /// # Panics
