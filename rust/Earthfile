@@ -8,7 +8,8 @@ builder:
     DO rust-ci+SETUP
 
     COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
-    COPY --dir .cargo .config c509-certificate cardano-chain-follower cbork hermes-ipfs  .
+    COPY --dir .cargo .config c509-certificate cardano-chain-follower \
+                cbork cbork-abnf-parser cbork-cddl-parser hermes-ipfs  .
 
 # check : Run basic check.
 check:
