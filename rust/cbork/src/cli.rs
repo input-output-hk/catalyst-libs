@@ -2,9 +2,9 @@
 
 use std::{path::PathBuf, process::exit};
 
+use cbork_cddl_parser::{parse_cddl, Extension};
 use clap::Parser;
 use console::{style, Emoji};
-use cbork_cddl_parser::{parse_cddl, Extension};
 
 /// CDDL linter cli tool
 #[derive(Parser)]
