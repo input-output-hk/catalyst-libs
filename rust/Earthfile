@@ -30,6 +30,22 @@ build:
         --args5="--libs=hermes-ipfs" \
         --docs="false"
 
+# build-wasm: Build wasn binaries for browser integration.
+build-wasm:
+    FROM +build
+
+    RUN wasm-pack build c509-certificate --target web
+
+    SAVE ARTIFACT ./pkg /pkg
+
+
+# js-wasm-package-locally : Generate the wasm package and save it locally
+js-wasm-package-locally:
+    FROM +build-wasm
+
+    SAVE ARTIFACT /pkg AS LOCAL ./pkg
+
+
 # local-ci-run: This step simulates the full CI run for local purposes only.
 local-ci-run:
     BUILD +check
