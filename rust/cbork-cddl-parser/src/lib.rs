@@ -106,7 +106,7 @@ pub struct CDDLError(CDDLErrorType);
 /// # Examples
 ///
 /// ```rs
-/// use cddl_parser::{parse_cddl, Extension};
+/// use cbork_cddl_parser::{parse_cddl, Extension};
 /// use std:fs;
 ///
 /// let mut input = fs::read_to_string("path/to/your/file.cddl").unwrap();

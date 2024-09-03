@@ -2,7 +2,7 @@
 
 use std::ops::Deref;
 
-use cddl_parser::{self, cddl_test::Rule};
+use cbork_cddl_parser::{self, cddl_test::Rule};
 
 mod common;
 use common::{byte_sequences::*, literal_values::*, text_sequences::*};

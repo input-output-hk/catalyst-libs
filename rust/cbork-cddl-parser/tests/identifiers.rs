@@ -1,6 +1,6 @@
 // cspell: words aname groupsocket typesocket groupsocket
 
-use cddl_parser::{
+use cbork_cddl_parser::{
     self,
     cddl_test::{CDDLTestParser, Parser, Rule},
 };

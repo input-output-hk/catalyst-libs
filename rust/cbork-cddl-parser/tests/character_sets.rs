@@ -1,6 +1,6 @@
 // cspell: words PCHAR pchar BCHAR bchar SESC sesc SCHAR schar fffd fffe
 
-use cddl_parser::{
+use cbork_cddl_parser::{
     self,
     cddl_test::{CDDLTestParser, Parser, Rule},
 };

@@ -4,6 +4,7 @@ use std::{path::PathBuf, process::exit};
 
 use clap::Parser;
 use console::{style, Emoji};
+use cbork_cddl_parser::{parse_cddl, Extension};
 
 /// CDDL linter cli tool
 #[derive(Parser)]
@@ -32,7 +33,7 @@ impl Cli {
 /// Check the CDDL file, return any errors
 fn check_file(file_path: &PathBuf) -> anyhow::Result<()> {
     let mut content = std::fs::read_to_string(file_path)?;
-    cddl_parser::parse_cddl(&mut content, &cddl_parser::Extension::CDDLParser)?;
+    parse_cddl(&mut content, &Extension::CDDLParser)?;
     Ok(())
 }
 

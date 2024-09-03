@@ -1,6 +1,6 @@
 use std::{ffi::OsStr, fs, io::Result};
 
-use cddl_parser::{parse_cddl, Extension};
+use cbork_cddl_parser::{parse_cddl, Extension};
 
 #[test]
 /// # Panics
