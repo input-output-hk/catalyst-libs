@@ -9,7 +9,7 @@ authors = [
 homepage = "https://input-output-hk.github.io/catalyst-libs"
 repository = "https://github.com/input-output-hk/catalyst-libs"
 license = "MIT OR Apache-2.0"
-edition = "2021"
+edition.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
