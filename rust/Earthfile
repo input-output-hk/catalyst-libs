@@ -30,7 +30,7 @@ build:
         --args5="--libs=hermes-ipfs" \
         --docs="false"
 
-# build-wasm: Build wasn binaries for browser integration.
+# build-wasm: Build wasm binaries for browser integration.
 build-wasm:
     FROM +build
 
