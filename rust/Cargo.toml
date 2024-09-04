@@ -11,7 +11,6 @@ members = [
 
 [workspace.package]
 edition = "2021"
-version = "0.0.1"
 authors = ["Steven Johnson <steven.johnson@iohk.io>"]
 homepage = "https://github.com/input-output-hk/catalyst-libs"
 repository = "https://github.com/input-output-hk/catalyst-libs"
