@@ -1,31 +1,37 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.21 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.00 AS rust-ci
 
-# builder : Set up our target toolchains, and copy our files.
-builder:
-    DO rust-ci+SETUP
+IMPORT .. AS rust-local
+IMPORT ../.. AS repo
 
-    COPY --dir .cargo .config Cargo.* clippy.toml deny.toml rustfmt.toml src examples .
+# build-wasm: Build wasm binaries for browser integration.
+# TODO:
+#   - Create a `test` target which Executes tests for browsers (chrome/firefox) and also nodejs 
+#       with the built wasm from this target.
+#   - Create a publish target which can publish the library to NPM for both Web and NodeJS.
+#   - Create a simple example web app and nodejs app which uses the library, and can be used to 
+#       test it after publishing.
+build-wasm:
+    FROM rust-local+build
 
-# check : Run basic check.
-check:
-    FROM +builder
+    COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
+    COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.
 
-    DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
+    # We should be able to use the library in all these places, so build it for them all.
+    FOR target IN web nodejs bundler
+        RUN wasm-pack build c509-certificate --release --target "$target" --out-dir "pkg/$target"
+    END    
 
-# build : Build the C509 library
-build:
-    FROM +builder
-
-    DO rust-ci+EXECUTE \
-        --cmd="/scripts/std_build.py" \
-        --args1="--libs=c509-certificate"
-
-    RUN cargo install wasm-pack --version=0.12.1 --locked
+    SAVE ARTIFACT ./c509-certificate/pkg /pkg
 
 # js-wasm-package-locally : Generate the wasm package and save it locally
 js-wasm-package-locally:
-    FROM +build
-    RUN wasm-pack build --target web
-    SAVE ARTIFACT ./pkg AS LOCAL ./pkg
+    FROM +build-wasm
+
+    SAVE ARTIFACT /pkg AS LOCAL ./pkg
+
+# Test which runs check with all supported host tooling.  Needs qemu or rosetta to run.
+# Only used to validate tooling is working across host toolsets.
+build-all-hosts:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-hosted

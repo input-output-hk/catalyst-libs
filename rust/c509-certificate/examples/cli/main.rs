@@ -8,14 +8,14 @@ use std::{
 
 use asn1_rs::{oid, Oid};
 use c509_certificate::{
-    c509_big_uint::UnwrappedBigUint,
-    c509_extensions::Extensions,
-    c509_issuer_sig_algo::IssuerSignatureAlgorithm,
-    c509_name::{rdn::RelativeDistinguishedName, Name, NameValue},
-    c509_subject_pub_key_algo::SubjectPubKeyAlgorithm,
-    c509_time::Time,
+    big_uint::UnwrappedBigUint,
+    extensions::Extensions,
+    issuer_sig_algo::IssuerSignatureAlgorithm,
+    name::{rdn::RelativeDistinguishedName, Name, NameValue},
     signing::{PrivateKey, PublicKey},
+    subject_pub_key_algo::SubjectPubKeyAlgorithm,
     tbs_cert::TbsCert,
+    time::Time,
 };
 use chrono::{DateTime, Utc};
 use clap::Parser;

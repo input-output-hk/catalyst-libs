@@ -1,27 +1,27 @@
 [package]
 name = "hermes-ipfs"
+version = "0.0.1"
 edition.workspace = true
-version.workspace = true
+license.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
-license.workspace = true
 
 [lints]
 workspace = true
 
 [dependencies]
-anyhow.workspace = true
-derive_more.workspace = true
-libipld.workspace = true
-rust-ipfs.workspace = true
-tokio.workspace = true
+anyhow = "1.0.71"
+derive_more = {version = "1.0.0", features = ["from","into","display"] }
+libipld = "0.16.0"
+rust-ipfs = "0.11.21"
+tokio = "1.36.0"
 
 [dev-dependencies]
 # Dependencies used by examples
-clap = { workspace = true, features = ["derive"] }
-dirs.workspace = true
-lipsum.workspace = true
-rand.workspace = true
-rustyline-async.workspace = true
-tracing-subscriber.workspace = true
+clap = { version = "4.5.3", features = ["derive"] }
+dirs = "5.0.1"
+lipsum = "0.9.1"
+rand = "0.8.5"
+rustyline-async = "0.4.2"
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
