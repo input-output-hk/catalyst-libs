@@ -36,8 +36,9 @@ impl GeneralNames {
         self.0.push(gn);
     }
 
-    /// Get the a vector of `GeneralName`.
-    pub(crate) fn get_gns(&self) -> &Vec<GeneralName> {
+    /// Get the inner of `GeneralName`.
+    #[must_use]
+    pub fn get_inner(&self) -> &Vec<GeneralName> {
         &self.0
     }
 }
@@ -85,7 +86,7 @@ mod test_general_names {
     use other_name_hw_module::OtherNameHardwareModuleName;
 
     use super::*;
-    use crate::c509_oid::C509oid;
+    use crate::oid::C509oid;
 
     #[test]
     fn encode_decode_gns() {

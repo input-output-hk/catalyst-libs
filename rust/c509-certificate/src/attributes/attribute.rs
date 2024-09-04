@@ -16,7 +16,7 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
 use super::data::{get_oid_from_int, ATTRIBUTES_LOOKUP};
-use crate::c509_oid::{C509oid, C509oidRegistered};
+use crate::oid::{C509oid, C509oidRegistered};
 
 /// A struct of C509 `Attribute`
 #[derive(Debug, Clone, PartialEq)]

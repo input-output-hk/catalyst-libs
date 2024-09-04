@@ -4,9 +4,8 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    c509_big_uint::UnwrappedBigUint, c509_extensions::Extensions,
-    c509_issuer_sig_algo::IssuerSignatureAlgorithm, c509_name::Name,
-    c509_subject_pub_key_algo::SubjectPubKeyAlgorithm, c509_time::Time,
+    big_uint::UnwrappedBigUint, extensions::Extensions, issuer_sig_algo::IssuerSignatureAlgorithm,
+    name::Name, subject_pub_key_algo::SubjectPubKeyAlgorithm, time::Time,
 };
 
 /// A struct represents a To Be Signed Certificate (TBS Certificate).
@@ -182,17 +181,17 @@ pub(crate) mod test_tbs_cert {
 
     use super::*;
     use crate::{
-        c509_attributes::attribute::{Attribute, AttributeValue},
-        c509_extensions::{
+        attributes::attribute::{Attribute, AttributeValue},
+        extensions::{
             alt_name::{AlternativeName, GeneralNamesOrText},
             extension::{Extension, ExtensionValue},
         },
-        c509_general_names::{
+        general_names::{
             general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
             other_name_hw_module::OtherNameHardwareModuleName,
             GeneralNames,
         },
-        c509_name::{
+        name::{
             rdn::RelativeDistinguishedName,
             test_name::{name_cn_eui_mac, name_cn_text, names},
             NameValue,

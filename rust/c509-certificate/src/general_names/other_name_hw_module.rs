@@ -7,7 +7,7 @@ use asn1_rs::Oid;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::c509_oid::C509oid;
+use crate::oid::C509oid;
 
 /// A struct represents the hardwareModuleName type of otherName.
 /// Containing a pair of ( hwType, hwSerialNum ) as mentioned in

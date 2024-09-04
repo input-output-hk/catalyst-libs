@@ -46,7 +46,8 @@ impl C509oidRegistered {
     }
 
     /// Get the `C509oid`.
-    pub(crate) fn get_c509_oid(&self) -> C509oid {
+    #[must_use]
+    pub fn get_c509_oid(&self) -> C509oid {
         self.oid.clone()
     }
 

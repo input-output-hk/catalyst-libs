@@ -13,7 +13,7 @@ use super::{
     data::{get_gn_from_int, get_gn_value_type_from_int, get_int_from_gn},
     other_name_hw_module::OtherNameHardwareModuleName,
 };
-use crate::{c509_name::Name, c509_oid::C509oid};
+use crate::{name::Name, oid::C509oid};
 
 /// A struct represents a `GeneralName`.
 /// ```cddl

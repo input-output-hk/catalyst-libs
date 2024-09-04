@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::tbs_cert::TbsCert;
 
-#[derive(Deserialize, Serialize)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 /// A struct represents the `C509` Certificate.
 pub struct C509 {
     /// A TBS Certificate.

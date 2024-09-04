@@ -2,46 +2,43 @@
 //! Certificate.
 //!
 //! ```cddl
-//! subjectPublicKeyAlgorithm: AlgorithmIdentifier
+//! issuerSignatureAlgorithm: AlgorithmIdentifier
 //! ```
-
-// cspell: words spka
 
 mod data;
 
 use std::str::FromStr;
 
 use asn1_rs::Oid;
-use data::{get_oid_from_int, SUBJECT_PUB_KEY_ALGO_LOOKUP};
+use data::{get_oid_from_int, ISSUER_SIG_ALGO_LOOKUP};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::{c509_algo_identifier::AlgorithmIdentifier, c509_oid::C509oidRegistered};
+use crate::{algorithm_identifier::AlgorithmIdentifier, oid::C509oidRegistered};
 
-/// A struct represents the `SubjectPubKeyAlgorithm`
+/// A struct represents the `IssuerSignatureAlgorithm`
 #[derive(Debug, Clone, PartialEq)]
-pub struct SubjectPubKeyAlgorithm {
-    /// The registered OID of the `SubjectPubKeyAlgorithm`.
+pub struct IssuerSignatureAlgorithm {
+    /// The registered OID of the `IssuerSignatureAlgorithm`.
     registered_oid: C509oidRegistered,
     /// An `AlgorithmIdentifier` type
     algo_identifier: AlgorithmIdentifier,
 }
 
-impl SubjectPubKeyAlgorithm {
-    /// Create new instance of `SubjectPubKeyAlgorithm` where it registered with
-    /// Subject Public Key Algorithm lookup table.
+impl IssuerSignatureAlgorithm {
+    /// Create new instance of `IssuerSignatureAlgorithm` where it registered with
+    /// Issuer Signature Algorithm lookup table.
     pub fn new(oid: Oid<'static>, param: Option<String>) -> Self {
         Self {
             registered_oid: C509oidRegistered::new(
                 oid.clone(),
-                SUBJECT_PUB_KEY_ALGO_LOOKUP.get_int_to_oid_table(),
+                ISSUER_SIG_ALGO_LOOKUP.get_int_to_oid_table(),
             ),
             algo_identifier: AlgorithmIdentifier::new(oid, param),
         }
     }
 }
-
-/// Helper struct for deserialize and serialize `SubjectPubKeyAlgorithm`.
+/// Helper struct for deserialize and serialize `IssuerSignatureAlgorithm`.
 #[derive(Debug, Deserialize, Serialize)]
 struct Helper {
     /// OID as string.
@@ -50,18 +47,18 @@ struct Helper {
     param: Option<String>,
 }
 
-impl<'de> Deserialize<'de> for SubjectPubKeyAlgorithm {
+impl<'de> Deserialize<'de> for IssuerSignatureAlgorithm {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: Deserializer<'de> {
         let helper = Helper::deserialize(deserializer)?;
         let oid =
             Oid::from_str(&helper.oid).map_err(|e| serde::de::Error::custom(format!("{e:?}")))?;
 
-        Ok(SubjectPubKeyAlgorithm::new(oid, helper.param))
+        Ok(IssuerSignatureAlgorithm::new(oid, helper.param))
     }
 }
 
-impl Serialize for SubjectPubKeyAlgorithm {
+impl Serialize for IssuerSignatureAlgorithm {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
@@ -72,7 +69,7 @@ impl Serialize for SubjectPubKeyAlgorithm {
     }
 }
 
-impl Encode<()> for SubjectPubKeyAlgorithm {
+impl Encode<()> for IssuerSignatureAlgorithm {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
@@ -90,19 +87,22 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
     }
 }
 
-impl Decode<'_, ()> for SubjectPubKeyAlgorithm {
+impl Decode<'_, ()> for IssuerSignatureAlgorithm {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        // Check u8 for 0 - 28
-        if d.datatype()? == minicbor::data::Type::U8 {
-            let i = d.i16()?;
-            let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
-            Ok(Self::new(oid, None))
-        } else {
-            let algo_identifier = AlgorithmIdentifier::decode(d, ctx)?;
-            Ok(SubjectPubKeyAlgorithm::new(
-                algo_identifier.get_oid(),
-                algo_identifier.get_param().clone(),
-            ))
+        match d.datatype()? {
+            // Check i16 for -256 and -256
+            minicbor::data::Type::U8 | minicbor::data::Type::I16 => {
+                let i = d.i16()?;
+                let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
+                Ok(Self::new(oid, None))
+            },
+            _ => {
+                let algo_identifier = AlgorithmIdentifier::decode(d, ctx)?;
+                Ok(IssuerSignatureAlgorithm::new(
+                    algo_identifier.get_oid(),
+                    algo_identifier.get_param().clone(),
+                ))
+            },
         }
     }
 }
@@ -110,7 +110,7 @@ impl Decode<'_, ()> for SubjectPubKeyAlgorithm {
 // ------------------Test----------------------
 
 #[cfg(test)]
-mod test_subject_public_key_algorithm {
+mod test_issuer_signature_algorithm {
     use asn1_rs::oid;
 
     use super::*;
@@ -120,17 +120,17 @@ mod test_subject_public_key_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let spka = SubjectPubKeyAlgorithm::new(oid!(1.3.101 .112), None);
-        spka.encode(&mut encoder, &mut ())
-            .expect("Failed to encode SubjectPubKeyAlgorithm");
+        let isa = IssuerSignatureAlgorithm::new(oid!(1.3.101 .112), None);
+        isa.encode(&mut encoder, &mut ())
+            .expect("Failed to encode IssuerSignatureAlgorithm");
 
-        // Ed25519 - int 10: 0x0a
-        assert_eq!(hex::encode(buffer.clone()), "0a");
+        // Ed25519 - int 12: 0x0c
+        assert_eq!(hex::encode(buffer.clone()), "0c");
 
         let mut decoder = Decoder::new(&buffer);
-        let decoded_spka = SubjectPubKeyAlgorithm::decode(&mut decoder, &mut ())
-            .expect("Failed to decode SubjectPubKeyAlgorithm");
-        assert_eq!(decoded_spka, spka);
+        let decoded_isa = IssuerSignatureAlgorithm::decode(&mut decoder, &mut ())
+            .expect("Failed to decode IssuerSignatureAlgorithm");
+        assert_eq!(decoded_isa, isa);
     }
 
     #[test]
@@ -138,17 +138,17 @@ mod test_subject_public_key_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let spka = SubjectPubKeyAlgorithm::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1), None);
-        spka.encode(&mut encoder, &mut ())
-            .expect("Failed to encode SubjectPubKeyAlgorithm");
+        let isa = IssuerSignatureAlgorithm::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1), None);
+        isa.encode(&mut encoder, &mut ())
+            .expect("Failed to encode IssuerSignatureAlgorithm");
 
         // 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
         assert_eq!(hex::encode(buffer.clone()), "49608648016503040201");
 
         let mut decoder = Decoder::new(&buffer);
-        let decoded_spka = SubjectPubKeyAlgorithm::decode(&mut decoder, &mut ())
-            .expect("Failed to decode SubjectPubKeyAlgorithm");
-        assert_eq!(decoded_spka, spka);
+        let decoded_isa = IssuerSignatureAlgorithm::decode(&mut decoder, &mut ())
+            .expect("Failed to decode IssuerSignatureAlgorithm");
+        assert_eq!(decoded_isa, isa);
     }
 
     #[test]
@@ -156,12 +156,12 @@ mod test_subject_public_key_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let spka = SubjectPubKeyAlgorithm::new(
+        let isa = IssuerSignatureAlgorithm::new(
             oid!(2.16.840 .1 .101 .3 .4 .2 .1),
             Some("example".to_string()),
         );
-        spka.encode(&mut encoder, &mut ())
-            .expect("Failed to encode SubjectPubKeyAlgorithm");
+        isa.encode(&mut encoder, &mut ())
+            .expect("Failed to encode IssuerSignatureAlgorithm");
         // Array of 2 items: 0x82
         // 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
         // bytes "example": 0x476578616d706c65
@@ -171,8 +171,8 @@ mod test_subject_public_key_algorithm {
         );
 
         let mut decoder = Decoder::new(&buffer);
-        let decoded_spka = SubjectPubKeyAlgorithm::decode(&mut decoder, &mut ())
-            .expect("Failed to decode SubjectPubKeyAlgorithm");
-        assert_eq!(decoded_spka, spka);
+        let decoded_isa = IssuerSignatureAlgorithm::decode(&mut decoder, &mut ())
+            .expect("Failed to decode IssuerSignatureAlgorithm");
+        assert_eq!(decoded_isa, isa);
     }
 }
