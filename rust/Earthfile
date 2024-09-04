@@ -9,7 +9,8 @@ builder:
 
     COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
     COPY --dir .cargo .config c509-certificate cardano-chain-follower \
-                cbork cbork-abnf-parser cbork-cddl-parser hermes-ipfs  .
+                cbork cbork-abnf-parser cbork-cddl-parser \
+                hermes-ipfs  .
 
 # check : Run basic check.
 check:
@@ -23,27 +24,17 @@ build:
 
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
+        --output="release/[^\./]+" \
         --args1="--libs=c509-certificate" \
         --args2="--libs=cardano-chain-follower" \
         --args3="--libs=cbork-cddl-parser" \
         --args4="--libs=cbork-abnf-parser" \
         --args5="--libs=hermes-ipfs" \
-        --docs="false"
+        --args6="--bins=cbork/cbork" \
+        --docs="true"
 
-# build-wasm: Build wasm binaries for browser integration.
-build-wasm:
-    FROM +build
-
-    RUN wasm-pack build c509-certificate --target web
-
-    SAVE ARTIFACT ./pkg /pkg
-
-
-# js-wasm-package-locally : Generate the wasm package and save it locally
-js-wasm-package-locally:
-    FROM +build-wasm
-
-    SAVE ARTIFACT /pkg AS LOCAL ./pkg
+    SAVE ARTIFACT target/$TARGETARCH/doc doc
+    SAVE ARTIFACT target/release/cbork cbork
 
 
 # local-ci-run: This step simulates the full CI run for local purposes only.
