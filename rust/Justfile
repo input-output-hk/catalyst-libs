@@ -26,4 +26,4 @@ code-lint:
     cargo lint
 
 # Pre Push Checks
-prepush: code-format code-lint license-check
+pre-push: code-format code-lint license-check
