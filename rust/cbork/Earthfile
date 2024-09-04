@@ -4,18 +4,14 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:feat/faster-rust-tool
 # IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.24 AS rust-ci
 # Use when debugging cat-ci locally.
 # IMPORT ../../catalyst-ci/earthly/rust AS rust-ci
+IMPORT .. AS rust-local
 
 # Run build using the most efficient host tooling
 # CI Automated Entry point.
 build:
-    FROM +builder
+    FROM rust-local+build
 
-    DO rust-ci+EXECUTE \
-        --cmd="/scripts/std_build.py" \
-        --output="release/[^\./]+" \
-        --docs="true"
-
-    SAVE ARTIFACT target/$TARGETARCH/doc doc
+    SAVE ARTIFACT target/release/cbork cbork
 
 # Test which runs check with all supported host tooling.  Needs qemu or rosetta to run.
 # Only used to validate tooling is working across host toolsets.

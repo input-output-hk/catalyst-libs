@@ -10,7 +10,11 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-cbork-cddl-parser = { path = "../cbork-cddl-parser", version = "0.1.0" }
+# Always used a versioned dependency, so that changes to dependent libraries do not cause cascading 
+# breakage inside the repo.
+cbork-cddl-parser = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "feat/reorganize-crates", version = "0.1.0" }
+# Only use this for testing - do not change dependency to this in checked in code.
+#cbork-cddl-parser = { path = "../cbork-cddl-parser", version = "0.1.0" }
 clap = { version = "4.5.3",  features = ["derive", "env"] }
 anyhow = "1.0.71"
 console = "0.15.8"

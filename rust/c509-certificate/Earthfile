@@ -1,0 +1,39 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:feat/faster-rust-tool-install AS rust-ci
+# IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.1.24 AS rust-ci
+# Use when debugging cat-ci locally.
+# IMPORT ../../catalyst-ci/earthly/rust AS rust-ci
+IMPORT .. AS rust-local
+IMPORT ../.. AS repo
+
+# build-wasm: Build wasm binaries for browser integration.
+# TODO:
+#   - Create a `test` target which Executes tests for browsers (chrome/firefox) and also nodejs 
+#       with the built wasm from this target.
+#   - Create a publish target which can publish the library to NPM for both Web and NodeJS.
+#   - Create a simple example web app and nodejs app which uses the library, and can be used to 
+#       test it after publishing.
+build-wasm:
+    FROM rust-local+build
+
+    COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
+    COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.
+
+    # We should be able to use the library in all these places, so build it for them all.
+    FOR target IN web nodejs bundler
+        RUN wasm-pack build c509-certificate --release --target "$target" --out-dir "pkg/$target"
+    END    
+
+    SAVE ARTIFACT ./c509-certificate/pkg /pkg
+
+# js-wasm-package-locally : Generate the wasm package and save it locally
+js-wasm-package-locally:
+    FROM +build-wasm
+
+    SAVE ARTIFACT /pkg AS LOCAL ./pkg
+
+# Test which runs check with all supported host tooling.  Needs qemu or rosetta to run.
+# Only used to validate tooling is working across host toolsets.
+build-all-hosts:
+    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-hosted
