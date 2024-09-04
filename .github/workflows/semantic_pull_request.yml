@@ -12,3 +12,13 @@ jobs:
   build:
     name: Validate PR title
     uses: input-output-hk/catalyst-ci/.github/workflows/semantic_pull_request.yml@master
+    with:
+      scopes: |
+        rust
+        rust/c509-certificate
+        rust/cardano-chain-follower
+        rust/cbork
+        rust/hermes-ipfs
+        dart
+        docs
+        general
