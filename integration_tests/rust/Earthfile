@@ -14,7 +14,7 @@ local-build:
 local-run-preprod:
     ARG --required BENCH_NAME
 
-    FROM +build
+    FROM +local-build
 
     COPY --dir mithril-snapshot-ci+package-preprod-snapshot/snapshot/immutable mithril_snapshot 
     COPY +build/overhead_benchmark overhead_benchmark_bin
