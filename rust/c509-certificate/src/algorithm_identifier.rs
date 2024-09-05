@@ -23,7 +23,7 @@ use crate::oid::C509oid;
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct AlgorithmIdentifier {
     /// A `C509oid`
-    oid: C509oid,
+    c509_oid: C509oid,
     /// An optional parameter string
     param: Option<String>,
 }
@@ -33,18 +33,20 @@ impl AlgorithmIdentifier {
     #[must_use]
     pub fn new(oid: Oid<'static>, param: Option<String>) -> Self {
         Self {
-            oid: C509oid::new(oid),
+            c509_oid: C509oid::new(oid),
             param,
         }
     }
 
     /// Get the OID.
-    pub(crate) fn get_oid(&self) -> Oid<'static> {
-        self.oid.clone().get_oid()
+    #[must_use]
+    pub fn oid(&self) -> &Oid<'static> {
+        self.c509_oid.oid()
     }
 
     /// Get the parameter.
-    pub(crate) fn get_param(&self) -> &Option<String> {
+    #[must_use]
+    pub fn param(&self) -> &Option<String> {
         &self.param
     }
 }
@@ -57,12 +59,12 @@ impl Encode<()> for AlgorithmIdentifier {
             // [ algorithm: ~oid, parameters: bytes ]
             Some(p) => {
                 e.array(2)?;
-                self.oid.encode(e, ctx)?;
+                self.c509_oid.encode(e, ctx)?;
                 e.bytes(p.as_bytes())?;
             },
             // ~oid
             None => {
-                self.oid.encode(e, ctx)?;
+                self.c509_oid.encode(e, ctx)?;
             },
         }
         Ok(())
@@ -82,11 +84,14 @@ impl Decode<'_, ()> for AlgorithmIdentifier {
             let c509_oid = C509oid::decode(d, ctx)?;
             let param =
                 String::from_utf8(d.bytes()?.to_vec()).map_err(minicbor::decode::Error::message)?;
-            Ok(AlgorithmIdentifier::new(c509_oid.get_oid(), Some(param)))
+            Ok(AlgorithmIdentifier::new(
+                c509_oid.oid().clone(),
+                Some(param),
+            ))
             // ~oid
         } else {
             let oid = C509oid::decode(d, ctx)?;
-            Ok(AlgorithmIdentifier::new(oid.get_oid(), None))
+            Ok(AlgorithmIdentifier::new(oid.oid().clone(), None))
         }
     }
 }

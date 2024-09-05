@@ -18,12 +18,6 @@ use crate::attributes::attribute::Attribute;
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct RelativeDistinguishedName(Vec<Attribute>);
 
-impl Default for RelativeDistinguishedName {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl RelativeDistinguishedName {
     /// Create a new instance of `RelativeDistinguishedName` as empty vector.
     #[must_use]
@@ -32,14 +26,21 @@ impl RelativeDistinguishedName {
     }
 
     /// Add an `Attribute` to the `RelativeDistinguishedName`.
-    pub fn add_attr(&mut self, attribute: Attribute) {
+    pub fn add_attribute(&mut self, attribute: Attribute) {
         // RelativeDistinguishedName support pen encoding
         self.0.push(attribute.set_pen_supported());
     }
 
     /// Get the a vector of `Attribute`.
-    pub(crate) fn get_attributes(&self) -> &Vec<Attribute> {
+    #[must_use]
+    pub fn attributes(&self) -> &[Attribute] {
         &self.0
+    }
+}
+
+impl Default for RelativeDistinguishedName {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -87,10 +88,10 @@ impl Decode<'_, ()> for RelativeDistinguishedName {
                 }
                 // The attribute type is included in an array, so divide by 2
                 for _ in 0..len / 2 {
-                    rdn.add_attr(Attribute::decode(d, ctx)?);
+                    rdn.add_attribute(Attribute::decode(d, ctx)?);
                 }
             },
-            _ => rdn.add_attr(Attribute::decode(d, ctx)?),
+            _ => rdn.add_attribute(Attribute::decode(d, ctx)?),
         }
         Ok(rdn)
     }
@@ -115,7 +116,7 @@ mod test_relative_distinguished_name {
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
 
         let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attr(attr);
+        rdn.add_attribute(attr);
         rdn.encode(&mut encoder, &mut ())
             .expect("Failed to encode RDN");
         // Email Address: 0x00
@@ -142,8 +143,8 @@ mod test_relative_distinguished_name {
         attr2.add_value(AttributeValue::Text("example".to_string()));
 
         let mut rdns = RelativeDistinguishedName::new();
-        rdns.add_attr(attr1);
-        rdns.add_attr(attr2);
+        rdns.add_attribute(attr1);
+        rdns.add_attribute(attr2);
 
         rdns.encode(&mut encoder, &mut ())
             .expect("Failed to encode RDN");

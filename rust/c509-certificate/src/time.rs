@@ -16,11 +16,17 @@ impl Time {
     pub fn new(time: i64) -> Self {
         Self(time)
     }
+}
 
-    /// Get the time in i64.
-    #[must_use]
-    pub fn to_i64(&self) -> i64 {
-        self.0
+impl From<i64> for Time {
+    fn from(value: i64) -> Self {
+        Time::new(value)
+    }
+}
+
+impl From<Time> for i64 {
+    fn from(time: Time) -> Self {
+        time.0
     }
 }
 

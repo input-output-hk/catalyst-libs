@@ -38,19 +38,19 @@ impl Extension {
 
     /// Get the value of the `Extension` in `ExtensionValue`.
     #[must_use]
-    pub fn get_value(&self) -> &ExtensionValue {
+    pub fn value(&self) -> &ExtensionValue {
         &self.value
     }
 
     /// Get the critical flag of the `Extension`.
     #[must_use]
-    pub fn get_critical(&self) -> bool {
+    pub fn critical(&self) -> bool {
         self.critical
     }
 
     /// Get the registered OID of the `Extension`.
     #[must_use]
-    pub fn get_registered_oid(&self) -> &C509oidRegistered {
+    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
         &self.registered_oid
     }
 }
@@ -81,7 +81,7 @@ impl Serialize for Extension {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
+            oid: self.registered_oid.c509_oid().oid().to_string(),
             value: self.value.clone(),
             critical: self.critical,
         };
@@ -100,9 +100,9 @@ impl Encode<()> for Extension {
         // Handle CBOR int based on OID mapping
         if let Some(&mapped_oid) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid.c509_oid().oid())
         {
             // Determine encoded OID value based on critical flag
             let encoded_oid = if self.critical {
@@ -113,7 +113,7 @@ impl Encode<()> for Extension {
             e.i16(encoded_oid)?;
         } else {
             // Handle unwrapped CBOR OID or CBOR PEN
-            self.registered_oid.get_c509_oid().encode(e, ctx)?;
+            self.registered_oid.c509_oid().encode(e, ctx)?;
             if self.critical {
                 e.bool(self.critical)?;
             }
@@ -164,7 +164,7 @@ impl Decode<'_, ()> for Extension {
                 let extension_value = ExtensionValue::Bytes(d.bytes()?.to_vec());
 
                 Ok(Extension::new(
-                    c509_oid.get_oid(),
+                    c509_oid.oid().clone(),
                     extension_value,
                     critical,
                 ))

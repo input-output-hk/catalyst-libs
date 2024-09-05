@@ -23,12 +23,6 @@ mod data;
 #[derive(Debug, Clone, PartialEq)]
 pub struct Attributes(Vec<Attribute>);
 
-impl Default for Attributes {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Attributes {
     /// Create a new instance of `Attributes` as empty vector.
     #[must_use]
@@ -36,10 +30,22 @@ impl Attributes {
         Self(Vec::new())
     }
 
+    /// Get a reference to the vector of `Attribute`.
+    #[must_use]
+    pub fn attributes(&self) -> &[Attribute] {
+        &self.0
+    }
+
     /// Add an `Attribute` to the `Attributes`.
     /// and set `Attribute` value to support multiple value.
-    pub fn add_attr(&mut self, attribute: Attribute) {
+    pub fn add_attribute(&mut self, attribute: Attribute) {
         self.0.push(attribute.set_multi_value());
+    }
+}
+
+impl Default for Attributes {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -73,7 +79,7 @@ impl Decode<'_, ()> for Attributes {
 
         for _ in 0..len {
             let attribute = Attribute::decode(d, &mut ())?;
-            attributes.add_attr(attribute);
+            attributes.add_attribute(attribute);
         }
 
         Ok(attributes)
@@ -97,7 +103,7 @@ mod test_attributes {
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
         let mut attributes = Attributes::new();
-        attributes.add_attr(attr);
+        attributes.add_attribute(attr);
         attributes
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode Attributes");

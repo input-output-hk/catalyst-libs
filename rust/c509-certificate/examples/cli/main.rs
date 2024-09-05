@@ -288,22 +288,26 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
     let mut d = minicbor::Decoder::new(&cert);
     let c509 = c509_certificate::c509::C509::decode(&mut d, &mut ())?;
 
-    let tbs_cert = c509.get_tbs_cert();
-    let is_self_signed = tbs_cert.get_c509_certificate_type() == SELF_SIGNED_INT;
+    let tbs_cert = c509.tbs_cert();
+    let is_self_signed = tbs_cert.c509_certificate_type() == SELF_SIGNED_INT;
     let c509_json = C509Json {
         self_signed: is_self_signed,
-        certificate_type: Some(tbs_cert.get_c509_certificate_type()),
-        serial_number: Some(tbs_cert.get_certificate_serial_number().clone()),
-        issuer: Some(extract_relative_distinguished_name(tbs_cert.get_issuer())?),
-        validity_not_before: Some(time_to_string(tbs_cert.get_validity_not_before().to_i64())?),
-        validity_not_after: Some(time_to_string(tbs_cert.get_validity_not_after().to_i64())?),
-        subject: extract_relative_distinguished_name(tbs_cert.get_subject())?,
-        subject_public_key_algorithm: Some(tbs_cert.get_subject_public_key_algorithm().clone()),
+        certificate_type: Some(tbs_cert.c509_certificate_type()),
+        serial_number: Some(tbs_cert.certificate_serial_number().clone()),
+        issuer: Some(extract_relative_distinguished_name(tbs_cert.issuer())?),
+        validity_not_before: Some(time_to_string(
+            tbs_cert.validity_not_before().clone().into(),
+        )?),
+        validity_not_after: Some(time_to_string(
+            tbs_cert.validity_not_after().clone().into(),
+        )?),
+        subject: extract_relative_distinguished_name(tbs_cert.subject())?,
+        subject_public_key_algorithm: Some(tbs_cert.subject_public_key_algorithm().clone()),
         // Return a hex formation of the public key
-        subject_public_key: tbs_cert.get_subject_public_key().encode_hex(),
-        extensions: tbs_cert.get_extensions().clone(),
-        issuer_signature_algorithm: Some(tbs_cert.get_issuer_signature_algorithm().clone()),
-        issuer_signature_value: c509.get_issuer_signature_value().clone(),
+        subject_public_key: tbs_cert.subject_public_key().encode_hex(),
+        extensions: tbs_cert.extensions().clone(),
+        issuer_signature_algorithm: Some(tbs_cert.issuer_signature_algorithm().clone()),
+        issuer_signature_value: c509.issuer_signature_value().clone(),
     };
 
     let data = serde_json::to_string(&c509_json)?;
@@ -318,7 +322,7 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
 
 /// Extract a `RelativeDistinguishedName` from a `Name`.
 fn extract_relative_distinguished_name(name: &Name) -> anyhow::Result<RelativeDistinguishedName> {
-    match name.get_value() {
+    match name.value() {
         NameValue::RelativeDistinguishedName(rdn) => Ok(rdn.clone()),
         _ => Err(anyhow::anyhow!("Expected RelativeDistinguishedName")),
     }

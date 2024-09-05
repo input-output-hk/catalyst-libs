@@ -39,6 +39,18 @@ impl SubjectPubKeyAlgorithm {
             algo_identifier: AlgorithmIdentifier::new(oid, param),
         }
     }
+
+    /// Get the algorithm identifier.
+    #[must_use]
+    pub fn algo_identifier(&self) -> &AlgorithmIdentifier {
+        &self.algo_identifier
+    }
+
+    /// Get the registered OID.
+    #[allow(dead_code)]
+    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
+        &self.registered_oid
+    }
 }
 
 /// Helper struct for deserialize and serialize `SubjectPubKeyAlgorithm`.
@@ -65,8 +77,8 @@ impl Serialize for SubjectPubKeyAlgorithm {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
-            param: self.algo_identifier.get_param().clone(),
+            oid: self.registered_oid.c509_oid().oid().to_string(),
+            param: self.algo_identifier.param().clone(),
         };
         helper.serialize(serializer)
     }
@@ -78,9 +90,9 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if let Some(&i) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid.c509_oid().oid())
         {
             e.i16(i)?;
         } else {
@@ -100,8 +112,8 @@ impl Decode<'_, ()> for SubjectPubKeyAlgorithm {
         } else {
             let algo_identifier = AlgorithmIdentifier::decode(d, ctx)?;
             Ok(SubjectPubKeyAlgorithm::new(
-                algo_identifier.get_oid(),
-                algo_identifier.get_param().clone(),
+                algo_identifier.oid().clone(),
+                algo_identifier.param().clone(),
             ))
         }
     }

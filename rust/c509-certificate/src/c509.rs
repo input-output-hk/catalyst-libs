@@ -26,13 +26,13 @@ impl C509 {
 
     /// Get the `TBSCertificate` of the C509 Certificate.
     #[must_use]
-    pub fn get_tbs_cert(&self) -> &TbsCert {
+    pub fn tbs_cert(&self) -> &TbsCert {
         &self.tbs_cert
     }
 
     /// Get the `IssuerSignatureValue` of the C509 Certificate.
     #[must_use]
-    pub fn get_issuer_signature_value(&self) -> &Option<Vec<u8>> {
+    pub fn issuer_signature_value(&self) -> &Option<Vec<u8>> {
         &self.issuer_signature_value
     }
 }

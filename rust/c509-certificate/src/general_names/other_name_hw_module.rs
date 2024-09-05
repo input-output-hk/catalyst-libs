@@ -29,6 +29,18 @@ impl OtherNameHardwareModuleName {
             hw_serial_num,
         }
     }
+
+    /// Get the c509 OID hardware type.
+    #[must_use]
+    pub fn hw_type(&self) -> &C509oid {
+        &self.hw_type
+    }
+
+    /// Get the hardware serial number.
+    #[must_use]
+    pub fn hw_serial_num(&self) -> &[u8] {
+        &self.hw_serial_num
+    }
 }
 
 impl Encode<()> for OtherNameHardwareModuleName {
@@ -48,7 +60,7 @@ impl<'a> Decode<'a, ()> for OtherNameHardwareModuleName {
         let hw_type = C509oid::decode(d, ctx)?;
         let hw_serial_num = d.bytes()?.to_vec();
         Ok(OtherNameHardwareModuleName::new(
-            hw_type.get_oid(),
+            hw_type.oid().clone(),
             hw_serial_num,
         ))
     }

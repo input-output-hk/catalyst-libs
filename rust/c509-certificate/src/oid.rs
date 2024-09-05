@@ -38,21 +38,21 @@ impl C509oidRegistered {
         }
     }
 
-    /// Is PEN Encoding supported for this OID.
+    /// Get the `C509oid`.
+    #[must_use]
+    pub fn c509_oid(&self) -> &C509oid {
+        &self.oid
+    }
+
+    /// Get whether PEN Encoding supported for this OID.
     /// Depends on each registration table.
     pub(crate) fn pen_encoded(mut self) -> Self {
         self.oid.pen_supported = true;
         self
     }
 
-    /// Get the `C509oid`.
-    #[must_use]
-    pub fn get_c509_oid(&self) -> C509oid {
-        self.oid.clone()
-    }
-
     /// Get the registration table.
-    pub(crate) fn get_table(&self) -> &'static IntegerToOidTable {
+    pub(crate) fn table(&self) -> &'static IntegerToOidTable {
         self.registration_table
     }
 }
@@ -114,8 +114,8 @@ impl C509oid {
 
     /// Get the underlying OID of the `C509oid`
     #[must_use]
-    pub fn get_oid(self) -> Oid<'static> {
-        self.oid.clone()
+    pub fn oid(&self) -> &Oid<'static> {
+        &self.oid
     }
 }
 

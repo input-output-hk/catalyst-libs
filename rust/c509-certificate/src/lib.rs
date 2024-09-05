@@ -104,8 +104,8 @@ pub fn verify(c509: &[u8], public_key: &PublicKey) -> anyhow::Result<()> {
     let c509 = C509::decode(&mut d, &mut ())?;
     let mut encoded_tbs = Vec::new();
     let mut encoder = minicbor::Encoder::new(&mut encoded_tbs);
-    c509.get_tbs_cert().encode(&mut encoder, &mut ())?;
-    let issuer_sig = c509.get_issuer_signature_value().clone().ok_or(anyhow!(
+    c509.tbs_cert().encode(&mut encoder, &mut ())?;
+    let issuer_sig = c509.issuer_signature_value().clone().ok_or(anyhow!(
         "Signature verification failed, No issuer signature"
     ))?;
     public_key.verify(&encoded_tbs, &issuer_sig)
