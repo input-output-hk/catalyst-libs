@@ -3,7 +3,7 @@ VERSION 0.8
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/mithril_snapshot:v3.1.8 AS mithril-snapshot-ci
 IMPORT ../../rust AS rust-workspace
 
-local_build:
+local-build:
     FROM rust-workspace+builder
 
     WORKDIR crates/cardano-chain-follower/testbed
