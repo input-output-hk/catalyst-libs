@@ -3,7 +3,7 @@ VERSION 0.8
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/mithril_snapshot:v3.1.8 AS mithril-snapshot-ci
 IMPORT ../../../.. AS hermes
 
-local_build:
+local-build:
     FROM hermes+builder
 
     WORKDIR crates/cardano-chain-follower/testbed
@@ -14,7 +14,7 @@ local_build:
 local-run-preprod:
     ARG --required BENCH_NAME
 
-    FROM +local_build
+    FROM +local-build
 
     COPY --dir mithril-snapshot-ci+package-preprod-snapshot/snapshot/immutable mithril_snapshot 
     COPY +build/overhead_benchmark overhead_benchmark_bin
