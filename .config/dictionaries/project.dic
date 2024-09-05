@@ -3,6 +3,7 @@ abcz
 ABNF
 abnf
 addrr
+addrs
 adminer
 anypolicy
 apskhem
@@ -11,6 +12,7 @@ asyncio
 Attributes
 auditability
 backpressure
+bech
 bimap
 bindgen
 bkioshn
@@ -63,6 +65,7 @@ encryptor
 Errno
 Eternl
 excalidraw
+extn
 fadvise
 fcntl
 fdatasync
@@ -89,6 +92,7 @@ happ
 hardano
 Hardlink
 hasher
+heaptrack
 hexdigit
 highwater
 hmod

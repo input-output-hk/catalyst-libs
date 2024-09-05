@@ -3,6 +3,7 @@
 use std::{fmt::Debug, sync::Arc};
 
 use cip36::Cip36;
+use cip509::Cip509;
 use dashmap::DashMap;
 use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
 use raw_aux_data::RawAuxData;
@@ -11,6 +12,7 @@ use tracing::error;
 use crate::{utils::usize_from_saturating, Network};
 
 pub mod cip36;
+pub mod cip509;
 mod raw_aux_data;
 
 /// List of all validation errors (as strings) Metadata is considered Valid if this list
@@ -25,6 +27,8 @@ pub enum DecodedMetadataValues {
     // Json(serde_json::Value), // TODO
     /// CIP-36/CIP-15 Catalyst Registration metadata.
     Cip36(Arc<Cip36>),
+    /// CIP-509 RBAC metadata.
+    Cip509(Arc<Cip509>),
 }
 
 /// An individual decoded metadata item.
@@ -45,11 +49,14 @@ pub(crate) struct DecodedMetadata(DashMap<u64, Arc<DecodedMetadataItem>>);
 
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
-    fn new(chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData) -> Self {
+    fn new(
+        chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData, txn_idx: usize,
+    ) -> Self {
         let decoded_metadata = Self(DashMap::new());
 
         // Process each known type of metadata here, and record the decoded result.
         Cip36::decode_and_validate(&decoded_metadata, slot, txn, raw_aux_data, true, chain);
+        Cip509::decode_and_validate(&decoded_metadata, txn, raw_aux_data, txn_idx);
 
         // if !decoded_metadata.0.is_empty() {
         //    debug!("Decoded Metadata final: {decoded_metadata:?}");
@@ -101,7 +108,7 @@ impl DecodedTransaction {
         };
 
         let txn_raw_aux_data = RawAuxData::new(cbor_data);
-        let txn_metadata = DecodedMetadata::new(chain, slot, txn, &txn_raw_aux_data);
+        let txn_metadata = DecodedMetadata::new(chain, slot, txn, &txn_raw_aux_data, txn_idx);
 
         self.raw.insert(txn_idx, txn_raw_aux_data);
         self.decoded.insert(txn_idx, txn_metadata);
