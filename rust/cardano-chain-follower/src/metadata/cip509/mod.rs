@@ -708,7 +708,7 @@ impl Cip509 {
             },
         };
 
-        let index = match u8::try_from(txn_idx) {
+        let index = match u16::try_from(txn_idx) {
             Ok(value) => value,
             Err(e) => {
                 self.validation_failure(
@@ -959,7 +959,7 @@ impl Cip509 {
         &self, output_address: &[u8], validation_report: &mut ValidationReport,
         decoded_metadata: &DecodedMetadata, witness: &TxWitness, txn_idx: usize,
     ) -> Option<bool> {
-        let idx = match u8::try_from(txn_idx) {
+        let idx = match u16::try_from(txn_idx) {
             Ok(value) => value,
             Err(e) => {
                 self.validation_failure(
