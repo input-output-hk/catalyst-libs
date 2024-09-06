@@ -9,15 +9,12 @@ use crate::utils::blake2b_244;
 /// `WitnessMap` type of `DashMap` with
 /// key as [u8; 28] = (`blake2b_244` hash of the public key)
 /// value as `(Bytes, Vec<u8>) = (public key, tx index within the block)`
-#[allow(dead_code)]
-pub(crate) type WitnessMap = DashMap<[u8; 28], (Bytes, Vec<u8>)>;
+pub(crate) type WitnessMap = DashMap<[u8; 28], (Bytes, Vec<u16>)>;
 
 #[derive(Debug)]
-#[allow(dead_code)]
 /// `TxWitness` struct to store the witness data.
 pub(crate) struct TxWitness(WitnessMap);
 
-#[allow(dead_code)]
 impl TxWitness {
     /// Create a new `TxWitness` from a list of `MultiEraTx`.
     pub(crate) fn new(txs: &[MultiEraTx]) -> anyhow::Result<Self> {
@@ -29,9 +26,9 @@ impl TxWitness {
                     if let Some(vkey_witness_set) = witness_set.vkeywitness.clone() {
                         for vkey_witness in vkey_witness_set {
                             let vkey_hash = blake2b_244(&vkey_witness.vkey)?;
-                            let tx_num = u8::try_from(i)?;
+                            let tx_num = u16::try_from(i)?;
                             map.entry(vkey_hash)
-                                .and_modify(|entry: &mut (_, Vec<u8>)| entry.1.push(tx_num))
+                                .and_modify(|entry: &mut (_, Vec<u16>)| entry.1.push(tx_num))
                                 .or_insert((vkey_witness.vkey.clone(), vec![tx_num]));
                         }
                     };
@@ -41,9 +38,9 @@ impl TxWitness {
                     if let Some(vkey_witness_set) = witness_set.vkeywitness.clone() {
                         for vkey_witness in vkey_witness_set {
                             let vkey_hash = blake2b_244(&vkey_witness.vkey)?;
-                            let tx_num = u8::try_from(i)?;
+                            let tx_num = u16::try_from(i)?;
                             map.entry(vkey_hash)
-                                .and_modify(|entry: &mut (_, Vec<u8>)| entry.1.push(tx_num))
+                                .and_modify(|entry: &mut (_, Vec<u16>)| entry.1.push(tx_num))
                                 .or_insert((vkey_witness.vkey.clone(), vec![tx_num]));
                         }
                     }
@@ -53,9 +50,9 @@ impl TxWitness {
                     if let Some(vkey_witness_set) = &witness_set.vkeywitness.clone() {
                         for vkey_witness in vkey_witness_set {
                             let vkey_hash = blake2b_244(&vkey_witness.vkey)?;
-                            let tx_num = u8::try_from(i)?;
+                            let tx_num = u16::try_from(i)?;
                             map.entry(vkey_hash)
-                                .and_modify(|entry: &mut (_, Vec<u8>)| entry.1.push(tx_num))
+                                .and_modify(|entry: &mut (_, Vec<u16>)| entry.1.push(tx_num))
                                 .or_insert((vkey_witness.vkey.clone(), vec![tx_num]));
                         }
                     }
@@ -69,7 +66,7 @@ impl TxWitness {
     }
 
     /// Check whether the public key hash is in the given transaction number.
-    pub(crate) fn check_witness_in_tx(&self, vkey_hash: &[u8; 28], tx_num: u8) -> bool {
+    pub(crate) fn check_witness_in_tx(&self, vkey_hash: &[u8; 28], tx_num: u16) -> bool {
         self.0
             .get(vkey_hash)
             .map_or(false, |entry| entry.1.contains(&tx_num))
