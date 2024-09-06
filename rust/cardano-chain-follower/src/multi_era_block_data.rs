@@ -158,7 +158,7 @@ impl MultiEraBlock {
     /// # Errors
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
-    pub fn new(
+    pub(crate) fn new(
         chain: Network, raw_data: Vec<u8>, previous: &Point, fork: u64,
     ) -> anyhow::Result<Self, Error> {
         // This lets us reliably count any bad block arising from deserialization.
@@ -170,11 +170,14 @@ impl MultiEraBlock {
     }
 
     /// Remake the block on a new fork.
-    pub fn set_fork(&mut self, fork: u64) {
+    pub(crate) fn set_fork(&mut self, fork: u64) {
         self.fork = fork;
     }
 
     /// Decodes the data into a multi-era block.
+    ///
+    /// # Returns
+    /// The decoded block data, which can easily be processed by a consumer.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
     pub fn decode(&self) -> &pallas::ledger::traverse::MultiEraBlock {
@@ -182,6 +185,9 @@ impl MultiEraBlock {
     }
 
     /// Decodes the data into a multi-era block.
+    ///
+    /// # Returns
+    /// The raw byte data of the block.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
     pub fn raw(&self) -> &Vec<u8> {
@@ -189,36 +195,68 @@ impl MultiEraBlock {
     }
 
     /// Returns the block point of this block.
+    ///
+    /// # Returns
+    /// The block point of this block.
     #[must_use]
     pub fn point(&self) -> Point {
         self.inner.point.clone()
     }
 
     /// Returns the block point of the previous block.
+    ///
+    /// # Returns
+    /// The previous blocks `Point`
     #[must_use]
     pub fn previous(&self) -> Point {
         self.inner.previous.clone()
     }
 
     /// Is the block data immutable on-chain.
+    ///
+    /// Immutable blocks are by-definition those that exist in the Mithril Snapshot
+    /// (Immutable Database) of the Node.
+    ///
+    /// # Returns
+    /// `true` if the block is immutable, `false` otherwise.
     #[must_use]
     pub fn immutable(&self) -> bool {
         self.fork == 0
     }
 
-    /// Is the block data immutable on-chain.
+    /// What fork is the block from.
+    ///
+    /// The fork is a synthetic number that represents how many rollbacks have been
+    /// detected in the running chain.  The fork is:
+    /// - 0 - for all immutable data;
+    /// - 1 - for any data read from the blockchain during a *backfill* on initial sync
+    /// - 2+ - for each subsequent rollback detected while reading live blocks.
+    ///
+    /// # Returns
+    /// The fork the block was found on.
     #[must_use]
     pub fn fork(&self) -> u64 {
         self.fork
     }
 
     /// What chain was the block from
+    ///
+    /// # Returns
+    /// - The chain that this block originated on.
     #[must_use]
     pub fn chain(&self) -> Network {
         self.inner.chain
     }
 
     /// Get The Decoded Metadata fora a transaction and known label from the block
+    ///
+    /// # Parameters
+    /// - `txn_idx` - Index of the Transaction in the Block
+    /// - `label` - The label of the transaction
+    ///
+    /// # Returns
+    /// - Metadata for the given label in the transaction.
+    /// - Or None if the label requested isn't present.
     #[must_use]
     pub fn txn_metadata(
         &self, txn_idx: usize, label: u64,
@@ -233,9 +271,22 @@ impl MultiEraBlock {
     }
 
     /// Returns the witness map for the block.
-    #[allow(dead_code)]
     pub(crate) fn witness_map(&self) -> Option<&TxWitness> {
         self.inner.witness_map.as_ref()
+    }
+
+    /// If the Witness exists for a given transaction then return its public key.
+    #[must_use]
+    pub fn witness_for_tx(&self, vkey_hash: &[u8; 28], tx_num: u16) -> Option<Vec<u8>> {
+        if let Some(witnesses) = self.witness_map() {
+            if witnesses.check_witness_in_tx(vkey_hash, tx_num) {
+                if let Some(pub_key) = witnesses.get_witness_pk_addr(vkey_hash) {
+                    return Some(pub_key.into());
+                }
+            }
+        }
+
+        None
     }
 }
 
