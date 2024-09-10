@@ -12,8 +12,13 @@ use minicbor::{data::Tag, decode, encode::Write, Decode, Decoder, Encode, Encode
 use oid_registry::Oid;
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::tables::IntegerToOidTable;
-
+use crate::{
+    helper::{
+        decode::{decode_bytes, decode_datatype, decode_tag},
+        encode::{encode_bytes, encode_tag},
+    },
+    tables::IntegerToOidTable,
+};
 /// IANA Private Enterprise Number (PEN) OID prefix.
 const PEN_PREFIX: Oid<'static> = oid!(1.3.6 .1 .4 .1);
 
@@ -135,7 +140,7 @@ impl Encode<()> for C509oid {
         // Check if PEN encoding is supported and the OID starts with the PEN prefix.
         if self.pen_supported && self.oid.starts_with(&PEN_PREFIX) {
             // Set the CBOR tag.
-            e.tag(Tag::new(OID_PEN_TAG))?;
+            encode_tag(e, "C509 OID", Tag::new(OID_PEN_TAG))?;
             // Convert OID originally store as [u8] to [u64]
             // This process is necessary to get the correct OID
             // For example given - 1.3.6 .1 .4 .1.4.999
@@ -163,10 +168,10 @@ impl Encode<()> for C509oid {
                     ))?;
             let relative_oid = Oid::from_relative(oid_slice)
                 .map_err(|_| minicbor::encode::Error::message("Failed to get a relative OID"))?;
-            return e.bytes(relative_oid.as_bytes())?.ok();
+            return encode_bytes(e, "C509 OID", relative_oid.as_bytes());
         }
         let oid_bytes = self.oid.as_bytes();
-        e.bytes(oid_bytes)?.ok()
+        encode_bytes(e, "C509 OID", oid_bytes)
     }
 }
 
@@ -181,19 +186,21 @@ impl Decode<'_, ()> for C509oid {
     /// A C509oid instance.
     /// If the decoding fails, it will return an error.
     fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        if (minicbor::data::Type::Tag == d.datatype()?) && (Tag::new(OID_PEN_TAG) == d.tag()?) {
-            let oid_bytes = d.bytes()?;
+        if (minicbor::data::Type::Tag == decode_datatype(d, "C509 OID")?)
+            && (Tag::new(OID_PEN_TAG) == decode_tag(d, "C509 OID")?)
+        {
+            let oid_bytes = decode_bytes(d, "C509 OID PEN")?;
             // raw_oid contains the whole OID which stored in bytes
             let mut raw_oid = Vec::new();
             raw_oid.extend_from_slice(PEN_PREFIX.as_bytes());
-            raw_oid.extend_from_slice(oid_bytes);
+            raw_oid.extend_from_slice(&oid_bytes);
             // Convert the raw_oid to Oid
             let oid = Oid::new(raw_oid.into());
             return Ok(C509oid::new(oid).pen_encoded());
         }
         // Not a PEN Relative OID, so treat as a normal OID
-        let oid_bytes = d.bytes()?;
-        let oid = Oid::new(oid_bytes.to_owned().into());
+        let oid_bytes = decode_bytes(d, "C509 OID")?;
+        let oid = Oid::new(oid_bytes.into());
         Ok(C509oid::new(oid))
     }
 }

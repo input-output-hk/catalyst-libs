@@ -3,6 +3,11 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
+use crate::helper::{
+    decode::{decode_datatype, decode_i64, decode_null},
+    encode::{encode_i64, encode_null},
+};
+
 /// A struct representing a time where it accept seconds since the Unix epoch.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Time(i64);
@@ -35,9 +40,9 @@ impl Encode<()> for Time {
         &self, e: &mut Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0 == NO_EXP_DATE {
-            e.null()?;
+            encode_null(e, "Time")?;
         } else {
-            e.i64(self.0)?;
+            encode_i64(e, "Time", self.0)?;
         }
         Ok(())
     }
@@ -45,7 +50,7 @@ impl Encode<()> for Time {
 
 impl Decode<'_, ()> for Time {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "Time")? {
             minicbor::data::Type::U8
             | minicbor::data::Type::I8
             | minicbor::data::Type::U16
@@ -54,11 +59,11 @@ impl Decode<'_, ()> for Time {
             | minicbor::data::Type::I32
             | minicbor::data::Type::U64
             | minicbor::data::Type::I64 => {
-                let time = d.i64()?;
+                let time = decode_i64(d, "Time")?;
                 Ok(Time::new(time))
             },
             minicbor::data::Type::Null => {
-                d.null()?;
+                decode_null(d, "Time")?;
                 Ok(Time::new(NO_EXP_DATE))
             },
             _ => Err(minicbor::decode::Error::message("Invalid type for Time")),

@@ -16,7 +16,14 @@ use data::{get_oid_from_int, SUBJECT_PUB_KEY_ALGO_LOOKUP};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::{algorithm_identifier::AlgorithmIdentifier, oid::C509oidRegistered};
+use crate::{
+    algorithm_identifier::AlgorithmIdentifier,
+    helper::{
+        decode::{decode_datatype, decode_i16},
+        encode::encode_i16,
+    },
+    oid::C509oidRegistered,
+};
 
 /// A struct represents the `SubjectPubKeyAlgorithm`
 #[derive(Debug, Clone, PartialEq)]
@@ -94,7 +101,7 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
             .get_map()
             .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            e.i16(i)?;
+            encode_i16(e, "Subject public key algorithm", i)?;
         } else {
             AlgorithmIdentifier::encode(&self.algo_identifier, e, ctx)?;
         }
@@ -105,8 +112,8 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
 impl Decode<'_, ()> for SubjectPubKeyAlgorithm {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Check u8 for 0 - 28
-        if d.datatype()? == minicbor::data::Type::U8 {
-            let i = d.i16()?;
+        if decode_datatype(d, "Subject public key algotithm")? == minicbor::data::Type::U8 {
+            let i = decode_i16(d, "Subject public key algorithm")?;
             let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
             Ok(Self::new(oid, None))
         } else {

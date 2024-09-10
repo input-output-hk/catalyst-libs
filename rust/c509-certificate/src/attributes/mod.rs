@@ -16,6 +16,8 @@
 use attribute::Attribute;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 
+use crate::helper::encode::encode_array_len;
+
 pub mod attribute;
 mod data;
 
@@ -58,7 +60,7 @@ impl Encode<()> for Attributes {
                 "Attributes should not be empty",
             ));
         }
-        e.array(self.0.len() as u64)?;
+        encode_array_len(e, "Attributes", self.0.len() as u64)?;
         for attribute in &self.0 {
             attribute.encode(e, ctx)?;
         }

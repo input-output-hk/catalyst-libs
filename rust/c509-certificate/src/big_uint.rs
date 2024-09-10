@@ -8,6 +8,7 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
+use crate::helper::{decode::decode_bytes, encode::encode_bytes};
 /// A struct representing an unwrapped CBOR unsigned bignum.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -45,7 +46,7 @@ impl Encode<()> for UnwrappedBigUint {
             .copied()
             .collect::<Vec<u8>>();
 
-        e.bytes(&significant_bytes)?;
+        encode_bytes(e, "Unwrapped big uint", &significant_bytes)?;
         Ok(())
     }
 }
@@ -53,8 +54,7 @@ impl Encode<()> for UnwrappedBigUint {
 impl Decode<'_, ()> for UnwrappedBigUint {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Turn bytes into u64
-        let b = d
-            .bytes()?
+        let b = decode_bytes(d, "Unwrapped big uint")?
             .iter()
             .fold(0, |acc, &b| (acc << 8) | u64::from(b));
         Ok(UnwrappedBigUint::new(b))

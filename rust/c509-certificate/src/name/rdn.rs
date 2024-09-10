@@ -8,8 +8,13 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::attributes::attribute::Attribute;
-
+use crate::{
+    attributes::attribute::Attribute,
+    helper::{
+        decode::{decode_array_len, decode_datatype},
+        encode::encode_array_len,
+    },
+};
 /// A struct represents a Relative Distinguished Name containing vector of `Attribute`.
 ///
 /// ```cddl
@@ -62,7 +67,7 @@ impl Encode<()> for RelativeDistinguishedName {
             self.0.first().encode(e, ctx)?;
         } else {
             // The attribute type should be included in array too
-            e.array(self.0.len() as u64 * 2)?;
+            encode_array_len(e, "Relative Distinguished Name", self.0.len() as u64 * 2)?;
             for attr in &self.0 {
                 attr.encode(e, ctx)?;
             }
@@ -75,11 +80,9 @@ impl Decode<'_, ()> for RelativeDistinguishedName {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let mut rdn = RelativeDistinguishedName::new();
 
-        match d.datatype()? {
+        match decode_datatype(d, "Relative Distinguished Name")? {
             minicbor::data::Type::Array => {
-                let len = d.array()?.ok_or(minicbor::decode::Error::message(
-                    "Failed to get array length for relative distinguished name",
-                ))?;
+                let len = decode_array_len(d, "Relative Distinguished Name")?;
                 // Should contain >= 1 attribute
                 if len == 0 {
                     return Err(minicbor::decode::Error::message(

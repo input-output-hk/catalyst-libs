@@ -13,7 +13,14 @@ use super::{
     data::{get_gn_from_int, get_gn_value_type_from_int, get_int_from_gn},
     other_name_hw_module::OtherNameHardwareModuleName,
 };
-use crate::{name::Name, oid::C509oid};
+use crate::{
+    helper::{
+        decode::{decode_bytes, decode_datatype, decode_i16, decode_string},
+        encode::{encode_bytes, encode_i16, encode_str},
+    },
+    name::Name,
+    oid::C509oid,
+};
 
 /// A struct represents a `GeneralName`.
 /// ```cddl
@@ -54,7 +61,7 @@ impl Encode<()> for GeneralName {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // Encode GeneralNameType as int
         let i = get_int_from_gn(self.gn_type).map_err(minicbor::encode::Error::message)?;
-        e.i16(i)?;
+        encode_i16(e, "General Name", i)?;
         // Encode GeneralNameValue as its type
         self.value.encode(e, ctx)?;
         Ok(())
@@ -63,8 +70,10 @@ impl Encode<()> for GeneralName {
 
 impl Decode<'_, ()> for GeneralName {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        if minicbor::data::Type::U8 == d.datatype()? || minicbor::data::Type::I8 == d.datatype()? {
-            let i = d.i16()?;
+        if decode_datatype(d, "General Name")? == minicbor::data::Type::U8
+            || decode_datatype(d, "General Name")? == minicbor::data::Type::I8
+        {
+            let i = decode_i16(d, "General Name")?;
             let gn = get_gn_from_int(i).map_err(minicbor::decode::Error::message)?;
             let value_type =
                 get_gn_value_type_from_int(i).map_err(minicbor::decode::Error::message)?;
@@ -149,10 +158,10 @@ impl Encode<()> for GeneralNameValue {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             GeneralNameValue::Text(value) => {
-                e.str(value)?;
+                encode_str(e, "General Name value", value)?;
             },
             GeneralNameValue::Bytes(value) => {
-                e.bytes(value)?;
+                encode_bytes(e, "General Name value", value)?;
             },
             GeneralNameValue::Oid(value) => {
                 value.encode(e, ctx)?;
@@ -178,11 +187,11 @@ where C: GeneralNameValueTrait + Debug
     fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
             GeneralNameValueType::Text => {
-                let value = d.str()?.to_string();
+                let value = decode_string(d, "General Name value")?;
                 Ok(GeneralNameValue::Text(value))
             },
             GeneralNameValueType::Bytes => {
-                let value = d.bytes()?.to_vec();
+                let value = decode_bytes(d, "General Name value")?;
                 Ok(GeneralNameValue::Bytes(value))
             },
             GeneralNameValueType::Oid => {

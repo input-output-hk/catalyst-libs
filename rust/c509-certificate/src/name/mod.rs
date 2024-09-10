@@ -23,8 +23,13 @@ use rdn::RelativeDistinguishedName;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::attributes::attribute::{Attribute, AttributeValue};
-
+use crate::{
+    attributes::attribute::{Attribute, AttributeValue},
+    helper::{
+        decode::{decode_bytes, decode_datatype, decode_string},
+        encode::{encode_bytes, encode_str},
+    },
+};
 /// OID of `CommonName` attribute.
 const COMMON_NAME_OID: Oid<'static> = oid!(2.5.4 .3);
 /// EUI-64 prefix.
@@ -114,10 +119,10 @@ impl Encode<()> for NameValue {
                 }
             },
             NameValue::Text(text) => {
-                e.str(text)?;
+                encode_str(e, "Name", text)?;
             },
             NameValue::Bytes(bytes) => {
-                e.bytes(bytes)?;
+                encode_bytes(e, "Name", bytes)?;
             },
         }
         Ok(())
@@ -126,15 +131,19 @@ impl Encode<()> for NameValue {
 
 impl Decode<'_, ()> for NameValue {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "Name")? {
             minicbor::data::Type::Array => {
                 Ok(NameValue::RelativeDistinguishedName(
                     RelativeDistinguishedName::decode(d, ctx)?,
                 ))
             },
             // If Name is a text string, the attribute is a CommonName
-            minicbor::data::Type::String => Ok(create_rdn_with_cn_attr(d.str()?.to_string())),
-            minicbor::data::Type::Bytes => decode_bytes(d),
+            minicbor::data::Type::String => {
+                Ok(create_rdn_with_cn_attr(
+                    decode_string(d, "Name")?.to_string(),
+                ))
+            },
+            minicbor::data::Type::Bytes => decode_bytes_helper(d),
             _ => {
                 Err(minicbor::decode::Error::message(
                     "Name must be an array, text or bytes",
@@ -161,7 +170,11 @@ fn encode_cn_value<W: Write>(
             // string, prefixed with an initial byte set to '00'
             if hex_regex.is_match(s) && s.len() % 2 == 0 {
                 let decoded_bytes = hex::decode(s).map_err(minicbor::encode::Error::message)?;
-                e.bytes(&[&[HEX_PREFIX], &decoded_bytes[..]].concat())?;
+                encode_bytes(
+                    e,
+                    "Common Name hex",
+                    &[&[HEX_PREFIX], &decoded_bytes[..]].concat(),
+                )?;
 
             // An EUI-64 mapped from a 48-bit MAC address (i.e., of the form
             // "HH-HH-HH-FF-FE-HH-HH-HH) is encoded as a CBOR byte string prefixed with an
@@ -180,7 +193,11 @@ fn encode_cn_value<W: Write>(
                     .ok_or(minicbor::encode::Error::message(
                         "Failed to get MAC EUI-64 bytes index 5 to 6",
                     ))?;
-                e.bytes(&[&[EUI64_PREFIX], chunk2, chunk3].concat())?;
+                encode_bytes(
+                    e,
+                    "Common Name EUI-64 MAC",
+                    &[&[EUI64_PREFIX], chunk2, chunk3].concat(),
+                )?;
 
             // an EUI-64 of the form "HH-HH-HH-HH-HH-HH-HH-HH" where 'H'
             // is one of the symbols '0'–'9' or 'A'–'F' it is encoded as a
@@ -190,9 +207,13 @@ fn encode_cn_value<W: Write>(
                 let clean_name = s.replace('-', "");
                 let decoded_bytes =
                     hex::decode(clean_name).map_err(minicbor::encode::Error::message)?;
-                e.bytes(&[&[EUI64_PREFIX], &decoded_bytes[..]].concat())?;
+                encode_bytes(
+                    e,
+                    "Common Name EUI-64",
+                    &[&[EUI64_PREFIX], &decoded_bytes[..]].concat(),
+                )?;
             } else {
-                e.str(s)?;
+                encode_str(e, "Common Name", s)?;
             }
         },
         AttributeValue::Bytes(_) => {
@@ -213,8 +234,8 @@ fn formatted_eui_bytes(data: &[u8]) -> String {
 }
 
 /// Decode bytes.
-fn decode_bytes(d: &mut Decoder<'_>) -> Result<NameValue, minicbor::decode::Error> {
-    let bytes = d.bytes()?;
+fn decode_bytes_helper(d: &mut Decoder<'_>) -> Result<NameValue, minicbor::decode::Error> {
+    let bytes = decode_bytes(d, "Name")?;
 
     let first_i = bytes.first().ok_or(minicbor::decode::Error::message(
         "Failed to get the first index of bytes",
@@ -223,10 +244,10 @@ fn decode_bytes(d: &mut Decoder<'_>) -> Result<NameValue, minicbor::decode::Erro
     // Bytes prefix
     match *first_i {
         // 0x00 for hex
-        HEX_PREFIX => decode_hex_cn_bytes(bytes),
+        HEX_PREFIX => decode_hex_cn_bytes(&bytes),
         // 0x01 for EUI
-        EUI64_PREFIX => decode_eui_cn_bytes(bytes),
-        _ => Ok(NameValue::Bytes(bytes.to_vec())),
+        EUI64_PREFIX => decode_eui_cn_bytes(&bytes),
+        _ => Ok(NameValue::Bytes(bytes)),
     }
 }
 

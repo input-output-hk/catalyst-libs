@@ -16,8 +16,13 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
 use super::data::{get_oid_from_int, ATTRIBUTES_LOOKUP};
-use crate::oid::{C509oid, C509oidRegistered};
-
+use crate::{
+    helper::{
+        decode::{decode_array_len, decode_bytes, decode_datatype, decode_i16, decode_string},
+        encode::{encode_array_len, encode_bytes, encode_i16, encode_str},
+    },
+    oid::{C509oid, C509oidRegistered},
+};
 /// A struct of C509 `Attribute`
 #[derive(Debug, Clone, PartialEq)]
 pub struct Attribute {
@@ -114,7 +119,7 @@ impl Encode<()> for Attribute {
             .get_map()
             .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            e.i16(oid)?;
+            encode_i16(e, "Attribute", oid)?;
         } else {
             // Encode unwrapped CBOR OID or CBOR PEN
             self.registered_oid.c509_oid().encode(e, ctx)?;
@@ -127,7 +132,7 @@ impl Encode<()> for Attribute {
 
         // If multi-value attributes, encode it as array
         if self.multi_value {
-            e.array(self.value.len() as u64)?;
+            encode_array_len(e, "Attribute", self.value.len() as u64)?;
         }
 
         // Encode each value in the attribute
@@ -142,8 +147,8 @@ impl Encode<()> for Attribute {
 impl Decode<'_, ()> for Attribute {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Handle CBOR int
-        let mut attr = if d.datatype()? == minicbor::data::Type::U8 {
-            let i = d.i16()?;
+        let mut attr = if decode_datatype(d, "Attribute")? == minicbor::data::Type::U8 {
+            let i = decode_i16(d, "Attribute")?;
             let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
             Attribute::new(oid.clone())
         } else {
@@ -153,11 +158,9 @@ impl Decode<'_, ()> for Attribute {
         };
 
         // Handle attribute value
-        if d.datatype()? == minicbor::data::Type::Array {
+        if decode_datatype(d, "Attribute")? == minicbor::data::Type::Array {
             // When multi-value attribute
-            let len = d.array()?.ok_or_else(|| {
-                minicbor::decode::Error::message("Failed to get array length for attribute value")
-            })?;
+            let len = decode_array_len(d, "Attribute")?;
 
             if len == 0 {
                 return Err(minicbor::decode::Error::message("Attribute value is empty"));
@@ -193,8 +196,8 @@ impl Encode<()> for AttributeValue {
         &self, e: &mut Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            AttributeValue::Text(text) => e.str(text)?,
-            AttributeValue::Bytes(bytes) => e.bytes(bytes)?,
+            AttributeValue::Text(text) => encode_str(e, "Attribute value", text)?,
+            AttributeValue::Bytes(bytes) => encode_bytes(e, "Attribute value", bytes)?,
         };
         Ok(())
     }
@@ -202,9 +205,13 @@ impl Encode<()> for AttributeValue {
 
 impl Decode<'_, ()> for AttributeValue {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
-            minicbor::data::Type::String => Ok(AttributeValue::Text(d.str()?.to_string())),
-            minicbor::data::Type::Bytes => Ok(AttributeValue::Bytes(d.bytes()?.to_vec())),
+        match decode_datatype(d, "Attribute value")? {
+            minicbor::data::Type::String => {
+                Ok(AttributeValue::Text(decode_string(d, "Attribute value")?))
+            },
+            minicbor::data::Type::Bytes => {
+                Ok(AttributeValue::Bytes(decode_bytes(d, "Attribute value")?))
+            },
             _ => {
                 Err(minicbor::decode::Error::message(
                     "Invalid AttributeValue, value should be either String or Bytes",

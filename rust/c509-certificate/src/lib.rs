@@ -46,6 +46,7 @@ pub mod big_uint;
 pub mod c509;
 pub mod extensions;
 pub mod general_names;
+mod helper;
 pub mod issuer_sig_algo;
 pub mod name;
 pub mod oid;

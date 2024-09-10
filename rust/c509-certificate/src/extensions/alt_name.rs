@@ -4,11 +4,16 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::general_names::{
-    general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
-    GeneralNames,
+use crate::{
+    general_names::{
+        general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
+        GeneralNames,
+    },
+    helper::{
+        decode::{decode_datatype, decode_string},
+        encode::encode_str,
+    },
 };
-
 /// Alternative Name extension.
 /// Can be interpreted as a `GeneralNames / text`
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -72,7 +77,7 @@ impl Encode<()> for GeneralNamesOrText {
                 }
             },
             GeneralNamesOrText::Text(text) => {
-                e.str(text)?;
+                encode_str(e, "General name - Alternative name", text)?;
             },
         }
         Ok(())
@@ -81,12 +86,12 @@ impl Encode<()> for GeneralNamesOrText {
 
 impl Decode<'_, ()> for GeneralNamesOrText {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "General name - Alternative name")? {
             // If it is a string it is a GeneralNames with only 1 DNSName
             minicbor::data::Type::String => {
                 let gn_dns = GeneralName::new(
                     GeneralNameTypeRegistry::DNSName,
-                    GeneralNameValue::Text(d.str()?.to_string()),
+                    GeneralNameValue::Text(decode_string(d, "General name - Alternative name")?),
                 );
                 let mut gns = GeneralNames::new();
                 gns.add_general_name(gn_dns);

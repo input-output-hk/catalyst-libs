@@ -4,8 +4,16 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    big_uint::UnwrappedBigUint, extensions::Extensions, issuer_sig_algo::IssuerSignatureAlgorithm,
-    name::Name, subject_pub_key_algo::SubjectPubKeyAlgorithm, time::Time,
+    big_uint::UnwrappedBigUint,
+    extensions::Extensions,
+    helper::{
+        decode::{decode_bytes, decode_u8},
+        encode::{encode_bytes, encode_u8},
+    },
+    issuer_sig_algo::IssuerSignatureAlgorithm,
+    name::Name,
+    subject_pub_key_algo::SubjectPubKeyAlgorithm,
+    time::Time,
 };
 
 /// A struct represents a To Be Signed Certificate (TBS Certificate).
@@ -123,14 +131,14 @@ impl Encode<()> for TbsCert {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.u8(self.c509_certificate_type)?;
+        encode_u8(e, "Certificate type", self.c509_certificate_type)?;
         self.certificate_serial_number.encode(e, ctx)?;
         self.issuer.encode(e, ctx)?;
         self.validity_not_before.encode(e, ctx)?;
         self.validity_not_after.encode(e, ctx)?;
         self.subject.encode(e, ctx)?;
         self.subject_public_key_algorithm.encode(e, ctx)?;
-        e.bytes(&self.subject_public_key)?;
+        encode_bytes(e, "Subject public key", &self.subject_public_key)?;
         self.extensions.encode(e, ctx)?;
         self.issuer_signature_algorithm.encode(e, ctx)?;
         Ok(())
@@ -139,14 +147,14 @@ impl Encode<()> for TbsCert {
 
 impl Decode<'_, ()> for TbsCert {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let cert_type = d.u8()?;
+        let cert_type = decode_u8(d, "Certificate type")?;
         let serial_number = UnwrappedBigUint::decode(d, ctx)?;
         let issuer = Name::decode(d, ctx)?;
         let not_before = Time::decode(d, ctx)?;
         let not_after = Time::decode(d, ctx)?;
         let subject = Name::decode(d, ctx)?;
         let subject_public_key_algorithm = SubjectPubKeyAlgorithm::decode(d, ctx)?;
-        let subject_public_key = d.bytes()?;
+        let subject_public_key = decode_bytes(d, "Subject public key")?;
         let extensions = Extensions::decode(d, ctx)?;
         let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;
 
@@ -158,7 +166,7 @@ impl Decode<'_, ()> for TbsCert {
             not_after,
             subject,
             subject_public_key_algorithm,
-            subject_public_key.to_vec(),
+            subject_public_key,
             extensions,
             issuer_signature_algorithm,
         ))
