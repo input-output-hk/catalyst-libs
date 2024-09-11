@@ -103,6 +103,9 @@ struct C509Json {
     /// Optional serial number of the certificate,
     /// if not provided, a random number will be generated.
     serial_number: Option<UnwrappedBigUint>,
+    /// Optional issuer signature algorithm of the certificate,
+    /// if not provided, set to Ed25519.
+    issuer_signature_algorithm: Option<IssuerSignatureAlgorithm>,
     /// Optional issuer of the certificate,
     /// if not provided, issuer is the same as subject.
     issuer: Option<Attributes>,
@@ -122,9 +125,6 @@ struct C509Json {
     subject_public_key: String,
     /// Extensions of the certificate.
     extensions: Extensions,
-    /// Optional issuer signature algorithm of the certificate,
-    /// if not provided, set to Ed25519.
-    issuer_signature_algorithm: Option<IssuerSignatureAlgorithm>,
     /// Optional issuer signature value of the certificate.
     #[serde(skip_deserializing)]
     issuer_signature_value: Option<Vec<u8>>,
@@ -181,18 +181,18 @@ fn generate(
     let tbs = TbsCert::new(
         c509_json.certificate_type.unwrap_or(SELF_SIGNED_INT),
         serial_number,
+        c509_json
+            .issuer_signature_algorithm
+            .unwrap_or(IssuerSignatureAlgorithm::new(key_type.0.clone(), ED25519.1)),
         Some(Name::new(NameValue::Attributes(issuer))),
         Time::new(not_before),
         Time::new(not_after),
         Name::new(NameValue::Attributes(c509_json.subject)),
         c509_json
             .subject_public_key_algorithm
-            .unwrap_or(SubjectPubKeyAlgorithm::new(key_type.0.clone(), key_type.1)),
+            .unwrap_or(SubjectPubKeyAlgorithm::new(key_type.0, key_type.1)),
         public_key.to_bytes(),
         c509_json.extensions.clone(),
-        c509_json
-            .issuer_signature_algorithm
-            .unwrap_or(IssuerSignatureAlgorithm::new(key_type.0, ED25519.1)),
     );
 
     let cert = c509_certificate::generate(&tbs, private_key)?;
@@ -257,13 +257,15 @@ fn get_key_type(key_type: &Option<String>) -> anyhow::Result<(Oid<'static>, Opti
 /// Parse date string to u64.
 fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u64, anyhow::Error> {
     match date_option {
-        Some(date) => DateTime::parse_from_rfc3339(&date)
-            .map(|dt| {
-                dt.timestamp()
-                    .try_into()
-                    .map_err(|_| anyhow::anyhow!("Timestamp is invalid"))
-            })?
-            .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",))),
+        Some(date) => {
+            DateTime::parse_from_rfc3339(&date)
+                .map(|dt| {
+                    dt.timestamp()
+                        .try_into()
+                        .map_err(|_| anyhow::anyhow!("Timestamp is invalid"))
+                })?
+                .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",)))
+        },
         None => Ok(default),
     }
 }
@@ -301,6 +303,7 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
         self_signed: is_self_signed,
         certificate_type: Some(tbs_cert.get_c509_certificate_type()),
         serial_number: Some(tbs_cert.get_certificate_serial_number().clone()),
+        issuer_signature_algorithm: Some(tbs_cert.get_issuer_signature_algorithm().clone()),
         issuer: Some(extract_relative_distinguished_name(tbs_cert.get_issuer())?),
         validity_not_before: Some(time_to_string(tbs_cert.get_validity_not_before().to_u64())?),
         validity_not_after: Some(time_to_string(tbs_cert.get_validity_not_after().to_u64())?),
@@ -309,7 +312,6 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
         // Return a hex formation of the public key
         subject_public_key: tbs_cert.get_subject_public_key().encode_hex(),
         extensions: tbs_cert.get_extensions().clone(),
-        issuer_signature_algorithm: Some(tbs_cert.get_issuer_signature_algorithm().clone()),
         issuer_signature_value: c509.get_issuer_signature_value().clone(),
     };
 

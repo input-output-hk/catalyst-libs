@@ -16,6 +16,8 @@ pub struct TbsCert {
     c509_certificate_type: u8,
     /// Serial number of the certificate.
     certificate_serial_number: UnwrappedBigUint,
+    /// Issuer Signature Algorithm
+    issuer_signature_algorithm: IssuerSignatureAlgorithm,
     /// Issuer
     issuer: Name,
     /// Validity not before.
@@ -30,8 +32,6 @@ pub struct TbsCert {
     subject_public_key: Vec<u8>,
     /// Extensions
     extensions: Extensions,
-    /// Issuer Signature Algorithm
-    issuer_signature_algorithm: IssuerSignatureAlgorithm,
 }
 
 impl TbsCert {
@@ -41,13 +41,15 @@ impl TbsCert {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         c509_certificate_type: u8, certificate_serial_number: UnwrappedBigUint,
-        issuer: Option<Name>, validity_not_before: Time, validity_not_after: Time, subject: Name,
+        issuer_signature_algorithm: IssuerSignatureAlgorithm, issuer: Option<Name>,
+        validity_not_before: Time, validity_not_after: Time, subject: Name,
         subject_public_key_algorithm: SubjectPubKeyAlgorithm, subject_public_key: Vec<u8>,
-        extensions: Extensions, issuer_signature_algorithm: IssuerSignatureAlgorithm,
+        extensions: Extensions,
     ) -> Self {
         Self {
             c509_certificate_type,
             certificate_serial_number,
+            issuer_signature_algorithm,
             issuer: issuer.unwrap_or_else(|| subject.clone()),
             validity_not_before,
             validity_not_after,
@@ -55,7 +57,6 @@ impl TbsCert {
             subject_public_key_algorithm,
             subject_public_key,
             extensions,
-            issuer_signature_algorithm,
         }
     }
 
@@ -69,6 +70,12 @@ impl TbsCert {
     #[must_use]
     pub fn get_certificate_serial_number(&self) -> &UnwrappedBigUint {
         &self.certificate_serial_number
+    }
+
+    /// Get the issuer signature algorithm.
+    #[must_use]
+    pub fn get_issuer_signature_algorithm(&self) -> &IssuerSignatureAlgorithm {
+        &self.issuer_signature_algorithm
     }
 
     /// Get the issuer.
@@ -112,12 +119,6 @@ impl TbsCert {
     pub fn get_extensions(&self) -> &Extensions {
         &self.extensions
     }
-
-    /// Get the issuer signature algorithm.
-    #[must_use]
-    pub fn get_issuer_signature_algorithm(&self) -> &IssuerSignatureAlgorithm {
-        &self.issuer_signature_algorithm
-    }
 }
 
 impl Encode<()> for TbsCert {
@@ -126,6 +127,7 @@ impl Encode<()> for TbsCert {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.u8(self.c509_certificate_type)?;
         self.certificate_serial_number.encode(e, ctx)?;
+        self.issuer_signature_algorithm.encode(e, ctx)?;
         self.issuer.encode(e, ctx)?;
         self.validity_not_before.encode(e, ctx)?;
         self.validity_not_after.encode(e, ctx)?;
@@ -133,7 +135,6 @@ impl Encode<()> for TbsCert {
         self.subject_public_key_algorithm.encode(e, ctx)?;
         e.bytes(&self.subject_public_key)?;
         self.extensions.encode(e, ctx)?;
-        self.issuer_signature_algorithm.encode(e, ctx)?;
         Ok(())
     }
 }
@@ -142,6 +143,7 @@ impl Decode<'_, ()> for TbsCert {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let cert_type = d.u8()?;
         let serial_number = UnwrappedBigUint::decode(d, ctx)?;
+        let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;
         let issuer = Some(Name::decode(d, ctx)?);
         let not_before = Time::decode(d, ctx)?;
         let not_after = Time::decode(d, ctx)?;
@@ -149,11 +151,11 @@ impl Decode<'_, ()> for TbsCert {
         let subject_public_key_algorithm = SubjectPubKeyAlgorithm::decode(d, ctx)?;
         let subject_public_key = d.bytes()?;
         let extensions = Extensions::decode(d, ctx)?;
-        let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;
 
         Ok(TbsCert::new(
             cert_type,
             serial_number,
+            issuer_signature_algorithm,
             issuer,
             not_before,
             not_after,
@@ -161,7 +163,6 @@ impl Decode<'_, ()> for TbsCert {
             subject_public_key_algorithm,
             subject_public_key.to_vec(),
             extensions,
-            issuer_signature_algorithm,
         ))
     }
 }
@@ -267,6 +268,7 @@ pub(crate) mod test_tbs_cert {
         TbsCert::new(
             1,
             UnwrappedBigUint::new(128_269),
+            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
             Some(name_cn_text().0),
             Time::new(1_672_531_200),
             Time::new(1_767_225_600),
@@ -274,7 +276,6 @@ pub(crate) mod test_tbs_cert {
             SubjectPubKeyAlgorithm::new(oid!(1.2.840 .10045 .2 .1), None),
             PUBKEY.to_vec(),
             extensions(),
-            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
         )
     }
 
@@ -445,6 +446,7 @@ pub(crate) mod test_tbs_cert {
         let tbs_cert = TbsCert::new(
             1,
             UnwrappedBigUint::new(9_112_578_475_118_446_130),
+            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
             Some(names().0),
             Time::new(1_548_934_156),
             Time::new(253_402_300_799),
@@ -452,7 +454,6 @@ pub(crate) mod test_tbs_cert {
             SubjectPubKeyAlgorithm::new(oid!(1.2.840 .10045 .2 .1), None),
             PUBKEY.to_vec(),
             extensions(),
-            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
         );
 
         let mut buffer = Vec::new();
