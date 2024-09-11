@@ -1,6 +1,6 @@
 {
 	"self_signed": true,
-	"c509_certificate_type": 0,
+	"c509_certificate_type": 2,
 	"certificate_serial_number": 128269,
 	"issuer": [
 		{

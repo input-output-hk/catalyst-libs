@@ -134,9 +134,9 @@ struct C509Json {
 const ED25519: (Oid, Option<String>) = (oid!(1.3.101 .112), None);
 
 /// Integer indicate that certificate is self-signed.
-/// 0 for Natively Signed C509 Certificate following X.509 v3
-/// 1 for CBOR re-encoding of X.509 v3 Certificate        
-const SELF_SIGNED_INT: u8 = 0;
+/// 2 for Natively Signed C509 Certificate following X.509 v3
+/// 3 for CBOR re-encoding of X.509 v3 Certificate        
+const SELF_SIGNED_INT: u8 = 2;
 
 // -------------------generate-----------------------
 
