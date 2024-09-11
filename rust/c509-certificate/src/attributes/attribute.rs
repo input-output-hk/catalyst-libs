@@ -58,7 +58,7 @@ impl Attribute {
     /// Set whether `Attribute` can be PEN encoded.
     pub(crate) fn set_pen_supported(self) -> Self {
         Self {
-            registered_oid: self.registered_oid.pen_encoded(),
+            registered_oid: self.registered_oid,
             multi_value: self.multi_value,
             value: self.value,
         }
@@ -82,7 +82,9 @@ struct Helper {
 
 impl<'de> Deserialize<'de> for Attribute {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where
+        D: Deserializer<'de>,
+    {
         let helper = Helper::deserialize(deserializer)?;
         let oid =
             Oid::from_str(&helper.oid).map_err(|e| serde::de::Error::custom(format!("{e:?}")))?;
@@ -96,7 +98,9 @@ impl<'de> Deserialize<'de> for Attribute {
 
 impl Serialize for Attribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    where
+        S: serde::Serializer,
+    {
         let helper = Helper {
             oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
             value: self.value.clone(),
@@ -207,11 +211,9 @@ impl Decode<'_, ()> for AttributeValue {
         match d.datatype()? {
             minicbor::data::Type::String => Ok(AttributeValue::Text(d.str()?.to_string())),
             minicbor::data::Type::Bytes => Ok(AttributeValue::Bytes(d.bytes()?.to_vec())),
-            _ => {
-                Err(minicbor::decode::Error::message(
-                    "Invalid AttributeValue, value should be either String or Bytes",
-                ))
-            },
+            _ => Err(minicbor::decode::Error::message(
+                "Invalid AttributeValue, value should be either String or Bytes",
+            )),
         }
     }
 }
