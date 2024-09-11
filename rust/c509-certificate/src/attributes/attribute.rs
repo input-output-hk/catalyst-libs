@@ -55,15 +55,6 @@ impl Attribute {
         &self.value
     }
 
-    /// Set whether `Attribute` can be PEN encoded.
-    pub(crate) fn set_pen_supported(self) -> Self {
-        Self {
-            registered_oid: self.registered_oid,
-            multi_value: self.multi_value,
-            value: self.value,
-        }
-    }
-
     /// Set whether `Attribute` can have multiple value.
     pub(crate) fn set_multi_value(mut self) -> Self {
         self.multi_value = true;

@@ -8,10 +8,11 @@ use std::{
 
 use asn1_rs::{oid, Oid};
 use c509_certificate::{
+    attributes::Attributes,
     big_uint::UnwrappedBigUint,
     extensions::Extensions,
     issuer_sig_algo::IssuerSignatureAlgorithm,
-    name::{rdn::RelativeDistinguishedName, Name, NameValue},
+    name::{Name, NameValue},
     signing::{PrivateKey, PublicKey},
     subject_pub_key_algo::SubjectPubKeyAlgorithm,
     tbs_cert::TbsCert,
@@ -104,7 +105,7 @@ struct C509Json {
     serial_number: Option<UnwrappedBigUint>,
     /// Optional issuer of the certificate,
     /// if not provided, issuer is the same as subject.
-    issuer: Option<RelativeDistinguishedName>,
+    issuer: Option<Attributes>,
     /// Optional validity not before date,
     /// if not provided, set to current time.
     validity_not_before: Option<String>,
@@ -112,7 +113,7 @@ struct C509Json {
     /// if not provided, set to no expire date 9999-12-31T23:59:59+00:00.
     validity_not_after: Option<String>,
     /// Relative distinguished name of the subject.
-    subject: RelativeDistinguishedName,
+    subject: Attributes,
     /// Optional subject public key algorithm of the certificate,
     /// if not provided, set to Ed25519.
     subject_public_key_algorithm: Option<SubjectPubKeyAlgorithm>,
@@ -180,10 +181,10 @@ fn generate(
     let tbs = TbsCert::new(
         c509_json.certificate_type.unwrap_or(SELF_SIGNED_INT),
         serial_number,
-        Some(Name::new(NameValue::RelativeDistinguishedName(issuer))),
+        Some(Name::new(NameValue::Attributes(issuer))),
         Time::new(not_before),
         Time::new(not_after),
-        Name::new(NameValue::RelativeDistinguishedName(c509_json.subject)),
+        Name::new(NameValue::Attributes(c509_json.subject)),
         c509_json
             .subject_public_key_algorithm
             .unwrap_or(SubjectPubKeyAlgorithm::new(key_type.0.clone(), key_type.1)),
@@ -218,9 +219,8 @@ fn write_to_output_file(output: PathBuf, data: &[u8]) -> anyhow::Result<()> {
 /// If self-signed is true, issuer is the same as subject.
 /// Otherwise, issuer must be present.
 fn determine_issuer(
-    self_signed: bool, issuer: Option<RelativeDistinguishedName>,
-    subject: RelativeDistinguishedName,
-) -> anyhow::Result<RelativeDistinguishedName> {
+    self_signed: bool, issuer: Option<Attributes>, subject: Attributes,
+) -> anyhow::Result<Attributes> {
     if self_signed {
         Ok(subject)
     } else {
@@ -323,11 +323,11 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Extract a `RelativeDistinguishedName` from a `Name`.
-fn extract_relative_distinguished_name(name: &Name) -> anyhow::Result<RelativeDistinguishedName> {
+/// Extract a `Attributes` from a `Name`.
+fn extract_relative_distinguished_name(name: &Name) -> anyhow::Result<Attributes> {
     match name.get_value() {
-        NameValue::RelativeDistinguishedName(rdn) => Ok(rdn.clone()),
-        _ => Err(anyhow::anyhow!("Expected RelativeDistinguishedName")),
+        NameValue::Attributes(attrs) => Ok(attrs.clone()),
+        _ => Err(anyhow::anyhow!("Expected Attributes")),
     }
 }
 

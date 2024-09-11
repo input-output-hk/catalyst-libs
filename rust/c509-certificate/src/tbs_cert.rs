@@ -182,7 +182,10 @@ pub(crate) mod test_tbs_cert {
 
     use super::*;
     use crate::{
-        attributes::attribute::{Attribute, AttributeValue},
+        attributes::{
+            attribute::{Attribute, AttributeValue},
+            Attributes,
+        },
         extensions::{
             alt_name::{AlternativeName, GeneralNamesOrText},
             extension::{Extension, ExtensionValue},
@@ -193,7 +196,6 @@ pub(crate) mod test_tbs_cert {
             GeneralNames,
         },
         name::{
-            rdn::RelativeDistinguishedName,
             test_name::{name_cn_eui_mac, name_cn_text, names},
             NameValue,
         },
@@ -385,15 +387,15 @@ pub(crate) mod test_tbs_cert {
             let mut attr6 = Attribute::new(oid!(2.5.4 .5));
             attr6.add_value(AttributeValue::Text("Wt1234".to_string()));
 
-            let mut rdn = RelativeDistinguishedName::new();
-            rdn.add_attr(attr1);
-            rdn.add_attr(attr2);
-            rdn.add_attr(attr3);
-            rdn.add_attr(attr4);
-            rdn.add_attr(attr5);
-            rdn.add_attr(attr6);
+            let mut attrs = Attributes::new();
+            attrs.add_attr(attr1);
+            attrs.add_attr(attr2);
+            attrs.add_attr(attr3);
+            attrs.add_attr(attr4);
+            attrs.add_attr(attr5);
+            attrs.add_attr(attr6);
 
-            Name::new(NameValue::RelativeDistinguishedName(rdn))
+            Name::new(NameValue::Attributes(attrs))
         }
 
         fn extensions() -> Extensions {

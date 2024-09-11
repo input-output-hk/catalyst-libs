@@ -15,12 +15,13 @@
 
 use attribute::Attribute;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use serde::{Deserialize, Serialize};
 
 pub mod attribute;
 mod data;
 
 /// A struct of C509 `Attributes` containing a vector of `Attribute`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Attributes(Vec<Attribute>);
 
 impl Default for Attributes {
@@ -34,6 +35,12 @@ impl Attributes {
     #[must_use]
     pub fn new() -> Self {
         Self(Vec::new())
+    }
+
+    /// Get the attributes.
+    #[must_use]
+    pub fn attributes(&self) -> &[Attribute] {
+        &self.0
     }
 
     /// Add an `Attribute` to the `Attributes`.
