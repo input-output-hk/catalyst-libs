@@ -159,7 +159,12 @@ fn generate(
 
     // Parse validity dates or use defaults
     // Now for not_before date
-    let not_before = parse_or_default_date(c509_json.validity_not_before, Utc::now().timestamp())?;
+    let now_timestamp: u64 = Utc::now()
+        .timestamp()
+        .try_into()
+        .expect("Timestamp cannot be converted to u64");
+
+    let not_before = parse_or_default_date(c509_json.validity_not_before, now_timestamp)?;
     // Default as expire date for not_after
     // Expire date = 9999-12-31T23:59:59+00:00 as mention in the C509 document
     let not_after = parse_or_default_date(
@@ -249,14 +254,16 @@ fn get_key_type(key_type: &Option<String>) -> anyhow::Result<(Oid<'static>, Opti
     }
 }
 
-/// Parse date string to i64.
-fn parse_or_default_date(date_option: Option<String>, default: i64) -> Result<i64, anyhow::Error> {
+/// Parse date string to u64.
+fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u64, anyhow::Error> {
     match date_option {
-        Some(date) => {
-            DateTime::parse_from_rfc3339(&date)
-                .map(|dt| dt.timestamp())
-                .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",)))
-        },
+        Some(date) => DateTime::parse_from_rfc3339(&date)
+            .map(|dt| {
+                dt.timestamp()
+                    .try_into()
+                    .map_err(|_| anyhow::anyhow!("Timestamp is invalid"))
+            })?
+            .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",))),
         None => Ok(default),
     }
 }
@@ -295,8 +302,8 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
         certificate_type: Some(tbs_cert.get_c509_certificate_type()),
         serial_number: Some(tbs_cert.get_certificate_serial_number().clone()),
         issuer: Some(extract_relative_distinguished_name(tbs_cert.get_issuer())?),
-        validity_not_before: Some(time_to_string(tbs_cert.get_validity_not_before().to_i64())?),
-        validity_not_after: Some(time_to_string(tbs_cert.get_validity_not_after().to_i64())?),
+        validity_not_before: Some(time_to_string(tbs_cert.get_validity_not_before().to_u64())?),
+        validity_not_after: Some(time_to_string(tbs_cert.get_validity_not_after().to_u64())?),
         subject: extract_relative_distinguished_name(tbs_cert.get_subject())?,
         subject_public_key_algorithm: Some(tbs_cert.get_subject_public_key_algorithm().clone()),
         // Return a hex formation of the public key
@@ -325,9 +332,15 @@ fn extract_relative_distinguished_name(name: &Name) -> anyhow::Result<RelativeDi
 }
 
 /// Convert time in i64 to string.
-fn time_to_string(time: i64) -> anyhow::Result<String> {
-    let datetime =
-        DateTime::from_timestamp(time, 0).ok_or_else(|| anyhow::anyhow!("Invalid timestamp"))?;
+fn time_to_string(time: u64) -> anyhow::Result<String> {
+    // Attempt to convert the timestamp and handle errors if they occur
+    let timestamp: i64 = time
+        .try_into()
+        .map_err(|e| anyhow::anyhow!("Failed to convert time: {:?}", e))?;
+
+    // Convert the timestamp to a DateTime and handle any potential errors
+    let datetime = DateTime::from_timestamp(timestamp, 0)
+        .ok_or_else(|| anyhow::anyhow!("Invalid timestamp"))?;
     Ok(datetime.to_rfc3339())
 }
 

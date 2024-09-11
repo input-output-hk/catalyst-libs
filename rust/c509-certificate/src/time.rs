@@ -4,22 +4,24 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 /// A struct representing a time where it accept seconds since the Unix epoch.
+/// Doesn't support dates before the Unix epoch (January 1, 1970, 00:00:00 UTC) 
+/// so unsigned integer is used.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct Time(i64);
+pub struct Time(u64);
 
 /// No expiration date in seconds since the Unix epoch.
-const NO_EXP_DATE: i64 = 253_402_300_799;
+const NO_EXP_DATE: u64 = 253_402_300_799;
 
 impl Time {
     /// Create a new instance of `Time`.
     #[must_use]
-    pub fn new(time: i64) -> Self {
+    pub fn new(time: u64) -> Self {
         Self(time)
     }
 
-    /// Get the time in i64.
+    /// Get the time in u64.
     #[must_use]
-    pub fn to_i64(&self) -> i64 {
+    pub fn to_u64(&self) -> u64 {
         self.0
     }
 }
@@ -31,7 +33,7 @@ impl Encode<()> for Time {
         if self.0 == NO_EXP_DATE {
             e.null()?;
         } else {
-            e.i64(self.0)?;
+            e.u64(self.0)?;
         }
         Ok(())
     }
@@ -41,14 +43,10 @@ impl Decode<'_, ()> for Time {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::U8
-            | minicbor::data::Type::I8
             | minicbor::data::Type::U16
-            | minicbor::data::Type::I16
             | minicbor::data::Type::U32
-            | minicbor::data::Type::I32
-            | minicbor::data::Type::U64
-            | minicbor::data::Type::I64 => {
-                let time = d.i64()?;
+            | minicbor::data::Type::U64 => {
+                let time = d.u64()?;
                 Ok(Time::new(time))
             },
             minicbor::data::Type::Null => {
