@@ -180,7 +180,7 @@ fn generate(
     let tbs = TbsCert::new(
         c509_json.certificate_type.unwrap_or(SELF_SIGNED_INT),
         serial_number,
-        Name::new(NameValue::RelativeDistinguishedName(issuer)),
+        Some(Name::new(NameValue::RelativeDistinguishedName(issuer))),
         Time::new(not_before),
         Time::new(not_after),
         Name::new(NameValue::RelativeDistinguishedName(c509_json.subject)),

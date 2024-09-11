@@ -36,18 +36,19 @@ pub struct TbsCert {
 
 impl TbsCert {
     /// Create a new instance of TBS Certificate.
+    /// If issuer is not provided, it will use the subject as the issuer.
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        c509_certificate_type: u8, certificate_serial_number: UnwrappedBigUint, issuer: Name,
-        validity_not_before: Time, validity_not_after: Time, subject: Name,
+        c509_certificate_type: u8, certificate_serial_number: UnwrappedBigUint,
+        issuer: Option<Name>, validity_not_before: Time, validity_not_after: Time, subject: Name,
         subject_public_key_algorithm: SubjectPubKeyAlgorithm, subject_public_key: Vec<u8>,
         extensions: Extensions, issuer_signature_algorithm: IssuerSignatureAlgorithm,
     ) -> Self {
         Self {
             c509_certificate_type,
             certificate_serial_number,
-            issuer,
+            issuer: issuer.unwrap_or_else(|| subject.clone()),
             validity_not_before,
             validity_not_after,
             subject,
@@ -141,7 +142,7 @@ impl Decode<'_, ()> for TbsCert {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let cert_type = d.u8()?;
         let serial_number = UnwrappedBigUint::decode(d, ctx)?;
-        let issuer = Name::decode(d, ctx)?;
+        let issuer = Some(Name::decode(d, ctx)?);
         let not_before = Time::decode(d, ctx)?;
         let not_after = Time::decode(d, ctx)?;
         let subject = Name::decode(d, ctx)?;
@@ -264,7 +265,7 @@ pub(crate) mod test_tbs_cert {
         TbsCert::new(
             1,
             UnwrappedBigUint::new(128_269),
-            name_cn_text().0,
+            Some(name_cn_text().0),
             Time::new(1_672_531_200),
             Time::new(1_767_225_600),
             name_cn_eui_mac().0,
@@ -419,9 +420,10 @@ pub(crate) mod test_tbs_cert {
                 true,
             ));
             let mut gns = GeneralNames::new();
-            let hw = OtherNameHardwareModuleName::new(oid!(1.3.6 .1 .4 .1 .6175 .10 .1), vec![
-                0x01, 0x02, 0x03, 0x04,
-            ]);
+            let hw = OtherNameHardwareModuleName::new(
+                oid!(1.3.6 .1 .4 .1 .6175 .10 .1),
+                vec![0x01, 0x02, 0x03, 0x04],
+            );
             gns.add_gn(GeneralName::new(
                 GeneralNameTypeRegistry::OtherNameHardwareModuleName,
                 GeneralNameValue::OtherNameHWModuleName(hw),
@@ -441,7 +443,7 @@ pub(crate) mod test_tbs_cert {
         let tbs_cert = TbsCert::new(
             1,
             UnwrappedBigUint::new(9_112_578_475_118_446_130),
-            names().0,
+            Some(names().0),
             Time::new(1_548_934_156),
             Time::new(253_402_300_799),
             subject(),
