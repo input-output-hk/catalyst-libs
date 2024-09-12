@@ -371,6 +371,7 @@ pub(crate) mod test_tbs_cert {
     // 83 2A 4D 33 6A 08 AD 67 DF 20 F1 50 64 21 18 8A 0A DE 6D 34 92 36
 
     #[test]
+    #[allow(clippy::similar_names)]
     fn tbs_cert2() {
         // ---------helper----------
         // C=US, ST=CA, L=LA, O=example Inc, OU=IoT/serialNumber=Wt1234
@@ -423,10 +424,9 @@ pub(crate) mod test_tbs_cert {
                 true,
             ));
             let mut gns = GeneralNames::new();
-            let hw = OtherNameHardwareModuleName::new(
-                oid!(1.3.6 .1 .4 .1 .6175 .10 .1),
-                vec![0x01, 0x02, 0x03, 0x04],
-            );
+            let hw = OtherNameHardwareModuleName::new(oid!(1.3.6 .1 .4 .1 .6175 .10 .1), vec![
+                0x01, 0x02, 0x03, 0x04,
+            ]);
             gns.add_gn(GeneralName::new(
                 GeneralNameTypeRegistry::OtherNameHardwareModuleName,
                 GeneralNameValue::OtherNameHWModuleName(hw),

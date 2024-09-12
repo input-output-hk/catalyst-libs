@@ -67,9 +67,7 @@ struct Helper {
 
 impl<'de> Deserialize<'de> for Extension {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    where D: Deserializer<'de> {
         let helper = Helper::deserialize(deserializer)?;
         let oid =
             Oid::from_str(&helper.oid).map_err(|e| serde::de::Error::custom(format!("{e:?}")))?;
@@ -80,9 +78,7 @@ impl<'de> Deserialize<'de> for Extension {
 
 impl Serialize for Extension {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
+    where S: serde::Serializer {
         let helper = Helper {
             oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
             value: self.value.clone(),
@@ -231,8 +227,7 @@ impl Encode<()> for ExtensionValue {
 }
 
 impl<C> Decode<'_, C> for ExtensionValue
-where
-    C: ExtensionValueTypeTrait + Debug,
+where C: ExtensionValueTypeTrait + Debug
 {
     fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
@@ -248,9 +243,11 @@ where
                 let value = AlternativeName::decode(d, &mut ())?;
                 Ok(ExtensionValue::AlternativeName(value))
             },
-            ExtensionValueType::Unsupported => Err(minicbor::decode::Error::message(
-                "Cannot decode Unsupported extension value",
-            )),
+            ExtensionValueType::Unsupported => {
+                Err(minicbor::decode::Error::message(
+                    "Cannot decode Unsupported extension value",
+                ))
+            },
         }
     }
 }

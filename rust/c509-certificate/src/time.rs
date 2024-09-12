@@ -4,7 +4,7 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 /// A struct representing a time where it accept seconds since the Unix epoch.
-/// Doesn't support dates before the Unix epoch (January 1, 1970, 00:00:00 UTC) 
+/// Doesn't support dates before the Unix epoch (January 1, 1970, 00:00:00 UTC)
 /// so unsigned integer is used.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Time(u64);

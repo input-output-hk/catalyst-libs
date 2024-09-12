@@ -1,7 +1,8 @@
 //! C509 Extension as a part of `TBSCertificate` used in C509 Certificate.
 //!
 //! Extension fallback of C509 OID extension
-//! Given OID if not found in the registered OID table, it will be encoded as an unwrapped OID.
+//! Given OID if not found in the registered OID table, it will be encoded as an unwrapped
+//! OID.
 //!
 //! ```cddl
 //! Extensions and Extension can be encoded as the following:

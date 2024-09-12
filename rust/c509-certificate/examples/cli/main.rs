@@ -163,7 +163,7 @@ fn generate(
     let now_timestamp: u64 = Utc::now()
         .timestamp()
         .try_into()
-        .expect("Timestamp cannot be converted to u64");
+        .map_err(|_| anyhow::anyhow!("Current timestamp is invalid"))?;
 
     let not_before = parse_or_default_date(c509_json.validity_not_before, now_timestamp)?;
     // Default as expire date for not_after

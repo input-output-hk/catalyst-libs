@@ -131,9 +131,11 @@ impl Decode<'_, ()> for NameValue {
             // If Name is a text string, the attribute is a CommonName
             minicbor::data::Type::String => Ok(create_attributes_with_cn(d.str()?.to_string())),
             minicbor::data::Type::Bytes => decode_bytes(d),
-            _ => Err(minicbor::decode::Error::message(
-                "Name must be an array, text or bytes",
-            )),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Name must be an array, text or bytes",
+                ))
+            },
         }
     }
 }
@@ -256,9 +258,11 @@ fn decode_eui_cn_bytes(bytes: &[u8]) -> Result<NameValue, minicbor::decode::Erro
             )?);
             Ok(create_attributes_with_cn(text))
         },
-        _ => Err(minicbor::decode::Error::message(
-            "EUI-64 or MAC address must be 7 or 9 bytes",
-        )),
+        _ => {
+            Err(minicbor::decode::Error::message(
+                "EUI-64 or MAC address must be 7 or 9 bytes",
+            ))
+        },
     }
 }
 
@@ -466,6 +470,7 @@ pub(crate) mod test_name {
     // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     // Issuer: C=US, ST=CA, O=Example Inc, OU=certification, CN=802.1AR CA
+    #[allow(clippy::similar_names)]
     pub(crate) fn names() -> (Name, String) {
         let mut attr1 = Attribute::new(oid!(2.5.4 .6));
         attr1.add_value(AttributeValue::Text("US".to_string()));
