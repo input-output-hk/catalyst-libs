@@ -1,5 +1,5 @@
 //! Attribute data provides a necessary information for encoding and decoding of C509
-//! Attribute. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! Attribute. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 //! Section 9.3 C509 Attributes Registry for more information.
 
 use anyhow::Error;

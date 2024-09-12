@@ -115,7 +115,7 @@ struct C509Json {
     /// Optional validity not after date,
     /// if not provided, set to no expire date 9999-12-31T23:59:59+00:00.
     validity_not_after: Option<String>,
-    /// Relative distinguished name of the subject.
+    /// Attributes of the subject.
     subject: Attributes,
     /// Optional subject public key algorithm of the certificate,
     /// if not provided, set to Ed25519.
@@ -304,10 +304,10 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
         certificate_type: Some(tbs_cert.get_c509_certificate_type()),
         serial_number: Some(tbs_cert.get_certificate_serial_number().clone()),
         issuer_signature_algorithm: Some(tbs_cert.get_issuer_signature_algorithm().clone()),
-        issuer: Some(extract_relative_distinguished_name(tbs_cert.get_issuer())?),
+        issuer: Some(extract_attributes(tbs_cert.get_issuer())?),
         validity_not_before: Some(time_to_string(tbs_cert.get_validity_not_before().to_u64())?),
         validity_not_after: Some(time_to_string(tbs_cert.get_validity_not_after().to_u64())?),
-        subject: extract_relative_distinguished_name(tbs_cert.get_subject())?,
+        subject: extract_attributes(tbs_cert.get_subject())?,
         subject_public_key_algorithm: Some(tbs_cert.get_subject_public_key_algorithm().clone()),
         // Return a hex formation of the public key
         subject_public_key: tbs_cert.get_subject_public_key().encode_hex(),
@@ -326,7 +326,7 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
 }
 
 /// Extract a `Attributes` from a `Name`.
-fn extract_relative_distinguished_name(name: &Name) -> anyhow::Result<Attributes> {
+fn extract_attributes(name: &Name) -> anyhow::Result<Attributes> {
     match name.get_value() {
         NameValue::Attributes(attrs) => Ok(attrs.clone()),
         _ => Err(anyhow::anyhow!("Expected Attributes")),

@@ -10,7 +10,7 @@
 //! ```
 //!
 //! For more information about Name,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use asn1_rs::{oid, Oid};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
@@ -278,7 +278,7 @@ pub(crate) mod test_name {
     use super::*;
     use crate::attributes::attribute::Attribute;
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.1.  Example C509 Certificate Encoding
     pub(crate) fn name_cn_text() -> (Name, String) {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
@@ -356,7 +356,7 @@ pub(crate) mod test_name {
         assert_eq!(name_decoded, name);
     }
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     pub(crate) fn name_cn_eui_mac() -> (Name, String) {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
@@ -463,7 +463,7 @@ pub(crate) mod test_name {
         assert_eq!(name_decoded, name);
     }
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     // Issuer: C=US, ST=CA, O=Example Inc, OU=certification, CN=802.1AR CA
     pub(crate) fn names() -> (Name, String) {

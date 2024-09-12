@@ -1,5 +1,5 @@
 //! Public key algorithm data provides a necessary information for encoding and decoding
-//! of C509 `subjectPublicKeyAlgorithm`. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! of C509 `subjectPublicKeyAlgorithm`. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 //! Section 9.11 C509 Public Key Algorithms Registry for more information.
 
 // cspell: words Weierstraß secp XMSS brainpool

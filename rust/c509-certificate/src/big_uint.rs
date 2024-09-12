@@ -54,7 +54,7 @@ mod test_big_uint {
 
     use super::*;
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     #[test]
     fn test_encode_decode() {
@@ -74,7 +74,7 @@ mod test_big_uint {
         assert_eq!(decoded_b_uint, b_uint);
     }
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     #[test]
     fn test_encode_decode_2() {

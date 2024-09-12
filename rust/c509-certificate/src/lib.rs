@@ -33,7 +33,7 @@
 //!    * issuerSignatureAlgorithm: The algorithm used to sign the certificate (must be the
 //!      algorithm uses to create `IssuerSignatureValue`).
 //!
-//! Please refer to the [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/) for more information.
+//! Please refer to the [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/) for more information.
 
 use anyhow::anyhow;
 use c509::C509;

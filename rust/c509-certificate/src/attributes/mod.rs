@@ -2,7 +2,7 @@
 //!
 //! ```cddl
 //! Attributes = ( attributeType: int, attributeValue: [+text] ) //
-//! ( attributeType: ~oid, attributeValue: [+bytes] )
+//!             ( attributeType: ~oid, attributeValue: [+bytes] )
 //! ```
 //!
 //! Use case:
@@ -11,7 +11,7 @@
 //! ```
 //!
 //! For more information about `Attributes`,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use attribute::Attribute;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
@@ -59,7 +59,8 @@ impl Encode<()> for Attributes {
                 "Attributes should not be empty",
             ));
         }
-        e.array(self.0.len() as u64)?;
+        // The attribute type should be included in array too
+        e.array(self.0.len() as u64 * 2)?;
         for attribute in &self.0 {
             attribute.encode(e, ctx)?;
         }
@@ -78,7 +79,8 @@ impl Decode<'_, ()> for Attributes {
 
         let mut attributes = Attributes::new();
 
-        for _ in 0..len {
+        // The attribute type is included in an array, so divide by 2
+        for _ in 0..len / 2 {
             let attribute = Attribute::decode(d, &mut ())?;
             attributes.add_attr(attribute);
         }
@@ -108,13 +110,13 @@ mod test_attributes {
         attributes
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode Attributes");
-        // 1 Attribute value (array len 1): 0x81
+        // 1 Attribute (array len 2 (attribute type + value)): 0x82
         // Email Address: 0x00
         // Attribute value (array len 2): 0x82
         // example@example.com: 0x736578616d706c65406578616d706c652e636f6d
         assert_eq!(
             hex::encode(buffer.clone()),
-            "810082736578616d706c65406578616d706c652e636f6d736578616d706c65406578616d706c652e636f6d"
+            "820082736578616d706c65406578616d706c652e636f6d736578616d706c65406578616d706c652e636f6d"
         );
 
         let mut decoder = Decoder::new(&buffer);

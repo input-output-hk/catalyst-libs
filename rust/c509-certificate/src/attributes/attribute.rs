@@ -2,12 +2,11 @@
 //!
 //! ```cddl
 //! Attribute = ( attributeType: int, attributeValue: text ) //
-//! ( attributeType: ~oid, attributeValue: bytes ) //
-//! ( attributeType: pen, attributeValue: bytes )
+//!             ( attributeType: ~oid, attributeValue: bytes ) //
 //! ```
 //!
 //! For more information about Attribute,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use std::str::FromStr;
 

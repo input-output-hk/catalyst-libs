@@ -79,7 +79,7 @@ mod test_time {
         assert_eq!(decoded_time, time);
     }
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     #[test]
     fn test_encode_decode() {

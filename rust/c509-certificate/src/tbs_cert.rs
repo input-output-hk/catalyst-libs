@@ -205,7 +205,7 @@ pub(crate) mod test_tbs_cert {
     // Mnemonic: match mad promote group rival case
     const PUBKEY: [u8; 8] = [0x88, 0xD0, 0xB6, 0xB0, 0xB3, 0x7B, 0xAA, 0x46];
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     //
     //
@@ -311,7 +311,7 @@ pub(crate) mod test_tbs_cert {
         assert_eq!(decoded_tbs, tbs_cert);
     }
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     //
     // Certificate:
