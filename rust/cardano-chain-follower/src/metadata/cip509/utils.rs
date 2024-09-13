@@ -76,8 +76,8 @@ pub(crate) fn zero_out_last_n_bytes(vec: &mut [u8], n: usize) {
 mod tests {
     use super::*;
 
-    // cspell: words stake_test1uqehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gssrtvn
-    // addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae
+    #[rustfmt::skip]
+    // cspell: words stake_test1uqehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gssrtvn addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae
 
     #[test]
     fn test_extract_cip19_hash_with_stake() {
