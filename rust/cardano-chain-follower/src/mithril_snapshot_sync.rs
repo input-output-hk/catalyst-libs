@@ -164,13 +164,13 @@ async fn get_snapshot(
             if let Some(snapshot) = snapshot {
                 snapshot
             } else {
-                // Some kind of communications error has ocurred.
+                // Some kind of communications error has occurred.
                 error!("No snapshot returned for {} ???", network);
                 return None;
             }
         },
         Err(err) => {
-            // Some kind of communications error has ocurred.
+            // Some kind of communications error has occurred.
             error!(
                 "Failure to get the latest snapshot for {} with error: {}",
                 network, err
