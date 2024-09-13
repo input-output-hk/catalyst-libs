@@ -240,8 +240,8 @@ impl Cip509 {
             // Validate only role 0
             for role in role_set {
                 if role.role_number == 0 {
-                    // Validate public key to in certificate to the witness set in transaction
-                    match cip509.validate_public_key(
+                    // Validate stake public key to in certificate to the witness set in transaction
+                    match cip509.validate_stake_public_key(
                         txn,
                         &mut validation_report,
                         decoded_metadata,
@@ -250,7 +250,7 @@ impl Cip509 {
                         Some(b) => cip509.validation.valid_public_key = b,
                         None => {
                             cip509.validation_failure(
-                                &format!("Failed to validate public key in tx id {txn_idx}"),
+                                &format!("Failed to validate stake public key in tx id {txn_idx}"),
                                 &mut validation_report,
                                 decoded_metadata,
                             );
@@ -531,9 +531,9 @@ impl Cip509 {
         }
     }
 
-    /// Validate the public key in the certificate with witness set in transaction.
+    /// Validate the stake public key in the certificate with witness set in transaction.
     #[allow(clippy::too_many_lines)]
-    fn validate_public_key(
+    fn validate_stake_public_key(
         &self, txn: &MultiEraTx, validation_report: &mut ValidationReport,
         decoded_metadata: &DecodedMetadata, txn_idx: usize,
     ) -> Option<bool> {
@@ -591,14 +591,13 @@ impl Cip509 {
                                                             return None;
                                                         },
                                                     };
-                                                    // Only extract the CIP19 hash when it is a
-                                                    // stake address
-                                                    if addr.contains("stake") {
-                                                        // Extract the CIP19 hash and push into
-                                                        // array
-                                                        if let Some(h) = extract_cip19_hash(&addr) {
-                                                            pk_addrs.push(h);
-                                                        }
+
+                                                    // Extract the CIP19 hash and push into
+                                                    // array
+                                                    if let Some(h) =
+                                                        extract_cip19_hash(&addr, Some("stake"))
+                                                    {
+                                                        pk_addrs.push(h);
                                                     }
                                                 },
                                                 Err(e) => {
@@ -651,12 +650,9 @@ impl Cip509 {
                                                             if name.get_gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
                                                                 match name.get_gn_value() {
                                                                     GeneralNameValue::Text(s) => {
-                                                                        // Only extract the CIP19 hash when it is a stake address
-                                                                        if s.contains("stake") {
-                                                                            if let Some(h) = extract_cip19_hash(s) {
+                                                                            if let Some(h) = extract_cip19_hash(s, Some("stake")) {
                                                                                 pk_addrs.push(h);
                                                                             }
-                                                                        }
                                                                     },
                                                                     _ => {
                                                                         self.validation_failure(

@@ -7,9 +7,9 @@ use crate::witness::TxWitness;
 /// Example input: `web+cardano://addr/<cip-19 address string>`
 /// <https://github.com/cardano-foundation/CIPs/tree/6bae5165dde5d803778efa5e93bd408f3317ca03/CPS-0016>
 /// URI = scheme ":" ["//" authority] path ["?" query] ["#" fragment]
-pub(crate) fn extract_cip19_hash(uri: &str) -> Option<Vec<u8>> {
-    // Define a regex pattern to match the expected URI format
-    let r = Regex::new(r"^.+://addr/(.+)$").ok()?;
+pub(crate) fn extract_cip19_hash(uri: &str, prefix: Option<&str>) -> Option<Vec<u8>> {
+    // Regex pattern to match the expected URI format
+    let r = Regex::new("^.+://addr/(.+)$").ok()?;
 
     // Apply the regex pattern to capture the CIP-19 address string
     let address = r
@@ -18,6 +18,11 @@ pub(crate) fn extract_cip19_hash(uri: &str) -> Option<Vec<u8>> {
 
     match address {
         Some(addr) => {
+            if let Some(prefix) = prefix {
+                if !addr.starts_with(prefix) {
+                    return None;
+                }
+            }
             let addr = bech32::decode(&addr).ok()?.1;
             // As in CIP19, the first byte is the header, so extract only the payload
             extract_key_hash(&addr)
@@ -72,9 +77,10 @@ mod tests {
     use super::*;
 
     // cspell: words stake_test1uqehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gssrtvn
+    // addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae
 
     #[test]
-    fn test_extract_cip19_hash() {
+    fn test_extract_cip19_hash_with_stake() {
         // Test stake data from https://cips.cardano.org/cip/CIP-19
         // Additional tools to check for bech32 https://slowli.github.io/bech32-buffer/
         let uri =
@@ -85,36 +91,54 @@ mod tests {
         let bytes = hex::decode("337b62cfff6403a06a3acbc34f8c46003c69fe79a3628cefa9c47251")
             .expect("Failed to decode bytes");
         assert_eq!(
-            extract_cip19_hash(uri).expect("Failed to extract CIP-19 hash"),
+            extract_cip19_hash(uri, Some("stake")).expect("Failed to extract CIP-19 hash"),
             bytes
         );
     }
 
     #[test]
+    fn test_extract_cip19_hash_with_addr_with_prefix_set() {
+        // Test payment data from https://cips.cardano.org/cip/CIP-19
+        let uri =
+        "web+cardano://addr/addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae";
+        let result = extract_cip19_hash(uri, Some("stake"));
+        assert_eq!(result, None);
+    }
+
+    #[test]
+    fn test_extract_cip19_hash_with_addr_without_prefix_set() {
+        // Test payment data from https://cips.cardano.org/cip/CIP-19
+        let uri =
+            "web+cardano://addr/addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae";
+        let result = extract_cip19_hash(uri, None);
+        assert!(result.is_some());
+    }
+
+    #[test]
     fn test_extract_cip19_hash_invalid_uri() {
         let uri = "invalid_uri";
-        let result = extract_cip19_hash(uri);
+        let result = extract_cip19_hash(uri, None);
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_extract_cip19_hash_non_bech32_address() {
         let uri = "example://addr/not_bech32";
-        let result = extract_cip19_hash(uri);
+        let result = extract_cip19_hash(uri, None);
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_extract_cip19_hash_empty_uri() {
         let uri = "";
-        let result = extract_cip19_hash(uri);
+        let result = extract_cip19_hash(uri, None);
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_extract_cip19_hash_no_address() {
         let uri = "example://addr/";
-        let result = extract_cip19_hash(uri);
+        let result = extract_cip19_hash(uri, None);
         assert_eq!(result, None);
     }
 }
