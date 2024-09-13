@@ -1,6 +1,3 @@
-# Compatibility:
-edition = "2021"
-
 # Enable unstable features:
 # * imports_indent
 # * imports_layout
@@ -23,32 +20,49 @@ edition = "2021"
 # * overflow_delimited_expr
 unstable_features = true
 
-blank_lines_upper_bound = 1
-comment_width = 90
-condense_wildcard_suffixes = true
-fn_params_layout = "Compressed"
-force_multiline_blocks = true
-format_code_in_doc_comments = true
-format_generated_files = false
-group_imports = "StdExternalCrate"
+# Compatibility:
+edition = "2021"
+
+# Tabs & spaces - Defaults, listed for clarity
+tab_spaces = 4
 hard_tabs = false
-hex_literal_case = "Upper"
-imports_granularity = "Crate"
-imports_indent = "Block"
-imports_layout = "Mixed"
-inline_attribute_width = 0
+
+# Commas.
+trailing_comma = "Vertical"
 match_block_trailing_comma = true
+
+# General width constraints.
 max_width = 100
+
+# Comments:
 normalize_comments = true
 normalize_doc_attributes = true
-overflow_delimited_expr = true
-reorder_impl_items = true
-reorder_imports = true
-tab_spaces = 4
-trailing_comma = "Vertical"
-use_field_init_shorthand = true
-use_small_heuristics = "Default"
-where_single_line = true
 wrap_comments = true
+comment_width = 90      # small excess is okay but prefer 80
+format_code_in_doc_comments = true
+format_generated_files = false
 
+# Imports.
+imports_indent = "Block"
+imports_layout = "Mixed"
+group_imports = "StdExternalCrate"
+reorder_imports = true
+imports_granularity = "Crate"
+
+# Arguments:
+use_small_heuristics = "Default"
+fn_params_layout = "Compressed"
+overflow_delimited_expr = true
+where_single_line = true
+
+# Misc:
+inline_attribute_width = 0
+blank_lines_upper_bound = 1
+reorder_impl_items = true
+use_field_init_shorthand = true
+force_multiline_blocks = true
+condense_wildcard_suffixes = true
+hex_literal_case = "Upper"
+
+# Ignored files:
 ignore = []
