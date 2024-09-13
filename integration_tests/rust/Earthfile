@@ -1,25 +1,26 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mithril_snapshot:v3.1.8 AS mithril-snapshot-ci
 IMPORT ../../rust AS rust-workspace
 
-local-build:
-    FROM rust-workspace+builder
+# TODO: This needs reworking, because we no longer have mithril snapshots inside CI.
 
-    WORKDIR crates/cardano-chain-follower/testbed
-    RUN cargo build -p overhead_benchmark --release
+#local-build:
+#    FROM rust-workspace+builder
 
-    SAVE ARTIFACT target/release/overhead_benchmark overhead_benchmark
+#    WORKDIR crates/cardano-chain-follower/testbed
+#    RUN cargo build -p overhead_benchmark --release
 
-local-run-preprod:
-    ARG --required BENCH_NAME
+#    SAVE ARTIFACT target/release/overhead_benchmark overhead_benchmark
 
-    FROM +local-build
+#local-run-preprod:
+#    ARG --required BENCH_NAME
 
-    COPY --dir mithril-snapshot-ci+package-preprod-snapshot/snapshot/immutable mithril_snapshot 
-    COPY +build/overhead_benchmark overhead_benchmark_bin
-    RUN ./overhead_benchmark_bin --bench-name $BENCH_NAME --mithril-snapshot-path ./mithril_snapshot
+#    FROM +local-build
 
-local-save-preprod-snapshot:
-    FROM mithril-snapshot-ci+package-preprod-snapshot
-    SAVE ARTIFACT immutable AS LOCAL local_preprod_mithril_snapshot 
+    #COPY --dir mithril-snapshot-ci+package-preprod-snapshot/snapshot/immutable mithril_snapshot 
+    #COPY +build/overhead_benchmark overhead_benchmark_bin
+    #RUN ./overhead_benchmark_bin --bench-name $BENCH_NAME --mithril-snapshot-path ./mithril_snapshot
+
+#local-save-preprod-snapshot:
+    #FROM mithril-snapshot-ci+package-preprod-snapshot
+    #SAVE ARTIFACT immutable AS LOCAL local_preprod_mithril_snapshot 

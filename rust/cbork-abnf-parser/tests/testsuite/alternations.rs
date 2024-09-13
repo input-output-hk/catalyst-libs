@@ -1,3 +1,7 @@
+//! Test Alternations through the parser.
+
+// cspell: words nbaz
+
 use cbork_abnf_parser::{self, abnf_test::Rule};
 
 use crate::common::*;

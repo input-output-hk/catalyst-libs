@@ -1,7 +1,6 @@
 aarch
 abcz
 ABNF
-abnf
 addrr
 addrs
 adminer
@@ -25,12 +24,10 @@ BROTLI
 cantopen
 cardano
 CBOR
-cbor
 cbork
 cdylib
 CEST
 CHAINCODE
-chaincode
 chainsync
 childs
 Chotivichit
@@ -60,7 +57,6 @@ dotglob
 drep
 dreps
 Earthfile
-earthfile
 encryptor
 Errno
 Eternl
@@ -131,7 +127,6 @@ mdlint
 mdns
 memx
 Metadatum
-metadatum
 mimalloc
 minicbor
 miniprotocol
@@ -196,7 +191,6 @@ retriggering
 rlib
 rulelist
 RULENAME
-rulename
 runable
 rustc
 rustdoc
@@ -250,13 +244,11 @@ utimensat
 UTXO
 vitss
 Vkey
-vkey
 vkeywitness
 voteplan
 voteplans
 wallclock
 WASI
-wasi
 wasip
 wasmtime
 webasm
@@ -265,6 +257,5 @@ webpki
 WORKDIR
 xprivate
 XPRV
-xprv
 xpub
 yoroi
