@@ -591,9 +591,14 @@ impl Cip509 {
                                                             return None;
                                                         },
                                                     };
-                                                    // Extract the CIP19 hash and push into array
-                                                    if let Some(h) = extract_cip19_hash(&addr) {
-                                                        pk_addrs.push(h);
+                                                    // Only extract the CIP19 hash when it is a
+                                                    // stake address
+                                                    if addr.contains("stake") {
+                                                        // Extract the CIP19 hash and push into
+                                                        // array
+                                                        if let Some(h) = extract_cip19_hash(&addr) {
+                                                            pk_addrs.push(h);
+                                                        }
                                                     }
                                                 },
                                                 Err(e) => {
@@ -646,8 +651,11 @@ impl Cip509 {
                                                             if name.get_gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
                                                                 match name.get_gn_value() {
                                                                     GeneralNameValue::Text(s) => {
-                                                                        if let Some(h) = extract_cip19_hash(s) {
-                                                                            pk_addrs.push(h);
+                                                                        // Only extract the CIP19 hash when it is a stake address
+                                                                        if s.contains("stake") {
+                                                                            if let Some(h) = extract_cip19_hash(s) {
+                                                                                pk_addrs.push(h);
+                                                                            }
                                                                         }
                                                                     },
                                                                     _ => {
