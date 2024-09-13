@@ -493,7 +493,7 @@ impl Cip509 {
             },
             _ => {
                 self.validation_failure(
-                    "Unsupported transaction era for auxillary data validation",
+                    "Unsupported transaction era for auxiliary data validation",
                     validation_report,
                     decoded_metadata,
                 );
