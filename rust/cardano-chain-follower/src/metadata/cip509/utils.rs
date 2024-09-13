@@ -76,15 +76,16 @@ pub(crate) fn zero_out_last_n_bytes(vec: &mut [u8], n: usize) {
 mod tests {
     use super::*;
 
-    #[rustfmt::skip]
-    // cspell: words stake_test1uqehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gssrtvn addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae
+    // Test data from https://cips.cardano.org/cip/CIP-19
+    // cSpell:disable
+    const STAKE_ADDR: &str = "stake_test1uqehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gssrtvn";
+    const PAYMENT_ADDR: &str = "addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae";
+    // cSpell:enable
 
     #[test]
     fn test_extract_cip19_hash_with_stake() {
-        // Test stake data from https://cips.cardano.org/cip/CIP-19
         // Additional tools to check for bech32 https://slowli.github.io/bech32-buffer/
-        let uri =
-            "web+cardano://addr/stake_test1uqehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gssrtvn";
+        let uri = &format!("web+cardano://addr/{STAKE_ADDR}");
         // Given:
         // e0337b62cfff6403a06a3acbc34f8c46003c69fe79a3628cefa9c47251
         // The first byte is the header, so extract only the payload
@@ -98,18 +99,14 @@ mod tests {
 
     #[test]
     fn test_extract_cip19_hash_with_addr_with_prefix_set() {
-        // Test payment data from https://cips.cardano.org/cip/CIP-19
-        let uri =
-        "web+cardano://addr/addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae";
+        let uri = &format!("web+cardano://addr/{PAYMENT_ADDR}");
         let result = extract_cip19_hash(uri, Some("stake"));
         assert_eq!(result, None);
     }
 
     #[test]
     fn test_extract_cip19_hash_with_addr_without_prefix_set() {
-        // Test payment data from https://cips.cardano.org/cip/CIP-19
-        let uri =
-            "web+cardano://addr/addr_test1qz2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgs68faae";
+        let uri = &format!("web+cardano://addr/{PAYMENT_ADDR}");
         let result = extract_cip19_hash(uri, None);
         assert!(result.is_some());
     }
