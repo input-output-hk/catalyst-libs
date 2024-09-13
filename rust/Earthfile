@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:feat/cat-gateway-changes AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.03 AS rust-ci
 
 # sync-cfg: Synchronize local config with CI version.
 # Must be run by the developer manually.
