@@ -29,8 +29,7 @@ impl Extension {
     #[must_use]
     pub fn new(oid: Oid<'static>, value: ExtensionValue, critical: bool) -> Self {
         Self {
-            registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table())
-                .pen_encoded(),
+            registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table()),
             critical,
             value,
         }

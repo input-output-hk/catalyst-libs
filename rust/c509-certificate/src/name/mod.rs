@@ -4,26 +4,23 @@
 //! are UTF-8 encoded and all attributeType should be non-negative.
 //!
 //! ```cddl
-//! Name = [ * RelativeDistinguishedName ] / text / bytes
-//! RelativeDistinguishedName = Attribute / [ 2* Attribute ]
+//! Name = [ * Attributes ] / text / bytes
 //! Attribute = ( attributeType: int, attributeValue: text ) //
 //!             ( attributeType: ~oid, attributeValue: bytes ) //
-//!             ( attributeType: pen, attributeValue: bytes )
 //! ```
 //!
 //! For more information about Name,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
-// cspell: words rdns
-
-pub mod rdn;
 use asn1_rs::{oid, Oid};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
-use rdn::RelativeDistinguishedName;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
-use crate::attributes::attribute::{Attribute, AttributeValue};
+use crate::attributes::{
+    attribute::{Attribute, AttributeValue},
+    Attributes,
+};
 
 /// OID of `CommonName` attribute.
 const COMMON_NAME_OID: Oid<'static> = oid!(2.5.4 .3);
@@ -77,8 +74,8 @@ impl Decode<'_, ()> for Name {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NameValue {
-    /// A relative distinguished name.
-    RelativeDistinguishedName(RelativeDistinguishedName),
+    /// Attributes.
+    Attributes(Attributes),
     /// A text.
     Text(String),
     /// bytes.
@@ -90,14 +87,17 @@ impl Encode<()> for NameValue {
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            NameValue::RelativeDistinguishedName(rdn) => {
-                let attr = rdn.attributes();
-                let attr_first = attr.first().ok_or(minicbor::encode::Error::message(
-                    "Cannot get the first Attribute",
-                ))?;
+            NameValue::Attributes(attrs) => {
+                let attr_first =
+                    attrs
+                        .attributes()
+                        .first()
+                        .ok_or(minicbor::encode::Error::message(
+                            "Cannot get the first Attribute",
+                        ))?;
                 //  If Name contains a single Attribute of type CommonName
-                if attr.len() == 1
-                    && attr_first.registered_oid().c509_oid().oid() == &COMMON_NAME_OID
+                if attrs.attributes().len() == 1
+                    && attr_first.get_registered_oid().get_c509_oid().get_oid() == COMMON_NAME_OID
                 {
                     // Get the value of the attribute
                     let cn_value =
@@ -110,7 +110,7 @@ impl Encode<()> for NameValue {
 
                     encode_cn_value(e, cn_value)?;
                 } else {
-                    rdn.encode(e, ctx)?;
+                    attrs.encode(e, ctx)?;
                 }
             },
             NameValue::Text(text) => {
@@ -127,13 +127,9 @@ impl Encode<()> for NameValue {
 impl Decode<'_, ()> for NameValue {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         match d.datatype()? {
-            minicbor::data::Type::Array => {
-                Ok(NameValue::RelativeDistinguishedName(
-                    RelativeDistinguishedName::decode(d, ctx)?,
-                ))
-            },
+            minicbor::data::Type::Array => Ok(NameValue::Attributes(Attributes::decode(d, ctx)?)),
             // If Name is a text string, the attribute is a CommonName
-            minicbor::data::Type::String => Ok(create_rdn_with_cn_attr(d.str()?.to_string())),
+            minicbor::data::Type::String => Ok(create_attributes_with_cn(d.str()?.to_string())),
             minicbor::data::Type::Bytes => decode_bytes(d),
             _ => {
                 Err(minicbor::decode::Error::message(
@@ -235,7 +231,7 @@ fn decode_hex_cn_bytes(bytes: &[u8]) -> Result<NameValue, minicbor::decode::Erro
     let text = hex::encode(bytes.get(1..).ok_or(minicbor::decode::Error::message(
         "Failed to get hex bytes index",
     ))?);
-    Ok(create_rdn_with_cn_attr(text))
+    Ok(create_attributes_with_cn(text))
 }
 
 /// Decode common name EUI-64 bytes.
@@ -253,14 +249,14 @@ fn decode_eui_cn_bytes(bytes: &[u8]) -> Result<NameValue, minicbor::decode::Erro
             // Turn it into HH-HH-HH-FF-FE-HH-HH-HH
             let data = [chunk1, &[0xFF], &[0xFE], chunk4].concat();
             let text = formatted_eui_bytes(&data);
-            Ok(create_rdn_with_cn_attr(text))
+            Ok(create_attributes_with_cn(text))
         },
         // EUI-64
         EUI64_LEN => {
             let text = formatted_eui_bytes(bytes.get(1..).ok_or(
                 minicbor::decode::Error::message("Failed to get EUI-64 bytes index"),
             )?);
-            Ok(create_rdn_with_cn_attr(text))
+            Ok(create_attributes_with_cn(text))
         },
         _ => {
             Err(minicbor::decode::Error::message(
@@ -270,13 +266,13 @@ fn decode_eui_cn_bytes(bytes: &[u8]) -> Result<NameValue, minicbor::decode::Erro
     }
 }
 
-/// Create a relative distinguished name with attribute common name from string.
-fn create_rdn_with_cn_attr(text: String) -> NameValue {
+/// Create a attributes with attribute common name from string.
+fn create_attributes_with_cn(text: String) -> NameValue {
     let mut attr = Attribute::new(COMMON_NAME_OID);
     attr.add_value(AttributeValue::Text(text));
-    let mut rdn = RelativeDistinguishedName::new();
-    rdn.add_attribute(attr);
-    NameValue::RelativeDistinguishedName(rdn)
+    let mut attrs = Attributes::new();
+    attrs.add_attr(attr);
+    NameValue::Attributes(attrs)
 }
 
 // ------------------Test----------------------
@@ -286,16 +282,16 @@ pub(crate) mod test_name {
     use super::*;
     use crate::attributes::attribute::Attribute;
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.1.  Example C509 Certificate Encoding
     pub(crate) fn name_cn_text() -> (Name, String) {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("RFC test CA".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
 
         (
-            Name::new(NameValue::RelativeDistinguishedName(rdn)),
+            Name::new(NameValue::Attributes(attrs)),
             // "RFC test CA" Text string: 6b5246432074657374204341
             "6b5246432074657374204341".to_string(),
         )
@@ -324,10 +320,10 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("000123abcd".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
 
-        let name = Name::new(NameValue::RelativeDistinguishedName(rdn));
+        let name = Name::new(NameValue::Attributes(attrs));
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
@@ -348,10 +344,10 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("000123ABCD".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
 
-        let name = Name::new(NameValue::RelativeDistinguishedName(rdn));
+        let name = Name::new(NameValue::Attributes(attrs));
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
@@ -364,16 +360,16 @@ pub(crate) mod test_name {
         assert_eq!(name_decoded, name);
     }
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     pub(crate) fn name_cn_eui_mac() -> (Name, String) {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-FF-FE-67-89-AB".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
 
         (
-            Name::new(NameValue::RelativeDistinguishedName(rdn)),
+            Name::new(NameValue::Attributes(attrs)),
             // Bytes of length 7: 0x47
             // "01-23-45-FF-FE-67-89-AB" special encode: 0x010123456789AB
             "47010123456789ab".to_string(),
@@ -403,9 +399,9 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-ff-fe-67-89-AB".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
-        let name = Name::new(NameValue::RelativeDistinguishedName(rdn));
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
+        let name = Name::new(NameValue::Attributes(attrs));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
@@ -429,10 +425,10 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-AB-00-01".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
 
-        let name = Name::new(NameValue::RelativeDistinguishedName(rdn));
+        let name = Name::new(NameValue::Attributes(attrs));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
@@ -451,10 +447,10 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-ab-00-01".to_string()));
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr);
 
-        let name = Name::new(NameValue::RelativeDistinguishedName(rdn));
+        let name = Name::new(NameValue::Attributes(attrs));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
@@ -471,9 +467,10 @@ pub(crate) mod test_name {
         assert_eq!(name_decoded, name);
     }
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     // Issuer: C=US, ST=CA, O=Example Inc, OU=certification, CN=802.1AR CA
+    #[allow(clippy::similar_names)]
     pub(crate) fn names() -> (Name, String) {
         let mut attr1 = Attribute::new(oid!(2.5.4 .6));
         attr1.add_value(AttributeValue::Text("US".to_string()));
@@ -486,15 +483,15 @@ pub(crate) mod test_name {
         let mut attr5 = Attribute::new(oid!(2.5.4 .3));
         attr5.add_value(AttributeValue::Text("802.1AR CA".to_string()));
 
-        let mut rdn = RelativeDistinguishedName::new();
-        rdn.add_attribute(attr1);
-        rdn.add_attribute(attr2);
-        rdn.add_attribute(attr3);
-        rdn.add_attribute(attr4);
-        rdn.add_attribute(attr5);
+        let mut attrs = Attributes::new();
+        attrs.add_attr(attr1);
+        attrs.add_attr(attr2);
+        attrs.add_attr(attr3);
+        attrs.add_attr(attr4);
+        attrs.add_attr(attr5);
 
         (
-            Name::new(NameValue::RelativeDistinguishedName(rdn)),
+            Name::new(NameValue::Attributes(attrs)),
             // Array of 10 items [4, "US", 6, "CA", 8, "Example Inc", 9, "certification", 1, "802.1AR CA"] : 0x8a
             // attr1: 0x04625553
             // attr2: 0x06624341
@@ -505,7 +502,7 @@ pub(crate) mod test_name {
         )
     }
     #[test]
-    fn encode_decode_type_name_rdns() {
+    fn encode_decode_type_name_attrs() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 

@@ -1,21 +1,19 @@
 //! C509 Extension as a part of `TBSCertificate` used in C509 Certificate.
 //!
 //! Extension fallback of C509 OID extension
-//! Given OID if not found in the registered OID table, it will be encoded as a PEN OID.
-//! If the OID is not a PEN OID, it will be encoded as an unwrapped OID.
+//! Given OID if not found in the registered OID table, it will be encoded as an unwrapped
+//! OID.
 //!
 //! ```cddl
 //! Extensions and Extension can be encoded as the following:
 //! Extensions = [ * Extension ] / int
 //! Extension = ( extensionID: int, extensionValue: any ) //
-//! ( extensionID: ~oid, ? critical: true,
-//!   extensionValue: bytes ) //
-//! ( extensionID: pen, ? critical: true,
-//!   extensionValue: bytes )
+//!             ( extensionID: ~oid, ? critical: true,
+//!             extensionValue: bytes ) //
 //! ```
 //!
 //! For more information about Extensions,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 pub mod alt_name;
 pub mod extension;

@@ -8,10 +8,11 @@ use std::{
 
 use asn1_rs::{oid, Oid};
 use c509_certificate::{
+    attributes::Attributes,
     big_uint::UnwrappedBigUint,
     extensions::Extensions,
     issuer_sig_algo::IssuerSignatureAlgorithm,
-    name::{rdn::RelativeDistinguishedName, Name, NameValue},
+    name::{Name, NameValue},
     signing::{PrivateKey, PublicKey},
     subject_pub_key_algo::SubjectPubKeyAlgorithm,
     tbs_cert::TbsCert,
@@ -102,17 +103,20 @@ struct C509Json {
     /// Optional serial number of the certificate,
     /// if not provided, a random number will be generated.
     serial_number: Option<UnwrappedBigUint>,
+    /// Optional issuer signature algorithm of the certificate,
+    /// if not provided, set to Ed25519.
+    issuer_signature_algorithm: Option<IssuerSignatureAlgorithm>,
     /// Optional issuer of the certificate,
     /// if not provided, issuer is the same as subject.
-    issuer: Option<RelativeDistinguishedName>,
+    issuer: Option<Attributes>,
     /// Optional validity not before date,
     /// if not provided, set to current time.
     validity_not_before: Option<String>,
     /// Optional validity not after date,
     /// if not provided, set to no expire date 9999-12-31T23:59:59+00:00.
     validity_not_after: Option<String>,
-    /// Relative distinguished name of the subject.
-    subject: RelativeDistinguishedName,
+    /// Attributes of the subject.
+    subject: Attributes,
     /// Optional subject public key algorithm of the certificate,
     /// if not provided, set to Ed25519.
     subject_public_key_algorithm: Option<SubjectPubKeyAlgorithm>,
@@ -121,9 +125,6 @@ struct C509Json {
     subject_public_key: String,
     /// Extensions of the certificate.
     extensions: Extensions,
-    /// Optional issuer signature algorithm of the certificate,
-    /// if not provided, set to Ed25519.
-    issuer_signature_algorithm: Option<IssuerSignatureAlgorithm>,
     /// Optional issuer signature value of the certificate.
     #[serde(skip_deserializing)]
     issuer_signature_value: Option<Vec<u8>>,
@@ -133,9 +134,9 @@ struct C509Json {
 const ED25519: (Oid, Option<String>) = (oid!(1.3.101 .112), None);
 
 /// Integer indicate that certificate is self-signed.
-/// 0 for Natively Signed C509 Certificate following X.509 v3
-/// 1 for CBOR re-encoding of X.509 v3 Certificate        
-const SELF_SIGNED_INT: u8 = 0;
+/// 2 for Natively Signed C509 Certificate following X.509 v3
+/// 3 for CBOR re-encoding of X.509 v3 Certificate        
+const SELF_SIGNED_INT: u8 = 2;
 
 // -------------------generate-----------------------
 
@@ -159,7 +160,12 @@ fn generate(
 
     // Parse validity dates or use defaults
     // Now for not_before date
-    let not_before = parse_or_default_date(c509_json.validity_not_before, Utc::now().timestamp())?;
+    let now_timestamp: u64 = Utc::now()
+        .timestamp()
+        .try_into()
+        .map_err(|_| anyhow::anyhow!("Current timestamp is invalid"))?;
+
+    let not_before = parse_or_default_date(c509_json.validity_not_before, now_timestamp)?;
     // Default as expire date for not_after
     // Expire date = 9999-12-31T23:59:59+00:00 as mention in the C509 document
     let not_after = parse_or_default_date(
@@ -175,18 +181,18 @@ fn generate(
     let tbs = TbsCert::new(
         c509_json.certificate_type.unwrap_or(SELF_SIGNED_INT),
         serial_number,
-        Name::new(NameValue::RelativeDistinguishedName(issuer)),
-        Time::new(not_before),
-        Time::new(not_after),
-        Name::new(NameValue::RelativeDistinguishedName(c509_json.subject)),
-        c509_json
-            .subject_public_key_algorithm
-            .unwrap_or(SubjectPubKeyAlgorithm::new(key_type.0.clone(), key_type.1)),
-        public_key.to_bytes(),
-        c509_json.extensions.clone(),
         c509_json
             .issuer_signature_algorithm
-            .unwrap_or(IssuerSignatureAlgorithm::new(key_type.0, ED25519.1)),
+            .unwrap_or(IssuerSignatureAlgorithm::new(key_type.0.clone(), ED25519.1)),
+        Some(Name::new(NameValue::Attributes(issuer))),
+        Time::new(not_before),
+        Time::new(not_after),
+        Name::new(NameValue::Attributes(c509_json.subject)),
+        c509_json
+            .subject_public_key_algorithm
+            .unwrap_or(SubjectPubKeyAlgorithm::new(key_type.0, key_type.1)),
+        public_key.to_bytes(),
+        c509_json.extensions.clone(),
     );
 
     let cert = c509_certificate::generate(&tbs, private_key)?;
@@ -213,9 +219,8 @@ fn write_to_output_file(output: PathBuf, data: &[u8]) -> anyhow::Result<()> {
 /// If self-signed is true, issuer is the same as subject.
 /// Otherwise, issuer must be present.
 fn determine_issuer(
-    self_signed: bool, issuer: Option<RelativeDistinguishedName>,
-    subject: RelativeDistinguishedName,
-) -> anyhow::Result<RelativeDistinguishedName> {
+    self_signed: bool, issuer: Option<Attributes>, subject: Attributes,
+) -> anyhow::Result<Attributes> {
     if self_signed {
         Ok(subject)
     } else {
@@ -249,12 +254,16 @@ fn get_key_type(key_type: &Option<String>) -> anyhow::Result<(Oid<'static>, Opti
     }
 }
 
-/// Parse date string to i64.
-fn parse_or_default_date(date_option: Option<String>, default: i64) -> Result<i64, anyhow::Error> {
+/// Parse date string to u64.
+fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u64, anyhow::Error> {
     match date_option {
         Some(date) => {
             DateTime::parse_from_rfc3339(&date)
-                .map(|dt| dt.timestamp())
+                .map(|dt| {
+                    dt.timestamp()
+                        .try_into()
+                        .map_err(|_| anyhow::anyhow!("Timestamp is invalid"))
+                })?
                 .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",)))
         },
         None => Ok(default),
@@ -292,22 +301,18 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
     let is_self_signed = tbs_cert.c509_certificate_type() == SELF_SIGNED_INT;
     let c509_json = C509Json {
         self_signed: is_self_signed,
-        certificate_type: Some(tbs_cert.c509_certificate_type()),
-        serial_number: Some(tbs_cert.certificate_serial_number().clone()),
-        issuer: Some(extract_relative_distinguished_name(tbs_cert.issuer())?),
-        validity_not_before: Some(time_to_string(
-            tbs_cert.validity_not_before().clone().into(),
-        )?),
-        validity_not_after: Some(time_to_string(
-            tbs_cert.validity_not_after().clone().into(),
-        )?),
-        subject: extract_relative_distinguished_name(tbs_cert.subject())?,
-        subject_public_key_algorithm: Some(tbs_cert.subject_public_key_algorithm().clone()),
+        certificate_type: Some(tbs_cert.get_c509_certificate_type()),
+        serial_number: Some(tbs_cert.get_certificate_serial_number().clone()),
+        issuer_signature_algorithm: Some(tbs_cert.get_issuer_signature_algorithm().clone()),
+        issuer: Some(extract_attributes(tbs_cert.get_issuer())?),
+        validity_not_before: Some(time_to_string(tbs_cert.get_validity_not_before().to_u64())?),
+        validity_not_after: Some(time_to_string(tbs_cert.get_validity_not_after().to_u64())?),
+        subject: extract_attributes(tbs_cert.get_subject())?,
+        subject_public_key_algorithm: Some(tbs_cert.get_subject_public_key_algorithm().clone()),
         // Return a hex formation of the public key
-        subject_public_key: tbs_cert.subject_public_key().encode_hex(),
-        extensions: tbs_cert.extensions().clone(),
-        issuer_signature_algorithm: Some(tbs_cert.issuer_signature_algorithm().clone()),
-        issuer_signature_value: c509.issuer_signature_value().clone(),
+        subject_public_key: tbs_cert.get_subject_public_key().encode_hex(),
+        extensions: tbs_cert.get_extensions().clone(),
+        issuer_signature_value: c509.get_issuer_signature_value().clone(),
     };
 
     let data = serde_json::to_string(&c509_json)?;
@@ -320,18 +325,24 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Extract a `RelativeDistinguishedName` from a `Name`.
-fn extract_relative_distinguished_name(name: &Name) -> anyhow::Result<RelativeDistinguishedName> {
-    match name.value() {
-        NameValue::RelativeDistinguishedName(rdn) => Ok(rdn.clone()),
-        _ => Err(anyhow::anyhow!("Expected RelativeDistinguishedName")),
+/// Extract a `Attributes` from a `Name`.
+fn extract_attributes(name: &Name) -> anyhow::Result<Attributes> {
+    match name.get_value() {
+        NameValue::Attributes(attrs) => Ok(attrs.clone()),
+        _ => Err(anyhow::anyhow!("Expected Attributes")),
     }
 }
 
 /// Convert time in i64 to string.
-fn time_to_string(time: i64) -> anyhow::Result<String> {
-    let datetime =
-        DateTime::from_timestamp(time, 0).ok_or_else(|| anyhow::anyhow!("Invalid timestamp"))?;
+fn time_to_string(time: u64) -> anyhow::Result<String> {
+    // Attempt to convert the timestamp and handle errors if they occur
+    let timestamp: i64 = time
+        .try_into()
+        .map_err(|e| anyhow::anyhow!("Failed to convert time: {:?}", e))?;
+
+    // Convert the timestamp to a DateTime and handle any potential errors
+    let datetime = DateTime::from_timestamp(timestamp, 0)
+        .ok_or_else(|| anyhow::anyhow!("Invalid timestamp"))?;
     Ok(datetime.to_rfc3339())
 }
 

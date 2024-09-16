@@ -7,18 +7,11 @@
 use std::str::FromStr;
 
 use anyhow::Result;
-use asn1_rs::oid;
-use minicbor::{data::Tag, decode, encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{decode, encode::Write, Decode, Decoder, Encode, Encoder};
 use oid_registry::Oid;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::tables::IntegerToOidTable;
-
-/// IANA Private Enterprise Number (PEN) OID prefix.
-const PEN_PREFIX: Oid<'static> = oid!(1.3.6 .1 .4 .1);
-
-/// Tag number representing IANA Private Enterprise Number (PEN) OID.
-const OID_PEN_TAG: u64 = 112;
 
 /// A strut of C509 OID with Registered Integer.
 #[derive(Debug, Clone, PartialEq)]
@@ -40,15 +33,8 @@ impl C509oidRegistered {
 
     /// Get the `C509oid`.
     #[must_use]
-    pub fn c509_oid(&self) -> &C509oid {
-        &self.oid
-    }
-
-    /// Get whether PEN Encoding supported for this OID.
-    /// Depends on each registration table.
-    pub(crate) fn pen_encoded(mut self) -> Self {
-        self.oid.pen_supported = true;
-        self
+    pub fn get_c509_oid(&self) -> C509oid {
+        self.oid.clone()
     }
 
     /// Get the registration table.
@@ -61,12 +47,7 @@ impl C509oidRegistered {
 
 /// A struct represent an instance of `C509oid`.
 #[derive(Debug, PartialEq, Clone, Eq, Hash)]
-pub struct C509oid {
-    /// The OID.
-    oid: Oid<'static>,
-    /// The flag to indicate whether PEN encoding is supported.
-    pen_supported: bool,
-}
+pub struct C509oid(Oid<'static>);
 
 /// A helper struct for deserialize and serialize `C509oid`.
 #[derive(Debug, Deserialize, Serialize)]
@@ -89,7 +70,7 @@ impl Serialize for C509oid {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.oid.to_string(),
+            oid: self.0.to_string(),
         };
         helper.serialize(serializer)
     }
@@ -100,30 +81,19 @@ impl C509oid {
     /// Default value of PEN flag is false
     #[must_use]
     pub fn new(oid: Oid<'static>) -> Self {
-        Self {
-            oid,
-            pen_supported: false,
-        }
-    }
-
-    /// Is PEN Encoding supported for this OID
-    pub(crate) fn pen_encoded(mut self) -> Self {
-        self.pen_supported = true;
-        self
+        Self(oid)
     }
 
     /// Get the underlying OID of the `C509oid`
     #[must_use]
-    pub fn oid(&self) -> &Oid<'static> {
-        &self.oid
+    pub fn get_oid(self) -> Oid<'static> {
+        self.0
     }
 }
 
 impl Encode<()> for C509oid {
     /// Encode an OID
-    /// If `pen_supported` flag is set, and OID start with a valid `PEN_PREFIX`,
-    /// it is encoded as PEN (Private Enterprise Number)
-    /// else encode as an unwrapped OID (~oid) - as bytes string without tag.
+    /// Encode as an unwrapped OID (~oid) - as bytes string without tag.
     ///
     /// # Returns
     ///
@@ -132,66 +102,21 @@ impl Encode<()> for C509oid {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        // Check if PEN encoding is supported and the OID starts with the PEN prefix.
-        if self.pen_supported && self.oid.starts_with(&PEN_PREFIX) {
-            // Set the CBOR tag.
-            e.tag(Tag::new(OID_PEN_TAG))?;
-            // Convert OID originally store as [u8] to [u64]
-            // This process is necessary to get the correct OID
-            // For example given - 1.3.6 .1 .4 .1.4.999
-            // This OID will be stored as [u8] - [43, 6, 1, 4, 1, 4, 135, 103]
-            // The first 2 integer has a special encoding formula where,
-            // values is computed using X * 40 + Y (See RFC9090 for more info)
-            // The number 999 exceed the 225 limit (max of u8), so it will be encoded as 2 bytes
-            let raw_oid: Vec<u64> =
-                self.oid
-                    .iter()
-                    .map(Iterator::collect)
-                    .ok_or(minicbor::encode::Error::message(
-                        "Failed to collect OID components from iterator",
-                    ))?;
-            let raw_pen_prefix: Vec<u64> = PEN_PREFIX.iter().map(Iterator::collect).ok_or(
-                minicbor::encode::Error::message("Failed to collect OID components from iterator"),
-            )?;
-            // relative_oid is OID that follows PEN_PREFIX (relative to PEN_PREFIX)
-            // Use the [u64] PEN prefix length to extract the relative OID
-            let oid_slice =
-                raw_oid
-                    .get(raw_pen_prefix.len()..)
-                    .ok_or(minicbor::encode::Error::message(
-                        "Failed to get a OID slice",
-                    ))?;
-            let relative_oid = Oid::from_relative(oid_slice)
-                .map_err(|_| minicbor::encode::Error::message("Failed to get a relative OID"))?;
-            return e.bytes(relative_oid.as_bytes())?.ok();
-        }
-        let oid_bytes = self.oid.as_bytes();
-        e.bytes(oid_bytes)?.ok()
+        let oid_bytes = self.0.as_bytes();
+        e.bytes(oid_bytes)?;
+        Ok(())
     }
 }
 
 impl Decode<'_, ()> for C509oid {
     /// Decode an OID
-    /// If the data to be decoded is a `Tag`, and the tag is an `OID_PEN_TAG`,
-    /// then decode the OID as Private Enterprise Number (PEN) OID.
-    /// else decode the OID as unwrapped OID (~oid) - as bytes string without tag.
+    /// Decode the OID as unwrapped OID (~oid) - as bytes string without tag.
 
     /// # Returns
     ///
     /// A C509oid instance.
     /// If the decoding fails, it will return an error.
     fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        if (minicbor::data::Type::Tag == d.datatype()?) && (Tag::new(OID_PEN_TAG) == d.tag()?) {
-            let oid_bytes = d.bytes()?;
-            // raw_oid contains the whole OID which stored in bytes
-            let mut raw_oid = Vec::new();
-            raw_oid.extend_from_slice(PEN_PREFIX.as_bytes());
-            raw_oid.extend_from_slice(oid_bytes);
-            // Convert the raw_oid to Oid
-            let oid = Oid::new(raw_oid.into());
-            return Ok(C509oid::new(oid).pen_encoded());
-        }
-        // Not a PEN Relative OID, so treat as a normal OID
         let oid_bytes = d.bytes()?;
         let oid = Oid::new(oid_bytes.to_owned().into());
         Ok(C509oid::new(oid))
@@ -202,6 +127,8 @@ impl Decode<'_, ()> for C509oid {
 
 #[cfg(test)]
 mod test_c509_oid {
+
+    use asn1_rs::oid;
 
     use super::*;
 
@@ -215,20 +142,6 @@ mod test_c509_oid {
         oid.encode(&mut encoder, &mut ())
             .expect("Failed to encode OID");
         assert_eq!(hex::encode(buffer.clone()), "49608648016503040201");
-
-        let mut decoder = Decoder::new(&buffer);
-        let decoded_oid = C509oid::decode(&mut decoder, &mut ()).expect("Failed to decode OID");
-        assert_eq!(decoded_oid, oid);
-    }
-
-    #[test]
-    fn encode_decode_pen() {
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        let oid = C509oid::new(oid!(1.3.6 .1 .4 .1 .1 .1 .29)).pen_encoded();
-        oid.encode(&mut encoder, &mut ())
-            .expect("Failed to encode OID");
-        assert_eq!(hex::encode(buffer.clone()), "d8704301011d");
 
         let mut decoder = Decoder::new(&buffer);
         let decoded_oid = C509oid::decode(&mut decoder, &mut ()).expect("Failed to decode OID");
