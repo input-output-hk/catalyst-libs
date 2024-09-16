@@ -18,9 +18,9 @@ The current validation includes
 
 ## Test Data
 
-* `conway_1.block`: Block number: `2684141`, Absolute slot number: `70512378`
+* `conway_1.block`: Block number: `2694583`, Absolute slot number: `70795216`
 * `conway_2.block`: Block number: `2625015`, Absolute slot number: `68906742`
-* `conway_3.block`: Block number: `2686596`, Absolute slot number: `70579800`
+* `conway_3.block`: Block number: `2694587`, Absolute slot number: `70795304`
 
 ## References
 

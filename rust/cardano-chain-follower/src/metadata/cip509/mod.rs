@@ -1084,8 +1084,8 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // First transaction of this test data contains the CIP509 auxiliary data
-        let tx = transactions[0].clone();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
         let aux_data = cip_509_aux_data(&tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
@@ -1104,8 +1104,8 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // First transaction of this test data contains the CIP509 auxiliary data
-        let tx = transactions[0].clone();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
 
@@ -1125,8 +1125,8 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // First transaction of this test data contains the CIP509 auxiliary data
-        let tx = transactions[0].clone();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
 
@@ -1146,8 +1146,8 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // First transaction of this test data contains the CIP509 auxiliary data
-        let tx = transactions[0].clone();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
 
@@ -1180,8 +1180,8 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Third transaction of this test data contains the CIP509 auxiliary data
-        let tx = transactions[2].clone();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
 
