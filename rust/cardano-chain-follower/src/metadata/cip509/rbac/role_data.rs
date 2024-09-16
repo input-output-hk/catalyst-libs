@@ -7,7 +7,7 @@ use strum::FromRepr;
 
 use super::Cip509RbacMetadataInt;
 use crate::metadata::cip509::decode_helper::{
-    decode_any, decode_array_len, decode_bytes, decode_i64, decode_map_len, decode_u64, decode_u8,
+    decode_any, decode_array_len, decode_bytes, decode_i16, decode_map_len, decode_u64, decode_u8,
 };
 
 /// Struct of role data.
@@ -20,7 +20,7 @@ pub struct RoleData {
     /// Optional role encryption key.
     pub role_encryption_key: Option<KeyReference>,
     /// Optional payment key.
-    pub payment_key: Option<i64>,
+    pub payment_key: Option<i16>,
     /// Optional role extended data keys.
     /// Empty map if no role extended data keys.
     pub role_extended_data_keys: HashMap<u8, Vec<u8>>,
@@ -64,7 +64,7 @@ impl Decode<'_, ()> for RoleData {
                         role_data.role_encryption_key = Some(KeyReference::decode(d, ctx)?);
                     },
                     RoleDataInt::PaymentKey => {
-                        role_data.payment_key = Some(decode_i64(d, "PaymentKey in RoleData")?);
+                        role_data.payment_key = Some(decode_i16(d, "PaymentKey in RoleData")?);
                     },
                 }
             } else {
