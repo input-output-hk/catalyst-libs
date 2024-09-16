@@ -999,3 +999,231 @@ impl Cip509 {
         None
     }
 }
+
+#[cfg(test)]
+mod tests {
+
+    use dashmap::DashMap;
+
+    use super::*;
+    fn conway_1() -> Vec<u8> {
+        hex::decode(include_str!(
+            "../../../test_data/conway_tx_rbac/conway_1.block"
+        ))
+        .expect("Failed to decode hex block.")
+    }
+
+    fn conway_2() -> Vec<u8> {
+        hex::decode(include_str!(
+            "../../../test_data/conway_tx_rbac/conway_2.block"
+        ))
+        .expect("Failed to decode hex block.")
+    }
+
+    fn conway_3() -> Vec<u8> {
+        hex::decode(include_str!(
+            "../../../test_data/conway_tx_rbac/conway_3.block"
+        ))
+        .expect("Failed to decode hex block.")
+    }
+
+    fn cip_509_aux_data(tx: &MultiEraTx<'_>) -> Vec<u8> {
+        let raw_auxiliary_data = tx
+            .as_conway()
+            .unwrap()
+            .clone()
+            .auxiliary_data
+            .map(|aux| aux.raw_cbor());
+
+        let raw_cbor_data = match raw_auxiliary_data {
+            pallas::codec::utils::Nullable::Some(data) => Ok(data),
+            _ => Err("Auxiliary data not found"),
+        };
+
+        let auxiliary_data = RawAuxData::new(raw_cbor_data.expect("Failed to get raw cbor data"));
+        auxiliary_data
+            .get_metadata(LABEL)
+            .expect("Failed to get metadata")
+            .to_vec()
+    }
+
+    #[test]
+    fn test_decode_cip509() {
+        let cip_509 = "a50050ca7a1457ef9f4c7f9c747f8c4a4cfa6c01504dd9d3b2ef173daf8612819857721d4b0258204d3f576f26db29139981a69443c2325daa812cc353a31b5a4db794a5bcbb06c20b8c58401b3d030866084fcb259de07496d3197e913a39fd628a3db0a4ed6839261a00c51cb0a5b9c16194064132ace375ea23c75c60659400cba304d0d689c00086195d5840ff28714da02c35e7295815ba58b77f227e576fa254c464e2f9c6f9dfa900a0208250033c054a468c38e08819601d073c034a4727a524ff39995477443c1fca235840839c927599b253887f50487c1caf757c0aaf79bc3fcacd42252b8f2ae1f1a8b282929ca22bb5c2885cc23a66005c0cc1ca20142b82310c3a137d44c1943e40995840a7a7ce5c3475b5887a3765ede2ff3b7bfea90f255e2edf37fd44e27f26b8e6cf408aef4b20bebf7257b3dabc7eda65fff4ed278b50219f0a52367ff5b80e46b758403875f55a394d17a5d9a6b1a1deff5b2206e9e9734e9fbefa6a1cdfeb7a104546dfb6e46c46feaeb65a7f4648c276e29e87b27bc053bffef79359300220d0c3875840f2a05cc4880317358e19c758fd9ab9917551ce3987af2e35d73b6958a0f5732784621b0c92f68a93537f16f48445424890f955d7a597c13c2eb54a82b39f0307584097507df5fef916fabb6dafdfb516fb9184783e2cb4e89d048a6c1e5c04818bdb76ffb5cbef1fbe452658d904cd152ee72a3bfc6efe1199fb3b51f1979629cd4e5840fdb7df511723d4cead3d2b2eb9c1f18cbbfcf9f5cc8eac46dc03cd55fcac3303c391437f50400923e65c02e981af5461b6867a47fb25ebe9b0fb4d9e41ec210e58404b9011000206414523c0990f9ee20b5d8a745393d3febaf6413a448b994f1567eb7945df7a0ab44afd55561e0190b376d411026c5d7a4a49a19e0bd3f5addd6c5840492fde46eee8d75b587286291dfeb6a78fdf59c1a6bfa2717b1f41dfa878756140ce7c77504b64b094b870ade78569566eec66369133af5aa8c8eab9f95e29df58409ec10be251547101b24c495c8ff4fa55378dbb4a5c6e89b18a12ac033343d61c3b7f5fba725b51536d92a5cbfaef9be6d24a3e5b3d75a1c0e29e42f523567fac4d0f8200811c822d2210b97f5708186358403b22c9d23b9e33092595b517442f4c73fbe11f2ec5bb7b3eb1ed060aeca73bfe750496dc8bdf459e9100c0013801dd1c6783d1703e18f738cf1b13561eaa1209";
+        let binding = hex::decode(cip_509).unwrap();
+        let mut decoder = Decoder::new(binding.as_slice());
+        let decoded_cip509 = Cip509::decode(&mut decoder, &mut ()).unwrap();
+
+        let purpose: [u8; 16] = hex::decode("ca7a1457ef9f4c7f9c747f8c4a4cfa6c")
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let txn_inputs_hash: [u8; 16] = hex::decode("4dd9d3b2ef173daf8612819857721d4b")
+            .unwrap()
+            .try_into()
+            .unwrap();
+        let prv_tx_id: [u8; 32] =
+            hex::decode("4d3f576f26db29139981a69443c2325daa812cc353a31b5a4db794a5bcbb06c2")
+                .unwrap()
+                .try_into()
+                .unwrap();
+        let validation_signature = hex::decode("3b22c9d23b9e33092595b517442f4c73fbe11f2ec5bb7b3eb1ed060aeca73bfe750496dc8bdf459e9100c0013801dd1c6783d1703e18f738cf1b13561eaa1209").unwrap();
+
+        assert_eq!(decoded_cip509.purpose, purpose);
+        assert_eq!(decoded_cip509.txn_inputs_hash, txn_inputs_hash);
+        assert_eq!(decoded_cip509.prv_tx_id, Some(prv_tx_id));
+        assert_eq!(decoded_cip509.validation_signature, validation_signature);
+    }
+
+    #[test]
+    fn test_validate_txn_inputs_hash() {
+        let decoded_metadata = DecodedMetadata(DashMap::new());
+        let mut validation_report = ValidationReport::new();
+        let conway_block_data = conway_1();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
+        let aux_data = cip_509_aux_data(&tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        assert!(cip509
+            .validate_txn_inputs_hash(&tx, &mut validation_report, &decoded_metadata)
+            .unwrap());
+    }
+
+    #[test]
+    fn test_validate_aux() {
+        let decoded_metadata = DecodedMetadata(DashMap::new());
+        let mut validation_report = ValidationReport::new();
+        let conway_block_data = conway_1();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
+
+        let aux_data = cip_509_aux_data(&tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let mut cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        assert!(cip509
+            .validate_aux(&tx, &mut validation_report, &decoded_metadata)
+            .unwrap());
+    }
+
+    #[test]
+    fn test_validate_public_key_success() {
+        let decoded_metadata = DecodedMetadata(DashMap::new());
+        let mut validation_report = ValidationReport::new();
+        let conway_block_data = conway_1();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
+
+        let aux_data = cip_509_aux_data(&tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        assert!(cip509
+            .validate_stake_public_key(&tx, &mut validation_report, &decoded_metadata, 0)
+            .unwrap());
+    }
+
+    #[test]
+    fn test_validate_payment_key_success_positive_ref() {
+        let decoded_metadata = DecodedMetadata(DashMap::new());
+        let mut validation_report = ValidationReport::new();
+        let conway_block_data = conway_1();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
+
+        let aux_data = cip_509_aux_data(&tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+
+        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+            for role in role_set {
+                if role.role_number == 0 {
+                    assert!(cip509
+                        .validate_payment_key(
+                            &tx,
+                            &mut validation_report,
+                            &decoded_metadata,
+                            0,
+                            role
+                        )
+                        .unwrap());
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_validate_payment_key_success_negative_ref() {
+        let decoded_metadata = DecodedMetadata(DashMap::new());
+        let mut validation_report = ValidationReport::new();
+        let conway_block_data = conway_3();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[1].clone();
+
+        let aux_data = cip_509_aux_data(&tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+
+        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+            for role in role_set {
+                if role.role_number == 0 {
+                    println!(
+                        "{:?}",
+                        cip509.validate_payment_key(
+                            &tx,
+                            &mut validation_report,
+                            &decoded_metadata,
+                            0,
+                            role
+                        )
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_validate_public_key_fail() {
+        let decoded_metadata = DecodedMetadata(DashMap::new());
+        let mut validation_report = ValidationReport::new();
+        let conway_block_data = conway_2();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Fifth transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions[4].clone();
+
+        let aux_data = cip_509_aux_data(&tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        assert!(!cip509
+            .validate_stake_public_key(&tx, &mut validation_report, &decoded_metadata, 0)
+            .unwrap());
+    }
+}
