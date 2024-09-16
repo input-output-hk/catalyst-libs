@@ -39,15 +39,15 @@ impl Extensions {
         Self(Vec::new())
     }
 
-    /// Add an `Extension` to the `Extensions`.
-    pub fn add_extension(&mut self, extension: Extension) {
-        self.0.push(extension);
-    }
-
     /// Get the inner vector of `Extensions`.
     #[must_use]
     pub fn extensions(&self) -> &[Extension] {
         &self.0
+    }
+
+    /// Add an `Extension` to the `Extensions`.
+    pub fn add_extension(&mut self, extension: Extension) {
+        self.0.push(extension);
     }
 }
 

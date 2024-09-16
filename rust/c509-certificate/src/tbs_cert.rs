@@ -396,12 +396,12 @@ pub(crate) mod test_tbs_cert {
             attr6.add_value(AttributeValue::Text("Wt1234".to_string()));
 
             let mut attrs = Attributes::new();
-            attrs.add_attr(attr1);
-            attrs.add_attr(attr2);
-            attrs.add_attr(attr3);
-            attrs.add_attr(attr4);
-            attrs.add_attr(attr5);
-            attrs.add_attr(attr6);
+            attrs.add_attribute(attr1);
+            attrs.add_attribute(attr2);
+            attrs.add_attribute(attr3);
+            attrs.add_attribute(attr4);
+            attrs.add_attribute(attr5);
+            attrs.add_attribute(attr6);
 
             Name::new(NameValue::Attributes(attrs))
         }
@@ -430,9 +430,10 @@ pub(crate) mod test_tbs_cert {
                 true,
             ));
             let mut gns = GeneralNames::new();
-            let hw = OtherNameHardwareModuleName::new(oid!(1.3.6 .1 .4 .1 .6175 .10 .1), vec![
-                0x01, 0x02, 0x03, 0x04,
-            ]);
+            let hw = OtherNameHardwareModuleName::new(
+                oid!(1.3.6 .1 .4 .1 .6175 .10 .1),
+                vec![0x01, 0x02, 0x03, 0x04],
+            );
             gns.add_general_name(GeneralName::new(
                 GeneralNameTypeRegistry::OtherNameHardwareModuleName,
                 GeneralNameValue::OtherNameHWModuleName(hw),

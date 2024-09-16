@@ -39,11 +39,6 @@ impl Attribute {
         }
     }
 
-    /// Add a value to `Attribute`.
-    pub fn add_value(&mut self, value: AttributeValue) {
-        self.value.push(value);
-    }
-
     /// Get the value of `Attribute`.
     #[must_use]
     pub fn value(&self) -> &[AttributeValue] {
@@ -55,9 +50,9 @@ impl Attribute {
         &self.registered_oid
     }
 
-    /// Get the value of `Attribute`.
-    pub(crate) fn get_value(&self) -> &Vec<AttributeValue> {
-        &self.value
+    /// Add a value to `Attribute`.
+    pub fn add_value(&mut self, value: AttributeValue) {
+        self.value.push(value);
     }
 
     /// Set whether `Attribute` can have multiple value.
@@ -78,7 +73,9 @@ struct Helper {
 
 impl<'de> Deserialize<'de> for Attribute {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where
+        D: Deserializer<'de>,
+    {
         let helper = Helper::deserialize(deserializer)?;
         let oid =
             Oid::from_str(&helper.oid).map_err(|e| serde::de::Error::custom(format!("{e:?}")))?;
@@ -92,9 +89,11 @@ impl<'de> Deserialize<'de> for Attribute {
 
 impl Serialize for Attribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    where
+        S: serde::Serializer,
+    {
         let helper = Helper {
-            oid: self.registered_oid.c509_oid().oid().to_string(),
+            oid: self.registered_oid().c509_oid().oid().to_string(),
             value: self.value.clone(),
         };
         helper.serialize(serializer)
@@ -110,12 +109,12 @@ impl Encode<()> for Attribute {
             .registered_oid
             .table()
             .get_map()
-            .get_by_right(self.registered_oid.c509_oid().oid())
+            .get_by_right(self.registered_oid().c509_oid().oid())
         {
             e.i16(oid)?;
         } else {
-            // Encode unwrapped CBOR OID or CBOR PEN
-            self.registered_oid.c509_oid().encode(e, ctx)?;
+            // Encode unwrapped CBOR OID
+            self.registered_oid().c509_oid().encode(e, ctx)?;
         }
 
         // Check if the attribute value is empty
@@ -203,11 +202,9 @@ impl Decode<'_, ()> for AttributeValue {
         match d.datatype()? {
             minicbor::data::Type::String => Ok(AttributeValue::Text(d.str()?.to_string())),
             minicbor::data::Type::Bytes => Ok(AttributeValue::Bytes(d.bytes()?.to_vec())),
-            _ => {
-                Err(minicbor::decode::Error::message(
-                    "Invalid AttributeValue, value should be either String or Bytes",
-                ))
-            },
+            _ => Err(minicbor::decode::Error::message(
+                "Invalid AttributeValue, value should be either String or Bytes",
+            )),
         }
     }
 }

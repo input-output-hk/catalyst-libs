@@ -17,7 +17,7 @@ use crate::tables::IntegerToOidTable;
 #[derive(Debug, Clone, PartialEq)]
 pub struct C509oidRegistered {
     /// The `C509oid`.
-    oid: C509oid,
+    c509_oid: C509oid,
     /// The registration table.
     registration_table: &'static IntegerToOidTable,
 }
@@ -26,15 +26,15 @@ impl C509oidRegistered {
     /// Create a new instance of `C509oidRegistered`.
     pub(crate) fn new(oid: Oid<'static>, table: &'static IntegerToOidTable) -> Self {
         Self {
-            oid: C509oid::new(oid),
+            c509_oid: C509oid::new(oid),
             registration_table: table,
         }
     }
 
     /// Get the `C509oid`.
     #[must_use]
-    pub fn get_c509_oid(&self) -> C509oid {
-        self.oid.clone()
+    pub fn c509_oid(&self) -> &C509oid {
+        &self.c509_oid
     }
 
     /// Get the registration table.
@@ -56,6 +56,21 @@ struct Helper {
     oid: String,
 }
 
+impl C509oid {
+    /// Create an new instance of `C509oid`.
+    /// Default value of PEN flag is false
+    #[must_use]
+    pub fn new(oid: Oid<'static>) -> Self {
+        Self(oid)
+    }
+
+    /// Get the underlying OID of the `C509oid`
+    #[must_use]
+    pub fn oid(&self) -> &Oid<'static> {
+        &self.0
+    }
+}
+
 impl<'de> Deserialize<'de> for C509oid {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: Deserializer<'de> {
@@ -73,21 +88,6 @@ impl Serialize for C509oid {
             oid: self.0.to_string(),
         };
         helper.serialize(serializer)
-    }
-}
-
-impl C509oid {
-    /// Create an new instance of `C509oid`.
-    /// Default value of PEN flag is false
-    #[must_use]
-    pub fn new(oid: Oid<'static>) -> Self {
-        Self(oid)
-    }
-
-    /// Get the underlying OID of the `C509oid`
-    #[must_use]
-    pub fn get_oid(self) -> Oid<'static> {
-        self.0
     }
 }
 

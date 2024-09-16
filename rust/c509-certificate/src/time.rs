@@ -20,13 +20,13 @@ impl Time {
     }
 }
 
-impl From<i64> for Time {
-    fn from(value: i64) -> Self {
+impl From<u64> for Time {
+    fn from(value: u64) -> Self {
         Time::new(value)
     }
 }
 
-impl From<Time> for i64 {
+impl From<Time> for u64 {
     fn from(time: Time) -> Self {
         time.0
     }
