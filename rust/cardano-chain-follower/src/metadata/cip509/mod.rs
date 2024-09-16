@@ -11,7 +11,10 @@ use rbac::{certs::C509Cert, role_data::RoleData};
 mod decode_helper;
 mod rbac;
 mod utils;
-use utils::{compare_key_hash, extract_cip19_hash, extract_key_hash, zero_out_last_n_bytes};
+use utils::{
+    compare_key_hash, decremented_index, extract_cip19_hash, extract_key_hash,
+    zero_out_last_n_bytes,
+};
 use x509_cert::{der::Decode as _, ext::pkix::ID_CE_SUBJECT_ALT_NAME};
 mod x509_chunks;
 
@@ -743,6 +746,15 @@ impl Cip509 {
         decoded_metadata: &DecodedMetadata, txn_idx: usize, role_data: &RoleData,
     ) -> Option<bool> {
         if let Some(payment_key) = role_data.payment_key {
+            // 0 reference key is not allowed
+            if payment_key == 0 {
+                self.validation_failure(
+                    "Invalid payment reference key, 0 is not allowed",
+                    validation_report,
+                    decoded_metadata,
+                );
+                return None;
+            }
             match txn {
                 MultiEraTx::AlonzoCompatible(tx, _) => {
                     // Handle negative payment keys (reference to tx output)
@@ -758,11 +770,11 @@ impl Cip509 {
                                 return None;
                             },
                         };
-                        let index = match usize::try_from(payment_key.abs()) {
+                        let index = match decremented_index(payment_key.abs()) {
                             Ok(value) => value,
                             Err(e) => {
                                 self.validation_failure(
-                                    &format!("Failed to convert payment_key to usize: {e}"),
+                                    &format!("Failed to get index of payment key: {e}"),
                                     validation_report,
                                     decoded_metadata,
                                 );
@@ -788,11 +800,11 @@ impl Cip509 {
                     }
                     // Handle positive payment keys (reference to tx input)
                     let inputs = &tx.transaction_body.inputs;
-                    let index = match usize::try_from(payment_key) {
+                    let index = match decremented_index(payment_key) {
                         Ok(value) => value,
                         Err(e) => {
                             self.validation_failure(
-                                &format!("Failed to convert payment_key to isize: {e}"),
+                                &format!("Failed to get index of payment key: {e}"),
                                 validation_report,
                                 decoded_metadata,
                             );
@@ -812,11 +824,11 @@ impl Cip509 {
                 MultiEraTx::Babbage(tx) => {
                     // Negative indicates reference to tx output
                     if payment_key < 0 {
-                        let index = match usize::try_from(payment_key.abs()) {
+                        let index = match decremented_index(payment_key.abs()) {
                             Ok(value) => value,
                             Err(e) => {
                                 self.validation_failure(
-                                    &format!("Failed to convert payment_key to usize: {e}"),
+                                    &format!("Failed to get index of payment key: {e}"),
                                     validation_report,
                                     decoded_metadata,
                                 );
@@ -856,11 +868,11 @@ impl Cip509 {
                     }
                     // Positive indicates reference to tx input
                     let inputs = &tx.transaction_body.inputs;
-                    let index = match usize::try_from(payment_key) {
+                    let index = match decremented_index(payment_key) {
                         Ok(value) => value,
                         Err(e) => {
                             self.validation_failure(
-                                &format!("Failed to convert payment_key to isize: {e}"),
+                                &format!("Failed to get index of payment key: {e}"),
                                 validation_report,
                                 decoded_metadata,
                             );
@@ -880,11 +892,11 @@ impl Cip509 {
                 MultiEraTx::Conway(tx) => {
                     // Negative indicates reference to tx output
                     if payment_key < 0 {
-                        let index = match usize::try_from(payment_key.abs()) {
+                        let index = match decremented_index(payment_key.abs()) {
                             Ok(value) => value,
                             Err(e) => {
                                 self.validation_failure(
-                                    &format!("Failed to convert payment_key to usize: {e}"),
+                                    &format!("Failed to get index of payment key: {e}"),
                                     validation_report,
                                     decoded_metadata,
                                 );
@@ -923,11 +935,11 @@ impl Cip509 {
                     }
                     // Positive indicates reference to tx input
                     let inputs = &tx.transaction_body.inputs;
-                    let index = match usize::try_from(payment_key) {
+                    let index = match decremented_index(payment_key) {
                         Ok(value) => value,
                         Err(e) => {
                             self.validation_failure(
-                                &format!("Failed to convert payment_key to isize: {e}"),
+                                &format!("Failed to get index of payment key: {e}"),
                                 validation_report,
                                 decoded_metadata,
                             );
