@@ -1203,7 +1203,7 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Fift transaction of this test data contains the CIP509 auxiliary data
+        // Fifth transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions[4].clone();
 
         let aux_data = cip_509_aux_data(&tx);
