@@ -39,19 +39,20 @@ impl Attribute {
         }
     }
 
-    /// Add a value to `Attribute`.
-    pub fn add_value(&mut self, value: AttributeValue) {
-        self.value.push(value);
+    /// Get the value of `Attribute`.
+    #[must_use]
+    pub fn value(&self) -> &[AttributeValue] {
+        &self.value
     }
 
     /// Get the registered OID of `Attribute`.
-    pub(crate) fn get_registered_oid(&self) -> &C509oidRegistered {
+    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
         &self.registered_oid
     }
 
-    /// Get the value of `Attribute`.
-    pub(crate) fn get_value(&self) -> &Vec<AttributeValue> {
-        &self.value
+    /// Add a value to `Attribute`.
+    pub fn add_value(&mut self, value: AttributeValue) {
+        self.value.push(value);
     }
 
     /// Set whether `Attribute` can have multiple value.
@@ -88,7 +89,7 @@ impl Serialize for Attribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
+            oid: self.registered_oid().c509_oid().oid().to_string(),
             value: self.value.clone(),
         };
         helper.serialize(serializer)
@@ -102,14 +103,14 @@ impl Encode<()> for Attribute {
         // Encode CBOR int if available
         if let Some(&oid) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid().c509_oid().oid())
         {
             e.i16(oid)?;
         } else {
-            // Encode unwrapped CBOR OID or CBOR PEN
-            self.registered_oid.get_c509_oid().encode(e, ctx)?;
+            // Encode unwrapped CBOR OID
+            self.registered_oid().c509_oid().encode(e, ctx)?;
         }
 
         // Check if the attribute value is empty
@@ -141,7 +142,7 @@ impl Decode<'_, ()> for Attribute {
         } else {
             // Handle unwrapped CBOR OID or CBOR PEN
             let c509_oid: C509oid = d.decode()?;
-            Attribute::new(c509_oid.get_oid())
+            Attribute::new(c509_oid.oid().clone())
         };
 
         // Handle attribute value

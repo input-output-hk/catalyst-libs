@@ -21,6 +21,18 @@ impl UnwrappedBigUint {
     }
 }
 
+impl From<u64> for UnwrappedBigUint {
+    fn from(value: u64) -> Self {
+        UnwrappedBigUint::new(value)
+    }
+}
+
+impl From<UnwrappedBigUint> for u64 {
+    fn from(unwrapped_big_uint: UnwrappedBigUint) -> Self {
+        unwrapped_big_uint.0
+    }
+}
+
 impl Encode<()> for UnwrappedBigUint {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, _ctx: &mut (),

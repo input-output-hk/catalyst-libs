@@ -37,13 +37,13 @@ impl GeneralName {
 
     /// Get the `GeneralName` type.
     #[must_use]
-    pub fn get_gn_type(&self) -> &GeneralNameTypeRegistry {
+    pub fn gn_type(&self) -> &GeneralNameTypeRegistry {
         &self.gn_type
     }
 
     /// Get the value of the `GeneralName` in `GeneralNameValue`.
     #[must_use]
-    pub fn get_gn_value(&self) -> &GeneralNameValue {
+    pub fn gn_value(&self) -> &GeneralNameValue {
         &self.value
     }
 }

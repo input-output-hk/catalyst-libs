@@ -19,10 +19,22 @@ impl Time {
         Self(time)
     }
 
-    /// Get the time in u64.
+    /// Get the u64 of `Time`.
     #[must_use]
-    pub fn to_u64(&self) -> u64 {
+    pub fn time(&self) -> u64 {
         self.0
+    }
+}
+
+impl From<u64> for Time {
+    fn from(value: u64) -> Self {
+        Time::new(value)
+    }
+}
+
+impl From<Time> for u64 {
+    fn from(time: Time) -> Self {
+        time.0
     }
 }
 

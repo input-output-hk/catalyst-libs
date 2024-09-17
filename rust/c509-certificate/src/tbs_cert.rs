@@ -62,13 +62,13 @@ impl TbsCert {
 
     /// Get the certificate type.
     #[must_use]
-    pub fn get_c509_certificate_type(&self) -> u8 {
+    pub fn c509_certificate_type(&self) -> u8 {
         self.c509_certificate_type
     }
 
     /// Get the certificate serial number.
     #[must_use]
-    pub fn get_certificate_serial_number(&self) -> &UnwrappedBigUint {
+    pub fn certificate_serial_number(&self) -> &UnwrappedBigUint {
         &self.certificate_serial_number
     }
 
@@ -80,44 +80,50 @@ impl TbsCert {
 
     /// Get the issuer.
     #[must_use]
-    pub fn get_issuer(&self) -> &Name {
+    pub fn issuer(&self) -> &Name {
         &self.issuer
     }
 
     /// Get the validity not before.
     #[must_use]
-    pub fn get_validity_not_before(&self) -> &Time {
+    pub fn validity_not_before(&self) -> &Time {
         &self.validity_not_before
     }
 
     /// Get the validity not after.
     #[must_use]
-    pub fn get_validity_not_after(&self) -> &Time {
+    pub fn validity_not_after(&self) -> &Time {
         &self.validity_not_after
     }
 
     /// Get the subject.
     #[must_use]
-    pub fn get_subject(&self) -> &Name {
+    pub fn subject(&self) -> &Name {
         &self.subject
     }
 
     /// Get the subject public key algorithm.
     #[must_use]
-    pub fn get_subject_public_key_algorithm(&self) -> &SubjectPubKeyAlgorithm {
+    pub fn subject_public_key_algorithm(&self) -> &SubjectPubKeyAlgorithm {
         &self.subject_public_key_algorithm
     }
 
     /// Get the subject public key.
     #[must_use]
-    pub fn get_subject_public_key(&self) -> &[u8] {
+    pub fn subject_public_key(&self) -> &[u8] {
         &self.subject_public_key
     }
 
     /// Get the extensions.
     #[must_use]
-    pub fn get_extensions(&self) -> &Extensions {
+    pub fn extensions(&self) -> &Extensions {
         &self.extensions
+    }
+
+    /// Get the issuer signature algorithm.
+    #[must_use]
+    pub fn issuer_signature_algorithm(&self) -> &IssuerSignatureAlgorithm {
+        &self.issuer_signature_algorithm
     }
 }
 
@@ -257,7 +263,7 @@ pub(crate) mod test_tbs_cert {
     pub(crate) fn tbs() -> TbsCert {
         fn extensions() -> Extensions {
             let mut exts = Extensions::new();
-            exts.add_ext(Extension::new(
+            exts.add_extension(Extension::new(
                 oid!(2.5.29 .15),
                 ExtensionValue::Int(1),
                 false,
@@ -390,24 +396,24 @@ pub(crate) mod test_tbs_cert {
             attr6.add_value(AttributeValue::Text("Wt1234".to_string()));
 
             let mut attrs = Attributes::new();
-            attrs.add_attr(attr1);
-            attrs.add_attr(attr2);
-            attrs.add_attr(attr3);
-            attrs.add_attr(attr4);
-            attrs.add_attr(attr5);
-            attrs.add_attr(attr6);
+            attrs.add_attribute(attr1);
+            attrs.add_attribute(attr2);
+            attrs.add_attribute(attr3);
+            attrs.add_attribute(attr4);
+            attrs.add_attribute(attr5);
+            attrs.add_attribute(attr6);
 
             Name::new(NameValue::Attributes(attrs))
         }
 
         fn extensions() -> Extensions {
             let mut exts = Extensions::new();
-            exts.add_ext(Extension::new(
+            exts.add_extension(Extension::new(
                 oid!(2.5.29 .19),
                 ExtensionValue::Int(-2),
                 false,
             ));
-            exts.add_ext(Extension::new(
+            exts.add_extension(Extension::new(
                 oid!(2.5.29 .14),
                 ExtensionValue::Bytes(
                     [
@@ -418,7 +424,7 @@ pub(crate) mod test_tbs_cert {
                 ),
                 false,
             ));
-            exts.add_ext(Extension::new(
+            exts.add_extension(Extension::new(
                 oid!(2.5.29 .15),
                 ExtensionValue::Int(5),
                 true,
@@ -427,12 +433,12 @@ pub(crate) mod test_tbs_cert {
             let hw = OtherNameHardwareModuleName::new(oid!(1.3.6 .1 .4 .1 .6175 .10 .1), vec![
                 0x01, 0x02, 0x03, 0x04,
             ]);
-            gns.add_gn(GeneralName::new(
+            gns.add_general_name(GeneralName::new(
                 GeneralNameTypeRegistry::OtherNameHardwareModuleName,
                 GeneralNameValue::OtherNameHWModuleName(hw),
             ));
 
-            exts.add_ext(Extension::new(
+            exts.add_extension(Extension::new(
                 oid!(2.5.29 .17),
                 ExtensionValue::AlternativeName(AlternativeName::new(
                     GeneralNamesOrText::GeneralNames(gns),

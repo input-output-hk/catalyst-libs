@@ -48,7 +48,7 @@ impl Name {
 
     /// Get the value of the `Name`.
     #[must_use]
-    pub fn get_value(&self) -> &NameValue {
+    pub fn value(&self) -> &NameValue {
         &self.0
     }
 }
@@ -97,12 +97,12 @@ impl Encode<()> for NameValue {
                         ))?;
                 //  If Name contains a single Attribute of type CommonName
                 if attrs.attributes().len() == 1
-                    && attr_first.get_registered_oid().get_c509_oid().get_oid() == COMMON_NAME_OID
+                    && attr_first.registered_oid().c509_oid().oid() == &COMMON_NAME_OID
                 {
                     // Get the value of the attribute
                     let cn_value =
                         attr_first
-                            .get_value()
+                            .value()
                             .first()
                             .ok_or(minicbor::encode::Error::message(
                                 "Cannot get the first Attribute value",
@@ -271,7 +271,7 @@ fn create_attributes_with_cn(text: String) -> NameValue {
     let mut attr = Attribute::new(COMMON_NAME_OID);
     attr.add_value(AttributeValue::Text(text));
     let mut attrs = Attributes::new();
-    attrs.add_attr(attr);
+    attrs.add_attribute(attr);
     NameValue::Attributes(attrs)
 }
 
@@ -288,7 +288,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("RFC test CA".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
 
         (
             Name::new(NameValue::Attributes(attrs)),
@@ -321,7 +321,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("000123abcd".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
 
         let name = Name::new(NameValue::Attributes(attrs));
         name.encode(&mut encoder, &mut ())
@@ -345,7 +345,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("000123ABCD".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
 
         let name = Name::new(NameValue::Attributes(attrs));
         name.encode(&mut encoder, &mut ())
@@ -366,7 +366,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-FF-FE-67-89-AB".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
 
         (
             Name::new(NameValue::Attributes(attrs)),
@@ -400,7 +400,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-ff-fe-67-89-AB".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
         let name = Name::new(NameValue::Attributes(attrs));
 
         name.encode(&mut encoder, &mut ())
@@ -426,7 +426,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-AB-00-01".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
 
         let name = Name::new(NameValue::Attributes(attrs));
 
@@ -448,7 +448,7 @@ pub(crate) mod test_name {
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-ab-00-01".to_string()));
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr);
+        attrs.add_attribute(attr);
 
         let name = Name::new(NameValue::Attributes(attrs));
 
@@ -484,11 +484,11 @@ pub(crate) mod test_name {
         attr5.add_value(AttributeValue::Text("802.1AR CA".to_string()));
 
         let mut attrs = Attributes::new();
-        attrs.add_attr(attr1);
-        attrs.add_attr(attr2);
-        attrs.add_attr(attr3);
-        attrs.add_attr(attr4);
-        attrs.add_attr(attr5);
+        attrs.add_attribute(attr1);
+        attrs.add_attribute(attr2);
+        attrs.add_attribute(attr3);
+        attrs.add_attribute(attr4);
+        attrs.add_attribute(attr5);
 
         (
             Name::new(NameValue::Attributes(attrs)),

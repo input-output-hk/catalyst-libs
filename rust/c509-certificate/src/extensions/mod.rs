@@ -32,12 +32,6 @@ static KEY_USAGE_OID: Oid<'static> = oid!(2.5.29 .15);
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Extensions(Vec<Extension>);
 
-impl Default for Extensions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Extensions {
     /// Create a new instance of `Extensions` as empty vector.
     #[must_use]
@@ -45,15 +39,21 @@ impl Extensions {
         Self(Vec::new())
     }
 
-    /// Add an `Extension` to the `Extensions`.
-    pub fn add_ext(&mut self, extension: Extension) {
-        self.0.push(extension);
-    }
-
     /// Get the inner vector of `Extensions`.
     #[must_use]
-    pub fn get_inner(&self) -> &Vec<Extension> {
+    pub fn extensions(&self) -> &[Extension] {
         &self.0
+    }
+
+    /// Add an `Extension` to the `Extensions`.
+    pub fn add_extension(&mut self, extension: Extension) {
+        self.0.push(extension);
+    }
+}
+
+impl Default for Extensions {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -64,16 +64,10 @@ impl Encode<()> for Extensions {
         // If there is only one extension and it is KeyUsage, encode as int
         // encoding as absolute value of the second int and the sign of the first int
         if let Some(extension) = self.0.first() {
-            if self.0.len() == 1
-                && extension.get_registered_oid().get_c509_oid().get_oid() == KEY_USAGE_OID
-            {
-                match extension.get_value() {
+            if self.0.len() == 1 && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID {
+                match extension.value() {
                     ExtensionValue::Int(value) => {
-                        let ku_value = if extension.get_critical() {
-                            -value
-                        } else {
-                            *value
-                        };
+                        let ku_value = if extension.critical() { -value } else { *value };
                         e.i64(ku_value)?;
                         return Ok(());
                     },
@@ -106,7 +100,7 @@ impl Decode<'_, ()> for Extensions {
 
             let extension_value = ExtensionValue::Int(value);
             let mut extensions = Extensions::new();
-            extensions.add_ext(Extension::new(
+            extensions.add_extension(Extension::new(
                 KEY_USAGE_OID.clone(),
                 extension_value,
                 critical,
@@ -120,7 +114,7 @@ impl Decode<'_, ()> for Extensions {
         let mut extensions = Extensions::new();
         for _ in 0..len {
             let extension = Extension::decode(d, &mut ())?;
-            extensions.add_ext(extension);
+            extensions.add_extension(extension);
         }
 
         Ok(extensions)
@@ -139,7 +133,7 @@ mod test_extensions {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut exts = Extensions::new();
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .15),
             ExtensionValue::Int(2),
             false,
@@ -162,7 +156,7 @@ mod test_extensions {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut exts = Extensions::new();
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .15),
             ExtensionValue::Int(2),
             true,
@@ -185,13 +179,13 @@ mod test_extensions {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut exts = Extensions::new();
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .15),
             ExtensionValue::Int(2),
             false,
         ));
 
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .14),
             ExtensionValue::Bytes([1, 2, 3, 4].to_vec()),
             false,
