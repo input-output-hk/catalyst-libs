@@ -1,10 +1,10 @@
-//! Role Based Access Control (RBAC) metadata for X509 certificates.
+//! Role Based Access Control (RBAC) metadata for CIP509.
 //! Doc Reference: <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX>
 //! CDDL Reference: <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-role-registration-metadata/CIP-XXXX/x509-roles.cddl>
 
-mod certs;
-mod pub_key;
-mod role_data;
+pub mod certs;
+pub mod pub_key;
+pub mod role_data;
 
 use std::collections::HashMap;
 
@@ -14,25 +14,27 @@ use pub_key::SimplePublicKeyType;
 use role_data::RoleData;
 use strum::FromRepr;
 
-use super::decode_any;
+use super::decode_helper::{
+    decode_any, decode_array_len, decode_bytes, decode_map_len, decode_u16,
+};
 
-/// Struct of x509 RBAC metadata.
-#[derive(Debug, PartialEq)]
-pub(crate) struct X509RbacMetadata {
+/// Struct of Cip509 RBAC metadata.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct Cip509RbacMetadata {
     /// Optional list of x509 certificates.
-    x509_certs: Option<Vec<X509DerCert>>,
+    pub x509_certs: Option<Vec<X509DerCert>>,
     /// Optional list of c509 certificates.
     /// The value can be either the c509 certificate or c509 metadatum reference.
-    c509_certs: Option<Vec<C509Cert>>,
+    pub c509_certs: Option<Vec<C509Cert>>,
     /// Optional list of Public keys.
-    pub_keys: Option<Vec<SimplePublicKeyType>>,
+    pub pub_keys: Option<Vec<SimplePublicKeyType>>,
     /// Optional list of revocation list.
-    revocation_list: Option<Vec<[u8; 16]>>,
+    pub revocation_list: Option<Vec<[u8; 16]>>,
     /// Optional list of role data.
-    role_set: Option<Vec<RoleData>>,
+    pub role_set: Option<Vec<RoleData>>,
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
-    purpose_key_data: HashMap<u16, Vec<u8>>,
+    pub purpose_key_data: HashMap<u16, Vec<u8>>,
 }
 
 /// The first valid purpose key.
@@ -40,10 +42,10 @@ const FIRST_PURPOSE_KEY: u16 = 200;
 /// The last valid purpose key.
 const LAST_PURPOSE_KEY: u16 = 299;
 
-/// Enum of x509 RBAC metadata with its associated unsigned integer value.
+/// Enum of CIP509 RBAC metadata with its associated unsigned integer value.
 #[derive(FromRepr, Debug, PartialEq)]
 #[repr(u16)]
-pub enum X509RbacMetadataInt {
+pub enum Cip509RbacMetadataInt {
     /// x509 certificates.
     X509Certs = 10,
     /// c509 certificates.
@@ -56,8 +58,8 @@ pub enum X509RbacMetadataInt {
     RoleSet = 100,
 }
 
-impl X509RbacMetadata {
-    /// Create a new instance of `X509RbacMetadata`.
+impl Cip509RbacMetadata {
+    /// Create a new instance of `Cip509RbacMetadata`.
     pub(crate) fn new() -> Self {
         Self {
             x509_certs: None,
@@ -95,34 +97,34 @@ impl X509RbacMetadata {
     }
 }
 
-impl Decode<'_, ()> for X509RbacMetadata {
+impl Decode<'_, ()> for Cip509RbacMetadata {
     fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        let map_len = d.map()?.ok_or(decode::Error::message(
-            "Error indefinite map in X509RbacMetadata",
-        ))?;
-        let mut x509_rbac_metadata = X509RbacMetadata::new();
+        let map_len = decode_map_len(d, "Cip509RbacMetadata")?;
+
+        let mut x509_rbac_metadata = Cip509RbacMetadata::new();
+
         for _ in 0..map_len {
-            let key = d.u16()?;
-            if let Some(key) = X509RbacMetadataInt::from_repr(key) {
+            let key = decode_u16(d, "key in Cip509RbacMetadata")?;
+            if let Some(key) = Cip509RbacMetadataInt::from_repr(key) {
                 match key {
-                    X509RbacMetadataInt::X509Certs => {
-                        let x509_certs = decode_array(d)?;
+                    Cip509RbacMetadataInt::X509Certs => {
+                        let x509_certs = decode_array_rbac(d, "x509 certificate")?;
                         x509_rbac_metadata.set_x509_certs(x509_certs);
                     },
-                    X509RbacMetadataInt::C509Certs => {
-                        let c509_certs = decode_array(d)?;
+                    Cip509RbacMetadataInt::C509Certs => {
+                        let c509_certs = decode_array_rbac(d, "c509 certificate")?;
                         x509_rbac_metadata.set_c509_certs(c509_certs);
                     },
-                    X509RbacMetadataInt::PubKeys => {
-                        let pub_keys = decode_array(d)?;
+                    Cip509RbacMetadataInt::PubKeys => {
+                        let pub_keys = decode_array_rbac(d, "public keys")?;
                         x509_rbac_metadata.set_pub_keys(pub_keys);
                     },
-                    X509RbacMetadataInt::RevocationList => {
+                    Cip509RbacMetadataInt::RevocationList => {
                         let revocation_list = decode_revocation_list(d)?;
                         x509_rbac_metadata.set_revocation_list(revocation_list);
                     },
-                    X509RbacMetadataInt::RoleSet => {
-                        let role_set = decode_array(d)?;
+                    Cip509RbacMetadataInt::RoleSet => {
+                        let role_set = decode_array_rbac(d, "role set")?;
                         x509_rbac_metadata.set_role_set(role_set);
                     },
                 }
@@ -132,7 +134,7 @@ impl Decode<'_, ()> for X509RbacMetadata {
                 }
                 x509_rbac_metadata
                     .purpose_key_data
-                    .insert(key, decode_any(d)?);
+                    .insert(key, decode_any(d, "purpose key")?);
             }
         }
         Ok(x509_rbac_metadata)
@@ -140,11 +142,9 @@ impl Decode<'_, ()> for X509RbacMetadata {
 }
 
 /// Decode an array of type T.
-fn decode_array<'b, T>(d: &mut Decoder<'b>) -> Result<Vec<T>, decode::Error>
+fn decode_array_rbac<'b, T>(d: &mut Decoder<'b>, from: &str) -> Result<Vec<T>, decode::Error>
 where T: Decode<'b, ()> {
-    let len = d.array()?.ok_or(decode::Error::message(
-        "Error indefinite array in X509RbacMetadata",
-    ))?;
+    let len = decode_array_len(d, &format!("{from} Cip509RbacMetadata"))?;
     let mut vec = Vec::with_capacity(usize::try_from(len).map_err(decode::Error::message)?);
     for _ in 0..len {
         vec.push(T::decode(d, &mut ())?);
@@ -154,14 +154,11 @@ where T: Decode<'b, ()> {
 
 /// Decode an array of revocation list.
 fn decode_revocation_list(d: &mut Decoder) -> Result<Vec<[u8; 16]>, decode::Error> {
-    let len = d.array()?.ok_or(decode::Error::message(
-        "Error indefinite array in X509RbacMetadata revocation list",
-    ))?;
+    let len = decode_array_len(d, "revocation list Cip509RbacMetadata")?;
     let mut revocation_list =
         Vec::with_capacity(usize::try_from(len).map_err(decode::Error::message)?);
     for _ in 0..len {
-        let arr: [u8; 16] = d
-            .bytes()?
+        let arr: [u8; 16] = decode_bytes(d, "revocation list Cip509RbacMetadata")?
             .try_into()
             .map_err(|_| decode::Error::message("Invalid revocation list size"))?;
         revocation_list.push(arr);
