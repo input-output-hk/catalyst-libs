@@ -79,11 +79,12 @@ impl Cip36 {
     /// * `decoded_metadata` - Decoded Metadata - Will be updated only if CIP36 Metadata
     ///   is found.
     /// * `slot` - Current Slot
-    /// * `txn` - Transaction Aux data was attached to and to be validated/decoded
-    ///   against. Not used for CIP36 Metadata.
+    /// * `txn` - Transaction data was attached to and to be validated/decoded against.
+    ///   Not used for CIP36 Metadata.
     /// * `raw_aux_data` - Raw Auxiliary Data for the transaction.
     /// * `catalyst_strict` - Strict Catalyst Validation - otherwise Catalyst Specific
     ///   rules/workarounds are not applied.
+    /// * `chain` - Network Chain
     ///
     /// # Returns
     ///
