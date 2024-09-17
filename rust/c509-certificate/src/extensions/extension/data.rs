@@ -1,5 +1,5 @@
 //! Extension data provides a necessary information for encoding and decoding of C509
-//! Extension. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! Extension. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 //! Section 9.4 C509 Extensions Registry for more information.
 
 // cspell: words Evt

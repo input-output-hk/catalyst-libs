@@ -24,6 +24,8 @@ pub struct TbsCert {
     c509_certificate_type: u8,
     /// Serial number of the certificate.
     certificate_serial_number: UnwrappedBigUint,
+    /// Issuer Signature Algorithm
+    issuer_signature_algorithm: IssuerSignatureAlgorithm,
     /// Issuer
     issuer: Name,
     /// Validity not before.
@@ -38,31 +40,31 @@ pub struct TbsCert {
     subject_public_key: Vec<u8>,
     /// Extensions
     extensions: Extensions,
-    /// Issuer Signature Algorithm
-    issuer_signature_algorithm: IssuerSignatureAlgorithm,
 }
 
 impl TbsCert {
     /// Create a new instance of TBS Certificate.
+    /// If issuer is not provided, it will use the subject as the issuer.
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        c509_certificate_type: u8, certificate_serial_number: UnwrappedBigUint, issuer: Name,
+        c509_certificate_type: u8, certificate_serial_number: UnwrappedBigUint,
+        issuer_signature_algorithm: IssuerSignatureAlgorithm, issuer: Option<Name>,
         validity_not_before: Time, validity_not_after: Time, subject: Name,
         subject_public_key_algorithm: SubjectPubKeyAlgorithm, subject_public_key: Vec<u8>,
-        extensions: Extensions, issuer_signature_algorithm: IssuerSignatureAlgorithm,
+        extensions: Extensions,
     ) -> Self {
         Self {
             c509_certificate_type,
             certificate_serial_number,
-            issuer,
+            issuer_signature_algorithm,
+            issuer: issuer.unwrap_or_else(|| subject.clone()),
             validity_not_before,
             validity_not_after,
             subject,
             subject_public_key_algorithm,
             subject_public_key,
             extensions,
-            issuer_signature_algorithm,
         }
     }
 
@@ -76,6 +78,12 @@ impl TbsCert {
     #[must_use]
     pub fn certificate_serial_number(&self) -> &UnwrappedBigUint {
         &self.certificate_serial_number
+    }
+
+    /// Get the issuer signature algorithm.
+    #[must_use]
+    pub fn get_issuer_signature_algorithm(&self) -> &IssuerSignatureAlgorithm {
+        &self.issuer_signature_algorithm
     }
 
     /// Get the issuer.
@@ -133,6 +141,7 @@ impl Encode<()> for TbsCert {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         encode_u8(e, "Certificate type", self.c509_certificate_type)?;
         self.certificate_serial_number.encode(e, ctx)?;
+        self.issuer_signature_algorithm.encode(e, ctx)?;
         self.issuer.encode(e, ctx)?;
         self.validity_not_before.encode(e, ctx)?;
         self.validity_not_after.encode(e, ctx)?;
@@ -140,7 +149,6 @@ impl Encode<()> for TbsCert {
         self.subject_public_key_algorithm.encode(e, ctx)?;
         encode_bytes(e, "Subject public key", &self.subject_public_key)?;
         self.extensions.encode(e, ctx)?;
-        self.issuer_signature_algorithm.encode(e, ctx)?;
         Ok(())
     }
 }
@@ -149,18 +157,19 @@ impl Decode<'_, ()> for TbsCert {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let cert_type = decode_u8(d, "Certificate type")?;
         let serial_number = UnwrappedBigUint::decode(d, ctx)?;
-        let issuer = Name::decode(d, ctx)?;
+        let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;
+        let issuer = Some(Name::decode(d, ctx)?);
         let not_before = Time::decode(d, ctx)?;
         let not_after = Time::decode(d, ctx)?;
         let subject = Name::decode(d, ctx)?;
         let subject_public_key_algorithm = SubjectPubKeyAlgorithm::decode(d, ctx)?;
         let subject_public_key = decode_bytes(d, "Subject public key")?;
         let extensions = Extensions::decode(d, ctx)?;
-        let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;
 
         Ok(TbsCert::new(
             cert_type,
             serial_number,
+            issuer_signature_algorithm,
             issuer,
             not_before,
             not_after,
@@ -168,7 +177,6 @@ impl Decode<'_, ()> for TbsCert {
             subject_public_key_algorithm,
             subject_public_key,
             extensions,
-            issuer_signature_algorithm,
         ))
     }
 }
@@ -189,7 +197,10 @@ pub(crate) mod test_tbs_cert {
 
     use super::*;
     use crate::{
-        attributes::attribute::{Attribute, AttributeValue},
+        attributes::{
+            attribute::{Attribute, AttributeValue},
+            Attributes,
+        },
         extensions::{
             alt_name::{AlternativeName, GeneralNamesOrText},
             extension::{Extension, ExtensionValue},
@@ -200,7 +211,6 @@ pub(crate) mod test_tbs_cert {
             GeneralNames,
         },
         name::{
-            rdn::RelativeDistinguishedName,
             test_name::{name_cn_eui_mac, name_cn_text, names},
             NameValue,
         },
@@ -209,7 +219,7 @@ pub(crate) mod test_tbs_cert {
     // Mnemonic: match mad promote group rival case
     const PUBKEY: [u8; 8] = [0x88, 0xD0, 0xB6, 0xB0, 0xB3, 0x7B, 0xAA, 0x46];
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     //
     //
@@ -272,14 +282,14 @@ pub(crate) mod test_tbs_cert {
         TbsCert::new(
             1,
             UnwrappedBigUint::new(128_269),
-            name_cn_text().0,
+            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
+            Some(name_cn_text().0),
             Time::new(1_672_531_200),
             Time::new(1_767_225_600),
             name_cn_eui_mac().0,
             SubjectPubKeyAlgorithm::new(oid!(1.2.840 .10045 .2 .1), None),
             PUBKEY.to_vec(),
             extensions(),
-            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
         )
     }
 
@@ -315,7 +325,7 @@ pub(crate) mod test_tbs_cert {
         assert_eq!(decoded_tbs, tbs_cert);
     }
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     //
     // Certificate:
@@ -375,6 +385,7 @@ pub(crate) mod test_tbs_cert {
     // 83 2A 4D 33 6A 08 AD 67 DF 20 F1 50 64 21 18 8A 0A DE 6D 34 92 36
 
     #[test]
+    #[allow(clippy::similar_names)]
     fn tbs_cert2() {
         // ---------helper----------
         // C=US, ST=CA, L=LA, O=example Inc, OU=IoT/serialNumber=Wt1234
@@ -392,15 +403,15 @@ pub(crate) mod test_tbs_cert {
             let mut attr6 = Attribute::new(oid!(2.5.4 .5));
             attr6.add_value(AttributeValue::Text("Wt1234".to_string()));
 
-            let mut rdn = RelativeDistinguishedName::new();
-            rdn.add_attribute(attr1);
-            rdn.add_attribute(attr2);
-            rdn.add_attribute(attr3);
-            rdn.add_attribute(attr4);
-            rdn.add_attribute(attr5);
-            rdn.add_attribute(attr6);
+            let mut attrs = Attributes::new();
+            attrs.add_attribute(attr1);
+            attrs.add_attribute(attr2);
+            attrs.add_attribute(attr3);
+            attrs.add_attribute(attr4);
+            attrs.add_attribute(attr5);
+            attrs.add_attribute(attr6);
 
-            Name::new(NameValue::RelativeDistinguishedName(rdn))
+            Name::new(NameValue::Attributes(attrs))
         }
 
         fn extensions() -> Extensions {
@@ -449,14 +460,14 @@ pub(crate) mod test_tbs_cert {
         let tbs_cert = TbsCert::new(
             1,
             UnwrappedBigUint::new(9_112_578_475_118_446_130),
-            names().0,
+            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
+            Some(names().0),
             Time::new(1_548_934_156),
             Time::new(253_402_300_799),
             subject(),
             SubjectPubKeyAlgorithm::new(oid!(1.2.840 .10045 .2 .1), None),
             PUBKEY.to_vec(),
             extensions(),
-            IssuerSignatureAlgorithm::new(oid!(1.2.840 .10045 .4 .3 .2), None),
         );
 
         let mut buffer = Vec::new();

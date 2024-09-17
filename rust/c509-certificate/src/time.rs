@@ -9,27 +9,35 @@ use crate::helper::{
 };
 
 /// A struct representing a time where it accept seconds since the Unix epoch.
+/// Doesn't support dates before the Unix epoch (January 1, 1970, 00:00:00 UTC)
+/// so unsigned integer is used.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-pub struct Time(i64);
+pub struct Time(u64);
 
 /// No expiration date in seconds since the Unix epoch.
-const NO_EXP_DATE: i64 = 253_402_300_799;
+const NO_EXP_DATE: u64 = 253_402_300_799;
 
 impl Time {
     /// Create a new instance of `Time`.
     #[must_use]
-    pub fn new(time: i64) -> Self {
+    pub fn new(time: u64) -> Self {
         Self(time)
+    }
+
+    /// Get the u64 of `Time`.
+    #[must_use]
+    pub fn time(&self) -> u64 {
+        self.0
     }
 }
 
-impl From<i64> for Time {
-    fn from(value: i64) -> Self {
+impl From<u64> for Time {
+    fn from(value: u64) -> Self {
         Time::new(value)
     }
 }
 
-impl From<Time> for i64 {
+impl From<Time> for u64 {
     fn from(time: Time) -> Self {
         time.0
     }
@@ -42,7 +50,7 @@ impl Encode<()> for Time {
         if self.0 == NO_EXP_DATE {
             encode_null(e, "Time")?;
         } else {
-            encode_i64(e, "Time", self.0)?;
+            encode_u64(e, "Time", self.0)?;
         }
         Ok(())
     }
@@ -52,14 +60,10 @@ impl Decode<'_, ()> for Time {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Time")? {
             minicbor::data::Type::U8
-            | minicbor::data::Type::I8
             | minicbor::data::Type::U16
-            | minicbor::data::Type::I16
             | minicbor::data::Type::U32
-            | minicbor::data::Type::I32
-            | minicbor::data::Type::U64
-            | minicbor::data::Type::I64 => {
-                let time = decode_i64(d, "Time")?;
+            | minicbor::data::Type::U64 => {
+                let time = decode_u64(d, "Time")?;
                 Ok(Time::new(time))
             },
             minicbor::data::Type::Null => {
@@ -92,7 +96,7 @@ mod test_time {
         assert_eq!(decoded_time, time);
     }
 
-    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/
+    // Test reference https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.  Example RFC 7925 profiled X.509 Certificate
     #[test]
     fn test_encode_decode() {

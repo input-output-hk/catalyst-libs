@@ -35,8 +35,7 @@ impl Extension {
     #[must_use]
     pub fn new(oid: Oid<'static>, value: ExtensionValue, critical: bool) -> Self {
         Self {
-            registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table())
-                .pen_encoded(),
+            registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table()),
             critical,
             value,
         }
@@ -99,7 +98,6 @@ impl Encode<()> for Extension {
     // Extension can be encoded as:
     // - (extensionID: int, extensionValue: any)
     // - (extensionID: ~oid, ? critical: true, extensionValue: bytes)
-    // - (extensionID: pen, ? critical: true, extensionValue: bytes)
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
@@ -118,7 +116,7 @@ impl Encode<()> for Extension {
             };
             encode_i16(e, "Extension", encoded_oid)?;
         } else {
-            // Handle unwrapped CBOR OID or CBOR PEN
+            // Handle unwrapped CBOR OID
             self.registered_oid.c509_oid().encode(e, ctx)?;
             if self.critical {
                 encode_bool(e, "Extension critical", self.critical)?;
@@ -157,7 +155,7 @@ impl Decode<'_, ()> for Extension {
                 ))
             },
             _ => {
-                // Handle unwrapped CBOR OID or CBOR PEN
+                // Handle unwrapped CBOR OID
                 let c509_oid = C509oid::decode(d, ctx)?;
                 // Critical flag is optional, so if exist, this mean we have to decode it
                 let critical =

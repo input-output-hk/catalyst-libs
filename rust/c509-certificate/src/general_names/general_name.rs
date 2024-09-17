@@ -1,7 +1,7 @@
 //! C509 General Name
 //!
 //! For more information about `GeneralName`,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use std::fmt::Debug;
 

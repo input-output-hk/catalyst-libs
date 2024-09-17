@@ -1,7 +1,7 @@
 //! C509 General Names
 //!
 //! For more information about `GeneralNames`,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 mod data;
 pub mod general_name;
@@ -27,15 +27,15 @@ impl GeneralNames {
         Self(Vec::new())
     }
 
+    /// Get the inner of `GeneralName`.
+    #[must_use]
+    pub fn general_names(&self) -> &[GeneralName] {
+        &self.0
+    }
+
     /// Add a new `GeneralName` to the `GeneralNames`.
     pub fn add_general_name(&mut self, gn: GeneralName) {
         self.0.push(gn);
-    }
-
-    /// Get the inner of `GeneralName`.
-    #[must_use]
-    pub fn general_names(&self) -> &Vec<GeneralName> {
-        &self.0
     }
 }
 

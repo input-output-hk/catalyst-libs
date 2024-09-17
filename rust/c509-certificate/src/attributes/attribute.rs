@@ -2,12 +2,11 @@
 //!
 //! ```cddl
 //! Attribute = ( attributeType: int, attributeValue: text ) //
-//! ( attributeType: ~oid, attributeValue: bytes ) //
-//! ( attributeType: pen, attributeValue: bytes )
+//!             ( attributeType: ~oid, attributeValue: bytes ) //
 //! ```
 //!
 //! For more information about Attribute,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use std::str::FromStr;
 
@@ -45,11 +44,6 @@ impl Attribute {
         }
     }
 
-    /// Add a value to `Attribute`.
-    pub fn add_value(&mut self, value: AttributeValue) {
-        self.value.push(value);
-    }
-
     /// Get the value of `Attribute`.
     #[must_use]
     pub fn value(&self) -> &[AttributeValue] {
@@ -61,10 +55,9 @@ impl Attribute {
         &self.registered_oid
     }
 
-    /// Set whether `Attribute` can be PEN encoded.
-    pub(crate) fn set_pen_supported(mut self) -> Self {
-        self.registered_oid = self.registered_oid.pen_encoded();
-        self
+    /// Add a value to `Attribute`.
+    pub fn add_value(&mut self, value: AttributeValue) {
+        self.value.push(value);
     }
 
     /// Set whether `Attribute` can have multiple value.
@@ -101,7 +94,7 @@ impl Serialize for Attribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.c509_oid().oid().to_string(),
+            oid: self.registered_oid().c509_oid().oid().to_string(),
             value: self.value.clone(),
         };
         helper.serialize(serializer)
@@ -117,12 +110,12 @@ impl Encode<()> for Attribute {
             .registered_oid
             .table()
             .get_map()
-            .get_by_right(self.registered_oid.c509_oid().oid())
+            .get_by_right(self.registered_oid().c509_oid().oid())
         {
             encode_i16(e, "Attribute", oid)?;
         } else {
-            // Encode unwrapped CBOR OID or CBOR PEN
-            self.registered_oid.c509_oid().encode(e, ctx)?;
+            // Encode unwrapped CBOR OID
+            self.registered_oid().c509_oid().encode(e, ctx)?;
         }
 
         // Check if the attribute value is empty
