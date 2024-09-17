@@ -63,9 +63,9 @@ impl Encode<()> for AlgorithmIdentifier {
         match &self.param {
             // [ algorithm: ~oid, parameters: bytes ]
             Some(p) => {
-                encode_array_len(e, "Algorithm identifier", 2)?;
+                encode_array_len(e, "Algorithm Identifier", 2)?;
                 self.c509_oid.encode(e, ctx)?;
-                encode_bytes(e, "Algorithm identifier", p.as_bytes())?;
+                encode_bytes(e, "Algorithm Identifier", p.as_bytes())?;
             },
             // ~oid
             None => {
@@ -79,13 +79,13 @@ impl Encode<()> for AlgorithmIdentifier {
 impl Decode<'_, ()> for AlgorithmIdentifier {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // [ algorithm: ~oid, parameters: bytes ]
-        if decode_datatype(d, "Algorithm identifier")? == minicbor::data::Type::Array {
-            let len = decode_array_len(d, "Algorithm identifier")?;
+        if decode_datatype(d, "Algorithm Identifier")? == minicbor::data::Type::Array {
+            let len = decode_array_len(d, "Algorithm Identifier")?;
             if len != 2 {
                 return Err(minicbor::decode::Error::message("Array length must be 2"));
             }
             let c509_oid = C509oid::decode(d, ctx)?;
-            let param = String::from_utf8(decode_bytes(d, "Algorithm identifier")?)
+            let param = String::from_utf8(decode_bytes(d, "Algorithm Identifier")?)
                 .map_err(minicbor::decode::Error::message)?;
             Ok(AlgorithmIdentifier::new(
                 c509_oid.oid().clone(),

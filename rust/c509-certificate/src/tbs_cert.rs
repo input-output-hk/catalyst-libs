@@ -147,7 +147,7 @@ impl Encode<()> for TbsCert {
         self.validity_not_after.encode(e, ctx)?;
         self.subject.encode(e, ctx)?;
         self.subject_public_key_algorithm.encode(e, ctx)?;
-        encode_bytes(e, "Subject public key", &self.subject_public_key)?;
+        encode_bytes(e, "Subject Public Key", &self.subject_public_key)?;
         self.extensions.encode(e, ctx)?;
         Ok(())
     }
@@ -163,7 +163,7 @@ impl Decode<'_, ()> for TbsCert {
         let not_after = Time::decode(d, ctx)?;
         let subject = Name::decode(d, ctx)?;
         let subject_public_key_algorithm = SubjectPubKeyAlgorithm::decode(d, ctx)?;
-        let subject_public_key = decode_bytes(d, "Subject public key")?;
+        let subject_public_key = decode_bytes(d, "Subject Public Key")?;
         let extensions = Extensions::decode(d, ctx)?;
 
         Ok(TbsCert::new(

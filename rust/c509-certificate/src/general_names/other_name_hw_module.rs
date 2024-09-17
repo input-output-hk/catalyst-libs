@@ -53,11 +53,11 @@ impl Encode<()> for OtherNameHardwareModuleName {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        encode_array_len(e, "Other name hardware module", 2)?;
+        encode_array_len(e, "OtherNameHardwareModule", 2)?;
         self.hw_type.encode(e, ctx)?;
         encode_bytes(
             e,
-            "Other name hardware module serial number",
+            "OtherNameHardwareModule serial number",
             &self.hw_serial_num,
         )?;
         Ok(())
@@ -66,9 +66,9 @@ impl Encode<()> for OtherNameHardwareModuleName {
 
 impl<'a> Decode<'a, ()> for OtherNameHardwareModuleName {
     fn decode(d: &mut Decoder<'a>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        decode_array_len(d, "Other name hardware module")?;
+        decode_array_len(d, "OtherNameHardwareModule")?;
         let hw_type = C509oid::decode(d, ctx)?;
-        let hw_serial_num = decode_bytes(d, "Other name hardware module serial number")?;
+        let hw_serial_num = decode_bytes(d, "OtherNameHardwareModule serial number")?;
         Ok(OtherNameHardwareModuleName::new(
             hw_type.oid().clone(),
             hw_serial_num,

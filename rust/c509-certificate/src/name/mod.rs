@@ -23,7 +23,7 @@ use crate::{
         Attributes,
     },
     helper::{
-        decode::{decode_bytes, decode_datatype, decode_string},
+        decode::{decode_bytes, decode_datatype, decode_str},
         encode::{encode_bytes, encode_str},
     },
 };
@@ -136,7 +136,7 @@ impl Decode<'_, ()> for NameValue {
             // If Name is a text string, the attribute is a CommonName
             minicbor::data::Type::String => {
                 Ok(create_attributes_with_cn(
-                    decode_string(d, "Name")?.to_string(),
+                    decode_str(d, "Name")?.to_string(),
                 ))
             },
             minicbor::data::Type::Bytes => decode_bytes_helper(d),

@@ -10,10 +10,11 @@ use crate::{
         GeneralNames,
     },
     helper::{
-        decode::{decode_datatype, decode_string},
+        decode::{decode_datatype, decode_str},
         encode::encode_str,
     },
 };
+
 /// Alternative Name extension.
 /// Can be interpreted as a `GeneralNames / text`
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
@@ -50,6 +51,8 @@ impl Decode<'_, ()> for AlternativeName {
 // ------------------GeneralNamesOrText--------------------
 
 /// Enum for type that can be a `GeneralNames` or a text use in `AlternativeName`.
+/// Type `Text` is also considered as a `GeneralNames` with only 1 `DNSName` as
+/// a special case.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GeneralNamesOrText {
@@ -68,7 +71,7 @@ impl Encode<()> for GeneralNamesOrText {
                 let gn = gns
                     .general_names()
                     .first()
-                    .ok_or(minicbor::encode::Error::message("GeneralNames is empty"))?;
+                    .ok_or(minicbor::encode::Error::message("General Names is empty"))?;
                 // Check whether there is only 1 item in the array which is a DNSName
                 if gns.general_names().len() == 1 && gn.gn_type().is_dns_name() {
                     gn.gn_value().encode(e, ctx)?;
@@ -77,7 +80,7 @@ impl Encode<()> for GeneralNamesOrText {
                 }
             },
             GeneralNamesOrText::Text(text) => {
-                encode_str(e, "General name - Alternative name", text)?;
+                encode_str(e, "Alternative Name - General Name Text", text)?;
             },
         }
         Ok(())
@@ -86,12 +89,12 @@ impl Encode<()> for GeneralNamesOrText {
 
 impl Decode<'_, ()> for GeneralNamesOrText {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match decode_datatype(d, "General name - Alternative name")? {
+        match decode_datatype(d, "Alternative Name - General Names")? {
             // If it is a string it is a GeneralNames with only 1 DNSName
             minicbor::data::Type::String => {
                 let gn_dns = GeneralName::new(
                     GeneralNameTypeRegistry::DNSName,
-                    GeneralNameValue::Text(decode_string(d, "General name - Alternative name")?),
+                    GeneralNameValue::Text(decode_str(d, "Alternative Name - General Name Text")?),
                 );
                 let mut gns = GeneralNames::new();
                 gns.add_general_name(gn_dns);

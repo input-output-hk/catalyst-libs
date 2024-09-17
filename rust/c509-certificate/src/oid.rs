@@ -12,10 +12,7 @@ use oid_registry::Oid;
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::{
-    helper::{
-        decode::{decode_bytes, decode_datatype, decode_tag},
-        encode::{encode_bytes, encode_tag},
-    },
+    helper::{decode::decode_bytes, encode::encode_bytes},
     tables::IntegerToOidTable,
 };
 

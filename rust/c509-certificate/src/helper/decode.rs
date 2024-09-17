@@ -92,7 +92,7 @@ pub(crate) fn decode_i64(d: &mut Decoder, from: &str) -> Result<i64, decode::Err
 
 /// Helper function for decoding string.
 #[allow(dead_code)]
-pub(crate) fn decode_string(d: &mut Decoder, from: &str) -> Result<String, decode::Error> {
+pub(crate) fn decode_str(d: &mut Decoder, from: &str) -> Result<String, decode::Error> {
     d.str().map(std::borrow::ToOwned::to_owned).map_err(|e| {
         decode::Error::message(&format!(
             "Failed to decode string in

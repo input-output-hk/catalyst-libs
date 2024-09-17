@@ -17,7 +17,7 @@ use attribute::Attribute;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::helper::encode::encode_array_len;
+use crate::helper::{decode::decode_array_len, encode::encode_array_len};
 
 pub mod attribute;
 mod data;
@@ -72,9 +72,7 @@ impl Encode<()> for Attributes {
 
 impl Decode<'_, ()> for Attributes {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let len = d
-            .array()?
-            .ok_or_else(|| minicbor::decode::Error::message("Failed to get array length"))?;
+        let len = decode_array_len(d, "Attributes")?;
         if len == 0 {
             return Err(minicbor::decode::Error::message("Attributes is empty"));
         }

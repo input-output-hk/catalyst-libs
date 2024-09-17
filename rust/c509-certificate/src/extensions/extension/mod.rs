@@ -114,7 +114,7 @@ impl Encode<()> for Extension {
             } else {
                 mapped_oid
             };
-            encode_i16(e, "Extension", encoded_oid)?;
+            encode_i16(e, "Extension as OID int", encoded_oid)?;
         } else {
             // Handle unwrapped CBOR OID
             self.registered_oid.c509_oid().encode(e, ctx)?;
@@ -138,7 +138,7 @@ impl Decode<'_, ()> for Extension {
             | minicbor::data::Type::U16
             | minicbor::data::Type::I8
             | minicbor::data::Type::I16 => {
-                let int_value = decode_i16(d, "Extension OID int")?;
+                let int_value = decode_i16(d, "Extension as OID int")?;
                 // OID can be negative due to critical flag, so need absolute the value
                 let abs_int_value = int_value.abs();
                 let oid =

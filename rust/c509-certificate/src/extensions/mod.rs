@@ -72,7 +72,7 @@ impl Encode<()> for Extensions {
                 match extension.value() {
                     ExtensionValue::Int(value) => {
                         let ku_value = if extension.critical() { -value } else { *value };
-                        encode_i64(e, "Extnesions", ku_value)?;
+                        encode_i64(e, "Extensions KeyUsage", ku_value)?;
                         return Ok(());
                     },
                     _ => {
@@ -95,14 +95,15 @@ impl Encode<()> for Extensions {
 impl Decode<'_, ()> for Extensions {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // If only KeyUsage is in the extension -> will only contain an int
-        if decode_datatype(d, "Extensions")? == minicbor::data::Type::U8
-            || decode_datatype(d, "Extensions")? == minicbor::data::Type::I8
+        if decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::U8
+            || decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::I8
         {
             // Check if it's a negative number (critical extension)
-            let critical = decode_datatype(d, "Extensions critical")? == minicbor::data::Type::I8;
+            let critical =
+                decode_datatype(d, "Extensions KeyUsage critical")? == minicbor::data::Type::I8;
             // Note that 'KeyUsage' BIT STRING is interpreted as an unsigned integer,
             // so we can absolute the value
-            let value = decode_i64(d, "Extensions value")?.abs();
+            let value = decode_i64(d, "Extensions KeyUsage value")?.abs();
 
             let extension_value = ExtensionValue::Int(value);
             let mut extensions = Extensions::new();

@@ -49,8 +49,8 @@ impl Encode<()> for C509 {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.tbs_cert.encode(e, ctx)?;
         match self.issuer_signature_value {
-            Some(ref value) => encode_bytes(e, "C509 issuer signature value", value)?,
-            None => encode_null(e, "C509 issuer signature value")?,
+            Some(ref value) => encode_bytes(e, "C509 Issuer Signature value", value)?,
+            None => encode_null(e, "C509 Issuer Signature value")?,
         };
         Ok(())
     }
@@ -59,8 +59,8 @@ impl Encode<()> for C509 {
 impl Decode<'_, ()> for C509 {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let tbs_cert = TbsCert::decode(d, ctx)?;
-        let issuer_signature_value = match decode_datatype(d, "C509 issuer signature value")? {
-            minicbor::data::Type::Bytes => Some(decode_bytes(d, "C509 issuer signature value")?),
+        let issuer_signature_value = match decode_datatype(d, "C509 Issuer Signature value")? {
+            minicbor::data::Type::Bytes => Some(decode_bytes(d, "C509 Issuer Signature value")?),
             _ => None,
         };
         Ok(Self::new(tbs_cert, issuer_signature_value))

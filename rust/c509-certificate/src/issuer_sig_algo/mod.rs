@@ -99,7 +99,7 @@ impl Encode<()> for IssuerSignatureAlgorithm {
             .get_map()
             .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            encode_i16(e, "Issuer Signature Algorithm", i)?;
+            encode_i16(e, "Issuer Signature Algorithm as OID int", i)?;
         } else {
             AlgorithmIdentifier::encode(&self.algo_identifier, e, ctx)?;
         }
@@ -112,7 +112,7 @@ impl Decode<'_, ()> for IssuerSignatureAlgorithm {
         match decode_datatype(d, "Issuer Signature Algorithm")? {
             // Check i16 for -256 and -256
             minicbor::data::Type::U8 | minicbor::data::Type::I16 => {
-                let i = decode_i16(d, "Issuer Signature Algorithm")?;
+                let i = decode_i16(d, "Issuer Signature Algorithm as OID int")?;
                 let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
                 Ok(Self::new(oid, None))
             },

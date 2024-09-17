@@ -51,7 +51,7 @@ impl Encode<()> for GeneralNames {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0.is_empty() {
             return Err(minicbor::encode::Error::message(
-                "GeneralNames should not be empty",
+                "General Names should not be empty",
             ));
         }
         // The general name type should be included in array too

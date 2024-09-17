@@ -4,8 +4,8 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{
-    decode::{decode_datatype, decode_i64, decode_null},
-    encode::{encode_i64, encode_null},
+    decode::{decode_datatype, decode_null, decode_u64},
+    encode::{encode_null, encode_u64},
 };
 
 /// A struct representing a time where it accept seconds since the Unix epoch.
