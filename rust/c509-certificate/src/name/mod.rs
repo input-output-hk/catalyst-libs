@@ -131,9 +131,11 @@ impl Decode<'_, ()> for NameValue {
             // If Name is a text string, the attribute is a CommonName
             minicbor::data::Type::String => Ok(create_attributes_with_cn(d.str()?.to_string())),
             minicbor::data::Type::Bytes => decode_bytes(d),
-            _ => Err(minicbor::decode::Error::message(
-                "Name must be an array, text or bytes",
-            )),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Name must be an array, text or bytes",
+                ))
+            },
         }
     }
 }
@@ -256,9 +258,11 @@ fn decode_eui_cn_bytes(bytes: &[u8]) -> Result<NameValue, minicbor::decode::Erro
             )?);
             Ok(create_attributes_with_cn(text))
         },
-        _ => Err(minicbor::decode::Error::message(
-            "EUI-64 or MAC address must be 7 or 9 bytes",
-        )),
+        _ => {
+            Err(minicbor::decode::Error::message(
+                "EUI-64 or MAC address must be 7 or 9 bytes",
+            ))
+        },
     }
 }
 

@@ -73,9 +73,7 @@ struct Helper {
 
 impl<'de> Deserialize<'de> for Attribute {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'de>,
-    {
+    where D: Deserializer<'de> {
         let helper = Helper::deserialize(deserializer)?;
         let oid =
             Oid::from_str(&helper.oid).map_err(|e| serde::de::Error::custom(format!("{e:?}")))?;
@@ -89,9 +87,7 @@ impl<'de> Deserialize<'de> for Attribute {
 
 impl Serialize for Attribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
+    where S: serde::Serializer {
         let helper = Helper {
             oid: self.registered_oid().c509_oid().oid().to_string(),
             value: self.value.clone(),
@@ -202,9 +198,11 @@ impl Decode<'_, ()> for AttributeValue {
         match d.datatype()? {
             minicbor::data::Type::String => Ok(AttributeValue::Text(d.str()?.to_string())),
             minicbor::data::Type::Bytes => Ok(AttributeValue::Bytes(d.bytes()?.to_vec())),
-            _ => Err(minicbor::decode::Error::message(
-                "Invalid AttributeValue, value should be either String or Bytes",
-            )),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Invalid AttributeValue, value should be either String or Bytes",
+                ))
+            },
         }
     }
 }

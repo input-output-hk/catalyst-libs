@@ -18,6 +18,12 @@ impl Time {
     pub fn new(time: u64) -> Self {
         Self(time)
     }
+
+    /// Get the u64 of `Time`.
+    #[must_use]
+    pub fn time(&self) -> u64 {
+        self.0
+    }
 }
 
 impl From<u64> for Time {

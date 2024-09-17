@@ -58,7 +58,6 @@ struct Helper {
 
 impl C509oid {
     /// Create an new instance of `C509oid`.
-    /// Default value of PEN flag is false
     #[must_use]
     pub fn new(oid: Oid<'static>) -> Self {
         Self(oid)
