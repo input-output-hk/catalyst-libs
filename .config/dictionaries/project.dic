@@ -1,8 +1,8 @@
 aarch
 abcz
 ABNF
-abnf
 addrr
+addrs
 adminer
 anypolicy
 apskhem
@@ -11,6 +11,7 @@ asyncio
 Attributes
 auditability
 backpressure
+bech
 bimap
 bindgen
 bkioshn
@@ -23,12 +24,10 @@ BROTLI
 cantopen
 cardano
 CBOR
-cbor
 cbork
 cdylib
 CEST
 CHAINCODE
-chaincode
 chainsync
 childs
 Chotivichit
@@ -58,11 +57,11 @@ dotglob
 drep
 dreps
 Earthfile
-earthfile
 encryptor
 Errno
 Eternl
 excalidraw
+extn
 fadvise
 fcntl
 fdatasync
@@ -89,6 +88,7 @@ happ
 hardano
 Hardlink
 hasher
+heaptrack
 hexdigit
 highwater
 hmod
@@ -127,7 +127,6 @@ mdlint
 mdns
 memx
 Metadatum
-metadatum
 mimalloc
 minicbor
 miniprotocol
@@ -192,7 +191,6 @@ retriggering
 rlib
 rulelist
 RULENAME
-rulename
 runable
 rustc
 rustdoc
@@ -246,13 +244,11 @@ utimensat
 UTXO
 vitss
 Vkey
-vkey
 vkeywitness
 voteplan
 voteplans
 wallclock
 WASI
-wasi
 wasip
 wasmtime
 webasm
@@ -261,6 +257,5 @@ webpki
 WORKDIR
 xprivate
 XPRV
-xprv
 xpub
 yoroi
