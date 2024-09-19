@@ -3,7 +3,6 @@
 use minicbor::{data::Tag, decode, Decoder};
 
 /// Helper function for decoding u8.
-#[allow(dead_code)]
 pub(crate) fn decode_u8(d: &mut Decoder, from: &str) -> Result<u8, decode::Error> {
     d.u8().map_err(|e| {
         decode::Error::message(&format!(
@@ -36,7 +35,6 @@ pub(crate) fn decode_u32(d: &mut Decoder, from: &str) -> Result<u32, decode::Err
 }
 
 /// Helper function for decoding u64.
-#[allow(dead_code)]
 pub(crate) fn decode_u64(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
     d.u64().map_err(|e| {
         decode::Error::message(&format!(
@@ -58,7 +56,6 @@ pub(crate) fn decode_i8(d: &mut Decoder, from: &str) -> Result<i8, decode::Error
 }
 
 /// Helper function for decoding i16.
-#[allow(dead_code)]
 pub(crate) fn decode_i16(d: &mut Decoder, from: &str) -> Result<i16, decode::Error> {
     d.i16().map_err(|e| {
         decode::Error::message(&format!(
@@ -80,7 +77,6 @@ pub(crate) fn decode_i32(d: &mut Decoder, from: &str) -> Result<i32, decode::Err
 }
 
 /// Helper function for decoding i64.
-#[allow(dead_code)]
 pub(crate) fn decode_i64(d: &mut Decoder, from: &str) -> Result<i64, decode::Error> {
     d.i64().map_err(|e| {
         decode::Error::message(&format!(
@@ -91,7 +87,6 @@ pub(crate) fn decode_i64(d: &mut Decoder, from: &str) -> Result<i64, decode::Err
 }
 
 /// Helper function for decoding string.
-#[allow(dead_code)]
 pub(crate) fn decode_str(d: &mut Decoder, from: &str) -> Result<String, decode::Error> {
     d.str().map(std::borrow::ToOwned::to_owned).map_err(|e| {
         decode::Error::message(&format!(
@@ -102,7 +97,6 @@ pub(crate) fn decode_str(d: &mut Decoder, from: &str) -> Result<String, decode::
 }
 
 /// Helper function for decoding bytes.
-#[allow(dead_code)]
 pub(crate) fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
     d.bytes().map(<[u8]>::to_vec).map_err(|e| {
         decode::Error::message(&format!(
@@ -113,7 +107,6 @@ pub(crate) fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decod
 }
 
 /// Helper function for decoding array.
-#[allow(dead_code)]
 pub(crate) fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
     d.array()
         .map_err(|e| {
@@ -154,7 +147,6 @@ pub(crate) fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Err
 }
 
 /// Helper function for decoding null.
-#[allow(dead_code)]
 pub(crate) fn decode_null(d: &mut Decoder, from: &str) -> Result<(), decode::Error> {
     d.null().map_err(|e| {
         decode::Error::message(&format!(
@@ -165,7 +157,6 @@ pub(crate) fn decode_null(d: &mut Decoder, from: &str) -> Result<(), decode::Err
 }
 
 /// Helper function for decoding boolean.
-#[allow(dead_code)]
 pub(crate) fn decode_bool(d: &mut Decoder, from: &str) -> Result<bool, decode::Error> {
     d.bool().map_err(|e| {
         decode::Error::message(&format!(
@@ -176,7 +167,6 @@ pub(crate) fn decode_bool(d: &mut Decoder, from: &str) -> Result<bool, decode::E
 }
 
 /// Helper function for decoding datatype.
-#[allow(dead_code)]
 pub(crate) fn decode_datatype(
     d: &mut Decoder, from: &str,
 ) -> Result<minicbor::data::Type, decode::Error> {

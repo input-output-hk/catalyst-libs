@@ -7,7 +7,6 @@ use minicbor::{
 };
 
 /// Helper function for encoding u8.
-#[allow(dead_code)]
 pub(crate) fn encode_u8<W: Write>(
     e: &mut Encoder<W>, from: &str, value: u8,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -40,7 +39,6 @@ pub(crate) fn encode_u32<W: Write>(
 }
 
 /// Helper function for encoding u64.
-#[allow(dead_code)]
 pub(crate) fn encode_u64<W: Write>(
     e: &mut Encoder<W>, from: &str, value: u64,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -62,7 +60,6 @@ pub(crate) fn encode_i8<W: Write>(
 }
 
 /// Helper function for encoding i16.
-#[allow(dead_code)]
 pub(crate) fn encode_i16<W: Write>(
     e: &mut Encoder<W>, from: &str, value: i16,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -84,7 +81,6 @@ pub(crate) fn encode_i32<W: Write>(
 }
 
 /// Helper function for encoding i64.
-#[allow(dead_code)]
 pub(crate) fn encode_i64<W: Write>(
     e: &mut Encoder<W>, from: &str, value: i64,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -106,7 +102,6 @@ pub(crate) fn encode_tag<W: Write>(
 }
 
 /// Helper function for encoding bytes.
-#[allow(dead_code)]
 pub(crate) fn encode_bytes<W: Write>(
     e: &mut Encoder<W>, from: &str, value: &[u8],
 ) -> Result<(), encode::Error<W::Error>> {
@@ -117,7 +112,6 @@ pub(crate) fn encode_bytes<W: Write>(
 }
 
 /// Helper function for encoding null.
-#[allow(dead_code)]
 pub(crate) fn encode_null<W: Write>(
     e: &mut Encoder<W>, from: &str,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -128,7 +122,6 @@ pub(crate) fn encode_null<W: Write>(
 }
 
 /// Helper function for encoding boolean.
-#[allow(dead_code)]
 pub(crate) fn encode_bool<W: Write>(
     e: &mut Encoder<W>, from: &str, value: bool,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -139,7 +132,6 @@ pub(crate) fn encode_bool<W: Write>(
 }
 
 /// Helper function for encoding string.
-#[allow(dead_code)]
 pub(crate) fn encode_str<W: Write>(
     e: &mut Encoder<W>, from: &str, value: &str,
 ) -> Result<(), encode::Error<W::Error>> {
@@ -150,7 +142,6 @@ pub(crate) fn encode_str<W: Write>(
 }
 
 /// Helper function for encoding array.
-#[allow(dead_code)]
 pub(crate) fn encode_array_len<W: Write>(
     e: &mut Encoder<W>, from: &str, len: u64,
 ) -> Result<(), encode::Error<W::Error>> {
