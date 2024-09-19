@@ -17,8 +17,13 @@ use asn1_rs::Oid;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::oid::C509oid;
-
+use crate::{
+    helper::{
+        decode::{decode_array_len, decode_bytes, decode_datatype},
+        encode::{encode_array_len, encode_bytes},
+    },
+    oid::C509oid,
+};
 /// A struct represents the `AlgorithmIdentifier` type.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct AlgorithmIdentifier {
@@ -58,9 +63,9 @@ impl Encode<()> for AlgorithmIdentifier {
         match &self.param {
             // [ algorithm: ~oid, parameters: bytes ]
             Some(p) => {
-                e.array(2)?;
+                encode_array_len(e, "Algorithm Identifier", 2)?;
                 self.c509_oid.encode(e, ctx)?;
-                e.bytes(p.as_bytes())?;
+                encode_bytes(e, "Algorithm Identifier", p.as_bytes())?;
             },
             // ~oid
             None => {
@@ -74,16 +79,14 @@ impl Encode<()> for AlgorithmIdentifier {
 impl Decode<'_, ()> for AlgorithmIdentifier {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // [ algorithm: ~oid, parameters: bytes ]
-        if d.datatype()? == minicbor::data::Type::Array {
-            let len = d.array()?.ok_or(minicbor::decode::Error::message(
-                "Failed to get array length",
-            ))?;
+        if decode_datatype(d, "Algorithm Identifier")? == minicbor::data::Type::Array {
+            let len = decode_array_len(d, "Algorithm Identifier")?;
             if len != 2 {
                 return Err(minicbor::decode::Error::message("Array length must be 2"));
             }
             let c509_oid = C509oid::decode(d, ctx)?;
-            let param =
-                String::from_utf8(d.bytes()?.to_vec()).map_err(minicbor::decode::Error::message)?;
+            let param = String::from_utf8(decode_bytes(d, "Algorithm Identifier")?)
+                .map_err(minicbor::decode::Error::message)?;
             Ok(AlgorithmIdentifier::new(
                 c509_oid.oid().clone(),
                 Some(param),

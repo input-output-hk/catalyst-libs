@@ -14,7 +14,14 @@ use data::{get_oid_from_int, ISSUER_SIG_ALGO_LOOKUP};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::{algorithm_identifier::AlgorithmIdentifier, oid::C509oidRegistered};
+use crate::{
+    algorithm_identifier::AlgorithmIdentifier,
+    helper::{
+        decode::{decode_datatype, decode_helper},
+        encode::encode_helper,
+    },
+    oid::C509oidRegistered,
+};
 
 /// A struct represents the `IssuerSignatureAlgorithm`
 #[derive(Debug, Clone, PartialEq)]
@@ -92,7 +99,7 @@ impl Encode<()> for IssuerSignatureAlgorithm {
             .get_map()
             .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            e.i16(i)?;
+            encode_helper(e, "Issuer Signature Algorithm as OID int", ctx, &i)?;
         } else {
             AlgorithmIdentifier::encode(&self.algo_identifier, e, ctx)?;
         }
@@ -102,10 +109,10 @@ impl Encode<()> for IssuerSignatureAlgorithm {
 
 impl Decode<'_, ()> for IssuerSignatureAlgorithm {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "Issuer Signature Algorithm")? {
             // Check i16 for -256 and -256
             minicbor::data::Type::U8 | minicbor::data::Type::I16 => {
-                let i = d.i16()?;
+                let i = decode_helper(d, "Issuer Signature Algorithm as OID int", ctx)?;
                 let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
                 Ok(Self::new(oid, None))
             },

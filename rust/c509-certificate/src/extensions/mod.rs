@@ -25,6 +25,10 @@ use extension::{Extension, ExtensionValue};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
+use crate::helper::{
+    decode::{decode_array_len, decode_datatype, decode_helper},
+    encode::{encode_array_len, encode_helper},
+};
 /// OID of `KeyUsage` extension
 static KEY_USAGE_OID: Oid<'static> = oid!(2.5.29 .15);
 
@@ -68,7 +72,7 @@ impl Encode<()> for Extensions {
                 match extension.value() {
                     ExtensionValue::Int(value) => {
                         let ku_value = if extension.critical() { -value } else { *value };
-                        e.i64(ku_value)?;
+                        encode_helper(e, "Extensions KeyUsage", ctx, &ku_value)?;
                         return Ok(());
                     },
                     _ => {
@@ -80,7 +84,7 @@ impl Encode<()> for Extensions {
             }
         }
         // Else handle the array of `Extension`
-        e.array(self.0.len() as u64)?;
+        encode_array_len(e, "Extensions", self.0.len() as u64)?;
         for extension in &self.0 {
             extension.encode(e, ctx)?;
         }
@@ -91,14 +95,16 @@ impl Encode<()> for Extensions {
 impl Decode<'_, ()> for Extensions {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // If only KeyUsage is in the extension -> will only contain an int
-        if d.datatype()? == minicbor::data::Type::U8 || d.datatype()? == minicbor::data::Type::I8 {
+        if decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::U8
+            || decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::I8
+        {
             // Check if it's a negative number (critical extension)
-            let critical = d.datatype()? == minicbor::data::Type::I8;
+            let critical =
+                decode_datatype(d, "Extensions KeyUsage critical")? == minicbor::data::Type::I8;
             // Note that 'KeyUsage' BIT STRING is interpreted as an unsigned integer,
             // so we can absolute the value
-            let value = d.i64()?.abs();
-
-            let extension_value = ExtensionValue::Int(value);
+            let value: i64 = decode_helper(d, "Extensions KeyUsage value", &mut ())?;
+            let extension_value = ExtensionValue::Int(value.abs());
             let mut extensions = Extensions::new();
             extensions.add_extension(Extension::new(
                 KEY_USAGE_OID.clone(),
@@ -108,9 +114,7 @@ impl Decode<'_, ()> for Extensions {
             return Ok(extensions);
         }
         // Handle array of extensions
-        let len = d
-            .array()?
-            .ok_or_else(|| minicbor::decode::Error::message("Failed to get array length"))?;
+        let len = decode_array_len(d, "Extensions")?;
         let mut extensions = Extensions::new();
         for _ in 0..len {
             let extension = Extension::decode(d, &mut ())?;

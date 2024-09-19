@@ -21,7 +21,7 @@ use crate::{
 pub fn generate(tbs_cert: JsValue, private_key: Option<PrivateKey>) -> Result<JsValue, JsValue> {
     let tbs_cert: TbsCert = serde_wasm_bindgen::from_value(tbs_cert)?;
     let c509 = crate::generate(&tbs_cert, private_key.as_ref())
-        .map_err(|e| JsValue::from(e.to_string()))?;
+        .map_err(|err| JsValue::from(err.to_string()))?;
     Ok(serde_wasm_bindgen::to_value(&c509)?)
 }
 
@@ -33,7 +33,7 @@ pub fn generate(tbs_cert: JsValue, private_key: Option<PrivateKey>) -> Result<Js
 pub fn verify(c509: &[u8], public_key: &PublicKey) -> Result<JsValue, JsValue> {
     match crate::verify(c509, public_key) {
         Ok(()) => Ok(JsValue::from("Signature verified")),
-        Err(e) => Err(JsValue::from(e.to_string())),
+        Err(err) => Err(JsValue::from(err.to_string())),
     }
 }
 
@@ -44,7 +44,8 @@ pub fn verify(c509: &[u8], public_key: &PublicKey) -> Result<JsValue, JsValue> {
 #[wasm_bindgen]
 pub fn decode(c509: &[u8]) -> Result<JsValue, JsValue> {
     let mut d = minicbor::Decoder::new(c509);
-    let c509 = crate::C509::decode(&mut d, &mut ()).map_err(|e| JsValue::from(e.to_string()))?;
+    let c509 =
+        crate::C509::decode(&mut d, &mut ()).map_err(|err| JsValue::from(err.to_string()))?;
     Ok(serde_wasm_bindgen::to_value(&c509)?)
 }
 

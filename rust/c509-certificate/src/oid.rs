@@ -11,7 +11,10 @@ use minicbor::{decode, encode::Write, Decode, Decoder, Encode, Encoder};
 use oid_registry::Oid;
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::tables::IntegerToOidTable;
+use crate::{
+    helper::{decode::decode_bytes, encode::encode_bytes},
+    tables::IntegerToOidTable,
+};
 
 /// A strut of C509 OID with Registered Integer.
 #[derive(Debug, Clone, PartialEq)]
@@ -102,8 +105,7 @@ impl Encode<()> for C509oid {
         &self, e: &mut Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let oid_bytes = self.0.as_bytes();
-        e.bytes(oid_bytes)?;
-        Ok(())
+        encode_bytes(e, "C509 OID", oid_bytes)
     }
 }
 
@@ -116,8 +118,8 @@ impl Decode<'_, ()> for C509oid {
     /// A C509oid instance.
     /// If the decoding fails, it will return an error.
     fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        let oid_bytes = d.bytes()?;
-        let oid = Oid::new(oid_bytes.to_owned().into());
+        let oid_bytes = decode_bytes(d, "C509 OID")?;
+        let oid = Oid::new(oid_bytes.into());
         Ok(C509oid::new(oid))
     }
 }

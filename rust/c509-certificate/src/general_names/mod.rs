@@ -10,6 +10,8 @@ use general_name::GeneralName;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
+use crate::helper::{decode::decode_array_len, encode::encode_array_len};
+
 /// A struct represents an array of `GeneralName`.
 ///
 /// ```cddl
@@ -49,11 +51,11 @@ impl Encode<()> for GeneralNames {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0.is_empty() {
             return Err(minicbor::encode::Error::message(
-                "GeneralNames should not be empty",
+                "General Names should not be empty",
             ));
         }
         // The general name type should be included in array too
-        e.array(self.0.len() as u64 * 2)?;
+        encode_array_len(e, "General Names", self.0.len() as u64 * 2)?;
         for gn in &self.0 {
             gn.encode(e, ctx)?;
         }
@@ -63,9 +65,7 @@ impl Encode<()> for GeneralNames {
 
 impl Decode<'_, ()> for GeneralNames {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let len = d.array()?.ok_or(minicbor::decode::Error::message(
-            "GeneralNames should be an array",
-        ))?;
+        let len = decode_array_len(d, "General Names")?;
         let mut gn = GeneralNames::new();
         for _ in 0..len / 2 {
             gn.add_general_name(GeneralName::decode(d, ctx)?);

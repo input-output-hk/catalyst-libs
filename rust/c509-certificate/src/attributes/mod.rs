@@ -17,6 +17,8 @@ use attribute::Attribute;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
+use crate::helper::{decode::decode_array_len, encode::encode_array_len};
+
 pub mod attribute;
 mod data;
 
@@ -60,7 +62,7 @@ impl Encode<()> for Attributes {
             ));
         }
         // The attribute type should be included in array too
-        e.array(self.0.len() as u64 * 2)?;
+        encode_array_len(e, "Attributes", self.0.len() as u64 * 2)?;
         for attribute in &self.0 {
             attribute.encode(e, ctx)?;
         }
@@ -69,10 +71,8 @@ impl Encode<()> for Attributes {
 }
 
 impl Decode<'_, ()> for Attributes {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let len = d
-            .array()?
-            .ok_or_else(|| minicbor::decode::Error::message("Failed to get array length"))?;
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let len = decode_array_len(d, "Attributes")?;
         if len == 0 {
             return Err(minicbor::decode::Error::message("Attributes is empty"));
         }
@@ -81,7 +81,7 @@ impl Decode<'_, ()> for Attributes {
 
         // The attribute type is included in an array, so divide by 2
         for _ in 0..len / 2 {
-            let attribute = Attribute::decode(d, &mut ())?;
+            let attribute = Attribute::decode(d, ctx)?;
             attributes.add_attribute(attribute);
         }
 
