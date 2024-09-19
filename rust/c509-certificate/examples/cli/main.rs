@@ -8,7 +8,7 @@ use std::{
 
 use asn1_rs::{oid, Oid};
 use c509_certificate::{
-    attributes::Attributes,
+    attributes::attribute::Attribute,
     big_uint::UnwrappedBigUint,
     extensions::Extensions,
     issuer_sig_algo::IssuerSignatureAlgorithm,
@@ -108,7 +108,7 @@ struct C509Json {
     issuer_signature_algorithm: Option<IssuerSignatureAlgorithm>,
     /// Optional issuer of the certificate,
     /// if not provided, issuer is the same as subject.
-    issuer: Option<Attributes>,
+    issuer: Option<Vec<Attribute>>,
     /// Optional validity not before date,
     /// if not provided, set to current time.
     validity_not_before: Option<String>,
@@ -116,7 +116,7 @@ struct C509Json {
     /// if not provided, set to no expire date 9999-12-31T23:59:59+00:00.
     validity_not_after: Option<String>,
     /// Attributes of the subject.
-    subject: Attributes,
+    subject: Vec<Attribute>,
     /// Optional subject public key algorithm of the certificate,
     /// if not provided, set to Ed25519.
     subject_public_key_algorithm: Option<SubjectPubKeyAlgorithm>,
@@ -184,10 +184,10 @@ fn generate(
         c509_json
             .issuer_signature_algorithm
             .unwrap_or(IssuerSignatureAlgorithm::new(key_type.0.clone(), ED25519.1)),
-        Some(Name::new(NameValue::Attributes(issuer))),
+        Some(Name::new(NameValue::Attribute(issuer))),
         Time::new(not_before),
         Time::new(not_after),
-        Name::new(NameValue::Attributes(c509_json.subject)),
+        Name::new(NameValue::Attribute(c509_json.subject)),
         c509_json
             .subject_public_key_algorithm
             .unwrap_or(SubjectPubKeyAlgorithm::new(key_type.0, key_type.1)),
@@ -219,8 +219,8 @@ fn write_to_output_file(output: PathBuf, data: &[u8]) -> anyhow::Result<()> {
 /// If self-signed is true, issuer is the same as subject.
 /// Otherwise, issuer must be present.
 fn determine_issuer(
-    self_signed: bool, issuer: Option<Attributes>, subject: Attributes,
-) -> anyhow::Result<Attributes> {
+    self_signed: bool, issuer: Option<Vec<Attribute>>, subject: Vec<Attribute>,
+) -> anyhow::Result<Vec<Attribute>> {
     if self_signed {
         Ok(subject)
     } else {
@@ -330,9 +330,9 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
 }
 
 /// Extract a `Attributes` from a `Name`.
-fn extract_attributes(name: &Name) -> anyhow::Result<Attributes> {
+fn extract_attributes(name: &Name) -> anyhow::Result<Vec<Attribute>> {
     match name.value() {
-        NameValue::Attributes(attrs) => Ok(attrs.clone()),
+        NameValue::Attribute(attrs) => Ok(attrs.clone()),
         _ => Err(anyhow::anyhow!("Expected Attributes")),
     }
 }
