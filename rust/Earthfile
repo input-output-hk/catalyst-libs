@@ -9,6 +9,7 @@ sync-cfg:
 
 # builder : Set up our target toolchains, and copy our files.
 builder:
+    RUN --no-cache
     DO rust-ci+SETUP
 
     COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
