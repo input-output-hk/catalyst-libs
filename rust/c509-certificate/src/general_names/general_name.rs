@@ -15,8 +15,8 @@ use super::{
 };
 use crate::{
     helper::{
-        decode::{decode_bytes, decode_datatype, decode_i16, decode_str},
-        encode::{encode_bytes, encode_i16, encode_str},
+        decode::{decode_bytes, decode_datatype, decode_helper},
+        encode::{encode_bytes, encode_helper},
     },
     name::Name,
     oid::C509oid,
@@ -61,7 +61,7 @@ impl Encode<()> for GeneralName {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // Encode GeneralNameType as int
         let i = get_int_from_gn(self.gn_type).map_err(minicbor::encode::Error::message)?;
-        encode_i16(e, "General Name as OID int", i)?;
+        encode_helper(e, "General Name as OID int", ctx, &i)?;
         // Encode GeneralNameValue as its type
         self.value.encode(e, ctx)?;
         Ok(())
@@ -73,7 +73,7 @@ impl Decode<'_, ()> for GeneralName {
         if decode_datatype(d, "General Name as OID int")? == minicbor::data::Type::U8
             || decode_datatype(d, "General Name as OID int")? == minicbor::data::Type::I8
         {
-            let i = decode_i16(d, "General Name as OID int")?;
+            let i = decode_helper(d, "General Name as OID int", &mut ())?;
             let gn = get_gn_from_int(i).map_err(minicbor::decode::Error::message)?;
             let value_type =
                 get_gn_value_type_from_int(i).map_err(minicbor::decode::Error::message)?;
@@ -158,7 +158,7 @@ impl Encode<()> for GeneralNameValue {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             GeneralNameValue::Text(value) => {
-                encode_str(e, "General Name value", value)?;
+                encode_helper(e, "General Name value", ctx, value)?;
             },
             GeneralNameValue::Bytes(value) => {
                 encode_bytes(e, "General Name value", value)?;
@@ -187,7 +187,7 @@ where C: GeneralNameValueTrait + Debug
     fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
             GeneralNameValueType::Text => {
-                let value = decode_str(d, "General Name value")?;
+                let value = decode_helper(d, "General Name value", ctx)?;
                 Ok(GeneralNameValue::Text(value))
             },
             GeneralNameValueType::Bytes => {

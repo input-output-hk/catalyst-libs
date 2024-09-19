@@ -12,8 +12,8 @@ use strum_macros::EnumDiscriminants;
 use super::alt_name::AlternativeName;
 use crate::{
     helper::{
-        decode::{decode_bool, decode_bytes, decode_datatype, decode_i16, decode_i64},
-        encode::{encode_bool, encode_bytes, encode_i16, encode_i64},
+        decode::{decode_bytes, decode_datatype, decode_helper},
+        encode::{encode_bytes, encode_helper},
     },
     oid::{C509oid, C509oidRegistered},
 };
@@ -114,12 +114,12 @@ impl Encode<()> for Extension {
             } else {
                 mapped_oid
             };
-            encode_i16(e, "Extension as OID int", encoded_oid)?;
+            encode_helper(e, "Extension as OID int", ctx, &encoded_oid)?;
         } else {
             // Handle unwrapped CBOR OID
             self.registered_oid.c509_oid().encode(e, ctx)?;
             if self.critical {
-                encode_bool(e, "Extension critical", self.critical)?;
+                encode_helper(e, "Extension critical", ctx, &self.critical)?;
             }
         }
         // Encode the extension value
@@ -138,7 +138,7 @@ impl Decode<'_, ()> for Extension {
             | minicbor::data::Type::U16
             | minicbor::data::Type::I8
             | minicbor::data::Type::I16 => {
-                let int_value = decode_i16(d, "Extension as OID int")?;
+                let int_value: i16 = decode_helper(d, "Extension as OID int", ctx)?;
                 // OID can be negative due to critical flag, so need absolute the value
                 let abs_int_value = int_value.abs();
                 let oid =
@@ -160,7 +160,7 @@ impl Decode<'_, ()> for Extension {
                 // Critical flag is optional, so if exist, this mean we have to decode it
                 let critical =
                     if decode_datatype(d, "Extension critical")? == minicbor::data::Type::Bool {
-                        decode_bool(d, "Extension critical")?
+                        decode_helper(d, "Extension critical", ctx)?
                     } else {
                         false
                     };
@@ -214,7 +214,7 @@ impl Encode<()> for ExtensionValue {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             ExtensionValue::Int(value) => {
-                encode_i64(e, "Extension Value", *value)?;
+                encode_helper(e, "Extension Value", ctx, value)?;
             },
             ExtensionValue::Bytes(value) => {
                 encode_bytes(e, "Extension value", value)?;
@@ -238,7 +238,7 @@ where C: ExtensionValueTypeTrait + Debug
     fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
             ExtensionValueType::Int => {
-                let value = decode_i64(d, "Extension value")?;
+                let value = decode_helper(d, "Extension value", ctx)?;
                 Ok(ExtensionValue::Int(value))
             },
             ExtensionValueType::Bytes => {

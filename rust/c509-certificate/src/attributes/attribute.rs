@@ -17,8 +17,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use super::data::{get_oid_from_int, ATTRIBUTES_LOOKUP};
 use crate::{
     helper::{
-        decode::{decode_array_len, decode_bytes, decode_datatype, decode_i16, decode_str},
-        encode::{encode_array_len, encode_bytes, encode_i16, encode_str},
+        decode::{decode_array_len, decode_datatype, decode_helper},
+        encode::{encode_array_len, encode_helper},
     },
     oid::{C509oid, C509oidRegistered},
 };
@@ -112,7 +112,7 @@ impl Encode<()> for Attribute {
             .get_map()
             .get_by_right(self.registered_oid().c509_oid().oid())
         {
-            encode_i16(e, "Attribute as OID int", oid)?;
+            encode_helper(e, "Attribute as OID int", ctx, &oid)?;
         } else {
             // Encode unwrapped CBOR OID
             self.registered_oid().c509_oid().encode(e, ctx)?;
@@ -141,7 +141,7 @@ impl Decode<'_, ()> for Attribute {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Handle CBOR int
         let mut attr = if decode_datatype(d, "Attribute as OID int")? == minicbor::data::Type::U8 {
-            let i = decode_i16(d, "Attribute as OID int")?;
+            let i = decode_helper(d, "Attribute as OID int", ctx)?;
             let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
             Attribute::new(oid.clone())
         } else {
@@ -186,24 +186,32 @@ pub enum AttributeValue {
 
 impl Encode<()> for AttributeValue {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, _ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            AttributeValue::Text(text) => encode_str(e, "Attribute value", text)?,
-            AttributeValue::Bytes(bytes) => encode_bytes(e, "Attribute value", bytes)?,
+            AttributeValue::Text(text) => encode_helper(e, "Attribute value", ctx, text)?,
+            AttributeValue::Bytes(bytes) => encode_helper(e, "Attribute value", ctx, bytes)?,
         };
         Ok(())
     }
 }
 
 impl Decode<'_, ()> for AttributeValue {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Attribute value")? {
             minicbor::data::Type::String => {
-                Ok(AttributeValue::Text(decode_str(d, "Attribute value")?))
+                Ok(AttributeValue::Text(decode_helper(
+                    d,
+                    "Attribute value",
+                    ctx,
+                )?))
             },
             minicbor::data::Type::Bytes => {
-                Ok(AttributeValue::Bytes(decode_bytes(d, "Attribute value")?))
+                Ok(AttributeValue::Bytes(decode_helper(
+                    d,
+                    "Attribute value",
+                    ctx,
+                )?))
             },
             _ => {
                 Err(minicbor::decode::Error::message(

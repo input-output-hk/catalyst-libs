@@ -23,8 +23,8 @@ use crate::{
         Attributes,
     },
     helper::{
-        decode::{decode_bytes, decode_datatype, decode_str},
-        encode::{encode_bytes, encode_str},
+        decode::{decode_bytes, decode_datatype, decode_helper},
+        encode::{encode_bytes, encode_helper},
     },
 };
 /// OID of `CommonName` attribute.
@@ -119,7 +119,7 @@ impl Encode<()> for NameValue {
                 }
             },
             NameValue::Text(text) => {
-                encode_str(e, "Name", text)?;
+                encode_helper(e, "Name", ctx, text)?;
             },
             NameValue::Bytes(bytes) => {
                 encode_bytes(e, "Name", bytes)?;
@@ -135,9 +135,7 @@ impl Decode<'_, ()> for NameValue {
             minicbor::data::Type::Array => Ok(NameValue::Attributes(Attributes::decode(d, ctx)?)),
             // If Name is a text string, the attribute is a CommonName
             minicbor::data::Type::String => {
-                Ok(create_attributes_with_cn(
-                    decode_str(d, "Name")?.to_string(),
-                ))
+                Ok(create_attributes_with_cn(decode_helper(d, "Name", ctx)?))
             },
             minicbor::data::Type::Bytes => decode_bytes_helper(d),
             _ => {
@@ -209,7 +207,7 @@ fn encode_cn_value<W: Write>(
                     &[&[EUI64_PREFIX], &decoded_bytes[..]].concat(),
                 )?;
             } else {
-                encode_str(e, "Common Name", s)?;
+                encode_helper(e, "Common Name", &mut (), s)?;
             }
         },
         AttributeValue::Bytes(_) => {

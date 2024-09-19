@@ -17,8 +17,8 @@ use serde::{Deserialize, Deserializer, Serialize};
 use crate::{
     algorithm_identifier::AlgorithmIdentifier,
     helper::{
-        decode::{decode_datatype, decode_i16},
-        encode::encode_i16,
+        decode::{decode_datatype, decode_helper},
+        encode::encode_helper,
     },
     oid::C509oidRegistered,
 };
@@ -99,7 +99,7 @@ impl Encode<()> for IssuerSignatureAlgorithm {
             .get_map()
             .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            encode_i16(e, "Issuer Signature Algorithm as OID int", i)?;
+            encode_helper(e, "Issuer Signature Algorithm as OID int", ctx, &i)?;
         } else {
             AlgorithmIdentifier::encode(&self.algo_identifier, e, ctx)?;
         }
@@ -112,7 +112,7 @@ impl Decode<'_, ()> for IssuerSignatureAlgorithm {
         match decode_datatype(d, "Issuer Signature Algorithm")? {
             // Check i16 for -256 and -256
             minicbor::data::Type::U8 | minicbor::data::Type::I16 => {
-                let i = decode_i16(d, "Issuer Signature Algorithm as OID int")?;
+                let i = decode_helper(d, "Issuer Signature Algorithm as OID int", ctx)?;
                 let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
                 Ok(Self::new(oid, None))
             },

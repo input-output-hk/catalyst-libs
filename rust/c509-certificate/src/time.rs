@@ -4,8 +4,8 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{
-    decode::{decode_datatype, decode_null, decode_u64},
-    encode::{encode_null, encode_u64},
+    decode::{decode_datatype, decode_helper, decode_null},
+    encode::{encode_helper, encode_null},
 };
 
 /// A struct representing a time where it accept seconds since the Unix epoch.
@@ -45,12 +45,12 @@ impl From<Time> for u64 {
 
 impl Encode<()> for Time {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, _ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0 == NO_EXP_DATE {
             encode_null(e, "Time")?;
         } else {
-            encode_u64(e, "Time", self.0)?;
+            encode_helper(e, "Time", ctx, &self.0)?;
         }
         Ok(())
     }
@@ -63,7 +63,7 @@ impl Decode<'_, ()> for Time {
             | minicbor::data::Type::U16
             | minicbor::data::Type::U32
             | minicbor::data::Type::U64 => {
-                let time = decode_u64(d, "Time")?;
+                let time = decode_helper(d, "Time", &mut ())?;
                 Ok(Time::new(time))
             },
             minicbor::data::Type::Null => {

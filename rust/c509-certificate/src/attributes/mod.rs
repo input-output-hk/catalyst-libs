@@ -71,7 +71,7 @@ impl Encode<()> for Attributes {
 }
 
 impl Decode<'_, ()> for Attributes {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let len = decode_array_len(d, "Attributes")?;
         if len == 0 {
             return Err(minicbor::decode::Error::message("Attributes is empty"));
@@ -81,7 +81,7 @@ impl Decode<'_, ()> for Attributes {
 
         // The attribute type is included in an array, so divide by 2
         for _ in 0..len / 2 {
-            let attribute = Attribute::decode(d, &mut ())?;
+            let attribute = Attribute::decode(d, ctx)?;
             attributes.add_attribute(attribute);
         }
 

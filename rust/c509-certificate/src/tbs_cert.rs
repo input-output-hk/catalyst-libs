@@ -7,8 +7,8 @@ use crate::{
     big_uint::UnwrappedBigUint,
     extensions::Extensions,
     helper::{
-        decode::{decode_bytes, decode_u8},
-        encode::{encode_bytes, encode_u8},
+        decode::{decode_bytes, decode_helper},
+        encode::{encode_bytes, encode_helper},
     },
     issuer_sig_algo::IssuerSignatureAlgorithm,
     name::Name,
@@ -139,7 +139,7 @@ impl Encode<()> for TbsCert {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        encode_u8(e, "Certificate type", self.c509_certificate_type)?;
+        encode_helper(e, "Certificate type", ctx, &self.c509_certificate_type)?;
         self.certificate_serial_number.encode(e, ctx)?;
         self.issuer_signature_algorithm.encode(e, ctx)?;
         self.issuer.encode(e, ctx)?;
@@ -155,7 +155,7 @@ impl Encode<()> for TbsCert {
 
 impl Decode<'_, ()> for TbsCert {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let cert_type = decode_u8(d, "Certificate type")?;
+        let cert_type = decode_helper(d, "Certificate type", ctx)?;
         let serial_number = UnwrappedBigUint::decode(d, ctx)?;
         let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;
         let issuer = Some(Name::decode(d, ctx)?);
