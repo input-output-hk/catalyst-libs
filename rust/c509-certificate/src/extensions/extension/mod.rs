@@ -307,7 +307,7 @@ mod test_extension {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        // Not PEN OID and not in the registry table
+        // Not in the registry table
         // Value should be bytes
         let ext = Extension::new(
             oid!(2.16.840 .1 .101 .3 .4 .2 .1),
