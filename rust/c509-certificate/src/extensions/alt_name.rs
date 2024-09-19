@@ -10,8 +10,8 @@ use crate::{
         GeneralNames,
     },
     helper::{
-        decode::{decode_datatype, decode_str},
-        encode::encode_str,
+        decode::{decode_datatype, decode_helper},
+        encode::encode_helper,
     },
 };
 
@@ -80,7 +80,7 @@ impl Encode<()> for GeneralNamesOrText {
                 }
             },
             GeneralNamesOrText::Text(text) => {
-                encode_str(e, "Alternative Name - General Name Text", text)?;
+                encode_helper(e, "Alternative Name - General Name Text", ctx, text)?;
             },
         }
         Ok(())
@@ -94,7 +94,11 @@ impl Decode<'_, ()> for GeneralNamesOrText {
             minicbor::data::Type::String => {
                 let gn_dns = GeneralName::new(
                     GeneralNameTypeRegistry::DNSName,
-                    GeneralNameValue::Text(decode_str(d, "Alternative Name - General Name Text")?),
+                    GeneralNameValue::Text(decode_helper(
+                        d,
+                        "Alternative Name - General Name Text",
+                        ctx,
+                    )?),
                 );
                 let mut gns = GeneralNames::new();
                 gns.add_general_name(gn_dns);
