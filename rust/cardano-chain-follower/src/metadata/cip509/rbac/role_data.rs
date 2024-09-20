@@ -7,7 +7,7 @@ use strum::FromRepr;
 
 use super::Cip509RbacMetadataInt;
 use crate::metadata::cip509::decode_helper::{
-    decode_any, decode_array_len, decode_bytes, decode_i16, decode_map_len, decode_u64, decode_u8,
+    decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
 
 /// Struct of role data.
@@ -51,11 +51,11 @@ impl Decode<'_, ()> for RoleData {
         let map_len = decode_map_len(d, "RoleData")?;
         let mut role_data = RoleData::default();
         for _ in 0..map_len {
-            let key = decode_u8(d, "key in RoleData")?;
+            let key: u8 = decode_helper(d, "key in RoleData", ctx)?;
             if let Some(key) = RoleDataInt::from_repr(key) {
                 match key {
                     RoleDataInt::RoleNumber => {
-                        role_data.role_number = decode_u8(d, "RoleNumber in RoleData")?;
+                        role_data.role_number = decode_helper(d, "RoleNumber in RoleData", ctx)?;
                     },
                     RoleDataInt::RoleSigningKey => {
                         role_data.role_signing_key = Some(KeyReference::decode(d, ctx)?);
@@ -64,7 +64,8 @@ impl Decode<'_, ()> for RoleData {
                         role_data.role_encryption_key = Some(KeyReference::decode(d, ctx)?);
                     },
                     RoleDataInt::PaymentKey => {
-                        role_data.payment_key = Some(decode_i16(d, "PaymentKey in RoleData")?);
+                        role_data.payment_key =
+                            Some(decode_helper(d, "PaymentKey in RoleData", ctx)?);
                     },
                 }
             } else {
@@ -129,11 +130,11 @@ enum LocalRefInt {
 }
 
 impl Decode<'_, ()> for KeyLocalRef {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         decode_array_len(d, "KeyLocalRef")?;
-        let local_ref = LocalRefInt::from_repr(decode_u8(d, "LocalRef in KeyLocalRef")?)
+        let local_ref = LocalRefInt::from_repr(decode_helper(d, "LocalRef in KeyLocalRef", ctx)?)
             .ok_or(decode::Error::message("Invalid local reference"))?;
-        let key_offset = decode_u64(d, "KeyOffset in KeyLocalRef")?;
+        let key_offset: u64 = decode_helper(d, "KeyOffset in KeyLocalRef", ctx)?;
         Ok(Self {
             local_ref,
             key_offset,

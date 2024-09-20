@@ -4,7 +4,7 @@
 
 // cspell: words pkix
 use c509_certificate::general_names::general_name::GeneralNameValue;
-use decode_helper::{decode_bytes, decode_map_len, decode_u8};
+use decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use der_parser::{asn1_rs::oid, der::parse_der_sequence, Oid};
 use rbac::{certs::C509Cert, role_data::RoleData};
 
@@ -110,7 +110,7 @@ impl Decode<'_, ()> for Cip509 {
             let key = d.probe().u8()?;
             if let Some(key) = Cip509IntIdentifier::from_repr(key) {
                 // Consuming the int
-                decode_u8(d, "CIP509")?;
+                let _: u8 = decode_helper(d, "CIP509", ctx)?;
                 match key {
                     Cip509IntIdentifier::Purpose => {
                         cip509_metadatum.purpose = decode_bytes(d, "CIP509 purpose")?

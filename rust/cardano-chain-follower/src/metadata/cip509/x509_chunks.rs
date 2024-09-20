@@ -5,7 +5,7 @@ use std::io::Read;
 use minicbor::{decode, Decode, Decoder};
 use strum::FromRepr;
 
-use super::{decode_helper::decode_u8, rbac::Cip509RbacMetadata};
+use super::{decode_helper::decode_helper, rbac::Cip509RbacMetadata};
 use crate::metadata::cip509::decode_helper::{decode_array_len, decode_bytes};
 
 /// Enum of compression algorithms used to compress chunks.
@@ -34,9 +34,9 @@ impl X509Chunks {
 }
 
 impl Decode<'_, ()> for X509Chunks {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         // Determine the algorithm
-        let algo = decode_u8(d, "algorithm in X509Chunks")?;
+        let algo: u8 = decode_helper(d, "algorithm in X509Chunks", ctx)?;
         let algorithm = CompressionAlgorithm::from_repr(algo)
             .ok_or(decode::Error::message("Invalid chunk data type"))?;
 

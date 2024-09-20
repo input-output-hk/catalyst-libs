@@ -15,7 +15,7 @@ use role_data::RoleData;
 use strum::FromRepr;
 
 use super::decode_helper::{
-    decode_any, decode_array_len, decode_bytes, decode_map_len, decode_u16,
+    decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
 
 /// Struct of Cip509 RBAC metadata.
@@ -98,13 +98,13 @@ impl Cip509RbacMetadata {
 }
 
 impl Decode<'_, ()> for Cip509RbacMetadata {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "Cip509RbacMetadata")?;
 
         let mut x509_rbac_metadata = Cip509RbacMetadata::new();
 
         for _ in 0..map_len {
-            let key = decode_u16(d, "key in Cip509RbacMetadata")?;
+            let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", ctx)?;
             if let Some(key) = Cip509RbacMetadataInt::from_repr(key) {
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
