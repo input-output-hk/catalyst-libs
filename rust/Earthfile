@@ -26,6 +26,7 @@ check:
 build:
     FROM +builder
 
+    RUN --no-cache
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --output="release/[^\./]+" \
