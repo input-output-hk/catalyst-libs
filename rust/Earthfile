@@ -20,6 +20,7 @@ builder:
 # check : Run basic check.
 check:
     FROM +builder
+    RUN --no-cache
 
     DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
 
