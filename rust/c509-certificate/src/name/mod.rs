@@ -326,6 +326,7 @@ mod test_name {
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
+        // "RFC test CA" text(11): 0x6b5246432074657374204341
         assert_eq!(hex::encode(buffer.clone()), "6b5246432074657374204341");
 
         let mut decoder = Decoder::new(&buffer);
@@ -434,6 +435,7 @@ mod test_name {
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
+        // 01-23-45-67-89-AB-00-01 = h'010123456789AB0001': 0x49010123456789ab0001
         assert_eq!(hex::encode(buffer.clone()), "49010123456789ab0001");
 
         let mut decoder = Decoder::new(&buffer);

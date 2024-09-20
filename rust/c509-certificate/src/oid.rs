@@ -142,6 +142,9 @@ mod test_c509_oid {
         let oid = C509oid::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1));
         oid.encode(&mut encoder, &mut ())
             .expect("Failed to encode OID");
+        // bytes(9) 0x49
+        // 0x60 (for 2.16)
+        // 0x18, 0x03, 0x60, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01
         assert_eq!(hex::encode(buffer.clone()), "49608648016503040201");
 
         let mut decoder = Decoder::new(&buffer);

@@ -111,7 +111,7 @@ mod test_attributes {
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode Attributes");
         // 1 Attribute (array len 2 (attribute type + value)): 0x82
-        // Email Address: 0x00
+        // Email Address attribute int: 0x00
         // Attribute value (array len 2): 0x82
         // example@example.com: 0x736578616d706c65406578616d706c652e636f6d
         assert_eq!(

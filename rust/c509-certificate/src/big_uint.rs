@@ -77,6 +77,7 @@ mod test_big_uint {
         b_uint
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode UnwrappedBigUint");
+        // 128269 (h'01F50D'): CBOR 0x4301f50d
         assert_eq!(hex::encode(buffer.clone()), "4301f50d");
 
         let mut decoder = minicbor::Decoder::new(&buffer);
@@ -97,6 +98,7 @@ mod test_big_uint {
         b_uint
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode UnwrappedBigUint");
+        // 9112578475118446130 (h'7E7661D7B54E4632'): CBOR 0x487e7661d7b54e4632
         assert_eq!(hex::encode(buffer.clone()), "487e7661d7b54e4632");
 
         let mut decoder = minicbor::Decoder::new(&buffer);

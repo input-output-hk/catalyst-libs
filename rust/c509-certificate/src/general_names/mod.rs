@@ -116,6 +116,16 @@ mod test_general_names {
         gns.encode(&mut encoder, &mut ())
             .expect("Failed to encode GeneralNames");
         // Array of 4 GeneralName (type, value) so 8 items: 0x88
+        // Unsigned int 2 for DNSName: 0x02
+        // DNSName with "example.com": 0x6b6578616d706c652e636f6d
+        // OtherNameHardwareModuleName negative 1: 0x20
+        // Array of 2 items: 0x82
+        // OID 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
+        // vec![0x01, 0x02, 0x03, 0x04]: 0x4401020304
+        // IPAddress: 0x07
+        // IPAddress Value in bytes string 192, 168, 1, 1: 0x44c0a80101
+        // RegisteredID: 0x08
+        // OID 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
         assert_eq!(hex::encode(buffer.clone()), "88026b6578616d706c652e636f6d20824960864801650304020144010203040744c0a801010849608648016503040201");
 
         let mut decoder = Decoder::new(&buffer);
