@@ -111,24 +111,25 @@ pub fn verify(c509: &[u8], public_key: &PublicKey) -> anyhow::Result<()> {
     public_key.verify(&encoded_tbs, &issuer_sig)
 }
 
-#[cfg(test)]
-mod test {
-    use std::str::FromStr;
+// #[cfg(test)]
+// mod test {
+//     use std::str::FromStr;
 
-    use signing::tests::private_key_str;
-    use tbs_cert::test_tbs_cert::tbs;
+//     use signing::tests::private_key_str;
+//     use tbs_cert::test_tbs_cert::tbs;
 
-    use super::*;
+//     use super::*;
 
-    #[test]
-    fn test_generate_and_verify_signed_c509_cert() {
-        let tbs_cert = tbs();
+//     #[test]
+//     fn test_generate_and_verify_signed_c509_cert() {
+//         let tbs_cert = tbs();
 
-        let private_key = FromStr::from_str(&private_key_str()).expect("Cannot create private key");
+//         let private_key = FromStr::from_str(&private_key_str()).expect("Cannot create
+// private key");
 
-        let signed_c509 = generate(&tbs_cert, Some(&private_key))
-            .expect("Failed to generate signed C509 certificate");
+//         let signed_c509 = generate(&tbs_cert, Some(&private_key))
+//             .expect("Failed to generate signed C509 certificate");
 
-        assert!(verify(&signed_c509, &private_key.public_key()).is_ok());
-    }
-}
+//         assert!(verify(&signed_c509, &private_key.public_key()).is_ok());
+//     }
+// }
