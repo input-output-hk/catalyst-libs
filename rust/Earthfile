@@ -10,7 +10,6 @@ sync-cfg:
 # builder : Set up our target toolchains, and copy our files.
 builder:
     DO rust-ci+SETUP
-    RUN --no-cache
 
     COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
     COPY --dir .cargo .config c509-certificate cardano-chain-follower \
@@ -20,7 +19,6 @@ builder:
 # check : Run basic check.
 check:
     FROM +builder
-    RUN --no-cache
 
     DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
 
@@ -28,7 +26,6 @@ check:
 build:
     FROM +builder
 
-    RUN --no-cache
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --output="release/[^\./]+" \
