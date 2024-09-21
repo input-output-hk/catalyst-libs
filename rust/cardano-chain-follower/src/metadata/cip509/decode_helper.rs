@@ -42,8 +42,8 @@ pub(crate) fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decod
 /// Helper function for decoding map.
 pub(crate) fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
     d.map()
-        .map_err(|e| decode::Error::message(&format!("Failed to decode map in {from}: {e}")))?
-        .ok_or(decode::Error::message(&format!(
+        .map_err(|e| decode::Error::message(format!("Failed to decode map in {from}: {e}")))?
+        .ok_or(decode::Error::message(format!(
             "Failed to decode map in {from}, unexpected indefinite length",
         )))
 }
@@ -51,7 +51,7 @@ pub(crate) fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode:
 /// Helper function for decoding tag.
 pub(crate) fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
     d.tag()
-        .map_err(|e| decode::Error::message(&format!("Failed to decode tag in {from}: {e}")))
+        .map_err(|e| decode::Error::message(format!("Failed to decode tag in {from}: {e}")))
 }
 
 /// Decode any in CDDL, only support basic datatype
@@ -118,7 +118,7 @@ pub(crate) fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode:
                 .to_vec())
         },
         _ => {
-            Err(decode::Error::message(&format!(
+            Err(decode::Error::message(format!(
                 "{from} Any, Data type not supported"
             )))
         },
