@@ -117,13 +117,13 @@ mod test {
     use std::str::FromStr;
 
     use signing::tests::private_key_str;
-    use tbs_cert::test_tbs_cert::tbs;
+    use tbs_cert::test_tbs_cert::tbs_1;
 
     use super::*;
 
     #[test]
     fn test_generate_and_verify_signed_c509_cert() {
-        let tbs_cert = tbs();
+        let (tbs_cert, _) = tbs_1();
 
         let private_key = FromStr::from_str(&private_key_str()).expect(
             "Cannot create

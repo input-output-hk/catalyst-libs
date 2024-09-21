@@ -13,7 +13,7 @@ where T: minicbor::Encode<C> {
     T::encode(value, e, ctx).map_err(|err| {
         encode::Error::with_message(
             err,
-            &format!(
+            format!(
                 "Failed to encode {:?} in {from}",
                 std::any::type_name::<T>()
             ),
@@ -28,7 +28,7 @@ pub(crate) fn encode_bytes<W: Write>(
     e: &mut Encoder<W>, from: &str, value: &[u8],
 ) -> Result<(), encode::Error<W::Error>> {
     e.bytes(value).map_err(|err| {
-        encode::Error::with_message(err, &format!("Failed to encode bytes in {from}"))
+        encode::Error::with_message(err, format!("Failed to encode bytes in {from}"))
     })?;
     Ok(())
 }
@@ -38,7 +38,7 @@ pub(crate) fn encode_null<W: Write>(
     e: &mut Encoder<W>, from: &str,
 ) -> Result<(), encode::Error<W::Error>> {
     e.null().map_err(|err| {
-        encode::Error::with_message(err, &format!("Failed to encode null in {from}"))
+        encode::Error::with_message(err, format!("Failed to encode null in {from}"))
     })?;
     Ok(())
 }
@@ -48,7 +48,7 @@ pub(crate) fn encode_array_len<W: Write>(
     e: &mut Encoder<W>, from: &str, len: u64,
 ) -> Result<(), encode::Error<W::Error>> {
     e.array(len).map_err(|err| {
-        encode::Error::with_message(err, &format!("Failed to encode array in {from}"))
+        encode::Error::with_message(err, format!("Failed to encode array in {from}"))
     })?;
     Ok(())
 }

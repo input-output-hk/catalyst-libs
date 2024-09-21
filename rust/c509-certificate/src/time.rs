@@ -106,6 +106,7 @@ mod test_time {
         let time = Time::new(1_672_531_200);
         time.encode(&mut encoder, &mut ())
             .expect("Failed to encode Time");
+        // 1A 63B0CD00 # unsigned(1672531200)
         assert_eq!(hex::encode(buffer.clone()), "1a63b0cd00");
 
         let mut decoder = minicbor::Decoder::new(&buffer);

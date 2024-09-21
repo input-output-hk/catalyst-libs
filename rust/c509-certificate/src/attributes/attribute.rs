@@ -239,7 +239,8 @@ mod test_attribute {
         attribute
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode Attribute");
-        // Email Address example@example.com: 0x00736578616d706c65406578616d706c652e636f6d
+        // 1.2.840 .113549 .1 .9 .1 in attribute int = 0x00
+        // Email Address example@example.com: 0x736578616d706c65406578616d706c652e636f6d
         assert_eq!(
             hex::encode(buffer.clone()),
             "00736578616d706c65406578616d706c652e636f6d"

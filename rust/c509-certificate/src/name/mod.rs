@@ -4,7 +4,7 @@
 //! are UTF-8 encoded and all attributeType should be non-negative.
 //!
 //! ```cddl
-//! Name = [ * Attributes ] / text / bytes
+//! Name = [ * Attribute ] / text / bytes
 //! Attribute = ( attributeType: int, attributeValue: text ) //
 //!             ( attributeType: ~oid, attributeValue: bytes ) //
 //! ```
@@ -18,13 +18,10 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    attributes::{
-        attribute::{Attribute, AttributeValue},
-        Attributes,
-    },
+    attributes::attribute::{Attribute, AttributeValue},
     helper::{
-        decode::{decode_bytes, decode_datatype, decode_helper},
-        encode::{encode_bytes, encode_helper},
+        decode::{decode_array_len, decode_bytes, decode_datatype, decode_helper},
+        encode::{encode_array_len, encode_bytes, encode_helper},
     },
 };
 /// OID of `CommonName` attribute.
@@ -79,8 +76,8 @@ impl Decode<'_, ()> for Name {
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum NameValue {
-    /// Attributes.
-    Attributes(Attributes),
+    /// Attribute.
+    Attribute(Vec<Attribute>),
     /// A text.
     Text(String),
     /// bytes.
@@ -92,30 +89,34 @@ impl Encode<()> for NameValue {
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            NameValue::Attributes(attrs) => {
-                let attr_first =
-                    attrs
-                        .attributes()
-                        .first()
-                        .ok_or(minicbor::encode::Error::message(
-                            "Cannot get the first Attribute",
-                        ))?;
-                //  If Name contains a single Attribute of type CommonName
-                if attrs.attributes().len() == 1
-                    && attr_first.registered_oid().c509_oid().oid() == &COMMON_NAME_OID
-                {
-                    // Get the value of the attribute
-                    let cn_value =
-                        attr_first
-                            .value()
-                            .first()
-                            .ok_or(minicbor::encode::Error::message(
-                                "Cannot get the first Attribute value",
-                            ))?;
+            NameValue::Attribute(attrs) => {
+                if let Some(attr_first) = attrs.first() {
+                    // If `attrs` contains exactly one attribute of type CommonName
+                    if attrs.len() == 1
+                        && attr_first.registered_oid().c509_oid().oid() == &COMMON_NAME_OID
+                    {
+                        // Get the value of the attribute
+                        let cn_value =
+                            attr_first
+                                .value()
+                                .first()
+                                .ok_or(minicbor::encode::Error::message(
+                                    "Cannot get the first attribute value",
+                                ))?;
 
-                    encode_cn_value(e, cn_value)?;
+                        encode_cn_value(e, cn_value)?;
+                    } else {
+                        encode_array_len(e, "Attributes", attrs.len() as u64 * 2)?;
+                        for attribute in attrs {
+                            attribute.encode(e, ctx)?;
+                        }
+                    }
                 } else {
-                    attrs.encode(e, ctx)?;
+                    // If is okay if the attributes is empty
+                    encode_array_len(e, "Attributes", attrs.len() as u64 * 2)?;
+                    for attribute in attrs {
+                        attribute.encode(e, ctx)?;
+                    }
                 }
             },
             NameValue::Text(text) => {
@@ -132,7 +133,17 @@ impl Encode<()> for NameValue {
 impl Decode<'_, ()> for NameValue {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Name")? {
-            minicbor::data::Type::Array => Ok(NameValue::Attributes(Attributes::decode(d, ctx)?)),
+            minicbor::data::Type::Array => {
+                let len = decode_array_len(d, "Attributes")?;
+                let mut attrs = Vec::new();
+
+                // The attribute type is included in an array, so divide by 2
+                for _ in 0..len / 2 {
+                    let attribute = Attribute::decode(d, ctx)?;
+                    attrs.push(attribute);
+                }
+                Ok(NameValue::Attribute(attrs))
+            },
             // If Name is a text string, the attribute is a CommonName
             minicbor::data::Type::String => {
                 Ok(create_attributes_with_cn(decode_helper(d, "Name", ctx)?))
@@ -289,43 +300,34 @@ fn decode_eui_cn_bytes(bytes: &[u8]) -> Result<NameValue, minicbor::decode::Erro
 fn create_attributes_with_cn(text: String) -> NameValue {
     let mut attr = Attribute::new(COMMON_NAME_OID);
     attr.add_value(AttributeValue::Text(text));
-    let mut attrs = Attributes::new();
-    attrs.add_attribute(attr);
-    NameValue::Attributes(attrs)
+    NameValue::Attribute(vec![attr])
 }
 
 // ------------------Test----------------------
 
 #[cfg(test)]
-pub(crate) mod test_name {
+mod test_name {
+    use std::vec;
+
     use super::*;
     use crate::attributes::attribute::Attribute;
 
     // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.1.1.  Example C509 Certificate Encoding
-    pub(crate) fn name_cn_text() -> (Name, String) {
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
-        attr.add_value(AttributeValue::Text("RFC test CA".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
-
-        (
-            Name::new(NameValue::Attributes(attrs)),
-            // "RFC test CA" Text string: 6b5246432074657374204341
-            "6b5246432074657374204341".to_string(),
-        )
-    }
-
     #[test]
     fn encode_decode_type_name_cn() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let name = name_cn_text().0;
+        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        attr.add_value(AttributeValue::Text("RFC test CA".to_string()));
+
+        let name = Name::new(NameValue::Attribute(vec![attr]));
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
-        assert_eq!(hex::encode(buffer.clone()), name_cn_text().1);
+        // "RFC test CA" text(11): 0x6b5246432074657374204341
+        assert_eq!(hex::encode(buffer.clone()), "6b5246432074657374204341");
 
         let mut decoder = Decoder::new(&buffer);
         let name_decoded = Name::decode(&mut decoder, &mut ()).expect("Failed to decode Name");
@@ -339,10 +341,8 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("000123abcd".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
 
-        let name = Name::new(NameValue::Attributes(attrs));
+        let name = Name::new(NameValue::Attribute(vec![attr]));
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
@@ -363,10 +363,8 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("000123ABCD".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
 
-        let name = Name::new(NameValue::Attributes(attrs));
+        let name = Name::new(NameValue::Attribute(vec![attr]));
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
@@ -379,32 +377,21 @@ pub(crate) mod test_name {
         assert_eq!(name_decoded, name);
     }
 
-    // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
-    // A.1.  Example RFC 7925 profiled X.509 Certificate
-    pub(crate) fn name_cn_eui_mac() -> (Name, String) {
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
-        attr.add_value(AttributeValue::Text("01-23-45-FF-FE-67-89-AB".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
-
-        (
-            Name::new(NameValue::Attributes(attrs)),
-            // Bytes of length 7: 0x47
-            // "01-23-45-FF-FE-67-89-AB" special encode: 0x010123456789AB
-            "47010123456789ab".to_string(),
-        )
-    }
-
     #[test]
     fn encode_decode_type_name_cn_eui_mac() {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let name = name_cn_eui_mac().0;
+        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        attr.add_value(AttributeValue::Text("01-23-45-FF-FE-67-89-AB".to_string()));
+
+        let name = Name::new(NameValue::Attribute(vec![attr]));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
-        assert_eq!(hex::encode(buffer.clone()), name_cn_eui_mac().1);
+        // Bytes of length 7: 0x47
+        // "01-23-45-FF-FE-67-89-AB" special encode: 0x010123456789AB
+        assert_eq!(hex::encode(buffer.clone()), "47010123456789ab");
 
         let mut decoder = Decoder::new(&buffer);
         let name_decoded = Name::decode(&mut decoder, &mut ()).expect("Failed to decode Name");
@@ -418,9 +405,7 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-ff-fe-67-89-AB".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
-        let name = Name::new(NameValue::Attributes(attrs));
+        let name = Name::new(NameValue::Attribute(vec![attr]));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
@@ -444,14 +429,13 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-AB-00-01".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
 
-        let name = Name::new(NameValue::Attributes(attrs));
+        let name = Name::new(NameValue::Attribute(vec![attr]));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
 
+        // 01-23-45-67-89-AB-00-01 = h'010123456789AB0001': 0x49010123456789ab0001
         assert_eq!(hex::encode(buffer.clone()), "49010123456789ab0001");
 
         let mut decoder = Decoder::new(&buffer);
@@ -466,10 +450,8 @@ pub(crate) mod test_name {
 
         let mut attr = Attribute::new(oid!(2.5.4 .3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-ab-00-01".to_string()));
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr);
 
-        let name = Name::new(NameValue::Attributes(attrs));
+        let name = Name::new(NameValue::Attribute(vec![attr]));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
@@ -489,8 +471,11 @@ pub(crate) mod test_name {
     // Test data from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
     // A.2.  Example IEEE 802.1AR profiled X.509 Certificate
     // Issuer: C=US, ST=CA, O=Example Inc, OU=certification, CN=802.1AR CA
-    #[allow(clippy::similar_names)]
-    pub(crate) fn names() -> (Name, String) {
+    #[test]
+    fn encode_decode_type_name_attrs() {
+        let mut buffer = Vec::new();
+        let mut encoder = Encoder::new(&mut buffer);
+
         let mut attr1 = Attribute::new(oid!(2.5.4 .6));
         attr1.add_value(AttributeValue::Text("US".to_string()));
         let mut attr2 = Attribute::new(oid!(2.5.4 .8));
@@ -502,34 +487,30 @@ pub(crate) mod test_name {
         let mut attr5 = Attribute::new(oid!(2.5.4 .3));
         attr5.add_value(AttributeValue::Text("802.1AR CA".to_string()));
 
-        let mut attrs = Attributes::new();
-        attrs.add_attribute(attr1);
-        attrs.add_attribute(attr2);
-        attrs.add_attribute(attr3);
-        attrs.add_attribute(attr4);
-        attrs.add_attribute(attr5);
-
-        (
-            Name::new(NameValue::Attributes(attrs)),
-            // Array of 10 items [4, "US", 6, "CA", 8, "Example Inc", 9, "certification", 1, "802.1AR CA"] : 0x8a
-            // attr1: 0x04625553
-            // attr2: 0x06624341
-            // attr3: 0x086b4578616d706c6520496e63
-            // attr4: 0x096d63657274696669636174696f6e
-            // attr5: 0x016a3830322e314152204341
-            "8a0462555306624341086b4578616d706c6520496e63096d63657274696669636174696f6e016a3830322e314152204341".to_string(),
-        )
-    }
-    #[test]
-    fn encode_decode_type_name_attrs() {
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-
-        let name = names().0;
+        let name = Name::new(NameValue::Attribute(vec![
+            attr1, attr2, attr3, attr4, attr5,
+        ]));
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
-        assert_eq!(hex::encode(buffer.clone()), names().1);
+        assert_eq!(hex::encode(buffer.clone()), "8a0462555306624341086b4578616d706c6520496e63096d63657274696669636174696f6e016a3830322e314152204341");
+
+        let mut decoder = Decoder::new(&buffer);
+        let name_decoded = Name::decode(&mut decoder, &mut ()).expect("Failed to decode Name");
+        assert_eq!(name_decoded, name);
+    }
+
+    #[test]
+    fn encode_decode_empty_attribute() {
+        let mut buffer = Vec::new();
+        let mut encoder = Encoder::new(&mut buffer);
+
+        let name = Name::new(NameValue::Attribute(vec![]));
+
+        name.encode(&mut encoder, &mut ())
+            .expect("Failed to encode Name");
+
+        assert_eq!(hex::encode(buffer.clone()), "80");
 
         let mut decoder = Decoder::new(&buffer);
         let name_decoded = Name::decode(&mut decoder, &mut ()).expect("Failed to decode Name");
