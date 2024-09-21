@@ -4,11 +4,11 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
 use crate::{
+    cert_tbs::TbsCert,
     helper::{
         decode::{decode_bytes, decode_datatype},
         encode::{encode_bytes, encode_null},
     },
-    tbs_cert::TbsCert,
 };
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]

@@ -6,8 +6,8 @@ use minicbor::Decode;
 use wasm_bindgen::{prelude::wasm_bindgen, JsValue};
 
 use crate::{
+    cert_tbs::TbsCert,
     signing::{PrivateKey, PublicKey},
-    tbs_cert::TbsCert,
 };
 
 /// Wrapper for generate function.

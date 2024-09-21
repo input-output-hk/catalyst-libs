@@ -37,13 +37,14 @@
 
 use anyhow::anyhow;
 use c509::C509;
+use cert_tbs::TbsCert;
 use minicbor::{Decode, Encode};
 use signing::{PrivateKey, PublicKey};
-use tbs_cert::TbsCert;
 pub mod algorithm_identifier;
 pub mod attributes;
 pub mod big_uint;
 pub mod c509;
+pub mod cert_tbs;
 pub mod extensions;
 pub mod general_names;
 mod helper;
@@ -53,7 +54,6 @@ pub mod oid;
 pub mod signing;
 pub mod subject_pub_key_algo;
 mod tables;
-pub mod tbs_cert;
 pub mod time;
 pub mod wasm_binding;
 
@@ -116,8 +116,8 @@ pub fn verify(c509: &[u8], public_key: &PublicKey) -> anyhow::Result<()> {
 mod test {
     use std::str::FromStr;
 
+    use cert_tbs::test_tbs_cert::tbs_1;
     use signing::tests::private_key_str;
-    use tbs_cert::test_tbs_cert::tbs_1;
 
     use super::*;
 
