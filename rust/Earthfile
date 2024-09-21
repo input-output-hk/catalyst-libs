@@ -11,8 +11,6 @@ sync-cfg:
 builder:
     DO rust-ci+SETUP
 
-    RUN --no-cache echo "Break Cache"
-
     COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
     COPY --dir .cargo .config c509-certificate cardano-chain-follower \
                 cbork cbork-abnf-parser cbork-cddl-parser \
