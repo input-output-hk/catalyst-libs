@@ -125,7 +125,10 @@ mod test {
     fn test_generate_and_verify_signed_c509_cert() {
         let tbs_cert = tbs();
 
-        let private_key = FromStr::from_str(&private_key_str()).expect("Cannot create private key");
+        let private_key = FromStr::from_str(&private_key_str()).expect(
+            "Cannot create
+private key",
+        );
 
         let signed_c509 = generate(&tbs_cert, Some(&private_key))
             .expect("Failed to generate signed C509 certificate");

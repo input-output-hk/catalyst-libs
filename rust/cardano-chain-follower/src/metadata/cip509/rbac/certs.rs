@@ -4,9 +4,7 @@ use c509_certificate::c509::C509;
 use minicbor::{decode, Decode, Decoder};
 use x509_cert::{der::Decode as x509Decode, Certificate};
 
-use crate::metadata::cip509::decode_helper::{
-    decode_array_len, decode_bytes, decode_u64, decode_u8,
-};
+use crate::metadata::cip509::decode_helper::{decode_array_len, decode_bytes, decode_helper};
 
 // ------------------x509------------------------
 
@@ -72,9 +70,11 @@ pub struct C509CertInMetadatumReference {
 }
 
 impl Decode<'_, ()> for C509CertInMetadatumReference {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        let txn_output_field = decode_u8(d, "txn output field in C509CertInMetadatumReference")?;
-        let txn_output_index = decode_u64(d, "txn output index in C509CertInMetadatumReference")?;
+    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+        let txn_output_field: u8 =
+            decode_helper(d, "txn output field in C509CertInMetadatumReference", ctx)?;
+        let txn_output_index: u64 =
+            decode_helper(d, "txn output index in C509CertInMetadatumReference", ctx)?;
         let cert_ref = match d.datatype()? {
             minicbor::data::Type::Array => {
                 let len = decode_array_len(d, "cert ref in C509CertInMetadatumReference")?;
@@ -82,7 +82,13 @@ impl Decode<'_, ()> for C509CertInMetadatumReference {
                 arr.map(Some)
             },
             minicbor::data::Type::Null => Ok(None),
-            _ => Ok(Some(vec![decode_u64(d, "C509CertInMetadatumReference")?])),
+            _ => {
+                Ok(Some(vec![decode_helper(
+                    d,
+                    "C509CertInMetadatumReference",
+                    ctx,
+                )?]))
+            },
         }?;
         Ok(Self {
             txn_output_field,
