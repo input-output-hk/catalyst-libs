@@ -4,7 +4,7 @@
 
 // cspell: words pkix
 use c509_certificate::general_names::general_name::GeneralNameValue;
-use decode_helper::{decode_bytes, decode_map_len, decode_u8};
+use decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use der_parser::{asn1_rs::oid, der::parse_der_sequence, Oid};
 use rbac::{certs::C509Cert, role_data::RoleData};
 
@@ -110,7 +110,7 @@ impl Decode<'_, ()> for Cip509 {
             let key = d.probe().u8()?;
             if let Some(key) = Cip509IntIdentifier::from_repr(key) {
                 // Consuming the int
-                decode_u8(d, "CIP509")?;
+                let _: u8 = decode_helper(d, "CIP509", ctx)?;
                 match key {
                     Cip509IntIdentifier::Purpose => {
                         cip509_metadatum.purpose = decode_bytes(d, "CIP509 purpose")?
@@ -1085,14 +1085,15 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
-        #[allow(clippy::indexing_slicing)]
-        let tx = transactions[1].clone();
-        let aux_data = cip_509_aux_data(&tx);
+        let tx = transactions
+            .get(1)
+            .expect("Failed to get transaction index");
+        let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
         assert!(cip509
-            .validate_txn_inputs_hash(&tx, &mut validation_report, &decoded_metadata)
+            .validate_txn_inputs_hash(tx, &mut validation_report, &decoded_metadata)
             .unwrap());
     }
 
@@ -1106,15 +1107,16 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
-        #[allow(clippy::indexing_slicing)]
-        let tx = transactions[1].clone();
+        let tx = transactions
+            .get(1)
+            .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(&tx);
+        let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
         assert!(cip509
-            .validate_aux(&tx, &mut validation_report, &decoded_metadata)
+            .validate_aux(tx, &mut validation_report, &decoded_metadata)
             .unwrap());
     }
 
@@ -1128,15 +1130,16 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
-        #[allow(clippy::indexing_slicing)]
-        let tx = transactions[1].clone();
+        let tx = transactions
+            .get(1)
+            .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(&tx);
+        let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
         assert!(cip509
-            .validate_stake_public_key(&tx, &mut validation_report, &decoded_metadata, 0)
+            .validate_stake_public_key(tx, &mut validation_report, &decoded_metadata, 0)
             .unwrap());
     }
 
@@ -1150,10 +1153,11 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
-        #[allow(clippy::indexing_slicing)]
-        let tx = transactions[1].clone();
+        let tx = transactions
+            .get(1)
+            .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(&tx);
+        let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
@@ -1163,7 +1167,7 @@ mod tests {
                 if role.role_number == 0 {
                     assert!(cip509
                         .validate_payment_key(
-                            &tx,
+                            tx,
                             &mut validation_report,
                             &decoded_metadata,
                             0,
@@ -1185,10 +1189,11 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
-        #[allow(clippy::indexing_slicing)]
-        let tx = transactions[1].clone();
+        let tx = transactions
+            .get(1)
+            .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(&tx);
+        let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
@@ -1199,7 +1204,7 @@ mod tests {
                     println!(
                         "{:?}",
                         cip509.validate_payment_key(
-                            &tx,
+                            tx,
                             &mut validation_report,
                             &decoded_metadata,
                             0,
@@ -1221,15 +1226,16 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Fifth transaction of this test data contains the CIP509 auxiliary data
-        #[allow(clippy::indexing_slicing)]
-        let tx = transactions[4].clone();
+        let tx = transactions
+            .get(4)
+            .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(&tx);
+        let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
         assert!(!cip509
-            .validate_stake_public_key(&tx, &mut validation_report, &decoded_metadata, 0)
+            .validate_stake_public_key(tx, &mut validation_report, &decoded_metadata, 0)
             .unwrap());
     }
 }

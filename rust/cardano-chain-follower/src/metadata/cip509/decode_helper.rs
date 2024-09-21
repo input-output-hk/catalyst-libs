@@ -2,83 +2,49 @@
 
 use minicbor::{data::Tag, decode, Decoder};
 
+/// Generic helper function for decoding different types.
+pub(crate) fn decode_helper<'a, T, C>(
+    d: &mut Decoder<'a>, from: &str, context: &mut C,
+) -> Result<T, decode::Error>
+where T: minicbor::Decode<'a, C> {
+    T::decode(d, context).map_err(|e| {
+        decode::Error::message(&format!(
+            "Failed to decode {:?} in {from}: {e}",
+            std::any::type_name::<T>()
+        ))
+    })
+}
+
+/// Helper function for decoding bytes.
+pub(crate) fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
+    d.bytes().map(<[u8]>::to_vec).map_err(|e| {
+        decode::Error::message(&format!(
+            "Failed to decode bytes in {from}:
+            {e}"
+        ))
+    })
+}
+
+/// Helper function for decoding array.
+pub(crate) fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
+    d.array()
+        .map_err(|e| {
+            decode::Error::message(&format!(
+                "Failed to decode array in {from}:
+            {e}"
+            ))
+        })?
+        .ok_or(decode::Error::message(&format!(
+            "Failed to decode array in {from}, unexpected indefinite length",
+        )))
+}
+
 /// Helper function for decoding map.
 pub(crate) fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
     d.map()
         .map_err(|e| decode::Error::message(format!("Failed to decode map in {from}: {e}")))?
         .ok_or(decode::Error::message(format!(
             "Failed to decode map in {from}, unexpected indefinite length",
-        )))
-}
-
-/// Helper function for decoding u8.
-pub(crate) fn decode_u8(d: &mut Decoder, from: &str) -> Result<u8, decode::Error> {
-    d.u8()
-        .map_err(|e| decode::Error::message(format!("Failed to decode u8 in {from}: {e}")))
-}
-
-/// Helper function for decoding u16.
-pub(crate) fn decode_u16(d: &mut Decoder, from: &str) -> Result<u16, decode::Error> {
-    d.u16()
-        .map_err(|e| decode::Error::message(format!("Failed to decode u16 in {from}: {e}")))
-}
-
-/// Helper function for decoding u32.
-pub(crate) fn decode_u32(d: &mut Decoder, from: &str) -> Result<u32, decode::Error> {
-    d.u32()
-        .map_err(|e| decode::Error::message(format!("Failed to decode u32 in {from}: {e}")))
-}
-
-/// Helper function for decoding u64.
-pub(crate) fn decode_u64(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
-    d.u64()
-        .map_err(|e| decode::Error::message(format!("Failed to decode u64 in {from}: {e}")))
-}
-
-/// Helper function for decoding i8.
-pub(crate) fn decode_i8(d: &mut Decoder, from: &str) -> Result<i8, decode::Error> {
-    d.i8()
-        .map_err(|e| decode::Error::message(format!("Failed to decode i8 in {from}: {e}")))
-}
-
-/// Helper function for decoding i16.
-pub(crate) fn decode_i16(d: &mut Decoder, from: &str) -> Result<i16, decode::Error> {
-    d.i16()
-        .map_err(|e| decode::Error::message(format!("Failed to decode i16 in {from}: {e}")))
-}
-
-/// Helper function for decoding i32.
-pub(crate) fn decode_i32(d: &mut Decoder, from: &str) -> Result<i32, decode::Error> {
-    d.i32()
-        .map_err(|e| decode::Error::message(format!("Failed to decode i32 in {from}: {e}")))
-}
-
-/// Helper function for decoding i64.
-pub(crate) fn decode_i64(d: &mut Decoder, from: &str) -> Result<i64, decode::Error> {
-    d.i64()
-        .map_err(|e| decode::Error::message(format!("Failed to decode i64 in {from}: {e}")))
-}
-
-/// Helper function for decoding string.
-pub(crate) fn decode_string(d: &mut Decoder, from: &str) -> Result<String, decode::Error> {
-    d.str()
-        .map(std::borrow::ToOwned::to_owned)
-        .map_err(|e| decode::Error::message(format!("Failed to decode string in {from}: {e}")))
-}
-
-/// Helper function for decoding bytes.
-pub(crate) fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
-    d.bytes()
-        .map(<[u8]>::to_vec)
-        .map_err(|e| decode::Error::message(format!("Failed to decode bytes in {from}: {e}")))
-}
-
-/// Helper function for decoding array.
-pub(crate) fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
-    d.array()
-        .map_err(|e| decode::Error::message(format!("Failed to decode array in {from}: {e}")))?
-        .ok_or(decode::Error::message(format!(
-            "Failed to decode array in {from}, unexpected indefinite length",
         )))
 }
 
@@ -91,50 +57,63 @@ pub(crate) fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Err
 /// Decode any in CDDL, only support basic datatype
 pub(crate) fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
     match d.datatype()? {
-        minicbor::data::Type::Bytes => Ok(decode_bytes(d, &format!("{from} Any"))?),
         minicbor::data::Type::String => {
-            Ok(decode_string(d, &format!("{from} Any"))?
-                .as_bytes()
-                .to_vec())
-        },
-        minicbor::data::Type::Array => {
-            Ok(decode_array_len(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
+            match decode_helper::<String, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.as_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::U8 => {
-            Ok(decode_u8(d, &format!("{from} Any"))?.to_be_bytes().to_vec())
+            match decode_helper::<u8, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::U16 => {
-            Ok(decode_u16(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
+            match decode_helper::<u16, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::U32 => {
-            Ok(decode_u32(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
+            match decode_helper::<u32, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::U64 => {
-            Ok(decode_u64(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
+            match decode_helper::<u64, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::I8 => {
-            Ok(decode_i8(d, &format!("{from} Any"))?.to_be_bytes().to_vec())
+            match decode_helper::<i8, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::I16 => {
-            Ok(decode_i16(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
+            match decode_helper::<i16, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::I32 => {
-            Ok(decode_i32(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
+            match decode_helper::<i32, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
         },
         minicbor::data::Type::I64 => {
-            Ok(decode_i64(d, &format!("{from} Any"))?
+            match decode_helper::<i64, _>(d, &format!("{from} Any"), &mut ()) {
+                Ok(i) => Ok(i.to_be_bytes().to_vec()),
+                Err(e) => Err(e),
+            }
+        },
+        minicbor::data::Type::Bytes => Ok(decode_bytes(d, &format!("{from} Any"))?),
+        minicbor::data::Type::Array => {
+            Ok(decode_array_len(d, &format!("{from} Any"))?
                 .to_be_bytes()
                 .to_vec())
         },
@@ -213,7 +192,6 @@ mod tests {
         let mut e = Encoder::new(&mut buf);
         let num: i32 = -123_456_789;
         e.i32(num).expect("Error encoding i32");
-
         let mut d = Decoder::new(&buf);
         let result = decode_any(&mut d, "test").expect("Error decoding i32");
         assert_eq!(
