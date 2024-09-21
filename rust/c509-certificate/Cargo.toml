@@ -2,7 +2,7 @@
 name = "c509-certificate"
 description = "C509 certificate implementation"
 keywords = ["cardano", "catalyst", "c509 certificate", "certificate", "x509"]
-version = "0.0.1"
+version = "0.0.2"
 authors = [
     "Arissara Chotivichit <arissara.chotivichit@iohk.io>"
 ]
@@ -18,7 +18,7 @@ crate-type = ["cdylib", "rlib"]
 workspace = true
 
 [dependencies]
-minicbor = { version = "0.24", features = ["std"] }
+minicbor = { version = "0.25.1", features = ["std"] }
 hex = "0.4.3"
 oid = "0.2.1"
 oid-registry = "0.7.0"
