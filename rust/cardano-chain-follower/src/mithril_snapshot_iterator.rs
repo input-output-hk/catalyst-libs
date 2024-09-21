@@ -200,10 +200,7 @@ impl MithrilSnapshotIterator {
         })
         .await;
 
-        match res {
-            Ok(res) => res,
-            Err(_error) => None,
-        }
+        res.unwrap_or_default()
     }
 }
 
