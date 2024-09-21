@@ -1085,6 +1085,7 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
+        #[allow(clippy::indexing_slicing)]
         let tx = transactions[1].clone();
         let aux_data = cip_509_aux_data(&tx);
 
@@ -1105,6 +1106,7 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
+        #[allow(clippy::indexing_slicing)]
         let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
@@ -1126,6 +1128,7 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
+        #[allow(clippy::indexing_slicing)]
         let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
@@ -1147,6 +1150,7 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
+        #[allow(clippy::indexing_slicing)]
         let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
@@ -1181,6 +1185,7 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
+        #[allow(clippy::indexing_slicing)]
         let tx = transactions[1].clone();
 
         let aux_data = cip_509_aux_data(&tx);
@@ -1216,6 +1221,7 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Fifth transaction of this test data contains the CIP509 auxiliary data
+        #[allow(clippy::indexing_slicing)]
         let tx = transactions[4].clone();
 
         let aux_data = cip_509_aux_data(&tx);

@@ -514,7 +514,6 @@ pub(crate) mod test_tbs_cert {
         tbs_cert
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode TBS Certificate");
-
         assert_eq!(hex::encode(buffer.clone()), tbs_cert_cbor);
 
         let mut decoder = Decoder::new(&buffer);
