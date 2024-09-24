@@ -29,11 +29,7 @@ build:
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --output="release/[^\./]+" \
-        --args1="--libs=c509-certificate" \
-        --args2="--libs=cardano-chain-follower" \
-        --args3="--libs=cbork-cddl-parser" \
-        --args4="--libs=cbork-abnf-parser" \
-        --args5="--libs=hermes-ipfs" \
+        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=hermes-ipfs --libs=catalyst-voting" \
         --args6="--bins=cbork/cbork" \
         --docs="true"
 
