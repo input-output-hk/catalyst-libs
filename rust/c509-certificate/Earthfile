@@ -30,8 +30,3 @@ js-wasm-package-locally:
     FROM +build-wasm
 
     SAVE ARTIFACT /pkg AS LOCAL ./pkg
-
-# Test which runs check with all supported host tooling.  Needs qemu or rosetta to run.
-# Only used to validate tooling is working across host toolsets.
-build-all-hosts:
-    BUILD --platform=linux/amd64 --platform=linux/arm64 +build-hosted
