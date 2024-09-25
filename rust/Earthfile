@@ -12,9 +12,14 @@ builder:
     DO rust-ci+SETUP
 
     COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
-    COPY --dir .cargo .config c509-certificate cardano-chain-follower \
-                cbork cbork-abnf-parser cbork-cddl-parser \
-                hermes-ipfs  .
+    COPY --dir .cargo .config \
+                c509-certificate \
+                cardano-chain-follower \
+                catalyst-voting \
+                cbork \
+                cbork-abnf-parser \
+                cbork-cddl-parser \
+                hermes-ipfs .
 
 # check : Run basic check.
 check:
@@ -29,12 +34,10 @@ build:
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --output="release/[^\./]+" \
-        --args1="--libs=c509-certificate" \
-        --args2="--libs=cardano-chain-follower" \
-        --args3="--libs=cbork-cddl-parser" \
-        --args4="--libs=cbork-abnf-parser" \
-        --args5="--libs=hermes-ipfs" \
-        --args6="--bins=cbork/cbork" \
+        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
+        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
+        --args3="--libs=catalyst-voting" \
+        --args4="--bins=cbork/cbork" \
         --docs="true"
 
     SAVE ARTIFACT target/$TARGETARCH/doc doc
