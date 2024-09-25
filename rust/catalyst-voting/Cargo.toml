@@ -12,3 +12,6 @@ workspace = true
 
 [dependencies]
 anyhow = "1.0.71"
+thiserror = "1.0.64"
+rand_core = "0.6.4"
+curve25519-dalek = { version = "4.0" }

@@ -2,6 +2,8 @@
 
 #![allow(dead_code, unused_variables, clippy::todo)]
 
+mod crypto;
+
 /// A representation of the voting choice.
 pub struct Vote;
 
