@@ -137,36 +137,6 @@ mod tests {
     }
 
     #[property_test]
-    fn add_zero(fe: Scalar) {
-        let ge = GroupElement::GENERATOR.mul(&fe);
-
-        assert_eq!(fe.add(&Scalar::zero()), fe);
-        assert_eq!(GroupElement::zero().add(&ge), ge);
-    }
-
-    #[property_test]
-    fn associative(fe1: Scalar, fe2: Scalar) {
-        let fe3 = fe1.add(&fe2);
-
-        let ge1 = GroupElement::GENERATOR.mul(&fe1);
-        let ge2 = GroupElement::GENERATOR.mul(&fe2);
-        let ge3 = GroupElement::GENERATOR.mul(&fe3);
-
-        let ge3_got = ge1.add(&ge2);
-
-        assert_eq!(fe3, fe2.add(&fe1));
-        assert_eq!(ge3_got, ge3);
-    }
-
-    #[property_test]
-    fn inverse(fe1: Scalar) {
-        let g = GroupElement::GENERATOR.mul(&fe1).mul(&fe1.inverse());
-
-        assert_eq!(fe1.mul(&fe1.inverse()), Scalar::one());
-        assert_eq!(g, GroupElement::GENERATOR);
-    }
-
-    #[property_test]
     fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {
         assert_eq!(&(&e1 + &e2) + &e3, &e1 + &(&e2 + &e3));
         assert_eq!(&e1 + &e2, &e2 + &e1);
