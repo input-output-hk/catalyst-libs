@@ -1,6 +1,6 @@
-//! Utulity functions and entities
+//! Utility functions and entities
 
-/// A convinient macro to autogenerate a `std::ops` traits implmentation as `Add`, `Sub`
+/// A convenient macro to autogenerate a `std::ops` traits implementation as `Add`, `Sub`
 /// etc.
 ///
 /// It is required to provide a basic implementation of the `std::ops` for reference

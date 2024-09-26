@@ -1,4 +1,4 @@
-//! Implementation of the lifted ``ElGamal`` cryptosystem, and combine with `ChaCha`
+//! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
 use std::ops::Mul;
@@ -40,7 +40,7 @@ pub fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Scalar) ->
     Ciphertext(e1, e2)
 }
 
-/// Decrypt ``ElGamal`` `Ciphertext`, returns the original message respresented as a
+/// Decrypt ``ElGamal`` `Ciphertext`, returns the original message represented as a
 /// `GroupElement`.
 pub fn decrypt(cipher: &Ciphertext, secret_key: &SecretKey) -> GroupElement {
     &(&cipher.0 * &secret_key.0.negate()) + &cipher.1
@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[property_test]
-    fn elgalam_encryption_decryption_test(
+    fn elgamal_encryption_decryption_test(
         secret_key: SecretKey, message: Scalar, randomness: Scalar,
     ) {
         let public_key = secret_key.public_key();

@@ -16,7 +16,7 @@ pub fn vote(vote: usize, voting_options: usize) -> anyhow::Result<Vote> {
     todo!()
 }
 
-/// A respresentation of the encrypted vote.
+/// A representation of the encrypted vote.
 pub struct EncryptedVote;
 
 /// Election public key.

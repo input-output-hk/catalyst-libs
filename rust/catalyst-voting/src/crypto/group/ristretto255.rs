@@ -1,5 +1,7 @@
 //! ristretto255 group implementation.
 
+// cspell: words BASEPOINT
+
 use std::ops::{Add, Mul, Sub};
 
 use curve25519_dalek::{
