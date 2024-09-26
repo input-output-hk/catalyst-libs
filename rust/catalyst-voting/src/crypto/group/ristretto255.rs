@@ -1,6 +1,6 @@
 //! ristretto255 group implementation.
 
-use std::ops::{Add, Mul};
+use std::ops::{Add, Mul, Sub};
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
@@ -40,6 +40,11 @@ impl Scalar {
     /// multiplicative identity
     pub fn one() -> Self {
         Scalar(IScalar::ONE)
+    }
+
+    /// negative value
+    pub fn negate(&self) -> Self {
+        Scalar(-self.0)
     }
 
     /// multiplicative inverse value, like `1 / Scalar`.
@@ -104,6 +109,14 @@ impl Add<&Scalar> for &Scalar {
     }
 }
 
+impl Sub<&Scalar> for &Scalar {
+    type Output = Scalar;
+
+    fn sub(self, other: &Scalar) -> Scalar {
+        Scalar(self.0 - other.0)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::{
@@ -126,6 +139,8 @@ mod tests {
     #[property_test]
     fn add_zero(fe: Scalar) {
         let ge = GroupElement::GENERATOR.mul(&fe);
+
+        assert_eq!(fe.add(&Scalar::zero()), fe);
         assert_eq!(GroupElement::zero().add(&ge), ge);
     }
 
@@ -139,7 +154,7 @@ mod tests {
 
         let ge3_got = ge1.add(&ge2);
 
-        assert_eq!(fe3, fe1.add(&fe2));
+        assert_eq!(fe3, fe2.add(&fe1));
         assert_eq!(ge3_got, ge3);
     }
 
@@ -149,5 +164,32 @@ mod tests {
 
         assert_eq!(fe1.mul(&fe1.inverse()), Scalar::one());
         assert_eq!(g, GroupElement::GENERATOR);
+    }
+
+    #[property_test]
+    fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {
+        assert_eq!(&(&e1 + &e2) + &e3, &e1 + &(&e2 + &e3));
+        assert_eq!(&e1 + &e2, &e2 + &e1);
+        assert_eq!(&e1 + &Scalar::zero(), e1.clone());
+        assert_eq!(&e1 * &Scalar::one(), e1.clone());
+        assert_eq!(&e1 * &e1.inverse(), Scalar::one());
+        assert_eq!(&e1 + &e1.negate(), Scalar::zero());
+        assert_eq!(&(&e1 - &e2) + &e2, e1.clone());
+        assert_eq!(&(&e1 + &e2) * &e3, &(&e1 * &e3) + &(&e2 * &e3));
+    }
+
+    #[property_test]
+    fn group_element_arithmetic_tests(e1: Scalar, e2: Scalar) {
+        let ge = GroupElement::GENERATOR.mul(&e1);
+        assert_eq!(&GroupElement::zero() + &ge, ge);
+
+        let ge1 = GroupElement::GENERATOR.mul(&e1);
+        let ge2 = GroupElement::GENERATOR.mul(&e2);
+        let ge3 = GroupElement::GENERATOR.mul(&(&e1 + &e2));
+
+        assert_eq!(&ge1 + &ge2, ge3);
+
+        let ge = GroupElement::GENERATOR.mul(&e1).mul(&e1.inverse());
+        assert_eq!(ge, GroupElement::GENERATOR);
     }
 }
