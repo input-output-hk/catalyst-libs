@@ -6,6 +6,7 @@ use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
     ristretto::RistrettoPoint as Point,
     scalar::Scalar as IScalar,
+    traits::Identity,
 };
 use rand_core::CryptoRngCore;
 
@@ -17,9 +18,10 @@ pub struct Scalar(IScalar);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct GroupElement(Point);
 
-impl GroupElement {
-    /// ristretto255 group generator.
-    pub const GENERATOR: GroupElement = GroupElement(RISTRETTO_BASEPOINT_POINT);
+impl From<u64> for Scalar {
+    fn from(value: u64) -> Self {
+        Scalar(IScalar::from(value))
+    }
 }
 
 impl Scalar {
@@ -29,7 +31,34 @@ impl Scalar {
         rng.fill_bytes(&mut scalar_bytes);
         Scalar(IScalar::from_bytes_mod_order_wide(&scalar_bytes))
     }
+
+    /// additive identity
+    pub fn zero() -> Self {
+        Scalar(IScalar::ZERO)
+    }
+
+    /// multiplicative identity
+    pub fn one() -> Self {
+        Scalar(IScalar::ONE)
+    }
+
+    /// multiplicative inverse value, like `1 / Scalar`.
+    pub fn inverse(&self) -> Scalar {
+        Scalar(self.0.invert())
+    }
 }
+
+impl GroupElement {
+    /// ristretto255 group generator.
+    pub const GENERATOR: GroupElement = GroupElement(RISTRETTO_BASEPOINT_POINT);
+
+    /// Generate a zero group element.
+    pub fn zero() -> Self {
+        GroupElement(Point::identity())
+    }
+}
+
+// `std::ops` traits implementations
 
 impl Mul<&GroupElement> for &Scalar {
     type Output = GroupElement;
@@ -51,10 +80,74 @@ impl Mul<&Scalar> for &GroupElement {
     }
 }
 
+impl Mul<&Scalar> for &Scalar {
+    type Output = Scalar;
+
+    fn mul(self, other: &Scalar) -> Scalar {
+        Scalar(self.0 * other.0)
+    }
+}
+
 impl Add<&GroupElement> for &GroupElement {
     type Output = GroupElement;
 
     fn add(self, other: &GroupElement) -> GroupElement {
         GroupElement(self.0 + other.0)
+    }
+}
+
+impl Add<&Scalar> for &Scalar {
+    type Output = Scalar;
+
+    fn add(self, other: &Scalar) -> Scalar {
+        Scalar(self.0 + other.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::{
+        arbitrary::any,
+        prelude::{Arbitrary, BoxedStrategy, Strategy},
+        property_test,
+    };
+
+    use super::*;
+
+    impl Arbitrary for Scalar {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<u64>().prop_map(Scalar::from).boxed()
+        }
+    }
+
+    #[property_test]
+    fn add_zero(fe: Scalar) {
+        let ge = GroupElement::GENERATOR.mul(&fe);
+        assert_eq!(GroupElement::zero().add(&ge), ge);
+    }
+
+    #[property_test]
+    fn associative(fe1: Scalar, fe2: Scalar) {
+        let fe3 = fe1.add(&fe2);
+
+        let ge1 = GroupElement::GENERATOR.mul(&fe1);
+        let ge2 = GroupElement::GENERATOR.mul(&fe2);
+        let ge3 = GroupElement::GENERATOR.mul(&fe3);
+
+        let ge3_got = ge1.add(&ge2);
+
+        assert_eq!(fe3, fe1.add(&fe2));
+        assert_eq!(ge3_got, ge3);
+    }
+
+    #[property_test]
+    fn inverse(fe1: Scalar) {
+        let g = GroupElement::GENERATOR.mul(&fe1).mul(&fe1.inverse());
+
+        assert_eq!(fe1.mul(&fe1.inverse()), Scalar::one());
+        assert_eq!(g, GroupElement::GENERATOR);
     }
 }
