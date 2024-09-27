@@ -2,33 +2,34 @@
 
 #![allow(dead_code, unused_variables, clippy::todo)]
 
-mod crypto;
+use voter::{
+    EncryptedVote, EncryptionRandomness, IncorrectChoiceError, IncorrectRandomnessLengthError, Vote,
+};
 
-/// A representation of the voting choice.
-pub struct Vote;
+mod crypto;
+pub mod voter;
+
+/// Election public key.
+pub type ElectionPublicKey = crypto::elgamal::PublicKey;
 
 /// Generate a vote.
 /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voting-choice)
 ///
 /// # Errors
-///   - TODO
-pub fn vote(vote: usize, voting_options: usize) -> anyhow::Result<Vote> {
-    todo!()
+///   - `voter::IncorrectChoiceError`
+pub fn vote(choice: usize, voting_options: usize) -> Result<Vote, IncorrectChoiceError> {
+    Vote::new(choice, voting_options)
 }
-
-/// A representation of the encrypted vote.
-pub struct EncryptedVote;
-
-/// Election public key.
-pub struct ElectionPublicKey;
 
 /// Encrypt vote function.
 /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
 ///
 /// # Errors
-///   - TODO
-pub fn encrypt_vote(vote: &Vote, election_pk: &ElectionPublicKey) -> anyhow::Result<EncryptedVote> {
-    todo!()
+///   - `voter::IncorrectRandomnessLengthError`
+pub fn encrypt_vote(
+    vote: &Vote, election_pk: &ElectionPublicKey, randomness: &EncryptionRandomness,
+) -> Result<EncryptedVote, IncorrectRandomnessLengthError> {
+    vote.encrypt(election_pk, randomness)
 }
 
 /// Vote proof struct.

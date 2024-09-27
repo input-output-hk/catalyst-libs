@@ -51,8 +51,8 @@ mod tests {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
-        property_test,
     };
+    use test_strategy::proptest;
 
     use super::*;
 
@@ -65,7 +65,7 @@ mod tests {
         }
     }
 
-    #[property_test]
+    #[proptest]
     fn elgamal_encryption_decryption_test(
         secret_key: SecretKey, message: Scalar, randomness: Scalar,
     ) {

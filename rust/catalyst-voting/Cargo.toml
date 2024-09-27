@@ -12,8 +12,13 @@ workspace = true
 
 [dependencies]
 anyhow = "1.0.71"
+thiserror = "1.0.56"
 rand_core = "0.6.4"
 curve25519-dalek = { version = "4.0" }
+rayon = "1.10.0"
 
 [dev-dependencies]
-proptest = {version = "1.5.0", features = ["attr-macro"] }
+proptest = {version = "1.5.0" }
+# Potentially it could be replaced with using `proptest::property_test` atribute macro,
+# after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
+test-strategy = "0.4.0"

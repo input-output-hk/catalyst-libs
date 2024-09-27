@@ -124,8 +124,8 @@ mod tests {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
-        property_test,
     };
+    use test_strategy::proptest;
 
     use super::*;
 
@@ -138,7 +138,7 @@ mod tests {
         }
     }
 
-    #[property_test]
+    #[proptest]
     fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {
         assert_eq!(&(&e1 + &e2) + &e3, &e1 + &(&e2 + &e3));
         assert_eq!(&e1 + &e2, &e2 + &e1);
@@ -150,7 +150,7 @@ mod tests {
         assert_eq!(&(&e1 + &e2) * &e3, &(&e1 * &e3) + &(&e2 * &e3));
     }
 
-    #[property_test]
+    #[proptest]
     fn group_element_arithmetic_tests(e1: Scalar, e2: Scalar) {
         let ge = GroupElement::GENERATOR.mul(&e1);
         assert_eq!(&GroupElement::zero() + &ge, ge);
