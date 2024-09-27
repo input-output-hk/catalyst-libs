@@ -25,19 +25,25 @@ pub struct EncryptedVote(Vec<Ciphertext>);
 /// A representation of the encryption randomness, used to encrypt the vote.
 pub struct EncryptionRandomness(Vec<Scalar>);
 
-/// Incorrect voting choice error
+/// Encrypted vote error
 #[derive(thiserror::Error, Debug)]
-#[error(
-    "Invalid voting choice, the value of choice: {0}, should be less than the number of voting options: {1}."
-)]
-pub struct IncorrectChoiceError(usize, usize);
+pub enum VoteError {
+    /// Incorrect voting choice
+    #[error(
+        "Invalid voting choice, the value of choice: {0}, should be less than the number of voting options: {1}."
+    )]
+    IncorrectChoiceError(usize, usize),
+}
 
-/// Incorrect randomness length error
+/// Encrypted vote error
 #[derive(thiserror::Error, Debug)]
-#[error(
-    "Invalid randomness length, the length of randomness: {0}, should be equal to the number of voting options: {1}."
-)]
-pub struct IncorrectRandomnessLengthError(usize, usize);
+pub enum EncryptedVoteError {
+    /// Incorrect randomness length
+    #[error(
+        "Invalid randomness length, the length of randomness: {0}, should be equal to the number of voting options: {1}."
+    )]
+    IncorrectRandomnessLength(usize, usize),
+}
 
 impl EncryptionRandomness {
     /// Randomly generate the `EncryptionRandomness`.
@@ -46,15 +52,22 @@ impl EncryptionRandomness {
     }
 }
 
+impl EncryptedVote {
+    /// Get the ciphertext to the corresponding `voting_option`.
+    pub(crate) fn get_ciphertext_for_choice(&self, voting_option: usize) -> Option<&Ciphertext> {
+        self.0.get(voting_option)
+    }
+}
+
 impl Vote {
     /// Generate a vote.
     /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voting-choice)
     ///
     /// # Errors
-    ///   - `IncorrectChoiceError`
-    pub(crate) fn new(choice: usize, voting_options: usize) -> Result<Vote, IncorrectChoiceError> {
+    ///   - `VoteError`
+    pub(crate) fn new(choice: usize, voting_options: usize) -> Result<Vote, VoteError> {
         if choice >= voting_options {
-            return Err(IncorrectChoiceError(choice, voting_options));
+            return Err(VoteError::IncorrectChoiceError(choice, voting_options));
         }
 
         Ok(Vote {
@@ -80,9 +93,9 @@ impl Vote {
     /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
     pub(crate) fn encrypt(
         &self, public_key: &PublicKey, randomness: &EncryptionRandomness,
-    ) -> Result<EncryptedVote, IncorrectRandomnessLengthError> {
+    ) -> Result<EncryptedVote, EncryptedVoteError> {
         if self.voting_options != randomness.0.len() {
-            return Err(IncorrectRandomnessLengthError(
+            return Err(EncryptedVoteError::IncorrectRandomnessLength(
                 randomness.0.len(),
                 self.voting_options,
             ));
