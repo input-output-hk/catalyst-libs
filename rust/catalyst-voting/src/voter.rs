@@ -1,5 +1,6 @@
 //! Module containing all primitives related to the voter.
 
+use rand_core::CryptoRngCore;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::crypto::{
@@ -37,6 +38,13 @@ pub struct IncorrectChoiceError(usize, usize);
     "Invalid randomness length, the length of randomness: {0}, should be equal to the number of voting options: {1}."
 )]
 pub struct IncorrectRandomnessLengthError(usize, usize);
+
+impl EncryptionRandomness {
+    /// Randomly generate the `EncryptionRandomness`.
+    pub fn generate<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
+        Self((0..voting_options).map(|_| Scalar::random(rng)).collect())
+    }
+}
 
 impl Vote {
     /// Generate a vote.
