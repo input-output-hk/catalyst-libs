@@ -5,10 +5,7 @@ use std::ops::{Add, Mul};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::{
-    crypto::{
-        elgamal::Ciphertext,
-        group::{GroupElement, Scalar},
-    },
+    crypto::{elgamal::Ciphertext, group::Scalar},
     voter::EncryptedVote,
 };
 
@@ -49,7 +46,7 @@ pub fn tally(
         ciphertexts_per_voting_option.push(ciphertext);
     }
 
-    let zero_ciphertext = Ciphertext(GroupElement::zero(), GroupElement::zero());
+    let zero_ciphertext = Ciphertext::zero();
 
     let res = ciphertexts_per_voting_option
         .par_iter()

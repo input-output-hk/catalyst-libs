@@ -17,7 +17,7 @@ pub struct PublicKey(GroupElement);
 
 /// ``ElGamal`` ciphertext, encrypted message with the public key.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Ciphertext(pub(crate) GroupElement, pub(crate) GroupElement);
+pub struct Ciphertext(GroupElement, GroupElement);
 
 impl SecretKey {
     /// Generate a random `SecretKey` value from the random number generator.
@@ -28,6 +28,14 @@ impl SecretKey {
     /// Generate a corresponding `PublicKey`.
     pub fn public_key(&self) -> PublicKey {
         PublicKey(GroupElement::GENERATOR.mul(&self.0))
+    }
+}
+
+impl Ciphertext {
+    /// Generate a zero `Ciphertext`.
+    /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
+    pub(crate) fn zero() -> Self {
+        Ciphertext(GroupElement::zero(), GroupElement::zero())
     }
 }
 
