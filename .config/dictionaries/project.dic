@@ -57,6 +57,7 @@ dotglob
 drep
 dreps
 Earthfile
+elgamal
 encryptor
 Errno
 Eternl
@@ -171,6 +172,7 @@ preopened
 preopens
 preprod
 Prokhorenko
+proptest
 psql
 pubk
 pubkey
@@ -188,6 +190,7 @@ Replayability
 Repr
 reqwest
 retriggering
+ristretto
 rlib
 rulelist
 RULENAME
