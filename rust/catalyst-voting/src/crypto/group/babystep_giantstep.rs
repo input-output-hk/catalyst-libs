@@ -45,6 +45,9 @@ impl BabyStepGiantStep {
     ///
     /// **NOTE** It is a heavy operation, so pls reuse the same instance for performing
     /// `baby_step_giant_step` function for the same `max_value`.
+    ///
+    /// # Errors
+    ///   - `BabyStepError`
     pub fn new(max_log_value: u64, balance: Option<u64>) -> Result<Self, BabyStepError> {
         let balance = balance.unwrap_or(DEFAULT_BALANCE);
 
@@ -80,6 +83,9 @@ impl BabyStepGiantStep {
     }
 
     /// Solve the discrete log using baby step giant step algorithm.
+    ///
+    /// # Errors
+    ///   - `BabyStepError`
     pub fn discrete_log(&self, mut point: GroupElement) -> Result<u64, BabyStepError> {
         for baby_step in 0..=self.baby_step_size {
             if let Some(x) = self.table.get(&point) {
