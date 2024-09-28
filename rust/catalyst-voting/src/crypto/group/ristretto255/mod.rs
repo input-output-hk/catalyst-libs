@@ -2,7 +2,10 @@
 
 // cspell: words BASEPOINT
 
-use std::ops::{Add, Mul, Sub};
+use std::{
+    hash::Hash,
+    ops::{Add, Mul, Sub},
+};
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
@@ -11,6 +14,10 @@ use curve25519_dalek::{
     traits::Identity,
 };
 use rand_core::CryptoRngCore;
+
+/// Size of the byte representation of `GroupElement`. We always encode the compressed
+/// with `CompressedRistretto`.
+pub const GROUP_ELEMENT_SIZE: usize = 32;
 
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -23,6 +30,12 @@ pub struct GroupElement(Point);
 impl From<u64> for Scalar {
     fn from(value: u64) -> Self {
         Scalar(IScalar::from(value))
+    }
+}
+
+impl Hash for GroupElement {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.compress().as_bytes().hash(state);
     }
 }
 
@@ -42,6 +55,11 @@ impl Scalar {
     /// multiplicative identity
     pub fn one() -> Self {
         Scalar(IScalar::ONE)
+    }
+
+    /// Increment on `1`.
+    pub fn increment(&mut self) {
+        self.0 += IScalar::ONE;
     }
 
     /// negative value
