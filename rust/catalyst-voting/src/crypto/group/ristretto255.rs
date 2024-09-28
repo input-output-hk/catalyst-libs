@@ -15,10 +15,6 @@ use curve25519_dalek::{
 };
 use rand_core::CryptoRngCore;
 
-/// Size of the byte representation of `GroupElement`. We always encode the compressed
-/// with `CompressedRistretto`.
-pub const GROUP_ELEMENT_SIZE: usize = 32;
-
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Scalar(IScalar);

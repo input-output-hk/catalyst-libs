@@ -21,7 +21,7 @@ pub struct Ciphertext(GroupElement, GroupElement);
 
 impl SecretKey {
     /// Generate a random `SecretKey` value from the random number generator.
-    pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
+    pub fn generate<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self(Scalar::random(rng))
     }
 

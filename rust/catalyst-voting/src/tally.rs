@@ -19,8 +19,9 @@ pub struct DecriptionTallySetup {
     discrete_log_setup: BabyStepGiantStep,
 }
 
-/// A representation of the encrypted tally result.
-pub struct EncryptedTallyResult(Ciphertext);
+/// A representation of the encrypted tally.
+#[allow(clippy::module_name_repetitions)]
+pub struct EncryptedTally(Ciphertext);
 
 /// Tally error
 #[derive(thiserror::Error, Debug)]
@@ -65,7 +66,7 @@ pub enum TallyError {
 ///   - `TallyError`
 pub fn tally(
     voting_option: usize, votes: &[EncryptedVote], voting_powers: &[u64],
-) -> Result<EncryptedTallyResult, TallyError> {
+) -> Result<EncryptedTally, TallyError> {
     if votes.len() != voting_powers.len() {
         return Err(TallyError::VotingPowerAndVotesMismatch(
             votes.len(),
@@ -95,7 +96,7 @@ pub fn tally(
             |res, ciphertext| res.add(&ciphertext),
         );
 
-    Ok(EncryptedTallyResult(res))
+    Ok(EncryptedTally(res))
 }
 
 /// Tally error
@@ -115,7 +116,7 @@ pub enum DecryptTallyError {
 ///   - `DecryptTallyError`
 #[allow(clippy::module_name_repetitions)]
 pub fn decrypt_tally(
-    tally_result: &EncryptedTallyResult, secret_key: &SecretKey, setup: &DecriptionTallySetup,
+    tally_result: &EncryptedTally, secret_key: &SecretKey, setup: &DecriptionTallySetup,
 ) -> Result<u64, DecryptTallyError> {
     let ge = decrypt(&tally_result.0, secret_key);
 
