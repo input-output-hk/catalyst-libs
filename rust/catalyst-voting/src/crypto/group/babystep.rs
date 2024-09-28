@@ -1,4 +1,4 @@
-//! Implementation of baby steps giant step algorithm to solve the discrete logarithm over
+//! Implementation of baby-step giant-step algorithm to solve the discrete logarithm over
 //! for the Ristretto255 group.
 
 use std::collections::HashMap;
@@ -10,8 +10,8 @@ use super::{GroupElement, Scalar};
 /// Balance of 2 means that baby steps are 2 time more than `sqrt(max_votes)`
 const DEFAULT_BALANCE: u64 = 2;
 
-/// Holds precomputed baby steps for the baby-stap giant-step algorithm
-/// for solving discrete log
+/// Holds precomputed baby steps `table` for the baby-step giant-step algorithm
+/// for solving discrete log.
 #[derive(Debug, Clone)]
 pub struct BabyStepGiantStep {
     /// Table of baby step precomputed values
@@ -45,9 +45,7 @@ impl BabyStepGiantStep {
     ///
     /// **NOTE** It is a heavy operation, so pls reuse the same instance for performing
     /// `baby_step_giant_step` function for the same `max_value`.
-    pub fn generate_with_balance(
-        max_log_value: u64, balance: Option<u64>,
-    ) -> Result<Self, BabyStepError> {
+    pub fn new(max_log_value: u64, balance: Option<u64>) -> Result<Self, BabyStepError> {
         let balance = balance.unwrap_or(DEFAULT_BALANCE);
 
         if balance == 0 || max_log_value == 0 {
@@ -93,5 +91,25 @@ impl BabyStepGiantStep {
         // If we get here, the point is not in the table
         // So we exceeded the maximum value of the discrete log
         Err(BabyStepError::MaxLogExceeded)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ops::Mul;
+
+    use test_strategy::proptest;
+
+    use super::*;
+
+    #[proptest]
+    fn baby_step_giant_step_test(
+        #[strategy(1..10000u64)] max_log_value: u64, #[strategy(1..#max_log_value)] log: u64,
+    ) {
+        let ge = GroupElement::GENERATOR.mul(&Scalar::from(log));
+
+        let baby_step_giant_step = BabyStepGiantStep::new(max_log_value, None).unwrap();
+        let result = baby_step_giant_step.discrete_log(ge).unwrap();
+        assert_eq!(result, log);
     }
 }
