@@ -25,26 +25,6 @@ pub struct EncryptedVote(Vec<Ciphertext>);
 /// A representation of the encryption randomness, used to encrypt the vote.
 pub struct EncryptionRandomness(Vec<Scalar>);
 
-/// Encrypted vote error
-#[derive(thiserror::Error, Debug)]
-pub enum VoteError {
-    /// Incorrect voting choice
-    #[error(
-        "Invalid voting choice, the value of choice: {0}, should be less than the number of voting options: {1}."
-    )]
-    IncorrectChoiceError(usize, usize),
-}
-
-/// Encrypted vote error
-#[derive(thiserror::Error, Debug)]
-pub enum EncryptedVoteError {
-    /// Incorrect randomness length
-    #[error(
-        "Invalid randomness length, the length of randomness: {0}, should be equal to the number of voting options: {1}."
-    )]
-    IncorrectRandomnessLength(usize, usize),
-}
-
 impl EncryptionRandomness {
     /// Randomly generate the `EncryptionRandomness`.
     pub fn generate<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
@@ -59,13 +39,23 @@ impl EncryptedVote {
     }
 }
 
+/// Encrypted vote error
+#[derive(thiserror::Error, Debug)]
+pub enum VoteError {
+    /// Incorrect voting choice
+    #[error(
+        "Invalid voting choice, the value of choice: {0}, should be less than the number of voting options: {1}."
+    )]
+    IncorrectChoiceError(usize, usize),
+}
+
 impl Vote {
     /// Generate a vote.
     /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voting-choice)
     ///
     /// # Errors
     ///   - `VoteError`
-    pub(crate) fn new(choice: usize, voting_options: usize) -> Result<Vote, VoteError> {
+    pub fn new(choice: usize, voting_options: usize) -> Result<Vote, VoteError> {
         if choice >= voting_options {
             return Err(VoteError::IncorrectChoiceError(choice, voting_options));
         }
@@ -88,28 +78,41 @@ impl Vote {
             })
             .collect()
     }
+}
 
-    /// Create a new encrypted vote from the given vote and public key.
-    /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
-    pub(crate) fn encrypt(
-        &self, public_key: &PublicKey, randomness: &EncryptionRandomness,
-    ) -> Result<EncryptedVote, EncryptedVoteError> {
-        if self.voting_options != randomness.0.len() {
-            return Err(EncryptedVoteError::IncorrectRandomnessLength(
-                randomness.0.len(),
-                self.voting_options,
-            ));
-        }
+/// Encrypted vote error
+#[derive(thiserror::Error, Debug)]
+pub enum EncryptedVoteError {
+    /// Incorrect randomness length
+    #[error(
+        "Invalid randomness length, the length of randomness: {0}, should be equal to the number of voting options: {1}."
+    )]
+    IncorrectRandomnessLength(usize, usize),
+}
 
-        let unit_vector = self.to_unit_vector();
-        let ciphers = unit_vector
-            .par_iter()
-            .zip(randomness.0.par_iter())
-            .map(|(m, r)| encrypt(m, public_key, r))
-            .collect();
-
-        Ok(EncryptedVote(ciphers))
+/// Create a new encrypted vote from the given vote and public key.
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+///
+/// # Errors
+///   - `EncryptedVoteError`
+pub fn encrypt_vote(
+    vote: &Vote, public_key: &PublicKey, randomness: &EncryptionRandomness,
+) -> Result<EncryptedVote, EncryptedVoteError> {
+    if vote.voting_options != randomness.0.len() {
+        return Err(EncryptedVoteError::IncorrectRandomnessLength(
+            randomness.0.len(),
+            vote.voting_options,
+        ));
     }
+
+    let unit_vector = vote.to_unit_vector();
+    let ciphers = unit_vector
+        .par_iter()
+        .zip(randomness.0.par_iter())
+        .map(|(m, r)| encrypt(m, public_key, r))
+        .collect();
+
+    Ok(EncryptedVote(ciphers))
 }
 
 #[cfg(test)]
@@ -157,9 +160,8 @@ mod tests {
         let public_key = secret_key.public_key();
         let vote = Vote::new(0, voting_options).unwrap();
 
-        let encrypted = vote
-            .encrypt(&public_key, &EncryptionRandomness(randomness))
-            .unwrap();
+        let encrypted =
+            encrypt_vote(&vote, &public_key, &EncryptionRandomness(randomness)).unwrap();
         assert_eq!(encrypted.0.len(), vote.voting_options);
     }
 }
