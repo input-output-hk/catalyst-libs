@@ -33,6 +33,9 @@ pub enum DecryptionTallySetupError {
 impl DecriptionTallySetup {
     /// Generate a decryption tally setup.
     ///
+    /// **NOTE** It is a heavy operation, so please reuse the same instance for performing
+    /// `decrypt_tally` function for the same `voting_powers`.
+    ///
     /// # Errors
     ///   - `DecryptionTallySetupError`
     pub fn new(voting_powers: &[u64]) -> Result<Self, DecryptionTallySetupError> {
@@ -110,7 +113,8 @@ pub enum DecryptTallyError {
 ///
 /// # Errors
 ///   - `DecryptTallyError`
-pub fn decrypt_tally_result(
+#[allow(clippy::module_name_repetitions)]
+pub fn decrypt_tally(
     tally_result: &EncryptedTallyResult, secret_key: &SecretKey, setup: &DecriptionTallySetup,
 ) -> Result<u64, DecryptTallyError> {
     let ge = decrypt(&tally_result.0, secret_key);
