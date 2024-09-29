@@ -1,7 +1,6 @@
 //! Module containing all primitives related to the voter.
 
 use rand_core::CryptoRngCore;
-use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use crate::crypto::{
     elgamal::{encrypt, Ciphertext, PublicKey},
@@ -107,8 +106,8 @@ pub fn encrypt_vote(
 
     let unit_vector = vote.to_unit_vector();
     let ciphers = unit_vector
-        .par_iter()
-        .zip(randomness.0.par_iter())
+        .iter()
+        .zip(randomness.0.iter())
         .map(|(m, r)| encrypt(m, public_key, r))
         .collect();
 

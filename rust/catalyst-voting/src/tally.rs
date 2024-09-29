@@ -2,8 +2,6 @@
 
 use std::ops::{Add, Mul};
 
-use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
-
 use crate::{
     crypto::{
         elgamal::{decrypt, Ciphertext, SecretKey},
@@ -40,7 +38,7 @@ impl DecriptionTallySetup {
     /// # Errors
     ///   - `DecryptionTallySetupError`
     pub fn new(voting_powers: &[u64]) -> Result<Self, DecryptionTallySetupError> {
-        let total_voting_power = voting_powers.par_iter().sum();
+        let total_voting_power = voting_powers.iter().sum();
         let discrete_log_setup = BabyStepGiantStep::new(total_voting_power, None)
             .map_err(|_| DecryptionTallySetupError::InvalidTotalVotingPowerAmount)?;
         Ok(Self { discrete_log_setup })
@@ -85,16 +83,13 @@ pub fn tally(
     let zero_ciphertext = Ciphertext::zero();
 
     let res = ciphertexts_per_voting_option
-        .par_iter()
-        .zip(voting_powers.par_iter())
+        .iter()
+        .zip(voting_powers.iter())
         .map(|(ciphertext, voting_power)| {
             let voting_power_scalar = Scalar::from(*voting_power);
             ciphertext.mul(&voting_power_scalar)
         })
-        .reduce(
-            || zero_ciphertext.clone(),
-            |res, ciphertext| res.add(&ciphertext),
-        );
+        .fold(zero_ciphertext, |acc, c| acc.add(&c));
 
     Ok(EncryptedTally(res))
 }
