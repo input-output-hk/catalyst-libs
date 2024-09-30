@@ -36,8 +36,6 @@ sync-cfg:
 builder:
     DO rust-ci+SETUP
 
-    RUN --no-cache echo "Cache Disabled"
-
     # Cached copy of the source we build.
     DO +COPY_SRC
 
@@ -81,7 +79,7 @@ check-builder-src-cache:
     # Generate Checksums of the source
     DO +FINGERPRINT_SRC --FINGERPRINT=src_fingerprint_uncached.txt
 
-    RUN diff ../src_fingerprint.txt ../src_fingerprint_uncached.txt \
+    RUN diff src_fingerprint.txt ../src_fingerprint_uncached.txt \
         || (echo "ERROR: Source fingerprints do not match. Caching Error Detected!!" && exit 1) \
         && echo "Source fingerprints match. Caching OK."
 
