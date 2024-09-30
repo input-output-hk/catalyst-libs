@@ -11,7 +11,7 @@ mod tests {
 
     use crate::{
         crypto::elgamal::SecretKey,
-        tally::{decrypt_tally, tally, DecriptionTallySetup},
+        tally::{decrypt_tally, tally, DecryptionTallySetup},
         voter::{encrypt_vote, EncryptionRandomness, Vote},
     };
 
@@ -56,7 +56,7 @@ mod tests {
             .map(|voting_option| tally(voting_option, &encrypted_votes, &voting_powers).unwrap())
             .collect();
 
-        let decription_tally_setup = DecriptionTallySetup::new(&voting_powers).unwrap();
+        let decription_tally_setup = DecryptionTallySetup::new(&voting_powers).unwrap();
 
         let decrypted_tallies: Vec<_> = encrypted_tallies
             .iter()

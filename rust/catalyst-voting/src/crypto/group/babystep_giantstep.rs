@@ -28,12 +28,12 @@ pub enum BabyStepError {
     #[error("Maximum value and balance must be greater than zero, provided max value: {0} and balance: {1}.")]
     InvalidMaxValueOrBalance(u64, u64),
     /// Max value exceeded
-    #[error("Max log value exceeded. Means that the actual discret log for the provided group element is higher than the provided `max_log_value`.")]
+    #[error("Max log value exceeded. Means that the actual discrete log for the provided group element is higher than the provided `max_log_value`.")]
     MaxLogExceeded,
 }
 
 impl BabyStepGiantStep {
-    /// Creates a new setup for the baby-stap giant-step algorithm.
+    /// Creates a new setup for the baby-step giant-step algorithm.
     ///
     /// Balance is used to make steps asymmetrical. If the table is reused multiple times
     /// with the same `max_value` it is recommended to set a balance > 1, since this

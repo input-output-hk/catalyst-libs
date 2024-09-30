@@ -10,9 +10,9 @@ use crate::{
     voter::EncryptedVote,
 };
 
-/// An important decription tally setup, which holds an important precomputed data needed
+/// An important decryption tally setup, which holds an important precomputed data needed
 /// for decryption.
-pub struct DecriptionTallySetup {
+pub struct DecryptionTallySetup {
     /// `BabyStepGiantStep` setup
     discrete_log_setup: BabyStepGiantStep,
 }
@@ -29,7 +29,7 @@ pub enum DecryptionTallySetupError {
     InvalidTotalVotingPowerAmount,
 }
 
-impl DecriptionTallySetup {
+impl DecryptionTallySetup {
     /// Generate a decryption tally setup.
     ///
     /// **NOTE** It is a heavy operation, so please reuse the same instance for performing
@@ -111,7 +111,7 @@ pub enum DecryptTallyError {
 ///   - `DecryptTallyError`
 #[allow(clippy::module_name_repetitions)]
 pub fn decrypt_tally(
-    tally_result: &EncryptedTally, secret_key: &SecretKey, setup: &DecriptionTallySetup,
+    tally_result: &EncryptedTally, secret_key: &SecretKey, setup: &DecryptionTallySetup,
 ) -> Result<u64, DecryptTallyError> {
     let ge = decrypt(&tally_result.0, secret_key);
 
