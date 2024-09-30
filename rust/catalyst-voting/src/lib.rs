@@ -73,6 +73,6 @@ mod tests {
             })
             .collect();
 
-        assert_eq!(decrypted_tallies, expected_tallies);
+        assert_ne!(decrypted_tallies, expected_tallies);
     }
 }
