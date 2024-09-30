@@ -67,9 +67,9 @@ build:
 
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:
-    FROM +builder
+    DO rust-ci+SETUP
 
-    COPY +builder-src/src_fingerprint.txt .
+    COPY +builder/src_fingerprint.txt .
 
     RUN --no-cache echo "Cache Disabled"
 
