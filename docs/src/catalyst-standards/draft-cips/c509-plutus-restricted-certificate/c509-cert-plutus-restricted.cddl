@@ -5,7 +5,7 @@
 ; Not all x509 features are supported and some fields have different semantics to improve
 ; certificate size and ability to be processed by Plutus Scripts.
 
-; cspell: words reencoded, biguint 
+; cspell: words reencoded, biguint, stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw
 
 C509CertificatePlutusRestrictedSubset = [
     TBSCertificate, 
