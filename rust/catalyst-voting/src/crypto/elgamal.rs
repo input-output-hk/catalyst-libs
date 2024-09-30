@@ -26,6 +26,7 @@ impl SecretKey {
     }
 
     /// Generate a corresponding `PublicKey`.
+    #[must_use]
     pub fn public_key(&self) -> PublicKey {
         PublicKey(GroupElement::GENERATOR.mul(&self.0))
     }

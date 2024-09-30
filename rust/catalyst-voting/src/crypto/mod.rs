@@ -2,3 +2,5 @@
 
 pub(crate) mod elgamal;
 pub(crate) mod group;
+
+pub use elgamal::{PublicKey, SecretKey};
