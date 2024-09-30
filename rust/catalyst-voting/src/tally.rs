@@ -31,14 +31,15 @@ pub enum DecryptionTallySetupError {
 
 impl DecryptionTallySetup {
     /// Generate a decryption tally setup.
+    /// `total_voting_power` must be a total sum of all voting powers used in the `tally`
+    /// procedure.
     ///
     /// **NOTE** It is a heavy operation, so please reuse the same instance for performing
     /// `decrypt_tally` function for the same `voting_powers`.
     ///
     /// # Errors
     ///   - `DecryptionTallySetupError`
-    pub fn new(voting_powers: &[u64]) -> Result<Self, DecryptionTallySetupError> {
-        let total_voting_power = voting_powers.iter().sum();
+    pub fn new(total_voting_power: u64) -> Result<Self, DecryptionTallySetupError> {
         let discrete_log_setup = BabyStepGiantStep::new(total_voting_power, None)
             .map_err(|_| DecryptionTallySetupError::InvalidTotalVotingPowerAmount)?;
         Ok(Self { discrete_log_setup })

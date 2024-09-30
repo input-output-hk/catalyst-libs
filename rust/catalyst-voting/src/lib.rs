@@ -56,7 +56,8 @@ mod tests {
             .map(|voting_option| tally(voting_option, &encrypted_votes, &voting_powers).unwrap())
             .collect();
 
-        let decryption_tally_setup = DecryptionTallySetup::new(&voting_powers).unwrap();
+        let total_voting_power = voting_powers.iter().sum();
+        let decryption_tally_setup = DecryptionTallySetup::new(total_voting_power).unwrap();
 
         let decrypted_tallies: Vec<_> = encrypted_tallies
             .iter()
@@ -73,6 +74,6 @@ mod tests {
             })
             .collect();
 
-        assert_ne!(decrypted_tallies, expected_tallies);
+        assert_eq!(decrypted_tallies, expected_tallies);
     }
 }
