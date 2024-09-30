@@ -53,7 +53,7 @@ check:
 build:
     FROM +builder
 
-    # RUN --no-cache echo "Cache Disabled"
+    RUN --no-cache echo "Cache Disabled"
 
     RUN /scripts/std_build.py \
         --libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs \
