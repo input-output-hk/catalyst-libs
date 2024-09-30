@@ -1,4 +1,4 @@
-//! To Be Sign Certificate (TBS Certificate) use to construct a C509 certificate.
+//! C509 certificate To Be Sign Certificate (TBS Certificate)
 
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
@@ -184,9 +184,9 @@ impl Decode<'_, ()> for TbsCert {
 // ------------------Test----------------------
 
 // Notes
-// - Test is modified to match the current encode and decode where `subject_public_key`
-//   doesn't support
-// special case for rsaEncryption and id-ecPublicKey.
+// - Test is modified to match the current encode and decode where this crate
+// not yet supported `subject_public_key` special case for rsaEncryption and
+// id-ecPublicKey.
 // - Currently support natively signed c509 certificate, so all text strings
 // are UTF-8 encoded and all attributeType SHALL be non-negative
 // - Some Extension values are not supported yet.

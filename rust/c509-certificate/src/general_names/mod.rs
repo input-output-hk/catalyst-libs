@@ -1,5 +1,9 @@
 //! C509 General Names
 //!
+//! ```cddl
+//! GeneralNames = [ + GeneralName ]
+//! ```
+//!
 //! For more information about `GeneralNames`,
 //! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 

@@ -7,7 +7,7 @@
 //!
 //! Use case:
 //! ```cddl
-//!     SubjectDirectoryAttributes = [+Attributes]
+//! SubjectDirectoryAttributes = [+Attributes]
 //! ```
 //!
 //! For more information about `Attributes`,
