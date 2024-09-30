@@ -37,6 +37,7 @@
     "rust",
     "rust/c509-certificate",
     "rust/cardano-chain-follower",
+    "rust/catalyst-voting",
     "rust/cbork",
     "rust/hermes-ipfs",
     "dart",
@@ -54,6 +55,9 @@
     "bash",
     "-c",
     "cargo lint-vscode"
+  ],
+  "rust-analyzer.linkedProjects": [
+    "./rust/Cargo.toml"
   ],
   "yaml.schemas": {
     "https://squidfunk.github.io/mkdocs-material/schema.json": "mkdocs.yml"
