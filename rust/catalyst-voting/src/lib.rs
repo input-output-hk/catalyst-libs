@@ -56,11 +56,11 @@ mod tests {
             .map(|voting_option| tally(voting_option, &encrypted_votes, &voting_powers).unwrap())
             .collect();
 
-        let decription_tally_setup = DecryptionTallySetup::new(&voting_powers).unwrap();
+        let decryption_tally_setup = DecryptionTallySetup::new(&voting_powers).unwrap();
 
         let decrypted_tallies: Vec<_> = encrypted_tallies
             .iter()
-            .map(|t| decrypt_tally(t, &election_secret_key, &decription_tally_setup).unwrap())
+            .map(|t| decrypt_tally(t, &election_secret_key, &decryption_tally_setup).unwrap())
             .collect();
 
         let expected_tallies: Vec<_> = (0..VOTING_OPTIONS)
