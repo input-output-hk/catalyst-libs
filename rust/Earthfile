@@ -53,16 +53,21 @@ check:
 build:
     FROM +builder
 
-    RUN --no-cache echo "Cache Disabled"
+    # RUN --no-cache echo "Cache Disabled"
 
-    DO rust-ci+EXECUTE \
-        --cmd="/scripts/std_build.py" \
-        --output="release/[^\./]+" \
-        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
-        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting" \
-        --args4="--bins=cbork/cbork" \
-        --docs="true"
+    RUN /scripts/std_build.py \
+        --libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs \
+        --libs=cbork-cddl-parser --libs=cbork-abnf-parser \
+        --bins=cbork/cbork
+
+    # DO rust-ci+EXECUTE \
+    #     --cmd="/scripts/std_build.py" \
+    #     --output="release/[^\./]+" \
+    #     --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
+    #     --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
+    #     --args3="--libs=catalyst-voting" \
+    #     --args4="--bins=cbork/cbork" \
+    #     --docs="true"
 
     SAVE ARTIFACT target/$TARGETARCH/doc doc
     SAVE ARTIFACT target/release/cbork cbork
