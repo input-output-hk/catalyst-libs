@@ -74,6 +74,6 @@ mod tests {
         let cipher = encrypt(&message, &public_key, &randomness);
         let decrypted = decrypt(&cipher, &secret_key);
 
-        assert_ne!(decrypted, GroupElement::GENERATOR.mul(&message));
+        assert_eq!(decrypted, GroupElement::GENERATOR.mul(&message));
     }
 }
