@@ -36,6 +36,8 @@ sync-cfg:
 builder:
     DO rust-ci+SETUP
 
+    RUN --no-cache echo "Cache Disabled"
+
     # Cached copy of the source we build.
     DO +COPY_SRC
 
