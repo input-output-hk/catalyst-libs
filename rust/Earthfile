@@ -53,6 +53,8 @@ check:
 build:
     FROM +builder
 
+    RUN --no-cache echo "Cache Disabled"
+
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --output="release/[^\./]+" \
