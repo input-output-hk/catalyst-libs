@@ -57,8 +57,8 @@ pub fn verify_vote(
     todo!()
 }
 
-// #[test]
-// #[allow(clippy::assertions_on_constants)]
-// fn test() {
-// assert!(false);
-// }
+#[test]
+#[allow(clippy::assertions_on_constants)]
+fn test() {
+    assert!(false);
+}
