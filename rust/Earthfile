@@ -1,7 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:fix/rust-cache-updates AS rust-ci
-#IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.11 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.12 AS rust-ci
 
 COPY_SRC:
     FUNCTION
@@ -23,7 +22,7 @@ sync-cfg:
 
 # builder : Set up our target toolchains, and copy our files.
 builder:
-    DO rust-ci+SETUP
+    DO rust-ci+SETUP 
 
 builder-src:
     FROM +builder
