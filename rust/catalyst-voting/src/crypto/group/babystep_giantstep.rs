@@ -108,9 +108,11 @@ mod tests {
 
     use super::*;
 
+    // Starting `max_log_value` from 2 allows to eliminate possible `Invalid use of empty
+    // range 1..1` for `log` strategy
     #[proptest]
     fn baby_step_giant_step_test(
-        #[strategy(1..10000u64)] max_log_value: u64, #[strategy(1..#max_log_value)] log: u64,
+        #[strategy(2..10000u64)] max_log_value: u64, #[strategy(1..#max_log_value)] log: u64,
     ) {
         let ge = GroupElement::GENERATOR.mul(&Scalar::from(log));
 
