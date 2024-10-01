@@ -9,7 +9,7 @@ use std::{
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
-    ristretto::RistrettoPoint as Point,
+    ristretto::{CompressedRistretto, RistrettoPoint as Point},
     scalar::Scalar as IScalar,
     traits::Identity,
 };
@@ -67,6 +67,16 @@ impl Scalar {
     pub fn inverse(&self) -> Scalar {
         Scalar(self.0.invert())
     }
+
+    /// Convert this `Scalar` to its underlying sequence of bytes.
+    pub fn to_bytes(&self) -> [u8; 32] {
+        self.0.to_bytes()
+    }
+
+    /// Attempt to construct a `Scalar` from a canonical byte representation.
+    pub fn from_bytes(bytes: [u8; 32]) -> Option<Scalar> {
+        IScalar::from_canonical_bytes(bytes).map(Scalar).into()
+    }
 }
 
 impl GroupElement {
@@ -76,6 +86,19 @@ impl GroupElement {
     /// Generate a zero group element.
     pub fn zero() -> Self {
         GroupElement(Point::identity())
+    }
+
+    /// Convert this `GroupElement` to its underlying sequence of bytes.
+    /// Always encode the compressed value.
+    pub fn to_bytes(&self) -> [u8; 32] {
+        self.0.compress().to_bytes()
+    }
+
+    /// Attempt to construct a `Scalar` from a compressed value byte representation.
+    pub fn from_bytes(bytes: &[u8; 32]) -> Option<Self> {
+        Some(GroupElement(
+            CompressedRistretto::from_slice(bytes).ok()?.decompress()?,
+        ))
     }
 }
 
@@ -150,6 +173,21 @@ mod tests {
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
             any::<u64>().prop_map(Scalar::from).boxed()
         }
+    }
+
+    #[proptest]
+    fn scalar_to_bytes_from_bytes_test(e1: Scalar) {
+        let bytes = e1.to_bytes();
+        let e2 = Scalar::from_bytes(bytes).unwrap();
+        assert_eq!(e1, e2);
+    }
+
+    #[proptest]
+    fn group_element_to_bytes_from_bytes_test(e: Scalar) {
+        let ge1 = GroupElement::GENERATOR.mul(&e);
+        let bytes = ge1.to_bytes();
+        let ge2 = GroupElement::from_bytes(&bytes).unwrap();
+        assert_eq!(ge1, ge2);
     }
 
     #[proptest]
