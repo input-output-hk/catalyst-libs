@@ -15,18 +15,6 @@ COPY_SRC:
         hermes-ipfs \
         .
 
-FINGERPRINT_SRC:
-    FUNCTION
-
-    ARG WHENCE=..
-    ARG DIR=build
-    ARG FINGERPRINT=src_fingerprint.txt
-
-    RUN cd $WHENCE; \
-        tar -C ./ -cf - --sort=name --mtime='UTC 2019-01-01' --group=0 --owner=0 --numeric-owner $DIR \
-        | sha256sum  > $FINGERPRINT
-    RUN cat $WHENCE/$FINGERPRINT
-
 # sync-cfg: Synchronize local config with CI version.
 # Must be run by the developer manually.
 sync-cfg:
@@ -43,7 +31,7 @@ builder-src:
     DO +COPY_SRC
 
     # Generate Checksums of the source
-    DO +FINGERPRINT_SRC
+    DO rust-ci+FINGERPRINT_SRC
     SAVE ARTIFACT ../src_fingerprint.txt 
 
 # check : Run basic check.
@@ -87,7 +75,7 @@ check-builder-src-cache:
     DO +COPY_SRC
 
     # Generate Checksums of the source
-    DO +FINGERPRINT_SRC --FINGERPRINT=src_fingerprint_uncached.txt
+    DO rust-ci+FINGERPRINT_SRC --FINGERPRINT=src_fingerprint_uncached.txt
 
     RUN diff src_fingerprint.txt ../src_fingerprint_uncached.txt \
         || (echo "ERROR: Source fingerprints do not match. Caching Error Detected!!" && exit 1) \
