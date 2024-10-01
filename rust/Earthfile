@@ -5,15 +5,15 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:fix/rust-cache-update
 COPY_SRC:
     FUNCTION
 
-    COPY Cargo.toml clippy.toml deny.toml rustfmt.toml .
-    COPY --dir .cargo .config \
-                c509-certificate \
-                cardano-chain-follower \
-                catalyst-voting \
-                cbork \
-                cbork-abnf-parser \
-                cbork-cddl-parser \
-                hermes-ipfs .
+    COPY --keep-ts --dir \
+        Cargo.toml clippy.toml deny.toml rustfmt.toml \
+        .cargo .config \
+        c509-certificate \
+        cardano-chain-follower \
+        catalyst-voting \
+        cbork cbork-abnf-parser cbork-cddl-parser \
+        hermes-ipfs \
+        .
 
 FINGERPRINT_SRC:
     FUNCTION
@@ -36,6 +36,9 @@ sync-cfg:
 builder:
     DO rust-ci+SETUP
 
+builder-src:
+    FROM +builder
+
     # Cached copy of the source we build.
     DO +COPY_SRC
 
@@ -45,13 +48,13 @@ builder:
 
 # check : Run basic check.
 check:
-    FROM +builder
+    FROM +builder-src
 
     DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
 
 # build : Build crates.
 build:
-    FROM +builder
+    FROM +builder-src
 
     RUN --no-cache echo "Cache Disabled"
 
@@ -74,9 +77,9 @@ build:
 
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:
-    DO rust-ci+SETUP
+    FROM +builder
 
-    COPY +builder/src_fingerprint.txt .
+    COPY +builder-src/src_fingerprint.txt .
 
     RUN --no-cache echo "Cache Disabled"
 
