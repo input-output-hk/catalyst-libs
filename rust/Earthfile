@@ -44,13 +44,6 @@ check:
 build:
     FROM +builder-src
 
-    RUN --no-cache echo "Cache Disabled"
-
-    # RUN /scripts/std_build.py \
-    #     --libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs \
-    #     --libs=cbork-cddl-parser --libs=cbork-abnf-parser \
-    #     --bins=cbork/cbork
-
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --output="release/[^\./]+" \
