@@ -1,6 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.11 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:fix/rust-cache-updates AS rust-ci
+#IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.11 AS rust-ci
 
 COPY_SRC:
     FUNCTION
@@ -26,6 +27,10 @@ builder:
 
 builder-src:
     FROM +builder
+
+    # Don't build the src in the home directory itself, because it contains stuff.
+    WORKDIR $HOME/build
+    RUN rm -rf *
 
     # Cached copy of the source we build.
     DO +COPY_SRC
@@ -60,7 +65,11 @@ build:
 check-builder-src-cache:
     FROM +builder
 
-    COPY +builder-src/src_fingerprint.txt .
+    # Don't build the src in the home directory itself, because it contains stuff.
+    WORKDIR $HOME/build
+    RUN rm -rf *
+
+    COPY +builder-src/src_fingerprint.txt ..
 
     RUN --no-cache echo "Cache Disabled"
 
@@ -70,7 +79,7 @@ check-builder-src-cache:
     # Generate Checksums of the source
     DO rust-ci+FINGERPRINT_SRC --FINGERPRINT=src_fingerprint_uncached.txt
 
-    RUN diff src_fingerprint.txt ../src_fingerprint_uncached.txt \
+    RUN diff ../src_fingerprint.txt ../src_fingerprint_uncached.txt \
         || (echo "ERROR: Source fingerprints do not match. Caching Error Detected!!" && exit 1) \
         && echo "Source fingerprints match. Caching OK."
 
