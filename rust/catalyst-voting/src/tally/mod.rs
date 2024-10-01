@@ -1,5 +1,7 @@
 //! Module containing all primitives related to the tally process.
 
+pub mod proof;
+
 use std::ops::{Add, Mul};
 
 use crate::{

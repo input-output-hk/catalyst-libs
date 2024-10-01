@@ -1,7 +1,7 @@
 //! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
-use std::ops::{Add, Mul};
+use std::ops::{Add, Deref, Mul};
 
 use rand_core::CryptoRngCore;
 
@@ -18,6 +18,14 @@ pub struct PublicKey(GroupElement);
 /// ``ElGamal`` ciphertext, encrypted message with the public key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ciphertext(GroupElement, GroupElement);
+
+impl Deref for SecretKey {
+    type Target = Scalar;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl SecretKey {
     /// Generate a random `SecretKey` value from the random number generator.
@@ -37,6 +45,18 @@ impl Ciphertext {
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
     pub(crate) fn zero() -> Self {
         Ciphertext(GroupElement::zero(), GroupElement::zero())
+    }
+
+    /// Get the first element of the `Ciphertext`.
+    #[allow(dead_code)]
+    pub(crate) fn first(&self) -> &GroupElement {
+        &self.0
+    }
+
+    /// Get the second element of the `Ciphertext`.
+    #[allow(dead_code)]
+    pub(crate) fn second(&self) -> &GroupElement {
+        &self.1
     }
 }
 
