@@ -6,8 +6,9 @@ use std::ops::{Add, Mul};
 
 use crate::{
     crypto::{
+        babystep_giantstep::BabyStepGiantStep,
         elgamal::{decrypt, Ciphertext, SecretKey},
-        group::{BabyStepGiantStep, Scalar},
+        group::Scalar,
     },
     voter::EncryptedVote,
 };

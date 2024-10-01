@@ -3,7 +3,7 @@
 
 use std::collections::HashMap;
 
-use super::{GroupElement, Scalar};
+use super::group::{GroupElement, Scalar};
 
 /// Default balance value.
 /// Make steps asymmetric, in order to better use caching of baby steps.
