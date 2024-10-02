@@ -2,8 +2,8 @@
 //!
 //! ```rust
 //! use catalyst_voting::{
-//!     decrypt_tally, encrypt_vote, tally, DecryptionTallySetup, EncryptionRandomness, SecretKey,
-//!     Vote,
+//!     decrypt_tally, encrypt_vote, generate_tally_proof, tally, verify_tally_proof,
+//!     DecryptionTallySetup, EncryptionRandomness, SecretKey, Vote,
 //! };
 //!
 //! struct Voter {
