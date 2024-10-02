@@ -233,9 +233,9 @@ fn validate_certificate_type(
     self_signed: bool, certificate_type: Option<u8>,
 ) -> anyhow::Result<()> {
     if self_signed && certificate_type.unwrap_or(SELF_SIGNED_INT) != SELF_SIGNED_INT {
-        return Err(anyhow::anyhow!(format!(
+        return Err(anyhow::anyhow!(
             "Certificate type must be {SELF_SIGNED_INT} if self-signed is true"
-        )));
+        ));
     }
     Ok(())
 }
@@ -264,7 +264,7 @@ fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u6
                         .try_into()
                         .map_err(|_| anyhow::anyhow!("Timestamp is invalid"))
                 })?
-                .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",)))
+                .map_err(|e| anyhow::anyhow!("Failed to parse date {date}: {e}"))
         },
         None => Ok(default),
     }
