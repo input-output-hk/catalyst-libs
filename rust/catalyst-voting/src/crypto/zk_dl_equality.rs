@@ -30,14 +30,84 @@ pub fn generate_dleq_proof(
     let a_1 = base_1 * randomness;
     let a_2 = base_2 * randomness;
 
-    let blake2b_hasher = Blake2b512Hasher::new()
-        .chain(a_1.to_bytes())
-        .chain(a_2.to_bytes())
-        .chain(point_1.to_bytes())
-        .chain(point_2.to_bytes());
-
-    let challenge = Scalar::from_hash(blake2b_hasher);
+    let challenge = calculate_challenge(base_1, base_2, point_1, point_2, &a_1, &a_2);
     let response = &(dlog * &challenge) + randomness;
 
     DleqProof(challenge, response)
+}
+
+/// Verify a DLEQ proof.
+pub fn verify_dleq_proof(
+    proof: &DleqProof, base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement,
+    point_2: &GroupElement,
+) -> bool {
+    let r1 = base_1 * &proof.1;
+    let r2 = base_2 * &proof.1;
+    let a_1 = &r1 - &(point_1 * &proof.0);
+    let a_2 = &r2 - &(point_2 * &proof.0);
+
+    let challenge = calculate_challenge(base_1, base_2, point_1, point_2, &a_1, &a_2);
+    challenge == proof.0
+}
+
+/// Calculates the challenge value.
+/// Its a hash value of all provided elements represented as `Scalar`.
+fn calculate_challenge(
+    base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement, point_2: &GroupElement,
+    a_1: &GroupElement, a_2: &GroupElement,
+) -> Scalar {
+    let blake2b_hasher = Blake2b512Hasher::new()
+        .chain(base_1.to_bytes())
+        .chain(base_2.to_bytes())
+        .chain(point_1.to_bytes())
+        .chain(point_2.to_bytes())
+        .chain(a_1.to_bytes())
+        .chain(a_2.to_bytes());
+
+    Scalar::from_hash(blake2b_hasher)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::ops::Mul;
+
+    use test_strategy::proptest;
+
+    use super::*;
+
+    #[proptest]
+    fn zk_dleq_test(e1: Scalar, e2: Scalar, dlog1: Scalar, dlog2: Scalar, randomness: Scalar) {
+        let base_1 = GroupElement::GENERATOR.mul(&e1);
+        let base_2 = GroupElement::GENERATOR.mul(&e2);
+
+        let point_1 = base_1.mul(&dlog1);
+        let point_2 = base_2.mul(&dlog1);
+
+        let proof = generate_dleq_proof(&base_1, &base_2, &point_1, &point_2, &dlog1, &randomness);
+        assert!(verify_dleq_proof(
+            &proof, &base_1, &base_2, &point_1, &point_2
+        ));
+
+        // use different discrete logarithm for both points
+        let point_1 = base_1.mul(&dlog2);
+        let point_2 = base_2.mul(&dlog2);
+
+        let proof = generate_dleq_proof(&base_1, &base_2, &point_1, &point_2, &dlog1, &randomness);
+        assert!(!verify_dleq_proof(
+            &proof, &base_1, &base_2, &point_1, &point_2
+        ));
+
+        // use different discrete logarithm across points
+        let point_1 = base_1.mul(&dlog1);
+        let point_2 = base_2.mul(&dlog2);
+
+        let proof = generate_dleq_proof(&base_1, &base_2, &point_1, &point_2, &dlog1, &randomness);
+        assert!(!verify_dleq_proof(
+            &proof, &base_1, &base_2, &point_1, &point_2
+        ));
+        let proof = generate_dleq_proof(&base_1, &base_2, &point_1, &point_2, &dlog2, &randomness);
+        assert!(!verify_dleq_proof(
+            &proof, &base_1, &base_2, &point_1, &point_2
+        ));
+    }
 }

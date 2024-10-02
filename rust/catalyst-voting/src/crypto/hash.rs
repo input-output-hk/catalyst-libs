@@ -1,17 +1,15 @@
 //! Blake2b-256 hash implementation.
 
-#![allow(dead_code)]
-
 use curve25519_dalek::digest::{
     consts::U64, typenum::Unsigned, FixedOutput, HashMarker, Output, OutputSizeUser, Update,
 };
 
 /// Blake2b-512 hasher instance.
-pub(crate) struct Blake2b512Hasher(blake2b_simd::State);
+pub struct Blake2b512Hasher(blake2b_simd::State);
 
 impl Blake2b512Hasher {
     /// Create a new `Blake2b256Hasher`.
-    pub(crate) fn new() -> Self {
+    pub fn new() -> Self {
         Self(
             blake2b_simd::Params::new()
                 .hash_length(Self::output_size())

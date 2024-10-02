@@ -163,6 +163,14 @@ impl Sub<&Scalar> for &Scalar {
     }
 }
 
+impl Sub<&GroupElement> for &GroupElement {
+    type Output = GroupElement;
+
+    fn sub(self, other: &GroupElement) -> GroupElement {
+        GroupElement(self.0 + (-other.0))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::{
@@ -219,6 +227,7 @@ mod tests {
         let ge3 = GroupElement::GENERATOR.mul(&(&e1 + &e2));
 
         assert_eq!(&ge1 + &ge2, ge3);
+        assert_eq!(&(&ge1 + &ge2) - &ge2, ge1);
 
         let ge = GroupElement::GENERATOR.mul(&e1).mul(&e1.inverse());
         assert_eq!(ge, GroupElement::GENERATOR);
