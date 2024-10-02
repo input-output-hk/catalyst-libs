@@ -50,7 +50,7 @@ pub fn verify_tally_proof(
     let tally = Scalar::from(tally);
     let e1 = encrypted_tally.0.first();
     let e2 = encrypted_tally.0.second();
-    let d = &GroupElement::GENERATOR.mul(&tally) - e2;
+    let d = e2 - &GroupElement::GENERATOR.mul(&tally);
 
     verify_dleq_proof(&proof.0, &GroupElement::GENERATOR, e1, public_key, &d)
 }

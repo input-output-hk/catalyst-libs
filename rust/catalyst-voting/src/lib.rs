@@ -79,5 +79,5 @@ pub mod tally;
 pub mod voter;
 
 pub use crypto::elgamal::{PublicKey, SecretKey};
-pub use tally::{decrypt_tally, tally, DecryptionTallySetup};
-pub use voter::{encrypt_vote, EncryptionRandomness, Vote};
+pub use tally::{proof::*, *};
+pub use voter::*;
