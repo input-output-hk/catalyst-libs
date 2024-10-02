@@ -10,6 +10,8 @@
 //! points `point_1` and `point_2`. The witness, on the other hand
 //! is the discrete logarithm, `dlog`.
 
+// cspell: words NIZK dlog
+
 use curve25519_dalek::digest::Update;
 
 use super::{
