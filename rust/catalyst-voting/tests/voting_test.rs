@@ -61,7 +61,6 @@ fn voting_test(voters: [Voter; 100]) {
         .map(|t| decrypt_tally(t, &election_secret_key, &decryption_tally_setup).unwrap())
         .collect();
 
-    // verify tally proofs
     let is_ok = tally_proofs
         .iter()
         .zip(encrypted_tallies.iter())
