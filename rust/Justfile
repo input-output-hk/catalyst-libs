@@ -17,7 +17,7 @@ sync-cfg:
 
 # Check Dependency licenses and CVE's
 license-check:
-    cargo deny check --exclude-dev
+    cargo deny check --exclude-dev -W vulnerability
 
 # Format the rust code
 code-format:

@@ -2,7 +2,10 @@
 
 // cspell: words BASEPOINT
 
-use std::ops::{Add, Mul, Sub};
+use std::{
+    hash::Hash,
+    ops::{Add, Mul, Sub},
+};
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
@@ -26,6 +29,12 @@ impl From<u64> for Scalar {
     }
 }
 
+impl Hash for GroupElement {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.compress().as_bytes().hash(state);
+    }
+}
+
 impl Scalar {
     /// Generate a random scalar value from the random number generator.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
@@ -42,6 +51,11 @@ impl Scalar {
     /// multiplicative identity
     pub fn one() -> Self {
         Scalar(IScalar::ONE)
+    }
+
+    /// Increment on `1`.
+    pub fn increment(&mut self) {
+        self.0 += IScalar::ONE;
     }
 
     /// negative value
@@ -124,8 +138,8 @@ mod tests {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
-        property_test,
     };
+    use test_strategy::proptest;
 
     use super::*;
 
@@ -138,7 +152,7 @@ mod tests {
         }
     }
 
-    #[property_test]
+    #[proptest]
     fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {
         assert_eq!(&(&e1 + &e2) + &e3, &e1 + &(&e2 + &e3));
         assert_eq!(&e1 + &e2, &e2 + &e1);
@@ -150,7 +164,7 @@ mod tests {
         assert_eq!(&(&e1 + &e2) * &e3, &(&e1 * &e3) + &(&e2 * &e3));
     }
 
-    #[property_test]
+    #[proptest]
     fn group_element_arithmetic_tests(e1: Scalar, e2: Scalar) {
         let ge = GroupElement::GENERATOR.mul(&e1);
         assert_eq!(&GroupElement::zero() + &ge, ge);
