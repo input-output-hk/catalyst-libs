@@ -10,6 +10,7 @@ Arissara
 asyncio
 Attributes
 auditability
+babystep
 backpressure
 bech
 bimap
@@ -34,6 +35,7 @@ Chotivichit
 chrono
 cids
 ciphertext
+ciphertexts
 codegen
 codepoints
 coti
@@ -83,6 +85,7 @@ futimens
 genhtml
 GETFL
 getres
+giantstep
 gmtime
 gossipsub
 happ
