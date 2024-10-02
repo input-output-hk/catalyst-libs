@@ -27,6 +27,14 @@ impl Deref for SecretKey {
     }
 }
 
+impl Deref for PublicKey {
+    type Target = GroupElement;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl SecretKey {
     /// Generate a random `SecretKey` value from the random number generator.
     pub fn generate<R: CryptoRngCore>(rng: &mut R) -> Self {

@@ -10,8 +10,6 @@
 //! points `point_1` and `point_2`. The witness, on the other hand
 //! is the discrete logarithm, `dlog`.
 
-#![allow(dead_code, unused_variables)]
-
 use curve25519_dalek::digest::Update;
 
 use super::{
@@ -41,10 +39,8 @@ pub fn verify_dleq_proof(
     proof: &DleqProof, base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement,
     point_2: &GroupElement,
 ) -> bool {
-    let r1 = base_1 * &proof.1;
-    let r2 = base_2 * &proof.1;
-    let a_1 = &r1 - &(point_1 * &proof.0);
-    let a_2 = &r2 - &(point_2 * &proof.0);
+    let a_1 = &(base_1 * &proof.1) - &(point_1 * &proof.0);
+    let a_2 = &(base_2 * &proof.1) - &(point_2 * &proof.0);
 
     let challenge = calculate_challenge(base_1, base_2, point_1, point_2, &a_1, &a_2);
     challenge == proof.0
