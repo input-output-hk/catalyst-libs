@@ -49,7 +49,7 @@ pub fn verify_dleq_proof(
 }
 
 /// Calculates the challenge value.
-/// Its a hash value of all provided elements represented as `Scalar`.
+/// Its a hash value represented as `Scalar` of all provided elements.
 fn calculate_challenge(
     base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement, point_2: &GroupElement,
     a_1: &GroupElement, a_2: &GroupElement,
