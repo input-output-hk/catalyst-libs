@@ -58,6 +58,11 @@
 //!     })
 //!     .collect();
 //!
+//! let tally_proofs: Vec<_> = encrypted_tallies
+//!     .iter()
+//!     .map(|t| generate_tally_proof(t, &election_secret_key, &mut rng))
+//!     .collect();
+//!
 //! let decryption_tally_setup = DecryptionTallySetup::new(
 //!     voter_1.voting_power + voter_2.voting_power + voter_3.voting_power,
 //! )
@@ -66,6 +71,13 @@
 //!     .iter()
 //!     .map(|t| decrypt_tally(t, &election_secret_key, &decryption_tally_setup).unwrap())
 //!     .collect();
+//!
+//! let is_ok = tally_proofs
+//!     .iter()
+//!     .zip(encrypted_tallies.iter())
+//!     .zip(decrypted_tallies.iter())
+//!     .all(|((p, enc_t), t)| verify_tally_proof(enc_t, *t, &election_public_key, p));
+//! assert!(is_ok);
 //!
 //! assert_eq!(decrypted_tallies, vec![
 //!     voter_1.voting_power,
