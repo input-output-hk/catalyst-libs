@@ -12,7 +12,12 @@
 
 #![allow(dead_code, unused_variables)]
 
-use super::group::{GroupElement, Scalar};
+use curve25519_dalek::digest::Update;
+
+use super::{
+    group::{GroupElement, Scalar},
+    hash::Blake2b512Hasher,
+};
 
 /// DLEQ proof struct
 pub struct DleqProof(Scalar, Scalar);
@@ -25,15 +30,13 @@ pub fn generate_dleq_proof(
     let a_1 = base_1 * randomness;
     let a_2 = base_2 * randomness;
 
-    let mut blake2b_hasher = blake2b_simd::State::new();
-    blake2b_hasher.update(&a_1.to_bytes());
-    blake2b_hasher.update(&a_2.to_bytes());
-    blake2b_hasher.update(&point_1.to_bytes());
-    blake2b_hasher.update(&point_2.to_bytes());
-    let hash = blake2b_hasher.finalize();
-    hash.as_bytes();
+    let blake2b_hasher = Blake2b512Hasher::new()
+        .chain(a_1.to_bytes())
+        .chain(a_2.to_bytes())
+        .chain(point_1.to_bytes())
+        .chain(point_2.to_bytes());
 
-    let challenge = Scalar::zero();
+    let challenge = Scalar::from_hash(blake2b_hasher);
     let response = &(dlog * &challenge) + randomness;
 
     DleqProof(challenge, response)

@@ -9,6 +9,7 @@ use std::{
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
+    digest::{consts::U64, Digest},
     ristretto::{CompressedRistretto, RistrettoPoint as Point},
     scalar::Scalar as IScalar,
     traits::Identity,
@@ -76,6 +77,12 @@ impl Scalar {
     /// Attempt to construct a `Scalar` from a canonical byte representation.
     pub fn from_bytes(bytes: [u8; 32]) -> Option<Scalar> {
         IScalar::from_canonical_bytes(bytes).map(Scalar).into()
+    }
+
+    /// Generate a `Scalar` from a hash digest.
+    pub fn from_hash<D>(hash: D) -> Scalar
+    where D: Digest<OutputSize = U64> {
+        Scalar(IScalar::from_hash(hash))
     }
 }
 
