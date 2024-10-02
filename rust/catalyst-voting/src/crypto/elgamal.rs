@@ -51,19 +51,17 @@ impl SecretKey {
 impl Ciphertext {
     /// Generate a zero `Ciphertext`.
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
-    pub(crate) fn zero() -> Self {
+    pub fn zero() -> Self {
         Ciphertext(GroupElement::zero(), GroupElement::zero())
     }
 
     /// Get the first element of the `Ciphertext`.
-    #[allow(dead_code)]
-    pub(crate) fn first(&self) -> &GroupElement {
+    pub fn first(&self) -> &GroupElement {
         &self.0
     }
 
     /// Get the second element of the `Ciphertext`.
-    #[allow(dead_code)]
-    pub(crate) fn second(&self) -> &GroupElement {
+    pub fn second(&self) -> &GroupElement {
         &self.1
     }
 }
@@ -71,7 +69,7 @@ impl Ciphertext {
 /// Given a `message` represented as a `Scalar`, return a ciphertext using the
 /// lifted ``ElGamal`` mechanism.
 /// Returns a ciphertext of type `Ciphertext`.
-pub(crate) fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Scalar) -> Ciphertext {
+pub fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Scalar) -> Ciphertext {
     let e1 = GroupElement::GENERATOR.mul(randomness);
     let e2 = &GroupElement::GENERATOR.mul(message) + &public_key.0.mul(randomness);
     Ciphertext(e1, e2)
@@ -79,7 +77,7 @@ pub(crate) fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Sca
 
 /// Decrypt ``ElGamal`` `Ciphertext`, returns the original message represented as a
 /// `GroupElement`.
-pub(crate) fn decrypt(cipher: &Ciphertext, secret_key: &SecretKey) -> GroupElement {
+pub fn decrypt(cipher: &Ciphertext, secret_key: &SecretKey) -> GroupElement {
     &(&cipher.0 * &secret_key.0.negate()) + &cipher.1
 }
 
