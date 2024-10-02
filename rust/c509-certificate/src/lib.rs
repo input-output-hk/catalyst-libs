@@ -17,12 +17,14 @@
 //! # TBS Certificate
 //!
 //! The To Be Sign Certificate contains the following fields:
-//!    * c509CertificateType: A certificate type, whether 2 a natively signed C509
-//!      certificate following X.509 v3 or 3 a CBOR re-encoded X.509 v3 DER certificate.
+//!    * c509CertificateType: A certificate type, where 2 indicates a natively signed C509
+//!      certificate following X.509 v3 or 3 indicates CBOR re-encoded X.509 v3 DER
+//!      certificate.
 //!    * certificateSerialNumber: A unique serial number for the certificate.
-//!    * subjectPublicKeyAlgorithm: The algorithm that the public key is used.
-//!    * issuer: The entity that issued the certificate. In case off self-signed, the
-//!      issuer is identical to the subject.
+//!    * subjectPublicKeyAlgorithm: Specifies the cryptographic algorithm used for the
+//!      `subjectPublicKey`.
+//!    * issuer: The entity that issued the certificate. In the case of a self-signed
+//!      certificate, the issuer is identical to the subject.
 //!    * validityNotBefore: The duration for which the Certificate Authority (CA)
 //!      guarantees it will retain information regarding the certificate's status on which
 //!      the period begins.
@@ -72,7 +74,7 @@ pub mod wasm_binding;
 ///
 /// # Errors
 ///
-/// Returns an error if tne generated data is invalid.
+/// Returns an error if the generated data is invalid.
 
 pub fn generate(tbs_cert: &TbsCert, private_key: Option<&PrivateKey>) -> anyhow::Result<Vec<u8>> {
     // Encode the TbsCert

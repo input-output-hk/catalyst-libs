@@ -184,9 +184,10 @@ impl Decode<'_, ()> for TbsCert {
 // ------------------Test----------------------
 
 // Notes
-// - Test is modified to match the current encode and decode where this crate
-// not yet supported `subject_public_key` special case for rsaEncryption and
-// id-ecPublicKey.
+// - The test from https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/
+// currently uses `subject_public_key` id-ecPublicKey, which has special encoding and
+// decoding that this crate does not yet support. Hence, this test has
+// been modified to align with the current encoding and decoding.
 // - Currently support natively signed c509 certificate, so all text strings
 // are UTF-8 encoded and all attributeType SHALL be non-negative
 // - Some Extension values are not supported yet.

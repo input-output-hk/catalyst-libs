@@ -1,7 +1,7 @@
 //! C509 type Name
 //!
 //! Currently only support natively signed c509 certificate, so all text strings
-//! are UTF-8 encoded and all attributeType should be non-negative.
+//! are UTF-8 encoded and all attributeType should be positive.
 //!
 //! ```cddl
 //! Name = [ * Attribute ] / text / bytes
