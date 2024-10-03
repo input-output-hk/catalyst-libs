@@ -98,7 +98,7 @@ impl Cli {
 struct C509Json {
     /// Indicate whether the certificate is self-signed.
     self_signed: bool,
-    /// Optional certificate type, if not provided, set to 0 as self-signed.
+    /// Optional certificate type, if not provided, set to 2 as self-signed.
     certificate_type: Option<u8>,
     /// Optional serial number of the certificate,
     /// if not provided, a random number will be generated.
@@ -234,7 +234,7 @@ fn validate_certificate_type(
 ) -> anyhow::Result<()> {
     if self_signed && certificate_type.unwrap_or(SELF_SIGNED_INT) != SELF_SIGNED_INT {
         return Err(anyhow::anyhow!(
-            "Certificate type must be 0 if self-signed is true"
+            "Certificate type must be {SELF_SIGNED_INT} if self-signed is true"
         ));
     }
     Ok(())
@@ -264,7 +264,7 @@ fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u6
                         .try_into()
                         .map_err(|_| anyhow::anyhow!("Timestamp is invalid"))
                 })?
-                .map_err(|e| anyhow::anyhow!(format!("Failed to parse date {date}: {e}",)))
+                .map_err(|e| anyhow::anyhow!("Failed to parse date {date}: {e}"))
         },
         None => Ok(default),
     }

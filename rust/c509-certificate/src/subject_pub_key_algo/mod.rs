@@ -1,10 +1,12 @@
-//! C509 Issuer Signature Algorithm as a part of `TBSCertificate` used in C509
+//! C509 Issuer Signature Algorithm
 //! Certificate.
 //!
 //! ```cddl
 //! subjectPublicKeyAlgorithm: AlgorithmIdentifier
 //! ```
-
+//!
+//! For more information about `subjectPublicKeyAlgorithm`,
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 // cspell: words spka
 
 mod data;

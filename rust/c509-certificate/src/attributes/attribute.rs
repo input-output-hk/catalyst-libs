@@ -5,6 +5,13 @@
 //!             ( attributeType: ~oid, attributeValue: bytes ) //
 //! ```
 //!
+//! In some case attributeValue can have multiple values.
+//!
+//! ```cddl
+//! Attributes = ( attributeType: int, attributeValue: [+text] ) //
+//!              ( attributeType: ~oid, attributeValue: [+bytes] )
+//! ```
+//!
 //! For more information about Attribute,
 //! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
@@ -145,7 +152,7 @@ impl Decode<'_, ()> for Attribute {
             let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
             Attribute::new(oid.clone())
         } else {
-            // Handle unwrapped CBOR OID or CBOR PEN
+            // Handle unwrapped CBOR OID
             let c509_oid: C509oid = d.decode()?;
             Attribute::new(c509_oid.oid().clone())
         };

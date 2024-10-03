@@ -2,7 +2,11 @@
 //!
 //! This crate provides a functionality for generating C509 Certificate.
 //!
-//! ## C509 certificate contains 2 parts
+//! Please refer to the [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/) for more information.
+//!
+//! ## C509 certificate structure
+//!
+//! A C509 certificate is a CBOR encoded X.509 certificate. It consists of two main parts:
 //! 1. `TBSCertificate`
 //! 2. `issuerSignatureValue`
 //!
@@ -13,27 +17,29 @@
 //! # TBS Certificate
 //!
 //! The To Be Sign Certificate contains the following fields:
-//!    * c509CertificateType: A certificate type, whether 0 a natively signed C509
-//!      certificate following X.509 v3 or 1 a CBOR re-encoded X.509 v3 DER certificate.
+//!    * c509CertificateType: A certificate type, where 2 indicates a natively signed C509
+//!      certificate following X.509 v3 or 3 indicates CBOR re-encoded X.509 v3 DER
+//!      certificate.
 //!    * certificateSerialNumber: A unique serial number for the certificate.
-//!    * issuer: The entity that issued the certificate.
+//!    * subjectPublicKeyAlgorithm: Specifies the cryptographic algorithm used for the
+//!      `subjectPublicKey`.
+//!    * issuer: The entity that issued the certificate. In the case of a self-signed
+//!      certificate, the issuer is identical to the subject.
 //!    * validityNotBefore: The duration for which the Certificate Authority (CA)
 //!      guarantees it will retain information regarding the certificate's status on which
 //!      the period begins.
 //!    * validityNotAfter: The duration for which the Certificate Authority (CA)
 //!      guarantees it will retain information regarding the certificate's status on which
-//!      the period ends.
+//!      the period ends. This can be set to no expiry date.
 //!    * subject: The entity associated with the public key stored in the subject public
 //!      key field.
-//!    * subjectPublicKeyAlgorithm: The algorithm that the public key is used.
 //!    * subjectPublicKey: The public key of the subject.
 //!    * extensions: A list of extensions defined for X.509 v3 certificate, providing
 //!      additional attributes for users or public keys, and for managing relationships
 //!      between Certificate Authorities (CAs).
 //!    * issuerSignatureAlgorithm: The algorithm used to sign the certificate (must be the
 //!      algorithm uses to create `IssuerSignatureValue`).
-//!
-//! Please refer to the [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/) for more information.
+//
 
 use anyhow::anyhow;
 use c509::C509;
@@ -68,7 +74,7 @@ pub mod wasm_binding;
 ///
 /// # Errors
 ///
-/// Returns an error if tne data cannot be converted to CBOR bytes.
+/// Returns an error if the generated data is invalid.
 
 pub fn generate(tbs_cert: &TbsCert, private_key: Option<&PrivateKey>) -> anyhow::Result<Vec<u8>> {
     // Encode the TbsCert

@@ -21,7 +21,8 @@ use crate::{
 pub struct C509oidRegistered {
     /// The `C509oid`.
     c509_oid: C509oid,
-    /// The registration table.
+    /// The registration lookup table for associated int to OID.
+    /// Each C509 field or type can have different registration table.
     registration_table: &'static IntegerToOidTable,
 }
 
