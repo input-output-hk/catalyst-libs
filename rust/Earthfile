@@ -22,7 +22,7 @@ sync-cfg:
 
 # builder : Set up our target toolchains, and copy our files.
 builder:
-    DO rust-ci+SETUP 
+    DO rust-ci+SETUP
 
 builder-src:
     FROM +builder
@@ -36,7 +36,7 @@ builder-src:
 
     # Generate Checksums of the source
     DO rust-ci+FINGERPRINT_SRC
-    SAVE ARTIFACT ../src_fingerprint.txt 
+    SAVE ARTIFACT ../src_fingerprint.txt
 
 # check : Run basic check.
 check:
@@ -50,11 +50,12 @@ build:
 
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
-        --output="release/[^\./]+" \
         --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
         --args3="--libs=catalyst-voting" \
         --args4="--bins=cbork/cbork" \
+        --output="release/[^\./]+" \
+        --junit="cat-libs.junit-report.xml" \
         --docs="true"
 
     SAVE ARTIFACT target/$TARGETARCH/doc doc
