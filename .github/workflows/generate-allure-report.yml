@@ -4,7 +4,6 @@ on:
   pull_request:
   push:
     branches: [main]
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -98,3 +97,12 @@ jobs:
           repository: gh-pages-dir
           branch: gh-pages
           pull_args: --rebase -X ours
+
+      - name: Comment PR with Allure report link
+        if: ${{ always() && github.event_name == 'pull_request' && steps.allure.outputs.report_url }}
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ${{ steps.allure.outputs.test_result_icon }} [Test Report](${{ steps.allure.outputs.report_url }}) | ${\color{lightgreen}Pass: ${{ steps.allure.outputs.test_result_passed }}/${{ steps.allure.outputs.test_result_total }}}$ | ${\color{red}Fail: ${{ steps.allure.outputs.test_result_failed }}/${{ steps.allure.outputs.test_result_total }}}$ |
+          comment_tag: allure_report
+          mode: upsert
