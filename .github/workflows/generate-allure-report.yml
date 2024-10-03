@@ -1,0 +1,39 @@
+name: Allure Report Generation
+
+on:
+  pull_request:
+  push:
+    branches: "main"
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: eu-central-1
+  AWS_ROLE_ARN: arn:aws:iam::332405224602:role/ci
+  EARTHLY_TARGET: docker
+  ECR_REGISTRY: 332405224602.dkr.ecr.eu-central-1.amazonaws.com
+  ALLURE_REPORT_PATH: allure-report
+  COVERAGE_REPORT_PATH: coverage-report
+  REPORT_EXT: .junit-report.xml
+  COVERAGE_EXT: .info
+
+jobs:
+  generate-test-reports:
+    name: Generate test reports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup CI
+        uses: input-output-hk/catalyst-ci/actions/setup@master
+        with:
+          aws_role_arn: ${{ env.AWS_ROLE_ARN }}
+          aws_region: ${{ env.AWS_REGION }}
+          earthly_runner_secret: ${{ secrets.EARTHLY_RUNNER_SECRET }}
