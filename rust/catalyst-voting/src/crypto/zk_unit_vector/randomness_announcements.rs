@@ -55,6 +55,28 @@ impl Announcement {
     }
 }
 
+/// Response encoding the bits of the private vector, and the randomness of
+/// `BlindingRandomness`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ResponseRandomness {
+    pub(crate) z: Scalar,
+    pub(crate) w: Scalar,
+    pub(crate) v: Scalar,
+}
+
+impl ResponseRandomness {
+    pub(crate) fn new(i_bit: bool, rand: &BlindingRandomness, com_2: &Scalar) -> Self {
+        let z = if i_bit {
+            com_2 + &rand.betta
+        } else {
+            rand.betta.clone()
+        };
+        let w = &(&rand.alpha * com_2) + &rand.gamma;
+        let v = &(&rand.alpha * &(com_2 - &z)) + &rand.delta;
+        Self { z, w, v }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::{

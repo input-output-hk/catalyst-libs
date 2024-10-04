@@ -14,7 +14,7 @@ use std::ops::Mul;
 use curve25519_dalek::digest::Digest;
 use polynomial::generate_polynomial;
 use rand_core::CryptoRngCore;
-use randomness_announcements::{Announcement, BlindingRandomness};
+use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 
 use super::{
     elgamal::{encrypt, Ciphertext, PublicKey},
@@ -23,7 +23,12 @@ use super::{
 };
 
 /// Unit vector proof struct
-pub struct UnitVectorProof;
+pub struct UnitVectorProof(
+    Vec<Announcement>,
+    Vec<Ciphertext>,
+    Vec<ResponseRandomness>,
+    Scalar,
+);
 
 /// Generation unit vector proof error
 #[derive(thiserror::Error, Debug)]
@@ -70,12 +75,12 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 
     let i_bits = bin_rep(i, log_n);
 
-    let randomness: Vec<_> = i_bits
+    let blinding_randomness: Vec<_> = i_bits
         .iter()
         .map(|_| BlindingRandomness::random(rng))
         .collect();
 
-    let announcements: Vec<_> = randomness
+    let announcements: Vec<_> = blinding_randomness
         .iter()
         .zip(i_bits.iter())
         .map(|(r, i_bit)| Announcement::new(*i_bit, r, commitment_key))
@@ -86,7 +91,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     let com_1 = Scalar::from_hash(com_1_hash.clone());
 
     let polynomials: Vec<_> = (0..n)
-        .map(|j| generate_polynomial(&i_bits, &randomness, j, log_n))
+        .map(|j| generate_polynomial(&i_bits, &blinding_randomness, j, log_n))
         .collect();
 
     // Generate new R_l for D_l
@@ -98,8 +103,8 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
         let (sum, _) = polynomials.iter().fold(
             (Scalar::zero(), Scalar::one()),
             |(mut sum, mut exp_com_1), pol| {
-                exp_com_1 = exp_com_1.mul(&com_1);
                 sum = &sum + &pol[(log_n - 1 - i) as usize].mul(&exp_com_1);
+                exp_com_1 = exp_com_1.mul(&com_1);
                 (sum, exp_com_1)
             },
         );
@@ -112,9 +117,41 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     }
 
     let com_2_hash = calculate_second_challenge_hash(com_1_hash, &ds);
-    
+    let com_2 = Scalar::from_hash(com_2_hash);
 
-    Ok(UnitVectorProof)
+    let response_randomness: Vec<_> = blinding_randomness
+        .iter()
+        .zip(i_bits.iter())
+        .map(|(r, i_bit)| ResponseRandomness::new(*i_bit, r, &com_2))
+        .collect();
+
+    let response = {
+        let exp_com_2 = (0..=log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+        let (p1, _) = encryption_randomness.iter().fold(
+            (Scalar::zero(), Scalar::one()),
+            |(mut sum, mut exp_com_1), r| {
+                sum = &sum + &(&(r * &exp_com_2) * &exp_com_1);
+                exp_com_1 = exp_com_1.mul(&com_1);
+                (sum, exp_com_1)
+            },
+        );
+        let (p2, _) = rs.iter().fold(
+            (Scalar::zero(), Scalar::one()),
+            |(mut sum, mut exp_com_2), r| {
+                sum = &sum + &(r * &exp_com_2);
+                exp_com_2 = exp_com_2.mul(&com_2);
+                (sum, exp_com_2)
+            },
+        );
+        &p1 + &p2
+    };
+
+    Ok(UnitVectorProof(
+        announcements,
+        ds,
+        response_randomness,
+        response,
+    ))
 }
 
 /// Generates a binary representation vector of `val` with the given `size`
