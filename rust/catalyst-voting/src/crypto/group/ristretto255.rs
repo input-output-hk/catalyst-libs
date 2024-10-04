@@ -90,12 +90,6 @@ impl GroupElement {
     /// ristretto255 group generator.
     pub const GENERATOR: GroupElement = GroupElement(RISTRETTO_BASEPOINT_POINT);
 
-    /// Generate a random group element value from the random number generator.
-    pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
-        let s = Scalar::random(rng);
-        GroupElement::GENERATOR.mul(&s)
-    }
-
     /// Generate a zero group element.
     pub fn zero() -> Self {
         GroupElement(Point::identity())

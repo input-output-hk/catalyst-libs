@@ -1,6 +1,6 @@
 //! Polynomial generation implementation for the ZK unit vector algorithm
 
-use std::ops::Mul;
+use std::ops::{Deref, Mul};
 
 use super::{bin_rep, randomness_announcements::BlindingRandomness};
 use crate::crypto::group::Scalar;
@@ -8,6 +8,14 @@ use crate::crypto::group::Scalar;
 /// Polynomial representation in the following form:
 /// `p_0 + p_1 * x + p_2 * x^2 + ... + p_n * x^n`
 pub struct Polynomial(Vec<Scalar>);
+
+impl Deref for Polynomial {
+    type Target = Vec<Scalar>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl Polynomial {
     /// Multiplication of a current polynomial on a degree-1 polynomial `a * x + b`.

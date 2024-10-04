@@ -9,13 +9,15 @@
 mod polynomial;
 mod randomness_announcements;
 
+use std::ops::Mul;
+
 use curve25519_dalek::digest::Digest;
 use polynomial::generate_polynomial;
 use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness};
 
 use super::{
-    elgamal::{Ciphertext, PublicKey},
+    elgamal::{encrypt, Ciphertext, PublicKey},
     group::{GroupElement, Scalar},
     hash::Blake2b512Hasher,
 };
@@ -81,11 +83,36 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 
     let com_1_hash =
         calculate_first_challenge_hash(commitment_key, public_key, &ciphertexts, &announcements);
-    let com_1 = Scalar::from_hash(com_1_hash);
+    let com_1 = Scalar::from_hash(com_1_hash.clone());
 
     let polynomials: Vec<_> = (0..n)
         .map(|j| generate_polynomial(&i_bits, &randomness, j, log_n))
         .collect();
+
+    // Generate new R_l for D_l
+    let mut rs = Vec::with_capacity(log_n as usize);
+    let mut ds = Vec::with_capacity(log_n as usize);
+
+    #[allow(clippy::indexing_slicing)]
+    for i in 0..log_n {
+        let (sum, _) = polynomials.iter().fold(
+            (Scalar::zero(), Scalar::one()),
+            |(mut sum, mut exp_com_1), pol| {
+                exp_com_1 = exp_com_1.mul(&com_1);
+                sum = &sum + &pol[(log_n - 1 - i) as usize].mul(&exp_com_1);
+                (sum, exp_com_1)
+            },
+        );
+
+        let r_l = Scalar::random(rng);
+        let d_l = encrypt(&sum, public_key, &r_l);
+
+        rs.push(r_l);
+        ds.push(d_l);
+    }
+
+    let com_2_hash = calculate_second_challenge_hash(com_1_hash, &ds);
+    
 
     Ok(UnitVectorProof)
 }
@@ -97,8 +124,7 @@ fn bin_rep(val: usize, size: u32) -> Vec<bool> {
         .collect()
 }
 
-/// Calculates the first challenge value.
-/// Its a hash value represented as `Scalar` of all provided elements.
+/// Calculates the first challenge hash.
 fn calculate_first_challenge_hash(
     commitment_key: &GroupElement, public_key: &PublicKey, ciphertexts: &[Ciphertext],
     announcements: &[Announcement],
@@ -116,6 +142,17 @@ fn calculate_first_challenge_hash(
         hash.update(announcement.a.to_bytes());
     }
     hash
+}
+
+/// Calculates the second challenge hash.
+fn calculate_second_challenge_hash(
+    mut com_1_hash: Blake2b512Hasher, ciphertexts: &[Ciphertext],
+) -> Blake2b512Hasher {
+    for c in ciphertexts {
+        com_1_hash.update(c.first().to_bytes());
+        com_1_hash.update(c.second().to_bytes());
+    }
+    com_1_hash
 }
 
 #[cfg(test)]
