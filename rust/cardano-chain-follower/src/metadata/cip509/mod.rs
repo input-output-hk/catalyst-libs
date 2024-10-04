@@ -6,9 +6,9 @@
 
 pub mod rbac;
 pub mod x509_chunks;
+pub mod utils;
 
 mod decode_helper;
-mod utils;
 
 use std::sync::Arc;
 
