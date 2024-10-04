@@ -21,7 +21,7 @@ struct Voter {
 fn voting_test(voters: [Voter; 100]) {
     let mut rng = rand_core::OsRng;
 
-    let election_secret_key = SecretKey::generate(&mut rng);
+    let election_secret_key = SecretKey::random(&mut rng);
     let election_public_key = election_secret_key.public_key();
 
     let votes: Vec<_> = voters
