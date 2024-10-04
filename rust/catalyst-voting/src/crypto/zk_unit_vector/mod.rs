@@ -6,11 +6,12 @@
 
 #![allow(dead_code, unused_variables)]
 
+mod polynomial;
 mod randomness_announcements;
 
 use curve25519_dalek::digest::Digest;
 use rand_core::CryptoRngCore;
-use randomness_announcements::{Announcement, Randomness};
+use randomness_announcements::{Announcement, BlindingRandomness};
 
 use super::{
     elgamal::{Ciphertext, PublicKey},
@@ -64,11 +65,12 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     // calculates log_2(N)
     let log_n = n.trailing_zeros();
 
-    let i_bits: Vec<_> = (0..log_n)
-        .map(|bit_index| ((i.to_le() >> bit_index) & 1) == 1)
-        .collect();
+    let i_bits = bin_rep(i, log_n);
 
-    let randomness: Vec<_> = i_bits.iter().map(|_| Randomness::random(rng)).collect();
+    let randomness: Vec<_> = i_bits
+        .iter()
+        .map(|_| BlindingRandomness::random(rng))
+        .collect();
 
     let announcements: Vec<_> = randomness
         .iter()
@@ -81,6 +83,13 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     let com_1 = Scalar::from_hash(com_1_hash);
 
     Ok(UnitVectorProof)
+}
+
+/// Generates a binary representation vector of `val` with the given `size`
+fn bin_rep(val: usize, size: u32) -> Vec<bool> {
+    (0..size)
+        .map(|bit_index| ((val.to_le() >> bit_index) & 1) == 1)
+        .collect()
 }
 
 /// Calculates the first challenge value.
