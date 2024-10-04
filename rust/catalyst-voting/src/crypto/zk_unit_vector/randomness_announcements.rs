@@ -9,14 +9,14 @@ use rand_core::CryptoRngCore;
 use crate::crypto::group::{GroupElement, Scalar};
 
 /// Randomness generated in the proof, used for the hiding property.
-pub struct Randomness {
+pub struct BlindingRandomness {
     alpha: Scalar,
     betta: Scalar,
     gamma: Scalar,
     delta: Scalar,
 }
 
-impl Randomness {
+impl BlindingRandomness {
     pub(crate) fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self {
             alpha: Scalar::random(rng),
@@ -36,7 +36,9 @@ pub struct Announcement {
 }
 
 impl Announcement {
-    pub(crate) fn new(i_bit: bool, rand: &Randomness, commitment_key: &GroupElement) -> Self {
+    pub(crate) fn new(
+        i_bit: bool, rand: &BlindingRandomness, commitment_key: &GroupElement,
+    ) -> Self {
         let i = if i_bit {
             &GroupElement::GENERATOR + &commitment_key.mul(&rand.alpha)
         } else {

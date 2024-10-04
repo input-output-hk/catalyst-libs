@@ -45,12 +45,12 @@ impl Scalar {
     }
 
     /// additive identity
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Scalar(IScalar::ZERO)
     }
 
     /// multiplicative identity
-    pub fn one() -> Self {
+    pub const fn one() -> Self {
         Scalar(IScalar::ONE)
     }
 
