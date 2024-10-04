@@ -10,6 +10,7 @@ mod polynomial;
 mod randomness_announcements;
 
 use curve25519_dalek::digest::Digest;
+use polynomial::generate_polynomial;
 use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness};
 
@@ -81,6 +82,10 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     let com_1_hash =
         calculate_first_challenge_hash(commitment_key, public_key, &ciphertexts, &announcements);
     let com_1 = Scalar::from_hash(com_1_hash);
+
+    let polynomials: Vec<_> = (0..n)
+        .map(|j| generate_polynomial(&i_bits, &randomness, j, log_n))
+        .collect();
 
     Ok(UnitVectorProof)
 }

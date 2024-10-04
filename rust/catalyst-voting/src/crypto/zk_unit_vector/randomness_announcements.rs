@@ -9,11 +9,12 @@ use rand_core::CryptoRngCore;
 use crate::crypto::group::{GroupElement, Scalar};
 
 /// Randomness generated in the proof, used for the hiding property.
+#[derive(Debug)]
 pub struct BlindingRandomness {
-    alpha: Scalar,
-    betta: Scalar,
-    gamma: Scalar,
-    delta: Scalar,
+    pub(crate) alpha: Scalar,
+    pub(crate) betta: Scalar,
+    pub(crate) gamma: Scalar,
+    pub(crate) delta: Scalar,
 }
 
 impl BlindingRandomness {
@@ -51,5 +52,33 @@ impl Announcement {
             commitment_key.mul(&rand.delta)
         };
         Self { i, b, a }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::{
+        arbitrary::any,
+        prelude::{Arbitrary, BoxedStrategy, Strategy},
+    };
+
+    use super::*;
+
+    impl Arbitrary for BlindingRandomness {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(Scalar, Scalar, Scalar, Scalar)>()
+                .prop_map(|(alpha, betta, gamma, delta)| {
+                    BlindingRandomness {
+                        alpha,
+                        betta,
+                        gamma,
+                        delta,
+                    }
+                })
+                .boxed()
+        }
     }
 }
