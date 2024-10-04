@@ -2,8 +2,8 @@
 //!
 //! ```rust
 //! use catalyst_voting::{
-//!     decrypt_tally, encrypt_vote, tally, DecryptionTallySetup, EncryptionRandomness, SecretKey,
-//!     Vote,
+//!     decrypt_tally, encrypt_vote, generate_tally_proof, tally, verify_tally_proof,
+//!     DecryptionTallySetup, EncryptionRandomness, SecretKey, Vote,
 //! };
 //!
 //! struct Voter {
@@ -58,6 +58,11 @@
 //!     })
 //!     .collect();
 //!
+//! let tally_proofs: Vec<_> = encrypted_tallies
+//!     .iter()
+//!     .map(|t| generate_tally_proof(t, &election_secret_key, &mut rng))
+//!     .collect();
+//!
 //! let decryption_tally_setup = DecryptionTallySetup::new(
 //!     voter_1.voting_power + voter_2.voting_power + voter_3.voting_power,
 //! )
@@ -67,6 +72,13 @@
 //!     .map(|t| decrypt_tally(t, &election_secret_key, &decryption_tally_setup).unwrap())
 //!     .collect();
 //!
+//! let is_ok = tally_proofs
+//!     .iter()
+//!     .zip(encrypted_tallies.iter())
+//!     .zip(decrypted_tallies.iter())
+//!     .all(|((p, enc_t), t)| verify_tally_proof(enc_t, *t, &election_public_key, p));
+//! assert!(is_ok);
+//!
 //! assert_eq!(decrypted_tallies, vec![
 //!     voter_1.voting_power,
 //!     voter_2.voting_power,
@@ -75,9 +87,9 @@
 //! ```
 
 mod crypto;
-pub mod tally;
-pub mod voter;
+mod tally;
+mod voter;
 
 pub use crypto::elgamal::{PublicKey, SecretKey};
-pub use tally::{decrypt_tally, tally, DecryptionTallySetup};
-pub use voter::{encrypt_vote, EncryptionRandomness, Vote};
+pub use tally::{proof::*, *};
+pub use voter::*;
