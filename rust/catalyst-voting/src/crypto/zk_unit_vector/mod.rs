@@ -16,6 +16,7 @@ use curve25519_dalek::digest::Digest;
 use polynomial::generate_polynomial;
 use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
+use utils::get_bit;
 
 use super::{
     elgamal::{encrypt, Ciphertext, PublicKey},
@@ -73,17 +74,17 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     encryption_randomness.resize(n, Scalar::zero());
     ciphertexts.resize(n, Ciphertext::zero());
 
-    let i_bits = bin_rep(i, log_n);
-
-    let blinding_randomness: Vec<_> = i_bits
-        .iter()
+    let blinding_randomness: Vec<_> = (0..log_n)
         .map(|_| BlindingRandomness::random(rng))
         .collect();
 
     let announcements: Vec<_> = blinding_randomness
         .iter()
-        .zip(i_bits.iter())
-        .map(|(r, i_bit)| Announcement::new(*i_bit, r, commitment_key))
+        .enumerate()
+        .map(|(l, r)| {
+            let i_bit = get_bit(i, l);
+            Announcement::new(i_bit, r, commitment_key)
+        })
         .collect();
 
     let com_1_hash =
@@ -91,7 +92,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     let com_1 = Scalar::from_hash(com_1_hash.clone());
 
     let polynomials: Vec<_> = (0..n)
-        .map(|j| generate_polynomial(&i_bits, &blinding_randomness, j, log_n))
+        .map(|j| generate_polynomial(i, j, &blinding_randomness))
         .collect();
 
     // Generate new R_l for D_l
@@ -121,8 +122,11 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 
     let response_randomness: Vec<_> = blinding_randomness
         .iter()
-        .zip(i_bits.iter())
-        .map(|(r, i_bit)| ResponseRandomness::new(*i_bit, r, &com_2))
+        .enumerate()
+        .map(|(l, r)| {
+            let i_bit = get_bit(i, l);
+            ResponseRandomness::new(i_bit, r, &com_2)
+        })
         .collect();
 
     let response = {
@@ -188,11 +192,7 @@ pub fn verify_unit_vector_proof(
         },
     );
 
-    let polynomials_com_2: Vec<_> = (0..n)
-        .map(|j| {
-            let j_bits = bin_rep(j, log_n);
-        })
-        .collect();
+    let polynomials_com_2: Vec<_> = (0..n).map(|j| {}).collect();
 
     true
 }
@@ -210,13 +210,6 @@ fn check_1(proof: &UnitVectorProof, com_2: &Scalar, commitment_key: &PublicKey) 
 
         eq_1 && eq_2
     })
-}
-
-/// Generates a binary representation vector of `val` with the given `size`
-fn bin_rep(val: usize, size: u32) -> Vec<bool> {
-    (0..size)
-        .map(|bit_index| ((val.to_le() >> bit_index) & 1) == 1)
-        .collect()
 }
 
 /// Calculates the first challenge hash.

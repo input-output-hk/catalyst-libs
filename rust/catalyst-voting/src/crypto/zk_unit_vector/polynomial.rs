@@ -2,7 +2,7 @@
 
 use std::ops::{Deref, Mul};
 
-use super::{bin_rep, randomness_announcements::BlindingRandomness};
+use super::{randomness_announcements::BlindingRandomness, utils::get_bit};
 use crate::crypto::group::Scalar;
 
 /// Polynomial representation in the following form:
@@ -36,33 +36,29 @@ impl Polynomial {
 
 /// Generate the polynomial according to the step 7 of this [spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#prover)
 pub(crate) fn generate_polynomial(
-    i_bits: &[bool], randomness: &[BlindingRandomness], j: usize, log_n: u32,
+    i: usize, j: usize, randomness: &[BlindingRandomness],
 ) -> Polynomial {
-    let j_bits = bin_rep(j, log_n);
+    let mut pol = randomness.iter().map(|r| &r.betta).enumerate().fold(
+        // `0 * x + 1`
+        Polynomial(vec![Scalar::one()]),
+        |mut acc, (l, betta)| {
+            let i_bit = get_bit(i, l);
+            let j_bit = get_bit(j, l);
+            match (j_bit, i_bit) {
+                // `1 * x + beta`
+                (true, true) => acc.pol_mul(&Scalar::one(), betta),
+                // `0 * x + beta`
+                (true, false) => acc.scalar_mul(betta),
+                // `0 * x - beta`
+                (false, true) => acc.scalar_mul(&betta.negate()),
+                // `1 * x - beta`
+                (false, false) => acc.pol_mul(&Scalar::one(), &betta.negate()),
+            }
+            acc
+        },
+    );
 
-    let mut pol = j_bits
-        .iter()
-        .zip(i_bits.iter())
-        .zip(randomness.iter().map(|r| &r.betta))
-        .fold(
-            // `0 * x + 1`
-            Polynomial(vec![Scalar::one()]),
-            |mut acc, ((j_bit, i_bit), betta)| {
-                match (*j_bit, *i_bit) {
-                    // `1 * x + beta`
-                    (true, true) => acc.pol_mul(&Scalar::one(), betta),
-                    // `0 * x + beta`
-                    (true, false) => acc.scalar_mul(betta),
-                    // `0 * x - beta`
-                    (false, true) => acc.scalar_mul(&betta.negate()),
-                    // `1 * x - beta`
-                    (false, false) => acc.pol_mul(&Scalar::one(), &betta.negate()),
-                }
-                acc
-            },
-        );
-
-    pol.0.resize((log_n + 1) as usize, Scalar::zero());
+    pol.0.resize(randomness.len() + 1, Scalar::zero());
     pol
 }
 
@@ -112,9 +108,8 @@ mod tests {
     #[proptest]
     fn generate_polynomial_test(betta: Scalar, randomnesses: [BlindingRandomness; LOG_N as usize]) {
         for i in 0..N {
-            let i_bits = bin_rep(i, LOG_N);
             for j in 0..N {
-                let p = generate_polynomial(&i_bits, &randomnesses, j, LOG_N);
+                let p = generate_polynomial(i, j, &randomnesses);
 
                 assert_eq!(p.0.len(), (LOG_N + 1) as usize);
                 if i == j {
