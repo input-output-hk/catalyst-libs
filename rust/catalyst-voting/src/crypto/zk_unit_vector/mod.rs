@@ -8,6 +8,7 @@
 
 mod polynomial;
 mod randomness_announcements;
+mod utils;
 
 use std::ops::Mul;
 
@@ -49,7 +50,7 @@ pub enum GenerationUnitVectorProofError {
 /// be invalid.
 pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     unit_vector: &[Scalar], mut encryption_randomness: Vec<Scalar>,
-    mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &GroupElement,
+    mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &PublicKey,
     rng: &mut R,
 ) -> Result<UnitVectorProof, GenerationUnitVectorProofError> {
     if unit_vector.len() != encryption_randomness.len() || unit_vector.len() != ciphertexts.len() {
@@ -66,12 +67,11 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 
     let m = unit_vector.len();
     let n = m.next_power_of_two();
+    // calculates log_2(N)
+    let log_n = n.trailing_zeros();
 
     encryption_randomness.resize(n, Scalar::zero());
     ciphertexts.resize(n, Ciphertext::zero());
-
-    // calculates log_2(N)
-    let log_n = n.trailing_zeros();
 
     let i_bits = bin_rep(i, log_n);
 
@@ -154,6 +154,64 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     ))
 }
 
+/// Verify a unit vector proof.
+pub fn verify_unit_vector_proof(
+    proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey,
+    commitment_key: &PublicKey,
+) -> bool {
+    let m = ciphertexts.len();
+    let n = m.next_power_of_two();
+    // calculates log_2(N)
+    let log_n = n.trailing_zeros();
+
+    ciphertexts.resize(n, Ciphertext::zero());
+
+    let com_1_hash =
+        calculate_first_challenge_hash(commitment_key, public_key, &ciphertexts, &proof.0);
+    let com_1 = Scalar::from_hash(com_1_hash.clone());
+
+    let com_2_hash = calculate_second_challenge_hash(com_1_hash, &proof.1);
+    let com_2 = Scalar::from_hash(com_2_hash);
+
+    if !check_1(proof, &com_2, commitment_key) {
+        return false;
+    }
+
+    let left = encrypt(&Scalar::zero(), public_key, &proof.3);
+
+    let (right_2, _) = proof.1.iter().fold(
+        (Ciphertext::zero(), Scalar::zero()),
+        |(mut acc, mut i), d_l| {
+            acc = &acc + &d_l.mul(&i);
+            i.increment();
+            (acc, i)
+        },
+    );
+
+    let polynomials_com_2: Vec<_> = (0..n)
+        .map(|j| {
+            let j_bits = bin_rep(j, log_n);
+        })
+        .collect();
+
+    true
+}
+
+/// Check the first part of the proof
+fn check_1(proof: &UnitVectorProof, com_2: &Scalar, commitment_key: &PublicKey) -> bool {
+    proof.0.iter().zip(proof.2.iter()).all(|(an, rand)| {
+        let right = &an.i.mul(com_2) + &an.b;
+        let left = &GroupElement::GENERATOR.mul(&rand.z) + &commitment_key.mul(&rand.w);
+        let eq_1 = right == left;
+
+        let right = &an.i.mul(&(com_2 - &rand.z)) + &an.a;
+        let left = &GroupElement::GENERATOR.mul(&Scalar::zero()) + &commitment_key.mul(&rand.v);
+        let eq_2 = right == left;
+
+        eq_1 && eq_2
+    })
+}
+
 /// Generates a binary representation vector of `val` with the given `size`
 fn bin_rep(val: usize, size: u32) -> Vec<bool> {
     (0..size)
@@ -195,8 +253,49 @@ fn calculate_second_challenge_hash(
 #[cfg(test)]
 mod tests {
 
+    use rand_core::OsRng;
+
+    use super::{super::elgamal::SecretKey, *};
+
+    const VECTOR_SIZE: usize = 3;
+
     #[test]
-    fn test() {
-        println!("{}", 4_u32.trailing_zeros());
+    fn zk_unit_vector_test() {
+        let mut rng = OsRng;
+
+        let secret_key = SecretKey::random(&mut rng);
+        let secret_commitment_key = SecretKey::random(&mut rng);
+        let public_key = secret_key.public_key();
+        let commitment_key = secret_commitment_key.public_key();
+
+        let unit_vector = [Scalar::one(), Scalar::zero(), Scalar::zero()];
+        let encryption_randomness = vec![
+            Scalar::random(&mut rng),
+            Scalar::random(&mut rng),
+            Scalar::random(&mut rng),
+        ];
+
+        let ciphertexts: Vec<_> = encryption_randomness
+            .iter()
+            .zip(unit_vector.iter())
+            .map(|(r, v)| encrypt(v, &public_key, r))
+            .collect();
+
+        let proof = generate_unit_vector_proof(
+            &unit_vector,
+            encryption_randomness,
+            ciphertexts.clone(),
+            &public_key,
+            &commitment_key,
+            &mut rng,
+        )
+        .unwrap();
+
+        assert!(verify_unit_vector_proof(
+            &proof,
+            ciphertexts,
+            &public_key,
+            &commitment_key
+        ));
     }
 }
