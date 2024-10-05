@@ -13,7 +13,7 @@ mod utils;
 use std::ops::Mul;
 
 use curve25519_dalek::digest::Digest;
-use polynomial::generate_polynomial;
+use polynomial::{calculate_polynomial_val, generate_polynomial};
 use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 use utils::get_bit;
@@ -130,9 +130,11 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
         .collect();
 
     let response = {
+        // exp_com_2 == `com_2^(log_2(N))`
         let exp_com_2 = (0..=log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
         let (p1, _) = encryption_randomness.iter().fold(
             (Scalar::zero(), Scalar::one()),
+            // exp_com_1 = `com_1^(j)`
             |(mut sum, mut exp_com_1), r| {
                 sum = &sum + &(&(r * &exp_com_2) * &exp_com_1);
                 exp_com_1 = exp_com_1.mul(&com_1);
@@ -141,6 +143,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
         );
         let (p2, _) = rs.iter().fold(
             (Scalar::zero(), Scalar::one()),
+            // exp_com_2 = `com_2^(l)`
             |(mut sum, mut exp_com_2), r| {
                 sum = &sum + &(r * &exp_com_2);
                 exp_com_2 = exp_com_2.mul(&com_2);
@@ -192,9 +195,30 @@ pub fn verify_unit_vector_proof(
         },
     );
 
-    let polynomials_com_2: Vec<_> = (0..n).map(|j| {}).collect();
+    let polynomials_com_2: Vec<_> = (0..n)
+        .map(|j| calculate_polynomial_val(j, &com_2, &proof.2))
+        .collect();
 
-    true
+    let p_j: Vec<_> = polynomials_com_2
+        .iter()
+        .map(|p_com_2| encrypt(p_com_2, public_key, &Scalar::zero()))
+        .collect();
+
+    // exp_com_2 == `com_2^(log_2(N))`
+    let exp_com_2 = (0..=log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+    let (right_1, _) = p_j.iter().zip(ciphertexts.iter()).fold(
+        (Ciphertext::zero(), Scalar::one()),
+        // exp_com_1 = `com_1^(j)`
+        |(mut sum, mut exp_com_1), (p_j, c_j)| {
+            sum = &sum + &(&c_j.mul(&exp_com_2) + &p_j.mul(&exp_com_1));
+            exp_com_1 = exp_com_1.mul(&com_1);
+            (sum, exp_com_1)
+        },
+    );
+
+    let right = &right_1 + &right_2;
+
+    right == left
 }
 
 /// Check the first part of the proof

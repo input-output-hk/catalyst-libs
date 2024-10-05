@@ -2,7 +2,10 @@
 
 use std::ops::{Deref, Mul};
 
-use super::{randomness_announcements::BlindingRandomness, utils::get_bit};
+use super::{
+    randomness_announcements::{BlindingRandomness, ResponseRandomness},
+    utils::get_bit,
+};
 use crate::crypto::group::Scalar;
 
 /// Polynomial representation in the following form:
@@ -60,6 +63,26 @@ pub(crate) fn generate_polynomial(
 
     pol.0.resize(randomness.len() + 1, Scalar::zero());
     pol
+}
+
+/// Calculate the polynomial value
+pub(crate) fn calculate_polynomial_val(
+    j: usize, x: &Scalar, randomness: &[ResponseRandomness],
+) -> Scalar {
+    let val = randomness
+        .iter()
+        .map(|r| &r.z)
+        .enumerate()
+        .fold(Scalar::one(), |mut acc, (l, z)| {
+            let j_bit = get_bit(j, l);
+            if j_bit {
+                acc = &acc * z;
+            } else {
+                acc = &acc * &(x - z);
+            }
+            acc
+        });
+    val
 }
 
 #[cfg(test)]
