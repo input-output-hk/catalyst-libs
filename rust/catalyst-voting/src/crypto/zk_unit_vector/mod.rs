@@ -99,28 +99,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
         })
         .collect();
 
-    // exp_ch_2 == `ch_2^(log_2(N))`
-    let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&ch_2));
-
-    let (p1, _) = encryption_randomness.iter().fold(
-        (Scalar::zero(), Scalar::one()),
-        // exp_ch_1 = `ch_1^(j)`
-        |(mut sum, mut exp_ch_1), r| {
-            sum = &sum + &r.mul(&exp_ch_2).mul(&exp_ch_1);
-            exp_ch_1 = exp_ch_1.mul(&ch_1);
-            (sum, exp_ch_1)
-        },
-    );
-    let (p2, _) = r_l.iter().fold(
-        (Scalar::zero(), Scalar::one()),
-        // exp_ch_2 = `ch_2^(l)`
-        |(mut sum, mut exp_ch_2), r_l| {
-            sum = &sum + &r_l.mul(&exp_ch_2);
-            exp_ch_2 = exp_ch_2.mul(&ch_2);
-            (sum, exp_ch_2)
-        },
-    );
-    let response = &p1 + &p2;
+    let response = generate_response(log_n, &ch_1, &ch_2, &encryption_randomness, &r_l);
 
     UnitVectorProof(announcements, d_l, response_randomness, response)
 }
@@ -130,8 +109,6 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 fn generate_dl_and_rl<R: CryptoRngCore>(
     log_n: u32, ch_1: &Scalar, public_key: &PublicKey, polynomials: &[Polynomial], rng: &mut R,
 ) -> (Vec<Ciphertext>, Vec<Scalar>) {
-    // Generate new R_l for D_l
-
     let r_l: Vec<_> = (0..log_n).map(|_| Scalar::random(rng)).collect();
 
     let d_l: Vec<_> = r_l
@@ -154,6 +131,34 @@ fn generate_dl_and_rl<R: CryptoRngCore>(
     (d_l, r_l)
 }
 
+/// Generate response element `R`
+fn generate_response(
+    log_n: u32, ch_1: &Scalar, ch_2: &Scalar, encryption_randomness: &[Scalar], r_l: &[Scalar],
+) -> Scalar {
+    // exp_ch_2 == `ch_2^(log_2(N))`
+    let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(ch_2));
+
+    let (r1, _) = encryption_randomness.iter().fold(
+        (Scalar::zero(), Scalar::one()),
+        // exp_ch_1 = `ch_1^(j)`
+        |(mut sum, mut exp_ch_1), r| {
+            sum = &sum + &r.mul(&exp_ch_2).mul(&exp_ch_1);
+            exp_ch_1 = exp_ch_1.mul(ch_1);
+            (sum, exp_ch_1)
+        },
+    );
+    let (r2, _) = r_l.iter().fold(
+        (Scalar::zero(), Scalar::one()),
+        // exp_ch_2 = `ch_2^(l)`
+        |(mut sum, mut exp_ch_2), r_l| {
+            sum = &sum + &r_l.mul(&exp_ch_2);
+            exp_ch_2 = exp_ch_2.mul(ch_2);
+            (sum, exp_ch_2)
+        },
+    );
+    &r1 + &r2
+}
+
 /// Verify a unit vector proof.
 pub fn verify_unit_vector_proof(
     proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey,
@@ -173,47 +178,8 @@ pub fn verify_unit_vector_proof(
     let ch_2_hash = calculate_second_challenge_hash(ch_1_hash, &proof.1);
     let ch_2 = Scalar::from_hash(ch_2_hash);
 
-    if !check_1(proof, &ch_2, commitment_key) {
-        return false;
-    }
-
-    let left = encrypt(&Scalar::zero(), public_key, &proof.3);
-
-    let (right_2, _) = proof.1.iter().fold(
-        (Ciphertext::zero(), Scalar::one()),
-        // exp_ch_2 = `ch_2^(l)`
-        |(mut sum, mut exp_ch_2), d_l| {
-            sum = &sum + &d_l.mul(&exp_ch_2);
-            exp_ch_2 = exp_ch_2.mul(&ch_2);
-            (sum, exp_ch_2)
-        },
-    );
-
-    let polynomials_ch_2: Vec<_> = (0..n)
-        .map(|j| calculate_polynomial_val(j, &ch_2, &proof.2))
-        .collect();
-
-    let p_j: Vec<_> = polynomials_ch_2
-        .iter()
-        .map(|p_ch_2| encrypt(&p_ch_2.negate(), public_key, &Scalar::zero()))
-        .collect();
-
-    // exp_ch_2 == `ch_2^(log_2(N))`
-    let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&ch_2));
-
-    let (right_1, _) = p_j.iter().zip(ciphertexts.iter()).fold(
-        (Ciphertext::zero(), Scalar::one()),
-        // exp_ch_1 = `ch_1^(j)`
-        |(mut sum, mut exp_ch_1), (p_j, c_j)| {
-            sum = &sum + &(&c_j.mul(&exp_ch_2) + p_j).mul(&exp_ch_1);
-            exp_ch_1 = exp_ch_1.mul(&ch_1);
-            (sum, exp_ch_1)
-        },
-    );
-
-    let right = &right_1 + &right_2;
-
-    right == left
+    check_1(proof, &ch_2, commitment_key)
+        && check_2(proof, log_n, &ch_1, &ch_2, &ciphertexts, public_key)
 }
 
 /// Check the first part of the proof
@@ -229,6 +195,44 @@ fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &PublicKey) -
 
         eq_1 && eq_2
     })
+}
+
+/// Check the second part of the proof
+fn check_2(
+    proof: &UnitVectorProof, log_n: u32, ch_1: &Scalar, ch_2: &Scalar, ciphertexts: &[Ciphertext],
+    public_key: &PublicKey,
+) -> bool {
+    let left = encrypt(&Scalar::zero(), public_key, &proof.3);
+
+    let (right_2, _) = proof.1.iter().fold(
+        (Ciphertext::zero(), Scalar::one()),
+        // exp_ch_2 = `ch_2^(l)`
+        |(mut sum, mut exp_ch_2), d_l| {
+            sum = &sum + &d_l.mul(&exp_ch_2);
+            exp_ch_2 = exp_ch_2.mul(ch_2);
+            (sum, exp_ch_2)
+        },
+    );
+
+    let p_j: Vec<_> = (0..ciphertexts.len())
+        .map(|j| calculate_polynomial_val(j, ch_2, &proof.2))
+        .map(|p_ch_2| encrypt(&p_ch_2.negate(), public_key, &Scalar::zero()))
+        .collect();
+
+    // exp_ch_2 == `ch_2^(log_2(N))`
+    let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(ch_2));
+
+    let (right_1, _) = p_j.iter().zip(ciphertexts.iter()).fold(
+        (Ciphertext::zero(), Scalar::one()),
+        // exp_ch_1 = `ch_1^(j)`
+        |(mut sum, mut exp_ch_1), (p_j, c_j)| {
+            sum = &sum + &(&c_j.mul(&exp_ch_2) + p_j).mul(&exp_ch_1);
+            exp_ch_1 = exp_ch_1.mul(ch_1);
+            (sum, exp_ch_1)
+        },
+    );
+
+    &right_1 + &right_2 == left
 }
 
 #[cfg(test)]
