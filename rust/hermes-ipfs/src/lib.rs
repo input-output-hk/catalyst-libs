@@ -30,7 +30,7 @@ pub use rust_ipfs::StorageType;
 /// Stream for `PubSub` Topic Subscriptions.
 pub use rust_ipfs::SubscriptionStream;
 /// Builder type for IPFS Node configuration.
-use rust_ipfs::UninitializedIpfsNoop;
+use rust_ipfs::UninitializedIpfsDefault as UninitializedIpfs;
 use rust_ipfs::{
     dag::ResolveError,
     libp2p::gossipsub::{Message as PubsubMessage, MessageId as PubsubMessageId},
@@ -43,13 +43,13 @@ use rust_ipfs::{
 pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
-pub struct IpfsBuilder(UninitializedIpfsNoop);
+pub struct IpfsBuilder(UninitializedIpfs);
 
 impl IpfsBuilder {
     #[must_use]
     /// Create a new` IpfsBuilder`.
     pub fn new() -> Self {
-        Self(UninitializedIpfsNoop::new())
+        Self(UninitializedIpfs::new())
     }
 
     #[must_use]
