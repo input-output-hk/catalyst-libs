@@ -281,4 +281,44 @@ mod tests {
             &commitment_key
         ));
     }
+
+    #[test]
+    fn not_a_unit_vector_test() {
+        let mut rng = OsRng;
+
+        let secret_key = SecretKey::random(&mut rng);
+        let secret_commitment_key = SecretKey::random(&mut rng);
+        let public_key = secret_key.public_key();
+        let commitment_key = secret_commitment_key.public_key();
+
+        // Encrypt not a unit vector
+        let unit_vector = [Scalar::from(2), Scalar::zero(), Scalar::zero()];
+        let encryption_randomness = vec![
+            Scalar::random(&mut rng),
+            Scalar::random(&mut rng),
+            Scalar::random(&mut rng),
+        ];
+
+        let ciphertexts: Vec<_> = encryption_randomness
+            .iter()
+            .zip(unit_vector.iter())
+            .map(|(r, v)| encrypt(v, &public_key, r))
+            .collect();
+
+        let proof = generate_unit_vector_proof(
+            &unit_vector,
+            encryption_randomness,
+            ciphertexts.clone(),
+            &public_key,
+            &commitment_key,
+            &mut rng,
+        );
+
+        assert!(!verify_unit_vector_proof(
+            &proof,
+            ciphertexts,
+            &public_key,
+            &commitment_key
+        ));
+    }
 }
