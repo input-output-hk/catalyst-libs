@@ -63,7 +63,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     }
     let i = unit_vector
         .iter()
-        .position(|s| s != &Scalar::one())
+        .position(|s| s != &Scalar::zero())
         .ok_or(GenerationUnitVectorProofError::EmptyUnitVector)?;
 
     let m = unit_vector.len();
@@ -103,8 +103,9 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     for i in 0..log_n {
         let (sum, _) = polynomials.iter().fold(
             (Scalar::zero(), Scalar::one()),
+            // exp_com_1 = `com_1^(j)`
             |(mut sum, mut exp_com_1), pol| {
-                sum = &sum + &pol[(log_n - 1 - i) as usize].mul(&exp_com_1);
+                sum = &sum + &pol[i as usize].mul(&exp_com_1);
                 exp_com_1 = exp_com_1.mul(&com_1);
                 (sum, exp_com_1)
             },
@@ -131,12 +132,13 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 
     let response = {
         // exp_com_2 == `com_2^(log_2(N))`
-        let exp_com_2 = (0..=log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+        let exp_com_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+
         let (p1, _) = encryption_randomness.iter().fold(
             (Scalar::zero(), Scalar::one()),
             // exp_com_1 = `com_1^(j)`
             |(mut sum, mut exp_com_1), r| {
-                sum = &sum + &(&(r * &exp_com_2) * &exp_com_1);
+                sum = &sum + &r.mul(&exp_com_2).mul(&exp_com_1);
                 exp_com_1 = exp_com_1.mul(&com_1);
                 (sum, exp_com_1)
             },
@@ -145,7 +147,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
             (Scalar::zero(), Scalar::one()),
             // exp_com_2 = `com_2^(l)`
             |(mut sum, mut exp_com_2), r| {
-                sum = &sum + &(r * &exp_com_2);
+                sum = &sum + &r.mul(&exp_com_2);
                 exp_com_2 = exp_com_2.mul(&com_2);
                 (sum, exp_com_2)
             },
@@ -187,11 +189,12 @@ pub fn verify_unit_vector_proof(
     let left = encrypt(&Scalar::zero(), public_key, &proof.3);
 
     let (right_2, _) = proof.1.iter().fold(
-        (Ciphertext::zero(), Scalar::zero()),
-        |(mut acc, mut i), d_l| {
-            acc = &acc + &d_l.mul(&i);
-            i.increment();
-            (acc, i)
+        (Ciphertext::zero(), Scalar::one()),
+        // exp_com_2 = `com_2^(l)`
+        |(mut sum, mut exp_com_2), d_l| {
+            sum = &sum + &d_l.mul(&exp_com_2);
+            exp_com_2 = exp_com_2.mul(&com_2);
+            (sum, exp_com_2)
         },
     );
 
@@ -201,16 +204,17 @@ pub fn verify_unit_vector_proof(
 
     let p_j: Vec<_> = polynomials_com_2
         .iter()
-        .map(|p_com_2| encrypt(p_com_2, public_key, &Scalar::zero()))
+        .map(|p_com_2| encrypt(&p_com_2.negate(), public_key, &Scalar::zero()))
         .collect();
 
     // exp_com_2 == `com_2^(log_2(N))`
-    let exp_com_2 = (0..=log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+    let exp_com_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+
     let (right_1, _) = p_j.iter().zip(ciphertexts.iter()).fold(
         (Ciphertext::zero(), Scalar::one()),
         // exp_com_1 = `com_1^(j)`
         |(mut sum, mut exp_com_1), (p_j, c_j)| {
-            sum = &sum + &(&c_j.mul(&exp_com_2) + &p_j.mul(&exp_com_1));
+            sum = &sum + &(&c_j.mul(&exp_com_2) + p_j).mul(&exp_com_1);
             exp_com_1 = exp_com_1.mul(&com_1);
             (sum, exp_com_1)
         },
