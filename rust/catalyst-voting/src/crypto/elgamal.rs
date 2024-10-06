@@ -1,7 +1,7 @@
 //! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
-use std::ops::{Add, Mul};
+use std::ops::{Add, Deref, Mul};
 
 use rand_core::CryptoRngCore;
 
@@ -19,6 +19,22 @@ pub struct PublicKey(GroupElement);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ciphertext(GroupElement, GroupElement);
 
+impl Deref for SecretKey {
+    type Target = Scalar;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Deref for PublicKey {
+    type Target = GroupElement;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl SecretKey {
     /// Generate a random `SecretKey` value from the random number generator.
     pub fn generate<R: CryptoRngCore>(rng: &mut R) -> Self {
@@ -35,15 +51,25 @@ impl SecretKey {
 impl Ciphertext {
     /// Generate a zero `Ciphertext`.
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
-    pub(crate) fn zero() -> Self {
+    pub fn zero() -> Self {
         Ciphertext(GroupElement::zero(), GroupElement::zero())
+    }
+
+    /// Get the first element of the `Ciphertext`.
+    pub fn first(&self) -> &GroupElement {
+        &self.0
+    }
+
+    /// Get the second element of the `Ciphertext`.
+    pub fn second(&self) -> &GroupElement {
+        &self.1
     }
 }
 
 /// Given a `message` represented as a `Scalar`, return a ciphertext using the
 /// lifted ``ElGamal`` mechanism.
 /// Returns a ciphertext of type `Ciphertext`.
-pub(crate) fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Scalar) -> Ciphertext {
+pub fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Scalar) -> Ciphertext {
     let e1 = GroupElement::GENERATOR.mul(randomness);
     let e2 = &GroupElement::GENERATOR.mul(message) + &public_key.0.mul(randomness);
     Ciphertext(e1, e2)
@@ -51,7 +77,7 @@ pub(crate) fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Sca
 
 /// Decrypt ``ElGamal`` `Ciphertext`, returns the original message represented as a
 /// `GroupElement`.
-pub(crate) fn decrypt(cipher: &Ciphertext, secret_key: &SecretKey) -> GroupElement {
+pub fn decrypt(cipher: &Ciphertext, secret_key: &SecretKey) -> GroupElement {
     &(&cipher.0 * &secret_key.0.negate()) + &cipher.1
 }
 
