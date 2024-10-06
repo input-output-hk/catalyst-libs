@@ -32,20 +32,15 @@ pub struct UnitVectorProof(
     Scalar,
 );
 
-/// Generation unit vector proof error
-#[derive(thiserror::Error, Debug)]
-pub enum GenerationUnitVectorProofError {
-    /// Incorrect number of elements
-    #[error("Invalid number of elements of `unit_vector`: {0}, `encryption_randomness`: {1}, and  `ciphertexts`: {2}. They all should be equal")]
-    InvalidNumberOfElements(usize, usize, usize),
-}
-
 /// Generates a unit vector proof.
 ///
 /// `unit_vector` must be a collection of `Scalar` where only one element is equal to
 /// `Scalar::one()` and the others are equal to `Scalar::zero()`.
-/// Pls make sure that you are providing a correct `unit_vector`, otherwise the proof will
-/// be invalid.
+/// Length of the `unit_vector`, `encryption_randomness`, `ciphertexts` must be equal with
+/// each other.
+///
+/// Pls make sure that you are providing a correct arguments, otherwise
+/// the proof will be invalid.
 pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     unit_vector: &[Scalar], mut encryption_randomness: Vec<Scalar>,
     mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &PublicKey,
