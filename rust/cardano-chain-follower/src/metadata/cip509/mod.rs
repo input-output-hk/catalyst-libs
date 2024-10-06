@@ -5,8 +5,8 @@
 // cspell: words pkix
 
 pub mod rbac;
-pub mod x509_chunks;
 pub mod utils;
+pub mod x509_chunks;
 
 mod decode_helper;
 
