@@ -14,7 +14,7 @@
 
 use curve25519_dalek::digest::Digest;
 
-use super::{
+use crate::crypto::{
     group::{GroupElement, Scalar},
     hash::Blake2b512Hasher,
 };

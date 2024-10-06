@@ -5,7 +5,7 @@ use std::ops::{Add, Deref, Mul};
 
 use rand_core::CryptoRngCore;
 
-use super::group::{GroupElement, Scalar};
+use crate::crypto::group::{GroupElement, Scalar};
 
 /// ``ElGamal`` secret key.
 #[derive(Debug, Clone, PartialEq, Eq)]

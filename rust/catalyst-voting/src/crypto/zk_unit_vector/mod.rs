@@ -6,6 +6,7 @@
 
 #![allow(dead_code, unused_variables)]
 
+mod challenges;
 mod polynomial;
 mod randomness_announcements;
 mod utils;
@@ -18,7 +19,7 @@ use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 use utils::get_bit;
 
-use super::{
+use crate::crypto::{
     elgamal::{encrypt, Ciphertext, PublicKey},
     group::{GroupElement, Scalar},
     hash::Blake2b512Hasher,

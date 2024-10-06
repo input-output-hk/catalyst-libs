@@ -2,11 +2,13 @@
 
 use std::ops::{Deref, Mul};
 
-use super::{
-    randomness_announcements::{BlindingRandomness, ResponseRandomness},
-    utils::get_bit,
+use crate::crypto::{
+    group::Scalar,
+    zk_unit_vector::{
+        randomness_announcements::{BlindingRandomness, ResponseRandomness},
+        utils::get_bit,
+    },
 };
-use crate::crypto::group::Scalar;
 
 /// Polynomial representation in the following form:
 /// `p_0 + p_1 * x + p_2 * x^2 + ... + p_n * x^n`
