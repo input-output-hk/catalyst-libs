@@ -131,7 +131,7 @@ mod tests {
     const LOG_N: u32 = 2;
 
     #[proptest]
-    fn generate_polynomial_test(betta: Scalar, randomnesses: [BlindingRandomness; LOG_N as usize]) {
+    fn generate_polynomial_test(randomnesses: [BlindingRandomness; LOG_N as usize]) {
         for i in 0..N {
             for j in 0..N {
                 let p = generate_polynomial(i, j, &randomnesses);

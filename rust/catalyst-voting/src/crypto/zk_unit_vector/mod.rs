@@ -4,7 +4,7 @@
 //!
 //! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#d-non-interactive-zk-vote-proof)
 
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code)]
 
 mod challenges;
 mod polynomial;
@@ -13,8 +13,8 @@ mod utils;
 
 use std::ops::Mul;
 
-use curve25519_dalek::digest::Digest;
-use polynomial::{calculate_polynomial_val, generate_polynomial};
+use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash};
+use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
 use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 use utils::get_bit;
@@ -22,7 +22,6 @@ use utils::get_bit;
 use crate::crypto::{
     elgamal::{encrypt, Ciphertext, PublicKey},
     group::{GroupElement, Scalar},
-    hash::Blake2b512Hasher,
 };
 
 /// Unit vector proof struct
@@ -39,9 +38,6 @@ pub enum GenerationUnitVectorProofError {
     /// Incorrect number of elements
     #[error("Invalid number of elements of `unit_vector`: {0}, `encryption_randomness`: {1}, and  `ciphertexts`: {2}. They all should be equal")]
     InvalidNumberOfElements(usize, usize, usize),
-    /// Empty unit vector
-    #[error("Provided `unit_vector` is empty")]
-    EmptyUnitVector,
 }
 
 /// Generates a unit vector proof.
@@ -54,18 +50,11 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     unit_vector: &[Scalar], mut encryption_randomness: Vec<Scalar>,
     mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &PublicKey,
     rng: &mut R,
-) -> Result<UnitVectorProof, GenerationUnitVectorProofError> {
-    if unit_vector.len() != encryption_randomness.len() || unit_vector.len() != ciphertexts.len() {
-        return Err(GenerationUnitVectorProofError::InvalidNumberOfElements(
-            unit_vector.len(),
-            encryption_randomness.len(),
-            ciphertexts.len(),
-        ));
-    }
+) -> UnitVectorProof {
     let i = unit_vector
         .iter()
         .position(|s| s != &Scalar::zero())
-        .ok_or(GenerationUnitVectorProofError::EmptyUnitVector)?;
+        .unwrap_or(0);
 
     let m = unit_vector.len();
     let n = m.next_power_of_two();
@@ -88,80 +77,81 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
         })
         .collect();
 
-    let com_1_hash =
+    let ch_1_hash =
         calculate_first_challenge_hash(commitment_key, public_key, &ciphertexts, &announcements);
-    let com_1 = Scalar::from_hash(com_1_hash.clone());
+    let ch_1 = Scalar::from_hash(ch_1_hash.clone());
 
     let polynomials: Vec<_> = (0..n)
         .map(|j| generate_polynomial(i, j, &blinding_randomness))
         .collect();
 
-    // Generate new R_l for D_l
-    let mut rs = Vec::with_capacity(log_n as usize);
-    let mut ds = Vec::with_capacity(log_n as usize);
+    let (d_l, r_l) = generate_dl_and_rl(log_n, &ch_1, public_key, &polynomials, rng);
 
-    #[allow(clippy::indexing_slicing)]
-    for i in 0..log_n {
-        let (sum, _) = polynomials.iter().fold(
-            (Scalar::zero(), Scalar::one()),
-            // exp_com_1 = `com_1^(j)`
-            |(mut sum, mut exp_com_1), pol| {
-                sum = &sum + &pol[i as usize].mul(&exp_com_1);
-                exp_com_1 = exp_com_1.mul(&com_1);
-                (sum, exp_com_1)
-            },
-        );
-
-        let r_l = Scalar::random(rng);
-        let d_l = encrypt(&sum, public_key, &r_l);
-
-        rs.push(r_l);
-        ds.push(d_l);
-    }
-
-    let com_2_hash = calculate_second_challenge_hash(com_1_hash, &ds);
-    let com_2 = Scalar::from_hash(com_2_hash);
+    let ch_2_hash = calculate_second_challenge_hash(ch_1_hash, &d_l);
+    let ch_2 = Scalar::from_hash(ch_2_hash);
 
     let response_randomness: Vec<_> = blinding_randomness
         .iter()
         .enumerate()
         .map(|(l, r)| {
             let i_bit = get_bit(i, l);
-            ResponseRandomness::new(i_bit, r, &com_2)
+            ResponseRandomness::new(i_bit, r, &ch_2)
         })
         .collect();
 
-    let response = {
-        // exp_com_2 == `com_2^(log_2(N))`
-        let exp_com_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+    // exp_ch_2 == `ch_2^(log_2(N))`
+    let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&ch_2));
 
-        let (p1, _) = encryption_randomness.iter().fold(
-            (Scalar::zero(), Scalar::one()),
-            // exp_com_1 = `com_1^(j)`
-            |(mut sum, mut exp_com_1), r| {
-                sum = &sum + &r.mul(&exp_com_2).mul(&exp_com_1);
-                exp_com_1 = exp_com_1.mul(&com_1);
-                (sum, exp_com_1)
-            },
-        );
-        let (p2, _) = rs.iter().fold(
-            (Scalar::zero(), Scalar::one()),
-            // exp_com_2 = `com_2^(l)`
-            |(mut sum, mut exp_com_2), r| {
-                sum = &sum + &r.mul(&exp_com_2);
-                exp_com_2 = exp_com_2.mul(&com_2);
-                (sum, exp_com_2)
-            },
-        );
-        &p1 + &p2
-    };
+    let (p1, _) = encryption_randomness.iter().fold(
+        (Scalar::zero(), Scalar::one()),
+        // exp_ch_1 = `ch_1^(j)`
+        |(mut sum, mut exp_ch_1), r| {
+            sum = &sum + &r.mul(&exp_ch_2).mul(&exp_ch_1);
+            exp_ch_1 = exp_ch_1.mul(&ch_1);
+            (sum, exp_ch_1)
+        },
+    );
+    let (p2, _) = r_l.iter().fold(
+        (Scalar::zero(), Scalar::one()),
+        // exp_ch_2 = `ch_2^(l)`
+        |(mut sum, mut exp_ch_2), r_l| {
+            sum = &sum + &r_l.mul(&exp_ch_2);
+            exp_ch_2 = exp_ch_2.mul(&ch_2);
+            (sum, exp_ch_2)
+        },
+    );
+    let response = &p1 + &p2;
 
-    Ok(UnitVectorProof(
-        announcements,
-        ds,
-        response_randomness,
-        response,
-    ))
+    UnitVectorProof(announcements, d_l, response_randomness, response)
+}
+
+/// Generates `D_l` and `R_l` elements
+#[allow(clippy::indexing_slicing)]
+fn generate_dl_and_rl<R: CryptoRngCore>(
+    log_n: u32, ch_1: &Scalar, public_key: &PublicKey, polynomials: &[Polynomial], rng: &mut R,
+) -> (Vec<Ciphertext>, Vec<Scalar>) {
+    // Generate new R_l for D_l
+
+    let r_l: Vec<_> = (0..log_n).map(|_| Scalar::random(rng)).collect();
+
+    let d_l: Vec<_> = r_l
+        .iter()
+        .enumerate()
+        .map(|(l, r_l)| {
+            let (sum, _) = polynomials.iter().fold(
+                (Scalar::zero(), Scalar::one()),
+                // exp_ch_1 = `ch_1^(j)`
+                |(mut sum, mut exp_ch_1), pol| {
+                    sum = &sum + &pol[l].mul(&exp_ch_1);
+                    exp_ch_1 = exp_ch_1.mul(ch_1);
+                    (sum, exp_ch_1)
+                },
+            );
+            encrypt(&sum, public_key, r_l)
+        })
+        .collect();
+
+    (d_l, r_l)
 }
 
 /// Verify a unit vector proof.
@@ -176,14 +166,14 @@ pub fn verify_unit_vector_proof(
 
     ciphertexts.resize(n, Ciphertext::zero());
 
-    let com_1_hash =
+    let ch_1_hash =
         calculate_first_challenge_hash(commitment_key, public_key, &ciphertexts, &proof.0);
-    let com_1 = Scalar::from_hash(com_1_hash.clone());
+    let ch_1 = Scalar::from_hash(ch_1_hash.clone());
 
-    let com_2_hash = calculate_second_challenge_hash(com_1_hash, &proof.1);
-    let com_2 = Scalar::from_hash(com_2_hash);
+    let ch_2_hash = calculate_second_challenge_hash(ch_1_hash, &proof.1);
+    let ch_2 = Scalar::from_hash(ch_2_hash);
 
-    if !check_1(proof, &com_2, commitment_key) {
+    if !check_1(proof, &ch_2, commitment_key) {
         return false;
     }
 
@@ -191,33 +181,33 @@ pub fn verify_unit_vector_proof(
 
     let (right_2, _) = proof.1.iter().fold(
         (Ciphertext::zero(), Scalar::one()),
-        // exp_com_2 = `com_2^(l)`
-        |(mut sum, mut exp_com_2), d_l| {
-            sum = &sum + &d_l.mul(&exp_com_2);
-            exp_com_2 = exp_com_2.mul(&com_2);
-            (sum, exp_com_2)
+        // exp_ch_2 = `ch_2^(l)`
+        |(mut sum, mut exp_ch_2), d_l| {
+            sum = &sum + &d_l.mul(&exp_ch_2);
+            exp_ch_2 = exp_ch_2.mul(&ch_2);
+            (sum, exp_ch_2)
         },
     );
 
-    let polynomials_com_2: Vec<_> = (0..n)
-        .map(|j| calculate_polynomial_val(j, &com_2, &proof.2))
+    let polynomials_ch_2: Vec<_> = (0..n)
+        .map(|j| calculate_polynomial_val(j, &ch_2, &proof.2))
         .collect();
 
-    let p_j: Vec<_> = polynomials_com_2
+    let p_j: Vec<_> = polynomials_ch_2
         .iter()
-        .map(|p_com_2| encrypt(&p_com_2.negate(), public_key, &Scalar::zero()))
+        .map(|p_ch_2| encrypt(&p_ch_2.negate(), public_key, &Scalar::zero()))
         .collect();
 
-    // exp_com_2 == `com_2^(log_2(N))`
-    let exp_com_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&com_2));
+    // exp_ch_2 == `ch_2^(log_2(N))`
+    let exp_ch_2 = (0..log_n).fold(Scalar::one(), |exp, _| exp.mul(&ch_2));
 
     let (right_1, _) = p_j.iter().zip(ciphertexts.iter()).fold(
         (Ciphertext::zero(), Scalar::one()),
-        // exp_com_1 = `com_1^(j)`
-        |(mut sum, mut exp_com_1), (p_j, c_j)| {
-            sum = &sum + &(&c_j.mul(&exp_com_2) + p_j).mul(&exp_com_1);
-            exp_com_1 = exp_com_1.mul(&com_1);
-            (sum, exp_com_1)
+        // exp_ch_1 = `ch_1^(j)`
+        |(mut sum, mut exp_ch_1), (p_j, c_j)| {
+            sum = &sum + &(&c_j.mul(&exp_ch_2) + p_j).mul(&exp_ch_1);
+            exp_ch_1 = exp_ch_1.mul(&ch_1);
+            (sum, exp_ch_1)
         },
     );
 
@@ -227,13 +217,13 @@ pub fn verify_unit_vector_proof(
 }
 
 /// Check the first part of the proof
-fn check_1(proof: &UnitVectorProof, com_2: &Scalar, commitment_key: &PublicKey) -> bool {
+fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &PublicKey) -> bool {
     proof.0.iter().zip(proof.2.iter()).all(|(an, rand)| {
-        let right = &an.i.mul(com_2) + &an.b;
+        let right = &an.i.mul(ch_2) + &an.b;
         let left = &GroupElement::GENERATOR.mul(&rand.z) + &commitment_key.mul(&rand.w);
         let eq_1 = right == left;
 
-        let right = &an.i.mul(&(com_2 - &rand.z)) + &an.a;
+        let right = &an.i.mul(&(ch_2 - &rand.z)) + &an.a;
         let left = &GroupElement::GENERATOR.mul(&Scalar::zero()) + &commitment_key.mul(&rand.v);
         let eq_2 = right == left;
 
@@ -241,40 +231,8 @@ fn check_1(proof: &UnitVectorProof, com_2: &Scalar, commitment_key: &PublicKey) 
     })
 }
 
-/// Calculates the first challenge hash.
-fn calculate_first_challenge_hash(
-    commitment_key: &GroupElement, public_key: &PublicKey, ciphertexts: &[Ciphertext],
-    announcements: &[Announcement],
-) -> Blake2b512Hasher {
-    let mut hash = Blake2b512Hasher::new()
-        .chain_update(commitment_key.to_bytes())
-        .chain_update(public_key.to_bytes());
-    for c in ciphertexts {
-        hash.update(c.first().to_bytes());
-        hash.update(c.second().to_bytes());
-    }
-    for announcement in announcements {
-        hash.update(announcement.i.to_bytes());
-        hash.update(announcement.b.to_bytes());
-        hash.update(announcement.a.to_bytes());
-    }
-    hash
-}
-
-/// Calculates the second challenge hash.
-fn calculate_second_challenge_hash(
-    mut com_1_hash: Blake2b512Hasher, ciphertexts: &[Ciphertext],
-) -> Blake2b512Hasher {
-    for c in ciphertexts {
-        com_1_hash.update(c.first().to_bytes());
-        com_1_hash.update(c.second().to_bytes());
-    }
-    com_1_hash
-}
-
 #[cfg(test)]
 mod tests {
-
     use rand_core::OsRng;
 
     use super::{super::elgamal::SecretKey, *};
@@ -310,8 +268,7 @@ mod tests {
             &public_key,
             &commitment_key,
             &mut rng,
-        )
-        .unwrap();
+        );
 
         assert!(verify_unit_vector_proof(
             &proof,
