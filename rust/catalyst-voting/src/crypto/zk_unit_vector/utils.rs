@@ -13,7 +13,7 @@ mod tests {
 
     #[test]
     fn get_bit_test() {
-        assert!(!get_bit(0b101_000, 0));
+        assert!(!get_bit(0b101_010, 0));
         assert!(get_bit(0b101_010, 1));
         assert!(!get_bit(0b101_010, 2));
         assert!(get_bit(0b101_010, 3));
