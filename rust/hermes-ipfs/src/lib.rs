@@ -181,7 +181,7 @@ impl HermesIpfs {
     ///
     /// Returns an error if pinning fails.
     pub async fn insert_pin(&self, cid: &Cid) -> anyhow::Result<()> {
-        self.node.insert_pin(cid.clone()).await
+        self.node.insert_pin(cid).await
     }
 
     /// Checks whether a given block is pinned.
