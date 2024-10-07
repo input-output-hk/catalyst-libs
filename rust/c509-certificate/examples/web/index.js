@@ -1,11 +1,11 @@
 // Testing the wasm binding JS functions.
 
 import init, {
-	generate,
-	verify,
 	decode,
-	PublicKey,
+	generate,
 	PrivateKey,
+	PublicKey,
+	verify,
 } from "../../pkg/c509_certificate.js";
 
 const pem_sk = `
@@ -24,7 +24,7 @@ const tbs = {
 	c509_certificate_type: 0,
 	certificate_serial_number: 1000000n,
 	issuer: {
-		relative_distinguished_name: [
+		attributes: [
 			{
 				oid: "2.5.4.3",
 				value: [{ text: "RFC test CA" }],

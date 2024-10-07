@@ -1,6 +1,6 @@
 [package]
 name = "hermes-ipfs"
-version = "0.0.1"
+version = "0.0.3"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -11,17 +11,17 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-anyhow = "1.0.71"
+anyhow = "1.0.89"
 derive_more = {version = "1.0.0", features = ["from","into","display"] }
-libipld = "0.16.0"
-rust-ipfs = "0.11.21"
-tokio = "1.36.0"
+ipld-core = { version = "0.4.1", features = ["serde"]}
+rust-ipfs = "0.12.1"
+tokio = "1.40.0"
 
 [dev-dependencies]
 # Dependencies used by examples
-clap = { version = "4.5.3", features = ["derive"] }
+clap = { version = "4.5.19", features = ["derive"] }
 dirs = "5.0.1"
 lipsum = "0.9.1"
 rand = "0.8.5"
-rustyline-async = "0.4.2"
+rustyline-async = "0.4.3"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }

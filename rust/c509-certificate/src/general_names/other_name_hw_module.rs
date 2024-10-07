@@ -7,7 +7,13 @@ use asn1_rs::Oid;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::oid::C509oid;
+use crate::{
+    helper::{
+        decode::{decode_array_len, decode_bytes},
+        encode::{encode_array_len, encode_bytes},
+    },
+    oid::C509oid,
+};
 
 /// A struct represents the hardwareModuleName type of otherName.
 /// Containing a pair of ( hwType, hwSerialNum ) as mentioned in
@@ -29,26 +35,42 @@ impl OtherNameHardwareModuleName {
             hw_serial_num,
         }
     }
+
+    /// Get the c509 OID hardware type.
+    #[must_use]
+    pub fn hw_type(&self) -> &C509oid {
+        &self.hw_type
+    }
+
+    /// Get the hardware serial number.
+    #[must_use]
+    pub fn hw_serial_num(&self) -> &[u8] {
+        &self.hw_serial_num
+    }
 }
 
 impl Encode<()> for OtherNameHardwareModuleName {
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.array(2)?;
+        encode_array_len(e, "OtherNameHardwareModule", 2)?;
         self.hw_type.encode(e, ctx)?;
-        e.bytes(&self.hw_serial_num)?;
+        encode_bytes(
+            e,
+            "OtherNameHardwareModule serial number",
+            &self.hw_serial_num,
+        )?;
         Ok(())
     }
 }
 
 impl<'a> Decode<'a, ()> for OtherNameHardwareModuleName {
     fn decode(d: &mut Decoder<'a>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        d.array()?;
+        decode_array_len(d, "OtherNameHardwareModule")?;
         let hw_type = C509oid::decode(d, ctx)?;
-        let hw_serial_num = d.bytes()?.to_vec();
+        let hw_serial_num = decode_bytes(d, "OtherNameHardwareModule serial number")?;
         Ok(OtherNameHardwareModuleName::new(
-            hw_type.get_oid(),
+            hw_type.oid().clone(),
             hw_serial_num,
         ))
     }

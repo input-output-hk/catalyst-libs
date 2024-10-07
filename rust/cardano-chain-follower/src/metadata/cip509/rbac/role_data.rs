@@ -112,15 +112,15 @@ impl Decode<'_, ()> for KeyReference {
 #[derive(Debug, PartialEq, Clone)]
 pub struct KeyLocalRef {
     /// Local reference.
-    local_ref: LocalRefInt,
+    pub local_ref: LocalRefInt,
     /// Key offset.
-    key_offset: u64,
+    pub key_offset: u64,
 }
 
 /// Enum of local reference with its associated unsigned integer value.
 #[derive(FromRepr, Debug, PartialEq, Clone)]
 #[repr(u8)]
-enum LocalRefInt {
+pub enum LocalRefInt {
     /// x509 certificates.
     X509Certs = Cip509RbacMetadataInt::X509Certs as u8, // 10
     /// c509 certificates.

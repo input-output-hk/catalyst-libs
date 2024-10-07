@@ -1,6 +1,6 @@
 //! C509 Extension use to construct an Extensions message field for C509 Certificate.
 
-mod data;
+pub mod data;
 use std::{fmt::Debug, str::FromStr};
 
 use asn1_rs::Oid;
@@ -10,7 +10,13 @@ use serde::{Deserialize, Deserializer, Serialize};
 use strum_macros::EnumDiscriminants;
 
 use super::alt_name::AlternativeName;
-use crate::oid::{C509oid, C509oidRegistered};
+use crate::{
+    helper::{
+        decode::{decode_bytes, decode_datatype, decode_helper},
+        encode::{encode_bytes, encode_helper},
+    },
+    oid::{C509oid, C509oidRegistered},
+};
 
 /// A struct of C509 `Extension`
 #[derive(Debug, Clone, PartialEq)]
@@ -29,8 +35,7 @@ impl Extension {
     #[must_use]
     pub fn new(oid: Oid<'static>, value: ExtensionValue, critical: bool) -> Self {
         Self {
-            registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table())
-                .pen_encoded(),
+            registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table()),
             critical,
             value,
         }
@@ -38,19 +43,19 @@ impl Extension {
 
     /// Get the value of the `Extension` in `ExtensionValue`.
     #[must_use]
-    pub fn get_value(&self) -> &ExtensionValue {
+    pub fn value(&self) -> &ExtensionValue {
         &self.value
     }
 
     /// Get the critical flag of the `Extension`.
     #[must_use]
-    pub fn get_critical(&self) -> bool {
+    pub fn critical(&self) -> bool {
         self.critical
     }
 
     /// Get the registered OID of the `Extension`.
     #[must_use]
-    pub fn get_registered_oid(&self) -> &C509oidRegistered {
+    pub fn registered_oid(&self) -> &C509oidRegistered {
         &self.registered_oid
     }
 }
@@ -81,7 +86,7 @@ impl Serialize for Extension {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
+            oid: self.registered_oid.c509_oid().oid().to_string(),
             value: self.value.clone(),
             critical: self.critical,
         };
@@ -93,16 +98,15 @@ impl Encode<()> for Extension {
     // Extension can be encoded as:
     // - (extensionID: int, extensionValue: any)
     // - (extensionID: ~oid, ? critical: true, extensionValue: bytes)
-    // - (extensionID: pen, ? critical: true, extensionValue: bytes)
     fn encode<W: Write>(
         &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // Handle CBOR int based on OID mapping
         if let Some(&mapped_oid) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid.c509_oid().oid())
         {
             // Determine encoded OID value based on critical flag
             let encoded_oid = if self.critical {
@@ -110,12 +114,12 @@ impl Encode<()> for Extension {
             } else {
                 mapped_oid
             };
-            e.i16(encoded_oid)?;
+            encode_helper(e, "Extension as OID int", ctx, &encoded_oid)?;
         } else {
-            // Handle unwrapped CBOR OID or CBOR PEN
-            self.registered_oid.get_c509_oid().encode(e, ctx)?;
+            // Handle unwrapped CBOR OID
+            self.registered_oid.c509_oid().encode(e, ctx)?;
             if self.critical {
-                e.bool(self.critical)?;
+                encode_helper(e, "Extension critical", ctx, &self.critical)?;
             }
         }
         // Encode the extension value
@@ -126,7 +130,7 @@ impl Encode<()> for Extension {
 
 impl Decode<'_, ()> for Extension {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "Extension")? {
             // Check whether OID is an int
             // Even the encoding is i16, the minicbor decoder doesn't know what type we encoded,
             // so need to check every possible type.
@@ -134,7 +138,7 @@ impl Decode<'_, ()> for Extension {
             | minicbor::data::Type::U16
             | minicbor::data::Type::I8
             | minicbor::data::Type::I16 => {
-                let int_value = d.i16()?;
+                let int_value: i16 = decode_helper(d, "Extension as OID int", ctx)?;
                 // OID can be negative due to critical flag, so need absolute the value
                 let abs_int_value = int_value.abs();
                 let oid =
@@ -151,20 +155,21 @@ impl Decode<'_, ()> for Extension {
                 ))
             },
             _ => {
-                // Handle unwrapped CBOR OID or CBOR PEN
+                // Handle unwrapped CBOR OID
                 let c509_oid = C509oid::decode(d, ctx)?;
                 // Critical flag is optional, so if exist, this mean we have to decode it
-                let critical = if d.datatype()? == minicbor::data::Type::Bool {
-                    d.bool()?
-                } else {
-                    false
-                };
+                let critical =
+                    if decode_datatype(d, "Extension critical")? == minicbor::data::Type::Bool {
+                        decode_helper(d, "Extension critical", ctx)?
+                    } else {
+                        false
+                    };
 
                 // Decode bytes for extension value
-                let extension_value = ExtensionValue::Bytes(d.bytes()?.to_vec());
+                let extension_value = ExtensionValue::Bytes(decode_bytes(d, "Extension")?);
 
                 Ok(Extension::new(
-                    c509_oid.get_oid(),
+                    c509_oid.oid().clone(),
                     extension_value,
                     critical,
                 ))
@@ -209,10 +214,10 @@ impl Encode<()> for ExtensionValue {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             ExtensionValue::Int(value) => {
-                e.i64(*value)?;
+                encode_helper(e, "Extension Value", ctx, value)?;
             },
             ExtensionValue::Bytes(value) => {
-                e.bytes(value)?;
+                encode_bytes(e, "Extension value", value)?;
             },
             ExtensionValue::AlternativeName(value) => {
                 value.encode(e, ctx)?;
@@ -233,11 +238,11 @@ where C: ExtensionValueTypeTrait + Debug
     fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
             ExtensionValueType::Int => {
-                let value = d.i64()?;
+                let value = decode_helper(d, "Extension value", ctx)?;
                 Ok(ExtensionValue::Int(value))
             },
             ExtensionValueType::Bytes => {
-                let value = d.bytes()?.to_vec();
+                let value = decode_bytes(d, "Extension value")?;
                 Ok(ExtensionValue::Bytes(value))
             },
             ExtensionValueType::AlternativeName => {
@@ -302,7 +307,7 @@ mod test_extension {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        // Not PEN OID and not in the registry table
+        // Not in the registry table
         // Value should be bytes
         let ext = Extension::new(
             oid!(2.16.840 .1 .101 .3 .4 .2 .1),

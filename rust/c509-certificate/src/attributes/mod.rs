@@ -2,32 +2,29 @@
 //!
 //! ```cddl
 //! Attributes = ( attributeType: int, attributeValue: [+text] ) //
-//! ( attributeType: ~oid, attributeValue: [+bytes] )
+//!             ( attributeType: ~oid, attributeValue: [+bytes] )
 //! ```
 //!
 //! Use case:
 //! ```cddl
-//!     SubjectDirectoryAttributes = [+Attributes]
+//! SubjectDirectoryAttributes = [+Attributes]
 //! ```
 //!
 //! For more information about `Attributes`,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use attribute::Attribute;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use serde::{Deserialize, Serialize};
+
+use crate::helper::{decode::decode_array_len, encode::encode_array_len};
 
 pub mod attribute;
 mod data;
 
 /// A struct of C509 `Attributes` containing a vector of `Attribute`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Attributes(Vec<Attribute>);
-
-impl Default for Attributes {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl Attributes {
     /// Create a new instance of `Attributes` as empty vector.
@@ -36,10 +33,22 @@ impl Attributes {
         Self(Vec::new())
     }
 
+    /// Get the attributes.
+    #[must_use]
+    pub fn attributes(&self) -> &[Attribute] {
+        &self.0
+    }
+
     /// Add an `Attribute` to the `Attributes`.
     /// and set `Attribute` value to support multiple value.
-    pub fn add_attr(&mut self, attribute: Attribute) {
+    pub fn add_attribute(&mut self, attribute: Attribute) {
         self.0.push(attribute.set_multi_value());
+    }
+}
+
+impl Default for Attributes {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -52,7 +61,8 @@ impl Encode<()> for Attributes {
                 "Attributes should not be empty",
             ));
         }
-        e.array(self.0.len() as u64)?;
+        // The attribute type should be included in array too
+        encode_array_len(e, "Attributes", self.0.len() as u64 * 2)?;
         for attribute in &self.0 {
             attribute.encode(e, ctx)?;
         }
@@ -61,19 +71,18 @@ impl Encode<()> for Attributes {
 }
 
 impl Decode<'_, ()> for Attributes {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let len = d
-            .array()?
-            .ok_or_else(|| minicbor::decode::Error::message("Failed to get array length"))?;
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let len = decode_array_len(d, "Attributes")?;
         if len == 0 {
             return Err(minicbor::decode::Error::message("Attributes is empty"));
         }
 
         let mut attributes = Attributes::new();
 
-        for _ in 0..len {
-            let attribute = Attribute::decode(d, &mut ())?;
-            attributes.add_attr(attribute);
+        // The attribute type is included in an array, so divide by 2
+        for _ in 0..len / 2 {
+            let attribute = Attribute::decode(d, ctx)?;
+            attributes.add_attribute(attribute);
         }
 
         Ok(attributes)
@@ -97,17 +106,17 @@ mod test_attributes {
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
         attr.add_value(AttributeValue::Text("example@example.com".to_string()));
         let mut attributes = Attributes::new();
-        attributes.add_attr(attr);
+        attributes.add_attribute(attr);
         attributes
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode Attributes");
-        // 1 Attribute value (array len 1): 0x81
-        // Email Address: 0x00
+        // 1 Attribute (array len 2 (attribute type + value)): 0x82
+        // Email Address attribute int: 0x00
         // Attribute value (array len 2): 0x82
         // example@example.com: 0x736578616d706c65406578616d706c652e636f6d
         assert_eq!(
             hex::encode(buffer.clone()),
-            "810082736578616d706c65406578616d706c652e636f6d736578616d706c65406578616d706c652e636f6d"
+            "820082736578616d706c65406578616d706c652e636f6d736578616d706c65406578616d706c652e636f6d"
         );
 
         let mut decoder = Decoder::new(&buffer);
