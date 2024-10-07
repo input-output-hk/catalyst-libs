@@ -6,9 +6,9 @@ use std::str::FromStr;
 
 use derive_more::{Display, From, Into};
 /// IPFS Content Identifier.
-pub use libipld::Cid;
+pub use ipld_core::cid::Cid;
 /// IPLD
-pub use libipld::Ipld;
+pub use ipld_core::ipld::Ipld;
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
 /// libp2p re-exports.
@@ -181,7 +181,7 @@ impl HermesIpfs {
     ///
     /// Returns an error if pinning fails.
     pub async fn insert_pin(&self, cid: &Cid) -> anyhow::Result<()> {
-        self.node.insert_pin(cid).await
+        self.node.insert_pin(cid.clone()).await
     }
 
     /// Checks whether a given block is pinned.
@@ -271,7 +271,7 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to add peer.
     pub async fn add_peer(&self, peer_id: PeerId, addr: Multiaddr) -> anyhow::Result<()> {
-        self.node.add_peer(peer_id, addr).await
+        self.node.add_peer((peer_id, addr)).await
     }
 
     /// List of local listening addresses
