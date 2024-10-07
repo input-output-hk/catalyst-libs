@@ -1,6 +1,6 @@
 [package]
 name = "overhead_benchmark"
-version = "0.1.0"
+version = "0.1.1"
 edition.workspace = true
 
 [lints]
@@ -9,8 +9,8 @@ workspace = true
 [dependencies]
 cardano-chain-follower = { path = "../.." }
 
-anyhow = "1.0.82"
-clap = { version = "4.5.4", features = ["derive", "help", "usage", "std"], default-features = false }
-pallas-traverse = "0.30.1"
-pallas-hardano = "0.30.1"
-tokio = { version = "1.37.0", features = ["macros", "sync", "rt-multi-thread", "rt", "net"] }
+anyhow = "1.0.89"
+clap = { version = "4.5.19", features = ["derive", "help", "usage", "std"], default-features = false }
+pallas-traverse = "0.30.2"
+pallas-hardano = "0.30.2"
+tokio = { version = "1.40.0", features = ["macros", "sync", "rt-multi-thread", "rt", "net"] }

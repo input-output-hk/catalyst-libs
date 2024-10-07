@@ -20,10 +20,22 @@ type ExtensionDataTuple = (i16, Oid<'static>, ExtensionValueType, &'static str);
 /// Create a type alias for `ExtensionValueType`
 type Evt = ExtensionValueType;
 
+/// Enum of all C509 Extension Types
+pub enum C509ExtensionType {
+    /// Subject Key Identifier
+    SubjectKeyIdentifier = 1,
+    /// Key Usage
+    KeyUsage = 2,
+    /// Subject Alternative Name
+    SubjectAlternativeName = 3,
+}
+
 /// `Extension` data table
+/// TODO, complete the ENUM above, and use it instead of raw integers here.
+/// Name might be able to come from the enum comments, which would reduce redundancy.
 #[rustfmt::skip]
 const EXTENSION_DATA: [ExtensionDataTuple; 25] = [
-    // Int |    OID     |                   Type                    |           Name
+    // Int               |    OID         |    Type      |           Name
     ( 1, oid!(2.5.29 .14),                     Evt::Bytes,           "Subject Key Identifier"),
     ( 2, oid!(2.5.29 .15),                     Evt::Int,             "Key Usage"),
     ( 3, oid!(2.5.29 .17),                     Evt::AlternativeName, "Subject Alternative Name"),
@@ -33,7 +45,7 @@ const EXTENSION_DATA: [ExtensionDataTuple; 25] = [
     ( 7, oid!(2.5.29 .35),                     Evt::Unsupported,     "Authority Key Identifier"),
     ( 8, oid!(2.5.29 .37),                     Evt::Unsupported,     "Extended Key Usage"),
     ( 9, oid!(1.3.6 .1 .5 .5 .7 .1 .1),        Evt::Unsupported,     "Authority Information Access"),
-    (10, oid!(1.3.6 .1 .4 .1 .11129 .2 .4 .2), Evt::Unsupported,   "Signed Certificate Timestamp List"),
+    (10, oid!(1.3.6 .1 .4 .1 .11129 .2 .4 .2), Evt::Unsupported,     "Signed Certificate Timestamp List"),
     (24, oid!(2.5.29 .9),                      Evt::Unsupported,     "Subject Directory Attributes"),
     (25, oid!(2.5.29 .18),                     Evt::AlternativeName, "Issuer Alternative Name"),
     (26, oid!(2.5.29 .30),                     Evt::Unsupported,     "Name Constraints"),
@@ -50,6 +62,17 @@ const EXTENSION_DATA: [ExtensionDataTuple; 25] = [
     (37, oid!(1.3.6 .1 .4 .1 .11129 .2 .4 .4), Evt::Unsupported,   "Precertificate Signing Certificate"),
     (38, oid!(1.3.6 .1 .5 .5 .7 .48 .1 .5),    Evt::Unsupported,     "OCSP No Check"),
 ];
+
+impl C509ExtensionType {
+    /// Get the OID for an Extension Type
+    #[must_use]
+    #[allow(clippy::missing_panics_doc)] // Can't really panic unless there is a bug.
+    pub fn oid(self) -> Oid<'static> {
+        let ext: i16 = self as i16;
+        #[allow(clippy::expect_used)] // Can't really panic.
+        get_oid_from_int(ext).expect("Invalid Extension Type")
+    }
+}
 
 /// A struct of data that contains lookup tables for `Extension`.
 pub(crate) struct ExtensionData {

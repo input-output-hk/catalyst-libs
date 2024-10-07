@@ -6,9 +6,9 @@ use std::str::FromStr;
 
 use derive_more::{Display, From, Into};
 /// IPFS Content Identifier.
-pub use libipld::Cid;
+pub use ipld_core::cid::Cid;
 /// IPLD
-pub use libipld::Ipld;
+pub use ipld_core::ipld::Ipld;
 /// `rust_ipfs` re-export.
 pub use rust_ipfs;
 /// libp2p re-exports.
@@ -30,7 +30,7 @@ pub use rust_ipfs::StorageType;
 /// Stream for `PubSub` Topic Subscriptions.
 pub use rust_ipfs::SubscriptionStream;
 /// Builder type for IPFS Node configuration.
-use rust_ipfs::UninitializedIpfsNoop;
+use rust_ipfs::UninitializedIpfsDefault as UninitializedIpfs;
 use rust_ipfs::{
     dag::ResolveError,
     libp2p::gossipsub::{Message as PubsubMessage, MessageId as PubsubMessageId},
@@ -43,13 +43,13 @@ use rust_ipfs::{
 pub struct MessageId(pub PubsubMessageId);
 
 /// Builder type for IPFS Node configuration.
-pub struct IpfsBuilder(UninitializedIpfsNoop);
+pub struct IpfsBuilder(UninitializedIpfs);
 
 impl IpfsBuilder {
     #[must_use]
     /// Create a new` IpfsBuilder`.
     pub fn new() -> Self {
-        Self(UninitializedIpfsNoop::new())
+        Self(UninitializedIpfs::new())
     }
 
     #[must_use]
@@ -271,7 +271,7 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to add peer.
     pub async fn add_peer(&self, peer_id: PeerId, addr: Multiaddr) -> anyhow::Result<()> {
-        self.node.add_peer(peer_id, addr).await
+        self.node.add_peer((peer_id, addr)).await
     }
 
     /// List of local listening addresses

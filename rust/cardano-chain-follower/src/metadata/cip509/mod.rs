@@ -5,16 +5,16 @@
 // cspell: words pkix
 
 pub mod rbac;
+pub mod utils;
 pub mod x509_chunks;
 
 mod decode_helper;
-mod utils;
 
 use std::sync::Arc;
 
-use c509_certificate::general_names::general_name::GeneralNameValue;
+use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
 use decode_helper::{decode_bytes, decode_helper, decode_map_len};
-use der_parser::{asn1_rs::oid, der::parse_der_sequence, Oid};
+use der_parser::der::parse_der_sequence;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
@@ -50,9 +50,6 @@ pub const LABEL: u64 = 509;
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
 pub(crate) const URI: u8 = 134;
-
-/// Subject Alternative Name OID
-pub(crate) const SUBJECT_ALT_NAME_OID: Oid = oid!(2.5.29 .17);
 
 /// CIP509 metadatum.
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -642,17 +639,17 @@ impl Cip509 {
                                 );
                             },
                             C509Cert::C509Certificate(c509) => {
-                                for exts in c509.get_tbs_cert().get_extensions().get_inner() {
-                                    if exts.get_registered_oid().get_c509_oid().get_oid()
-                                        == SUBJECT_ALT_NAME_OID
+                                for exts in c509.tbs_cert().extensions().extensions() {
+                                    if *exts.registered_oid().c509_oid().oid()
+                                        == C509ExtensionType::SubjectAlternativeName.oid()
                                     {
-                                        match exts.get_value() {
+                                        match exts.value() {
                                             c509_certificate::extensions::extension::ExtensionValue::AlternativeName(alt_name) => {
-                                                match alt_name.get_inner() {
+                                                match alt_name.general_name() {
                                                     c509_certificate::extensions::alt_name::GeneralNamesOrText::GeneralNames(gn) => {
-                                                        for name in gn.get_inner() {
-                                                            if name.get_gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
-                                                                match name.get_gn_value() {
+                                                        for name in gn.general_names() {
+                                                            if name.gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
+                                                                match name.gn_value() {
                                                                     GeneralNameValue::Text(s) => {
                                                                             if let Some(h) = extract_cip19_hash(s, Some("stake")) {
                                                                                 pk_addrs.push(h);
