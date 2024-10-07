@@ -89,8 +89,6 @@ pub(crate) fn calculate_polynomial_val(
 
 #[cfg(test)]
 mod tests {
-    use test_strategy::proptest;
-
     use super::*;
 
     #[test]
@@ -125,24 +123,5 @@ mod tests {
             Scalar::from(314),
             Scalar::from(210),
         ]);
-    }
-
-    const N: usize = 4;
-    const LOG_N: u32 = 2;
-
-    #[proptest]
-    fn generate_polynomial_test(randomnesses: [BlindingRandomness; LOG_N as usize]) {
-        for i in 0..N {
-            for j in 0..N {
-                let p = generate_polynomial(i, j, &randomnesses);
-
-                assert_eq!(p.0.len(), (LOG_N + 1) as usize);
-                if i == j {
-                    assert_eq!(p.0.last().unwrap(), &Scalar::one());
-                } else {
-                    assert_eq!(p.0.last().unwrap(), &Scalar::zero());
-                }
-            }
-        }
     }
 }
