@@ -1,9 +1,12 @@
-//! C509 Issuer Signature Algorithm as a part of `TBSCertificate` used in C509
+//! C509 Issuer Signature Algorithm
 //! Certificate.
 //!
 //! ```cddl
 //! issuerSignatureAlgorithm: AlgorithmIdentifier
 //! ```
+//!
+//! For more information about `issuerSignatureAlgorithm`,
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 mod data;
 
@@ -14,7 +17,14 @@ use data::{get_oid_from_int, ISSUER_SIG_ALGO_LOOKUP};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::{algorithm_identifier::AlgorithmIdentifier, oid::C509oidRegistered};
+use crate::{
+    algorithm_identifier::AlgorithmIdentifier,
+    helper::{
+        decode::{decode_datatype, decode_helper},
+        encode::encode_helper,
+    },
+    oid::C509oidRegistered,
+};
 
 /// A struct represents the `IssuerSignatureAlgorithm`
 #[derive(Debug, Clone, PartialEq)]
@@ -37,7 +47,20 @@ impl IssuerSignatureAlgorithm {
             algo_identifier: AlgorithmIdentifier::new(oid, param),
         }
     }
+
+    /// Get the algorithm identifier.
+    #[must_use]
+    pub fn algo_identifier(&self) -> &AlgorithmIdentifier {
+        &self.algo_identifier
+    }
+
+    /// Get the registered OID.
+    #[allow(dead_code)]
+    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
+        &self.registered_oid
+    }
 }
+
 /// Helper struct for deserialize and serialize `IssuerSignatureAlgorithm`.
 #[derive(Debug, Deserialize, Serialize)]
 struct Helper {
@@ -62,8 +85,8 @@ impl Serialize for IssuerSignatureAlgorithm {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
-            param: self.algo_identifier.get_param().clone(),
+            oid: self.registered_oid.c509_oid().oid().to_string(),
+            param: self.algo_identifier.param().clone(),
         };
         helper.serialize(serializer)
     }
@@ -75,11 +98,11 @@ impl Encode<()> for IssuerSignatureAlgorithm {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if let Some(&i) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            e.i16(i)?;
+            encode_helper(e, "Issuer Signature Algorithm as OID int", ctx, &i)?;
         } else {
             AlgorithmIdentifier::encode(&self.algo_identifier, e, ctx)?;
         }
@@ -89,18 +112,18 @@ impl Encode<()> for IssuerSignatureAlgorithm {
 
 impl Decode<'_, ()> for IssuerSignatureAlgorithm {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "Issuer Signature Algorithm")? {
             // Check i16 for -256 and -256
             minicbor::data::Type::U8 | minicbor::data::Type::I16 => {
-                let i = d.i16()?;
+                let i = decode_helper(d, "Issuer Signature Algorithm as OID int", ctx)?;
                 let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
                 Ok(Self::new(oid, None))
             },
             _ => {
                 let algo_identifier = AlgorithmIdentifier::decode(d, ctx)?;
                 Ok(IssuerSignatureAlgorithm::new(
-                    algo_identifier.get_oid(),
-                    algo_identifier.get_param().clone(),
+                    algo_identifier.oid().clone(),
+                    algo_identifier.param().clone(),
                 ))
             },
         }

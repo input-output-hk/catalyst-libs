@@ -1,21 +1,18 @@
-//! C509 Extension as a part of `TBSCertificate` used in C509 Certificate.
+//! C509 Extensions
 //!
 //! Extension fallback of C509 OID extension
-//! Given OID if not found in the registered OID table, it will be encoded as a PEN OID.
-//! If the OID is not a PEN OID, it will be encoded as an unwrapped OID.
+//! Given OID, if it is found in the registered OID table, int value of the
+//! associated OID will be used, if not, it will be encoded as an unwrapped OID (~oid).
 //!
 //! ```cddl
-//! Extensions and Extension can be encoded as the following:
 //! Extensions = [ * Extension ] / int
 //! Extension = ( extensionID: int, extensionValue: any ) //
-//! ( extensionID: ~oid, ? critical: true,
-//!   extensionValue: bytes ) //
-//! ( extensionID: pen, ? critical: true,
-//!   extensionValue: bytes )
+//!             ( extensionID: ~oid, ? critical: true,
+//!             extensionValue: bytes ) //
 //! ```
 //!
 //! For more information about Extensions,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 pub mod alt_name;
 pub mod extension;
@@ -27,18 +24,16 @@ use extension::{Extension, ExtensionValue};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
+use crate::helper::{
+    decode::{decode_array_len, decode_datatype, decode_helper},
+    encode::{encode_array_len, encode_helper},
+};
 /// OID of `KeyUsage` extension
 static KEY_USAGE_OID: Oid<'static> = oid!(2.5.29 .15);
 
 /// A struct of C509 Extensions containing a vector of `Extension`.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Extensions(Vec<Extension>);
-
-impl Default for Extensions {
-    fn default() -> Self {
-        Self::new()
-    }
-}
 
 impl Extensions {
     /// Create a new instance of `Extensions` as empty vector.
@@ -47,15 +42,21 @@ impl Extensions {
         Self(Vec::new())
     }
 
-    /// Add an `Extension` to the `Extensions`.
-    pub fn add_ext(&mut self, extension: Extension) {
-        self.0.push(extension);
-    }
-
     /// Get the inner vector of `Extensions`.
     #[must_use]
-    pub fn get_inner(&self) -> &Vec<Extension> {
+    pub fn extensions(&self) -> &[Extension] {
         &self.0
+    }
+
+    /// Add an `Extension` to the `Extensions`.
+    pub fn add_extension(&mut self, extension: Extension) {
+        self.0.push(extension);
+    }
+}
+
+impl Default for Extensions {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -66,17 +67,11 @@ impl Encode<()> for Extensions {
         // If there is only one extension and it is KeyUsage, encode as int
         // encoding as absolute value of the second int and the sign of the first int
         if let Some(extension) = self.0.first() {
-            if self.0.len() == 1
-                && extension.get_registered_oid().get_c509_oid().get_oid() == KEY_USAGE_OID
-            {
-                match extension.get_value() {
+            if self.0.len() == 1 && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID {
+                match extension.value() {
                     ExtensionValue::Int(value) => {
-                        let ku_value = if extension.get_critical() {
-                            -value
-                        } else {
-                            *value
-                        };
-                        e.i64(ku_value)?;
+                        let ku_value = if extension.critical() { -value } else { *value };
+                        encode_helper(e, "Extensions KeyUsage", ctx, &ku_value)?;
                         return Ok(());
                     },
                     _ => {
@@ -88,7 +83,7 @@ impl Encode<()> for Extensions {
             }
         }
         // Else handle the array of `Extension`
-        e.array(self.0.len() as u64)?;
+        encode_array_len(e, "Extensions", self.0.len() as u64)?;
         for extension in &self.0 {
             extension.encode(e, ctx)?;
         }
@@ -99,16 +94,18 @@ impl Encode<()> for Extensions {
 impl Decode<'_, ()> for Extensions {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // If only KeyUsage is in the extension -> will only contain an int
-        if d.datatype()? == minicbor::data::Type::U8 || d.datatype()? == minicbor::data::Type::I8 {
+        if decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::U8
+            || decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::I8
+        {
             // Check if it's a negative number (critical extension)
-            let critical = d.datatype()? == minicbor::data::Type::I8;
+            let critical =
+                decode_datatype(d, "Extensions KeyUsage critical")? == minicbor::data::Type::I8;
             // Note that 'KeyUsage' BIT STRING is interpreted as an unsigned integer,
             // so we can absolute the value
-            let value = d.i64()?.abs();
-
-            let extension_value = ExtensionValue::Int(value);
+            let value: i64 = decode_helper(d, "Extensions KeyUsage value", &mut ())?;
+            let extension_value = ExtensionValue::Int(value.abs());
             let mut extensions = Extensions::new();
-            extensions.add_ext(Extension::new(
+            extensions.add_extension(Extension::new(
                 KEY_USAGE_OID.clone(),
                 extension_value,
                 critical,
@@ -116,13 +113,11 @@ impl Decode<'_, ()> for Extensions {
             return Ok(extensions);
         }
         // Handle array of extensions
-        let len = d
-            .array()?
-            .ok_or_else(|| minicbor::decode::Error::message("Failed to get array length"))?;
+        let len = decode_array_len(d, "Extensions")?;
         let mut extensions = Extensions::new();
         for _ in 0..len {
             let extension = Extension::decode(d, &mut ())?;
-            extensions.add_ext(extension);
+            extensions.add_extension(extension);
         }
 
         Ok(extensions)
@@ -141,7 +136,7 @@ mod test_extensions {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut exts = Extensions::new();
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .15),
             ExtensionValue::Int(2),
             false,
@@ -164,7 +159,7 @@ mod test_extensions {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut exts = Extensions::new();
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .15),
             ExtensionValue::Int(2),
             true,
@@ -187,13 +182,13 @@ mod test_extensions {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut exts = Extensions::new();
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .15),
             ExtensionValue::Int(2),
             false,
         ));
 
-        exts.add_ext(Extension::new(
+        exts.add_extension(Extension::new(
             oid!(2.5.29 .14),
             ExtensionValue::Bytes([1, 2, 3, 4].to_vec()),
             false,

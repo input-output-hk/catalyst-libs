@@ -2,12 +2,18 @@
 //!
 //! ```cddl
 //! Attribute = ( attributeType: int, attributeValue: text ) //
-//! ( attributeType: ~oid, attributeValue: bytes ) //
-//! ( attributeType: pen, attributeValue: bytes )
+//!             ( attributeType: ~oid, attributeValue: bytes ) //
+//! ```
+//!
+//! In some case attributeValue can have multiple values.
+//!
+//! ```cddl
+//! Attributes = ( attributeType: int, attributeValue: [+text] ) //
+//!              ( attributeType: ~oid, attributeValue: [+bytes] )
 //! ```
 //!
 //! For more information about Attribute,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 use std::str::FromStr;
 
@@ -16,8 +22,13 @@ use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
 use super::data::{get_oid_from_int, ATTRIBUTES_LOOKUP};
-use crate::oid::{C509oid, C509oidRegistered};
-
+use crate::{
+    helper::{
+        decode::{decode_array_len, decode_datatype, decode_helper},
+        encode::{encode_array_len, encode_helper},
+    },
+    oid::{C509oid, C509oidRegistered},
+};
 /// A struct of C509 `Attribute`
 #[derive(Debug, Clone, PartialEq)]
 pub struct Attribute {
@@ -40,28 +51,20 @@ impl Attribute {
         }
     }
 
-    /// Add a value to `Attribute`.
-    pub fn add_value(&mut self, value: AttributeValue) {
-        self.value.push(value);
-    }
-
-    /// Get the registered OID of `Attribute`.
-    pub(crate) fn get_registered_oid(&self) -> &C509oidRegistered {
-        &self.registered_oid
-    }
-
     /// Get the value of `Attribute`.
-    pub(crate) fn get_value(&self) -> &Vec<AttributeValue> {
+    #[must_use]
+    pub fn value(&self) -> &[AttributeValue] {
         &self.value
     }
 
-    /// Set whether `Attribute` can be PEN encoded.
-    pub(crate) fn set_pen_supported(self) -> Self {
-        Self {
-            registered_oid: self.registered_oid.pen_encoded(),
-            multi_value: self.multi_value,
-            value: self.value,
-        }
+    /// Get the registered OID of `Attribute`.
+    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
+        &self.registered_oid
+    }
+
+    /// Add a value to `Attribute`.
+    pub fn add_value(&mut self, value: AttributeValue) {
+        self.value.push(value);
     }
 
     /// Set whether `Attribute` can have multiple value.
@@ -98,7 +101,7 @@ impl Serialize for Attribute {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
+            oid: self.registered_oid().c509_oid().oid().to_string(),
             value: self.value.clone(),
         };
         helper.serialize(serializer)
@@ -112,14 +115,14 @@ impl Encode<()> for Attribute {
         // Encode CBOR int if available
         if let Some(&oid) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid().c509_oid().oid())
         {
-            e.i16(oid)?;
+            encode_helper(e, "Attribute as OID int", ctx, &oid)?;
         } else {
-            // Encode unwrapped CBOR OID or CBOR PEN
-            self.registered_oid.get_c509_oid().encode(e, ctx)?;
+            // Encode unwrapped CBOR OID
+            self.registered_oid().c509_oid().encode(e, ctx)?;
         }
 
         // Check if the attribute value is empty
@@ -129,7 +132,7 @@ impl Encode<()> for Attribute {
 
         // If multi-value attributes, encode it as array
         if self.multi_value {
-            e.array(self.value.len() as u64)?;
+            encode_array_len(e, "Attribute multiple value", self.value.len() as u64)?;
         }
 
         // Encode each value in the attribute
@@ -144,22 +147,20 @@ impl Encode<()> for Attribute {
 impl Decode<'_, ()> for Attribute {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Handle CBOR int
-        let mut attr = if d.datatype()? == minicbor::data::Type::U8 {
-            let i = d.i16()?;
+        let mut attr = if decode_datatype(d, "Attribute as OID int")? == minicbor::data::Type::U8 {
+            let i = decode_helper(d, "Attribute as OID int", ctx)?;
             let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
             Attribute::new(oid.clone())
         } else {
-            // Handle unwrapped CBOR OID or CBOR PEN
+            // Handle unwrapped CBOR OID
             let c509_oid: C509oid = d.decode()?;
-            Attribute::new(c509_oid.get_oid())
+            Attribute::new(c509_oid.oid().clone())
         };
 
         // Handle attribute value
-        if d.datatype()? == minicbor::data::Type::Array {
+        if decode_datatype(d, "Attribute")? == minicbor::data::Type::Array {
             // When multi-value attribute
-            let len = d.array()?.ok_or_else(|| {
-                minicbor::decode::Error::message("Failed to get array length for attribute value")
-            })?;
+            let len = decode_array_len(d, "Attribute multiple value")?;
 
             if len == 0 {
                 return Err(minicbor::decode::Error::message("Attribute value is empty"));
@@ -192,21 +193,33 @@ pub enum AttributeValue {
 
 impl Encode<()> for AttributeValue {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, _ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            AttributeValue::Text(text) => e.str(text)?,
-            AttributeValue::Bytes(bytes) => e.bytes(bytes)?,
+            AttributeValue::Text(text) => encode_helper(e, "Attribute value", ctx, text)?,
+            AttributeValue::Bytes(bytes) => encode_helper(e, "Attribute value", ctx, bytes)?,
         };
         Ok(())
     }
 }
 
 impl Decode<'_, ()> for AttributeValue {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
-            minicbor::data::Type::String => Ok(AttributeValue::Text(d.str()?.to_string())),
-            minicbor::data::Type::Bytes => Ok(AttributeValue::Bytes(d.bytes()?.to_vec())),
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+        match decode_datatype(d, "Attribute value")? {
+            minicbor::data::Type::String => {
+                Ok(AttributeValue::Text(decode_helper(
+                    d,
+                    "Attribute value",
+                    ctx,
+                )?))
+            },
+            minicbor::data::Type::Bytes => {
+                Ok(AttributeValue::Bytes(decode_helper(
+                    d,
+                    "Attribute value",
+                    ctx,
+                )?))
+            },
             _ => {
                 Err(minicbor::decode::Error::message(
                     "Invalid AttributeValue, value should be either String or Bytes",
@@ -233,7 +246,8 @@ mod test_attribute {
         attribute
             .encode(&mut encoder, &mut ())
             .expect("Failed to encode Attribute");
-        // Email Address example@example.com: 0x00736578616d706c65406578616d706c652e636f6d
+        // 1.2.840 .113549 .1 .9 .1 in attribute int = 0x00
+        // Email Address example@example.com: 0x736578616d706c65406578616d706c652e636f6d
         assert_eq!(
             hex::encode(buffer.clone()),
             "00736578616d706c65406578616d706c652e636f6d"
