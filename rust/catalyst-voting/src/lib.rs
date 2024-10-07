@@ -3,7 +3,7 @@
 //! ```rust
 //! use catalyst_voting::{
 //!     decrypt_tally, encrypt_vote, generate_tally_proof, tally, verify_tally_proof,
-//!     DecryptionTallySetup, EncryptionRandomness, SecretKey, Vote,
+//!     DecryptionTallySetup, SecretKey, Vote,
 //! };
 //!
 //! struct Voter {
@@ -13,7 +13,7 @@
 //!
 //! let mut rng = rand_core::OsRng;
 //! let voting_options = 3;
-//! let election_secret_key = SecretKey::generate(&mut rng);
+//! let election_secret_key = SecretKey::random(&mut rng);
 //! let election_public_key = election_secret_key.public_key();
 //!
 //! let voter_1 = Voter {
@@ -35,16 +35,12 @@
 //! let vote_2 = Vote::new(voter_2.choice, voting_options).unwrap();
 //! let vote_3 = Vote::new(voter_3.choice, voting_options).unwrap();
 //!
-//! let voter_1_randomness = EncryptionRandomness::generate(&mut rng, voting_options);
-//! let voter_2_randomness = EncryptionRandomness::generate(&mut rng, voting_options);
-//! let voter_3_randomness = EncryptionRandomness::generate(&mut rng, voting_options);
-//!
-//! let encrypted_vote_1 =
-//!     encrypt_vote(&vote_1, &election_public_key, &voter_1_randomness).unwrap();
-//! let encrypted_vote_2 =
-//!     encrypt_vote(&vote_2, &election_public_key, &voter_2_randomness).unwrap();
-//! let encrypted_vote_3 =
-//!     encrypt_vote(&vote_3, &election_public_key, &voter_3_randomness).unwrap();
+//! let (encrypted_vote_1, voter_randomness_1) =
+//!     encrypt_vote(&vote_1, &election_public_key, &mut rng);
+//! let (encrypted_vote_2, voter_randomness_2) =
+//!     encrypt_vote(&vote_2, &election_public_key, &mut rng);
+//! let (encrypted_vote_3, voter_randomness_3) =
+//!     encrypt_vote(&vote_3, &election_public_key, &mut rng);
 //! let encrypted_votes = vec![encrypted_vote_1, encrypted_vote_2, encrypted_vote_3];
 //!
 //! let encrypted_tallies: Vec<_> = (0..voting_options)
