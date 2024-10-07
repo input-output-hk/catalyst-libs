@@ -13,6 +13,7 @@ use crate::crypto::{
 /// Represented as a Unit vector which size is `voting_options`
 /// and the `choice` value is the index of the unit vector component equals to `1`,
 /// and other components equal to `0`.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Vote {
     /// Voter's voting choice.
     choice: usize,
@@ -21,9 +22,11 @@ pub struct Vote {
 }
 
 /// A representation of the encrypted vote.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EncryptedVote(Vec<Ciphertext>);
 
 /// A representation of the encryption randomness, used to encrypt the vote.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EncryptionRandomness(Vec<Scalar>);
 
 impl EncryptionRandomness {

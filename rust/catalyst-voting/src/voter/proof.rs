@@ -70,8 +70,8 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
 #[must_use]
 #[allow(clippy::module_name_repetitions)]
 pub fn verify_voter_proof(
-    encrypted_vote: EncryptedVote, public_key: &PublicKey, commitment_key: &PublicKey,
+    encrypted_vote: EncryptedVote, public_key: &PublicKey, commitment: &VoterProofCommitment,
     proof: &VoterProof,
 ) -> bool {
-    verify_unit_vector_proof(&proof.0, encrypted_vote.0, public_key, commitment_key)
+    verify_unit_vector_proof(&proof.0, encrypted_vote.0, public_key, &commitment.0)
 }

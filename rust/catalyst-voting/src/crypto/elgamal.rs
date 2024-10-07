@@ -12,7 +12,7 @@ use crate::crypto::group::{GroupElement, Scalar};
 pub struct SecretKey(Scalar);
 
 /// ``ElGamal`` public key.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PublicKey(GroupElement);
 
 /// ``ElGamal`` ciphertext, encrypted message with the public key.
