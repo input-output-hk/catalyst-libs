@@ -4,9 +4,15 @@
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
 
-use crate::general_names::{
-    general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
-    GeneralNames,
+use crate::{
+    general_names::{
+        general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
+        GeneralNames,
+    },
+    helper::{
+        decode::{decode_datatype, decode_helper},
+        encode::encode_helper,
+    },
 };
 
 /// Alternative Name extension.
@@ -21,9 +27,9 @@ impl AlternativeName {
         Self(value)
     }
 
-    /// Get the inner of Alternative Name.
+    /// Get the general name which can be general names or text.
     #[must_use]
-    pub fn get_inner(&self) -> &GeneralNamesOrText {
+    pub fn general_name(&self) -> &GeneralNamesOrText {
         &self.0
     }
 }
@@ -45,6 +51,8 @@ impl Decode<'_, ()> for AlternativeName {
 // ------------------GeneralNamesOrText--------------------
 
 /// Enum for type that can be a `GeneralNames` or a text use in `AlternativeName`.
+/// Type `Text` is also considered as a `GeneralNames` with only 1 `DNSName` as
+/// a special case.
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 pub enum GeneralNamesOrText {
@@ -61,18 +69,18 @@ impl Encode<()> for GeneralNamesOrText {
         match self {
             GeneralNamesOrText::GeneralNames(gns) => {
                 let gn = gns
-                    .get_inner()
+                    .general_names()
                     .first()
-                    .ok_or(minicbor::encode::Error::message("GeneralNames is empty"))?;
+                    .ok_or(minicbor::encode::Error::message("General Names is empty"))?;
                 // Check whether there is only 1 item in the array which is a DNSName
-                if gns.get_inner().len() == 1 && gn.get_gn_type().is_dns_name() {
-                    gn.get_gn_value().encode(e, ctx)?;
+                if gns.general_names().len() == 1 && gn.gn_type().is_dns_name() {
+                    gn.gn_value().encode(e, ctx)?;
                 } else {
                     gns.encode(e, ctx)?;
                 }
             },
             GeneralNamesOrText::Text(text) => {
-                e.str(text)?;
+                encode_helper(e, "Alternative Name - General Name Text", ctx, text)?;
             },
         }
         Ok(())
@@ -81,15 +89,19 @@ impl Encode<()> for GeneralNamesOrText {
 
 impl Decode<'_, ()> for GeneralNamesOrText {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        match d.datatype()? {
+        match decode_datatype(d, "Alternative Name - General Names")? {
             // If it is a string it is a GeneralNames with only 1 DNSName
             minicbor::data::Type::String => {
                 let gn_dns = GeneralName::new(
                     GeneralNameTypeRegistry::DNSName,
-                    GeneralNameValue::Text(d.str()?.to_string()),
+                    GeneralNameValue::Text(decode_helper(
+                        d,
+                        "Alternative Name - General Name Text",
+                        ctx,
+                    )?),
                 );
                 let mut gns = GeneralNames::new();
-                gns.add_gn(gn_dns);
+                gns.add_general_name(gn_dns);
                 Ok(GeneralNamesOrText::GeneralNames(gns))
             },
             minicbor::data::Type::Array => {
@@ -120,7 +132,7 @@ mod test_alt_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
         let mut gns = GeneralNames::new();
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::DNSName,
             GeneralNameValue::Text("example.com".to_string()),
         ));
@@ -151,7 +163,7 @@ mod test_alt_name {
 
         // If only text, it should be GeneralNames with only 1 DNSName
         let mut gns = GeneralNames::new();
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::DNSName,
             GeneralNameValue::Text("example.com".to_string()),
         ));

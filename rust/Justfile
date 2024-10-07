@@ -26,8 +26,8 @@ code-format:
 
 # Lint the rust code
 code-lint:
-    cargo lintfix
-    cargo lint
+    cargo lintfix -r
+    cargo lint -r
 
 # Pre Push Checks
 pre-push: sync-cfg code-format code-lint license-check

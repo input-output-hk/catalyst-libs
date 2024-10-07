@@ -1,7 +1,11 @@
 //! C509 General Names
 //!
+//! ```cddl
+//! GeneralNames = [ + GeneralName ]
+//! ```
+//!
 //! For more information about `GeneralNames`,
-//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/09/)
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
 mod data;
 pub mod general_name;
@@ -9,6 +13,8 @@ pub mod other_name_hw_module;
 use general_name::GeneralName;
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Serialize};
+
+use crate::helper::{decode::decode_array_len, encode::encode_array_len};
 
 /// A struct represents an array of `GeneralName`.
 ///
@@ -18,12 +24,6 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct GeneralNames(Vec<GeneralName>);
 
-impl Default for GeneralNames {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl GeneralNames {
     /// Create a new instance of `GeneralNames` as empty vector.
     #[must_use]
@@ -31,15 +31,21 @@ impl GeneralNames {
         Self(Vec::new())
     }
 
-    /// Add a new `GeneralName` to the `GeneralNames`.
-    pub fn add_gn(&mut self, gn: GeneralName) {
-        self.0.push(gn);
-    }
-
     /// Get the inner of `GeneralName`.
     #[must_use]
-    pub fn get_inner(&self) -> &Vec<GeneralName> {
+    pub fn general_names(&self) -> &[GeneralName] {
         &self.0
+    }
+
+    /// Add a new `GeneralName` to the `GeneralNames`.
+    pub fn add_general_name(&mut self, gn: GeneralName) {
+        self.0.push(gn);
+    }
+}
+
+impl Default for GeneralNames {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
@@ -49,11 +55,11 @@ impl Encode<()> for GeneralNames {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0.is_empty() {
             return Err(minicbor::encode::Error::message(
-                "GeneralNames should not be empty",
+                "General Names should not be empty",
             ));
         }
         // The general name type should be included in array too
-        e.array(self.0.len() as u64 * 2)?;
+        encode_array_len(e, "General Names", self.0.len() as u64 * 2)?;
         for gn in &self.0 {
             gn.encode(e, ctx)?;
         }
@@ -63,12 +69,10 @@ impl Encode<()> for GeneralNames {
 
 impl Decode<'_, ()> for GeneralNames {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let len = d.array()?.ok_or(minicbor::decode::Error::message(
-            "GeneralNames should be an array",
-        ))?;
+        let len = decode_array_len(d, "General Names")?;
         let mut gn = GeneralNames::new();
         for _ in 0..len / 2 {
-            gn.add_gn(GeneralName::decode(d, ctx)?);
+            gn.add_general_name(GeneralName::decode(d, ctx)?);
         }
         Ok(gn)
     }
@@ -94,28 +98,38 @@ mod test_general_names {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut gns = GeneralNames::new();
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::DNSName,
             GeneralNameValue::Text("example.com".to_string()),
         ));
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::OtherNameHardwareModuleName,
             GeneralNameValue::OtherNameHWModuleName(OtherNameHardwareModuleName::new(
                 oid!(2.16.840 .1 .101 .3 .4 .2 .1),
                 vec![0x01, 0x02, 0x03, 0x04],
             )),
         ));
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::IPAddress,
             GeneralNameValue::Bytes(Ipv4Addr::new(192, 168, 1, 1).octets().to_vec()),
         ));
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::RegisteredID,
             GeneralNameValue::Oid(C509oid::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1))),
         ));
         gns.encode(&mut encoder, &mut ())
             .expect("Failed to encode GeneralNames");
         // Array of 4 GeneralName (type, value) so 8 items: 0x88
+        // Unsigned int 2 for DNSName: 0x02
+        // DNSName with "example.com": 0x6b6578616d706c652e636f6d
+        // OtherNameHardwareModuleName negative 1: 0x20
+        // Array of 2 items: 0x82
+        // OID 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
+        // vec![0x01, 0x02, 0x03, 0x04]: 0x4401020304
+        // IPAddress: 0x07
+        // IPAddress Value in bytes string 192, 168, 1, 1: 0x44c0a80101
+        // RegisteredID: 0x08
+        // OID 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
         assert_eq!(hex::encode(buffer.clone()), "88026b6578616d706c652e636f6d20824960864801650304020144010203040744c0a801010849608648016503040201");
 
         let mut decoder = Decoder::new(&buffer);
@@ -130,15 +144,15 @@ mod test_general_names {
         let mut encoder = Encoder::new(&mut buffer);
 
         let mut gns = GeneralNames::new();
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::DNSName,
             GeneralNameValue::Text("example.com".to_string()),
         ));
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::DNSName,
             GeneralNameValue::Text("example.com".to_string()),
         ));
-        gns.add_gn(GeneralName::new(
+        gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::DNSName,
             GeneralNameValue::Text("example.com".to_string()),
         ));

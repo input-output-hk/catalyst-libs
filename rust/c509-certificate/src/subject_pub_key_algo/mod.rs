@@ -1,10 +1,12 @@
-//! C509 Issuer Signature Algorithm as a part of `TBSCertificate` used in C509
+//! C509 Issuer Signature Algorithm
 //! Certificate.
 //!
 //! ```cddl
 //! subjectPublicKeyAlgorithm: AlgorithmIdentifier
 //! ```
-
+//!
+//! For more information about `subjectPublicKeyAlgorithm`,
+//! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 // cspell: words spka
 
 mod data;
@@ -16,7 +18,14 @@ use data::{get_oid_from_int, SUBJECT_PUB_KEY_ALGO_LOOKUP};
 use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
 use serde::{Deserialize, Deserializer, Serialize};
 
-use crate::{algorithm_identifier::AlgorithmIdentifier, oid::C509oidRegistered};
+use crate::{
+    algorithm_identifier::AlgorithmIdentifier,
+    helper::{
+        decode::{decode_datatype, decode_helper},
+        encode::encode_helper,
+    },
+    oid::C509oidRegistered,
+};
 
 /// A struct represents the `SubjectPubKeyAlgorithm`
 #[derive(Debug, Clone, PartialEq)]
@@ -38,6 +47,18 @@ impl SubjectPubKeyAlgorithm {
             ),
             algo_identifier: AlgorithmIdentifier::new(oid, param),
         }
+    }
+
+    /// Get the algorithm identifier.
+    #[must_use]
+    pub fn algo_identifier(&self) -> &AlgorithmIdentifier {
+        &self.algo_identifier
+    }
+
+    /// Get the registered OID.
+    #[allow(dead_code)]
+    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
+        &self.registered_oid
     }
 }
 
@@ -65,8 +86,8 @@ impl Serialize for SubjectPubKeyAlgorithm {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         let helper = Helper {
-            oid: self.registered_oid.get_c509_oid().get_oid().to_string(),
-            param: self.algo_identifier.get_param().clone(),
+            oid: self.registered_oid.c509_oid().oid().to_string(),
+            param: self.algo_identifier.param().clone(),
         };
         helper.serialize(serializer)
     }
@@ -78,11 +99,11 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if let Some(&i) = self
             .registered_oid
-            .get_table()
+            .table()
             .get_map()
-            .get_by_right(&self.registered_oid.get_c509_oid().get_oid())
+            .get_by_right(self.registered_oid.c509_oid().oid())
         {
-            e.i16(i)?;
+            encode_helper(e, "Subject public key algorithm", ctx, &i)?;
         } else {
             AlgorithmIdentifier::encode(&self.algo_identifier, e, ctx)?;
         }
@@ -93,15 +114,15 @@ impl Encode<()> for SubjectPubKeyAlgorithm {
 impl Decode<'_, ()> for SubjectPubKeyAlgorithm {
     fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Check u8 for 0 - 28
-        if d.datatype()? == minicbor::data::Type::U8 {
-            let i = d.i16()?;
+        if decode_datatype(d, "Subject public key algorithm")? == minicbor::data::Type::U8 {
+            let i = decode_helper(d, "Subject public key algorithm", ctx)?;
             let oid = get_oid_from_int(i).map_err(minicbor::decode::Error::message)?;
             Ok(Self::new(oid, None))
         } else {
             let algo_identifier = AlgorithmIdentifier::decode(d, ctx)?;
             Ok(SubjectPubKeyAlgorithm::new(
-                algo_identifier.get_oid(),
-                algo_identifier.get_param().clone(),
+                algo_identifier.oid().clone(),
+                algo_identifier.param().clone(),
             ))
         }
     }
