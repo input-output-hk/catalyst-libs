@@ -7,7 +7,8 @@ use crate::witness::TxWitness;
 /// Example input: `web+cardano://addr/<cip-19 address string>`
 /// <https://github.com/cardano-foundation/CIPs/tree/6bae5165dde5d803778efa5e93bd408f3317ca03/CPS-0016>
 /// URI = scheme ":" ["//" authority] path ["?" query] ["#" fragment]
-pub(crate) fn extract_cip19_hash(uri: &str, prefix: Option<&str>) -> Option<Vec<u8>> {
+#[must_use]
+pub fn extract_cip19_hash(uri: &str, prefix: Option<&str>) -> Option<Vec<u8>> {
     // Regex pattern to match the expected URI format
     let r = Regex::new("^.+://addr/(.+)$").ok()?;
 

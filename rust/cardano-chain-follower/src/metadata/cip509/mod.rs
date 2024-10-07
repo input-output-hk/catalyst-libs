@@ -5,10 +5,10 @@
 // cspell: words pkix
 
 pub mod rbac;
+pub mod utils;
 pub mod x509_chunks;
 
 mod decode_helper;
-mod utils;
 
 use std::sync::Arc;
 
