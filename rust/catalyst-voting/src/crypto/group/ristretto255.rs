@@ -190,6 +190,17 @@ mod tests {
         }
     }
 
+    impl Arbitrary for GroupElement {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<Scalar>()
+                .prop_map(|s| GroupElement::GENERATOR.mul(&s))
+                .boxed()
+        }
+    }
+
     #[proptest]
     fn scalar_to_bytes_from_bytes_test(e1: Scalar) {
         let bytes = e1.to_bytes();

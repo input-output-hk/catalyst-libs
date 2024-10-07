@@ -28,7 +28,7 @@ pub struct EncryptionRandomness(Vec<Scalar>);
 
 impl EncryptionRandomness {
     /// Randomly generate the `EncryptionRandomness`.
-    fn generate<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
+    fn random<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
         Self((0..voting_options).map(|_| Scalar::random(rng)).collect())
     }
 }
@@ -89,7 +89,7 @@ impl Vote {
 pub fn encrypt_vote<R: CryptoRngCore>(
     vote: &Vote, public_key: &PublicKey, rng: &mut R,
 ) -> (EncryptedVote, EncryptionRandomness) {
-    let randomness = EncryptionRandomness::generate(rng, vote.voting_options);
+    let randomness = EncryptionRandomness::random(rng, vote.voting_options);
 
     let unit_vector = vote.to_unit_vector();
     let ciphers = unit_vector

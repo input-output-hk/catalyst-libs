@@ -155,7 +155,7 @@ fn generate_response(
 /// Verify a unit vector proof.
 pub fn verify_unit_vector_proof(
     proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey,
-    commitment_key: &PublicKey,
+    commitment_key: &GroupElement,
 ) -> bool {
     let m = ciphertexts.len();
     let n = m.next_power_of_two();
@@ -176,7 +176,7 @@ pub fn verify_unit_vector_proof(
 }
 
 /// Check the first part of the proof
-fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &PublicKey) -> bool {
+fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &GroupElement) -> bool {
     proof.0.iter().zip(proof.2.iter()).all(|(an, rand)| {
         let right = &an.i.mul(ch_2) + &an.b;
         let left = &GroupElement::GENERATOR.mul(&rand.z) + &commitment_key.mul(&rand.w);
@@ -244,14 +244,13 @@ mod tests {
 
     #[proptest]
     fn zk_unit_vector_test(
-        secret_key: SecretKey, secret_commitment_key: SecretKey,
+        secret_key: SecretKey, commitment_key: GroupElement,
         #[strategy(1..10_usize)] unit_vector_size: usize,
         #[strategy(0..#unit_vector_size)] unit_vector_index: usize,
     ) {
         let mut rng = OsRng;
 
         let public_key = secret_key.public_key();
-        let commitment_key = secret_commitment_key.public_key();
 
         let unit_vector: Vec<_> = (0..unit_vector_size)
             .map(|i| {
@@ -295,7 +294,7 @@ mod tests {
 
     #[proptest]
     fn not_a_unit_vector_test(
-        secret_key: SecretKey, secret_commitment_key: SecretKey,
+        secret_key: SecretKey, commitment_key: GroupElement,
         #[any(size_range(1..10_usize).lift())] random_vector: Vec<Scalar>,
     ) {
         let mut rng = OsRng;
@@ -307,7 +306,6 @@ mod tests {
         }
 
         let public_key = secret_key.public_key();
-        let commitment_key = secret_commitment_key.public_key();
 
         let encryption_randomness: Vec<_> = random_vector
             .iter()
