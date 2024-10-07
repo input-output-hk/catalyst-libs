@@ -232,27 +232,47 @@ fn check_2(
 
 #[cfg(test)]
 mod tests {
+    use proptest::sample::size_range;
     use rand_core::OsRng;
+    use test_strategy::proptest;
 
     use super::{super::elgamal::SecretKey, *};
 
     const VECTOR_SIZE: usize = 3;
 
-    #[test]
-    fn zk_unit_vector_test() {
+    fn is_unit_vector(vector: &[Scalar]) -> bool {
+        let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();
+        let zeros = vector.iter().filter(|s| s == &&Scalar::zero()).count();
+        ones == 1 && zeros == vector.len() - 1
+    }
+
+    #[proptest]
+    fn zk_unit_vector_test(
+        secret_key: SecretKey, secret_commitment_key: SecretKey,
+        #[strategy(2..10_usize)] unit_vector_size: usize,
+        #[strategy(0..#unit_vector_size)] unit_vector_index: usize,
+    ) {
         let mut rng = OsRng;
 
-        let secret_key = SecretKey::random(&mut rng);
-        let secret_commitment_key = SecretKey::random(&mut rng);
         let public_key = secret_key.public_key();
         let commitment_key = secret_commitment_key.public_key();
 
-        let unit_vector = [Scalar::one(), Scalar::zero(), Scalar::zero()];
-        let encryption_randomness = vec![
-            Scalar::random(&mut rng),
-            Scalar::random(&mut rng),
-            Scalar::random(&mut rng),
-        ];
+        let unit_vector: Vec<_> = (0..unit_vector_size)
+            .map(|i| {
+                if i == unit_vector_index {
+                    Scalar::one()
+                } else {
+                    Scalar::zero()
+                }
+            })
+            .collect();
+
+        assert!(is_unit_vector(&unit_vector));
+
+        let encryption_randomness: Vec<_> = unit_vector
+            .iter()
+            .map(|_| Scalar::random(&mut rng))
+            .collect();
 
         let ciphertexts: Vec<_> = encryption_randomness
             .iter()
@@ -277,31 +297,35 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn not_a_unit_vector_test() {
+    #[proptest]
+    fn not_a_unit_vector_test(
+        secret_key: SecretKey, secret_commitment_key: SecretKey,
+        #[any(size_range(2..10_usize).lift())] random_vector: Vec<Scalar>,
+    ) {
         let mut rng = OsRng;
 
-        let secret_key = SecretKey::random(&mut rng);
-        let secret_commitment_key = SecretKey::random(&mut rng);
+        // make sure the `random_vector` is not a unit vector
+        // if it is early return
+        if is_unit_vector(&random_vector) {
+            return Ok(());
+        }
+
         let public_key = secret_key.public_key();
         let commitment_key = secret_commitment_key.public_key();
 
-        // Encrypt not a unit vector
-        let unit_vector = [Scalar::from(2), Scalar::zero(), Scalar::zero()];
-        let encryption_randomness = vec![
-            Scalar::random(&mut rng),
-            Scalar::random(&mut rng),
-            Scalar::random(&mut rng),
-        ];
+        let encryption_randomness: Vec<_> = random_vector
+            .iter()
+            .map(|_| Scalar::random(&mut rng))
+            .collect();
 
         let ciphertexts: Vec<_> = encryption_randomness
             .iter()
-            .zip(unit_vector.iter())
+            .zip(random_vector.iter())
             .map(|(r, v)| encrypt(v, &public_key, r))
             .collect();
 
         let proof = generate_unit_vector_proof(
-            &unit_vector,
+            &random_vector,
             encryption_randomness,
             ciphertexts.clone(),
             &public_key,
