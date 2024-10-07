@@ -2,7 +2,7 @@
 
 [package]
 name = "cbork-cddl-parser"
-version = "0.0.2"
+version = "0.0.3"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -16,6 +16,6 @@ workspace = true
 
 [dependencies]
 derive_more = {version = "1.0.0", features = ["from","display"] }
-pest = { version = "2.7.2", features = ["std", "pretty-print", "memchr", "const_prec_climber"] }
+pest = { version = "2.7.13", features = ["std", "pretty-print", "memchr", "const_prec_climber"] }
 pest_derive = { version = "2.7.13", features = ["grammar-extras"] }
 thiserror = "1.0.64"

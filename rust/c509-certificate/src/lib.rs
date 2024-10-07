@@ -46,6 +46,9 @@ use c509::C509;
 use cert_tbs::TbsCert;
 use minicbor::{Decode, Encode};
 use signing::{PrivateKey, PublicKey};
+
+pub use crate::extensions::extension::data::C509ExtensionType;
+
 pub mod algorithm_identifier;
 pub mod attributes;
 pub mod big_uint;

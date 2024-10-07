@@ -1,6 +1,6 @@
 //! C509 Extension use to construct an Extensions message field for C509 Certificate.
 
-mod data;
+pub mod data;
 use std::{fmt::Debug, str::FromStr};
 
 use asn1_rs::Oid;
@@ -55,7 +55,7 @@ impl Extension {
 
     /// Get the registered OID of the `Extension`.
     #[must_use]
-    pub(crate) fn registered_oid(&self) -> &C509oidRegistered {
+    pub fn registered_oid(&self) -> &C509oidRegistered {
         &self.registered_oid
     }
 }

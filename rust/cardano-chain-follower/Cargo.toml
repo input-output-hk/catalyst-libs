@@ -16,13 +16,12 @@ pallas-hardano = { version = "0.30.1", git = "https://github.com/input-output-hk
 pallas-crypto = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9b5183c8b90b90fe2cc319d986e933e9518957b3" }
 
 # cspell: words licence
-#mithril-client = { version = "0.8.16", git = "https://github.com/input-output-hk/catalyst-mithril.git", branch = "fix/lgpl-licence", default-features = false, features = [
 mithril-client = { version = "0.8.18", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
 
-c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.3" }
+c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git" , tag = "v0.0.3" }
 
 thiserror = "1.0.64"
 tokio = { version = "1.40.0", features = [
