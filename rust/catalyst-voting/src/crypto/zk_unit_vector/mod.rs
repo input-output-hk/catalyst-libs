@@ -43,7 +43,7 @@ pub struct UnitVectorProof(
 /// the proof will be invalid.
 pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     unit_vector: &[Scalar], mut encryption_randomness: Vec<Scalar>,
-    mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &PublicKey,
+    mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &GroupElement,
     rng: &mut R,
 ) -> UnitVectorProof {
     let i = unit_vector
@@ -249,7 +249,7 @@ mod tests {
     #[proptest]
     fn zk_unit_vector_test(
         secret_key: SecretKey, secret_commitment_key: SecretKey,
-        #[strategy(2..10_usize)] unit_vector_size: usize,
+        #[strategy(1..10_usize)] unit_vector_size: usize,
         #[strategy(0..#unit_vector_size)] unit_vector_index: usize,
     ) {
         let mut rng = OsRng;
@@ -300,7 +300,7 @@ mod tests {
     #[proptest]
     fn not_a_unit_vector_test(
         secret_key: SecretKey, secret_commitment_key: SecretKey,
-        #[any(size_range(2..10_usize).lift())] random_vector: Vec<Scalar>,
+        #[any(size_range(1..10_usize).lift())] random_vector: Vec<Scalar>,
     ) {
         let mut rng = OsRng;
 

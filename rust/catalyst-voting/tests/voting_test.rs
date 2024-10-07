@@ -2,7 +2,7 @@
 
 use catalyst_voting::{
     decrypt_tally, encrypt_vote, generate_tally_proof, tally, verify_tally_proof,
-    DecryptionTallySetup, EncryptionRandomness, SecretKey, Vote,
+    DecryptionTallySetup, SecretKey, Vote,
 };
 use proptest::prelude::ProptestConfig;
 use test_strategy::{proptest, Arbitrary};
@@ -29,15 +29,10 @@ fn voting_test(voters: [Voter; 100]) {
         .map(|voter| Vote::new(voter.choice, VOTING_OPTIONS).unwrap())
         .collect();
 
-    let voters_randomness: Vec<_> = (0..voters.len())
-        .map(|_| EncryptionRandomness::generate(&mut rng, VOTING_OPTIONS))
-        .collect();
-
-    let encrypted_votes: Vec<_> = votes
+    let (encrypted_votes, _randomness): (Vec<_>, Vec<_>) = votes
         .iter()
-        .zip(voters_randomness.iter())
-        .map(|(vote, r)| encrypt_vote(vote, &election_public_key, r).unwrap())
-        .collect();
+        .map(|vote| encrypt_vote(vote, &election_public_key, &mut rng))
+        .unzip();
 
     let voting_powers: Vec<_> = voters
         .iter()
