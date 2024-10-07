@@ -83,9 +83,7 @@
 //! ```
 
 mod crypto;
-mod tally;
-mod voter;
+pub mod tally;
+pub mod voter;
 
 pub use crypto::elgamal::{PublicKey, SecretKey};
-pub use tally::{proof::*, *};
-pub use voter::*;

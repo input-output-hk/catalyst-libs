@@ -1,5 +1,7 @@
 //! Module containing all primitives related to the voter.
 
+pub mod proof;
+
 use rand_core::CryptoRngCore;
 
 use crate::crypto::{

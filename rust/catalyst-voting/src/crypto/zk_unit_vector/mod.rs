@@ -4,8 +4,6 @@
 //!
 //! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#d-non-interactive-zk-vote-proof)
 
-#![allow(dead_code)]
-
 mod challenges;
 mod polynomial;
 mod randomness_announcements;
@@ -42,8 +40,8 @@ pub struct UnitVectorProof(
 /// Pls make sure that you are providing a correct arguments, otherwise
 /// the proof will be invalid.
 pub fn generate_unit_vector_proof<R: CryptoRngCore>(
-    unit_vector: &[Scalar], mut encryption_randomness: Vec<Scalar>,
-    mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey, commitment_key: &GroupElement,
+    unit_vector: &[Scalar], mut ciphertexts: Vec<Ciphertext>,
+    mut encryption_randomness: Vec<Scalar>, public_key: &PublicKey, commitment_key: &GroupElement,
     rng: &mut R,
 ) -> UnitVectorProof {
     let i = unit_vector
@@ -238,8 +236,6 @@ mod tests {
 
     use super::{super::elgamal::SecretKey, *};
 
-    const VECTOR_SIZE: usize = 3;
-
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();
         let zeros = vector.iter().filter(|s| s == &&Scalar::zero()).count();
@@ -282,8 +278,8 @@ mod tests {
 
         let proof = generate_unit_vector_proof(
             &unit_vector,
-            encryption_randomness,
             ciphertexts.clone(),
+            encryption_randomness,
             &public_key,
             &commitment_key,
             &mut rng,
@@ -326,8 +322,8 @@ mod tests {
 
         let proof = generate_unit_vector_proof(
             &random_vector,
-            encryption_randomness,
             ciphertexts.clone(),
+            encryption_randomness,
             &public_key,
             &commitment_key,
             &mut rng,
