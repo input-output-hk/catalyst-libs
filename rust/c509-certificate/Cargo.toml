@@ -2,7 +2,7 @@
 name = "c509-certificate"
 description = "C509 certificate implementation"
 keywords = ["cardano", "catalyst", "c509 certificate", "certificate", "x509"]
-version = "0.0.2"
+version = "0.0.3"
 authors = [
     "Arissara Chotivichit <arissara.chotivichit@iohk.io>"
 ]
