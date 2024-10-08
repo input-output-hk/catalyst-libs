@@ -4,6 +4,8 @@
 //!
 //! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#d-non-interactive-zk-vote-proof)
 
+// cspell: words Zhang, Oliynykov, Balogum
+
 mod challenges;
 mod polynomial;
 mod randomness_announcements;
