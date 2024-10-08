@@ -5,6 +5,7 @@ use curve25519_dalek::digest::{
 };
 
 /// Blake2b-512 hasher instance.
+#[derive(Clone, Debug)]
 pub struct Blake2b512Hasher(blake2b_simd::State);
 
 impl Blake2b512Hasher {

@@ -12,9 +12,9 @@
 
 // cspell: words NIZK dlog
 
-use curve25519_dalek::digest::Update;
+use curve25519_dalek::digest::Digest;
 
-use super::{
+use crate::crypto::{
     group::{GroupElement, Scalar},
     hash::Blake2b512Hasher,
 };
@@ -55,12 +55,12 @@ fn calculate_challenge(
     a_1: &GroupElement, a_2: &GroupElement,
 ) -> Scalar {
     let blake2b_hasher = Blake2b512Hasher::new()
-        .chain(base_1.to_bytes())
-        .chain(base_2.to_bytes())
-        .chain(point_1.to_bytes())
-        .chain(point_2.to_bytes())
-        .chain(a_1.to_bytes())
-        .chain(a_2.to_bytes());
+        .chain_update(base_1.to_bytes())
+        .chain_update(base_2.to_bytes())
+        .chain_update(point_1.to_bytes())
+        .chain_update(point_2.to_bytes())
+        .chain_update(a_1.to_bytes())
+        .chain_update(a_2.to_bytes());
 
     Scalar::from_hash(blake2b_hasher)
 }

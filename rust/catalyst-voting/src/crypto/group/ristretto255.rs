@@ -45,12 +45,12 @@ impl Scalar {
     }
 
     /// additive identity
-    pub fn zero() -> Self {
+    pub const fn zero() -> Self {
         Scalar(IScalar::ZERO)
     }
 
     /// multiplicative identity
-    pub fn one() -> Self {
+    pub const fn one() -> Self {
         Scalar(IScalar::ONE)
     }
 
@@ -187,6 +187,17 @@ mod tests {
 
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
             any::<u64>().prop_map(Scalar::from).boxed()
+        }
+    }
+
+    impl Arbitrary for GroupElement {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<Scalar>()
+                .prop_map(|s| GroupElement::GENERATOR.mul(&s))
+                .boxed()
         }
     }
 

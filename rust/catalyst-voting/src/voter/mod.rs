@@ -1,5 +1,7 @@
 //! Module containing all primitives related to the voter.
 
+pub mod proof;
+
 use rand_core::CryptoRngCore;
 
 use crate::crypto::{
@@ -11,6 +13,7 @@ use crate::crypto::{
 /// Represented as a Unit vector which size is `voting_options`
 /// and the `choice` value is the index of the unit vector component equals to `1`,
 /// and other components equal to `0`.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Vote {
     /// Voter's voting choice.
     choice: usize,
@@ -19,14 +22,16 @@ pub struct Vote {
 }
 
 /// A representation of the encrypted vote.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EncryptedVote(Vec<Ciphertext>);
 
 /// A representation of the encryption randomness, used to encrypt the vote.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct EncryptionRandomness(Vec<Scalar>);
 
 impl EncryptionRandomness {
     /// Randomly generate the `EncryptionRandomness`.
-    pub fn generate<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
+    fn random<R: CryptoRngCore>(rng: &mut R, voting_options: usize) -> Self {
         Self((0..voting_options).map(|_| Scalar::random(rng)).collect())
     }
 }
@@ -79,30 +84,15 @@ impl Vote {
     }
 }
 
-/// Encrypted vote error
-#[derive(thiserror::Error, Debug)]
-pub enum EncryptedVoteError {
-    /// Incorrect randomness length
-    #[error(
-        "Invalid randomness length, the length of randomness: {0}, should be equal to the number of voting options: {1}."
-    )]
-    IncorrectRandomnessLength(usize, usize),
-}
-
 /// Create a new encrypted vote from the given vote and public key.
 /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
 ///
 /// # Errors
 ///   - `EncryptedVoteError`
-pub fn encrypt_vote(
-    vote: &Vote, public_key: &PublicKey, randomness: &EncryptionRandomness,
-) -> Result<EncryptedVote, EncryptedVoteError> {
-    if vote.voting_options != randomness.0.len() {
-        return Err(EncryptedVoteError::IncorrectRandomnessLength(
-            randomness.0.len(),
-            vote.voting_options,
-        ));
-    }
+pub fn encrypt_vote<R: CryptoRngCore>(
+    vote: &Vote, public_key: &PublicKey, rng: &mut R,
+) -> (EncryptedVote, EncryptionRandomness) {
+    let randomness = EncryptionRandomness::random(rng, vote.voting_options);
 
     let unit_vector = vote.to_unit_vector();
     let ciphers = unit_vector
@@ -111,16 +101,12 @@ pub fn encrypt_vote(
         .map(|(m, r)| encrypt(m, public_key, r))
         .collect();
 
-    Ok(EncryptedVote(ciphers))
+    (EncryptedVote(ciphers), randomness)
 }
 
 #[cfg(test)]
 mod tests {
-    use proptest::sample::size_range;
-    use test_strategy::proptest;
-
     use super::*;
-    use crate::crypto::elgamal::SecretKey;
 
     #[test]
     fn vote_test() {
@@ -149,18 +135,5 @@ mod tests {
 
         assert!(Vote::new(3, voting_options).is_err());
         assert!(Vote::new(4, voting_options).is_err());
-    }
-
-    #[proptest]
-    fn encrypt_test(
-        secret_key: SecretKey, #[strategy(1..10usize)] voting_options: usize,
-        #[any(size_range(#voting_options).lift())] randomness: Vec<Scalar>,
-    ) {
-        let public_key = secret_key.public_key();
-        let vote = Vote::new(0, voting_options).unwrap();
-
-        let encrypted =
-            encrypt_vote(&vote, &public_key, &EncryptionRandomness(randomness)).unwrap();
-        assert_eq!(encrypted.0.len(), vote.voting_options);
     }
 }

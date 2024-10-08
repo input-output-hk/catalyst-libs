@@ -5,14 +5,14 @@ use std::ops::{Add, Deref, Mul};
 
 use rand_core::CryptoRngCore;
 
-use super::group::{GroupElement, Scalar};
+use crate::crypto::group::{GroupElement, Scalar};
 
 /// ``ElGamal`` secret key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SecretKey(Scalar);
 
 /// ``ElGamal`` public key.
-#[derive(Debug, Clone, Eq, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PublicKey(GroupElement);
 
 /// ``ElGamal`` ciphertext, encrypted message with the public key.
@@ -37,7 +37,7 @@ impl Deref for PublicKey {
 
 impl SecretKey {
     /// Generate a random `SecretKey` value from the random number generator.
-    pub fn generate<R: CryptoRngCore>(rng: &mut R) -> Self {
+    pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self(Scalar::random(rng))
     }
 
