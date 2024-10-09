@@ -38,12 +38,9 @@ impl EncryptionRandomness {
     }
 }
 
-/// `Tx` decoding error
+/// `EncryptedVote` decoding error
 #[derive(thiserror::Error, Debug)]
 pub enum DecodingError {
-    /// Cannot decode ciphertexts array size
-    #[error("Cannot decode ciphertexts array size field.")]
-    CannotDecodeCiphertextArraySize,
     /// Cannot decode ciphertext
     #[error("Cannot decode ciphertext field.")]
     CannotDecodeCiphertext,

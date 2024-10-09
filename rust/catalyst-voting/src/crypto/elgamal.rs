@@ -71,8 +71,8 @@ impl Ciphertext {
     /// Convert this `Ciphertext` to its underlying sequence of bytes.
     pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
         let mut res = [0; Self::BYTES_SIZE];
-        res[0..Self::BYTES_SIZE / 2].copy_from_slice(&self.0.to_bytes());
-        res[Self::BYTES_SIZE / 2..Self::BYTES_SIZE].copy_from_slice(&self.1.to_bytes());
+        res[0..32].copy_from_slice(&self.0.to_bytes());
+        res[32..64].copy_from_slice(&self.1.to_bytes());
         res
     }
 
@@ -80,12 +80,8 @@ impl Ciphertext {
     #[allow(clippy::unwrap_used)]
     pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
         Some(Self(
-            GroupElement::from_bytes(bytes[0..Self::BYTES_SIZE / 2].try_into().unwrap())?,
-            GroupElement::from_bytes(
-                bytes[Self::BYTES_SIZE / 2..Self::BYTES_SIZE]
-                    .try_into()
-                    .unwrap(),
-            )?,
+            GroupElement::from_bytes(bytes[0..32].try_into().unwrap())?,
+            GroupElement::from_bytes(bytes[32..64].try_into().unwrap())?,
         ))
     }
 }
