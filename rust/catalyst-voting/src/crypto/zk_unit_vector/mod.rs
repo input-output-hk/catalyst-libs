@@ -11,7 +11,7 @@ mod polynomial;
 mod randomness_announcements;
 mod utils;
 
-use std::ops::Mul;
+use std::{io::Read, ops::Mul};
 
 use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash};
 use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
@@ -25,12 +25,71 @@ use crate::crypto::{
 };
 
 /// Unit vector proof struct
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnitVectorProof(
     Vec<Announcement>,
     Vec<Ciphertext>,
     Vec<ResponseRandomness>,
     Scalar,
 );
+
+impl UnitVectorProof {
+    /// Decode `UnitVectorProof` from bytes.
+    pub fn from_bytes(mut bytes: &[u8], size: usize) -> Option<Self> {
+        let mut ann_buf = [0u8; Announcement::BYTES_SIZE];
+        let mut dl_buf = [0u8; Ciphertext::BYTES_SIZE];
+        let mut rr_buf = [0u8; ResponseRandomness::BYTES_SIZE];
+
+        let ann = (0..size)
+            .map(|_| {
+                bytes.read_exact(&mut ann_buf).ok()?;
+                Announcement::from_bytes(&ann_buf)
+            })
+            .collect::<Option<_>>()?;
+        let dl = (0..size)
+            .map(|_| {
+                bytes.read_exact(&mut dl_buf).ok()?;
+                Ciphertext::from_bytes(&dl_buf)
+            })
+            .collect::<Option<_>>()?;
+        let rr = (0..size)
+            .map(|_| {
+                bytes.read_exact(&mut rr_buf).ok()?;
+                ResponseRandomness::from_bytes(&rr_buf)
+            })
+            .collect::<Option<_>>()?;
+
+        let mut scalar_buf = [0u8; Scalar::BYTES_SIZE];
+        bytes.read_exact(&mut scalar_buf).ok()?;
+        let scalar = Scalar::from_bytes(scalar_buf)?;
+        Some(Self(ann, dl, rr, scalar))
+    }
+
+    /// Get a deserialized bytes size
+    #[must_use]
+    pub fn bytes_size(&self) -> usize {
+        self.0.len() * Announcement::BYTES_SIZE
+            + self.0.len() * Ciphertext::BYTES_SIZE
+            + self.0.len() * ResponseRandomness::BYTES_SIZE
+    }
+
+    /// Encode `EncryptedVote` tos bytes.
+    #[must_use]
+    pub fn to_bytes(&self) -> Vec<u8> {
+        let mut res = Vec::with_capacity(self.bytes_size());
+        self.0
+            .iter()
+            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
+        self.1
+            .iter()
+            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
+        self.2
+            .iter()
+            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
+        res.extend_from_slice(&self.3.to_bytes());
+        res
+    }
+}
 
 /// Generates a unit vector proof.
 ///
@@ -232,11 +291,39 @@ fn check_2(
 
 #[cfg(test)]
 mod tests {
-    use proptest::sample::size_range;
+    use proptest::{
+        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        sample::size_range,
+    };
     use rand_core::OsRng;
     use test_strategy::proptest;
 
     use super::{super::elgamal::SecretKey, *};
+
+    impl Arbitrary for UnitVectorProof {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<(
+                Vec<((Announcement, Ciphertext), ResponseRandomness)>,
+                Scalar,
+            )>(((size_range(size), (((), ()), ())), ()))
+            .prop_map(|(val, scalar)| {
+                let (vec, rr): (Vec<_>, Vec<_>) = val.into_iter().unzip();
+                let (an, ciph) = vec.into_iter().unzip();
+                Self(an, ciph, rr, scalar)
+            })
+            .boxed()
+        }
+    }
+
+    #[proptest]
+    fn proof_to_bytes_from_bytes_test(p1: UnitVectorProof) {
+        let bytes = p1.to_bytes();
+        let p2 = UnitVectorProof::from_bytes(&bytes, p1.0.len()).unwrap();
+        assert_eq!(p1, p2);
+    }
 
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();

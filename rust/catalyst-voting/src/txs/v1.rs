@@ -4,7 +4,7 @@
 
 use std::io::Read;
 
-use crate::vote_protocol::voter::{DecodingError as EncryptedVoteDecodingError, EncryptedVote};
+use crate::vote_protocol::voter::EncryptedVote;
 
 /// A v1 (Jörmungandr) transaction struct
 pub struct Tx {
@@ -61,8 +61,8 @@ pub enum DecodingError {
     #[error("Cannot decode encrypted vote size field.")]
     CannotDecodeEncryptedVoteSize,
     /// Cannot decode encrypted vote
-    #[error(transparent)]
-    CannotDecodeEncryptedVote(#[from] EncryptedVoteDecodingError),
+    #[error("Cannot decode ecnrypted vote field.")]
+    CannotDecodeEncryptedVote,
 }
 
 impl Tx {
@@ -119,7 +119,8 @@ impl Tx {
                 bytes
                     .read_exact(&mut u8_buf)
                     .map_err(|_| DecodingError::CannotDecodeEncryptedVoteSize)?;
-                let encrypted_vote = EncryptedVote::from_bytes(bytes, u8_buf[0].into())?;
+                let encrypted_vote = EncryptedVote::from_bytes(bytes, u8_buf[0].into())
+                    .ok_or(DecodingError::CannotDecodeEncryptedVote)?;
 
                 Vote::Private(encrypted_vote)
             },

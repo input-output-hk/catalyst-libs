@@ -1,6 +1,6 @@
 //! Randomness and announcements structs for the ZK unit vector algorithm
 
-#![allow(clippy::missing_docs_in_private_items, dead_code)]
+#![allow(clippy::missing_docs_in_private_items)]
 
 use std::ops::Mul;
 
@@ -37,14 +37,6 @@ pub struct Announcement {
     pub(crate) a: GroupElement,
 }
 
-/// `EncryptedVote` decoding error
-#[derive(thiserror::Error, Debug)]
-pub enum AnnouncementDecodingError {
-    /// Cannot decode ciphertext
-    #[error("Cannot decode group element {0} field.")]
-    CannotDecodeGroupElement(char),
-}
-
 impl Announcement {
     /// `Announcement` bytes size
     pub const BYTES_SIZE: usize = GroupElement::BYTES_SIZE * 3;
@@ -71,14 +63,11 @@ impl Announcement {
     /// # Errors
     ///   - `AnnouncementDecodingError`
     #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Result<Self, AnnouncementDecodingError> {
-        let i = GroupElement::from_bytes(bytes[0..32].try_into().unwrap())
-            .ok_or(AnnouncementDecodingError::CannotDecodeGroupElement('i'))?;
-        let b = GroupElement::from_bytes(bytes[32..64].try_into().unwrap())
-            .ok_or(AnnouncementDecodingError::CannotDecodeGroupElement('b'))?;
-        let a = GroupElement::from_bytes(bytes[64..96].try_into().unwrap())
-            .ok_or(AnnouncementDecodingError::CannotDecodeGroupElement('a'))?;
-        Ok(Self { i, b, a })
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
+        let i = GroupElement::from_bytes(bytes[0..32].try_into().unwrap())?;
+        let b = GroupElement::from_bytes(bytes[32..64].try_into().unwrap())?;
+        let a = GroupElement::from_bytes(bytes[64..96].try_into().unwrap())?;
+        Some(Self { i, b, a })
     }
 
     /// Encode `Announcement` tos bytes.
@@ -101,14 +90,6 @@ pub struct ResponseRandomness {
     pub(crate) v: Scalar,
 }
 
-/// `EncryptedVote` decoding error
-#[derive(thiserror::Error, Debug)]
-pub enum ResponseRandomnessDecodingError {
-    /// Cannot decode ciphertext
-    #[error("Cannot decode scalar {0} field.")]
-    CannotDecodeScalar(char),
-}
-
 impl ResponseRandomness {
     /// `ResponseRandomness` bytes size
     pub const BYTES_SIZE: usize = Scalar::BYTES_SIZE * 3;
@@ -129,16 +110,11 @@ impl ResponseRandomness {
     /// # Errors
     ///   - `ResponseRandomnessDecodingError`
     #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(
-        bytes: &[u8; Self::BYTES_SIZE],
-    ) -> Result<Self, ResponseRandomnessDecodingError> {
-        let z = Scalar::from_bytes(bytes[0..32].try_into().unwrap())
-            .ok_or(ResponseRandomnessDecodingError::CannotDecodeScalar('z'))?;
-        let w = Scalar::from_bytes(bytes[32..64].try_into().unwrap())
-            .ok_or(ResponseRandomnessDecodingError::CannotDecodeScalar('w'))?;
-        let v = Scalar::from_bytes(bytes[64..96].try_into().unwrap())
-            .ok_or(ResponseRandomnessDecodingError::CannotDecodeScalar('v'))?;
-        Ok(Self { z, w, v })
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
+        let z = Scalar::from_bytes(bytes[0..32].try_into().unwrap())?;
+        let w = Scalar::from_bytes(bytes[32..64].try_into().unwrap())?;
+        let v = Scalar::from_bytes(bytes[64..96].try_into().unwrap())?;
+        Some(Self { z, w, v })
     }
 
     /// Encode `ResponseRandomness` tos bytes.

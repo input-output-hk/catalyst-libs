@@ -1,7 +1,7 @@
 //! Voter proof generation and verification procedures.
 //! It allows to transparently verify the correctness voter generation and encryption.
 
-use std::ops::Mul;
+use std::ops::{Deref, Mul};
 
 use rand_core::CryptoRngCore;
 
@@ -17,6 +17,14 @@ use crate::{
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
 pub struct VoterProof(UnitVectorProof);
+
+impl Deref for VoterProof {
+    type Target = UnitVectorProof;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 /// Voter proof commitment struct.
 pub struct VoterProofCommitment(GroupElement);

@@ -38,33 +38,20 @@ impl EncryptionRandomness {
     }
 }
 
-/// `EncryptedVote` decoding error
-#[derive(thiserror::Error, Debug)]
-pub enum DecodingError {
-    /// Cannot decode ciphertext
-    #[error("Cannot decode ciphertext {0} field.")]
-    CannotDecodeCiphertext(usize),
-}
-
 impl EncryptedVote {
     /// Decode `EncryptedVote` from bytes.
-    ///
-    /// # Errors
-    ///   - `DecodingError`
-    pub fn from_bytes(mut bytes: &[u8], size: usize) -> Result<Self, DecodingError> {
+    #[must_use]
+    pub fn from_bytes(mut bytes: &[u8], size: usize) -> Option<Self> {
         let mut ciph_buf = [0u8; Ciphertext::BYTES_SIZE];
 
-        let mut ciphertexts = Vec::with_capacity(size);
-        for i in 0..size {
-            bytes
-                .read_exact(&mut ciph_buf)
-                .map_err(|_| DecodingError::CannotDecodeCiphertext(i))?;
-            ciphertexts.push(
+        let ciphertexts = (0..size)
+            .map(|_| {
+                bytes.read_exact(&mut ciph_buf).ok()?;
                 Ciphertext::from_bytes(&ciph_buf)
-                    .ok_or(DecodingError::CannotDecodeCiphertext(i))?,
-            );
-        }
-        Ok(Self(ciphertexts))
+            })
+            .collect::<Option<_>>()?;
+
+        Some(Self(ciphertexts))
     }
 
     /// Get a deserialized bytes size
