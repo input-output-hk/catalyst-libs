@@ -8,6 +8,7 @@ members = [
     "cbork-abnf-parser",
     "cbork-cddl-parser",
     "catalyst-voting",
+    "ledger"
 ]
 
 [workspace.package]
