@@ -10,7 +10,7 @@ use crate::{
         elgamal::{decrypt, Ciphertext, SecretKey},
         group::Scalar,
     },
-    voter::EncryptedVote,
+    vote_protocol::voter::EncryptedVote,
 };
 
 /// An important decryption tally setup, which holds an important precomputed data needed
