@@ -50,7 +50,7 @@ impl SecretKey {
 
 impl Ciphertext {
     /// `Ciphertext` bytes size
-    const BYTES_SIZE: usize = 64;
+    pub const BYTES_SIZE: usize = GroupElement::BYTES_SIZE * 2;
 
     /// Generate a zero `Ciphertext`.
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
@@ -140,9 +140,19 @@ mod tests {
         }
     }
 
+    impl Arbitrary for Ciphertext {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(GroupElement, GroupElement)>()
+                .prop_map(|(g1, g2)| Ciphertext(g1, g2))
+                .boxed()
+        }
+    }
+
     #[proptest]
-    fn ciphertext_to_bytes_from_bytes_test(ge1: GroupElement, ge2: GroupElement) {
-        let c1 = Ciphertext(ge1, ge2);
+    fn ciphertext_to_bytes_from_bytes_test(c1: Ciphertext) {
         let bytes = c1.to_bytes();
         let c2 = Ciphertext::from_bytes(&bytes).unwrap();
         assert_eq!(c1, c2);

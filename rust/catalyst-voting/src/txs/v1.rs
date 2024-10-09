@@ -4,6 +4,8 @@
 
 use std::io::Read;
 
+use crate::vote_protocol::voter::{DecodingError as EncryptedVoteDecodingError, EncryptedVote};
+
 /// A v1 (Jörmungandr) transaction struct
 pub struct Tx {
     /// Vote plan id
@@ -19,12 +21,12 @@ pub enum Vote {
     /// Public voting choice
     Public(u8),
     /// Private (encrypted) voting choice
-    Private,
+    Private(EncryptedVote),
 }
 
-/// `V1Tx` decoding error
+/// `Tx` decoding error
 #[derive(thiserror::Error, Debug)]
-pub enum TxDecodingError {
+pub enum DecodingError {
     /// Cannot decode tx size
     #[error("Cannot decode `u32` tx size field.")]
     CannotDecodeTxSize,
@@ -55,59 +57,73 @@ pub enum TxDecodingError {
     /// Cannot decode public vote
     #[error("Cannot decode public vote field.")]
     CannotDecodePublicVote,
+    /// Cannot decode ciphertexts array size
+    #[error("Cannot decode encrypted vote size field.")]
+    CannotDecodeEncryptedVoteSize,
+    /// Cannot decode encrypted vote
+    #[error(transparent)]
+    CannotDecodeEncryptedVote(#[from] EncryptedVoteDecodingError),
 }
 
 impl Tx {
-    /// Decode `V1Tx` from bytes.
+    /// Decode `Tx` from bytes.
     ///
     /// # Errors
-    ///   - `TxDecodingError`
-    pub fn from_bytes(mut bytes: &[u8]) -> Result<Self, TxDecodingError> {
+    ///   - `DecodingError`
+    pub fn from_bytes(mut bytes: &[u8]) -> Result<Self, DecodingError> {
         let mut u32_buf = [0u8; 4];
         let mut u8_buf = [0u8; 1];
         let mut u256_buf = [0u8; 32];
+        // let mut u512_buf = [0u8; 64];
 
         bytes
             .read_exact(&mut u32_buf)
-            .map_err(|_| TxDecodingError::CannotDecodeTxSize)?;
+            .map_err(|_| DecodingError::CannotDecodeTxSize)?;
         let tx_size = u32::from_be_bytes(u32_buf);
 
         bytes
             .read_exact(&mut u8_buf)
-            .map_err(|_| TxDecodingError::CannotDecodePaddingTag)?;
+            .map_err(|_| DecodingError::CannotDecodePaddingTag)?;
         if u8_buf[0] != 0 {
-            return Err(TxDecodingError::InvalidPaddingTag(u8_buf[0]));
+            return Err(DecodingError::InvalidPaddingTag(u8_buf[0]));
         }
 
         bytes
             .read_exact(&mut u8_buf)
-            .map_err(|_| TxDecodingError::CannotDecodeFragmentTag)?;
+            .map_err(|_| DecodingError::CannotDecodeFragmentTag)?;
         if u8_buf[0] != 11 {
-            return Err(TxDecodingError::InvalidFragmentTag(u8_buf[0]));
+            return Err(DecodingError::InvalidFragmentTag(u8_buf[0]));
         }
 
         bytes
             .read_exact(&mut u256_buf)
-            .map_err(|_| TxDecodingError::CannotDecodeVotePlanId)?;
+            .map_err(|_| DecodingError::CannotDecodeVotePlanId)?;
         let vote_plan_id = u256_buf;
 
         bytes
             .read_exact(&mut u8_buf)
-            .map_err(|_| TxDecodingError::CannotDecodeProposalIndex)?;
+            .map_err(|_| DecodingError::CannotDecodeProposalIndex)?;
         let proposal_index = u8_buf[0];
 
         bytes
             .read_exact(&mut u8_buf)
-            .map_err(|_| TxDecodingError::CannotDecodeVoteTag)?;
+            .map_err(|_| DecodingError::CannotDecodeVoteTag)?;
         let vote = match u8_buf[0] {
             1 => {
                 bytes
                     .read_exact(&mut u8_buf)
-                    .map_err(|_| TxDecodingError::CannotDecodePublicVote)?;
+                    .map_err(|_| DecodingError::CannotDecodePublicVote)?;
                 Vote::Public(u8_buf[0])
             },
-            2 => Vote::Private,
-            tag => return Err(TxDecodingError::InvalidVoteTag(tag)),
+            2 => {
+                bytes
+                    .read_exact(&mut u8_buf)
+                    .map_err(|_| DecodingError::CannotDecodeEncryptedVoteSize)?;
+                let encrypted_vote = EncryptedVote::from_bytes(bytes, u8_buf[0].into())?;
+
+                Vote::Private(encrypted_vote)
+            },
+            tag => return Err(DecodingError::InvalidVoteTag(tag)),
         };
 
         Ok(Self {
