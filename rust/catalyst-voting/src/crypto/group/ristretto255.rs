@@ -37,6 +37,9 @@ impl Hash for GroupElement {
 }
 
 impl Scalar {
+    /// `Scalar` bytes size
+    pub const BYTES_SIZE: usize = 32;
+
     /// Generate a random scalar value from the random number generator.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         let mut scalar_bytes = [0u8; 64];
@@ -70,12 +73,12 @@ impl Scalar {
     }
 
     /// Convert this `Scalar` to its underlying sequence of bytes.
-    pub fn to_bytes(&self) -> [u8; 32] {
+    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
         self.0.to_bytes()
     }
 
     /// Attempt to construct a `Scalar` from a canonical byte representation.
-    pub fn from_bytes(bytes: [u8; 32]) -> Option<Scalar> {
+    pub fn from_bytes(bytes: [u8; Self::BYTES_SIZE]) -> Option<Scalar> {
         IScalar::from_canonical_bytes(bytes).map(Scalar).into()
     }
 
@@ -87,6 +90,8 @@ impl Scalar {
 }
 
 impl GroupElement {
+    /// `GroupElement` bytes size
+    pub const BYTES_SIZE: usize = 32;
     /// ristretto255 group generator.
     pub const GENERATOR: GroupElement = GroupElement(RISTRETTO_BASEPOINT_POINT);
 
@@ -97,12 +102,12 @@ impl GroupElement {
 
     /// Convert this `GroupElement` to its underlying sequence of bytes.
     /// Always encode the compressed value.
-    pub fn to_bytes(&self) -> [u8; 32] {
+    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
         self.0.compress().to_bytes()
     }
 
     /// Attempt to construct a `Scalar` from a compressed value byte representation.
-    pub fn from_bytes(bytes: &[u8; 32]) -> Option<Self> {
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
         Some(GroupElement(
             CompressedRistretto::from_slice(bytes).ok()?.decompress()?,
         ))
@@ -209,8 +214,7 @@ mod tests {
     }
 
     #[proptest]
-    fn group_element_to_bytes_from_bytes_test(e: Scalar) {
-        let ge1 = GroupElement::GENERATOR.mul(&e);
+    fn group_element_to_bytes_from_bytes_test(ge1: GroupElement) {
         let bytes = ge1.to_bytes();
         let ge2 = GroupElement::from_bytes(&bytes).unwrap();
         assert_eq!(ge1, ge2);

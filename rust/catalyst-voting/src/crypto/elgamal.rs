@@ -49,6 +49,9 @@ impl SecretKey {
 }
 
 impl Ciphertext {
+    /// `Ciphertext` bytes size
+    const BYTES_SIZE: usize = 64;
+
     /// Generate a zero `Ciphertext`.
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
     pub fn zero() -> Self {
@@ -63,6 +66,27 @@ impl Ciphertext {
     /// Get the second element of the `Ciphertext`.
     pub fn second(&self) -> &GroupElement {
         &self.1
+    }
+
+    /// Convert this `Ciphertext` to its underlying sequence of bytes.
+    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
+        let mut res = [0; Self::BYTES_SIZE];
+        res[0..Self::BYTES_SIZE / 2].copy_from_slice(&self.0.to_bytes());
+        res[Self::BYTES_SIZE / 2..Self::BYTES_SIZE].copy_from_slice(&self.1.to_bytes());
+        res
+    }
+
+    /// Attempt to construct a `Scalar` from a compressed value byte representation.
+    #[allow(clippy::unwrap_used)]
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
+        Some(Self(
+            GroupElement::from_bytes(bytes[0..Self::BYTES_SIZE / 2].try_into().unwrap())?,
+            GroupElement::from_bytes(
+                bytes[Self::BYTES_SIZE / 2..Self::BYTES_SIZE]
+                    .try_into()
+                    .unwrap(),
+            )?,
+        ))
     }
 }
 
@@ -114,6 +138,14 @@ mod tests {
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
             any::<Scalar>().prop_map(SecretKey).boxed()
         }
+    }
+
+    #[proptest]
+    fn ciphertext_to_bytes_from_bytes_test(ge1: GroupElement, ge2: GroupElement) {
+        let c1 = Ciphertext(ge1, ge2);
+        let bytes = c1.to_bytes();
+        let c2 = Ciphertext::from_bytes(&bytes).unwrap();
+        assert_eq!(c1, c2);
     }
 
     #[proptest]
