@@ -21,35 +21,35 @@ impl UnitVectorProof {
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes(mut bytes: &[u8], len: usize) -> anyhow::Result<Self> {
+    pub fn from_bytes<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
         let mut ann_buf = [0u8; Announcement::BYTES_SIZE];
         let mut dl_buf = [0u8; Ciphertext::BYTES_SIZE];
         let mut rr_buf = [0u8; ResponseRandomness::BYTES_SIZE];
 
         let ann = (0..len)
             .map(|i| {
-                bytes.read_exact(&mut ann_buf)?;
+                reader.read_exact(&mut ann_buf)?;
                 Announcement::from_bytes(&ann_buf)
                     .map_err(|e| anyhow!("Cannot decode announcement at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
         let dl = (0..len)
             .map(|i| {
-                bytes.read_exact(&mut dl_buf)?;
+                reader.read_exact(&mut dl_buf)?;
                 Ciphertext::from_bytes(&dl_buf)
                     .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
         let rr = (0..len)
             .map(|i| {
-                bytes.read_exact(&mut rr_buf)?;
+                reader.read_exact(&mut rr_buf)?;
                 ResponseRandomness::from_bytes(&rr_buf)
                     .map_err(|e| anyhow!("Cannot decode response randomness at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
 
         let mut scalar_buf = [0u8; Scalar::BYTES_SIZE];
-        bytes.read_exact(&mut scalar_buf)?;
+        reader.read_exact(&mut scalar_buf)?;
         let scalar =
             Scalar::from_bytes(scalar_buf).map_err(|_| anyhow!("Cannot decode scalar field."))?;
         Ok(Self(ann, dl, rr, scalar))
@@ -57,7 +57,7 @@ impl UnitVectorProof {
 
     /// Get a deserialized bytes size
     #[must_use]
-    pub fn bytes_size(&self) -> usize {
+    fn bytes_size(&self) -> usize {
         Scalar::BYTES_SIZE
             + self.0.len() * Announcement::BYTES_SIZE
             + self.0.len() * Ciphertext::BYTES_SIZE
@@ -144,6 +144,8 @@ impl ResponseRandomness {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use test_strategy::proptest;
 
     use super::*;
@@ -154,7 +156,7 @@ mod tests {
     ) {
         let bytes = p1.to_bytes();
         assert_eq!(bytes.len(), p1.bytes_size());
-        let p2 = UnitVectorProof::from_bytes(&bytes, p1.size()).unwrap();
+        let p2 = UnitVectorProof::from_bytes(&mut Cursor::new(bytes), p1.size()).unwrap();
         assert_eq!(p1, p2);
     }
 

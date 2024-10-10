@@ -44,6 +44,7 @@ impl Tx {
         tx_body.push(0xFF);
         // Zero value
         tx_body.extend_from_slice(&[0u8; 8]);
+
         tx_body.extend_from_slice(&self.public_key.to_bytes());
 
         // Add the size of decoded bytes to the beginning.
@@ -62,57 +63,49 @@ impl Tx {
     ///   - Invalid vote tag value.
     ///   - Invalid public key.
     #[allow(clippy::indexing_slicing)]
-    pub fn from_bytes(mut bytes: &[u8]) -> anyhow::Result<Self> {
+    pub fn from_bytes<R: Read>(reader: &mut R) -> anyhow::Result<Self> {
         let mut u8_buf = [0u8; 1];
         let mut u32_buf = [0u8; 4];
         let mut u64_buf = [0u8; 8];
         let mut u256_buf = [0u8; 32];
 
-        // Read tx size
-        bytes.read_exact(&mut u32_buf)?;
-        let tx_size = u32::from_be_bytes(u32_buf);
-        ensure!(
-            tx_size as usize == bytes.len(),
-            "Invalid tx size, expected: {tx_size}, provided: {0}.",
-            bytes.len()
-        );
+        // Skip tx size field
+        reader.read_exact(&mut u32_buf)?;
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         ensure!(
             u8_buf[0] == 0,
             "Invalid padding tag field value, must be equals to `0`, provided: {0}.",
             u8_buf[0]
         );
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         ensure!(
             u8_buf[0] == 11,
             "Invalid fragment tag field value, must be equals to `11`, provided: {0}.",
             u8_buf[0]
         );
 
-        bytes.read_exact(&mut u256_buf)?;
+        reader.read_exact(&mut u256_buf)?;
         let vote_plan_id = u256_buf;
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         let proposal_index = u8_buf[0];
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         let vote = match u8_buf[0] {
             1 => {
-                bytes.read_exact(&mut u8_buf)?;
+                reader.read_exact(&mut u8_buf)?;
                 Vote::Public(u8_buf[0])
             },
             2 => {
-                bytes.read_exact(&mut u8_buf)?;
-                let vote = EncryptedVote::from_bytes(bytes, u8_buf[0].into())
+                reader.read_exact(&mut u8_buf)?;
+                let vote = EncryptedVote::from_bytes(reader, u8_buf[0].into())
                     .map_err(|e| anyhow!("Invalid encrypted vote, error: {e}."))?;
-                bytes = &bytes[vote.bytes_size()..];
 
-                bytes.read_exact(&mut u8_buf)?;
-                let proof = VoterProof::from_bytes(bytes, u8_buf[0].into())
+                reader.read_exact(&mut u8_buf)?;
+                let proof = VoterProof::from_bytes(reader, u8_buf[0].into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
-                bytes = &bytes[proof.bytes_size()..];
 
                 Vote::Private(vote, proof)
             },
@@ -120,23 +113,23 @@ impl Tx {
         };
 
         // skip block date (epoch and slot)
-        bytes.read_exact(&mut u64_buf)?;
+        reader.read_exact(&mut u64_buf)?;
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         ensure!(
             u8_buf[0] == 1,
             "Invalid number of inputs, expected: `1`, provided: {0}",
             u8_buf[0]
         );
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         ensure!(
             u8_buf[0] == 0,
             "Invalid number of outputs, expected: `0`, provided: {0}",
             u8_buf[0]
         );
 
-        bytes.read_exact(&mut u8_buf)?;
+        reader.read_exact(&mut u8_buf)?;
         ensure!(
             u8_buf[0] == 0xFF,
             "Invalid input tag, expected: `255`, provided: {0}",
@@ -144,9 +137,9 @@ impl Tx {
         );
 
         // skip value
-        bytes.read_exact(&mut u64_buf)?;
+        reader.read_exact(&mut u64_buf)?;
 
-        bytes.read_exact(&mut u256_buf)?;
+        reader.read_exact(&mut u256_buf)?;
         let public_key = PublicKey::from_bytes(&u256_buf)
             .map_err(|e| anyhow!("Invalid public key, error: {e}."))?;
 
@@ -161,6 +154,8 @@ impl Tx {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
     use test_strategy::proptest;
 
@@ -211,7 +206,12 @@ mod tests {
     #[allow(clippy::indexing_slicing)]
     fn tx_to_bytes_from_bytes_test(t1: Tx) {
         let bytes = t1.to_bytes();
-        let t2 = Tx::from_bytes(&bytes).unwrap();
+
+        // verify correctness serializing tx size field
+        let size = u32::from_be_bytes(bytes[0..4].try_into().unwrap());
+        assert_eq!(size as usize, bytes.len() - 4);
+
+        let t2 = Tx::from_bytes(&mut Cursor::new(bytes)).unwrap();
         assert_eq!(t1, t2);
     }
 }

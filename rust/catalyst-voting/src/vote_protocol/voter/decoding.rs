@@ -17,12 +17,12 @@ impl EncryptedVote {
     ///
     /// # Errors
     ///   - Cannot decode ciphertext.
-    pub fn from_bytes(mut bytes: &[u8], size: usize) -> anyhow::Result<Self> {
+    pub fn from_bytes<R: Read>(reader: &mut R, size: usize) -> anyhow::Result<Self> {
         let mut ciph_buf = [0u8; Ciphertext::BYTES_SIZE];
 
         let ciphertexts = (0..size)
             .map(|i| {
-                bytes.read_exact(&mut ciph_buf)?;
+                reader.read_exact(&mut ciph_buf)?;
                 Ciphertext::from_bytes(&ciph_buf)
                     .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}"))
             })
@@ -64,14 +64,8 @@ impl VoterProof {
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes(bytes: &[u8], len: usize) -> anyhow::Result<Self> {
-        UnitVectorProof::from_bytes(bytes, len).map(Self)
-    }
-
-    /// Get a deserialized bytes size
-    #[must_use]
-    pub fn bytes_size(&self) -> usize {
-        self.0.bytes_size()
+    pub fn from_bytes<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
+        UnitVectorProof::from_bytes(reader, len).map(Self)
     }
 
     /// Encode `EncryptedVote` tos bytes.
@@ -83,6 +77,8 @@ impl VoterProof {
 
 #[cfg(test)]
 mod tests {
+    use std::io::Cursor;
+
     use test_strategy::proptest;
 
     use super::*;
@@ -93,7 +89,7 @@ mod tests {
     ) {
         let bytes = vote1.to_bytes();
         assert_eq!(bytes.len(), vote1.bytes_size());
-        let vote2 = EncryptedVote::from_bytes(&bytes, vote1.size()).unwrap();
+        let vote2 = EncryptedVote::from_bytes(&mut Cursor::new(bytes), vote1.size()).unwrap();
         assert_eq!(vote1, vote2);
     }
 }
