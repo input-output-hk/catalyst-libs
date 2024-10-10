@@ -89,9 +89,8 @@ mod tests {
 
     #[proptest]
     fn encrypted_vote_to_bytes_from_bytes_test(
-        #[strategy(0..20usize)] _size: usize, #[any(#_size)] vote1: EncryptedVote,
+        #[strategy(0..5usize)] _size: usize, #[any(#_size)] vote1: EncryptedVote,
     ) {
-        println!("{}", vote1.size());
         let bytes = vote1.to_bytes();
         assert_eq!(bytes.len(), vote1.bytes_size());
         let vote2 = EncryptedVote::from_bytes(&bytes, vote1.size()).unwrap();

@@ -10,6 +10,7 @@ use crate::{
 };
 
 /// A v1 (Jörmungandr) transaction struct
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tx {
     /// Vote plan id
     vote_plan_id: [u8; 32],
@@ -22,25 +23,10 @@ pub struct Tx {
 }
 
 /// Vote struct
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Vote {
     /// Public voting choice
     Public(u8),
     /// Private (encrypted) voting choice
     Private(EncryptedVote, VoterProof),
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use proptest::prelude::{Arbitrary, BoxedStrategy};
-
-//     use super::*;
-
-//     impl Arbitrary for Tx {
-//         type Parameters = ();
-//         type Strategy = BoxedStrategy<Self>;
-
-//         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-
-//         }
-//     }
-// }

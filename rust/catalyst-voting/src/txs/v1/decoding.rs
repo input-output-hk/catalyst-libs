@@ -152,3 +152,63 @@ impl Tx {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, ProptestConfig, Strategy};
+    use test_strategy::proptest;
+
+    use super::*;
+    use crate::SecretKey;
+
+    impl Arbitrary for Tx {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<([u8; 32], u8, Vote, SecretKey)>()
+                .prop_map(|(vote_plan_id, proposal_index, vote, s)| {
+                    Tx {
+                        vote_plan_id,
+                        proposal_index,
+                        vote,
+                        public_key: s.public_key(),
+                    }
+                })
+                .boxed()
+        }
+    }
+
+    impl Arbitrary for Vote {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<bool>()
+                .prop_flat_map(|b| {
+                    if b {
+                        any::<u8>().prop_map(Vote::Public).boxed()
+                    } else {
+                        any::<(u8, u8)>()
+                            .prop_flat_map(|(s1, s2)| {
+                                any_with::<(EncryptedVote, VoterProof)>((s1.into(), s2.into()))
+                                    .prop_map(|(v, p)| Vote::Private(v, p))
+                            })
+                            .boxed()
+                    }
+                })
+                .boxed()
+        }
+    }
+
+    #[proptest(ProptestConfig::with_cases(1))]
+    #[allow(clippy::indexing_slicing)]
+    fn tx_to_bytes_from_bytes_test(t1: Tx) {
+        let bytes = t1.to_bytes();
+        // verify correctness serializing tx size field
+        let size = u32::from_be_bytes(bytes[0..4].try_into().unwrap());
+        assert_eq!(size as usize, bytes.len() - 4);
+        let t2 = Tx::from_bytes(&bytes).unwrap();
+        assert_eq!(t1, t2);
+    }
+}

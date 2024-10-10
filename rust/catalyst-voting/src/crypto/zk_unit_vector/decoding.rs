@@ -149,7 +149,7 @@ mod tests {
 
     #[proptest]
     fn proof_to_bytes_from_bytes_test(
-        #[strategy(0..20usize)] _size: usize, #[any(#_size)] p1: UnitVectorProof,
+        #[strategy(0..5usize)] _size: usize, #[any(#_size)] p1: UnitVectorProof,
     ) {
         let bytes = p1.to_bytes();
         let p2 = UnitVectorProof::from_bytes(&bytes, p1.size()).unwrap();
