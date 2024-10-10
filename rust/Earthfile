@@ -57,6 +57,7 @@ build:
         --args4="--bins=cbork/cbork" \
         --output="release/[^\./]+" \
         --junit="cat-libs.junit-report.xml" \
+        --coverage="cat-libs.coverage.info" \
         --docs="true"
 
     SAVE ARTIFACT target/$TARGETARCH/doc doc
