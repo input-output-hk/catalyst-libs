@@ -1,15 +1,17 @@
 //! A general voting integration test, which performs a full voting procedure.
 
 use catalyst_voting::{
-    tally::{
-        decrypt_tally,
-        proof::{generate_tally_proof, verify_tally_proof},
-        tally, DecryptionTallySetup,
-    },
-    voter::{
-        encrypt_vote,
-        proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
-        Vote,
+    vote_protocol::{
+        tally::{
+            decrypt_tally,
+            proof::{generate_tally_proof, verify_tally_proof},
+            tally, DecryptionTallySetup,
+        },
+        voter::{
+            encrypt_vote,
+            proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
+            Vote,
+        },
     },
     SecretKey,
 };

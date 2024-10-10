@@ -1,8 +1,8 @@
 //! Crypto primitives which are used by voting protocol.
 
-pub(crate) mod babystep_giantstep;
-pub(crate) mod elgamal;
-pub(crate) mod group;
-pub(crate) mod hash;
-pub(crate) mod zk_dl_equality;
-pub(crate) mod zk_unit_vector;
+pub mod babystep_giantstep;
+pub mod elgamal;
+pub mod group;
+pub mod hash;
+pub mod zk_dl_equality;
+pub mod zk_unit_vector;
