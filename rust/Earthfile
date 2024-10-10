@@ -55,6 +55,7 @@ build:
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
         --args3="--libs=catalyst-voting" \
         --args4="--bins=cbork/cbork" \
+        --args5="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \
         --junit="cat-libs.junit-report.xml" \
         --coverage="cat-libs.coverage.info" \
