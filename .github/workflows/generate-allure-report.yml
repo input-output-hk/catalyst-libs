@@ -59,6 +59,15 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Collect and upload test coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-reports
+          path: "**/*${{ env.COVERAGE_EXT }}"
+          if-no-files-found: error
+          retention-days: 1
+
   generate-allure-report:
     name: Generate allure report
     runs-on: ubuntu-latest
