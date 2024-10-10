@@ -3,6 +3,7 @@
 
 use std::ops::{Add, Deref, Mul};
 
+use anyhow::anyhow;
 use rand_core::CryptoRngCore;
 
 use crate::crypto::group::{GroupElement, Scalar};
@@ -77,11 +78,16 @@ impl Ciphertext {
     }
 
     /// Attempt to construct a `Scalar` from a compressed value byte representation.
+    ///
+    /// # Errors
+    ///   - Cannot decode group element field.
     #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
-        Some(Self(
-            GroupElement::from_bytes(bytes[0..32].try_into().unwrap())?,
-            GroupElement::from_bytes(bytes[32..64].try_into().unwrap())?,
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
+        Ok(Self(
+            GroupElement::from_bytes(bytes[0..32].try_into().unwrap())
+                .map_err(|_| anyhow!("Cannot decode first group element field."))?,
+            GroupElement::from_bytes(bytes[32..64].try_into().unwrap())
+                .map_err(|_| anyhow!("Cannot decode second group element field."))?,
         ))
     }
 }

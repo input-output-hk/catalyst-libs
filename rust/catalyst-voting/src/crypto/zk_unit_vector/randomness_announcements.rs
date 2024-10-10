@@ -4,6 +4,7 @@
 
 use std::ops::Mul;
 
+use anyhow::anyhow;
 use rand_core::CryptoRngCore;
 
 use crate::crypto::group::{GroupElement, Scalar};
@@ -63,11 +64,14 @@ impl Announcement {
     /// # Errors
     ///   - `AnnouncementDecodingError`
     #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
-        let i = GroupElement::from_bytes(bytes[0..32].try_into().unwrap())?;
-        let b = GroupElement::from_bytes(bytes[32..64].try_into().unwrap())?;
-        let a = GroupElement::from_bytes(bytes[64..96].try_into().unwrap())?;
-        Some(Self { i, b, a })
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
+        let i = GroupElement::from_bytes(bytes[0..32].try_into().unwrap())
+            .map_err(|_| anyhow!("Cannot decode `i` group element field."))?;
+        let b = GroupElement::from_bytes(bytes[32..64].try_into().unwrap())
+            .map_err(|_| anyhow!("Cannot decode `b` group element field."))?;
+        let a = GroupElement::from_bytes(bytes[64..96].try_into().unwrap())
+            .map_err(|_| anyhow!("Cannot decode `a` group element field."))?;
+        Ok(Self { i, b, a })
     }
 
     /// Encode `Announcement` tos bytes.
@@ -108,13 +112,16 @@ impl ResponseRandomness {
     /// Decode `ResponseRandomness` from bytes.
     ///
     /// # Errors
-    ///   - `ResponseRandomnessDecodingError`
+    ///   - Cannot decode scalar field.
     #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
-        let z = Scalar::from_bytes(bytes[0..32].try_into().unwrap())?;
-        let w = Scalar::from_bytes(bytes[32..64].try_into().unwrap())?;
-        let v = Scalar::from_bytes(bytes[64..96].try_into().unwrap())?;
-        Some(Self { z, w, v })
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
+        let z = Scalar::from_bytes(bytes[0..32].try_into().unwrap())
+            .map_err(|_| anyhow!("Cannot decode `z` scalar field."))?;
+        let w = Scalar::from_bytes(bytes[32..64].try_into().unwrap())
+            .map_err(|_| anyhow!("Cannot decode `w` scalar field."))?;
+        let v = Scalar::from_bytes(bytes[64..96].try_into().unwrap())
+            .map_err(|_| anyhow!("Cannot decode `v` scalar field."))?;
+        Ok(Self { z, w, v })
     }
 
     /// Encode `ResponseRandomness` tos bytes.

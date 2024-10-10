@@ -7,6 +7,7 @@ use std::{
     ops::{Add, Mul, Sub},
 };
 
+use anyhow::anyhow;
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
     digest::{consts::U64, Digest},
@@ -78,8 +79,14 @@ impl Scalar {
     }
 
     /// Attempt to construct a `Scalar` from a canonical byte representation.
-    pub fn from_bytes(bytes: [u8; Self::BYTES_SIZE]) -> Option<Scalar> {
-        IScalar::from_canonical_bytes(bytes).map(Scalar).into()
+    ///
+    /// # Errors
+    ///   - Cannot decode scalar.
+    pub fn from_bytes(bytes: [u8; Self::BYTES_SIZE]) -> anyhow::Result<Scalar> {
+        IScalar::from_canonical_bytes(bytes)
+            .map(Scalar)
+            .into_option()
+            .ok_or(anyhow!("Cannot decode scalar."))
     }
 
     /// Generate a `Scalar` from a hash digest.
@@ -107,9 +114,14 @@ impl GroupElement {
     }
 
     /// Attempt to construct a `Scalar` from a compressed value byte representation.
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Option<Self> {
-        Some(GroupElement(
-            CompressedRistretto::from_slice(bytes).ok()?.decompress()?,
+    ///
+    /// # Errors
+    ///   - Cannot decode group element.
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
+        Ok(GroupElement(
+            CompressedRistretto::from_slice(bytes)?
+                .decompress()
+                .ok_or(anyhow!("Cannot decode group element."))?,
         ))
     }
 }

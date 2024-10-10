@@ -4,6 +4,7 @@ pub mod proof;
 
 use std::io::Read;
 
+use anyhow::{anyhow, ensure};
 use rand_core::CryptoRngCore;
 
 use crate::crypto::{
@@ -40,18 +41,21 @@ impl EncryptionRandomness {
 
 impl EncryptedVote {
     /// Decode `EncryptedVote` from bytes.
-    #[must_use]
-    pub fn from_bytes(mut bytes: &[u8], size: usize) -> Option<Self> {
+    ///
+    /// # Errors
+    ///   - Cannot decode ciphertext.
+    pub fn from_bytes(mut bytes: &[u8], size: usize) -> anyhow::Result<Self> {
         let mut ciph_buf = [0u8; Ciphertext::BYTES_SIZE];
 
         let ciphertexts = (0..size)
-            .map(|_| {
-                bytes.read_exact(&mut ciph_buf).ok()?;
+            .map(|i| {
+                bytes.read_exact(&mut ciph_buf)?;
                 Ciphertext::from_bytes(&ciph_buf)
+                    .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}"))
             })
-            .collect::<Option<_>>()?;
+            .collect::<anyhow::Result<_>>()?;
 
-        Some(Self(ciphertexts))
+        Ok(Self(ciphertexts))
     }
 
     /// Get a deserialized bytes size
@@ -76,26 +80,15 @@ impl EncryptedVote {
     }
 }
 
-/// Encrypted vote error
-#[derive(thiserror::Error, Debug)]
-pub enum VoteError {
-    /// Incorrect voting choice
-    #[error(
-        "Invalid voting choice, the value of choice: {0}, should be less than the number of voting options: {1}."
-    )]
-    IncorrectChoiceError(usize, usize),
-}
-
 impl Vote {
     /// Generate a vote.
     /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voting-choice)
     ///
     /// # Errors
-    ///   - `VoteError`
-    pub fn new(choice: usize, voting_options: usize) -> Result<Vote, VoteError> {
-        if choice >= voting_options {
-            return Err(VoteError::IncorrectChoiceError(choice, voting_options));
-        }
+    ///   - Invalid voting choice, the value of `choice`, should be less than the number
+    ///     of `voting_options`.
+    pub fn new(choice: usize, voting_options: usize) -> anyhow::Result<Vote> {
+        ensure!(choice < voting_options,"Invalid voting choice, the value of choice: {choice}, should be less than the number of voting options: {voting_options}." );
 
         Ok(Vote {
             choice,

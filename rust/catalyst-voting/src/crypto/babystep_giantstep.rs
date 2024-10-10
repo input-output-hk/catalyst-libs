@@ -3,6 +3,8 @@
 
 use std::collections::HashMap;
 
+use anyhow::{bail, ensure};
+
 use crate::crypto::group::{GroupElement, Scalar};
 
 /// Default balance value.
@@ -22,16 +24,6 @@ pub struct BabyStepGiantStep {
     giant_step: GroupElement,
 }
 
-#[derive(thiserror::Error, Debug)]
-pub enum BabyStepError {
-    /// Invalid max value or balance
-    #[error("Maximum value and balance must be greater than zero, provided max value: {0} and balance: {1}.")]
-    InvalidMaxValueOrBalance(u64, u64),
-    /// Max value exceeded
-    #[error("Max log value exceeded. Means that the actual discrete log for the provided group element is higher than the provided `max_log_value`.")]
-    MaxLogExceeded,
-}
-
 impl BabyStepGiantStep {
     /// Creates a new setup for the baby-step giant-step algorithm.
     ///
@@ -47,16 +39,15 @@ impl BabyStepGiantStep {
     /// `baby_step_giant_step` function for the same `max_value`.
     ///
     /// # Errors
-    ///   - `BabyStepError`
-    pub fn new(max_log_value: u64, balance: Option<u64>) -> Result<Self, BabyStepError> {
+    ///   - Maximum value and balance must be greater than zero.
+    pub fn new(max_log_value: u64, balance: Option<u64>) -> anyhow::Result<Self> {
         let balance = balance.unwrap_or(DEFAULT_BALANCE);
 
-        if balance == 0 || max_log_value == 0 {
-            return Err(BabyStepError::InvalidMaxValueOrBalance(
-                max_log_value,
-                balance,
-            ));
-        }
+        ensure!(
+            balance != 0 && max_log_value != 0,
+            "Maximum value and balance must be greater than zero,
+            provided max value: {max_log_value} and balance: {balance}."
+        );
 
         #[allow(
             clippy::cast_possible_truncation,
@@ -85,8 +76,8 @@ impl BabyStepGiantStep {
     /// Solve the discrete log using baby step giant step algorithm.
     ///
     /// # Errors
-    ///   - `BabyStepError`
-    pub fn discrete_log(&self, mut point: GroupElement) -> Result<u64, BabyStepError> {
+    ///   - Max log value exceeded.
+    pub fn discrete_log(&self, mut point: GroupElement) -> anyhow::Result<u64> {
         for baby_step in 0..=self.baby_step_size {
             if let Some(x) = self.table.get(&point) {
                 let r = baby_step * self.baby_step_size + x;
@@ -94,9 +85,12 @@ impl BabyStepGiantStep {
             }
             point = &point + &self.giant_step;
         }
+
         // If we get here, the point is not in the table
         // So we exceeded the maximum value of the discrete log
-        Err(BabyStepError::MaxLogExceeded)
+        bail!("Max log value exceeded.
+                Means that the actual discrete log for the provided group element is higher than the provided `max_log_value`."
+        )
     }
 }
 

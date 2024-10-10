@@ -3,6 +3,7 @@
 
 use std::ops::Mul;
 
+use anyhow::ensure;
 use rand_core::CryptoRngCore;
 
 use super::{EncryptedVote, EncryptionRandomness, Vote};
@@ -21,8 +22,13 @@ pub struct VoterProof(UnitVectorProof);
 
 impl VoterProof {
     /// Decode `VoterProof` from bytes.
-    #[must_use]
-    pub fn from_bytes(bytes: &[u8], size: usize) -> Option<Self> {
+    ///
+    /// # Errors
+    ///   - Cannot decode announcement value.
+    ///   - Cannot decode ciphertext value.
+    ///   - Cannot decode response randomness value.
+    ///   - Cannot decode scalar value.
+    pub fn from_bytes(bytes: &[u8], size: usize) -> anyhow::Result<Self> {
         UnitVectorProof::from_bytes(bytes, size).map(Self)
     }
 
@@ -49,31 +55,25 @@ impl VoterProofCommitment {
     }
 }
 
-/// Generate voter proof error
-#[derive(thiserror::Error, Debug)]
-pub enum GenerateVoterProofError {
-    /// Arguments mismatch
-    #[error("Provided arguments mismatch. Size of the provided `vote`: {0}, `encrypted_vote: {1}` and `randomness`: {2} must be equal with each other.")]
-    ArgumentsMismatch(usize, usize, usize),
-}
-
 /// Generates a voter proof.
 /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voters-proof)
 ///
 /// # Errors
-///   - `GenerateVoterProofError`
+///   - Provided arguments mismatch. Size of the provided `vote`, `encrypted_vote` and
+///     `randomness` must be equal with each other.
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_voter_proof<R: CryptoRngCore>(
     vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
     public_key: &PublicKey, commitment: &VoterProofCommitment, rng: &mut R,
-) -> Result<VoterProof, GenerateVoterProofError> {
-    if vote.voting_options != encrypted_vote.0.len() || vote.voting_options != randomness.0.len() {
-        return Err(GenerateVoterProofError::ArgumentsMismatch(
-            vote.voting_options,
-            encrypted_vote.0.len(),
-            randomness.0.len(),
-        ));
-    }
+) -> anyhow::Result<VoterProof> {
+    ensure!(
+        vote.voting_options == encrypted_vote.0.len() && vote.voting_options == randomness.0.len(),
+        "Provided arguments mismatch.
+        Size of the provided `vote`: {0}, `encrypted_vote: {1}` and `randomness`: {2} must be equal with each other.",
+        vote.voting_options,
+        encrypted_vote.0.len(),
+        randomness.0.len(),
+    );
 
     let proof = generate_unit_vector_proof(
         &vote.to_unit_vector(),
