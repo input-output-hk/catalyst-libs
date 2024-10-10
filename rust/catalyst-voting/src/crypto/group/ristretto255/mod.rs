@@ -2,16 +2,17 @@
 
 // cspell: words BASEPOINT
 
+mod decoding;
+
 use std::{
     hash::Hash,
     ops::{Add, Mul, Sub},
 };
 
-use anyhow::anyhow;
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
     digest::{consts::U64, Digest},
-    ristretto::{CompressedRistretto, RistrettoPoint as Point},
+    ristretto::RistrettoPoint as Point,
     scalar::Scalar as IScalar,
     traits::Identity,
 };
@@ -38,9 +39,6 @@ impl Hash for GroupElement {
 }
 
 impl Scalar {
-    /// `Scalar` bytes size
-    pub const BYTES_SIZE: usize = 32;
-
     /// Generate a random scalar value from the random number generator.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         let mut scalar_bytes = [0u8; 64];
@@ -73,22 +71,6 @@ impl Scalar {
         Scalar(self.0.invert())
     }
 
-    /// Convert this `Scalar` to its underlying sequence of bytes.
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        self.0.to_bytes()
-    }
-
-    /// Attempt to construct a `Scalar` from a canonical byte representation.
-    ///
-    /// # Errors
-    ///   - Cannot decode scalar.
-    pub fn from_bytes(bytes: [u8; Self::BYTES_SIZE]) -> anyhow::Result<Scalar> {
-        IScalar::from_canonical_bytes(bytes)
-            .map(Scalar)
-            .into_option()
-            .ok_or(anyhow!("Cannot decode scalar."))
-    }
-
     /// Generate a `Scalar` from a hash digest.
     pub fn from_hash<D>(hash: D) -> Scalar
     where D: Digest<OutputSize = U64> {
@@ -97,32 +79,12 @@ impl Scalar {
 }
 
 impl GroupElement {
-    /// `GroupElement` bytes size
-    pub const BYTES_SIZE: usize = 32;
     /// ristretto255 group generator.
     pub const GENERATOR: GroupElement = GroupElement(RISTRETTO_BASEPOINT_POINT);
 
     /// Generate a zero group element.
     pub fn zero() -> Self {
         GroupElement(Point::identity())
-    }
-
-    /// Convert this `GroupElement` to its underlying sequence of bytes.
-    /// Always encode the compressed value.
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        self.0.compress().to_bytes()
-    }
-
-    /// Attempt to construct a `Scalar` from a compressed value byte representation.
-    ///
-    /// # Errors
-    ///   - Cannot decode group element.
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
-        Ok(GroupElement(
-            CompressedRistretto::from_slice(bytes)?
-                .decompress()
-                .ok_or(anyhow!("Cannot decode group element."))?,
-        ))
     }
 }
 
@@ -216,20 +178,6 @@ mod tests {
                 .prop_map(|s| GroupElement::GENERATOR.mul(&s))
                 .boxed()
         }
-    }
-
-    #[proptest]
-    fn scalar_to_bytes_from_bytes_test(e1: Scalar) {
-        let bytes = e1.to_bytes();
-        let e2 = Scalar::from_bytes(bytes).unwrap();
-        assert_eq!(e1, e2);
-    }
-
-    #[proptest]
-    fn group_element_to_bytes_from_bytes_test(ge1: GroupElement) {
-        let bytes = ge1.to_bytes();
-        let ge2 = GroupElement::from_bytes(&bytes).unwrap();
-        assert_eq!(ge1, ge2);
     }
 
     #[proptest]

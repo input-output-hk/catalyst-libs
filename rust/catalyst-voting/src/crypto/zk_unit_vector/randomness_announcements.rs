@@ -4,7 +4,6 @@
 
 use std::ops::Mul;
 
-use anyhow::anyhow;
 use rand_core::CryptoRngCore;
 
 use crate::crypto::group::{GroupElement, Scalar};
@@ -39,9 +38,6 @@ pub struct Announcement {
 }
 
 impl Announcement {
-    /// `Announcement` bytes size
-    pub const BYTES_SIZE: usize = GroupElement::BYTES_SIZE * 3;
-
     pub(crate) fn new(
         i_bit: bool, rand: &BlindingRandomness, commitment_key: &GroupElement,
     ) -> Self {
@@ -58,31 +54,6 @@ impl Announcement {
         };
         Self { i, b, a }
     }
-
-    /// Decode `Announcement` from bytes.
-    ///
-    /// # Errors
-    ///   - `AnnouncementDecodingError`
-    #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
-        let i = GroupElement::from_bytes(bytes[0..32].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `i` group element field."))?;
-        let b = GroupElement::from_bytes(bytes[32..64].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `b` group element field."))?;
-        let a = GroupElement::from_bytes(bytes[64..96].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `a` group element field."))?;
-        Ok(Self { i, b, a })
-    }
-
-    /// Encode `Announcement` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        let mut res = [0; 96];
-        res[0..32].copy_from_slice(&self.i.to_bytes());
-        res[32..64].copy_from_slice(&self.b.to_bytes());
-        res[64..96].copy_from_slice(&self.a.to_bytes());
-        res
-    }
 }
 
 /// Response encoding the bits of the private vector, and the randomness of
@@ -95,9 +66,6 @@ pub struct ResponseRandomness {
 }
 
 impl ResponseRandomness {
-    /// `ResponseRandomness` bytes size
-    pub const BYTES_SIZE: usize = Scalar::BYTES_SIZE * 3;
-
     pub(crate) fn new(i_bit: bool, rand: &BlindingRandomness, com_2: &Scalar) -> Self {
         let z = if i_bit {
             com_2 + &rand.betta
@@ -108,31 +76,6 @@ impl ResponseRandomness {
         let v = &(&rand.alpha * &(com_2 - &z)) + &rand.delta;
         Self { z, w, v }
     }
-
-    /// Decode `ResponseRandomness` from bytes.
-    ///
-    /// # Errors
-    ///   - Cannot decode scalar field.
-    #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
-        let z = Scalar::from_bytes(bytes[0..32].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `z` scalar field."))?;
-        let w = Scalar::from_bytes(bytes[32..64].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `w` scalar field."))?;
-        let v = Scalar::from_bytes(bytes[64..96].try_into().unwrap())
-            .map_err(|_| anyhow!("Cannot decode `v` scalar field."))?;
-        Ok(Self { z, w, v })
-    }
-
-    /// Encode `ResponseRandomness` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        let mut res = [0; 96];
-        res[0..32].copy_from_slice(&self.z.to_bytes());
-        res[32..64].copy_from_slice(&self.w.to_bytes());
-        res[64..96].copy_from_slice(&self.v.to_bytes());
-        res
-    }
 }
 
 #[cfg(test)]
@@ -141,7 +84,6 @@ mod tests {
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
-    use test_strategy::proptest;
 
     use super::*;
 
@@ -183,19 +125,5 @@ mod tests {
                 .prop_map(|(z, w, v)| ResponseRandomness { z, w, v })
                 .boxed()
         }
-    }
-
-    #[proptest]
-    fn announcement_to_bytes_from_bytes_test(a1: Announcement) {
-        let bytes = a1.to_bytes();
-        let a2 = Announcement::from_bytes(&bytes).unwrap();
-        assert_eq!(a1, a2);
-    }
-
-    #[proptest]
-    fn response_randomness_to_bytes_from_bytes_test(r1: ResponseRandomness) {
-        let bytes = r1.to_bytes();
-        let r2 = ResponseRandomness::from_bytes(&bytes).unwrap();
-        assert_eq!(r1, r2);
     }
 }

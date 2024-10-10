@@ -1,9 +1,10 @@
 //! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
+mod decoding;
+
 use std::ops::{Add, Deref, Mul};
 
-use anyhow::anyhow;
 use rand_core::CryptoRngCore;
 
 use crate::crypto::group::{GroupElement, Scalar};
@@ -50,9 +51,6 @@ impl SecretKey {
 }
 
 impl Ciphertext {
-    /// `Ciphertext` bytes size
-    pub const BYTES_SIZE: usize = GroupElement::BYTES_SIZE * 2;
-
     /// Generate a zero `Ciphertext`.
     /// The same as encrypt a `Scalar::zero()` message and `Scalar::zero()` randomness.
     pub fn zero() -> Self {
@@ -67,28 +65,6 @@ impl Ciphertext {
     /// Get the second element of the `Ciphertext`.
     pub fn second(&self) -> &GroupElement {
         &self.1
-    }
-
-    /// Convert this `Ciphertext` to its underlying sequence of bytes.
-    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
-        let mut res = [0; Self::BYTES_SIZE];
-        res[0..32].copy_from_slice(&self.0.to_bytes());
-        res[32..64].copy_from_slice(&self.1.to_bytes());
-        res
-    }
-
-    /// Attempt to construct a `Scalar` from a compressed value byte representation.
-    ///
-    /// # Errors
-    ///   - Cannot decode group element field.
-    #[allow(clippy::unwrap_used)]
-    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
-        Ok(Self(
-            GroupElement::from_bytes(bytes[0..32].try_into().unwrap())
-                .map_err(|_| anyhow!("Cannot decode first group element field."))?,
-            GroupElement::from_bytes(bytes[32..64].try_into().unwrap())
-                .map_err(|_| anyhow!("Cannot decode second group element field."))?,
-        ))
     }
 }
 
@@ -151,13 +127,6 @@ mod tests {
                 .prop_map(|(g1, g2)| Ciphertext(g1, g2))
                 .boxed()
         }
-    }
-
-    #[proptest]
-    fn ciphertext_to_bytes_from_bytes_test(c1: Ciphertext) {
-        let bytes = c1.to_bytes();
-        let c2 = Ciphertext::from_bytes(&bytes).unwrap();
-        assert_eq!(c1, c2);
     }
 
     #[proptest]

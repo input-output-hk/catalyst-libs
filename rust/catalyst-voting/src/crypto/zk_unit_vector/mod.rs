@@ -7,13 +7,13 @@
 // cspell: words Zhang, Oliynykov, Balogum
 
 mod challenges;
+mod decoding;
 mod polynomial;
 mod randomness_announcements;
 mod utils;
 
-use std::{io::Read, ops::Mul};
+use std::ops::Mul;
 
-use anyhow::anyhow;
 use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash};
 use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
 use rand_core::CryptoRngCore;
@@ -33,74 +33,6 @@ pub struct UnitVectorProof(
     Vec<ResponseRandomness>,
     Scalar,
 );
-
-impl UnitVectorProof {
-    /// Decode `UnitVectorProof` from bytes.
-    ///
-    /// # Errors
-    ///   - Cannot decode announcement value.
-    ///   - Cannot decode ciphertext value.
-    ///   - Cannot decode response randomness value.
-    ///   - Cannot decode scalar value.
-    pub fn from_bytes(mut bytes: &[u8], size: usize) -> anyhow::Result<Self> {
-        let mut ann_buf = [0u8; Announcement::BYTES_SIZE];
-        let mut dl_buf = [0u8; Ciphertext::BYTES_SIZE];
-        let mut rr_buf = [0u8; ResponseRandomness::BYTES_SIZE];
-
-        let ann = (0..size)
-            .map(|i| {
-                bytes.read_exact(&mut ann_buf)?;
-                Announcement::from_bytes(&ann_buf)
-                    .map_err(|e| anyhow!("Cannot decode announcement at {i}, error: {e}."))
-            })
-            .collect::<anyhow::Result<_>>()?;
-        let dl = (0..size)
-            .map(|i| {
-                bytes.read_exact(&mut dl_buf)?;
-                Ciphertext::from_bytes(&dl_buf)
-                    .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}."))
-            })
-            .collect::<anyhow::Result<_>>()?;
-        let rr = (0..size)
-            .map(|i| {
-                bytes.read_exact(&mut rr_buf)?;
-                ResponseRandomness::from_bytes(&rr_buf)
-                    .map_err(|e| anyhow!("Cannot decode response randomness at {i}, error: {e}."))
-            })
-            .collect::<anyhow::Result<_>>()?;
-
-        let mut scalar_buf = [0u8; Scalar::BYTES_SIZE];
-        bytes.read_exact(&mut scalar_buf)?;
-        let scalar =
-            Scalar::from_bytes(scalar_buf).map_err(|_| anyhow!("Cannot decode scalar field."))?;
-        Ok(Self(ann, dl, rr, scalar))
-    }
-
-    /// Get a deserialized bytes size
-    #[must_use]
-    pub fn bytes_size(&self) -> usize {
-        self.0.len() * Announcement::BYTES_SIZE
-            + self.0.len() * Ciphertext::BYTES_SIZE
-            + self.0.len() * ResponseRandomness::BYTES_SIZE
-    }
-
-    /// Encode `EncryptedVote` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> Vec<u8> {
-        let mut res = Vec::with_capacity(self.bytes_size());
-        self.0
-            .iter()
-            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
-        self.1
-            .iter()
-            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
-        self.2
-            .iter()
-            .for_each(|c| res.extend_from_slice(&c.to_bytes()));
-        res.extend_from_slice(&self.3.to_bytes());
-        res
-    }
-}
 
 /// Generates a unit vector proof.
 ///
@@ -327,13 +259,6 @@ mod tests {
             })
             .boxed()
         }
-    }
-
-    #[proptest]
-    fn proof_to_bytes_from_bytes_test(p1: UnitVectorProof) {
-        let bytes = p1.to_bytes();
-        let p2 = UnitVectorProof::from_bytes(&bytes, p1.0.len()).unwrap();
-        assert_eq!(p1, p2);
     }
 
     fn is_unit_vector(vector: &[Scalar]) -> bool {

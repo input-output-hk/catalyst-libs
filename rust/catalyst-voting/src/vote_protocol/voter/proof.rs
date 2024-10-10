@@ -18,32 +18,7 @@ use crate::{
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VoterProof(UnitVectorProof);
-
-impl VoterProof {
-    /// Decode `VoterProof` from bytes.
-    ///
-    /// # Errors
-    ///   - Cannot decode announcement value.
-    ///   - Cannot decode ciphertext value.
-    ///   - Cannot decode response randomness value.
-    ///   - Cannot decode scalar value.
-    pub fn from_bytes(bytes: &[u8], size: usize) -> anyhow::Result<Self> {
-        UnitVectorProof::from_bytes(bytes, size).map(Self)
-    }
-
-    /// Get a deserialized bytes size
-    #[must_use]
-    pub fn bytes_size(&self) -> usize {
-        self.0.bytes_size()
-    }
-
-    /// Encode `EncryptedVote` tos bytes.
-    #[must_use]
-    pub fn to_bytes(&self) -> Vec<u8> {
-        self.0.to_bytes()
-    }
-}
+pub struct VoterProof(pub(super) UnitVectorProof);
 
 /// Voter proof commitment struct.
 pub struct VoterProofCommitment(GroupElement);
