@@ -7,6 +7,13 @@ use anyhow::anyhow;
 use super::{Announcement, Ciphertext, GroupElement, ResponseRandomness, Scalar, UnitVectorProof};
 
 impl UnitVectorProof {
+    /// Get an underlying vector length.
+    ///
+    /// **Note** each vector field has the same length.
+    pub fn size(&self) -> usize {
+        self.0.len()
+    }
+
     /// Decode `UnitVectorProof` from bytes.
     ///
     /// # Errors
@@ -14,26 +21,26 @@ impl UnitVectorProof {
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes(mut bytes: &[u8], size: usize) -> anyhow::Result<Self> {
+    pub fn from_bytes(mut bytes: &[u8], len: usize) -> anyhow::Result<Self> {
         let mut ann_buf = [0u8; Announcement::BYTES_SIZE];
         let mut dl_buf = [0u8; Ciphertext::BYTES_SIZE];
         let mut rr_buf = [0u8; ResponseRandomness::BYTES_SIZE];
 
-        let ann = (0..size)
+        let ann = (0..len)
             .map(|i| {
                 bytes.read_exact(&mut ann_buf)?;
                 Announcement::from_bytes(&ann_buf)
                     .map_err(|e| anyhow!("Cannot decode announcement at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
-        let dl = (0..size)
+        let dl = (0..len)
             .map(|i| {
                 bytes.read_exact(&mut dl_buf)?;
                 Ciphertext::from_bytes(&dl_buf)
                     .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
-        let rr = (0..size)
+        let rr = (0..len)
             .map(|i| {
                 bytes.read_exact(&mut rr_buf)?;
                 ResponseRandomness::from_bytes(&rr_buf)
@@ -141,9 +148,11 @@ mod tests {
     use super::*;
 
     #[proptest]
-    fn proof_to_bytes_from_bytes_test(p1: UnitVectorProof) {
+    fn proof_to_bytes_from_bytes_test(
+        #[strategy(0..20usize)] _size: usize, #[any(#_size)] p1: UnitVectorProof,
+    ) {
         let bytes = p1.to_bytes();
-        let p2 = UnitVectorProof::from_bytes(&bytes, p1.0.len()).unwrap();
+        let p2 = UnitVectorProof::from_bytes(&bytes, p1.size()).unwrap();
         assert_eq!(p1, p2);
     }
 

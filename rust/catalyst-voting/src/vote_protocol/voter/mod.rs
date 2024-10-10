@@ -97,7 +97,23 @@ pub fn encrypt_vote<R: CryptoRngCore>(
 
 #[cfg(test)]
 mod tests {
+    use proptest::{
+        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        sample::size_range,
+    };
+
     use super::*;
+
+    impl Arbitrary for EncryptedVote {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<Vec<Ciphertext>>((size_range(size), ()))
+                .prop_map(Self)
+                .boxed()
+        }
+    }
 
     #[test]
     fn vote_test() {

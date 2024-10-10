@@ -8,6 +8,11 @@ use super::{proof::VoterProof, EncryptedVote};
 use crate::crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof};
 
 impl EncryptedVote {
+    /// Get an underlying vector length.
+    pub(crate) fn size(&self) -> usize {
+        self.0.len()
+    }
+
     /// Decode `EncryptedVote` from bytes.
     ///
     /// # Errors
@@ -44,6 +49,14 @@ impl EncryptedVote {
 }
 
 impl VoterProof {
+    /// Get an underlying vector length.
+    ///
+    /// **Note** each vector field has the same length.
+    #[must_use]
+    pub fn size(&self) -> usize {
+        self.0.size()
+    }
+
     /// Decode `VoterProof` from bytes.
     ///
     /// # Errors
@@ -51,8 +64,8 @@ impl VoterProof {
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes(bytes: &[u8], size: usize) -> anyhow::Result<Self> {
-        UnitVectorProof::from_bytes(bytes, size).map(Self)
+    pub fn from_bytes(bytes: &[u8], len: usize) -> anyhow::Result<Self> {
+        UnitVectorProof::from_bytes(bytes, len).map(Self)
     }
 
     /// Get a deserialized bytes size
@@ -70,19 +83,18 @@ impl VoterProof {
 
 #[cfg(test)]
 mod tests {
-    use proptest::sample::size_range;
     use test_strategy::proptest;
 
     use super::*;
 
     #[proptest]
     fn encrypted_vote_to_bytes_from_bytes_test(
-        #[any(size_range(0..u8::MAX as usize).lift())] ciphers: Vec<Ciphertext>,
+        #[strategy(0..20usize)] _size: usize, #[any(#_size)] vote1: EncryptedVote,
     ) {
-        let vote1 = EncryptedVote(ciphers);
+        println!("{}", vote1.size());
         let bytes = vote1.to_bytes();
         assert_eq!(bytes.len(), vote1.bytes_size());
-        let vote2 = EncryptedVote::from_bytes(&bytes, vote1.0.len()).unwrap();
+        let vote2 = EncryptedVote::from_bytes(&bytes, vote1.size()).unwrap();
         assert_eq!(vote1, vote2);
     }
 }
