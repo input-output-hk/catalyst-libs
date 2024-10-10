@@ -1,7 +1,7 @@
 //! Voter proof generation and verification procedures.
 //! It allows to transparently verify the correctness voter generation and encryption.
 
-use std::ops::{Deref, Mul};
+use std::ops::Mul;
 
 use rand_core::CryptoRngCore;
 
@@ -16,13 +16,26 @@ use crate::{
 
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VoterProof(UnitVectorProof);
 
-impl Deref for VoterProof {
-    type Target = UnitVectorProof;
+impl VoterProof {
+    /// Decode `VoterProof` from bytes.
+    #[must_use]
+    pub fn from_bytes(bytes: &[u8], size: usize) -> Option<Self> {
+        UnitVectorProof::from_bytes(bytes, size).map(Self)
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.0
+    /// Get a deserialized bytes size
+    #[must_use]
+    pub fn bytes_size(&self) -> usize {
+        self.0.bytes_size()
+    }
+
+    /// Encode `EncryptedVote` tos bytes.
+    #[must_use]
+    pub fn to_bytes(&self) -> Vec<u8> {
+        self.0.to_bytes()
     }
 }
 
@@ -82,4 +95,20 @@ pub fn verify_voter_proof(
     proof: &VoterProof,
 ) -> bool {
     verify_unit_vector_proof(&proof.0, encrypted_vote.0, public_key, &commitment.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::{any_with, Arbitrary, BoxedStrategy, Strategy};
+
+    use super::*;
+
+    impl Arbitrary for VoterProof {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<UnitVectorProof>(size).prop_map(Self).boxed()
+        }
+    }
 }
