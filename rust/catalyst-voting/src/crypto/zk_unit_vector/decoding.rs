@@ -144,8 +144,6 @@ impl ResponseRandomness {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
     use test_strategy::proptest;
 
     use super::*;
@@ -156,7 +154,7 @@ mod tests {
     ) {
         let bytes = p1.to_bytes();
         assert_eq!(bytes.len(), p1.bytes_size());
-        let p2 = UnitVectorProof::from_bytes(&mut Cursor::new(bytes), p1.size()).unwrap();
+        let p2 = UnitVectorProof::from_bytes(&mut bytes.as_slice(), p1.size()).unwrap();
         assert_eq!(p1, p2);
     }
 

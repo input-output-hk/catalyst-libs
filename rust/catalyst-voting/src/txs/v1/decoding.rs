@@ -154,8 +154,6 @@ impl Tx {
 
 #[cfg(test)]
 mod tests {
-    use std::io::Cursor;
-
     use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
     use test_strategy::proptest;
 
@@ -211,7 +209,7 @@ mod tests {
         let size = u32::from_be_bytes(bytes[0..4].try_into().unwrap());
         assert_eq!(size as usize, bytes.len() - 4);
 
-        let t2 = Tx::from_bytes(&mut Cursor::new(bytes)).unwrap();
+        let t2 = Tx::from_bytes(&mut bytes.as_slice()).unwrap();
         assert_eq!(t1, t2);
     }
 }
