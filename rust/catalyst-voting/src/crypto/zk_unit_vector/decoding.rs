@@ -58,7 +58,8 @@ impl UnitVectorProof {
     /// Get a deserialized bytes size
     #[must_use]
     pub fn bytes_size(&self) -> usize {
-        self.0.len() * Announcement::BYTES_SIZE
+        Scalar::BYTES_SIZE
+            + self.0.len() * Announcement::BYTES_SIZE
             + self.0.len() * Ciphertext::BYTES_SIZE
             + self.0.len() * ResponseRandomness::BYTES_SIZE
     }
@@ -152,6 +153,7 @@ mod tests {
         #[strategy(0..5usize)] _size: usize, #[any(#_size)] p1: UnitVectorProof,
     ) {
         let bytes = p1.to_bytes();
+        assert_eq!(bytes.len(), p1.bytes_size());
         let p2 = UnitVectorProof::from_bytes(&bytes, p1.size()).unwrap();
         assert_eq!(p1, p2);
     }

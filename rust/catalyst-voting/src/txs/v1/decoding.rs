@@ -70,6 +70,12 @@ impl Tx {
 
         // Read tx size
         bytes.read_exact(&mut u32_buf)?;
+        let tx_size = u32::from_be_bytes(u32_buf);
+        ensure!(
+            tx_size as usize == bytes.len(),
+            "Invalid tx size, expected: {tx_size}, provided: {0}.",
+            bytes.len()
+        );
 
         bytes.read_exact(&mut u8_buf)?;
         ensure!(
@@ -106,7 +112,7 @@ impl Tx {
                 bytes.read_exact(&mut u8_buf)?;
                 let proof = VoterProof::from_bytes(bytes, u8_buf[0].into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
-                bytes = &bytes[vote.bytes_size()..];
+                bytes = &bytes[proof.bytes_size()..];
 
                 Vote::Private(vote, proof)
             },
@@ -155,7 +161,7 @@ impl Tx {
 
 #[cfg(test)]
 mod tests {
-    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, ProptestConfig, Strategy};
+    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
     use test_strategy::proptest;
 
     use super::*;
@@ -201,13 +207,10 @@ mod tests {
         }
     }
 
-    #[proptest(ProptestConfig::with_cases(1))]
+    #[proptest]
     #[allow(clippy::indexing_slicing)]
     fn tx_to_bytes_from_bytes_test(t1: Tx) {
         let bytes = t1.to_bytes();
-        // verify correctness serializing tx size field
-        let size = u32::from_be_bytes(bytes[0..4].try_into().unwrap());
-        assert_eq!(size as usize, bytes.len() - 4);
         let t2 = Tx::from_bytes(&bytes).unwrap();
         assert_eq!(t1, t2);
     }
