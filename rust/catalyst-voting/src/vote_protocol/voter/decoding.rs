@@ -5,7 +5,10 @@ use std::io::Read;
 use anyhow::anyhow;
 
 use super::{proof::VoterProof, EncryptedVote};
-use crate::crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof};
+use crate::{
+    crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof},
+    utils::read_array,
+};
 
 impl EncryptedVote {
     /// Get an underlying vector length.
@@ -18,12 +21,10 @@ impl EncryptedVote {
     /// # Errors
     ///   - Cannot decode ciphertext.
     pub fn from_bytes<R: Read>(reader: &mut R, size: usize) -> anyhow::Result<Self> {
-        let mut ciph_buf = [0u8; Ciphertext::BYTES_SIZE];
-
         let ciphertexts = (0..size)
             .map(|i| {
-                reader.read_exact(&mut ciph_buf)?;
-                Ciphertext::from_bytes(&ciph_buf)
+                let bytes = read_array(reader)?;
+                Ciphertext::from_bytes(&bytes)
                     .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}"))
             })
             .collect::<anyhow::Result<_>>()?;

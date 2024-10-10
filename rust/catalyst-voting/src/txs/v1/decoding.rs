@@ -5,6 +5,7 @@ use std::io::Read;
 use anyhow::{anyhow, bail, ensure};
 
 use super::{EncryptedVote, PublicKey, Tx, Vote, VoterProof};
+use crate::utils::{read_array, read_be_u32, read_be_u64, read_be_u8};
 
 impl Tx {
     /// Convert this `Tx` to its underlying sequence of bytes.
@@ -64,47 +65,38 @@ impl Tx {
     ///   - Invalid public key.
     #[allow(clippy::indexing_slicing)]
     pub fn from_bytes<R: Read>(reader: &mut R) -> anyhow::Result<Self> {
-        let mut u8_buf = [0u8; 1];
-        let mut u32_buf = [0u8; 4];
-        let mut u64_buf = [0u8; 8];
-        let mut u256_buf = [0u8; 32];
-
         // Skip tx size field
-        reader.read_exact(&mut u32_buf)?;
+        read_be_u32(reader)?;
 
-        reader.read_exact(&mut u8_buf)?;
+        let padding_tag = read_be_u8(reader)?;
         ensure!(
-            u8_buf[0] == 0,
-            "Invalid padding tag field value, must be equals to `0`, provided: {0}.",
-            u8_buf[0]
+            padding_tag == 0,
+            "Invalid padding tag field value, must be equals to `0`, provided: {padding_tag}.",
         );
 
-        reader.read_exact(&mut u8_buf)?;
+        let fragment_tag = read_be_u8(reader)?;
         ensure!(
-            u8_buf[0] == 11,
-            "Invalid fragment tag field value, must be equals to `11`, provided: {0}.",
-            u8_buf[0]
+            fragment_tag == 11,
+            "Invalid fragment tag field value, must be equals to `11`, provided: {fragment_tag}.",
         );
 
-        reader.read_exact(&mut u256_buf)?;
-        let vote_plan_id = u256_buf;
+        let vote_plan_id = read_array(reader)?;
 
-        reader.read_exact(&mut u8_buf)?;
-        let proposal_index = u8_buf[0];
+        let proposal_index = read_be_u8(reader)?;
 
-        reader.read_exact(&mut u8_buf)?;
-        let vote = match u8_buf[0] {
+        let vote_tag = read_be_u8(reader)?;
+        let vote = match vote_tag {
             1 => {
-                reader.read_exact(&mut u8_buf)?;
-                Vote::Public(u8_buf[0])
+                let vote = read_be_u8(reader)?;
+                Vote::Public(vote)
             },
             2 => {
-                reader.read_exact(&mut u8_buf)?;
-                let vote = EncryptedVote::from_bytes(reader, u8_buf[0].into())
+                let size = read_be_u8(reader)?;
+                let vote = EncryptedVote::from_bytes(reader, size.into())
                     .map_err(|e| anyhow!("Invalid encrypted vote, error: {e}."))?;
 
-                reader.read_exact(&mut u8_buf)?;
-                let proof = VoterProof::from_bytes(reader, u8_buf[0].into())
+                let size = read_be_u8(reader)?;
+                let proof = VoterProof::from_bytes(reader, size.into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
 
                 Vote::Private(vote, proof)
@@ -113,34 +105,31 @@ impl Tx {
         };
 
         // skip block date (epoch and slot)
-        reader.read_exact(&mut u64_buf)?;
+        read_be_u64(reader)?;
 
-        reader.read_exact(&mut u8_buf)?;
+        let inputs_amount = read_be_u8(reader)?;
         ensure!(
-            u8_buf[0] == 1,
-            "Invalid number of inputs, expected: `1`, provided: {0}",
-            u8_buf[0]
+            inputs_amount == 1,
+            "Invalid number of inputs, expected: `1`, provided: {inputs_amount}",
         );
 
-        reader.read_exact(&mut u8_buf)?;
+        let outputs_amount = read_be_u8(reader)?;
         ensure!(
-            u8_buf[0] == 0,
-            "Invalid number of outputs, expected: `0`, provided: {0}",
-            u8_buf[0]
+            outputs_amount == 0,
+            "Invalid number of outputs, expected: `0`, provided: {outputs_amount}",
         );
 
-        reader.read_exact(&mut u8_buf)?;
+        let input_tag = read_be_u8(reader)?;
         ensure!(
-            u8_buf[0] == 0xFF,
-            "Invalid input tag, expected: `255`, provided: {0}",
-            u8_buf[0]
+            input_tag == 0xFF,
+            "Invalid input tag, expected: `255`, provided: {input_tag}",
         );
 
         // skip value
-        reader.read_exact(&mut u64_buf)?;
+        read_be_u64(reader)?;
 
-        reader.read_exact(&mut u256_buf)?;
-        let public_key = PublicKey::from_bytes(&u256_buf)
+        let public_key_bytes = read_array(reader)?;
+        let public_key = PublicKey::from_bytes(&public_key_bytes)
             .map_err(|e| anyhow!("Invalid public key, error: {e}."))?;
 
         Ok(Self {

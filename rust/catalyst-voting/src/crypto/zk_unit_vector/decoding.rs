@@ -5,6 +5,7 @@ use std::io::Read;
 use anyhow::anyhow;
 
 use super::{Announcement, Ciphertext, GroupElement, ResponseRandomness, Scalar, UnitVectorProof};
+use crate::utils::read_array;
 
 impl UnitVectorProof {
     /// Get an underlying vector length.
@@ -22,36 +23,31 @@ impl UnitVectorProof {
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
     pub fn from_bytes<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
-        let mut ann_buf = [0u8; Announcement::BYTES_SIZE];
-        let mut dl_buf = [0u8; Ciphertext::BYTES_SIZE];
-        let mut rr_buf = [0u8; ResponseRandomness::BYTES_SIZE];
-
         let ann = (0..len)
             .map(|i| {
-                reader.read_exact(&mut ann_buf)?;
-                Announcement::from_bytes(&ann_buf)
+                let bytes = read_array(reader)?;
+                Announcement::from_bytes(&bytes)
                     .map_err(|e| anyhow!("Cannot decode announcement at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
         let dl = (0..len)
             .map(|i| {
-                reader.read_exact(&mut dl_buf)?;
-                Ciphertext::from_bytes(&dl_buf)
+                let bytes = read_array(reader)?;
+                Ciphertext::from_bytes(&bytes)
                     .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
         let rr = (0..len)
             .map(|i| {
-                reader.read_exact(&mut rr_buf)?;
-                ResponseRandomness::from_bytes(&rr_buf)
+                let bytes = read_array(reader)?;
+                ResponseRandomness::from_bytes(&bytes)
                     .map_err(|e| anyhow!("Cannot decode response randomness at {i}, error: {e}."))
             })
             .collect::<anyhow::Result<_>>()?;
 
-        let mut scalar_buf = [0u8; Scalar::BYTES_SIZE];
-        reader.read_exact(&mut scalar_buf)?;
+        let bytes = read_array(reader)?;
         let scalar =
-            Scalar::from_bytes(scalar_buf).map_err(|_| anyhow!("Cannot decode scalar field."))?;
+            Scalar::from_bytes(bytes).map_err(|_| anyhow!("Cannot decode scalar field."))?;
         Ok(Self(ann, dl, rr, scalar))
     }
 
