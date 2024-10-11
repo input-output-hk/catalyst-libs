@@ -254,8 +254,8 @@ mod tests {
             )>(((size_range(size), (((), ()), ())), ()))
             .prop_map(|(val, scalar)| {
                 let (vec, rr): (Vec<_>, Vec<_>) = val.into_iter().unzip();
-                let (an, ciph) = vec.into_iter().unzip();
-                Self(an, ciph, rr, scalar)
+                let (an, cipher) = vec.into_iter().unzip();
+                Self(an, cipher, rr, scalar)
             })
             .boxed()
         }
