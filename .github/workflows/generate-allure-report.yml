@@ -147,8 +147,11 @@ jobs:
           allow-empty: true
           debug: true
           flag-name: rust-unit-test
-          base-path: "/home/runner/work/catalyst-libs/catalyst-libs/"
+          base-path: "/home/runner/work/catalyst-libs/"
           parallel: true
+
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
 
   upload-coverage-report:
     name: Upload coverage report
