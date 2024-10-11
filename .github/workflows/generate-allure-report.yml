@@ -127,8 +127,6 @@ jobs:
         with:
           name: coverage-reports
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
       - name: Collect coverage report
         run: |
           mkdir -p ${{ env.COVERAGE_REPORT_PATH }}
@@ -149,7 +147,7 @@ jobs:
           allow-empty: true
           debug: true
           flag-name: rust-unit-test
-          base-path: "/home/runner/work/catalyst-libs/"
+          base-path: "/home/runner/work/catalyst-libs/catalyst-libs/"
           parallel: true
 
   upload-coverage-report:
