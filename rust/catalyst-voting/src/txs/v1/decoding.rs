@@ -4,7 +4,7 @@ use std::io::Read;
 
 use anyhow::{anyhow, bail, ensure};
 
-use super::{EncryptedVote, PublicKey, Tx, Vote, VoterProof};
+use super::{EncryptedVote, PublicKey, Tx, VotePayload, VoterProof};
 use crate::utils::{read_array, read_be_u32, read_be_u64, read_be_u8};
 
 impl Tx {
@@ -19,12 +19,12 @@ impl Tx {
         tx_body.push(self.proposal_index);
 
         match &self.vote {
-            Vote::Public(vote) => {
+            VotePayload::Public(vote) => {
                 // Public vote tag
                 tx_body.push(1);
                 tx_body.push(*vote);
             },
-            Vote::Private(vote, proof) => {
+            VotePayload::Private(vote, proof) => {
                 // Private vote tag
                 tx_body.push(2);
                 tx_body.push(vote.size() as u8);
@@ -88,7 +88,7 @@ impl Tx {
         let vote = match vote_tag {
             1 => {
                 let vote = read_be_u8(reader)?;
-                Vote::Public(vote)
+                VotePayload::Public(vote)
             },
             2 => {
                 let size = read_be_u8(reader)?;
@@ -99,7 +99,7 @@ impl Tx {
                 let proof = VoterProof::from_bytes(reader, size.into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
 
-                Vote::Private(vote, proof)
+                VotePayload::Private(vote, proof)
             },
             tag => bail!("Invalid vote tag value, must be equals to `0` or `1`, provided: {tag}"),
         };

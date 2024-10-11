@@ -4,6 +4,7 @@
 use std::ops::Mul;
 
 use anyhow::ensure;
+use curve25519_dalek::digest::{consts::U64, Digest};
 use rand_core::CryptoRngCore;
 
 use super::{EncryptedVote, EncryptionRandomness, Vote};
@@ -27,6 +28,12 @@ impl VoterProofCommitment {
     /// Randomly generate the `VoterProofCommitment`.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self(GroupElement::GENERATOR.mul(&Scalar::random(rng)))
+    }
+
+    /// Generate a `VoterProofCommitment` from a hash digest.
+    pub fn from_hash<D>(hash: D) -> VoterProofCommitment
+    where D: Digest<OutputSize = U64> + Default {
+        Self(GroupElement::from_hash(hash))
     }
 }
 

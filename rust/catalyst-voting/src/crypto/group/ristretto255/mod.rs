@@ -86,6 +86,12 @@ impl GroupElement {
     pub fn zero() -> Self {
         GroupElement(Point::identity())
     }
+
+    /// Generate a `GroupElement` from a hash digest.
+    pub fn from_hash<D>(hash: D) -> GroupElement
+    where D: Digest<OutputSize = U64> + Default {
+        GroupElement(Point::from_hash(hash))
+    }
 }
 
 // `std::ops` traits implementations
