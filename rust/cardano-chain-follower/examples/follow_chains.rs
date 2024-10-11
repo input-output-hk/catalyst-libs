@@ -111,7 +111,7 @@ async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Bo
         mithril_dl_connect_timeout = format!("{}", humantime::format_duration(connect_timeout));
     }
 
-    if let Some(data_timeout) = matches.get_one::<u64>("mithril-sync-data-timeout") {
+    if let Some(data_timeout) = matches.get_one::<u64>("mithril-sync-data-read-timeout") {
         dl_config = dl_config.with_connection_timeout(Duration::from_secs(*data_timeout));
     }
     if let Some(data_timeout) = dl_config.data_read_timeout {
