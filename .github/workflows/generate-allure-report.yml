@@ -138,9 +138,6 @@ jobs:
         run: |
           sed -i -e 's/SF:\/root\/build/SF:rust/g' ${{ env.COVERAGE_REPORT_PATH }}/cat-libs.coverage.info
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
       - name: Coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
