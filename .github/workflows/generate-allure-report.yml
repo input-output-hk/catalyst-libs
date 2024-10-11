@@ -127,6 +127,8 @@ jobs:
         with:
           name: coverage-reports
 
+      - name: Setup upterm session
+        uses: lhotari/action-upterm@v1
       - name: Collect coverage report
         run: |
           mkdir -p ${{ env.COVERAGE_REPORT_PATH }}
@@ -137,7 +139,6 @@ jobs:
       - name: Normalize coverage report paths
         run: |
           sed -i -e 's/SF:\/root/SF:rust/g' ${{ env.COVERAGE_REPORT_PATH }}/cat-libs.coverage.info
-          # sed -i -e 's/SF:/SF:rust\/tests\/api_tests\//g' ${{ env.COVERAGE_REPORT_PATH }}/api-tests.coverage.info
 
       - name: Coveralls
         env:
