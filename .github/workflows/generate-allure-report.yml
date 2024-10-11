@@ -147,7 +147,7 @@ jobs:
           allow-empty: true
           debug: true
           flag-name: rust-unit-test
-          base-path: "/home/runner/work/catalyst-libs/"
+          base-path: "/home/runner/work/catalyst-libs/catalyst-libs/"
           parallel: true
 
       - name: Setup upterm session
