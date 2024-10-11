@@ -150,9 +150,6 @@ jobs:
           base-path: "/home/runner/work/catalyst-libs/catalyst-libs/"
           parallel: true
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
   upload-coverage-report:
     name: Upload coverage report
     needs: [generate-coverage-report]
