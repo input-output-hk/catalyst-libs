@@ -134,12 +134,9 @@ jobs:
           cp **/*${{ env.COVERAGE_EXT }} ${{ env.COVERAGE_REPORT_PATH }}
           ls ${{ env.COVERAGE_REPORT_PATH }}
 
-      - name: Setup upterm session
-        uses: lhotari/action-upterm@v1
-
       - name: Normalize coverage report paths
         run: |
-          sed -i -e 's/SF:\/root/SF:rust/g' ${{ env.COVERAGE_REPORT_PATH }}/cat-libs.coverage.info
+          sed -i -e 's/SF:\/root/SF:build/g' ${{ env.COVERAGE_REPORT_PATH }}/cat-libs.coverage.info
 
       - name: Setup upterm session
         uses: lhotari/action-upterm@v1
