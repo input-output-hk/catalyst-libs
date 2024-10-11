@@ -90,6 +90,7 @@ impl Tx {
 #[cfg(test)]
 mod tests {
     use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
+    use test_strategy::proptest;
 
     use super::*;
     use crate::SecretKey;
@@ -132,5 +133,25 @@ mod tests {
                 })
                 .boxed()
         }
+    }
+
+    #[proptest]
+    fn tx_private_test(
+        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..)] proposal_voting_options: u8,
+        #[strategy(0..#proposal_voting_options)] choice: u8, users_secret_key: SecretKey,
+        election_secret_key: SecretKey,
+    ) {
+        let users_public_key = users_secret_key.public_key();
+        let election_public_key = election_secret_key.public_key();
+
+        Tx::new_private(
+            vote_plan_id,
+            proposal_index,
+            proposal_voting_options,
+            choice,
+            users_public_key,
+            &election_public_key,
+        )
+        .unwrap();
     }
 }
