@@ -3,7 +3,9 @@
 //! Facilitates block serialization for immutable ledger
 
 use anyhow::Ok;
+use blake2b_simd::{self, Params};
 use core::result::Result::Ok as ResultOk;
+use ed25519_dalek::{ed25519::signature::SignerMut, SigningKey, SECRET_KEY_LENGTH};
 
 use ulid::Ulid;
 use uuid::Uuid;
@@ -49,6 +51,10 @@ pub struct Validator(pub Vec<Kid>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct Metadata(pub Vec<u8>);
 
+/// Size of block hdr
+#[derive(Debug, Clone, PartialEq)]
+pub struct BlockHdrSize(usize);
+
 /// Decoder block header
 type DecodedBlockHeader = (
     ChainId,
@@ -59,7 +65,89 @@ type DecodedBlockHeader = (
     PurposeId,
     Validator,
     Option<Metadata>,
+    BlockHdrSize,
 );
+
+/// Choice of hash function:
+/// must be the same as the hash of the previous block.
+pub enum HashFunction {
+    /// BLAKE3 is based on an optimized instance of the established hash function BLAKE2 and on the original Bao tree mode
+    Blake3,
+    /// BLAKE2b-512 produces digest side of 512 bits.
+    Blake2b,
+}
+
+/// Encode block
+pub fn encode_block(
+    block_hdr_cbor: Vec<u8>, block_data: Vec<u8>, validator_keys: Vec<&[u8; SECRET_KEY_LENGTH]>,
+    hasher: HashFunction,
+) -> anyhow::Result<Vec<u8>> {
+    let hashed_block_header = match hasher {
+        HashFunction::Blake3 => blake3(&block_hdr_cbor)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(&block_hdr_cbor)?.to_vec(),
+    };
+
+    // validator_signature MUST be a signature of the hashed block_header bytes
+    // and the block_data bytes
+
+    let data_to_sign = [hashed_block_header, block_data.clone()].concat();
+
+    // if validator is only one id => validator_signature contains only 1 signature;
+    // if validator is array => validator_signature contains an array with the same length;
+
+    let signatures: Vec<[u8; 64]> = validator_keys
+        .iter()
+        .map(|sk| {
+            let mut sk: SigningKey = SigningKey::from_bytes(&sk);
+            sk.sign(&data_to_sign).to_bytes()
+        })
+        .collect();
+
+    let out = block_hdr_cbor;
+
+    let mut encoder = minicbor::Encoder::new(out);
+    encoder.bytes(&block_data)?;
+    encoder.bytes(&signatures.concat())?;
+
+    Ok(encoder.writer().to_vec())
+}
+
+/// Decoded block
+pub fn decode_block(encoded_block: Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    // Decode cbor to bytes
+    let binding = encoded_block.clone();
+    let mut cbor_decoder = minicbor::Decoder::new(&binding);
+
+    println!("ab {:?}", encoded_block.len());
+
+    // Decoded block hdr
+    let block_hdr: DecodedBlockHeader = decode_block_header(encoded_block.clone())?;
+    let block_hdr_size: BlockHdrSize = block_hdr.8;
+
+    cbor_decoder.set_position(block_hdr_size.0);
+
+    // Block data
+    let block_data = cbor_decoder
+        .bytes()
+        .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for block data : {e}")))?;
+
+    println!("bloc {:?}", block_data.len());
+
+    Ok(vec![0; 64])
+}
+
+/// Produce BLAKE3 hash
+pub(crate) fn blake3(value: &[u8]) -> anyhow::Result<[u8; 32]> {
+    Ok(*blake3::hash(value).as_bytes())
+}
+
+/// BLAKE2b-512 produces digest side of 512 bits.
+pub(crate) fn blake2b_512(value: &[u8]) -> anyhow::Result<[u8; 64]> {
+    let h = Params::new().hash_length(64).hash(value);
+    let b = h.as_bytes();
+    b.try_into()
+        .map_err(|_| anyhow::anyhow!("Invalid length of blake2b_512, expected 64 got {}", b.len()))
+}
 
 /// Encode block header
 pub fn encode_block_header(
@@ -164,6 +252,8 @@ pub fn decode_block_header(block_hdr: Vec<u8>) -> anyhow::Result<DecodedBlockHea
         Err(_) => None,
     };
 
+    let block_hdr_size = BlockHdrSize((cbor_decoder.position()).try_into()?);
+
     Ok((
         chain_id,
         block_height,
@@ -173,17 +263,20 @@ pub fn decode_block_header(block_hdr: Vec<u8>) -> anyhow::Result<DecodedBlockHea
         purpose_id,
         Validator(validators),
         metadata,
+        block_hdr_size,
     ))
 }
 
 #[cfg(test)]
 mod tests {
+    use ed25519_dalek::SECRET_KEY_LENGTH;
+
     use ulid::Ulid;
     use uuid::Uuid;
 
     use crate::{
-        decode_block_header, encode_block_header, BlockTimeStamp, ChainId, Height, Kid, LedgerType,
-        Metadata, PreviousBlockHash, PurposeId, Validator,
+        decode_block, decode_block_header, encode_block, encode_block_header, BlockTimeStamp,
+        ChainId, Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId, Validator,
     };
 
     #[test]
@@ -228,5 +321,66 @@ mod tests {
         assert_eq!(decoded_hdr.5, purpose_id);
         assert_eq!(decoded_hdr.6, validators);
         assert_eq!(decoded_hdr.7, metadata);
+    }
+
+    #[test]
+    fn block_encode_decode() {
+        let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        let kid_b: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        let chain_id = ChainId(Ulid::new());
+        let block_height = Height(5);
+        let block_ts = BlockTimeStamp(1728474515);
+        let prev_block_height = PreviousBlockHash(vec![0; 64]);
+        let ledger_type = LedgerType(Uuid::new_v4());
+        let purpose_id = PurposeId(Ulid::new());
+        let validators = Validator(vec![Kid(kid_a), Kid(kid_b)]);
+        let metadata = Some(Metadata(vec![1; 128]));
+
+        let encoded_block_hdr = encode_block_header(
+            chain_id,
+            block_height,
+            block_ts,
+            prev_block_height.clone(),
+            ledger_type.clone(),
+            purpose_id.clone(),
+            validators.clone(),
+            metadata.clone(),
+        )
+        .unwrap();
+
+        // validators
+        let secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
+            157, 097, 177, 157, 239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196, 068,
+            073, 197, 105, 123, 050, 105, 025, 112, 059, 172, 003, 028, 174, 127, 096,
+        ];
+
+        let out: Vec<u8> = Vec::new();
+        let mut encoder = minicbor::Encoder::new(out);
+
+        encoder
+            .bytes(&[
+                157, 097, 177, 157, 239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196,
+                068, 073, 197, 105, 123, 050, 105, 025, 112, 059, 172, 003, 028, 174, 127, 096,
+            ])
+            .unwrap();
+
+        let encoded_block = encode_block(
+            encoded_block_hdr,
+            encoder.writer().to_vec(),
+            vec![&secret_key_bytes],
+            crate::HashFunction::Blake2b,
+        )
+        .unwrap();
+
+        let decoded = decode_block(encoded_block).unwrap();
+        println!("decoced {:?}", decoded);
     }
 }
