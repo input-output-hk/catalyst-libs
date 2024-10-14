@@ -1,4 +1,40 @@
 //! A Jörmungandr transaction object structured following this [spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/transaction/#v1-jormungandr)
+//!
+//! ```rust
+//! use catalyst_voting::{
+//!     crypto::ed25519::PrivateKey, txs::v1::Tx, vote_protocol::committee::ElectionSecretKey,
+//! };
+//!
+//! let mut rng = rand_core::OsRng;
+//!
+//! let vote_plan_id = [0u8; 32];
+//! let proposal_index = 0u8;
+//!
+//! let voting_options = 3;
+//! let choice = 1;
+//!
+//! let users_private_key = PrivateKey::random(&mut rng);
+//! let election_public_key = ElectionSecretKey::random(&mut rng).public_key();
+//!
+//! let public_tx = Tx::new_public(
+//!     vote_plan_id,
+//!     proposal_index,
+//!     voting_options,
+//!     choice,
+//!     &users_private_key,
+//! )
+//! .unwrap();
+//!
+//! let private_tx = Tx::new_private(
+//!     vote_plan_id,
+//!     proposal_index,
+//!     voting_options,
+//!     choice,
+//!     &election_public_key,
+//!     &users_private_key,
+//! )
+//! .unwrap();
+//! ```
 
 mod decoding;
 
@@ -46,33 +82,20 @@ pub enum VotePayload {
     Private(EncryptedVote, VoterProof),
 }
 
-/// Proposal information struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[allow(clippy::missing_docs_in_private_items)]
-pub struct ProposalInfo {
-    vote_plan_id: [u8; 32],
-    proposal_index: u8,
-    voting_options: u8,
-}
-
 impl Tx {
     /// Generate a new `Tx` with public vote
     ///
     /// # Errors
     ///   - Invalid voting choice
     pub fn new_public(
-        proposal_info: &ProposalInfo, choice: u8, users_private_key: &PrivateKey,
+        vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
+        users_private_key: &PrivateKey,
     ) -> anyhow::Result<Self> {
-        let vote = VotePayload::new_public(choice, proposal_info.voting_options)?;
-        let signature = Self::sign(
-            &proposal_info.vote_plan_id,
-            proposal_info.proposal_index,
-            &vote,
-            users_private_key,
-        );
+        let vote = VotePayload::new_public(choice, voting_options)?;
+        let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
         Ok(Self {
-            vote_plan_id: proposal_info.vote_plan_id,
-            proposal_index: proposal_info.proposal_index,
+            vote_plan_id,
+            proposal_index,
             vote,
             public_key: users_private_key.public_key(),
             signature,
@@ -84,25 +107,16 @@ impl Tx {
     /// # Errors
     ///   - Invalid voting choice
     pub fn new_private(
-        proposal_info: &ProposalInfo, choice: u8, election_public_key: &ElectionPublicKey,
-        users_private_key: &PrivateKey,
+        vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
+        election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey,
     ) -> anyhow::Result<Self> {
-        let vote = VotePayload::new_private(
-            &proposal_info.vote_plan_id,
-            choice,
-            proposal_info.voting_options,
-            election_public_key,
-        )?;
-        let signature = Self::sign(
-            &proposal_info.vote_plan_id,
-            proposal_info.proposal_index,
-            &vote,
-            users_private_key,
-        );
+        let vote =
+            VotePayload::new_private(&vote_plan_id, choice, voting_options, election_public_key)?;
+        let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
 
         Ok(Self {
-            vote_plan_id: proposal_info.vote_plan_id,
-            proposal_index: proposal_info.proposal_index,
+            vote_plan_id,
+            proposal_index,
             vote,
             public_key: users_private_key.public_key(),
             signature,
@@ -176,15 +190,24 @@ mod tests {
         election_secret_key: ElectionSecretKey,
     ) {
         let election_public_key = election_secret_key.public_key();
-        let proposal = ProposalInfo {
+
+        let _tx = Tx::new_public(
             vote_plan_id,
             proposal_index,
             voting_options,
-        };
+            choice,
+            &users_private_key,
+        )
+        .unwrap();
 
-        let _tx = Tx::new_public(&proposal, choice, &users_private_key).unwrap();
-
-        let _tx =
-            Tx::new_private(&proposal, choice, &election_public_key, &users_private_key).unwrap();
+        let _tx = Tx::new_private(
+            vote_plan_id,
+            proposal_index,
+            voting_options,
+            choice,
+            &election_public_key,
+            &users_private_key,
+        )
+        .unwrap();
     }
 }
