@@ -46,40 +46,6 @@ pub enum VotePayload {
     Private(EncryptedVote, VoterProof),
 }
 
-#[allow(clippy::missing_docs_in_private_items)]
-impl VotePayload {
-    fn new_public(choice: u8, proposal_voting_options: u8) -> anyhow::Result<Self> {
-        // Try to make a `Vote` just for applying underlying validation, which must be the same
-        // even for public vote
-        Vote::new(choice.into(), proposal_voting_options.into())?;
-        Ok(Self::Public(choice))
-    }
-
-    fn new_private(
-        vote_plan_id: &[u8; 32], choice: u8, proposal_voting_options: u8,
-        election_public_key: &ElectionPublicKey,
-    ) -> anyhow::Result<Self> {
-        let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
-
-        let mut rng = ChaCha20Rng::from_entropy();
-        let (encrypted_vote, randomness) = encrypt_vote(&vote, election_public_key, &mut rng);
-
-        let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(vote_plan_id);
-        let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
-
-        let voter_proof = generate_voter_proof(
-            &vote,
-            encrypted_vote.clone(),
-            randomness,
-            election_public_key,
-            &commitment,
-            &mut rng,
-        )?;
-
-        Ok(Self::Private(encrypted_vote, voter_proof))
-    }
-}
-
 impl Tx {
     /// Generate a new `Tx` with public vote
     ///
@@ -141,6 +107,40 @@ impl Tx {
             .chain_update(bytes.as_slice())
             .finalize();
         sign(private_key, msg.as_slice())
+    }
+}
+
+#[allow(clippy::missing_docs_in_private_items)]
+impl VotePayload {
+    fn new_public(choice: u8, proposal_voting_options: u8) -> anyhow::Result<Self> {
+        // Try to make a `Vote` just for applying underlying validation, which must be the same
+        // even for public vote
+        Vote::new(choice.into(), proposal_voting_options.into())?;
+        Ok(Self::Public(choice))
+    }
+
+    fn new_private(
+        vote_plan_id: &[u8; 32], choice: u8, proposal_voting_options: u8,
+        election_public_key: &ElectionPublicKey,
+    ) -> anyhow::Result<Self> {
+        let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
+
+        let mut rng = ChaCha20Rng::from_entropy();
+        let (encrypted_vote, randomness) = encrypt_vote(&vote, election_public_key, &mut rng);
+
+        let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(vote_plan_id);
+        let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
+
+        let voter_proof = generate_voter_proof(
+            &vote,
+            encrypted_vote.clone(),
+            randomness,
+            election_public_key,
+            &commitment,
+            &mut rng,
+        )?;
+
+        Ok(Self::Private(encrypted_vote, voter_proof))
     }
 }
 
