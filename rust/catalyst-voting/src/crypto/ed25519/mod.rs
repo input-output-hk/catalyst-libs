@@ -1,5 +1,7 @@
 //! `EdDSA` digital signature scheme over Curve25519.
 
+mod decoding;
+
 use ed25519_dalek::{
     ed25519::signature::Signer, Signature as Ed25519Signature, SigningKey, VerifyingKey,
 };
