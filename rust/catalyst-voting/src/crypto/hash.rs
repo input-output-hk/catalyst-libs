@@ -1,6 +1,7 @@
 //! Blake2b-256 hash implementation.
 
-use curve25519_dalek::digest::{
+pub use curve25519_dalek::digest;
+use digest::{
     consts::U64, typenum::Unsigned, FixedOutput, HashMarker, Output, OutputSizeUser, Update,
 };
 

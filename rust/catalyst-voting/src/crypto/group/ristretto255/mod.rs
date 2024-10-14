@@ -11,12 +11,13 @@ use std::{
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
-    digest::{consts::U64, Digest},
-    ristretto::RistrettoPoint as Point,
     scalar::Scalar as IScalar,
     traits::Identity,
+    RistrettoPoint,
 };
 use rand_core::CryptoRngCore;
+
+use crate::crypto::hash::digest::{consts::U64, Digest};
 
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,7 +27,7 @@ pub struct Scalar(IScalar);
 /// Ristretto group element.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
-pub struct GroupElement(Point);
+pub struct GroupElement(RistrettoPoint);
 
 impl From<u64> for Scalar {
     fn from(value: u64) -> Self {
@@ -86,13 +87,13 @@ impl GroupElement {
 
     /// Generate a zero group element.
     pub fn zero() -> Self {
-        GroupElement(Point::identity())
+        GroupElement(RistrettoPoint::identity())
     }
 
     /// Generate a `GroupElement` from a hash digest.
     pub fn from_hash<D>(hash: D) -> GroupElement
     where D: Digest<OutputSize = U64> + Default {
-        GroupElement(Point::from_hash(hash))
+        GroupElement(RistrettoPoint::from_hash(hash))
     }
 }
 

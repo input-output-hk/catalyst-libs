@@ -4,13 +4,13 @@
 use std::ops::Mul;
 
 use anyhow::ensure;
-use curve25519_dalek::digest::{consts::U64, Digest};
 use rand_core::CryptoRngCore;
 
 use super::{EncryptedVote, EncryptionRandomness, Vote};
 use crate::{
     crypto::{
         group::{GroupElement, Scalar},
+        hash::digest::{consts::U64, Digest},
         zk_unit_vector::{generate_unit_vector_proof, verify_unit_vector_proof, UnitVectorProof},
     },
     vote_protocol::committee::ElectionPublicKey,

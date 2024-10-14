@@ -1,6 +1,7 @@
 //! Crypto primitives which are used by voting protocol.
 
 pub mod babystep_giantstep;
+pub mod ed25519;
 pub mod elgamal;
 pub mod group;
 pub mod hash;

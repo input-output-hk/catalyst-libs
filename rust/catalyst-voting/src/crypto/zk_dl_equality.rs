@@ -12,11 +12,9 @@
 
 // cspell: words NIZK dlog
 
-use curve25519_dalek::digest::Digest;
-
 use crate::crypto::{
     group::{GroupElement, Scalar},
-    hash::Blake2b512Hasher,
+    hash::{digest::Digest, Blake2b512Hasher},
 };
 
 /// DLEQ proof struct

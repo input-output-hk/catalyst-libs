@@ -2,12 +2,11 @@
 
 mod decoding;
 
-use curve25519_dalek::digest::Update;
 use rand_chacha::ChaCha20Rng;
 use rand_core::SeedableRng;
 
 use crate::{
-    crypto::hash::Blake2b512Hasher,
+    crypto::hash::{digest::Digest, Blake2b512Hasher},
     vote_protocol::{
         committee::ElectionPublicKey,
         voter::{
@@ -65,7 +64,7 @@ impl Tx {
         let mut rng = ChaCha20Rng::from_entropy();
         let (encrypted_vote, randomness) = encrypt_vote(&vote, election_public_key, &mut rng);
 
-        let vote_plan_id_hash = Blake2b512Hasher::new().chain(vote_plan_id);
+        let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(vote_plan_id);
         let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
 
         let voter_proof = generate_voter_proof(

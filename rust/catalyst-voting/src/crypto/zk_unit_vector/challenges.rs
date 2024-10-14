@@ -1,9 +1,9 @@
 //! ZK unit vector challenges calculation functionality
 
-use curve25519_dalek::digest::Digest;
-
 use crate::crypto::{
-    elgamal::Ciphertext, group::GroupElement, hash::Blake2b512Hasher,
+    elgamal::Ciphertext,
+    group::GroupElement,
+    hash::{digest::Digest, Blake2b512Hasher},
     zk_unit_vector::randomness_announcements::Announcement,
 };
 
