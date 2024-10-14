@@ -20,6 +20,7 @@ use crate::{
 
 /// A v1 (Jörmungandr) transaction struct
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct Tx {
     /// Vote plan id
     vote_plan_id: [u8; 32],
@@ -43,7 +44,6 @@ pub enum VotePayload {
 
 impl Tx {
     /// Generate a new `Tx` with public vote
-    #[must_use]
     pub fn new_public(vote_plan_id: [u8; 32], proposal_index: u8, choice: u8) -> Self {
         Self {
             vote_plan_id,
@@ -140,7 +140,7 @@ mod tests {
     ) {
         let election_public_key = election_secret_key.public_key();
 
-        Tx::new_private(
+        let _tx = Tx::new_private(
             vote_plan_id,
             proposal_index,
             proposal_voting_options,

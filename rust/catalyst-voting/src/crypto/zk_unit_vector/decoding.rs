@@ -11,6 +11,7 @@ impl UnitVectorProof {
     /// Get an underlying vector length.
     ///
     /// **Note** each vector field has the same length.
+    #[must_use]
     pub fn size(&self) -> usize {
         self.0.len()
     }

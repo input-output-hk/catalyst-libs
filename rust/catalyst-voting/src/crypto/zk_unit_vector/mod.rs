@@ -27,6 +27,7 @@ use crate::crypto::{
 
 /// Unit vector proof struct
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct UnitVectorProof(
     Vec<Announcement>,
     Vec<Ciphertext>,
@@ -157,6 +158,7 @@ fn generate_response(
 }
 
 /// Verify a unit vector proof.
+#[must_use]
 pub fn verify_unit_vector_proof(
     proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &GroupElement,
     commitment_key: &GroupElement,

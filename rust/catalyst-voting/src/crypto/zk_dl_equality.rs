@@ -20,6 +20,7 @@ use crate::crypto::{
 };
 
 /// DLEQ proof struct
+#[must_use]
 pub struct DleqProof(Scalar, Scalar);
 
 /// Generates a DLEQ proof.
@@ -37,6 +38,7 @@ pub fn generate_dleq_proof(
 }
 
 /// Verify a DLEQ proof.
+#[must_use]
 pub fn verify_dleq_proof(
     proof: &DleqProof, base_1: &GroupElement, base_2: &GroupElement, point_1: &GroupElement,
     point_2: &GroupElement,

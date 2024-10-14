@@ -20,10 +20,12 @@ use rand_core::CryptoRngCore;
 
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct Scalar(IScalar);
 
 /// Ristretto group element.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct GroupElement(Point);
 
 impl From<u64> for Scalar {

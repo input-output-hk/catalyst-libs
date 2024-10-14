@@ -9,6 +9,7 @@ impl Ciphertext {
     pub const BYTES_SIZE: usize = GroupElement::BYTES_SIZE * 2;
 
     /// Convert this `Ciphertext` to its underlying sequence of bytes.
+    #[must_use]
     pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
         let mut res = [0; Self::BYTES_SIZE];
         res[0..32].copy_from_slice(&self.0.to_bytes());
@@ -20,6 +21,8 @@ impl Ciphertext {
     ///
     /// # Errors
     ///   - Cannot decode group element field.
+    ///
+    /// # Panics
     #[allow(clippy::unwrap_used)]
     pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
         Ok(Self(

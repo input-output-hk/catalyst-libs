@@ -9,6 +9,7 @@ use crate::crypto::group::{GroupElement, Scalar};
 
 /// ``ElGamal`` ciphertext, encrypted message with the public key.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct Ciphertext(GroupElement, GroupElement);
 
 impl Ciphertext {

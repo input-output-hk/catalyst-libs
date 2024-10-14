@@ -19,9 +19,11 @@ use crate::{
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct VoterProof(pub(super) UnitVectorProof);
 
 /// Voter proof commitment struct.
+#[must_use]
 pub struct VoterProofCommitment(GroupElement);
 
 impl VoterProofCommitment {
