@@ -3,6 +3,7 @@
 
 use std::ops::Mul;
 
+use anyhow::ensure;
 use rand_core::CryptoRngCore;
 
 use super::{EncryptedVote, EncryptionRandomness, Vote};
@@ -16,7 +17,8 @@ use crate::{
 
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
-pub struct VoterProof(UnitVectorProof);
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VoterProof(pub(super) UnitVectorProof);
 
 /// Voter proof commitment struct.
 pub struct VoterProofCommitment(GroupElement);
@@ -28,31 +30,25 @@ impl VoterProofCommitment {
     }
 }
 
-/// Generate voter proof error
-#[derive(thiserror::Error, Debug)]
-pub enum GenerateVoterProofError {
-    /// Arguments mismatch
-    #[error("Provided arguments mismatch. Size of the provided `vote`: {0}, `encrypted_vote: {1}` and `randomness`: {2} must be equal with each other.")]
-    ArgumentsMismatch(usize, usize, usize),
-}
-
 /// Generates a voter proof.
 /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voters-proof)
 ///
 /// # Errors
-///   - `GenerateVoterProofError`
+///   - Provided arguments mismatch. Size of the provided `vote`, `encrypted_vote` and
+///     `randomness` must be equal with each other.
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_voter_proof<R: CryptoRngCore>(
     vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
     public_key: &PublicKey, commitment: &VoterProofCommitment, rng: &mut R,
-) -> Result<VoterProof, GenerateVoterProofError> {
-    if vote.voting_options != encrypted_vote.0.len() || vote.voting_options != randomness.0.len() {
-        return Err(GenerateVoterProofError::ArgumentsMismatch(
-            vote.voting_options,
-            encrypted_vote.0.len(),
-            randomness.0.len(),
-        ));
-    }
+) -> anyhow::Result<VoterProof> {
+    ensure!(
+        vote.voting_options == encrypted_vote.0.len() && vote.voting_options == randomness.0.len(),
+        "Provided arguments mismatch.
+        Size of the provided `vote`: {0}, `encrypted_vote: {1}` and `randomness`: {2} must be equal with each other.",
+        vote.voting_options,
+        encrypted_vote.0.len(),
+        randomness.0.len(),
+    );
 
     let proof = generate_unit_vector_proof(
         &vote.to_unit_vector(),
@@ -74,4 +70,20 @@ pub fn verify_voter_proof(
     proof: &VoterProof,
 ) -> bool {
     verify_unit_vector_proof(&proof.0, encrypted_vote.0, public_key, &commitment.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::prelude::{any_with, Arbitrary, BoxedStrategy, Strategy};
+
+    use super::*;
+
+    impl Arbitrary for VoterProof {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<UnitVectorProof>(size).prop_map(Self).boxed()
+        }
+    }
 }

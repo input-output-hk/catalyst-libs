@@ -1,7 +1,9 @@
 //! Module containing all primitives related to the voter.
 
+mod decoding;
 pub mod proof;
 
+use anyhow::ensure;
 use rand_core::CryptoRngCore;
 
 use crate::crypto::{
@@ -43,26 +45,15 @@ impl EncryptedVote {
     }
 }
 
-/// Encrypted vote error
-#[derive(thiserror::Error, Debug)]
-pub enum VoteError {
-    /// Incorrect voting choice
-    #[error(
-        "Invalid voting choice, the value of choice: {0}, should be less than the number of voting options: {1}."
-    )]
-    IncorrectChoiceError(usize, usize),
-}
-
 impl Vote {
     /// Generate a vote.
     /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voting-choice)
     ///
     /// # Errors
-    ///   - `VoteError`
-    pub fn new(choice: usize, voting_options: usize) -> Result<Vote, VoteError> {
-        if choice >= voting_options {
-            return Err(VoteError::IncorrectChoiceError(choice, voting_options));
-        }
+    ///   - Invalid voting choice, the value of `choice`, should be less than the number
+    ///     of `voting_options`.
+    pub fn new(choice: usize, voting_options: usize) -> anyhow::Result<Vote> {
+        ensure!(choice < voting_options,"Invalid voting choice, the value of choice: {choice}, should be less than the number of voting options: {voting_options}." );
 
         Ok(Vote {
             choice,
@@ -106,7 +97,23 @@ pub fn encrypt_vote<R: CryptoRngCore>(
 
 #[cfg(test)]
 mod tests {
+    use proptest::{
+        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        sample::size_range,
+    };
+
     use super::*;
+
+    impl Arbitrary for EncryptedVote {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<Vec<Ciphertext>>((size_range(size), ()))
+                .prop_map(Self)
+                .boxed()
+        }
+    }
 
     #[test]
     fn vote_test() {

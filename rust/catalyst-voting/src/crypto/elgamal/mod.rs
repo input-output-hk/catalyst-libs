@@ -1,6 +1,8 @@
 //! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
+mod decoding;
+
 use std::ops::{Add, Deref, Mul};
 
 use rand_core::CryptoRngCore;
@@ -113,6 +115,17 @@ mod tests {
 
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
             any::<Scalar>().prop_map(SecretKey).boxed()
+        }
+    }
+
+    impl Arbitrary for Ciphertext {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(GroupElement, GroupElement)>()
+                .prop_map(|(g1, g2)| Ciphertext(g1, g2))
+                .boxed()
         }
     }
 

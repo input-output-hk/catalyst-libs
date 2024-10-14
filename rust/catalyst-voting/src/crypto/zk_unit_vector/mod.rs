@@ -7,6 +7,7 @@
 // cspell: words Zhang, Oliynykov, Balogum
 
 mod challenges;
+mod decoding;
 mod polynomial;
 mod randomness_announcements;
 mod utils;
@@ -25,6 +26,7 @@ use crate::crypto::{
 };
 
 /// Unit vector proof struct
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnitVectorProof(
     Vec<Announcement>,
     Vec<Ciphertext>,
@@ -232,11 +234,32 @@ fn check_2(
 
 #[cfg(test)]
 mod tests {
-    use proptest::sample::size_range;
+    use proptest::{
+        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        sample::size_range,
+    };
     use rand_core::OsRng;
     use test_strategy::proptest;
 
     use super::{super::elgamal::SecretKey, *};
+
+    impl Arbitrary for UnitVectorProof {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<(
+                Vec<((Announcement, Ciphertext), ResponseRandomness)>,
+                Scalar,
+            )>(((size_range(size), (((), ()), ())), ()))
+            .prop_map(|(val, scalar)| {
+                let (vec, rr): (Vec<_>, Vec<_>) = val.into_iter().unzip();
+                let (an, cipher) = vec.into_iter().unzip();
+                Self(an, cipher, rr, scalar)
+            })
+            .boxed()
+        }
+    }
 
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();
