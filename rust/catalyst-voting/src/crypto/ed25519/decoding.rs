@@ -1,8 +1,10 @@
 //! `Ed25519` objects decoding implementation
 
-use ed25519_dalek::{VerifyingKey, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{
+    Signature as Ed25519Signature, VerifyingKey, PUBLIC_KEY_LENGTH, SIGNATURE_LENGTH,
+};
 
-use super::PublicKey;
+use super::{PublicKey, Signature};
 
 impl PublicKey {
     /// `PublicKey` bytes size
@@ -23,17 +25,18 @@ impl PublicKey {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use test_strategy::proptest;
+impl Signature {
+    /// `Signature` bytes size
+    pub const BYTES_SIZE: usize = SIGNATURE_LENGTH;
 
-    use super::{super::PrivateKey, *};
+    /// Convert this `Signature` to its underlying sequence of bytes.
+    #[must_use]
+    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
+        self.0.to_bytes()
+    }
 
-    #[proptest]
-    fn public_key_to_bytes_from_bytes_test(private_key: PrivateKey) {
-        let public_key = private_key.public_key();
-        let public_key_bytes = public_key.to_bytes();
-        let public_key2 = PublicKey::from_bytes(&public_key_bytes).unwrap();
-        assert_eq!(public_key, public_key2);
+    /// Attempt to construct a `Signature` from a byte representation.
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> Self {
+        Self(Ed25519Signature::from_bytes(bytes))
     }
 }

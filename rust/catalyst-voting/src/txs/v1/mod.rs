@@ -7,7 +7,7 @@ use rand_core::SeedableRng;
 
 use crate::{
     crypto::{
-        ed25519::PublicKey,
+        ed25519::{sign, PrivateKey, PublicKey, Signature},
         hash::{digest::Digest, Blake2b512Hasher},
     },
     vote_protocol::{
@@ -32,6 +32,8 @@ pub struct Tx {
     vote: VotePayload,
     /// Public key
     public_key: PublicKey,
+    /// Transaction signature
+    signature: Signature,
 }
 
 /// Vote payload struct.
@@ -44,26 +46,18 @@ pub enum VotePayload {
     Private(EncryptedVote, VoterProof),
 }
 
-impl Tx {
-    /// Generate a new `Tx` with public vote
-    pub fn new_public(
-        vote_plan_id: [u8; 32], proposal_index: u8, choice: u8, public_key: PublicKey,
-    ) -> Self {
-        Self {
-            vote_plan_id,
-            proposal_index,
-            vote: VotePayload::Public(choice),
-            public_key,
-        }
+#[allow(clippy::missing_docs_in_private_items)]
+impl VotePayload {
+    fn new_public(choice: u8, proposal_voting_options: u8) -> anyhow::Result<Self> {
+        // Try to make a `Vote` just for applying underlying validation, which must be the same
+        // even for public vote
+        Vote::new(choice.into(), proposal_voting_options.into())?;
+        Ok(Self::Public(choice))
     }
 
-    /// Generate a new `Tx` with public vote
-    ///
-    /// # Errors
-    ///   - Invalid voting choice
-    pub fn new_private(
-        vote_plan_id: [u8; 32], proposal_index: u8, proposal_voting_options: u8, choice: u8,
-        election_public_key: &ElectionPublicKey, users_public_key: PublicKey,
+    fn new_private(
+        vote_plan_id: &[u8; 32], choice: u8, proposal_voting_options: u8,
+        election_public_key: &ElectionPublicKey,
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
@@ -82,62 +76,80 @@ impl Tx {
             &mut rng,
         )?;
 
+        Ok(Self::Private(encrypted_vote, voter_proof))
+    }
+}
+
+impl Tx {
+    /// Generate a new `Tx` with public vote
+    ///
+    /// # Errors
+    ///   - Invalid voting choice
+    pub fn new_public(
+        vote_plan_id: [u8; 32], proposal_index: u8, choice: u8, proposal_voting_options: u8,
+        users_private_key: &PrivateKey,
+    ) -> anyhow::Result<Self> {
+        let vote = VotePayload::new_public(choice, proposal_voting_options)?;
+        let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
         Ok(Self {
             vote_plan_id,
             proposal_index,
-            vote: VotePayload::Private(encrypted_vote, voter_proof),
-            public_key: users_public_key,
+            vote,
+            public_key: users_private_key.public_key(),
+            signature,
         })
+    }
+
+    /// Generate a new `Tx` with public vote
+    ///
+    /// # Errors
+    ///   - Invalid voting choice
+    pub fn new_private(
+        vote_plan_id: [u8; 32], proposal_index: u8, choice: u8, proposal_voting_options: u8,
+        election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey,
+    ) -> anyhow::Result<Self> {
+        let vote = VotePayload::new_private(
+            &vote_plan_id,
+            choice,
+            proposal_voting_options,
+            election_public_key,
+        )?;
+        let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
+
+        Ok(Self {
+            vote_plan_id,
+            proposal_index,
+            vote,
+            public_key: users_private_key.public_key(),
+            signature,
+        })
+    }
+
+    /// Generate transaction signature
+    fn sign(
+        vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, private_key: &PrivateKey,
+    ) -> Signature {
+        let mut bytes = Vec::new();
+        Self::bytes_to_sign(
+            vote_plan_id,
+            proposal_index,
+            vote,
+            &private_key.public_key(),
+            &mut bytes,
+        );
+        let msg = Blake2b512Hasher::new()
+            .chain_update(bytes.as_slice())
+            .finalize();
+        sign(private_key, msg.as_slice())
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
     use test_strategy::proptest;
 
     use super::*;
     use crate::{crypto::ed25519::PrivateKey, vote_protocol::committee::ElectionSecretKey};
-
-    impl Arbitrary for Tx {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<([u8; 32], u8, VotePayload, PrivateKey)>()
-                .prop_map(|(vote_plan_id, proposal_index, vote, sk)| {
-                    Tx {
-                        vote_plan_id,
-                        proposal_index,
-                        vote,
-                        public_key: sk.public_key(),
-                    }
-                })
-                .boxed()
-        }
-    }
-
-    impl Arbitrary for VotePayload {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<bool>()
-                .prop_flat_map(|b| {
-                    if b {
-                        any::<u8>().prop_map(VotePayload::Public).boxed()
-                    } else {
-                        any::<(u8, u8)>()
-                            .prop_flat_map(|(s1, s2)| {
-                                any_with::<(EncryptedVote, VoterProof)>((s1.into(), s2.into()))
-                                    .prop_map(|(v, p)| VotePayload::Private(v, p))
-                            })
-                            .boxed()
-                    }
-                })
-                .boxed()
-        }
-    }
 
     #[proptest]
     fn tx_private_test(
@@ -145,16 +157,15 @@ mod tests {
         #[strategy(0..#proposal_voting_options)] choice: u8, users_private_key: PrivateKey,
         election_secret_key: ElectionSecretKey,
     ) {
-        let users_public_key = users_private_key.public_key();
         let election_public_key = election_secret_key.public_key();
 
         let _tx = Tx::new_private(
             vote_plan_id,
             proposal_index,
-            proposal_voting_options,
             choice,
+            proposal_voting_options,
             &election_public_key,
-            users_public_key,
+            &users_private_key,
         )
         .unwrap();
     }

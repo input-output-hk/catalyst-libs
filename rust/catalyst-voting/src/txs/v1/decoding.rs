@@ -6,11 +6,51 @@ use anyhow::{anyhow, bail, ensure};
 
 use super::{EncryptedVote, Tx, VotePayload, VoterProof};
 use crate::{
-    crypto::ed25519::PublicKey,
+    crypto::ed25519::{PublicKey, Signature},
     utils::{read_array, read_be_u32, read_be_u64, read_be_u8},
 };
 
 impl Tx {
+    /// Write the bytes to sign for the `Tx` to provided `buf`.
+    #[allow(clippy::cast_possible_truncation)]
+    pub(super) fn bytes_to_sign(
+        vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, public_key: &PublicKey,
+        buf: &mut Vec<u8>,
+    ) {
+        buf.extend_from_slice(vote_plan_id);
+        buf.push(proposal_index);
+
+        match vote {
+            VotePayload::Public(vote) => {
+                // Public vote tag
+                buf.push(1);
+                buf.push(*vote);
+            },
+            VotePayload::Private(vote, proof) => {
+                // Private vote tag
+                buf.push(2);
+                buf.push(vote.size() as u8);
+                buf.extend_from_slice(&vote.to_bytes());
+
+                buf.push(proof.size() as u8);
+                buf.extend_from_slice(&proof.to_bytes());
+            },
+        }
+
+        // Zeros block date
+        buf.extend_from_slice(&[0u8; 8]);
+        // Number of inputs
+        buf.push(1);
+        // Number of outputs
+        buf.push(0);
+        // Input tag
+        buf.push(0xFF);
+        // Zero value
+        buf.extend_from_slice(&[0u8; 8]);
+
+        buf.extend_from_slice(&public_key.to_bytes());
+    }
+
     /// Convert this `Tx` to its underlying sequence of bytes.
     #[must_use]
     #[allow(clippy::cast_possible_truncation)]
@@ -18,38 +58,15 @@ impl Tx {
         // Initialize already with the padding tag `0` and fragment tag `11`.
         let mut tx_body = vec![0, 11];
 
-        tx_body.extend_from_slice(&self.vote_plan_id);
-        tx_body.push(self.proposal_index);
+        Self::bytes_to_sign(
+            &self.vote_plan_id,
+            self.proposal_index,
+            &self.vote,
+            &self.public_key,
+            &mut tx_body,
+        );
 
-        match &self.vote {
-            VotePayload::Public(vote) => {
-                // Public vote tag
-                tx_body.push(1);
-                tx_body.push(*vote);
-            },
-            VotePayload::Private(vote, proof) => {
-                // Private vote tag
-                tx_body.push(2);
-                tx_body.push(vote.size() as u8);
-                tx_body.extend_from_slice(&vote.to_bytes());
-
-                tx_body.push(proof.size() as u8);
-                tx_body.extend_from_slice(&proof.to_bytes());
-            },
-        }
-
-        // Zeros block date
-        tx_body.extend_from_slice(&[0u8; 8]);
-        // Number of inputs
-        tx_body.push(1);
-        // Number of outputs
-        tx_body.push(0);
-        // Input tag
-        tx_body.push(0xFF);
-        // Zero value
-        tx_body.extend_from_slice(&[0u8; 8]);
-
-        tx_body.extend_from_slice(&self.public_key.to_bytes());
+        tx_body.extend_from_slice(&self.signature.to_bytes());
 
         // Add the size of decoded bytes to the beginning.
         let mut res = (tx_body.len() as u32).to_be_bytes().to_vec();
@@ -135,20 +152,76 @@ impl Tx {
         let public_key = PublicKey::from_bytes(&public_key_bytes)
             .map_err(|e| anyhow!("Invalid public key, error: {e}."))?;
 
+        let signature_bytes =
+            read_array(reader).map_err(|_| anyhow!("Missing signature field."))?;
+        let signature = Signature::from_bytes(&signature_bytes);
+
         Ok(Self {
             vote_plan_id,
             proposal_index,
             vote,
             public_key,
+            signature,
         })
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
     use test_strategy::proptest;
 
     use super::*;
+    use crate::crypto::ed25519::PrivateKey;
+
+    impl Arbitrary for Tx {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(
+                [u8; 32],
+                u8,
+                VotePayload,
+                PrivateKey,
+                [u8; Signature::BYTES_SIZE],
+            )>()
+            .prop_map(
+                |(vote_plan_id, proposal_index, vote, sk, signature_bytes)| {
+                    Tx {
+                        vote_plan_id,
+                        proposal_index,
+                        vote,
+                        public_key: sk.public_key(),
+                        signature: Signature::from_bytes(&signature_bytes),
+                    }
+                },
+            )
+            .boxed()
+        }
+    }
+
+    impl Arbitrary for VotePayload {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<bool>()
+                .prop_flat_map(|b| {
+                    if b {
+                        any::<u8>().prop_map(VotePayload::Public).boxed()
+                    } else {
+                        any::<(u8, u8)>()
+                            .prop_flat_map(|(s1, s2)| {
+                                any_with::<(EncryptedVote, VoterProof)>((s1.into(), s2.into()))
+                                    .prop_map(|(v, p)| VotePayload::Private(v, p))
+                            })
+                            .boxed()
+                    }
+                })
+                .boxed()
+        }
+    }
 
     #[proptest]
     #[allow(clippy::indexing_slicing)]
