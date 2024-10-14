@@ -1,4 +1,4 @@
-//! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
+//! Implementation of the lifted `ElGamal` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
 mod decoding;
@@ -7,7 +7,7 @@ use std::ops::{Add, Mul};
 
 use crate::crypto::group::{GroupElement, Scalar};
 
-/// ``ElGamal`` ciphertext, encrypted message with the public key.
+/// `ElGamal` ciphertext, encrypted message with the public key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct Ciphertext(GroupElement, GroupElement);
@@ -30,13 +30,13 @@ impl Ciphertext {
     }
 }
 
-/// Generate ``ElGamal`` public key from the secret key value.
+/// Generate `ElGamal` public key from the secret key value.
 pub fn generate_public_key(secret_key: &Scalar) -> GroupElement {
     GroupElement::GENERATOR.mul(secret_key)
 }
 
 /// Given a `message` represented as a `Scalar`, return a ciphertext using the
-/// lifted ``ElGamal`` mechanism.
+/// lifted `ElGamal` mechanism.
 /// Returns a ciphertext of type `Ciphertext`.
 pub fn encrypt(message: &Scalar, public_key: &GroupElement, randomness: &Scalar) -> Ciphertext {
     let e1 = GroupElement::GENERATOR.mul(randomness);
@@ -44,7 +44,7 @@ pub fn encrypt(message: &Scalar, public_key: &GroupElement, randomness: &Scalar)
     Ciphertext(e1, e2)
 }
 
-/// Decrypt ``ElGamal`` `Ciphertext`, returns the original message represented as a
+/// Decrypt `ElGamal` `Ciphertext`, returns the original message represented as a
 /// `GroupElement`.
 pub fn decrypt(cipher: &Ciphertext, secret_key: &Scalar) -> GroupElement {
     &(&cipher.0 * &secret_key.negate()) + &cipher.1
