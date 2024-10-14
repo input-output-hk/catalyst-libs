@@ -1,16 +1,14 @@
 //! An implementation of the voting protocol described in this [spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/)
 //!
 //! ```rust
-//! use catalyst_voting::{
-//!     vote_protocol::{
-//!         tally::{
-//!             decrypt_tally,
-//!             proof::{generate_tally_proof, verify_tally_proof},
-//!             tally, DecryptionTallySetup,
-//!         },
-//!         voter::{encrypt_vote, Vote},
+//! use catalyst_voting::vote_protocol::{
+//!     committee::ElectionSecretKey,
+//!     tally::{
+//!         decrypt_tally,
+//!         proof::{generate_tally_proof, verify_tally_proof},
+//!         tally, DecryptionTallySetup,
 //!     },
-//!     SecretKey,
+//!     voter::{encrypt_vote, Vote},
 //! };
 //!
 //! struct Voter {
@@ -20,7 +18,7 @@
 //!
 //! let mut rng = rand_core::OsRng;
 //! let voting_options = 3;
-//! let election_secret_key = SecretKey::random(&mut rng);
+//! let election_secret_key = ElectionSecretKey::random(&mut rng);
 //! let election_public_key = election_secret_key.public_key();
 //!
 //! let voter_1 = Voter {
