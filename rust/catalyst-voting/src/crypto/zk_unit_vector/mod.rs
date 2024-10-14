@@ -263,24 +263,6 @@ mod tests {
         }
     }
 
-    impl Arbitrary for UnitVectorProof {
-        type Parameters = usize;
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
-            any_with::<(
-                Vec<((Announcement, Ciphertext), ResponseRandomness)>,
-                Scalar,
-            )>(((size_range(size), (((), ()), ())), ()))
-            .prop_map(|(val, scalar)| {
-                let (vec, rr): (Vec<_>, Vec<_>) = val.into_iter().unzip();
-                let (an, cipher) = vec.into_iter().unzip();
-                Self(an, cipher, rr, scalar)
-            })
-            .boxed()
-        }
-    }
-
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();
         let zeros = vector.iter().filter(|s| s == &&Scalar::zero()).count();

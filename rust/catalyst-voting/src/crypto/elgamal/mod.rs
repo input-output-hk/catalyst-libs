@@ -87,17 +87,6 @@ mod tests {
         }
     }
 
-    impl Arbitrary for Ciphertext {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<(GroupElement, GroupElement)>()
-                .prop_map(|(g1, g2)| Ciphertext(g1, g2))
-                .boxed()
-        }
-    }
-
     #[proptest]
     fn ciphertext_add_test(e1: Scalar, e2: Scalar, e3: Scalar, e4: Scalar) {
         let g1 = GroupElement::GENERATOR.mul(&e1);

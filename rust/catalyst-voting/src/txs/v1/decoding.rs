@@ -38,12 +38,12 @@ impl Tx {
         match vote {
             VotePayload::Public(vote) => {
                 // Public vote tag
-                buf.push(1);
+                buf.push(PUBLIC_VOTE_TAG);
                 buf.push(*vote);
             },
             VotePayload::Private(vote, proof) => {
                 // Private vote tag
-                buf.push(2);
+                buf.push(PRIVATE_VOTE_TAG);
                 buf.push(vote.size() as u8);
                 buf.extend_from_slice(&vote.to_bytes());
 
@@ -55,11 +55,11 @@ impl Tx {
         // Zeros block date
         buf.extend_from_slice(&[0u8; 8]);
         // Number of inputs
-        buf.push(1);
+        buf.push(NUMBER_OF_INPUTS);
         // Number of outputs
-        buf.push(0);
+        buf.push(NUMBER_OF_OUTPUTS);
         // Input tag
-        buf.push(0xFF);
+        buf.push(INPUT_TAG);
         // Zero value
         buf.extend_from_slice(&[0u8; 8]);
 
@@ -73,38 +73,15 @@ impl Tx {
         // Initialize already with the padding tag `0` and fragment tag `11`.
         let mut tx_body = vec![PADDING_TAG, FRAGMENT_TAG];
 
-        tx_body.extend_from_slice(&self.vote_plan_id);
-        tx_body.push(self.proposal_index);
+        Self::bytes_to_sign(
+            &self.vote_plan_id,
+            self.proposal_index,
+            &self.vote,
+            &self.public_key,
+            &mut tx_body,
+        );
 
-        match &self.vote {
-            Vote::Public(vote) => {
-                // Public vote tag
-                tx_body.push(PUBLIC_VOTE_TAG);
-                tx_body.push(*vote);
-            },
-            Vote::Private(vote, proof) => {
-                // Private vote tag
-                tx_body.push(PRIVATE_VOTE_TAG);
-                tx_body.push(vote.size() as u8);
-                tx_body.extend_from_slice(&vote.to_bytes());
-
-                tx_body.push(proof.size() as u8);
-                tx_body.extend_from_slice(&proof.to_bytes());
-            },
-        }
-
-        // Zeros block date
-        tx_body.extend_from_slice(&[0u8; 8]);
-        // Number of inputs
-        tx_body.push(NUMBER_OF_INPUTS);
-        // Number of outputs
-        tx_body.push(NUMBER_OF_OUTPUTS);
-        // Input tag
-        tx_body.push(INPUT_TAG);
-        // Zero value
-        tx_body.extend_from_slice(&[0u8; 8]);
-
-        tx_body.extend_from_slice(&self.public_key.to_bytes());
+        tx_body.extend_from_slice(&self.signature.to_bytes());
 
         // Add the size of decoded bytes to the beginning.
         let mut res = (tx_body.len() as u32).to_be_bytes().to_vec();
@@ -146,7 +123,7 @@ impl Tx {
         let vote = match vote_tag {
             PUBLIC_VOTE_TAG => {
                 let vote = read_be_u8(reader)?;
-                Vote::Public(vote)
+                VotePayload::Public(vote)
             },
             PRIVATE_VOTE_TAG => {
                 let size = read_be_u8(reader)?;
@@ -157,7 +134,7 @@ impl Tx {
                 let proof = VoterProof::from_bytes(reader, size.into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
 
-                Vote::Private(vote, proof)
+                VotePayload::Private(vote, proof)
             },
             tag => {
                 bail!(
