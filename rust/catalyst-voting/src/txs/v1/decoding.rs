@@ -5,7 +5,10 @@ use std::io::Read;
 use anyhow::{anyhow, bail, ensure};
 
 use super::{EncryptedVote, Tx, VotePayload, VoterProof};
-use crate::utils::{read_array, read_be_u32, read_be_u64, read_be_u8};
+use crate::{
+    crypto::ed25519::PublicKey,
+    utils::{read_array, read_be_u32, read_be_u64, read_be_u8},
+};
 
 impl Tx {
     /// Convert this `Tx` to its underlying sequence of bytes.
@@ -46,7 +49,7 @@ impl Tx {
         // Zero value
         tx_body.extend_from_slice(&[0u8; 8]);
 
-        // tx_body.extend_from_slice(&self.public_key.to_bytes());
+        tx_body.extend_from_slice(&self.public_key.to_bytes());
 
         // Add the size of decoded bytes to the beginning.
         let mut res = (tx_body.len() as u32).to_be_bytes().to_vec();
@@ -128,14 +131,15 @@ impl Tx {
         // skip value
         read_be_u64(reader)?;
 
-        // let public_key_bytes = read_array(reader)?;
-        // let public_key = PublicKey::from_bytes(&public_key_bytes)
-        //     .map_err(|e| anyhow!("Invalid public key, error: {e}."))?;
+        let public_key_bytes = read_array(reader)?;
+        let public_key = PublicKey::from_bytes(&public_key_bytes)
+            .map_err(|e| anyhow!("Invalid public key, error: {e}."))?;
 
         Ok(Self {
             vote_plan_id,
             proposal_index,
             vote,
+            public_key,
         })
     }
 }

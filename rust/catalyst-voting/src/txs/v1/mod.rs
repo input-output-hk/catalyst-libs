@@ -6,7 +6,10 @@ use rand_chacha::ChaCha20Rng;
 use rand_core::SeedableRng;
 
 use crate::{
-    crypto::hash::{digest::Digest, Blake2b512Hasher},
+    crypto::{
+        ed25519::PublicKey,
+        hash::{digest::Digest, Blake2b512Hasher},
+    },
     vote_protocol::{
         committee::ElectionPublicKey,
         voter::{
@@ -27,8 +30,8 @@ pub struct Tx {
     proposal_index: u8,
     /// Vote
     vote: VotePayload,
-    // /// Public key
-    // public_key: PublicKey,
+    /// Public key
+    public_key: PublicKey,
 }
 
 /// Vote payload struct.
@@ -43,11 +46,14 @@ pub enum VotePayload {
 
 impl Tx {
     /// Generate a new `Tx` with public vote
-    pub fn new_public(vote_plan_id: [u8; 32], proposal_index: u8, choice: u8) -> Self {
+    pub fn new_public(
+        vote_plan_id: [u8; 32], proposal_index: u8, choice: u8, public_key: PublicKey,
+    ) -> Self {
         Self {
             vote_plan_id,
             proposal_index,
             vote: VotePayload::Public(choice),
+            public_key,
         }
     }
 
@@ -57,7 +63,7 @@ impl Tx {
     ///   - Invalid voting choice
     pub fn new_private(
         vote_plan_id: [u8; 32], proposal_index: u8, proposal_voting_options: u8, choice: u8,
-        election_public_key: &ElectionPublicKey,
+        election_public_key: &ElectionPublicKey, users_public_key: PublicKey,
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
@@ -80,6 +86,7 @@ impl Tx {
             vote_plan_id,
             proposal_index,
             vote: VotePayload::Private(encrypted_vote, voter_proof),
+            public_key: users_public_key,
         })
     }
 }
@@ -90,19 +97,20 @@ mod tests {
     use test_strategy::proptest;
 
     use super::*;
-    use crate::vote_protocol::committee::ElectionSecretKey;
+    use crate::{crypto::ed25519::PrivateKey, vote_protocol::committee::ElectionSecretKey};
 
     impl Arbitrary for Tx {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<([u8; 32], u8, VotePayload)>()
-                .prop_map(|(vote_plan_id, proposal_index, vote)| {
+            any::<([u8; 32], u8, VotePayload, PrivateKey)>()
+                .prop_map(|(vote_plan_id, proposal_index, vote, sk)| {
                     Tx {
                         vote_plan_id,
                         proposal_index,
                         vote,
+                        public_key: sk.public_key(),
                     }
                 })
                 .boxed()
@@ -134,9 +142,10 @@ mod tests {
     #[proptest]
     fn tx_private_test(
         vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..)] proposal_voting_options: u8,
-        #[strategy(0..#proposal_voting_options)] choice: u8,
+        #[strategy(0..#proposal_voting_options)] choice: u8, users_private_key: PrivateKey,
         election_secret_key: ElectionSecretKey,
     ) {
+        let users_public_key = users_private_key.public_key();
         let election_public_key = election_secret_key.public_key();
 
         let _tx = Tx::new_private(
@@ -145,6 +154,7 @@ mod tests {
             proposal_voting_options,
             choice,
             &election_public_key,
+            users_public_key,
         )
         .unwrap();
     }
