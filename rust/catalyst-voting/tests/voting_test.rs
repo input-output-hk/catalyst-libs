@@ -1,19 +1,17 @@
 //! A general voting integration test, which performs a full voting procedure.
 
-use catalyst_voting::{
-    vote_protocol::{
-        tally::{
-            decrypt_tally,
-            proof::{generate_tally_proof, verify_tally_proof},
-            tally, DecryptionTallySetup,
-        },
-        voter::{
-            encrypt_vote,
-            proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
-            Vote,
-        },
+use catalyst_voting::vote_protocol::{
+    committee::ElectionSecretKey,
+    tally::{
+        decrypt_tally,
+        proof::{generate_tally_proof, verify_tally_proof},
+        tally, DecryptionTallySetup,
     },
-    SecretKey,
+    voter::{
+        encrypt_vote,
+        proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
+        Vote,
+    },
 };
 use proptest::prelude::ProptestConfig;
 use test_strategy::{proptest, Arbitrary};
@@ -32,7 +30,7 @@ struct Voter {
 fn voting_test(voters: [Voter; 100]) {
     let mut rng = rand_core::OsRng;
 
-    let election_secret_key = SecretKey::random(&mut rng);
+    let election_secret_key = ElectionSecretKey::random(&mut rng);
     let election_public_key = election_secret_key.public_key();
     let voter_proof_commitment = VoterProofCommitment::random(&mut rng);
 

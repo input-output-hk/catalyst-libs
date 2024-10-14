@@ -8,12 +8,14 @@ use rand_core::SeedableRng;
 
 use crate::{
     crypto::hash::Blake2b512Hasher,
-    vote_protocol::voter::{
-        encrypt_vote,
-        proof::{generate_voter_proof, VoterProof, VoterProofCommitment},
-        EncryptedVote, Vote,
+    vote_protocol::{
+        committee::ElectionPublicKey,
+        voter::{
+            encrypt_vote,
+            proof::{generate_voter_proof, VoterProof, VoterProofCommitment},
+            EncryptedVote, Vote,
+        },
     },
-    PublicKey,
 };
 
 /// A v1 (Jörmungandr) transaction struct
@@ -25,8 +27,8 @@ pub struct Tx {
     proposal_index: u8,
     /// Vote
     vote: VotePayload,
-    /// Public key
-    public_key: PublicKey,
+    // /// Public key
+    // public_key: PublicKey,
 }
 
 /// Vote payload struct.
@@ -42,14 +44,11 @@ pub enum VotePayload {
 impl Tx {
     /// Generate a new `Tx` with public vote
     #[must_use]
-    pub fn new_public(
-        vote_plan_id: [u8; 32], proposal_index: u8, choice: u8, users_public_key: PublicKey,
-    ) -> Self {
+    pub fn new_public(vote_plan_id: [u8; 32], proposal_index: u8, choice: u8) -> Self {
         Self {
             vote_plan_id,
             proposal_index,
             vote: VotePayload::Public(choice),
-            public_key: users_public_key,
         }
     }
 
@@ -59,7 +58,7 @@ impl Tx {
     ///   - Invalid voting choice
     pub fn new_private(
         vote_plan_id: [u8; 32], proposal_index: u8, proposal_voting_options: u8, choice: u8,
-        users_public_key: PublicKey, election_public_key: &PublicKey,
+        election_public_key: &ElectionPublicKey,
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
@@ -82,7 +81,6 @@ impl Tx {
             vote_plan_id,
             proposal_index,
             vote: VotePayload::Private(encrypted_vote, voter_proof),
-            public_key: users_public_key,
         })
     }
 }
@@ -93,20 +91,19 @@ mod tests {
     use test_strategy::proptest;
 
     use super::*;
-    use crate::SecretKey;
+    use crate::vote_protocol::committee::ElectionSecretKey;
 
     impl Arbitrary for Tx {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<([u8; 32], u8, VotePayload, SecretKey)>()
-                .prop_map(|(vote_plan_id, proposal_index, vote, s)| {
+            any::<([u8; 32], u8, VotePayload)>()
+                .prop_map(|(vote_plan_id, proposal_index, vote)| {
                     Tx {
                         vote_plan_id,
                         proposal_index,
                         vote,
-                        public_key: s.public_key(),
                     }
                 })
                 .boxed()
@@ -138,10 +135,9 @@ mod tests {
     #[proptest]
     fn tx_private_test(
         vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..)] proposal_voting_options: u8,
-        #[strategy(0..#proposal_voting_options)] choice: u8, users_secret_key: SecretKey,
-        election_secret_key: SecretKey,
+        #[strategy(0..#proposal_voting_options)] choice: u8,
+        election_secret_key: ElectionSecretKey,
     ) {
-        let users_public_key = users_secret_key.public_key();
         let election_public_key = election_secret_key.public_key();
 
         Tx::new_private(
@@ -149,7 +145,6 @@ mod tests {
             proposal_index,
             proposal_voting_options,
             choice,
-            users_public_key,
             &election_public_key,
         )
         .unwrap();

@@ -2,17 +2,14 @@
 
 use curve25519_dalek::digest::Digest;
 
-use crate::{
-    crypto::{
-        elgamal::Ciphertext, group::GroupElement, hash::Blake2b512Hasher,
-        zk_unit_vector::randomness_announcements::Announcement,
-    },
-    PublicKey,
+use crate::crypto::{
+    elgamal::Ciphertext, group::GroupElement, hash::Blake2b512Hasher,
+    zk_unit_vector::randomness_announcements::Announcement,
 };
 
 /// Calculates the first challenge hash.
 pub(crate) fn calculate_first_challenge_hash(
-    commitment_key: &GroupElement, public_key: &PublicKey, ciphertexts: &[Ciphertext],
+    commitment_key: &GroupElement, public_key: &GroupElement, ciphertexts: &[Ciphertext],
     announcements: &[Announcement],
 ) -> Blake2b512Hasher {
     let mut hash = Blake2b512Hasher::new()

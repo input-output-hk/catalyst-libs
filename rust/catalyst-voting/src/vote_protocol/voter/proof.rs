@@ -13,7 +13,7 @@ use crate::{
         group::{GroupElement, Scalar},
         zk_unit_vector::{generate_unit_vector_proof, verify_unit_vector_proof, UnitVectorProof},
     },
-    PublicKey,
+    vote_protocol::committee::ElectionPublicKey,
 };
 
 /// Tally proof struct.
@@ -46,7 +46,7 @@ impl VoterProofCommitment {
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_voter_proof<R: CryptoRngCore>(
     vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
-    public_key: &PublicKey, commitment: &VoterProofCommitment, rng: &mut R,
+    public_key: &ElectionPublicKey, commitment: &VoterProofCommitment, rng: &mut R,
 ) -> anyhow::Result<VoterProof> {
     ensure!(
         vote.voting_options == encrypted_vote.0.len() && vote.voting_options == randomness.0.len(),
@@ -61,7 +61,7 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
         &vote.to_unit_vector(),
         encrypted_vote.0,
         randomness.0,
-        public_key,
+        &public_key.0,
         &commitment.0,
         rng,
     );
@@ -73,10 +73,10 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
 #[must_use]
 #[allow(clippy::module_name_repetitions)]
 pub fn verify_voter_proof(
-    encrypted_vote: EncryptedVote, public_key: &PublicKey, commitment: &VoterProofCommitment,
-    proof: &VoterProof,
+    encrypted_vote: EncryptedVote, public_key: &ElectionPublicKey,
+    commitment: &VoterProofCommitment, proof: &VoterProof,
 ) -> bool {
-    verify_unit_vector_proof(&proof.0, encrypted_vote.0, public_key, &commitment.0)
+    verify_unit_vector_proof(&proof.0, encrypted_vote.0, &public_key.0, &commitment.0)
 }
 
 #[cfg(test)]

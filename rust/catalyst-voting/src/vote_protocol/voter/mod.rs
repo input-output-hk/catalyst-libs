@@ -6,8 +6,9 @@ pub mod proof;
 use anyhow::ensure;
 use rand_core::CryptoRngCore;
 
+use super::committee::ElectionPublicKey;
 use crate::crypto::{
-    elgamal::{encrypt, Ciphertext, PublicKey},
+    elgamal::{encrypt, Ciphertext},
     group::Scalar,
 };
 
@@ -81,7 +82,7 @@ impl Vote {
 /// # Errors
 ///   - `EncryptedVoteError`
 pub fn encrypt_vote<R: CryptoRngCore>(
-    vote: &Vote, public_key: &PublicKey, rng: &mut R,
+    vote: &Vote, public_key: &ElectionPublicKey, rng: &mut R,
 ) -> (EncryptedVote, EncryptionRandomness) {
     let randomness = EncryptionRandomness::random(rng, vote.voting_options);
 
@@ -89,7 +90,7 @@ pub fn encrypt_vote<R: CryptoRngCore>(
     let ciphers = unit_vector
         .iter()
         .zip(randomness.0.iter())
-        .map(|(m, r)| encrypt(m, public_key, r))
+        .map(|(m, r)| encrypt(m, &public_key.0, r))
         .collect();
 
     (EncryptedVote(ciphers), randomness)

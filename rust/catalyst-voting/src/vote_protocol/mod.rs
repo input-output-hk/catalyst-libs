@@ -89,5 +89,6 @@
 //! ]);
 //! ```
 
+pub mod committee;
 pub mod tally;
 pub mod voter;

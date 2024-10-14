@@ -4,5 +4,3 @@ mod crypto;
 pub mod txs;
 mod utils;
 pub mod vote_protocol;
-
-pub use crypto::elgamal::{PublicKey, SecretKey};
