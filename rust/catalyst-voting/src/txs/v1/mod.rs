@@ -8,7 +8,7 @@ use rand_core::SeedableRng;
 use crate::{
     crypto::{
         ed25519::{sign, PrivateKey, PublicKey, Signature},
-        hash::{digest::Digest, Blake2b512Hasher},
+        hash::{digest::Digest, Blake2b256Hasher, Blake2b512Hasher},
     },
     vote_protocol::{
         committee::ElectionPublicKey,
@@ -121,7 +121,7 @@ impl Tx {
             &private_key.public_key(),
             &mut bytes,
         );
-        let msg = Blake2b512Hasher::new()
+        let msg = Blake2b256Hasher::new()
             .chain_update(bytes.as_slice())
             .finalize();
         sign(private_key, msg.as_slice())
