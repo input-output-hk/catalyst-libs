@@ -24,6 +24,7 @@ bootstrapper
 BROTLI
 cantopen
 cardano
+carryforward
 CBOR
 cbork
 cdylib
@@ -39,6 +40,7 @@ ciphertexts
 codegen
 codepoints
 coti
+coverallsapp
 cpus
 crontabs
 crontagged
