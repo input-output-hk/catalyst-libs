@@ -24,6 +24,8 @@ const PADDING_TAG: u8 = 0;
 const PRIVATE_VOTE_TAG: u8 = 2;
 /// Jörmungandr tx public vote tag.
 const PUBLIC_VOTE_TAG: u8 = 1;
+/// Jörmungandr tx witness tag.
+const WITNESS_TAG: u8 = 2;
 
 impl Tx {
     /// Write the bytes to sign for the `Tx` to provided `buf`.
@@ -81,6 +83,10 @@ impl Tx {
             &mut tx_body,
         );
 
+        // Input tag
+        tx_body.push(WITNESS_TAG);
+        // Zero nonce
+        tx_body.extend_from_slice(&[0u8; 4]);
         tx_body.extend_from_slice(&self.signature.to_bytes());
 
         // Add the size of decoded bytes to the beginning.
@@ -101,36 +107,40 @@ impl Tx {
     #[allow(clippy::indexing_slicing)]
     pub fn from_bytes<R: Read>(reader: &mut R) -> anyhow::Result<Self> {
         // Skip tx size field
-        read_be_u32(reader)?;
+        read_be_u32(reader).map_err(|_| anyhow!("Missing tx size field."))?;
 
-        let padding_tag = read_be_u8(reader)?;
+        let padding_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing padding tag field."))?;
         ensure!(
             padding_tag == PADDING_TAG,
             "Invalid padding tag field value, must be equals to {PADDING_TAG}, provided: {padding_tag}.",
         );
 
-        let fragment_tag = read_be_u8(reader)?;
+        let fragment_tag =
+            read_be_u8(reader).map_err(|_| anyhow!("Missing fragment tag field."))?;
         ensure!(
             fragment_tag == FRAGMENT_TAG,
             "Invalid fragment tag field value, must be equals to {FRAGMENT_TAG}, provided: {fragment_tag}.",
         );
 
-        let vote_plan_id = read_array(reader)?;
+        let vote_plan_id =
+            read_array(reader).map_err(|_| anyhow!("Missing vote plan id field."))?;
 
-        let proposal_index = read_be_u8(reader)?;
+        let proposal_index =
+            read_be_u8(reader).map_err(|_| anyhow!("Missing proposal index field."))?;
 
-        let vote_tag = read_be_u8(reader)?;
+        let vote_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing vote tag field."))?;
         let vote = match vote_tag {
             PUBLIC_VOTE_TAG => {
-                let vote = read_be_u8(reader)?;
+                let vote =
+                    read_be_u8(reader).map_err(|_| anyhow!("Missing public vote choice field."))?;
                 VotePayload::Public(vote)
             },
             PRIVATE_VOTE_TAG => {
-                let size = read_be_u8(reader)?;
+                let size = read_be_u8(reader).map_err(|_| anyhow!("Missing vote size field."))?;
                 let vote = EncryptedVote::from_bytes(reader, size.into())
                     .map_err(|e| anyhow!("Invalid encrypted vote, error: {e}."))?;
 
-                let size = read_be_u8(reader)?;
+                let size = read_be_u8(reader).map_err(|_| anyhow!("Missing proof size field."))?;
                 let proof = VoterProof::from_bytes(reader, size.into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
 
@@ -144,32 +154,44 @@ impl Tx {
         };
 
         // skip block date (epoch and slot)
-        read_be_u64(reader)?;
+        read_be_u64(reader).map_err(|_| anyhow!("Missing block date field."))?;
 
-        let inputs_amount = read_be_u8(reader)?;
+        let inputs_amount =
+            read_be_u8(reader).map_err(|_| anyhow!("Missing inputs amount field."))?;
         ensure!(
             inputs_amount == NUMBER_OF_INPUTS,
             "Invalid number of inputs, expected: {NUMBER_OF_INPUTS}, provided: {inputs_amount}",
         );
 
-        let outputs_amount = read_be_u8(reader)?;
+        let outputs_amount =
+            read_be_u8(reader).map_err(|_| anyhow!("Missing outputs amount field."))?;
         ensure!(
             outputs_amount == NUMBER_OF_OUTPUTS,
             "Invalid number of outputs, expected: {NUMBER_OF_OUTPUTS}, provided: {outputs_amount}",
         );
 
-        let input_tag = read_be_u8(reader)?;
+        let input_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing input tag field."))?;
         ensure!(
             input_tag == INPUT_TAG,
             "Invalid input tag, expected: {INPUT_TAG}, provided: {input_tag}",
         );
 
         // skip value
-        read_be_u64(reader)?;
+        read_be_u64(reader).map_err(|_| anyhow!("Missing value field."))?;
 
-        let public_key_bytes = read_array(reader)?;
+        let public_key_bytes =
+            read_array(reader).map_err(|_| anyhow!("Missing public_key field."))?;
         let public_key = PublicKey::from_bytes(&public_key_bytes)
             .map_err(|e| anyhow!("Invalid public key, error: {e}."))?;
+
+        let witness_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing witness tag field."))?;
+        ensure!(
+            witness_tag == WITNESS_TAG,
+            "Invalid witness tag, expected: {WITNESS_TAG}, provided: {witness_tag}",
+        );
+
+        // Skip nonce field
+        read_be_u32(reader).map_err(|_| anyhow!("Missing nonce field."))?;
 
         let signature_bytes =
             read_array(reader).map_err(|_| anyhow!("Missing signature field."))?;
