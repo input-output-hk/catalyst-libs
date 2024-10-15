@@ -24,6 +24,7 @@
 //!     &users_private_key,
 //! )
 //! .unwrap();
+//! public_tx.verify_signature().unwrap();
 //!
 //! let private_tx = Tx::new_private_with_default_rng(
 //!     vote_plan_id,
@@ -34,6 +35,8 @@
 //!     &users_private_key,
 //! )
 //! .unwrap();
+//! private_tx.verify_signature().unwrap();
+//! private_tx.verify_proof(&election_public_key).unwrap();
 //! ```
 
 mod decoding;
