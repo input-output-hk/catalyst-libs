@@ -8,6 +8,7 @@ use rand_core::CryptoRngCore;
 use super::EncryptedTally;
 use crate::{
     crypto::{
+        default_rng,
         group::{GroupElement, Scalar},
         zk_dl_equality::{generate_dleq_proof, verify_dleq_proof, DleqProof},
     },
@@ -39,6 +40,15 @@ pub fn generate_tally_proof<R: CryptoRngCore>(
     );
 
     TallyProof(proof)
+}
+
+/// Generates a tally proof with `crypto::default_rng`.
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#tally-proof)
+#[allow(clippy::module_name_repetitions)]
+pub fn generate_tally_proof_with_default_rng(
+    encrypted_tally: &EncryptedTally, secret_key: &ElectionSecretKey,
+) -> TallyProof {
+    generate_tally_proof(encrypted_tally, secret_key, &mut default_rng())
 }
 
 /// Verifies a tally proof.

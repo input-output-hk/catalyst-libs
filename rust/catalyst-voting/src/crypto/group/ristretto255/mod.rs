@@ -44,9 +44,7 @@ impl Hash for GroupElement {
 impl Scalar {
     /// Generate a random scalar value from the random number generator.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
-        let mut scalar_bytes = [0u8; 64];
-        rng.fill_bytes(&mut scalar_bytes);
-        Scalar(IScalar::from_bytes_mod_order_wide(&scalar_bytes))
+        Scalar(IScalar::random(rng))
     }
 
     /// additive identity

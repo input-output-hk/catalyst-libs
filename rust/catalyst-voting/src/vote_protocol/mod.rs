@@ -5,12 +5,14 @@
 //!     committee::ElectionSecretKey,
 //!     tally::{
 //!         decrypt_tally,
-//!         proof::{generate_tally_proof, verify_tally_proof},
+//!         proof::{generate_tally_proof_with_default_rng, verify_tally_proof},
 //!         tally, DecryptionTallySetup,
 //!     },
 //!     voter::{
-//!         encrypt_vote,
-//!         proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
+//!         encrypt_vote_with_default_rng,
+//!         proof::{
+//!             generate_voter_proof_with_default_rng, verify_voter_proof, VoterProofCommitment,
+//!         },
 //!         Vote,
 //!     },
 //! };
@@ -21,11 +23,10 @@
 //! }
 //!
 //! // Initial setup
-//! let mut rng = rand_core::OsRng;
 //! let voting_options = 3;
-//! let election_secret_key = ElectionSecretKey::random(&mut rng);
+//! let election_secret_key = ElectionSecretKey::random_with_default_rng();
 //! let election_public_key = election_secret_key.public_key();
-//! let voter_proof_commitment = VoterProofCommitment::random(&mut rng);
+//! let voter_proof_commitment = VoterProofCommitment::random_with_default_rng();
 //!
 //! let voter_1 = Voter {
 //!     voting_power: 10,
@@ -48,21 +49,20 @@
 //! let vote_3 = Vote::new(voter_3.choice, voting_options).unwrap();
 //!
 //! let (encrypted_vote_1, voter_randomness_1) =
-//!     encrypt_vote(&vote_1, &election_public_key, &mut rng);
+//!     encrypt_vote_with_default_rng(&vote_1, &election_public_key);
 //! let (encrypted_vote_2, voter_randomness_2) =
-//!     encrypt_vote(&vote_2, &election_public_key, &mut rng);
+//!     encrypt_vote_with_default_rng(&vote_2, &election_public_key);
 //! let (encrypted_vote_3, voter_randomness_3) =
-//!     encrypt_vote(&vote_3, &election_public_key, &mut rng);
+//!     encrypt_vote_with_default_rng(&vote_3, &election_public_key);
 //!
 //! // Verify encrypted votes
 //! {
-//!     let voter_proof_1 = generate_voter_proof(
+//!     let voter_proof_1 = generate_voter_proof_with_default_rng(
 //!         &vote_1,
 //!         encrypted_vote_1.clone(),
 //!         voter_randomness_1,
 //!         &election_public_key,
 //!         &voter_proof_commitment,
-//!         &mut rng,
 //!     )
 //!     .unwrap();
 //!     assert!(verify_voter_proof(
@@ -72,13 +72,12 @@
 //!         &voter_proof_1
 //!     ));
 //!
-//!     let voter_proof_2 = generate_voter_proof(
+//!     let voter_proof_2 = generate_voter_proof_with_default_rng(
 //!         &vote_2,
 //!         encrypted_vote_2.clone(),
 //!         voter_randomness_2,
 //!         &election_public_key,
 //!         &voter_proof_commitment,
-//!         &mut rng,
 //!     )
 //!     .unwrap();
 //!     assert!(verify_voter_proof(
@@ -88,13 +87,12 @@
 //!         &voter_proof_2
 //!     ));
 //!
-//!     let voter_proof_3 = generate_voter_proof(
+//!     let voter_proof_3 = generate_voter_proof_with_default_rng(
 //!         &vote_3,
 //!         encrypted_vote_3.clone(),
 //!         voter_randomness_3,
 //!         &election_public_key,
 //!         &voter_proof_commitment,
-//!         &mut rng,
 //!     )
 //!     .unwrap();
 //!     assert!(verify_voter_proof(
@@ -129,7 +127,7 @@
 //! {
 //!     let tally_proofs: Vec<_> = encrypted_tallies
 //!         .iter()
-//!         .map(|t| generate_tally_proof(t, &election_secret_key, &mut rng))
+//!         .map(|t| generate_tally_proof_with_default_rng(t, &election_secret_key))
 //!         .collect();
 //!
 //!     let is_ok = tally_proofs

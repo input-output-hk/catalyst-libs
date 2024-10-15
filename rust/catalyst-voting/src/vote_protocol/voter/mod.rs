@@ -8,6 +8,7 @@ use rand_core::CryptoRngCore;
 
 use super::committee::ElectionPublicKey;
 use crate::crypto::{
+    default_rng,
     elgamal::{encrypt, Ciphertext},
     group::Scalar,
 };
@@ -76,11 +77,12 @@ impl Vote {
     }
 }
 
-/// Create a new encrypted vote from the given vote and public key.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+/// Create a new encrypted vote from the given vote and public key with with the
+/// `crypto::default_rng`. More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
 ///
 /// # Errors
 ///   - `EncryptedVoteError`
+#[must_use]
 pub fn encrypt_vote<R: CryptoRngCore>(
     vote: &Vote, public_key: &ElectionPublicKey, rng: &mut R,
 ) -> (EncryptedVote, EncryptionRandomness) {
@@ -94,6 +96,15 @@ pub fn encrypt_vote<R: CryptoRngCore>(
         .collect();
 
     (EncryptedVote(ciphers), randomness)
+}
+
+/// Create a new encrypted vote from the given vote and public key.
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+#[must_use]
+pub fn encrypt_vote_with_default_rng(
+    vote: &Vote, public_key: &ElectionPublicKey,
+) -> (EncryptedVote, EncryptionRandomness) {
+    encrypt_vote(vote, public_key, &mut default_rng())
 }
 
 #[cfg(test)]

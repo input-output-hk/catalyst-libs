@@ -1,10 +1,9 @@
 //! Module containing all primitives related to the committee.
 
-use std::ops::Mul;
-
 use rand_core::CryptoRngCore;
 
 use crate::crypto::{
+    default_rng,
     elgamal::generate_public_key,
     group::{GroupElement, Scalar},
 };
@@ -15,8 +14,15 @@ pub struct ElectionSecretKey(pub(crate) Scalar);
 
 impl ElectionSecretKey {
     /// Randomly generate the `ElectionSecretKey`.
+    #[must_use]
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self(Scalar::random(rng))
+    }
+
+    /// Randomly generate the `ElectionSecretKey` with the `crypto::default_rng`.
+    #[must_use]
+    pub fn random_with_default_rng() -> Self {
+        Self::random(&mut default_rng())
     }
 
     /// Generate a corresponding `PublicKey`.
@@ -29,13 +35,6 @@ impl ElectionSecretKey {
 /// Election public key.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElectionPublicKey(pub(crate) GroupElement);
-
-impl ElectionPublicKey {
-    /// Randomly generate the `ElectionPublicKey`.
-    pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
-        Self(GroupElement::GENERATOR.mul(&Scalar::random(rng)))
-    }
-}
 
 #[cfg(test)]
 mod tests {

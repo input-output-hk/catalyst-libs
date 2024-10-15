@@ -38,9 +38,6 @@
 
 mod decoding;
 
-use rand_chacha::ChaCha20Rng;
-use rand_core::SeedableRng;
-
 use crate::{
     crypto::{
         ed25519::{sign, PrivateKey, PublicKey, Signature},
@@ -49,8 +46,8 @@ use crate::{
     vote_protocol::{
         committee::ElectionPublicKey,
         voter::{
-            encrypt_vote,
-            proof::{generate_voter_proof, VoterProof, VoterProofCommitment},
+            encrypt_vote_with_default_rng,
+            proof::{generate_voter_proof_with_default_rng, VoterProof, VoterProofCommitment},
             EncryptedVote, Vote,
         },
     },
@@ -157,19 +154,18 @@ impl VotePayload {
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
-        let mut rng = ChaCha20Rng::from_entropy();
-        let (encrypted_vote, randomness) = encrypt_vote(&vote, election_public_key, &mut rng);
+        let (encrypted_vote, randomness) =
+            encrypt_vote_with_default_rng(&vote, election_public_key);
 
         let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(vote_plan_id);
         let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
 
-        let voter_proof = generate_voter_proof(
+        let voter_proof = generate_voter_proof_with_default_rng(
             &vote,
             encrypted_vote.clone(),
             randomness,
             election_public_key,
             &commitment,
-            &mut rng,
         )?;
 
         Ok(Self::Private(encrypted_vote, voter_proof))
