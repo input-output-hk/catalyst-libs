@@ -2,10 +2,10 @@
 //!
 //! ```rust
 //! use catalyst_voting::{
-//!     crypto::ed25519::PrivateKey, txs::v1::Tx, vote_protocol::committee::ElectionSecretKey,
+//!     crypto::{default_rng, ed25519::PrivateKey},
+//!     txs::v1::Tx,
+//!     vote_protocol::committee::ElectionSecretKey,
 //! };
-//!
-//! let mut rng = rand_core::OsRng;
 //!
 //! let vote_plan_id = [0u8; 32];
 //! let proposal_index = 0u8;
@@ -13,8 +13,8 @@
 //! let voting_options = 3;
 //! let choice = 1;
 //!
-//! let users_private_key = PrivateKey::random(&mut rng);
-//! let election_public_key = ElectionSecretKey::random(&mut rng).public_key();
+//! let users_private_key = PrivateKey::random(&mut default_rng());
+//! let election_public_key = ElectionSecretKey::random_with_default_rng().public_key();
 //!
 //! let public_tx = Tx::new_public(
 //!     vote_plan_id,
@@ -25,7 +25,7 @@
 //! )
 //! .unwrap();
 //!
-//! let private_tx = Tx::new_private(
+//! let private_tx = Tx::new_private_with_default_rng(
 //!     vote_plan_id,
 //!     proposal_index,
 //!     voting_options,
@@ -38,8 +38,11 @@
 
 mod decoding;
 
+use rand_core::CryptoRngCore;
+
 use crate::{
     crypto::{
+        default_rng,
         ed25519::{sign, PrivateKey, PublicKey, Signature},
         hash::{digest::Digest, Blake2b256Hasher, Blake2b512Hasher},
     },
@@ -47,7 +50,7 @@ use crate::{
         committee::ElectionPublicKey,
         voter::{
             encrypt_vote_with_default_rng,
-            proof::{generate_voter_proof_with_default_rng, VoterProof, VoterProofCommitment},
+            proof::{generate_voter_proof, VoterProof, VoterProofCommitment},
             EncryptedVote, Vote,
         },
     },
@@ -80,7 +83,7 @@ pub enum VotePayload {
 }
 
 impl Tx {
-    /// Generate a new `Tx` with public vote
+    /// Generate a new `Tx` with public vote.
     ///
     /// # Errors
     ///   - Invalid voting choice
@@ -99,16 +102,47 @@ impl Tx {
         })
     }
 
-    /// Generate a new `Tx` with public vote
+    /// Generate a new `Tx` with public vote.
     ///
     /// # Errors
     ///   - Invalid voting choice
-    pub fn new_private(
+    pub fn new_private<R: CryptoRngCore>(
+        vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
+        election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey, rng: &mut R,
+    ) -> anyhow::Result<Self> {
+        let vote = VotePayload::new_private(
+            &vote_plan_id,
+            choice,
+            voting_options,
+            election_public_key,
+            rng,
+        )?;
+        let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
+
+        Ok(Self {
+            vote_plan_id,
+            proposal_index,
+            vote,
+            public_key: users_private_key.public_key(),
+            signature,
+        })
+    }
+
+    /// Generate a new `Tx` with public vote with `crypto::default_rng`.
+    ///
+    /// # Errors
+    ///   - Invalid voting choice
+    pub fn new_private_with_default_rng(
         vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
         election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey,
     ) -> anyhow::Result<Self> {
-        let vote =
-            VotePayload::new_private(&vote_plan_id, choice, voting_options, election_public_key)?;
+        let vote = VotePayload::new_private(
+            &vote_plan_id,
+            choice,
+            voting_options,
+            election_public_key,
+            &mut default_rng(),
+        )?;
         let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
 
         Ok(Self {
@@ -148,9 +182,9 @@ impl VotePayload {
         Ok(Self::Public(choice))
     }
 
-    fn new_private(
+    fn new_private<R: CryptoRngCore>(
         vote_plan_id: &[u8; 32], choice: u8, proposal_voting_options: u8,
-        election_public_key: &ElectionPublicKey,
+        election_public_key: &ElectionPublicKey, rng: &mut R,
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
@@ -160,12 +194,13 @@ impl VotePayload {
         let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(vote_plan_id);
         let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
 
-        let voter_proof = generate_voter_proof_with_default_rng(
+        let voter_proof = generate_voter_proof(
             &vote,
             encrypted_vote.clone(),
             randomness,
             election_public_key,
             &commitment,
+            rng,
         )?;
 
         Ok(Self::Private(encrypted_vote, voter_proof))
@@ -196,7 +231,7 @@ mod tests {
         )
         .unwrap();
 
-        let _tx = Tx::new_private(
+        let _tx = Tx::new_private_with_default_rng(
             vote_plan_id,
             proposal_index,
             voting_options,
