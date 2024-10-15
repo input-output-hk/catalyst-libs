@@ -38,19 +38,20 @@
 
 mod decoding;
 
+use anyhow::ensure;
 use rand_core::CryptoRngCore;
 
 use crate::{
     crypto::{
         default_rng,
-        ed25519::{sign, PrivateKey, PublicKey, Signature},
+        ed25519::{sign, verify_signature, PrivateKey, PublicKey, Signature},
         hash::{digest::Digest, Blake2b256Hasher, Blake2b512Hasher},
     },
     vote_protocol::{
         committee::ElectionPublicKey,
         voter::{
             encrypt_vote_with_default_rng,
-            proof::{generate_voter_proof, VoterProof, VoterProofCommitment},
+            proof::{generate_voter_proof, verify_voter_proof, VoterProof, VoterProofCommitment},
             EncryptedVote, Vote,
         },
     },
@@ -154,22 +155,64 @@ impl Tx {
         })
     }
 
+    /// Verify transaction signature and underlying proof for public vote
+    ///
+    /// # Errors
+    ///   - Invalid signature
+    ///   - Invalid proof
+    pub fn verify(&self, election_public_key: &ElectionPublicKey) -> anyhow::Result<()> {
+        let bytes = Self::bytes_to_sign(
+            &self.vote_plan_id,
+            self.proposal_index,
+            &self.vote,
+            &self.public_key,
+        );
+        ensure!(
+            verify_signature(&self.public_key, &bytes, &self.signature),
+            "Invalid signature."
+        );
+
+        if let VotePayload::Private(encrypted_vote, proof) = &self.vote {
+            let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(self.vote_plan_id);
+            let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
+            ensure!(
+                verify_voter_proof(
+                    encrypted_vote.clone(),
+                    election_public_key,
+                    &commitment,
+                    proof,
+                ),
+                "Invalid proof."
+            );
+        }
+
+        Ok(())
+    }
+
     /// Generate transaction signature
     fn sign(
         vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, private_key: &PrivateKey,
     ) -> Signature {
-        let mut bytes = Vec::new();
-        Self::bytes_to_sign(
+        let bytes = Self::bytes_to_sign(
             vote_plan_id,
             proposal_index,
             vote,
             &private_key.public_key(),
-            &mut bytes,
         );
-        let msg = Blake2b256Hasher::new()
+        sign(private_key, &bytes)
+    }
+
+    /// Generate bytes to be signed.
+    /// A Blake2b256 hash of the transaction body
+    fn bytes_to_sign(
+        vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, public_key: &PublicKey,
+    ) -> Vec<u8> {
+        let mut bytes = Vec::new();
+        Self::tx_body_decode(vote_plan_id, proposal_index, vote, public_key, &mut bytes);
+        Blake2b256Hasher::new()
             .chain_update(bytes.as_slice())
-            .finalize();
-        sign(private_key, msg.as_slice())
+            .finalize()
+            .to_vec()
     }
 }
 
@@ -205,6 +248,27 @@ impl VotePayload {
 
         Ok(Self::Private(encrypted_vote, voter_proof))
     }
+
+    // #[allow(clippy::cast_possible_truncation, dead_code)]
+    // fn choice(&self, secret_key: &ElectionSecretKey) -> anyhow::Result<u8> {
+    //     match self {
+    //         Self::Public(choice) => Ok(*choice),
+    //         Self::Private(vote, _) => {
+    //             // Making a tally and decryption tally procedure on one vote to retrieve
+    // the             // original voting choice.
+    //             // Assuming that the voting power argument must be equals to 1.
+    //             let setup = DecryptionTallySetup::new(1)?;
+    //             for voting_option in 0..vote.voting_options() {
+    //                 let tally = tally(voting_option, &[vote.clone()], &[1])?;
+    //                 let choice_for_voting_option = decrypt_tally(&tally, secret_key,
+    // &setup)?;                 if choice_for_voting_option == 1 {
+    //                     return Ok(voting_option as u8);
+    //                 }
+    //             }
+    //             bail!("Invalid encrypted vote, not a unit vector");
+    //         },
+    //     }
+    // }
 }
 
 #[cfg(test)]
@@ -216,13 +280,13 @@ mod tests {
 
     #[proptest]
     fn tx_test(
-        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..)] voting_options: u8,
+        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
         #[strategy(0..#voting_options)] choice: u8, users_private_key: PrivateKey,
         election_secret_key: ElectionSecretKey,
     ) {
         let election_public_key = election_secret_key.public_key();
 
-        let _tx = Tx::new_public(
+        let tx = Tx::new_public(
             vote_plan_id,
             proposal_index,
             voting_options,
@@ -230,8 +294,9 @@ mod tests {
             &users_private_key,
         )
         .unwrap();
+        tx.verify(&election_public_key).unwrap();
 
-        let _tx = Tx::new_private_with_default_rng(
+        let tx = Tx::new_private_with_default_rng(
             vote_plan_id,
             proposal_index,
             voting_options,
@@ -240,5 +305,6 @@ mod tests {
             &users_private_key,
         )
         .unwrap();
+        tx.verify(&election_public_key).unwrap();
     }
 }

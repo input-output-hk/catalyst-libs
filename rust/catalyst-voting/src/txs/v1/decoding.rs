@@ -28,9 +28,9 @@ const PUBLIC_VOTE_TAG: u8 = 1;
 const WITNESS_TAG: u8 = 2;
 
 impl Tx {
-    /// Write the bytes to sign for the `Tx` to provided `buf`.
+    /// Write the bytes of the `Tx` body to provided `buf`.
     #[allow(clippy::cast_possible_truncation)]
-    pub(super) fn bytes_to_sign(
+    pub(super) fn tx_body_decode(
         vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, public_key: &PublicKey,
         buf: &mut Vec<u8>,
     ) {
@@ -73,25 +73,25 @@ impl Tx {
     #[allow(clippy::cast_possible_truncation)]
     pub fn to_bytes(&self) -> Vec<u8> {
         // Initialize already with the padding tag `0` and fragment tag `11`.
-        let mut tx_body = vec![PADDING_TAG, FRAGMENT_TAG];
+        let mut buf = vec![PADDING_TAG, FRAGMENT_TAG];
 
-        Self::bytes_to_sign(
+        Self::tx_body_decode(
             &self.vote_plan_id,
             self.proposal_index,
             &self.vote,
             &self.public_key,
-            &mut tx_body,
+            &mut buf,
         );
 
-        // Input tag
-        tx_body.push(WITNESS_TAG);
+        // Witness tag
+        buf.push(WITNESS_TAG);
         // Zero nonce
-        tx_body.extend_from_slice(&[0u8; 4]);
-        tx_body.extend_from_slice(&self.signature.to_bytes());
+        buf.extend_from_slice(&[0u8; 4]);
+        buf.extend_from_slice(&self.signature.to_bytes());
 
         // Add the size of decoded bytes to the beginning.
-        let mut res = (tx_body.len() as u32).to_be_bytes().to_vec();
-        res.append(&mut tx_body);
+        let mut res = (buf.len() as u32).to_be_bytes().to_vec();
+        res.append(&mut buf);
         res
     }
 
