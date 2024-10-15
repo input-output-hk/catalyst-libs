@@ -137,30 +137,34 @@ impl Tx {
         vote_plan_id: [u8; 32], proposal_index: u8, voting_options: u8, choice: u8,
         election_public_key: &ElectionPublicKey, users_private_key: &PrivateKey,
     ) -> anyhow::Result<Self> {
-        let vote = VotePayload::new_private(
-            &vote_plan_id,
-            choice,
-            voting_options,
-            election_public_key,
-            &mut default_rng(),
-        )?;
-        let signature = Self::sign(&vote_plan_id, proposal_index, &vote, users_private_key);
-
-        Ok(Self {
+        Self::new_private(
             vote_plan_id,
             proposal_index,
-            vote,
-            public_key: users_private_key.public_key(),
-            signature,
-        })
+            voting_options,
+            choice,
+            election_public_key,
+            users_private_key,
+            &mut default_rng(),
+        )
     }
 
-    /// Verify transaction signature and underlying proof for public vote
+    /// Returns `true` if the vote is public
+    #[must_use]
+    pub fn is_public(&self) -> bool {
+        matches!(self.vote, VotePayload::Public(_))
+    }
+
+    /// Returns `true` if the vote is private
+    #[must_use]
+    pub fn is_private(&self) -> bool {
+        matches!(self.vote, VotePayload::Private(_, _))
+    }
+
+    /// Verify transaction signature
     ///
     /// # Errors
     ///   - Invalid signature
-    ///   - Invalid proof
-    pub fn verify(&self, election_public_key: &ElectionPublicKey) -> anyhow::Result<()> {
+    pub fn verify_signature(&self) -> anyhow::Result<()> {
         let bytes = Self::bytes_to_sign(
             &self.vote_plan_id,
             self.proposal_index,
@@ -171,7 +175,15 @@ impl Tx {
             verify_signature(&self.public_key, &bytes, &self.signature),
             "Invalid signature."
         );
+        Ok(())
+    }
 
+    /// Verify transaction proof of the private vote.
+    /// If vote is public it returns `Ok(())`
+    ///
+    /// # Errors
+    ///   - Invalid proof
+    pub fn verify_proof(&self, election_public_key: &ElectionPublicKey) -> anyhow::Result<()> {
         if let VotePayload::Private(encrypted_vote, proof) = &self.vote {
             let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(self.vote_plan_id);
             let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
@@ -185,7 +197,6 @@ impl Tx {
                 "Invalid proof."
             );
         }
-
         Ok(())
     }
 
@@ -294,7 +305,10 @@ mod tests {
             &users_private_key,
         )
         .unwrap();
-        tx.verify(&election_public_key).unwrap();
+        assert!(tx.is_public());
+        assert!(!tx.is_private());
+        tx.verify_signature().unwrap();
+        tx.verify_proof(&election_public_key).unwrap();
 
         let tx = Tx::new_private_with_default_rng(
             vote_plan_id,
@@ -305,6 +319,9 @@ mod tests {
             &users_private_key,
         )
         .unwrap();
-        tx.verify(&election_public_key).unwrap();
+        assert!(!tx.is_public());
+        assert!(tx.is_private());
+        tx.verify_signature().unwrap();
+        tx.verify_proof(&election_public_key).unwrap();
     }
 }
