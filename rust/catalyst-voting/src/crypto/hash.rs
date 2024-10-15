@@ -1,4 +1,4 @@
-//! Blake2b-256 hash implementation.
+//! Different hash implementations.
 
 pub use curve25519_dalek::digest;
 use digest::{
