@@ -64,6 +64,12 @@ impl Vote {
         })
     }
 
+    /// Get the voter's choice.
+    #[must_use]
+    pub fn choice(&self) -> usize {
+        self.choice
+    }
+
     /// Transform the vote into the unit vector.
     fn to_unit_vector(&self) -> Vec<Scalar> {
         (0..self.voting_options)
@@ -114,7 +120,7 @@ pub fn encrypt_vote_with_default_rng(
 /// If not valid encrypted vote is provided, unexpected results may occur.
 ///
 /// # Errors
-///   - Ivalid provided encrypted vote, not a unit vector.
+///   - Ivalid encrypted vote, not a valid unit vector.
 pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> anyhow::Result<Vote> {
     // Assuming that the provided encrypted vote is a correctly encoded unit vector,
     // the maximum log value is `1`.
@@ -124,7 +130,7 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
         let decrypted_choice_per_option = decrypt(encrypted_choice_per_option, &secret_key.0);
         let choice_per_option = setup
             .discrete_log(decrypted_choice_per_option)
-            .map_err(|_| anyhow!("Ivalid provided encrypted vote, not a unit vector."))?;
+            .map_err(|_| anyhow!("Ivalid encrypted vote, not a valid unit vector."))?;
         if choice_per_option == 1 {
             return Ok(Vote {
                 choice: i,
@@ -132,7 +138,7 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
             });
         }
     }
-    bail!("Ivalid provided encrypted vote, not a unit vector.")
+    bail!("Ivalid encrypted vote, not a valid unit vector.")
 }
 
 #[cfg(test)]
@@ -160,6 +166,7 @@ mod tests {
         let voting_options = 3;
 
         let vote = Vote::new(0, voting_options).unwrap();
+        assert_eq!(vote.choice(), 0);
         assert_eq!(vote.to_unit_vector(), vec![
             Scalar::one(),
             Scalar::zero(),
@@ -167,6 +174,7 @@ mod tests {
         ]);
 
         let vote = Vote::new(1, voting_options).unwrap();
+        assert_eq!(vote.choice(), 1);
         assert_eq!(vote.to_unit_vector(), vec![
             Scalar::zero(),
             Scalar::one(),
@@ -174,6 +182,7 @@ mod tests {
         ]);
 
         let vote = Vote::new(2, voting_options).unwrap();
+        assert_eq!(vote.choice(), 2);
         assert_eq!(vote.to_unit_vector(), vec![
             Scalar::zero(),
             Scalar::zero(),

@@ -51,9 +51,9 @@ use crate::{
         hash::{digest::Digest, Blake2b256Hasher, Blake2b512Hasher},
     },
     vote_protocol::{
-        committee::ElectionPublicKey,
+        committee::{ElectionPublicKey, ElectionSecretKey},
         voter::{
-            encrypt_vote_with_default_rng,
+            decrypt_vote, encrypt_vote_with_default_rng,
             proof::{generate_voter_proof, verify_voter_proof, VoterProof, VoterProofCommitment},
             EncryptedVote, Vote,
         },
@@ -163,6 +163,33 @@ impl Tx {
         matches!(self.vote, VotePayload::Private(_, _))
     }
 
+    /// Returns public voting choice.
+    ///
+    /// # Errors
+    ///   - Not a public vote
+    pub fn public_choice(&self) -> anyhow::Result<u8> {
+        if let VotePayload::Public(choice) = &self.vote {
+            Ok(*choice)
+        } else {
+            Err(anyhow::anyhow!("Not a public vote"))
+        }
+    }
+
+    /// Returns private voting choice.
+    ///
+    /// # Errors
+    ///   - Not a private vote
+    #[allow(clippy::cast_possible_truncation)]
+    pub fn private_choice(&self, secret_key: &ElectionSecretKey) -> anyhow::Result<u8> {
+        if let VotePayload::Private(vote, _) = &self.vote {
+            let vote = decrypt_vote(vote, secret_key)?;
+            let choice = vote.choice() as u8;
+            Ok(choice)
+        } else {
+            Err(anyhow::anyhow!("Not a private vote"))
+        }
+    }
+
     /// Verify transaction signature
     ///
     /// # Errors
@@ -262,27 +289,6 @@ impl VotePayload {
 
         Ok(Self::Private(encrypted_vote, voter_proof))
     }
-
-    // #[allow(clippy::cast_possible_truncation, dead_code)]
-    // fn choice(&self, secret_key: &ElectionSecretKey) -> anyhow::Result<u8> {
-    //     match self {
-    //         Self::Public(choice) => Ok(*choice),
-    //         Self::Private(vote, _) => {
-    //             // Making a tally and decryption tally procedure on one vote to retrieve
-    // the             // original voting choice.
-    //             // Assuming that the voting power argument must be equals to 1.
-    //             let setup = DecryptionTallySetup::new(1)?;
-    //             for voting_option in 0..vote.voting_options() {
-    //                 let tally = tally(voting_option, &[vote.clone()], &[1])?;
-    //                 let choice_for_voting_option = decrypt_tally(&tally, secret_key,
-    // &setup)?;                 if choice_for_voting_option == 1 {
-    //                     return Ok(voting_option as u8);
-    //                 }
-    //             }
-    //             bail!("Invalid encrypted vote, not a unit vector");
-    //         },
-    //     }
-    // }
 }
 
 #[cfg(test)]
@@ -312,6 +318,8 @@ mod tests {
         assert!(!tx.is_private());
         tx.verify_signature().unwrap();
         tx.verify_proof(&election_public_key).unwrap();
+        assert_eq!(tx.public_choice().unwrap(), choice);
+        assert!(tx.private_choice(&election_secret_key).is_err());
 
         let tx = Tx::new_private_with_default_rng(
             vote_plan_id,
@@ -326,5 +334,7 @@ mod tests {
         assert!(tx.is_private());
         tx.verify_signature().unwrap();
         tx.verify_proof(&election_public_key).unwrap();
+        assert_eq!(tx.private_choice(&election_secret_key).unwrap(), choice);
+        assert!(tx.public_choice().is_err());
     }
 }
