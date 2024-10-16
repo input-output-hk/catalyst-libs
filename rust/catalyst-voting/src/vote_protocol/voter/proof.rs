@@ -9,24 +9,39 @@ use rand_core::CryptoRngCore;
 use super::{EncryptedVote, EncryptionRandomness, Vote};
 use crate::{
     crypto::{
+        default_rng,
         group::{GroupElement, Scalar},
+        hash::digest::{consts::U64, Digest},
         zk_unit_vector::{generate_unit_vector_proof, verify_unit_vector_proof, UnitVectorProof},
     },
-    PublicKey,
+    vote_protocol::committee::ElectionPublicKey,
 };
 
 /// Tally proof struct.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct VoterProof(pub(super) UnitVectorProof);
 
 /// Voter proof commitment struct.
+#[must_use]
 pub struct VoterProofCommitment(GroupElement);
 
 impl VoterProofCommitment {
     /// Randomly generate the `VoterProofCommitment`.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self(GroupElement::GENERATOR.mul(&Scalar::random(rng)))
+    }
+
+    /// Randomly generate the `VoterProofCommitment` with the `crypto::default_rng`..
+    pub fn random_with_default_rng() -> Self {
+        Self::random(&mut default_rng())
+    }
+
+    /// Generate a `VoterProofCommitment` from a hash digest.
+    pub fn from_hash<D>(hash: D) -> VoterProofCommitment
+    where D: Digest<OutputSize = U64> + Default {
+        Self(GroupElement::from_hash(hash))
     }
 }
 
@@ -39,7 +54,7 @@ impl VoterProofCommitment {
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_voter_proof<R: CryptoRngCore>(
     vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
-    public_key: &PublicKey, commitment: &VoterProofCommitment, rng: &mut R,
+    public_key: &ElectionPublicKey, commitment: &VoterProofCommitment, rng: &mut R,
 ) -> anyhow::Result<VoterProof> {
     ensure!(
         vote.voting_options == encrypted_vote.0.len() && vote.voting_options == randomness.0.len(),
@@ -54,11 +69,32 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
         &vote.to_unit_vector(),
         encrypted_vote.0,
         randomness.0,
-        public_key,
+        &public_key.0,
         &commitment.0,
         rng,
     );
     Ok(VoterProof(proof))
+}
+
+/// Generates a voter proof with `crypto::default_rng`.
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voters-proof)
+///
+/// # Errors
+///   - Provided arguments mismatch. Size of the provided `vote`, `encrypted_vote` and
+///     `randomness` must be equal with each other.
+#[allow(clippy::module_name_repetitions)]
+pub fn generate_voter_proof_with_default_rng(
+    vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
+    public_key: &ElectionPublicKey, commitment: &VoterProofCommitment,
+) -> anyhow::Result<VoterProof> {
+    generate_voter_proof(
+        vote,
+        encrypted_vote,
+        randomness,
+        public_key,
+        commitment,
+        &mut default_rng(),
+    )
 }
 
 /// Verifies a voter proof.
@@ -66,10 +102,10 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
 #[must_use]
 #[allow(clippy::module_name_repetitions)]
 pub fn verify_voter_proof(
-    encrypted_vote: EncryptedVote, public_key: &PublicKey, commitment: &VoterProofCommitment,
-    proof: &VoterProof,
+    encrypted_vote: EncryptedVote, public_key: &ElectionPublicKey,
+    commitment: &VoterProofCommitment, proof: &VoterProof,
 ) -> bool {
-    verify_unit_vector_proof(&proof.0, encrypted_vote.0, public_key, &commitment.0)
+    verify_unit_vector_proof(&proof.0, encrypted_vote.0, &public_key.0, &commitment.0)
 }
 
 #[cfg(test)]

@@ -29,6 +29,7 @@ CBOR
 cbork
 cdylib
 CEST
+chacha
 CHAINCODE
 chainsync
 childs

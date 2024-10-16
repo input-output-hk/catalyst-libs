@@ -3,11 +3,14 @@
 mod decoding;
 pub mod proof;
 
-use anyhow::ensure;
+use anyhow::{anyhow, bail, ensure};
 use rand_core::CryptoRngCore;
 
+use super::committee::{ElectionPublicKey, ElectionSecretKey};
 use crate::crypto::{
-    elgamal::{encrypt, Ciphertext, PublicKey},
+    babystep_giantstep::BabyStepGiantStep,
+    default_rng,
+    elgamal::{decrypt, encrypt, Ciphertext},
     group::Scalar,
 };
 
@@ -61,6 +64,12 @@ impl Vote {
         })
     }
 
+    /// Get the voter's choice.
+    #[must_use]
+    pub fn choice(&self) -> usize {
+        self.choice
+    }
+
     /// Transform the vote into the unit vector.
     fn to_unit_vector(&self) -> Vec<Scalar> {
         (0..self.voting_options)
@@ -75,13 +84,14 @@ impl Vote {
     }
 }
 
-/// Create a new encrypted vote from the given vote and public key.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+/// Create a new encrypted vote from the given vote and public key with with the
+/// `crypto::default_rng`. More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
 ///
 /// # Errors
 ///   - `EncryptedVoteError`
+#[must_use]
 pub fn encrypt_vote<R: CryptoRngCore>(
-    vote: &Vote, public_key: &PublicKey, rng: &mut R,
+    vote: &Vote, public_key: &ElectionPublicKey, rng: &mut R,
 ) -> (EncryptedVote, EncryptionRandomness) {
     let randomness = EncryptionRandomness::random(rng, vote.voting_options);
 
@@ -89,10 +99,46 @@ pub fn encrypt_vote<R: CryptoRngCore>(
     let ciphers = unit_vector
         .iter()
         .zip(randomness.0.iter())
-        .map(|(m, r)| encrypt(m, public_key, r))
+        .map(|(m, r)| encrypt(m, &public_key.0, r))
         .collect();
 
     (EncryptedVote(ciphers), randomness)
+}
+
+/// Create a new encrypted vote from the given vote and public key.
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+#[must_use]
+pub fn encrypt_vote_with_default_rng(
+    vote: &Vote, public_key: &ElectionPublicKey,
+) -> (EncryptedVote, EncryptionRandomness) {
+    encrypt_vote(vote, public_key, &mut default_rng())
+}
+
+/// Decrypt the encrypted vote.
+/// **NOTE** make sure tha the provided `vote` is a valid one, by executing the
+/// `verify_voter_proof` on the underlying voter proof.
+/// If not valid encrypted vote is provided, unexpected results may occur.
+///
+/// # Errors
+///   - Invalid encrypted vote, not a valid unit vector.
+pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> anyhow::Result<Vote> {
+    // Assuming that the provided encrypted vote is a correctly encoded unit vector,
+    // the maximum log value is `1`.
+    let setup = BabyStepGiantStep::new(1, None)?;
+
+    for (i, encrypted_choice_per_option) in vote.0.iter().enumerate() {
+        let decrypted_choice_per_option = decrypt(encrypted_choice_per_option, &secret_key.0);
+        let choice_per_option = setup
+            .discrete_log(decrypted_choice_per_option)
+            .map_err(|_| anyhow!("Invalid encrypted vote, not a valid unit vector."))?;
+        if choice_per_option == 1 {
+            return Ok(Vote {
+                choice: i,
+                voting_options: vote.0.len(),
+            });
+        }
+    }
+    bail!("Invalid encrypted vote, not a valid unit vector.")
 }
 
 #[cfg(test)]
@@ -120,6 +166,7 @@ mod tests {
         let voting_options = 3;
 
         let vote = Vote::new(0, voting_options).unwrap();
+        assert_eq!(vote.choice(), 0);
         assert_eq!(vote.to_unit_vector(), vec![
             Scalar::one(),
             Scalar::zero(),
@@ -127,6 +174,7 @@ mod tests {
         ]);
 
         let vote = Vote::new(1, voting_options).unwrap();
+        assert_eq!(vote.choice(), 1);
         assert_eq!(vote.to_unit_vector(), vec![
             Scalar::zero(),
             Scalar::one(),
@@ -134,6 +182,7 @@ mod tests {
         ]);
 
         let vote = Vote::new(2, voting_options).unwrap();
+        assert_eq!(vote.choice(), 2);
         assert_eq!(vote.to_unit_vector(), vec![
             Scalar::zero(),
             Scalar::zero(),

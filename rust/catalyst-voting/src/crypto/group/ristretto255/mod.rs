@@ -11,20 +11,23 @@ use std::{
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
-    digest::{consts::U64, Digest},
-    ristretto::RistrettoPoint as Point,
     scalar::Scalar as IScalar,
     traits::Identity,
+    RistrettoPoint,
 };
 use rand_core::CryptoRngCore;
 
+use crate::crypto::hash::digest::{consts::U64, Digest};
+
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct Scalar(IScalar);
 
 /// Ristretto group element.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GroupElement(Point);
+#[must_use]
+pub struct GroupElement(RistrettoPoint);
 
 impl From<u64> for Scalar {
     fn from(value: u64) -> Self {
@@ -41,9 +44,7 @@ impl Hash for GroupElement {
 impl Scalar {
     /// Generate a random scalar value from the random number generator.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
-        let mut scalar_bytes = [0u8; 64];
-        rng.fill_bytes(&mut scalar_bytes);
-        Scalar(IScalar::from_bytes_mod_order_wide(&scalar_bytes))
+        Scalar(IScalar::random(rng))
     }
 
     /// additive identity
@@ -84,7 +85,13 @@ impl GroupElement {
 
     /// Generate a zero group element.
     pub fn zero() -> Self {
-        GroupElement(Point::identity())
+        GroupElement(RistrettoPoint::identity())
+    }
+
+    /// Generate a `GroupElement` from a hash digest.
+    pub fn from_hash<D>(hash: D) -> GroupElement
+    where D: Digest<OutputSize = U64> + Default {
+        GroupElement(RistrettoPoint::from_hash(hash))
     }
 }
 

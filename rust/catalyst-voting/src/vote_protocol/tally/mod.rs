@@ -6,10 +6,11 @@ use std::ops::{Add, Mul};
 
 use anyhow::{anyhow, ensure};
 
+use super::committee::ElectionSecretKey;
 use crate::{
     crypto::{
         babystep_giantstep::BabyStepGiantStep,
-        elgamal::{decrypt, Ciphertext, SecretKey},
+        elgamal::{decrypt, Ciphertext},
         group::Scalar,
     },
     vote_protocol::voter::EncryptedVote,
@@ -92,9 +93,9 @@ pub fn tally(
 ///     tally result.
 #[allow(clippy::module_name_repetitions)]
 pub fn decrypt_tally(
-    tally_result: &EncryptedTally, secret_key: &SecretKey, setup: &DecryptionTallySetup,
+    tally_result: &EncryptedTally, secret_key: &ElectionSecretKey, setup: &DecryptionTallySetup,
 ) -> anyhow::Result<u64> {
-    let ge = decrypt(&tally_result.0, secret_key);
+    let ge = decrypt(&tally_result.0, &secret_key.0);
 
     let res = setup
         .discrete_log_setup
