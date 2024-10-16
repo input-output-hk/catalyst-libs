@@ -77,7 +77,7 @@ pub struct Tx {
 }
 
 /// Vote payload struct.
-/// Contains all necesarry information for the valid vote.
+/// Contains all necessary information for the valid vote.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum VotePayload {
     /// Public voting choice

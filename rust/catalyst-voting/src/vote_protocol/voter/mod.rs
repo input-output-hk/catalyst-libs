@@ -120,7 +120,7 @@ pub fn encrypt_vote_with_default_rng(
 /// If not valid encrypted vote is provided, unexpected results may occur.
 ///
 /// # Errors
-///   - Ivalid encrypted vote, not a valid unit vector.
+///   - Invalid encrypted vote, not a valid unit vector.
 pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> anyhow::Result<Vote> {
     // Assuming that the provided encrypted vote is a correctly encoded unit vector,
     // the maximum log value is `1`.
@@ -130,7 +130,7 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
         let decrypted_choice_per_option = decrypt(encrypted_choice_per_option, &secret_key.0);
         let choice_per_option = setup
             .discrete_log(decrypted_choice_per_option)
-            .map_err(|_| anyhow!("Ivalid encrypted vote, not a valid unit vector."))?;
+            .map_err(|_| anyhow!("Invalid encrypted vote, not a valid unit vector."))?;
         if choice_per_option == 1 {
             return Ok(Vote {
                 choice: i,
@@ -138,7 +138,7 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
             });
         }
     }
-    bail!("Ivalid encrypted vote, not a valid unit vector.")
+    bail!("Invalid encrypted vote, not a valid unit vector.")
 }
 
 #[cfg(test)]

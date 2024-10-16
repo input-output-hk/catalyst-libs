@@ -1,5 +1,7 @@
 //! Crypto primitives which are used by voting protocol.
 
+// cspell: words Seedable
+
 use rand_chacha::ChaCha8Rng;
 use rand_core::{CryptoRngCore, SeedableRng};
 
