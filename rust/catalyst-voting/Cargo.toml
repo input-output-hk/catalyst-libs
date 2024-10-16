@@ -1,3 +1,5 @@
+# cspell: words getrandom
+
 [package]
 name = "catalyst-voting"
 version = "0.0.1"
