@@ -291,14 +291,15 @@ pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader>
 
 #[cfg(test)]
 mod tests {
-    use ed25519_dalek::SECRET_KEY_LENGTH;
+    use ed25519_dalek::{SigningKey, SECRET_KEY_LENGTH};
 
     use ulid::Ulid;
     use uuid::Uuid;
 
     use crate::{
-        decode_block, decode_block_header, encode_block, encode_block_header, BlockTimeStamp,
-        ChainId, Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId, Validator,
+        blake2b_512, decode_block, decode_block_header, encode_block, encode_block_header,
+        BlockTimeStamp, ChainId, Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId,
+        Validator,
     };
 
     #[test]
@@ -398,7 +399,7 @@ mod tests {
         block_data.bytes(block_data_bytes).unwrap();
 
         let encoded_block = encode_block(
-            encoded_block_hdr,
+            encoded_block_hdr.clone(),
             block_data_bytes.to_vec(),
             vec![&validator_secret_key_bytes, &validator_secret_key_bytes],
             crate::HashFunction::Blake2b,
@@ -416,5 +417,17 @@ mod tests {
         assert_eq!(decoded.0 .7, metadata);
 
         assert_eq!(decoded.1 .0, block_data_bytes.to_vec());
+
+        let data_to_sign = [
+            blake2b_512(&encoded_block_hdr).unwrap().to_vec(),
+            block_data_bytes.to_vec(),
+        ]
+        .concat();
+
+        let verifying_key = SigningKey::from_bytes(&validator_secret_key_bytes);
+
+        for sig in decoded.2 .0 {
+            verifying_key.verify_strict(&data_to_sign, &sig).unwrap();
+        }
     }
 }
