@@ -8,7 +8,7 @@ use catalyst_voting::vote_protocol::{
         tally, DecryptionTallySetup,
     },
     voter::{
-        encrypt_vote_with_default_rng,
+        decrypt_vote, encrypt_vote_with_default_rng,
         proof::{generate_voter_proof_with_default_rng, verify_voter_proof, VoterProofCommitment},
         Vote,
     },
@@ -41,6 +41,15 @@ fn voting_test(voters: [Voter; 100]) {
         .iter()
         .map(|vote| encrypt_vote_with_default_rng(vote, &election_public_key))
         .unzip();
+
+    // Decrypting votes
+    {
+        let decrypted_votes: Vec<_> = encrypted_votes
+            .iter()
+            .map(|v| decrypt_vote(v, &election_secret_key).unwrap())
+            .collect();
+        assert_eq!(votes, decrypted_votes);
+    }
 
     // Verify encrypted votes
     {

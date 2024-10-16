@@ -3,13 +3,14 @@
 mod decoding;
 pub mod proof;
 
-use anyhow::ensure;
+use anyhow::{anyhow, bail, ensure};
 use rand_core::CryptoRngCore;
 
-use super::committee::ElectionPublicKey;
+use super::committee::{ElectionPublicKey, ElectionSecretKey};
 use crate::crypto::{
+    babystep_giantstep::BabyStepGiantStep,
     default_rng,
-    elgamal::{encrypt, Ciphertext},
+    elgamal::{decrypt, encrypt, Ciphertext},
     group::Scalar,
 };
 
@@ -105,6 +106,33 @@ pub fn encrypt_vote_with_default_rng(
     vote: &Vote, public_key: &ElectionPublicKey,
 ) -> (EncryptedVote, EncryptionRandomness) {
     encrypt_vote(vote, public_key, &mut default_rng())
+}
+
+/// Decrypt the encrypted vote.
+/// **NOTE** make sure tha the provided `vote` is a valid one, by executing the
+/// `verify_voter_proof` on the underlying voter proof.
+/// If not valid encrypted vote is provided, unexpected results may occur.
+///
+/// # Errors
+///   - Ivalid provided encrypted vote, not a unit vector.
+pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> anyhow::Result<Vote> {
+    // Assuming that the provided encrypted vote is a correctly encoded unit vector,
+    // the maximum log value is `1`.
+    let setup = BabyStepGiantStep::new(1, None)?;
+
+    for (i, encrypted_choice_per_option) in vote.0.iter().enumerate() {
+        let decrypted_choice_per_option = decrypt(encrypted_choice_per_option, &secret_key.0);
+        let choice_per_option = setup
+            .discrete_log(decrypted_choice_per_option)
+            .map_err(|_| anyhow!("Ivalid provided encrypted vote, not a unit vector."))?;
+        if choice_per_option == 1 {
+            return Ok(Vote {
+                choice: i,
+                voting_options: vote.0.len(),
+            });
+        }
+    }
+    bail!("Ivalid provided encrypted vote, not a unit vector.")
 }
 
 #[cfg(test)]
