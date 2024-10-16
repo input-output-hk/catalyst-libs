@@ -51,9 +51,9 @@ pub struct Validator(pub Vec<Kid>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct Metadata(pub Vec<u8>);
 
-/// block data + sig
+/// Block header size
 #[derive(Debug, Clone, PartialEq)]
-pub struct BlockDataAndSignature(Vec<u8>);
+pub struct BlockHeaderSize(usize);
 
 /// Decoded block data
 #[derive(Debug, Clone, PartialEq)]
@@ -76,7 +76,7 @@ type DecodedBlockHeader = (
     PurposeId,
     Validator,
     Option<Metadata>,
-    BlockDataAndSignature,
+    BlockHeaderSize,
 );
 
 /// Choice of hash function:
@@ -114,8 +114,7 @@ pub fn encode_block(
         })
         .collect();
 
-    let out = block_hdr_cbor;
-
+    let out: Vec<u8> = Vec::new();
     let mut encoder = minicbor::Encoder::new(out);
 
     encoder.bytes(&block_data)?;
@@ -124,7 +123,7 @@ pub fn encode_block(
         encoder.bytes(sig)?;
     }
 
-    Ok(encoder.writer().to_vec())
+    Ok([block_hdr_cbor, encoder.writer().to_vec()].concat())
 }
 
 /// Decoded block
@@ -134,9 +133,9 @@ pub fn decode_block(encoded_block: Vec<u8>) -> anyhow::Result<DecodedBlock> {
     // Decoded block hdr
     let block_hdr: DecodedBlockHeader = decode_block_header(encoded_block.clone())?;
 
-    // block data + sigs
-    let remaining_block = block_hdr.clone().8 .0;
-    let mut cbor_decoder = minicbor::Decoder::new(&remaining_block);
+    let mut cbor_decoder = minicbor::Decoder::new(&encoded_block);
+    // Decode remaining block, set position after block hdr data.
+    cbor_decoder.set_position(block_hdr.8 .0);
 
     // Block data
     let block_data = cbor_decoder
@@ -277,9 +276,6 @@ pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader>
         Err(_) => None,
     };
 
-    // return remaining blocks for further processing.
-    let (_block_hdr_bytes, remaining_block_bytes) = block.split_at(cbor_decoder.position());
-
     Ok((
         chain_id,
         block_height,
@@ -289,7 +285,7 @@ pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader>
         purpose_id,
         Validator(validators),
         metadata,
-        BlockDataAndSignature(remaining_block_bytes.to_vec()),
+        BlockHeaderSize(cbor_decoder.position()),
     ))
 }
 
@@ -383,7 +379,7 @@ mod tests {
         .unwrap();
 
         // validators
-        let secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
+        let validator_secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
             157, 097, 177, 157, 239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196, 068,
             073, 197, 105, 123, 050, 105, 025, 112, 059, 172, 003, 028, 174, 127, 096,
         ];
@@ -392,15 +388,19 @@ mod tests {
         let mut block_data = minicbor::Encoder::new(out);
 
         let block_data_bytes = &[
-            157, 097, 177, 157, 239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196,
+            157, 097, 177, 157, 239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196, 157,
+            239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196, 157, 239, 253, 090, 096,
+            186, 132, 074, 244, 146, 236, 044, 196, 157, 239, 253, 090, 096, 186, 132, 074, 244,
+            146, 236, 044, 196, 157, 239, 253, 090, 096, 186, 132, 074, 244, 146, 236, 044, 196,
+            157,
         ];
 
         block_data.bytes(block_data_bytes).unwrap();
 
         let encoded_block = encode_block(
             encoded_block_hdr,
-            block_data.writer().to_vec(),
-            vec![&secret_key_bytes, &secret_key_bytes],
+            block_data_bytes.to_vec(),
+            vec![&validator_secret_key_bytes, &validator_secret_key_bytes],
             crate::HashFunction::Blake2b,
         )
         .unwrap();
