@@ -14,9 +14,8 @@ impl Scalar {
     /// # Errors
     ///   - Cannot decode scalar.
     pub fn from_bytes(bytes: [u8; Self::BYTES_SIZE]) -> anyhow::Result<Scalar> {
-        IScalar::from_canonical_bytes(bytes)
+        Into::<Option<_>>::into(IScalar::from_canonical_bytes(bytes))
             .map(Scalar)
-            .into_option()
             .ok_or(anyhow!("Cannot decode scalar."))
     }
 
