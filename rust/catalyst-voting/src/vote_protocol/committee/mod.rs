@@ -1,5 +1,7 @@
 //! Module containing all primitives related to the committee.
 
+mod decoding;
+
 use rand_core::CryptoRngCore;
 
 use crate::crypto::{

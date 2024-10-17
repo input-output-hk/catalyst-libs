@@ -53,7 +53,7 @@ use crate::{
     vote_protocol::{
         committee::{ElectionPublicKey, ElectionSecretKey},
         voter::{
-            decrypt_vote, encrypt_vote_with_default_rng,
+            decrypt_vote, encrypt_vote,
             proof::{generate_voter_proof, verify_voter_proof, VoterProof, VoterProofCommitment},
             EncryptedVote, Vote,
         },
@@ -272,8 +272,7 @@ impl VotePayload {
     ) -> anyhow::Result<Self> {
         let vote = Vote::new(choice.into(), proposal_voting_options.into())?;
 
-        let (encrypted_vote, randomness) =
-            encrypt_vote_with_default_rng(&vote, election_public_key);
+        let (encrypted_vote, randomness) = encrypt_vote(&vote, election_public_key, rng);
 
         let vote_plan_id_hash = Blake2b512Hasher::new().chain_update(vote_plan_id);
         let commitment = VoterProofCommitment::from_hash(vote_plan_id_hash);
