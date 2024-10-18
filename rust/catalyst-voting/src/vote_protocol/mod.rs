@@ -1,4 +1,4 @@
-//! An implementation of the voting protocol described in this [spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/)
+//! An implementation of the voting protocol described in this [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/)
 //!
 //! ```rust
 //! use catalyst_voting::vote_protocol::{

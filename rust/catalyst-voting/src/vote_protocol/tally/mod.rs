@@ -47,7 +47,7 @@ impl DecryptionTallySetup {
 }
 
 /// Tally function.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#homomorphic-tally)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#homomorphic-tally)
 ///
 /// # Errors
 ///   - Votes and voting power length mismatch.
@@ -86,7 +86,7 @@ pub fn tally(
 }
 
 /// Decrypts the encrypted tally result.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#tally-decryption)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#tally-decryption)
 ///
 /// # Errors
 ///   - Cannot decrypt tally result. Provided an invalid secret key or invalid encrypted

@@ -10,7 +10,7 @@
 //! points `point_1` and `point_2`. The witness, on the other hand
 //! is the discrete logarithm, `dlog`.
 
-// cspell: words NIZK dlog
+// cspell: words NIZK
 
 use crate::crypto::{
     group::{GroupElement, Scalar},

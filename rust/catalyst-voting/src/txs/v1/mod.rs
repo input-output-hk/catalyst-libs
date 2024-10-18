@@ -1,4 +1,4 @@
-//! A Jörmungandr transaction object structured following this [spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/transaction/#v1-jormungandr)
+//! A Jörmungandr transaction object structured following this [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/transaction/#v1-jormungandr)
 //!
 //! ```rust
 //! use catalyst_voting::{
