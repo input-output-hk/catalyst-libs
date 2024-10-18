@@ -39,7 +39,7 @@ impl Polynomial {
     }
 }
 
-/// Generate the polynomial according to the step 7 of this [spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#prover)
+/// Generate the polynomial according to the step 7 of this [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#prover)
 pub(crate) fn generate_polynomial(
     i: usize, j: usize, randomness: &[BlindingRandomness],
 ) -> Polynomial {

@@ -21,7 +21,7 @@ use crate::{
 pub struct TallyProof(DleqProof);
 
 /// Generates a tally proof.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#tally-proof)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#tally-proof)
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_tally_proof<R: CryptoRngCore>(
     encrypted_tally: &EncryptedTally, secret_key: &ElectionSecretKey, rng: &mut R,
@@ -43,7 +43,7 @@ pub fn generate_tally_proof<R: CryptoRngCore>(
 }
 
 /// Generates a tally proof with `crypto::default_rng`.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#tally-proof)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#tally-proof)
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_tally_proof_with_default_rng(
     encrypted_tally: &EncryptedTally, secret_key: &ElectionSecretKey,
@@ -52,7 +52,7 @@ pub fn generate_tally_proof_with_default_rng(
 }
 
 /// Verifies a tally proof.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#tally-proof)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#tally-proof)
 #[must_use]
 #[allow(clippy::module_name_repetitions)]
 pub fn verify_tally_proof(

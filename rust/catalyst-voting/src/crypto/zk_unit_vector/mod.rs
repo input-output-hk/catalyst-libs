@@ -2,7 +2,7 @@
 //! Zhang, Oliynykov and Balogum in
 //! [`A Treasury System for Cryptocurrencies: Enabling Better Collaborative Intelligence`](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_02A-2_Zhang_paper.pdf).
 //!
-//! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#d-non-interactive-zk-vote-proof)
+//! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#d-non-interactive-zk-vote-proof)
 
 // cspell: words Zhang, Oliynykov, Balogum
 
