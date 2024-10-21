@@ -1,0 +1,34 @@
+vote_tx = [
+    network_id: UUID, ; e.g. Midnight, Catalyst etc.
+    campaign_id: UUID, ; e.g. Fund 1, Fund 2 etc.
+    challenge_info,
+    votes,
+]
+
+challenge_info = [
+    challenge_id: UUID,
+    proposals: ? [+ UUID],
+]
+
+votes = [+ vote]
+vote = (public_vote / private_vote)
+
+public_vote = [2* bool]
+; public_vote = [2* scalar]
+; public_vote = [2* bytes]
+private_vote = [2* (encrypted_vote, vote_proof)]
+
+encrypted_vote = ciphertext
+vote_proof = ( [2* (announcement, ciphertext, r_response)], scalar)
+
+ciphertext = (group_element, group_element)
+announcement = (group_element, group_element, group_element)
+r_response = (scalar, scalar, scalar)
+
+; encrypted_vote = bytes
+; vote_proof = bytes
+
+scalar = (bytes .size 32)
+group_element = (bytes .size 32)
+
+UUID = #6.37(bytes) ; UUID type

@@ -1,8 +1,8 @@
-# Transaction
+# Transactions
 
 ---
 
-Title: Voting Transaction
+Title: Voting Transactions
 
 Status: Proposed
 
@@ -87,7 +87,6 @@ the following properties are used:
 
 1. Each proposal, defined by the "Vote plan id" and "Proposal index", defines a number of possible options.
 2. [ristretto255] as a backend cryptographic group.
-3. [BLAKE2b-512] hash function.
 4. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
 
 #### Transaction signing (witness generation)
@@ -118,6 +117,16 @@ Expected witness (includes signature)
     0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
 ```
 <!-- markdownlint-enable code-block-style -->
+
+### v2
+
+<!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
+??? note "V2 vote transaction definition: `tx_v1.abnf`"
+
+    ```CDDL
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
 ## Rationale
 
