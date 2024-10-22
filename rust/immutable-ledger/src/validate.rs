@@ -244,10 +244,7 @@ mod tests {
         // VALIDATE BLOCK
         //
 
-        match block_validation(&current_block, &previous_block, &Blake2b) {
-            Ok(()) => (),
-            Err(err) => panic!("Block validation failed: {err:?}"),
-        };
+        assert!(block_validation(&current_block, &previous_block, &Blake2b).is_ok());
     }
 
     #[test]
@@ -278,9 +275,6 @@ mod tests {
         )
         .unwrap();
 
-        match genesis_validation(&encoded_block_genesis, &Blake2b) {
-            Ok(()) => (),
-            Err(err) => panic!("Genesis Block validation failed: {err:?}"),
-        };
+        assert!(genesis_validation(&encoded_block_genesis, &Blake2b).is_ok());
     }
 }
