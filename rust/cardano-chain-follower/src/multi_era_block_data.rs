@@ -10,6 +10,7 @@
 use std::{cmp::Ordering, fmt::Display, sync::Arc};
 
 use ouroboros::self_referencing;
+use pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary;
 use tracing::debug;
 
 use crate::{
@@ -30,7 +31,7 @@ pub(crate) struct SelfReferencedMultiEraBlock {
     /// References the `raw_data` field.
     #[borrows(raw_data)]
     #[covariant]
-    block: pallas::ledger::traverse::MultiEraBlock<'this>,
+    block: MultiEraBlockWithRawAuxiliary<'this>,
 }
 
 /// Multi-era block - inner.
@@ -89,7 +90,7 @@ impl MultiEraBlock {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
             raw_data,
             block_builder: |raw_data| -> Result<_, Error> {
-                pallas::ledger::traverse::MultiEraBlock::decode(raw_data)
+                MultiEraBlockWithRawAuxiliary::decode(raw_data)
                     .map_err(|err| Error::Codec(err.to_string()))
             },
         };
@@ -104,7 +105,7 @@ impl MultiEraBlock {
 
         let byron_block = matches!(
             decoded_block,
-            pallas::ledger::traverse::MultiEraBlock::Byron(_)
+            MultiEraBlockWithRawAuxiliary::Byron(_)
         );
 
         // debug!("New Block: {slot} {point} {}", *previous);
@@ -180,7 +181,7 @@ impl MultiEraBlock {
     /// The decoded block data, which can easily be processed by a consumer.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
-    pub fn decode(&self) -> &pallas::ledger::traverse::MultiEraBlock {
+    pub fn decode(&self) -> &MultiEraBlockWithRawAuxiliary {
         self.inner.data.borrow_block()
     }
 
@@ -308,15 +309,15 @@ impl Display for MultiEraBlock {
         };
 
         let block_era = match block {
-            pallas::ledger::traverse::MultiEraBlock::EpochBoundary(_) => {
+            MultiEraBlockWithRawAuxiliary::EpochBoundary(_) => {
                 "Byron Epoch Boundary".to_string()
             },
-            pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(_, era) => {
+            MultiEraBlockWithRawAuxiliary::AlonzoCompatible(_, era) => {
                 format!("{era}")
             },
-            pallas::ledger::traverse::MultiEraBlock::Babbage(_) => "Babbage".to_string(),
-            pallas::ledger::traverse::MultiEraBlock::Byron(_) => "Byron".to_string(),
-            pallas::ledger::traverse::MultiEraBlock::Conway(_) => "Conway".to_string(),
+            MultiEraBlockWithRawAuxiliary::Babbage(_) => "Babbage".to_string(),
+            MultiEraBlockWithRawAuxiliary::Byron(_) => "Byron".to_string(),
+            MultiEraBlockWithRawAuxiliary::Conway(_) => "Conway".to_string(),
             _ => "Unknown".to_string(),
         };
         write!(f, "{block_era} block : {}, Previous {} : Slot# {slot} : {fork} : Block# {block_number} : Size {size} : Txns {txns} : AuxData? {aux_data}",
@@ -373,6 +374,7 @@ pub(crate) mod tests {
 
     use anyhow::Ok;
 
+    use super::*;
     use crate::{point::ORIGIN_POINT, MultiEraBlock, Network, Point};
 
     struct TestRecord {
@@ -457,7 +459,7 @@ pub(crate) mod tests {
     fn test_multi_era_block_point_compare_1() -> anyhow::Result<()> {
         for (i, test_block) in test_blocks().into_iter().enumerate() {
             let pallas_block =
-                pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
+                MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
                 pallas_block.slot().add(i as u64),
@@ -482,7 +484,7 @@ pub(crate) mod tests {
     fn test_multi_era_block_point_compare_2() -> anyhow::Result<()> {
         for test_block in test_blocks() {
             let pallas_block =
-                pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
+                MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(pallas_block.slot() - 1, vec![0; 32]);
 
@@ -500,7 +502,7 @@ pub(crate) mod tests {
     fn test_multi_era_block_point_compare_3() -> anyhow::Result<()> {
         for test_block in test_blocks() {
             let pallas_block =
-                pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
+                MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
                 pallas_block.slot() - 1,
@@ -525,7 +527,7 @@ pub(crate) mod tests {
         raw_blocks
             .iter()
             .map(|block| {
-                let prev_point = pallas::ledger::traverse::MultiEraBlock::decode(block.as_slice())
+                let prev_point = MultiEraBlockWithRawAuxiliary::decode(block.as_slice())
                     .map(|block| {
                         Point::new(
                             block.slot() - 1,
@@ -549,7 +551,7 @@ pub(crate) mod tests {
         raw_blocks
             .iter()
             .map(|block| {
-                pallas::ledger::traverse::MultiEraBlock::decode(block.as_slice())
+                MultiEraBlockWithRawAuxiliary::decode(block.as_slice())
                     .map(|block| {
                         Point::new(
                             block.slot(),
