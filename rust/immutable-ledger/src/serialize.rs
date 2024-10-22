@@ -131,9 +131,14 @@ pub enum HashFunction {
 ///
 /// Returns an error if block encoding fails
 pub fn encode_block(
-    block_hdr_cbor: EncodedBlockHeader, block_data: &EncodedBlockData,
-    validator_keys: &ValidatorKeys, hasher: &HashFunction,
+    block_hdr: EncodedBlockHeader, block_data: &EncodedBlockData, validator_keys: &ValidatorKeys,
+    hasher: &HashFunction,
 ) -> anyhow::Result<EncodedBlock> {
+    // Ensure block header is cbor encoded
+    let binding = block_hdr.0.clone();
+    let mut block_hdr_cbor_encoding_check = minicbor::Decoder::new(&binding);
+    let _ = block_hdr_cbor_encoding_check.bytes()?;
+
     // Enforce block data to be cbor encoded in the form of CBOR byte strings
     // which are just (ordered) series of bytes without further interpretation
     let binding = block_data.0.clone();
@@ -141,8 +146,8 @@ pub fn encode_block(
     let _ = block_data_cbor_encoding_check.bytes()?;
 
     let hashed_block_header = match hasher {
-        HashFunction::Blake3 => blake3(&block_hdr_cbor.0)?.to_vec(),
-        HashFunction::Blake2b => blake2b_512(&block_hdr_cbor.0)?.to_vec(),
+        HashFunction::Blake3 => blake3(&block_hdr.0)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(&block_hdr.0)?.to_vec(),
     };
 
     // validator_signature MUST be a signature of the hashed block_header bytes
@@ -173,7 +178,7 @@ pub fn encode_block(
 
     let block_data_with_sigs = encoder.writer().clone();
     // block hdr + block data + sigs
-    let encoded_block = [block_hdr_cbor.0, block_data_with_sigs].concat();
+    let encoded_block = [block_hdr.0, block_data_with_sigs].concat();
 
     Ok(encoded_block)
 }
