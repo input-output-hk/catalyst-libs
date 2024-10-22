@@ -2,20 +2,25 @@
 //!
 //! Facilitates validation for immutable ledger
 
-use crate::serialize::{blake3, decode_genesis_block, EncodedGenesisBlock};
 use anyhow::Ok;
 
-use crate::serialize::{blake2b_512, decode_block, EncodedBlock, HashFunction};
+use crate::serialize::{
+    blake2b_512, blake3, decode_block, decode_genesis_block, EncodedBlock, EncodedGenesisBlock,
+    HashFunction,
+};
 
 /// Validate current block against previous block.
-pub fn validate_block(
-    current_block: EncodedBlock, previous_block: EncodedBlock, hasher: HashFunction,
+/// ## Errors
+///
+/// Returns an error if block validation fails.
+pub fn block_validation(
+    current_block: &EncodedBlock, previous_block: &EncodedBlock, hasher: &HashFunction,
 ) -> anyhow::Result<()> {
     let current_block = decode_block(current_block)?;
 
     let hashed_previous_block = match hasher {
-        HashFunction::Blake3 => blake3(&previous_block)?.to_vec(),
-        HashFunction::Blake2b => blake2b_512(&previous_block)?.to_vec(),
+        HashFunction::Blake3 => blake3(previous_block)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(previous_block)?.to_vec(),
     };
     let previous_block = decode_block(previous_block)?;
 
@@ -28,9 +33,10 @@ pub fn validate_block(
         ));
     };
 
-    // height MUST be incremented by 1 from the previous block height value (except for genesis and final block).
-    // Genesis block MUST have 0 value. Final block MUST hash be incremented by 1 from the previous block height
-    // and changed the sign to negative. E.g. previous block height is 9 and the Final block height is -10.
+    // height MUST be incremented by 1 from the previous block height value (except for
+    // genesis and final block). Genesis block MUST have 0 value. Final block MUST hash be
+    // incremented by 1 from the previous block height and changed the sign to negative.
+    // E.g. previous block height is 9 and the Final block height is -10.
     if current_block.0 .1 .0 != previous_block.0 .1 .0 + 1 {
         return Err(anyhow::anyhow!(
             "Module: Immutable ledger,  Message: height validation failed: {:?} {:?}",
@@ -39,7 +45,8 @@ pub fn validate_block(
         ));
     }
 
-    // timestamp MUST be greater or equals than the timestamp of the previous block (except for genesis)
+    // timestamp MUST be greater or equals than the timestamp of the previous block (except
+    // for genesis)
     if current_block.0 .2 .0 <= previous_block.0 .2 .0 {
         return Err(anyhow::anyhow!(
             "Module: Immutable ledger,  Message: timestamp validation failed: {:?} {:?}",
@@ -88,8 +95,13 @@ pub fn validate_block(
 }
 
 /// Validate genesis block
-pub fn validate_genesis(genesis: EncodedGenesisBlock, hasher: HashFunction) -> anyhow::Result<()> {
-    //  Genesis block MUST have 0 value
+/// ## Errors
+///
+/// Genesis validation
+pub fn genesis_validation(
+    genesis: &EncodedGenesisBlock, hasher: &HashFunction,
+) -> anyhow::Result<()> {
+    ///  Genesis block MUST have 0 value
     const BLOCK_HEIGHT: u32 = 0;
 
     let genesis_block = decode_genesis_block(genesis.clone())?;
@@ -130,23 +142,18 @@ pub fn validate_genesis(genesis: EncodedGenesisBlock, hasher: HashFunction) -> a
 mod tests {
 
     use ed25519_dalek::SECRET_KEY_LENGTH;
-
     use ulid::Ulid;
     use uuid::Uuid;
 
+    use super::{block_validation, genesis_validation};
     use crate::serialize::{
         blake2b_512, encode_block, encode_block_header, encode_genesis, BlockTimeStamp, ChainId,
-        EncodedBlockData, Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId,
-        Validator, ValidatorKeys,
+        EncodedBlockData, HashFunction::Blake2b, Height, Kid, LedgerType, Metadata,
+        PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
     };
-
-    use crate::serialize::HashFunction::Blake2b;
-
-    use super::{validate_block, validate_genesis};
 
     #[test]
     fn validate_block_test() {
-        //
         // PREVIOUS BLOCK
         //
         //
@@ -173,10 +180,10 @@ mod tests {
             chain_id,
             block_height,
             block_ts,
-            prev_block_height.clone(),
-            ledger_type.clone(),
-            purpose_id.clone(),
-            validators.clone(),
+            &prev_block_height.clone(),
+            &ledger_type.clone(),
+            &purpose_id.clone(),
+            &validators.clone(),
             metadata.clone(),
         )
         .unwrap();
@@ -202,13 +209,12 @@ mod tests {
 
         let previous_block = encode_block(
             encoded_block_hdr.clone(),
-            EncodedBlockData(block_data_bytes.to_vec()),
-            ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
-            Blake2b,
+            &EncodedBlockData(block_data_bytes.to_vec()),
+            &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
+            &Blake2b,
         )
         .unwrap();
 
-        //
         // CURRENT BLOCK
         //
 
@@ -222,10 +228,10 @@ mod tests {
             chain_id,
             block_height,
             block_ts,
-            prev_block_hash,
-            ledger_type.clone(),
-            purpose_id.clone(),
-            validators.clone(),
+            &prev_block_hash,
+            &ledger_type.clone(),
+            &purpose_id.clone(),
+            &validators.clone(),
             metadata.clone(),
         )
         .unwrap();
@@ -234,17 +240,16 @@ mod tests {
 
         let current_block = encode_block(
             encoded_block_hdr.clone(),
-            EncodedBlockData(block_data_bytes.to_vec()),
-            ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
-            Blake2b,
+            &EncodedBlockData(block_data_bytes.to_vec()),
+            &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
+            &Blake2b,
         )
         .unwrap();
 
-        //
         // VALIDATE BLOCK
         //
 
-        match validate_block(current_block, previous_block, Blake2b) {
+        match block_validation(&current_block, &previous_block, &Blake2b) {
             Ok(()) => (),
             Err(err) => panic!("Block validation failed: {err:?}"),
         };
@@ -271,14 +276,14 @@ mod tests {
         let encoded_block_genesis = encode_genesis(
             chain_id,
             block_ts,
-            ledger_type.clone(),
-            purpose_id.clone(),
-            validators.clone(),
-            Blake2b,
+            &ledger_type.clone(),
+            &purpose_id.clone(),
+            &validators.clone(),
+            &Blake2b,
         )
         .unwrap();
 
-        match validate_genesis(encoded_block_genesis, Blake2b) {
+        match genesis_validation(&encoded_block_genesis, &Blake2b) {
             Ok(()) => (),
             Err(err) => panic!("Genesis Block validation failed: {err:?}"),
         };

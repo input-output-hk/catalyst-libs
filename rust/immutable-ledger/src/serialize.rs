@@ -2,11 +2,11 @@
 //!
 //! Facilitates block serialization for immutable ledger
 
+use core::result::Result::Ok as ResultOk;
+
 use anyhow::Ok;
 use blake2b_simd::{self, Params};
-use core::result::Result::Ok as ResultOk;
 use ed25519_dalek::{ed25519::signature::SignerMut, Signature, SigningKey, SECRET_KEY_LENGTH};
-
 use ulid::Ulid;
 use uuid::Uuid;
 
@@ -35,11 +35,13 @@ pub struct BlockTimeStamp(pub i64);
 pub struct PreviousBlockHash(pub Vec<u8>);
 
 /// unique identifier of the ledger type.
-/// In general, this is the way to strictly bound and specify `block_data` of the ledger for the specific `ledger_type`.
+/// In general, this is the way to strictly bound and specify `block_data` of the ledger
+/// for the specific `ledger_type`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LedgerType(pub Uuid);
 
-/// unique identifier of the purpose, each Ledger instance will have a strict time boundaries, so each of them will run for different purposes.
+/// unique identifier of the purpose, each Ledger instance will have a strict time
+/// boundaries, so each of them will run for different purposes.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PurposeId(pub Ulid);
 
@@ -71,7 +73,8 @@ pub struct EncodedGenesisBlockContents(pub Vec<u8>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct Signatures(Vec<Signature>);
 
-/// Validator's keys defined in the corresponding certificates referenced by the validator.
+/// Validator's keys defined in the corresponding certificates referenced by the
+/// validator.
 pub struct ValidatorKeys(pub Vec<[u8; SECRET_KEY_LENGTH]>);
 
 /// Decoded block
@@ -112,16 +115,20 @@ pub type EncodedGenesisBlock = Vec<u8>;
 /// Choice of hash function:
 /// must be the same as the hash of the previous block.
 pub enum HashFunction {
-    /// BLAKE3 is based on an optimized instance of the established hash function BLAKE2 and on the original Bao tree mode
+    /// BLAKE3 is based on an optimized instance of the established hash function BLAKE2
+    /// and on the original Bao tree mode
     Blake3,
     /// BLAKE2b-512 produces digest side of 512 bits.
     Blake2b,
 }
 
 /// Encode standard block
+/// ## Errors
+///
+/// Returns an error if block encoding fails
 pub fn encode_block(
-    block_hdr_cbor: Vec<u8>, block_data: EncodedBlockData, validator_keys: ValidatorKeys,
-    hasher: HashFunction,
+    block_hdr_cbor: Vec<u8>, block_data: &EncodedBlockData, validator_keys: &ValidatorKeys,
+    hasher: &HashFunction,
 ) -> anyhow::Result<EncodedBlock> {
     let hashed_block_header = match hasher {
         HashFunction::Blake3 => blake3(&block_hdr_cbor)?.to_vec(),
@@ -161,12 +168,15 @@ pub fn encode_block(
     Ok(encoded_block)
 }
 
-/// Decoded standard block
-pub fn decode_block(encoded_block: Vec<u8>) -> anyhow::Result<DecodedBlock> {
+/// Decodes standard block
+/// ## Errors
+///
+/// Returns an error if block decoding fails
+pub fn decode_block(encoded_block: &[u8]) -> anyhow::Result<DecodedBlock> {
     // Decoded block hdr
-    let block_hdr: DecodedBlockHeader = decode_block_header(encoded_block.clone())?;
+    let block_hdr: DecodedBlockHeader = decode_block_header(encoded_block)?;
 
-    let mut cbor_decoder = minicbor::Decoder::new(&encoded_block);
+    let mut cbor_decoder = minicbor::Decoder::new(encoded_block);
     // Decode remaining block, set position after block hdr data.
     cbor_decoder.set_position(block_hdr.8 .0);
 
@@ -207,9 +217,13 @@ pub(crate) fn blake2b_512(value: &[u8]) -> anyhow::Result<[u8; 64]> {
 }
 
 /// Encode block header
+/// ## Errors
+///
+/// Returns an error if block header encoding fails.
+#[allow(clippy::too_many_arguments)]
 pub fn encode_block_header(
-    chain_id: ChainId, height: Height, ts: BlockTimeStamp, prev_block_hash: PreviousBlockHash,
-    ledger_type: LedgerType, pid: PurposeId, validator: Validator, metadata: Option<Metadata>,
+    chain_id: ChainId, height: Height, ts: BlockTimeStamp, prev_block_hash: &PreviousBlockHash,
+    ledger_type: &LedgerType, pid: &PurposeId, validator: &Validator, metadata: Option<Metadata>,
 ) -> anyhow::Result<Vec<u8>> {
     let out: Vec<u8> = Vec::new();
     let mut encoder = minicbor::Encoder::new(out);
@@ -235,9 +249,12 @@ pub fn encode_block_header(
 }
 
 /// Decode block header
-pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader> {
+/// ## Errors
+///
+/// Returns an error if decoding block header fails.
+pub fn decode_block_header(block: &[u8]) -> anyhow::Result<DecodedBlockHeader> {
     // Decode cbor to bytes
-    let mut cbor_decoder = minicbor::Decoder::new(&block);
+    let mut cbor_decoder = minicbor::Decoder::new(block);
 
     // Raw chain_id
     let chain_id = ChainId(Ulid::from_bytes(
@@ -325,11 +342,14 @@ pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader>
 }
 
 /// Encode genesis block
+/// ## Errors
+///
+/// Returns an error if genesis block encoding fails.
 pub fn encode_genesis(
-    chain_id: ChainId, ts: BlockTimeStamp, ledger_type: LedgerType, pid: PurposeId,
-    validator: Validator, hasher: HashFunction,
+    chain_id: ChainId, ts: BlockTimeStamp, ledger_type: &LedgerType, pid: &PurposeId,
+    validator: &Validator, hasher: &HashFunction,
 ) -> anyhow::Result<Vec<u8>> {
-    //  Genesis block MUST have 0 value
+    ///  Genesis block MUST have 0 value
     const BLOCK_HEIGHT: u32 = 0;
 
     let out: Vec<u8> = Vec::new();
@@ -359,13 +379,17 @@ pub fn encode_genesis(
     };
 
     // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
-    // last 64 bytes (depending on given hash function) of encoding are the hash of the genesis contents
+    // last 64 bytes (depending on given hash function) of encoding are the hash of the
+    // genesis contents
     encoder.bytes(genesis_prev_hash.as_slice())?;
 
     Ok(encoder.writer().clone())
 }
 
 /// Decode genesis
+/// ## Errors
+///
+/// Returns an error if block decoding for genesis fails.
 pub fn decode_genesis_block(genesis_block: Vec<u8>) -> anyhow::Result<DecodedBlockGenesis> {
     let binding = genesis_block.clone();
     let mut cbor_decoder = minicbor::Decoder::new(&binding);
@@ -467,19 +491,15 @@ pub fn decode_genesis_block(genesis_block: Vec<u8>) -> anyhow::Result<DecodedBlo
 #[cfg(test)]
 mod tests {
     use ed25519_dalek::{SigningKey, SECRET_KEY_LENGTH};
-
     use ulid::Ulid;
     use uuid::Uuid;
 
+    use super::{decode_genesis_block, encode_genesis};
     use crate::serialize::{
         blake2b_512, decode_block, decode_block_header, encode_block, encode_block_header,
-        BlockTimeStamp, ChainId, EncodedBlockData, Height, Kid, LedgerType, Metadata,
-        PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
+        BlockTimeStamp, ChainId, EncodedBlockData, HashFunction::Blake2b, Height, Kid, LedgerType,
+        Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
     };
-
-    use crate::serialize::HashFunction::Blake2b;
-
-    use super::{decode_genesis_block, encode_genesis};
     #[test]
     fn block_header_encode_decode() {
         let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
@@ -505,15 +525,15 @@ mod tests {
             chain_id,
             block_height,
             block_ts,
-            prev_block_height.clone(),
-            ledger_type.clone(),
-            purpose_id.clone(),
-            validators.clone(),
+            &prev_block_height.clone(),
+            &ledger_type.clone(),
+            &purpose_id.clone(),
+            &validators.clone(),
             metadata.clone(),
         )
         .unwrap();
 
-        let decoded_hdr = decode_block_header(encoded_block_hdr).unwrap();
+        let decoded_hdr = decode_block_header(&encoded_block_hdr).unwrap();
         assert_eq!(decoded_hdr.0, chain_id);
         assert_eq!(decoded_hdr.1, block_height);
         assert_eq!(decoded_hdr.2, block_ts);
@@ -549,10 +569,10 @@ mod tests {
             chain_id,
             block_height,
             block_ts,
-            prev_block_height.clone(),
-            ledger_type.clone(),
-            purpose_id.clone(),
-            validators.clone(),
+            &prev_block_height.clone(),
+            &ledger_type.clone(),
+            &purpose_id.clone(),
+            &validators.clone(),
             metadata.clone(),
         )
         .unwrap();
@@ -578,13 +598,13 @@ mod tests {
 
         let encoded_block = encode_block(
             encoded_block_hdr.clone(),
-            EncodedBlockData(block_data_bytes.to_vec()),
-            ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
-            Blake2b,
+            &EncodedBlockData(block_data_bytes.to_vec()),
+            &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
+            &Blake2b,
         )
         .unwrap();
 
-        let decoded = decode_block(encoded_block).unwrap();
+        let decoded = decode_block(&encoded_block).unwrap();
         assert_eq!(decoded.0 .0, chain_id);
         assert_eq!(decoded.0 .1, block_height);
         assert_eq!(decoded.0 .2, block_ts);
@@ -630,10 +650,10 @@ mod tests {
         let encoded_block_genesis = encode_genesis(
             chain_id,
             block_ts,
-            ledger_type.clone(),
-            purpose_id.clone(),
-            validators.clone(),
-            Blake2b,
+            &ledger_type.clone(),
+            &purpose_id.clone(),
+            &validators.clone(),
+            &Blake2b,
         )
         .unwrap();
 
