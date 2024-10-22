@@ -669,7 +669,8 @@ mod tests {
         let prev_block_hash = decoded_genesis.3 .0;
 
         // last 64 bytes of encoding are the hash of the contents
-        let prev_block_from_original_encoding = &encoded_block_genesis[110..];
+        let prev_block_from_original_encoding =
+            &encoded_block_genesis[encoded_block_genesis.len() - 64..];
 
         assert_eq!(prev_block_hash, prev_block_from_original_encoding);
     }
