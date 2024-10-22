@@ -2,7 +2,7 @@
 use std::fmt::{Display, Formatter};
 
 use dashmap::DashMap;
-use pallas::{codec::utils::Bytes, ledger::traverse::MultiEraTx};
+use pallas::{codec::utils::Bytes, ledger::traverse::MultiEraTxWithRawAuxiliary};
 
 use crate::utils::blake2b_244;
 
@@ -17,11 +17,11 @@ pub(crate) struct TxWitness(WitnessMap);
 
 impl TxWitness {
     /// Create a new `TxWitness` from a list of `MultiEraTx`.
-    pub(crate) fn new(txs: &[MultiEraTx]) -> anyhow::Result<Self> {
+    pub(crate) fn new(txs: &[MultiEraTxWithRawAuxiliary]) -> anyhow::Result<Self> {
         let map: WitnessMap = DashMap::new();
         for (i, tx) in txs.iter().enumerate() {
             match tx {
-                MultiEraTx::AlonzoCompatible(tx, _) => {
+                MultiEraTxWithRawAuxiliary::AlonzoCompatible(tx, _) => {
                     let witness_set = &tx.transaction_witness_set;
                     if let Some(vkey_witness_set) = witness_set.vkeywitness.clone() {
                         for vkey_witness in vkey_witness_set {
@@ -33,7 +33,7 @@ impl TxWitness {
                         }
                     };
                 },
-                MultiEraTx::Babbage(tx) => {
+                MultiEraTxWithRawAuxiliary::Babbage(tx) => {
                     let witness_set = &tx.transaction_witness_set;
                     if let Some(vkey_witness_set) = witness_set.vkeywitness.clone() {
                         for vkey_witness in vkey_witness_set {
@@ -45,7 +45,7 @@ impl TxWitness {
                         }
                     }
                 },
-                MultiEraTx::Conway(tx) => {
+                MultiEraTxWithRawAuxiliary::Conway(tx) => {
                     let witness_set = &tx.transaction_witness_set;
                     if let Some(vkey_witness_set) = &witness_set.vkeywitness.clone() {
                         for vkey_witness in vkey_witness_set {
@@ -103,7 +103,7 @@ mod tests {
     #[test]
     fn tx_witness() {
         let alonzo = alonzo_block();
-        let alonzo_block = pallas::ledger::traverse::MultiEraBlock::decode(&alonzo)
+        let alonzo_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&alonzo)
             .expect("Failed to decode MultiEraBlock");
         let txs_alonzo = alonzo_block.txs();
         let tx_witness_alonzo = TxWitness::new(&txs_alonzo).expect("Failed to create TxWitness");
@@ -117,7 +117,7 @@ mod tests {
         assert!(tx_witness_alonzo.check_witness_in_tx(&vkey1_hash, 0));
 
         let babbage = babbage_block();
-        let babbage_block = pallas::ledger::traverse::MultiEraBlock::decode(&babbage)
+        let babbage_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&babbage)
             .expect("Failed to decode MultiEraBlock");
         let txs_babbage = babbage_block.txs();
         let tx_witness_babbage = TxWitness::new(&txs_babbage).expect("Failed to create TxWitness");
