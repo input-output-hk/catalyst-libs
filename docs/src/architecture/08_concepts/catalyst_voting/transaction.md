@@ -132,7 +132,7 @@ Expected witness (includes signature)
 
 Vote:
 
-* `choice` - a voter choice.
+* `choices` - a collection of voter choices for the proposal.
 * `proof` - a voter proof, could be `null`.
 * `prop_id` - a proposal id for which `choice` is made, could be `null`.
   For that case where for the voting event defined only **one** proposal,
