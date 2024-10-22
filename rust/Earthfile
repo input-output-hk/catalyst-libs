@@ -11,9 +11,9 @@ COPY_SRC:
         c509-certificate \
         cardano-chain-follower \
         catalyst-voting \
+        immutable-ledger \
         cbork cbork-abnf-parser cbork-cddl-parser \
         hermes-ipfs \
-        immutable-ledger\
         .
 
 # builder : Set up our target toolchains, and copy our files.
