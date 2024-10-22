@@ -7,6 +7,7 @@ use std::{
 };
 
 use logcall::logcall;
+use pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary;
 use tokio::task;
 use tracing::{debug, error};
 use tracing_log::log;
@@ -85,7 +86,7 @@ impl MithrilSnapshotIterator {
 
             match next {
                 Some(Ok(raw_block)) => {
-                    let Ok(block) = pallas::ledger::traverse::MultiEraBlock::decode(&raw_block)
+                    let Ok(block) = MultiEraBlockWithRawAuxiliary::decode(&raw_block)
                     else {
                         return None;
                     };
@@ -238,7 +239,7 @@ impl Iterator for MithrilSnapshotIteratorInner {
                 // We cannot fully decode this block because we don't know its previous point,
                 // So this MUST be the first block in iteration, so use it as the previous.
                 if let Ok(raw_decoded_block) =
-                    pallas::ledger::traverse::MultiEraBlock::decode(&block)
+                MultiEraBlockWithRawAuxiliary::decode(&block)
                 {
                     // debug!("Pre Previous update 2 : {:?}", self.previous);
                     self.previous =
