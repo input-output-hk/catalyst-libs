@@ -9,7 +9,7 @@ vote_tx_body = [
     voters_data: encoded_cbor
 ]
 
-event_info = [* UUID]
+event_info = [+ UUID]
 vote_info = {
     brand_id: UUID, ; e.g. Midnight, Catalyst etc.
     campaign_id: UUID, ; e.g. treasury campaign
