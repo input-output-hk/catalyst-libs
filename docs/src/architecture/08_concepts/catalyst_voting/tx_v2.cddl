@@ -1,40 +1,28 @@
 vote_tx = [
-    brand_id: UUID, ; e.g. Midnight, Catalyst etc.
-    campaign_id: UUID, ; e.g. Fund 1, Fund 2 etc.
-    event_id: UUID, ;
-    category_id: UUID,
-    vote_type: UUID,
-    challenge_info,
+    vote_tx_body,
+    signature
+]
+
+vote_tx_body = [
+    vote_info,
     votes,
     voters_data: encoded_cbor
 ]
 
+vote_info = {
+    brand_id: UUID, ; e.g. Midnight, Catalyst etc.
+    campaign_id: UUID, ; e.g. treasury campaign
+    event_id: UUID, ; e.g. Fund 1, Fund 2 etc.
+    category_id: UUID,
+    vote_type: UUID, ; e.g. Public or Private vote
+}
+
 votes = [+ vote]
-vote = (public_vote / private_vote)
-;---
-vote = [ choices, ? proof, ? prop_id ]
-choices = [ + choice ] 
-choice = encoded-cbor
-;---
-
-public_vote = [2* bool]
-; public_vote = [2* scalar]
-; public_vote = [2* bytes]
-private_vote = [2* (encrypted_vote, vote_proof)]
-
-encrypted_vote = ciphertext
-vote_proof = ( [2* (announcement, ciphertext, r_response)], scalar)
-
-ciphertext = (group_element, group_element)
-announcement = (group_element, group_element, group_element)
-r_response = (scalar, scalar, scalar)
-
-; encrypted_vote = bytes
-; vote_proof = bytes
-
-scalar = (bytes .size 32)
-group_element = (bytes .size 32)
+vote = [
+    choice: encoded-cbor,
+    proof: encoded-cbor / null,
+    prop_id: UUID / null,
+]
 
 UUID = #6.37(bytes) ; UUID type
-
-#6.24( bstr( biguint  ) )
+signature = #6.98(COSE_Sign) ; COSE signature

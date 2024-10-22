@@ -128,6 +128,29 @@ Expected witness (includes signature)
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
+#### Transaction signing
+
+[COSE] is used to define a transaction's signature structure.
+[COSE] is a flexible security protocol that supports various types of security messages.
+However, only `COSE Signed Data Object` or `COSE_Sign` type is used.
+
+The following header must be included in the [COSE] signasture.
+
+`protected`:
+* `content type`: `application/cbor`
+  (this parameter is used to indicate the content type of the data in the payload or ciphertext fields).
+
+Any other headers as `alg`, `kid` etc. could be specified of any kind and not defined by this spec.
+
+##### Signature payload
+
+As mentioned earlier, the content type of the [COSE] signature payload is `application/cbor`.
+In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
+
+```CDDL
+payload = #6.32782(bytes .size 32)
+```
+
 ## Rationale
 
 ## Path to Active
@@ -140,6 +163,8 @@ Expected witness (includes signature)
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
-[BLAKE2b-256]: https://www.blake2.net/blake2.pdf\
-[BLAKE2b-512]: https://www.blake2.net/blake2.pdf\
+[BLAKE2b-256]: https://www.blake2.net/blake2.pdf
+[BLAKE2b-512]: https://www.blake2.net/blake2.pdf
 [ristretto255]: https://ristretto.group
+[COSE]: https://datatracker.ietf.org/doc/rfc9052/
+[CBOR]: https://datatracker.ietf.org/doc/rfc8949/
