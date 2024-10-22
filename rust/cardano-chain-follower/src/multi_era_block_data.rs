@@ -103,10 +103,7 @@ impl MultiEraBlock {
 
         let point = Point::new(slot, decoded_block.hash().to_vec());
 
-        let byron_block = matches!(
-            decoded_block,
-            MultiEraBlockWithRawAuxiliary::Byron(_)
-        );
+        let byron_block = matches!(decoded_block, MultiEraBlockWithRawAuxiliary::Byron(_));
 
         // debug!("New Block: {slot} {point} {}", *previous);
 
@@ -309,9 +306,7 @@ impl Display for MultiEraBlock {
         };
 
         let block_era = match block {
-            MultiEraBlockWithRawAuxiliary::EpochBoundary(_) => {
-                "Byron Epoch Boundary".to_string()
-            },
+            MultiEraBlockWithRawAuxiliary::EpochBoundary(_) => "Byron Epoch Boundary".to_string(),
             MultiEraBlockWithRawAuxiliary::AlonzoCompatible(_, era) => {
                 format!("{era}")
             },
@@ -458,8 +453,7 @@ pub(crate) mod tests {
     #[test]
     fn test_multi_era_block_point_compare_1() -> anyhow::Result<()> {
         for (i, test_block) in test_blocks().into_iter().enumerate() {
-            let pallas_block =
-                MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
+            let pallas_block = MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
                 pallas_block.slot().add(i as u64),
@@ -483,8 +477,7 @@ pub(crate) mod tests {
     #[test]
     fn test_multi_era_block_point_compare_2() -> anyhow::Result<()> {
         for test_block in test_blocks() {
-            let pallas_block =
-                MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
+            let pallas_block = MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(pallas_block.slot() - 1, vec![0; 32]);
 
@@ -501,8 +494,7 @@ pub(crate) mod tests {
     #[test]
     fn test_multi_era_block_point_compare_3() -> anyhow::Result<()> {
         for test_block in test_blocks() {
-            let pallas_block =
-                MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
+            let pallas_block = MultiEraBlockWithRawAuxiliary::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
                 pallas_block.slot() - 1,

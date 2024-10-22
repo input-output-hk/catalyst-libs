@@ -189,8 +189,8 @@ impl Cip509 {
     ///
     /// Nothing.  IF CIP509 Metadata is found it will be updated in `decoded_metadata`.
     pub(crate) fn decode_and_validate(
-        decoded_metadata: &DecodedMetadata, txn: &MultiEraTxWithRawAuxiliary, raw_aux_data: &RawAuxData,
-        txn_idx: usize,
+        decoded_metadata: &DecodedMetadata, txn: &MultiEraTxWithRawAuxiliary,
+        raw_aux_data: &RawAuxData, txn_idx: usize,
     ) {
         // Get the CIP509 metadata if possible
         let Some(k509) = raw_aux_data.get_metadata(LABEL) else {
@@ -540,7 +540,9 @@ impl Cip509 {
     ) -> Option<bool> {
         let mut pk_addrs = Vec::new();
         match txn {
-            MultiEraTxWithRawAuxiliary::AlonzoCompatible(..) | MultiEraTxWithRawAuxiliary::Babbage(_) | MultiEraTxWithRawAuxiliary::Conway(_) => {
+            MultiEraTxWithRawAuxiliary::AlonzoCompatible(..)
+            | MultiEraTxWithRawAuxiliary::Babbage(_)
+            | MultiEraTxWithRawAuxiliary::Conway(_) => {
                 // X509 certificate
                 if let Some(x509_certs) = &self.x509_chunks.0.x509_certs {
                     for cert in x509_certs {
@@ -1079,8 +1081,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1101,8 +1104,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1124,8 +1128,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1147,8 +1152,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1183,8 +1189,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_3();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // First transaction of this test data contains the CIP509 auxiliary data
@@ -1220,8 +1227,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_2();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data

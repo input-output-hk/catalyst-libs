@@ -91,8 +91,8 @@ impl Cip36 {
     /// Nothing.  IF CIP36 Metadata is found it will be updated in `decoded_metadata`.
     #[allow(clippy::too_many_lines)]
     pub(crate) fn decode_and_validate(
-        decoded_metadata: &DecodedMetadata, slot: u64, txn: &MultiEraTxWithRawAuxiliary, raw_aux_data: &RawAuxData,
-        catalyst_strict: bool, chain: Network,
+        decoded_metadata: &DecodedMetadata, slot: u64, txn: &MultiEraTxWithRawAuxiliary,
+        raw_aux_data: &RawAuxData, catalyst_strict: bool, chain: Network,
     ) {
         let k61284 = raw_aux_data.get_metadata(LABEL);
         let k61285 = raw_aux_data.get_metadata(SIG_LABEL);

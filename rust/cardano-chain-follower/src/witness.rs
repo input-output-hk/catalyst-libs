@@ -117,8 +117,9 @@ mod tests {
         assert!(tx_witness_alonzo.check_witness_in_tx(&vkey1_hash, 0));
 
         let babbage = babbage_block();
-        let babbage_block = pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&babbage)
-            .expect("Failed to decode MultiEraBlock");
+        let babbage_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&babbage)
+                .expect("Failed to decode MultiEraBlock");
         let txs_babbage = babbage_block.txs();
         let tx_witness_babbage = TxWitness::new(&txs_babbage).expect("Failed to create TxWitness");
         let vkey2_hash: [u8; 28] =

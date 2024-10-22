@@ -50,7 +50,8 @@ pub(crate) struct DecodedMetadata(DashMap<u64, Arc<DecodedMetadataItem>>);
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
     fn new(
-        chain: Network, slot: u64, txn: &MultiEraTxWithRawAuxiliary, raw_aux_data: &RawAuxData, txn_idx: usize,
+        chain: Network, slot: u64, txn: &MultiEraTxWithRawAuxiliary, raw_aux_data: &RawAuxData,
+        txn_idx: usize,
     ) -> Self {
         let decoded_metadata = Self(DashMap::new());
 
