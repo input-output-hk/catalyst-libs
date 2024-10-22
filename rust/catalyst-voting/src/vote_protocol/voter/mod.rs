@@ -50,7 +50,7 @@ impl EncryptedVote {
 
 impl Vote {
     /// Generate a vote.
-    /// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voting-choice)
+    /// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#voting-choice)
     ///
     /// # Errors
     ///   - Invalid voting choice, the value of `choice`, should be less than the number
@@ -85,7 +85,7 @@ impl Vote {
 }
 
 /// Create a new encrypted vote from the given vote and public key with with the
-/// `crypto::default_rng`. More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+/// `crypto::default_rng`. More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#vote-encryption)
 ///
 /// # Errors
 ///   - `EncryptedVoteError`
@@ -106,7 +106,7 @@ pub fn encrypt_vote<R: CryptoRngCore>(
 }
 
 /// Create a new encrypted vote from the given vote and public key.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#vote-encryption)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#vote-encryption)
 #[must_use]
 pub fn encrypt_vote_with_default_rng(
     vote: &Vote, public_key: &ElectionPublicKey,

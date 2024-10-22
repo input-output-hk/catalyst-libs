@@ -46,7 +46,7 @@ impl VoterProofCommitment {
 }
 
 /// Generates a voter proof.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voters-proof)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#voters-proof)
 ///
 /// # Errors
 ///   - Provided arguments mismatch. Size of the provided `vote`, `encrypted_vote` and
@@ -77,7 +77,7 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
 }
 
 /// Generates a voter proof with `crypto::default_rng`.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voters-proof)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#voters-proof)
 ///
 /// # Errors
 ///   - Provided arguments mismatch. Size of the provided `vote`, `encrypted_vote` and
@@ -98,7 +98,7 @@ pub fn generate_voter_proof_with_default_rng(
 }
 
 /// Verifies a voter proof.
-/// More detailed described [here](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#voters-proof)
+/// More detailed described [here](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#voters-proof)
 #[must_use]
 #[allow(clippy::module_name_repetitions)]
 pub fn verify_voter_proof(
