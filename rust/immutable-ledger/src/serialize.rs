@@ -63,6 +63,10 @@ pub struct DecodedBlockData(Vec<u8>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct EncodedBlockData(pub Vec<u8>);
 
+/// Encoded genesis Block contents as cbor, used for hash validation
+#[derive(Debug, Clone, PartialEq)]
+pub struct EncodedGenesisBlockContents(pub Vec<u8>);
+
 /// Signatures
 #[derive(Debug, Clone, PartialEq)]
 pub struct Signatures(Vec<Signature>);
@@ -70,10 +74,10 @@ pub struct Signatures(Vec<Signature>);
 /// Validator's keys defined in the corresponding certificates referenced by the validator.
 pub struct ValidatorKeys(pub Vec<[u8; SECRET_KEY_LENGTH]>);
 
-/// Decoder block
+/// Decoded block
 pub type DecodedBlock = (DecodedBlockHeader, DecodedBlockData, Signatures);
 
-/// Decoder block header
+/// Decoded block header
 pub type DecodedBlockHeader = (
     ChainId,
     Height,
@@ -86,8 +90,24 @@ pub type DecodedBlockHeader = (
     BlockHeaderSize,
 );
 
+/// Decoded Genesis block
+pub type DecodedBlockGenesis = (
+    ChainId,
+    Height,
+    BlockTimeStamp,
+    PreviousBlockHash,
+    LedgerType,
+    PurposeId,
+    Validator,
+    BlockHeaderSize,
+    EncodedGenesisBlockContents,
+);
+
 /// Encoded whole block including block header, cbor encoded block data and signatures.
 pub type EncodedBlock = Vec<u8>;
+
+/// Encoded genesis block, see genesis_to_prev_hash
+pub type EncodedGenesisBlock = Vec<u8>;
 
 /// Choice of hash function:
 /// must be the same as the hash of the previous block.
@@ -98,7 +118,7 @@ pub enum HashFunction {
     Blake2b,
 }
 
-/// Encode block
+/// Encode standard block
 pub fn encode_block(
     block_hdr_cbor: Vec<u8>, block_data: EncodedBlockData, validator_keys: ValidatorKeys,
     hasher: HashFunction,
@@ -134,13 +154,15 @@ pub fn encode_block(
         encoder.bytes(sig)?;
     }
 
-    Ok([block_hdr_cbor, encoder.writer().to_vec()].concat())
+    let block_data_with_sigs = encoder.writer().to_vec();
+    // block hdr + block data + sigs
+    let encoded_block = [block_hdr_cbor, block_data_with_sigs].concat();
+
+    Ok(encoded_block)
 }
 
-/// Decoded block
+/// Decoded standard block
 pub fn decode_block(encoded_block: Vec<u8>) -> anyhow::Result<DecodedBlock> {
-    // Decode cbor to bytes
-
     // Decoded block hdr
     let block_hdr: DecodedBlockHeader = decode_block_header(encoded_block.clone())?;
 
@@ -211,6 +233,7 @@ pub fn encode_block_header(
 
     Ok(encoder.writer().to_vec())
 }
+
 /// Decode block header
 pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader> {
     // Decode cbor to bytes
@@ -301,6 +324,146 @@ pub fn decode_block_header(block: Vec<u8>) -> anyhow::Result<DecodedBlockHeader>
     ))
 }
 
+/// Encode genesis block
+pub fn encode_genesis(
+    chain_id: ChainId, ts: BlockTimeStamp, ledger_type: LedgerType, pid: PurposeId,
+    validator: Validator, hasher: HashFunction,
+) -> anyhow::Result<Vec<u8>> {
+    //  Genesis block MUST have 0 value
+    const BLOCK_HEIGHT: u32 = 0;
+
+    let out: Vec<u8> = Vec::new();
+    let mut encoder = minicbor::Encoder::new(out);
+
+    encoder.bytes(&chain_id.0.to_bytes())?;
+    encoder.bytes(&BLOCK_HEIGHT.to_be_bytes())?;
+    encoder.bytes(&ts.0.to_be_bytes())?;
+    encoder.bytes(ledger_type.0.as_bytes())?;
+    encoder.bytes(&pid.0.to_bytes())?;
+
+    // marks how many validators for decoding side.
+    encoder.bytes(&validator.0.len().to_be_bytes())?;
+    for validator in validator.0.iter() {
+        encoder.bytes(&validator.0)?;
+    }
+
+    // Get hash of the genesis_to_prev_hash bytes i.e hash of itself
+    let genesis_prev_bytes = encoder.writer().to_vec();
+
+    // Size of encoded contents which is hashed
+    encoder.bytes(&genesis_prev_bytes.len().to_be_bytes())?;
+
+    let genesis_prev_hash = match hasher {
+        HashFunction::Blake3 => blake3(&genesis_prev_bytes)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(&genesis_prev_bytes)?.to_vec(),
+    };
+
+    // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
+    // last 64 bytes (depending on given hash function) of encoding are the hash of the genesis contents
+    encoder.bytes(&genesis_prev_hash.as_slice())?;
+
+    Ok(encoder.writer().to_vec())
+}
+
+/// Decode genesis
+pub fn decode_genesis_block(genesis_block: Vec<u8>) -> anyhow::Result<DecodedBlockGenesis> {
+    let binding = genesis_block.clone();
+    let mut cbor_decoder = minicbor::Decoder::new(&binding);
+
+    // Raw chain_id
+    let chain_id = ChainId(Ulid::from_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for chain id : {e}")))?
+            .try_into()?,
+    ));
+
+    // Raw Block height
+    let block_height = Height(u32::from_be_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for block height : {e}")))?
+            .try_into()?,
+    ));
+
+    // Raw time stamp
+    let ts = BlockTimeStamp(i64::from_be_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for timestamp : {e}")))?
+            .try_into()?,
+    ));
+
+    // Raw ledger type
+    let ledger_type = LedgerType(Uuid::from_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for ledger type : {e}")))?
+            .try_into()?,
+    ));
+
+    // Raw purpose id
+    let purpose_id = PurposeId(Ulid::from_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for purpose id : {e}")))?
+            .try_into()?,
+    ));
+
+    // Number of validators
+    let number_of_validators = usize::from_be_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for number of validators : {e}")))?
+            .try_into()?,
+    );
+
+    // Extract validators
+    let mut validators = Vec::new();
+    for _validator in 0..number_of_validators {
+        let validator_kid: [u8; 16] = cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for validators : {e}")))?
+            .try_into()?;
+
+        validators.push(Kid(validator_kid));
+    }
+
+    // Size of encoded contents
+    let encoded_content_size = usize::from_be_bytes(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for encoded contents size : {e}")))?
+            .try_into()?,
+    );
+
+    // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
+    // last 64 bytes (depending on hash function) of encoding are the hash of the contents
+    let prev_block_hash = PreviousBlockHash(
+        cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for prev block hash : {e}")))?
+            .to_vec(),
+    );
+
+    let genesis_block_contents: Vec<u8> = genesis_block
+        .into_iter()
+        .take(encoded_content_size)
+        .collect();
+
+    Ok((
+        chain_id,
+        block_height,
+        ts,
+        prev_block_hash,
+        ledger_type,
+        purpose_id,
+        Validator(validators),
+        BlockHeaderSize(cbor_decoder.position()),
+        EncodedGenesisBlockContents(genesis_block_contents),
+    ))
+}
+
 #[cfg(test)]
 mod tests {
     use ed25519_dalek::{SigningKey, SECRET_KEY_LENGTH};
@@ -315,6 +478,8 @@ mod tests {
     };
 
     use crate::serialize::HashFunction::Blake2b;
+
+    use super::{decode_genesis_block, encode_genesis};
     #[test]
     fn block_header_encode_decode() {
         let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
@@ -442,5 +607,50 @@ mod tests {
         for sig in decoded.2 .0 {
             verifying_key.verify_strict(&data_to_sign, &sig).unwrap();
         }
+    }
+
+    #[test]
+    fn genesis_block_encode_decode() {
+        let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        let kid_b: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        let chain_id = ChainId(Ulid::new());
+        let block_ts = BlockTimeStamp(0);
+        let ledger_type = LedgerType(Uuid::new_v4());
+        let purpose_id = PurposeId(Ulid::new());
+        let validators = Validator(vec![Kid(kid_a), Kid(kid_b)]);
+
+        let encoded_block_genesis = encode_genesis(
+            chain_id,
+            block_ts,
+            ledger_type.clone(),
+            purpose_id.clone(),
+            validators.clone(),
+            Blake2b,
+        )
+        .unwrap();
+
+        let decoded_genesis = decode_genesis_block(encoded_block_genesis.clone()).unwrap();
+        assert_eq!(decoded_genesis.0, chain_id);
+        assert_eq!(decoded_genesis.1, Height(0));
+        assert_eq!(decoded_genesis.2, block_ts);
+        assert_eq!(decoded_genesis.4, ledger_type);
+        assert_eq!(decoded_genesis.5, purpose_id);
+        assert_eq!(decoded_genesis.6, validators);
+
+        // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
+        let prev_block_hash = decoded_genesis.3 .0;
+
+        // last 64 bytes of encoding are the hash of the contents
+        let prev_block_from_original_encoding = &encoded_block_genesis[110..];
+
+        assert_eq!(prev_block_hash, prev_block_from_original_encoding);
     }
 }

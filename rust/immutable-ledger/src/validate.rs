@@ -2,7 +2,7 @@
 //!
 //! Facilitates validation for immutable ledger
 
-use crate::serialize::blake3;
+use crate::serialize::{blake3, decode_genesis_block, EncodedGenesisBlock};
 use anyhow::Ok;
 
 use crate::serialize::{blake2b_512, decode_block, EncodedBlock, HashFunction};
@@ -87,6 +87,45 @@ pub fn validate_block(
     Ok(())
 }
 
+/// Validate genesis block
+pub fn validate_genesis(genesis: EncodedGenesisBlock, hasher: HashFunction) -> anyhow::Result<()> {
+    //  Genesis block MUST have 0 value
+    const BLOCK_HEIGHT: u32 = 0;
+
+    let genesis_block = decode_genesis_block(genesis.clone())?;
+
+    // Genesis block MUST have 0 value
+    if genesis_block.1 .0 != BLOCK_HEIGHT {
+        return Err(anyhow::anyhow!(
+            "Module: Immutable ledger,  Message: Validate genesis failed {:?}",
+            genesis_block.1
+        ));
+    };
+
+    // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
+    let _hash_size = match hasher {
+        HashFunction::Blake3 => 32,
+        HashFunction::Blake2b => 64,
+    };
+
+    // last N bytes of encoding are the hash of the contents
+    let genesis_block_contents = genesis_block.8 .0;
+
+    let hashed_contents = match hasher {
+        HashFunction::Blake3 => blake3(&genesis_block_contents)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(&genesis_block_contents)?.to_vec(),
+    };
+
+    if genesis_block.3 .0 != hashed_contents {
+        return Err(anyhow::anyhow!(
+            "Module: Immutable ledger,  Message: Validate genesis failed {:?}",
+            genesis_block.3
+        ));
+    };
+
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
 
@@ -96,13 +135,14 @@ mod tests {
     use uuid::Uuid;
 
     use crate::serialize::{
-        blake2b_512, encode_block, encode_block_header, BlockTimeStamp, ChainId, EncodedBlockData,
-        Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
+        blake2b_512, encode_block, encode_block_header, encode_genesis, BlockTimeStamp, ChainId,
+        EncodedBlockData, Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId,
+        Validator, ValidatorKeys,
     };
 
     use crate::serialize::HashFunction::Blake2b;
 
-    use super::validate_block;
+    use super::{validate_block, validate_genesis};
 
     #[test]
     fn validate_block_test() {
@@ -207,6 +247,40 @@ mod tests {
         match validate_block(current_block, previous_block, Blake2b) {
             Ok(_) => (),
             Err(err) => panic!("Block validation failed: {:?}", err),
+        };
+    }
+
+    #[test]
+    fn validate_genesis_test() {
+        let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        let kid_b: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
+            .unwrap()
+            .try_into()
+            .unwrap();
+
+        let chain_id = ChainId(Ulid::new());
+        let block_ts = BlockTimeStamp(0);
+        let ledger_type = LedgerType(Uuid::new_v4());
+        let purpose_id = PurposeId(Ulid::new());
+        let validators = Validator(vec![Kid(kid_a), Kid(kid_b)]);
+
+        let encoded_block_genesis = encode_genesis(
+            chain_id,
+            block_ts,
+            ledger_type.clone(),
+            purpose_id.clone(),
+            validators.clone(),
+            Blake2b,
+        )
+        .unwrap();
+
+        match validate_genesis(encoded_block_genesis, Blake2b) {
+            Ok(_) => (),
+            Err(err) => panic!("Genesis Block validation failed: {:?}", err),
         };
     }
 }
