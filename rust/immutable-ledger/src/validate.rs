@@ -153,6 +153,7 @@ mod tests {
     };
 
     #[test]
+    #[allow(clippy::zero_prefixed_literal)]
     fn validate_block_test() {
         // PREVIOUS BLOCK
         //
