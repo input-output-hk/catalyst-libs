@@ -109,13 +109,3 @@ pub fn decrypt_tally(
     })?;
     Ok(res)
 }
-
-#[test]
-fn test() {
-    let i = 10;
-    let voting_option = 1;
-    println!(
-        "Invalid encrypted vote at index {i}. \
-        Does not have a ciphertext for the voting option {voting_option}."
-    );
-}
