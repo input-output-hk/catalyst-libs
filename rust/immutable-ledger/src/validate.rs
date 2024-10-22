@@ -114,12 +114,6 @@ pub fn genesis_validation(
         ));
     };
 
-    // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
-    let _hash_size = match hasher {
-        HashFunction::Blake3 => 32,
-        HashFunction::Blake2b => 64,
-    };
-
     // last N bytes of encoding are the hash of the contents
     let genesis_block_contents = genesis_block.8 .0;
 
