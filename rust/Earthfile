@@ -54,9 +54,10 @@ build:
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting --libs=immutable-ledger" \
+        --args3="--libs=catalyst-voting" \
         --args4="--bins=cbork/cbork" \
         --args5="--cov_report=$HOME/build/coverage-report.info" \
+        --args6="--libs=immutable-ledger" \
         --output="release/[^\./]+" \
         --junit="cat-libs.junit-report.xml" \
         --coverage="cat-libs.coverage.info" \
