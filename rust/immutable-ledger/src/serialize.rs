@@ -631,7 +631,7 @@ mod tests {
     }
 
     #[test]
-    #[allow(clippy::zero_prefixed_literal)]
+    #[allow(clippy::zero_prefixed_literal, clippy::indexing_slicing)]
     fn genesis_block_encode_decode() {
         let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
             .unwrap()
