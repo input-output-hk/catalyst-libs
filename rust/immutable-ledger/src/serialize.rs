@@ -35,7 +35,7 @@ pub struct BlockTimeStamp(pub i64);
 pub struct PreviousBlockHash(pub Vec<u8>);
 
 /// unique identifier of the ledger type.
-/// In general, this is the way to strictly bound and specify block_data of the ledger for the specific ledger_type.
+/// In general, this is the way to strictly bound and specify `block_data` of the ledger for the specific `ledger_type`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct LedgerType(pub Uuid);
 
@@ -106,7 +106,7 @@ pub type DecodedBlockGenesis = (
 /// Encoded whole block including block header, cbor encoded block data and signatures.
 pub type EncodedBlock = Vec<u8>;
 
-/// Encoded genesis block, see genesis_to_prev_hash
+/// Encoded genesis block, see `genesis_to_prev_hash`
 pub type EncodedGenesisBlock = Vec<u8>;
 
 /// Choice of hash function:
@@ -140,7 +140,7 @@ pub fn encode_block(
         .0
         .iter()
         .map(|sk| {
-            let mut sk: SigningKey = SigningKey::from_bytes(&sk);
+            let mut sk: SigningKey = SigningKey::from_bytes(sk);
             sk.sign(&data_to_sign).to_bytes()
         })
         .collect();
@@ -150,11 +150,11 @@ pub fn encode_block(
 
     encoder.bytes(&block_data.0)?;
 
-    for sig in signatures.iter() {
+    for sig in &signatures {
         encoder.bytes(sig)?;
     }
 
-    let block_data_with_sigs = encoder.writer().to_vec();
+    let block_data_with_sigs = encoder.writer().clone();
     // block hdr + block data + sigs
     let encoded_block = [block_hdr_cbor, block_data_with_sigs].concat();
 
@@ -217,13 +217,13 @@ pub fn encode_block_header(
     encoder.bytes(&chain_id.0.to_bytes())?;
     encoder.bytes(&height.0.to_be_bytes())?;
     encoder.bytes(&ts.0.to_be_bytes())?;
-    encoder.bytes(&prev_block_hash.0.as_slice())?;
+    encoder.bytes(prev_block_hash.0.as_slice())?;
     encoder.bytes(ledger_type.0.as_bytes())?;
     encoder.bytes(&pid.0.to_bytes())?;
 
     // marks how many validators for decoding side.
     encoder.bytes(&validator.0.len().to_be_bytes())?;
-    for validator in validator.0.iter() {
+    for validator in &validator.0 {
         encoder.bytes(&validator.0)?;
     }
 
@@ -231,7 +231,7 @@ pub fn encode_block_header(
         encoder.bytes(&meta.0)?;
     }
 
-    Ok(encoder.writer().to_vec())
+    Ok(encoder.writer().clone())
 }
 
 /// Decode block header
@@ -343,12 +343,12 @@ pub fn encode_genesis(
 
     // marks how many validators for decoding side.
     encoder.bytes(&validator.0.len().to_be_bytes())?;
-    for validator in validator.0.iter() {
+    for validator in &validator.0 {
         encoder.bytes(&validator.0)?;
     }
 
     // Get hash of the genesis_to_prev_hash bytes i.e hash of itself
-    let genesis_prev_bytes = encoder.writer().to_vec();
+    let genesis_prev_bytes = encoder.writer().clone();
 
     // Size of encoded contents which is hashed
     encoder.bytes(&genesis_prev_bytes.len().to_be_bytes())?;
@@ -360,9 +360,9 @@ pub fn encode_genesis(
 
     // prev_block_id for the Genesis block MUST be a hash of the genesis_to_prev_hash bytes
     // last 64 bytes (depending on given hash function) of encoding are the hash of the genesis contents
-    encoder.bytes(&genesis_prev_hash.as_slice())?;
+    encoder.bytes(genesis_prev_hash.as_slice())?;
 
-    Ok(encoder.writer().to_vec())
+    Ok(encoder.writer().clone())
 }
 
 /// Decode genesis
@@ -494,7 +494,7 @@ mod tests {
 
         let chain_id = ChainId(Ulid::new());
         let block_height = Height(5);
-        let block_ts = BlockTimeStamp(1728474515);
+        let block_ts = BlockTimeStamp(1_728_474_515);
         let prev_block_height = PreviousBlockHash(vec![0; 64]);
         let ledger_type = LedgerType(Uuid::new_v4());
         let purpose_id = PurposeId(Ulid::new());
@@ -538,7 +538,7 @@ mod tests {
 
         let chain_id = ChainId(Ulid::new());
         let block_height = Height(5);
-        let block_ts = BlockTimeStamp(1728474515);
+        let block_ts = BlockTimeStamp(1_728_474_515);
         let prev_block_height = PreviousBlockHash(vec![0; 64]);
         let ledger_type = LedgerType(Uuid::new_v4());
         let purpose_id = PurposeId(Ulid::new());

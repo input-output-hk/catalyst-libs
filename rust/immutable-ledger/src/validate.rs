@@ -162,7 +162,7 @@ mod tests {
 
         let chain_id = ChainId(Ulid::new());
         let block_height = Height(5);
-        let block_ts = BlockTimeStamp(1728474515);
+        let block_ts = BlockTimeStamp(1_728_474_515);
         let prev_block_height = PreviousBlockHash(vec![0; 64]);
         let ledger_type = LedgerType(Uuid::new_v4());
         let purpose_id = PurposeId(Ulid::new());
@@ -213,7 +213,7 @@ mod tests {
         //
 
         let block_height = Height(6);
-        let block_ts = BlockTimeStamp(1728474518);
+        let block_ts = BlockTimeStamp(1_728_474_518);
         let prev_block_hash = PreviousBlockHash(blake2b_512(&previous_block).unwrap().to_vec());
         let validators = Validator(vec![Kid(kid_a), Kid(kid_b)]);
         let metadata = Some(Metadata(vec![1; 128]));
@@ -245,8 +245,8 @@ mod tests {
         //
 
         match validate_block(current_block, previous_block, Blake2b) {
-            Ok(_) => (),
-            Err(err) => panic!("Block validation failed: {:?}", err),
+            Ok(()) => (),
+            Err(err) => panic!("Block validation failed: {err:?}"),
         };
     }
 
@@ -279,8 +279,8 @@ mod tests {
         .unwrap();
 
         match validate_genesis(encoded_block_genesis, Blake2b) {
-            Ok(_) => (),
-            Err(err) => panic!("Genesis Block validation failed: {:?}", err),
+            Ok(()) => (),
+            Err(err) => panic!("Genesis Block validation failed: {err:?}"),
         };
     }
 }
