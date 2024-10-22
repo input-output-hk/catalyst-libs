@@ -121,25 +121,14 @@ Expected witness (includes signature)
 ### v2
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "V2 vote transaction definition: `tx_v1.abnf`"
+??? note "V2 vote transaction definition: `tx_v2.cddl`"
 
     ```CDDL
     {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-`event_info` - a set of different identifiers which is uniquely define a particular voting event.
-
-Vote info:
-
-  * `brand_id` - a unique identifier which represents a "brand" who is running the voting,
-    e.g. Catalyst, Midnight.
-  * `campaign_id` - a unique identifier which defines a "campaign" of voting,
-    e.g. "treasury campaign".
-  * `event_id` - a unique identifier which defines an event of voting,
-    e.g. "Catalyst Fund 1", "Catalyst Fund 2".
-  * `category_id` - a unique identifier which defines a voting category as a collection of proposals,
-    e.g. "Development & Infrastructure", "Products & Integrations".
+`event` - a set of different identifiers which is uniquely define a particular voting event.
 
 Vote:
 
@@ -172,7 +161,7 @@ As mentioned earlier, the content type of the [COSE] signature payload is `appli
 In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 
 ```CDDL
-payload = #6.32782(bytes .size 32)
+{{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2_cose_payload.cddl') }}
 ```
 
 ## Rationale

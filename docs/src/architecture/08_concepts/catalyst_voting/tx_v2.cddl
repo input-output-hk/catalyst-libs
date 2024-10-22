@@ -4,26 +4,23 @@ vote_tx = [
 ]
 
 vote_tx_body = [
-    event_info,
+    vote_type: UUID ; e.g. Public or Private vote
+    event,
     votes,
     voters_data: encoded_cbor
 ]
 
-event_info = [+ UUID]
-vote_info = {
-    brand_id: UUID, ; e.g. Midnight, Catalyst etc.
-    campaign_id: UUID, ; e.g. treasury campaign
-    event_id: UUID, ; e.g. Fund 1, Fund 2 etc.
-    category_id: UUID,
-    ; vote_type: UUID, ; e.g. Public or Private vote
-}
+event = { * event_key => any }
+event_key = int / tstr
 
 votes = [+ vote]
 vote = [
-    choice: encoded-cbor,
+    choices: encoded-cbor,
     proof: encoded-cbor / null,
-    prop_id: UUID / null,
+    prop_id: encoded-cbor / null,
 ]
+choices = [+ choice]
+choice = encoded-cbor
 
 UUID = #6.37(bytes) ; UUID type
 signature = #6.98(COSE_Sign) ; COSE signature
