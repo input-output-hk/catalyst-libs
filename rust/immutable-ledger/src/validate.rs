@@ -201,7 +201,7 @@ mod tests {
         ];
 
         block_data.bytes(block_data_bytes).unwrap();
-        let encoded_block_data = block_data.writer().to_vec();
+        let encoded_block_data = block_data.writer().clone();
 
         let previous_block = encode_block(
             EncodedBlockHeader(encoded_block_hdr.clone()),

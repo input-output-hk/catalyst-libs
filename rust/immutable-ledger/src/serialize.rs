@@ -611,7 +611,7 @@ mod tests {
         ];
 
         block_data.bytes(block_data_bytes).unwrap();
-        let encoded_block_data = block_data.writer().to_vec();
+        let encoded_block_data = block_data.writer().clone();
 
         let encoded_block = encode_block(
             EncodedBlockHeader(encoded_block_hdr.clone()),
@@ -635,7 +635,7 @@ mod tests {
 
         let data_to_sign = [
             blake2b_512(&encoded_block_hdr).unwrap().to_vec(),
-            encoded_block_data.to_vec(),
+            encoded_block_data.clone(),
         ]
         .concat();
 
