@@ -150,6 +150,8 @@ Vote:
     so it's redundant to provide an additional identifier for the proposal,
     so it could be placed `null`.
 
+`voters_data` - an any additional voter's specific data.
+
 #### Transaction signing
 
 [COSE] is used to define a transaction's signature structure.
