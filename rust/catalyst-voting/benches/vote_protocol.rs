@@ -40,9 +40,12 @@ struct Voter {
     choice: usize,
 }
 
+struct Choices(Vec<usize>);
+struct VotingPowers(Vec<u64>);
+
 fn initial_setup() -> (
-    Vec<usize>,
-    Vec<u64>,
+    Choices,
+    VotingPowers,
     ElectionSecretKey,
     ElectionPublicKey,
     VoterProofCommitment,
@@ -65,8 +68,8 @@ fn initial_setup() -> (
     let election_public_key = election_secret_key.public_key();
 
     (
-        choices,
-        voting_powers,
+        Choices(choices),
+        VotingPowers(voting_powers),
         election_secret_key,
         election_public_key,
         voter_proof_commitment,
@@ -81,6 +84,7 @@ fn vote_protocol_benches(c: &mut Criterion) {
     let (choices, voting_powers, election_secret_key, election_public_key, voter_proof_commitment) =
         initial_setup();
     let votes: Vec<_> = choices
+        .0
         .iter()
         .map(|choice| Vote::new(*choice, VOTING_OPTIONS).unwrap())
         .collect();
@@ -141,13 +145,13 @@ fn vote_protocol_benches(c: &mut Criterion) {
         b.iter(|| {
             encrypted_tallies = (0..VOTING_OPTIONS)
                 .map(|voting_option| {
-                    tally(voting_option, &encrypted_votes, &voting_powers).unwrap()
+                    tally(voting_option, &encrypted_votes, &voting_powers.0).unwrap()
                 })
                 .collect();
         });
     });
 
-    let total_voting_power = voting_powers.iter().sum();
+    let total_voting_power = voting_powers.0.iter().sum();
     let mut decryption_tally_setup = None;
     group.bench_function("decryption tally setup initialization", |b| {
         b.iter(|| {
