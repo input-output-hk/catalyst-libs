@@ -1,17 +1,21 @@
 vote_tx = [
-    network_id: UUID, ; e.g. Midnight, Catalyst etc.
+    brand_id: UUID, ; e.g. Midnight, Catalyst etc.
     campaign_id: UUID, ; e.g. Fund 1, Fund 2 etc.
+    event_id: UUID, ;
+    category_id: UUID,
+    vote_type: UUID,
     challenge_info,
     votes,
-]
-
-challenge_info = [
-    challenge_id: UUID,
-    proposals: ? [+ UUID],
+    voters_data: encoded_cbor
 ]
 
 votes = [+ vote]
 vote = (public_vote / private_vote)
+;---
+vote = [ choices, ? proof, ? prop_id ]
+choices = [ + choice ] 
+choice = encoded-cbor
+;---
 
 public_vote = [2* bool]
 ; public_vote = [2* scalar]
@@ -32,3 +36,5 @@ scalar = (bytes .size 32)
 group_element = (bytes .size 32)
 
 UUID = #6.37(bytes) ; UUID type
+
+#6.24( bstr( biguint  ) )
