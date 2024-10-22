@@ -4,17 +4,18 @@ vote_tx = [
 ]
 
 vote_tx_body = [
-    vote_info,
+    event_info,
     votes,
     voters_data: encoded_cbor
 ]
 
+event_info = [* UUID]
 vote_info = {
     brand_id: UUID, ; e.g. Midnight, Catalyst etc.
     campaign_id: UUID, ; e.g. treasury campaign
     event_id: UUID, ; e.g. Fund 1, Fund 2 etc.
     category_id: UUID,
-    vote_type: UUID, ; e.g. Public or Private vote
+    ; vote_type: UUID, ; e.g. Public or Private vote
 }
 
 votes = [+ vote]

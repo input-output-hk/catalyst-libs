@@ -128,6 +128,25 @@ Expected witness (includes signature)
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
+`event_info` - a set of different identifiers which is uniquely define a particular voting event.
+
+Vote info:
+
+  * `brand_id` - a unique identifier which represents a "brand" who is running the voting,
+    e.g. Catalyst, Midnight.
+  * `campaign_id` - a unique identifier which defines a "campaign" of voting,
+    e.g. "treasury campaign".
+  * `event_id` - a unique identifier which defines an event of voting,
+    e.g. "Catalyst Fund 1", "Catalyst Fund 2".
+  * `category_id` - a unique identifier which defines a voting category as a collection of proposals,
+    e.g. "Development & Infrastructure", "Products & Integrations".
+
+Vote:
+
+  * `choice` - a voter choice.
+  * `proof` - a voter proof, could be `null`.
+  * `prop_id` - a proposal id for which `choice` is made, could be `null`.
+
 #### Transaction signing
 
 [COSE] is used to define a transaction's signature structure.
