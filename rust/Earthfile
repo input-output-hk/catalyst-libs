@@ -52,9 +52,9 @@ build:
 
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
-        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs --libs=immutable-ledger" \
+        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting" \
+        --args3="--libs=catalyst-voting --libs=immutable-ledger" \
         --args4="--bins=cbork/cbork" \
         --args5="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \
