@@ -51,9 +51,9 @@ build:
         --args3="--libs=cbork-cddl-parser" \
         --args4="--libs=cbork-abnf-parser" \
         --args5="--libs=hermes-ipfs" \
-        --args6="--libs=catalyst-voting" \
-        --args7="--libs=immutable-ledger" \
-        --args8="--bins=cbork/cbork" \
+        --args6="--bins=cbork/cbork" \
+        --args7="--libs=catalyst-voting" \
+        --args8="--libs=immutable-ledger" \
         --docs="true"
 
     SAVE ARTIFACT target/$TARGETARCH/doc doc
