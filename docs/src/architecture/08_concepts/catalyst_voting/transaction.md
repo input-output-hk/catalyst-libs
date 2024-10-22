@@ -87,7 +87,7 @@ the following properties are used:
 
 1. Each proposal, defined by the "Vote plan id" and "Proposal index", defines a number of possible options.
 2. [ristretto255] as a backend cryptographic group.
-4. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
 
 #### Transaction signing (witness generation)
 
@@ -114,7 +114,7 @@ Expected witness (includes signature)
 
 <!-- markdownlint-disable code-block-style -->
 ```hex
-    0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
+0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
 ```
 <!-- markdownlint-enable code-block-style -->
 
@@ -132,12 +132,12 @@ Expected witness (includes signature)
 
 Vote:
 
-  * `choice` - a voter choice.
-  * `proof` - a voter proof, could be `null`.
-  * `prop_id` - a proposal id for which `choice` is made, could be `null`.
-    For that case where for the voting event defined only **one** proposal,
-    so it's redundant to provide an additional identifier for the proposal,
-    so it could be placed `null`.
+* `choice` - a voter choice.
+* `proof` - a voter proof, could be `null`.
+* `prop_id` - a proposal id for which `choice` is made, could be `null`.
+  For that case where for the voting event defined only **one** proposal,
+  so it's redundant to provide an additional identifier for the proposal,
+  so it could be placed `null`.
 
 `voters_data` - an any additional voter's specific data.
 
@@ -147,9 +147,10 @@ Vote:
 [COSE] is a flexible security protocol that supports various types of security messages.
 However, only `COSE Signed Data Object` or `COSE_Sign` type is used.
 
-The following header must be included in the [COSE] signasture.
+The following header must be included in the [COSE] signature.
 
 `protected`:
+
 * `content type`: `application/cbor`
   (this parameter is used to indicate the content type of the data in the payload or ciphertext fields).
 
@@ -160,9 +161,11 @@ Any other headers as `alg`, `kid` etc. could be specified of any kind and not de
 As mentioned earlier, the content type of the [COSE] signature payload is `application/cbor`.
 In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 
+<!-- markdownlint-disable code-block-style -->
 ```CDDL
 {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2_cose_payload.cddl') }}
 ```
+<!-- markdownlint-enable code-block-style -->
 
 ## Rationale
 

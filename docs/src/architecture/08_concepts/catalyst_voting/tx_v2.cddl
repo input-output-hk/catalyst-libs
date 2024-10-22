@@ -11,7 +11,7 @@ vote_tx_body = [
 ]
 
 event = { * event_key => any }
-event_key = int / tstr
+event_key = int / text
 
 votes = [+ vote]
 vote = [
