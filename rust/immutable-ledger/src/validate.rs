@@ -142,8 +142,8 @@ mod tests {
     use super::{block_validation, genesis_validation};
     use crate::serialize::{
         blake2b_512, encode_block, encode_block_header, encode_genesis, BlockTimeStamp, ChainId,
-        EncodedBlockData, HashFunction::Blake2b, Height, Kid, LedgerType, Metadata,
-        PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
+        EncodedBlockData, EncodedBlockHeader, HashFunction::Blake2b, Height, Kid, LedgerType,
+        Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
     };
 
     #[test]
@@ -201,10 +201,11 @@ mod tests {
         ];
 
         block_data.bytes(block_data_bytes).unwrap();
+        let encoded_block_data = block_data.writer().to_vec();
 
         let previous_block = encode_block(
-            encoded_block_hdr.clone(),
-            &EncodedBlockData(block_data_bytes.to_vec()),
+            EncodedBlockHeader(encoded_block_hdr.clone()),
+            &EncodedBlockData(encoded_block_data.clone()),
             &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
             &Blake2b,
         )
@@ -234,8 +235,8 @@ mod tests {
         block_data.bytes(block_data_bytes).unwrap();
 
         let current_block = encode_block(
-            encoded_block_hdr.clone(),
-            &EncodedBlockData(block_data_bytes.to_vec()),
+            EncodedBlockHeader(encoded_block_hdr.clone()),
+            &EncodedBlockData(encoded_block_data.clone()),
             &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
             &Blake2b,
         )

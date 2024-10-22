@@ -57,6 +57,10 @@ pub struct Metadata(pub Vec<u8>);
 #[derive(Debug, Clone, PartialEq)]
 pub struct BlockHeaderSize(usize);
 
+/// Encoded block header as cbor
+#[derive(Debug, Clone, PartialEq)]
+pub struct EncodedBlockHeader(pub Vec<u8>);
+
 /// Decoded block data
 #[derive(Debug, Clone, PartialEq)]
 pub struct DecodedBlockData(Vec<u8>);
@@ -127,12 +131,18 @@ pub enum HashFunction {
 ///
 /// Returns an error if block encoding fails
 pub fn encode_block(
-    block_hdr_cbor: Vec<u8>, block_data: &EncodedBlockData, validator_keys: &ValidatorKeys,
-    hasher: &HashFunction,
+    block_hdr_cbor: EncodedBlockHeader, block_data: &EncodedBlockData,
+    validator_keys: &ValidatorKeys, hasher: &HashFunction,
 ) -> anyhow::Result<EncodedBlock> {
+    // Enforce block data to be cbor encoded in the form of CBOR byte strings
+    // which are just (ordered) series of bytes without further interpretation
+    let binding = block_data.0.clone();
+    let mut block_data_cbor_encoding_check = minicbor::Decoder::new(&binding);
+    let _ = block_data_cbor_encoding_check.bytes()?;
+
     let hashed_block_header = match hasher {
-        HashFunction::Blake3 => blake3(&block_hdr_cbor)?.to_vec(),
-        HashFunction::Blake2b => blake2b_512(&block_hdr_cbor)?.to_vec(),
+        HashFunction::Blake3 => blake3(&block_hdr_cbor.0)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(&block_hdr_cbor.0)?.to_vec(),
     };
 
     // validator_signature MUST be a signature of the hashed block_header bytes
@@ -163,7 +173,7 @@ pub fn encode_block(
 
     let block_data_with_sigs = encoder.writer().clone();
     // block hdr + block data + sigs
-    let encoded_block = [block_hdr_cbor, block_data_with_sigs].concat();
+    let encoded_block = [block_hdr_cbor.0, block_data_with_sigs].concat();
 
     Ok(encoded_block)
 }
@@ -216,7 +226,7 @@ pub(crate) fn blake2b_512(value: &[u8]) -> anyhow::Result<[u8; 64]> {
         .map_err(|_| anyhow::anyhow!("Invalid length of blake2b_512, expected 64 got {}", b.len()))
 }
 
-/// Encode block header
+/// Encode block header as cbor
 /// ## Errors
 ///
 /// Returns an error if block header encoding fails.
@@ -497,8 +507,8 @@ mod tests {
     use super::{decode_genesis_block, encode_genesis};
     use crate::serialize::{
         blake2b_512, decode_block, decode_block_header, encode_block, encode_block_header,
-        BlockTimeStamp, ChainId, EncodedBlockData, HashFunction::Blake2b, Height, Kid, LedgerType,
-        Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
+        BlockTimeStamp, ChainId, EncodedBlockData, EncodedBlockHeader, HashFunction::Blake2b,
+        Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
     };
     #[test]
     fn block_header_encode_decode() {
@@ -596,10 +606,11 @@ mod tests {
         ];
 
         block_data.bytes(block_data_bytes).unwrap();
+        let encoded_block_data = block_data.writer().to_vec();
 
         let encoded_block = encode_block(
-            encoded_block_hdr.clone(),
-            &EncodedBlockData(block_data_bytes.to_vec()),
+            EncodedBlockHeader(encoded_block_hdr.clone()),
+            &EncodedBlockData(encoded_block_data.clone()),
             &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
             &Blake2b,
         )
@@ -615,11 +626,11 @@ mod tests {
         assert_eq!(decoded.0 .6, validators);
         assert_eq!(decoded.0 .7, metadata);
 
-        assert_eq!(decoded.1 .0, block_data_bytes.to_vec());
+        assert_eq!(decoded.1 .0, encoded_block_data);
 
         let data_to_sign = [
             blake2b_512(&encoded_block_hdr).unwrap().to_vec(),
-            block_data_bytes.to_vec(),
+            encoded_block_data.to_vec(),
         ]
         .concat();
 
