@@ -1,52 +1,16 @@
-//! Implementation of the lifted ``ElGamal`` crypto system, and combine with `ChaCha`
+//! Implementation of the lifted `ElGamal` crypto system, and combine with `ChaCha`
 //! stream cipher to produce a hybrid encryption scheme.
 
-use std::ops::{Add, Deref, Mul};
+mod decoding;
 
-use rand_core::CryptoRngCore;
+use std::ops::{Add, Mul};
 
 use crate::crypto::group::{GroupElement, Scalar};
 
-/// ``ElGamal`` secret key.
+/// `ElGamal` ciphertext, encrypted message with the public key.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct SecretKey(Scalar);
-
-/// ``ElGamal`` public key.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct PublicKey(GroupElement);
-
-/// ``ElGamal`` ciphertext, encrypted message with the public key.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct Ciphertext(GroupElement, GroupElement);
-
-impl Deref for SecretKey {
-    type Target = Scalar;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl Deref for PublicKey {
-    type Target = GroupElement;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
-
-impl SecretKey {
-    /// Generate a random `SecretKey` value from the random number generator.
-    pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
-        Self(Scalar::random(rng))
-    }
-
-    /// Generate a corresponding `PublicKey`.
-    #[must_use]
-    pub fn public_key(&self) -> PublicKey {
-        PublicKey(GroupElement::GENERATOR.mul(&self.0))
-    }
-}
 
 impl Ciphertext {
     /// Generate a zero `Ciphertext`.
@@ -66,19 +30,24 @@ impl Ciphertext {
     }
 }
 
+/// Generate `ElGamal` public key from the secret key value.
+pub fn generate_public_key(secret_key: &Scalar) -> GroupElement {
+    GroupElement::GENERATOR.mul(secret_key)
+}
+
 /// Given a `message` represented as a `Scalar`, return a ciphertext using the
-/// lifted ``ElGamal`` mechanism.
+/// lifted `ElGamal` mechanism.
 /// Returns a ciphertext of type `Ciphertext`.
-pub fn encrypt(message: &Scalar, public_key: &PublicKey, randomness: &Scalar) -> Ciphertext {
+pub fn encrypt(message: &Scalar, public_key: &GroupElement, randomness: &Scalar) -> Ciphertext {
     let e1 = GroupElement::GENERATOR.mul(randomness);
-    let e2 = &GroupElement::GENERATOR.mul(message) + &public_key.0.mul(randomness);
+    let e2 = &GroupElement::GENERATOR.mul(message) + &public_key.mul(randomness);
     Ciphertext(e1, e2)
 }
 
-/// Decrypt ``ElGamal`` `Ciphertext`, returns the original message represented as a
+/// Decrypt `ElGamal` `Ciphertext`, returns the original message represented as a
 /// `GroupElement`.
-pub fn decrypt(cipher: &Ciphertext, secret_key: &SecretKey) -> GroupElement {
-    &(&cipher.0 * &secret_key.0.negate()) + &cipher.1
+pub fn decrypt(cipher: &Ciphertext, secret_key: &Scalar) -> GroupElement {
+    &(&cipher.0 * &secret_key.negate()) + &cipher.1
 }
 
 impl Mul<&Scalar> for &Ciphertext {
@@ -107,12 +76,14 @@ mod tests {
 
     use super::*;
 
-    impl Arbitrary for SecretKey {
+    impl Arbitrary for Ciphertext {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<Scalar>().prop_map(SecretKey).boxed()
+            any::<(GroupElement, GroupElement)>()
+                .prop_map(|(g1, g2)| Ciphertext(g1, g2))
+                .boxed()
         }
     }
 
@@ -139,10 +110,8 @@ mod tests {
     }
 
     #[proptest]
-    fn elgamal_encryption_decryption_test(
-        secret_key: SecretKey, message: Scalar, randomness: Scalar,
-    ) {
-        let public_key = secret_key.public_key();
+    fn elgamal_encryption_decryption_test(secret_key: Scalar, message: Scalar, randomness: Scalar) {
+        let public_key = generate_public_key(&secret_key);
 
         let cipher = encrypt(&message, &public_key, &randomness);
         let decrypted = decrypt(&cipher, &secret_key);

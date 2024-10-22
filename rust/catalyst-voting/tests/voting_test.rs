@@ -1,17 +1,17 @@
 //! A general voting integration test, which performs a full voting procedure.
 
-use catalyst_voting::{
+use catalyst_voting::vote_protocol::{
+    committee::ElectionSecretKey,
     tally::{
         decrypt_tally,
-        proof::{generate_tally_proof, verify_tally_proof},
+        proof::{generate_tally_proof_with_default_rng, verify_tally_proof},
         tally, DecryptionTallySetup,
     },
     voter::{
-        encrypt_vote,
-        proof::{generate_voter_proof, verify_voter_proof, VoterProofCommitment},
+        decrypt_vote, encrypt_vote_with_default_rng,
+        proof::{generate_voter_proof_with_default_rng, verify_voter_proof, VoterProofCommitment},
         Vote,
     },
-    SecretKey,
 };
 use proptest::prelude::ProptestConfig;
 use test_strategy::{proptest, Arbitrary};
@@ -28,11 +28,9 @@ struct Voter {
 
 #[proptest(ProptestConfig::with_cases(1))]
 fn voting_test(voters: [Voter; 100]) {
-    let mut rng = rand_core::OsRng;
-
-    let election_secret_key = SecretKey::random(&mut rng);
+    let election_secret_key = ElectionSecretKey::random_with_default_rng();
     let election_public_key = election_secret_key.public_key();
-    let voter_proof_commitment = VoterProofCommitment::random(&mut rng);
+    let voter_proof_commitment = VoterProofCommitment::random_with_default_rng();
 
     let votes: Vec<_> = voters
         .iter()
@@ -41,8 +39,17 @@ fn voting_test(voters: [Voter; 100]) {
 
     let (encrypted_votes, randomness): (Vec<_>, Vec<_>) = votes
         .iter()
-        .map(|vote| encrypt_vote(vote, &election_public_key, &mut rng))
+        .map(|vote| encrypt_vote_with_default_rng(vote, &election_public_key))
         .unzip();
+
+    // Decrypting votes
+    {
+        let decrypted_votes: Vec<_> = encrypted_votes
+            .iter()
+            .map(|v| decrypt_vote(v, &election_secret_key).unwrap())
+            .collect();
+        assert_eq!(votes, decrypted_votes);
+    }
 
     // Verify encrypted votes
     {
@@ -51,13 +58,12 @@ fn voting_test(voters: [Voter; 100]) {
             .zip(encrypted_votes.iter())
             .zip(randomness.iter())
             .map(|((v, enc_v), r)| {
-                generate_voter_proof(
+                generate_voter_proof_with_default_rng(
                     v,
                     enc_v.clone(),
                     r.clone(),
                     &election_public_key,
                     &voter_proof_commitment,
-                    &mut rng,
                 )
                 .unwrap()
             })
@@ -98,7 +104,7 @@ fn voting_test(voters: [Voter; 100]) {
     {
         let tally_proofs: Vec<_> = encrypted_tallies
             .iter()
-            .map(|t| generate_tally_proof(t, &election_secret_key, &mut rng))
+            .map(|t| generate_tally_proof_with_default_rng(t, &election_secret_key))
             .collect();
 
         let is_ok = tally_proofs

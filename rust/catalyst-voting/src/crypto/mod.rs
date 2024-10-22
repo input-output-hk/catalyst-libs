@@ -1,8 +1,20 @@
 //! Crypto primitives which are used by voting protocol.
 
-pub(crate) mod babystep_giantstep;
-pub(crate) mod elgamal;
-pub(crate) mod group;
-pub(crate) mod hash;
-pub(crate) mod zk_dl_equality;
-pub(crate) mod zk_unit_vector;
+// cspell: words Seedable
+
+use rand_chacha::ChaCha8Rng;
+use rand_core::{CryptoRngCore, SeedableRng};
+
+pub mod babystep_giantstep;
+pub mod ed25519;
+pub mod elgamal;
+pub mod group;
+pub mod hash;
+pub mod zk_dl_equality;
+pub mod zk_unit_vector;
+
+/// Default random number generator `rand_chacha::ChaCha8Rng`.
+#[must_use]
+pub fn default_rng() -> impl CryptoRngCore {
+    ChaCha8Rng::from_entropy()
+}

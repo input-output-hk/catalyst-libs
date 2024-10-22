@@ -9,7 +9,7 @@ use rand_core::CryptoRngCore;
 use crate::crypto::group::{GroupElement, Scalar};
 
 /// Randomness generated in the proof, used for the hiding property.
-#[derive(Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct BlindingRandomness {
     pub(crate) alpha: Scalar,
     pub(crate) betta: Scalar,
@@ -30,6 +30,7 @@ impl BlindingRandomness {
 
 /// First announcement, formed by I, B, A group elements. These group elements
 /// are the commitments of the binary representation of the unit vector index.
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Announcement {
     pub(crate) i: GroupElement,
     pub(crate) b: GroupElement,
@@ -100,6 +101,28 @@ mod tests {
                         delta,
                     }
                 })
+                .boxed()
+        }
+    }
+
+    impl Arbitrary for Announcement {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(GroupElement, GroupElement, GroupElement)>()
+                .prop_map(|(i, b, a)| Announcement { i, b, a })
+                .boxed()
+        }
+    }
+
+    impl Arbitrary for ResponseRandomness {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(Scalar, Scalar, Scalar)>()
+                .prop_map(|(z, w, v)| ResponseRandomness { z, w, v })
                 .boxed()
         }
     }

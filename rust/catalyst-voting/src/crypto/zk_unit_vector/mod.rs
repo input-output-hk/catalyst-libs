@@ -2,11 +2,12 @@
 //! Zhang, Oliynykov and Balogum in
 //! [`A Treasury System for Cryptocurrencies: Enabling Better Collaborative Intelligence`](https://www.ndss-symposium.org/wp-content/uploads/2019/02/ndss2019_02A-2_Zhang_paper.pdf).
 //!
-//! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/voting_transaction/crypto/#d-non-interactive-zk-vote-proof)
+//! This implementation follows this [specification](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#d-non-interactive-zk-vote-proof)
 
 // cspell: words Zhang, Oliynykov, Balogum
 
 mod challenges;
+mod decoding;
 mod polynomial;
 mod randomness_announcements;
 mod utils;
@@ -20,11 +21,13 @@ use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomn
 use utils::get_bit;
 
 use crate::crypto::{
-    elgamal::{encrypt, Ciphertext, PublicKey},
+    elgamal::{encrypt, Ciphertext},
     group::{GroupElement, Scalar},
 };
 
 /// Unit vector proof struct
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct UnitVectorProof(
     Vec<Announcement>,
     Vec<Ciphertext>,
@@ -43,8 +46,8 @@ pub struct UnitVectorProof(
 /// the proof will be invalid.
 pub fn generate_unit_vector_proof<R: CryptoRngCore>(
     unit_vector: &[Scalar], mut ciphertexts: Vec<Ciphertext>,
-    mut encryption_randomness: Vec<Scalar>, public_key: &PublicKey, commitment_key: &GroupElement,
-    rng: &mut R,
+    mut encryption_randomness: Vec<Scalar>, public_key: &GroupElement,
+    commitment_key: &GroupElement, rng: &mut R,
 ) -> UnitVectorProof {
     let i = unit_vector
         .iter()
@@ -102,7 +105,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
 /// Generates `D_l` and `R_l` elements
 #[allow(clippy::indexing_slicing)]
 fn generate_dl_and_rl<R: CryptoRngCore>(
-    log_n: u32, ch_1: &Scalar, public_key: &PublicKey, polynomials: &[Polynomial], rng: &mut R,
+    log_n: u32, ch_1: &Scalar, public_key: &GroupElement, polynomials: &[Polynomial], rng: &mut R,
 ) -> (Vec<Ciphertext>, Vec<Scalar>) {
     let r_l: Vec<_> = (0..log_n).map(|_| Scalar::random(rng)).collect();
 
@@ -155,8 +158,9 @@ fn generate_response(
 }
 
 /// Verify a unit vector proof.
+#[must_use]
 pub fn verify_unit_vector_proof(
-    proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &PublicKey,
+    proof: &UnitVectorProof, mut ciphertexts: Vec<Ciphertext>, public_key: &GroupElement,
     commitment_key: &GroupElement,
 ) -> bool {
     let m = ciphertexts.len();
@@ -195,7 +199,7 @@ fn check_1(proof: &UnitVectorProof, ch_2: &Scalar, commitment_key: &GroupElement
 /// Check the second part of the proof
 fn check_2(
     proof: &UnitVectorProof, log_n: u32, ch_1: &Scalar, ch_2: &Scalar, ciphertexts: &[Ciphertext],
-    public_key: &PublicKey,
+    public_key: &GroupElement,
 ) -> bool {
     let left = encrypt(&Scalar::zero(), public_key, &proof.3);
 
@@ -232,11 +236,32 @@ fn check_2(
 
 #[cfg(test)]
 mod tests {
-    use proptest::sample::size_range;
+    use proptest::{
+        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        sample::size_range,
+    };
     use rand_core::OsRng;
     use test_strategy::proptest;
 
-    use super::{super::elgamal::SecretKey, *};
+    use super::{super::elgamal::generate_public_key, *};
+
+    impl Arbitrary for UnitVectorProof {
+        type Parameters = usize;
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
+            any_with::<(
+                Vec<((Announcement, Ciphertext), ResponseRandomness)>,
+                Scalar,
+            )>(((size_range(size), (((), ()), ())), ()))
+            .prop_map(|(val, scalar)| {
+                let (vec, rr): (Vec<_>, Vec<_>) = val.into_iter().unzip();
+                let (an, cipher) = vec.into_iter().unzip();
+                Self(an, cipher, rr, scalar)
+            })
+            .boxed()
+        }
+    }
 
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();
@@ -246,13 +271,13 @@ mod tests {
 
     #[proptest]
     fn zk_unit_vector_test(
-        secret_key: SecretKey, commitment_key: GroupElement,
+        secret_key: Scalar, commitment_key: GroupElement,
         #[strategy(1..10_usize)] unit_vector_size: usize,
         #[strategy(0..#unit_vector_size)] unit_vector_index: usize,
     ) {
         let mut rng = OsRng;
 
-        let public_key = secret_key.public_key();
+        let public_key = generate_public_key(&secret_key);
 
         let unit_vector: Vec<_> = (0..unit_vector_size)
             .map(|i| {
@@ -296,7 +321,7 @@ mod tests {
 
     #[proptest]
     fn not_a_unit_vector_test(
-        secret_key: SecretKey, commitment_key: GroupElement,
+        secret_key: Scalar, commitment_key: GroupElement,
         #[any(size_range(1..10_usize).lift())] random_vector: Vec<Scalar>,
     ) {
         let mut rng = OsRng;
@@ -307,7 +332,7 @@ mod tests {
             return Ok(());
         }
 
-        let public_key = secret_key.public_key();
+        let public_key = generate_public_key(&secret_key);
 
         let encryption_randomness: Vec<_> = random_vector
             .iter()

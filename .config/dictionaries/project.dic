@@ -24,10 +24,12 @@ bootstrapper
 BROTLI
 cantopen
 cardano
+carryforward
 CBOR
 cbork
 cdylib
 CEST
+chacha
 CHAINCODE
 chainsync
 childs
@@ -39,6 +41,7 @@ ciphertexts
 codegen
 codepoints
 coti
+coverallsapp
 cpus
 crontabs
 crontagged
@@ -52,6 +55,7 @@ dcbor
 decompressor
 delegators
 dleq
+dlog
 dockerhub
 Dominik
 dotenv
@@ -102,6 +106,7 @@ ideascale
 idents
 IFMT
 Intellij
+inversed
 ioerr
 iohk
 ipfs

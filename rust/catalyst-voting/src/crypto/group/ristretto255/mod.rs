@@ -2,6 +2,8 @@
 
 // cspell: words BASEPOINT
 
+mod decoding;
+
 use std::{
     hash::Hash,
     ops::{Add, Mul, Sub},
@@ -9,20 +11,23 @@ use std::{
 
 use curve25519_dalek::{
     constants::{RISTRETTO_BASEPOINT_POINT, RISTRETTO_BASEPOINT_TABLE},
-    digest::{consts::U64, Digest},
-    ristretto::{CompressedRistretto, RistrettoPoint as Point},
     scalar::Scalar as IScalar,
     traits::Identity,
+    RistrettoPoint,
 };
 use rand_core::CryptoRngCore;
 
+use crate::crypto::hash::digest::{consts::U64, Digest};
+
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[must_use]
 pub struct Scalar(IScalar);
 
 /// Ristretto group element.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GroupElement(Point);
+#[must_use]
+pub struct GroupElement(RistrettoPoint);
 
 impl From<u64> for Scalar {
     fn from(value: u64) -> Self {
@@ -39,9 +44,7 @@ impl Hash for GroupElement {
 impl Scalar {
     /// Generate a random scalar value from the random number generator.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
-        let mut scalar_bytes = [0u8; 64];
-        rng.fill_bytes(&mut scalar_bytes);
-        Scalar(IScalar::from_bytes_mod_order_wide(&scalar_bytes))
+        Scalar(IScalar::random(rng))
     }
 
     /// additive identity
@@ -69,16 +72,6 @@ impl Scalar {
         Scalar(self.0.invert())
     }
 
-    /// Convert this `Scalar` to its underlying sequence of bytes.
-    pub fn to_bytes(&self) -> [u8; 32] {
-        self.0.to_bytes()
-    }
-
-    /// Attempt to construct a `Scalar` from a canonical byte representation.
-    pub fn from_bytes(bytes: [u8; 32]) -> Option<Scalar> {
-        IScalar::from_canonical_bytes(bytes).map(Scalar).into()
-    }
-
     /// Generate a `Scalar` from a hash digest.
     pub fn from_hash<D>(hash: D) -> Scalar
     where D: Digest<OutputSize = U64> {
@@ -92,20 +85,13 @@ impl GroupElement {
 
     /// Generate a zero group element.
     pub fn zero() -> Self {
-        GroupElement(Point::identity())
+        GroupElement(RistrettoPoint::identity())
     }
 
-    /// Convert this `GroupElement` to its underlying sequence of bytes.
-    /// Always encode the compressed value.
-    pub fn to_bytes(&self) -> [u8; 32] {
-        self.0.compress().to_bytes()
-    }
-
-    /// Attempt to construct a `Scalar` from a compressed value byte representation.
-    pub fn from_bytes(bytes: &[u8; 32]) -> Option<Self> {
-        Some(GroupElement(
-            CompressedRistretto::from_slice(bytes).ok()?.decompress()?,
-        ))
+    /// Generate a `GroupElement` from a hash digest.
+    pub fn from_hash<D>(hash: D) -> GroupElement
+    where D: Digest<OutputSize = U64> + Default {
+        GroupElement(RistrettoPoint::from_hash(hash))
     }
 }
 
@@ -199,21 +185,6 @@ mod tests {
                 .prop_map(|s| GroupElement::GENERATOR.mul(&s))
                 .boxed()
         }
-    }
-
-    #[proptest]
-    fn scalar_to_bytes_from_bytes_test(e1: Scalar) {
-        let bytes = e1.to_bytes();
-        let e2 = Scalar::from_bytes(bytes).unwrap();
-        assert_eq!(e1, e2);
-    }
-
-    #[proptest]
-    fn group_element_to_bytes_from_bytes_test(e: Scalar) {
-        let ge1 = GroupElement::GENERATOR.mul(&e);
-        let bytes = ge1.to_bytes();
-        let ge2 = GroupElement::from_bytes(&bytes).unwrap();
-        assert_eq!(ge1, ge2);
     }
 
     #[proptest]
