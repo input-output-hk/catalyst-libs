@@ -5,16 +5,9 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.15 AS rust-ci
 COPY_SRC:
     FUNCTION
 
-    COPY --keep-ts --dir \
-        Cargo.toml clippy.toml deny.toml rustfmt.toml \
-        .cargo .config \
-        c509-certificate \
-        cardano-chain-follower \
-        catalyst-voting \
-        immutable-ledger \
-        cbork cbork-abnf-parser cbork-cddl-parser \
-        hermes-ipfs \
-        .
+    COPY --dir .cargo .config c509-certificate cardano-chain-follower \
+                cbork cbork-abnf-parser cbork-cddl-parser \
+                hermes-ipfs catalyst-voting immutable-ledger .
 
 # builder : Set up our target toolchains, and copy our files.
 builder:
@@ -52,15 +45,15 @@ build:
 
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
-        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
-        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting" \
-        --args4="--libs=immutable-ledger" \
-        --args5="--bins=cbork/cbork" \
-        --args6="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \
-        --junit="cat-libs.junit-report.xml" \
-        --coverage="cat-libs.coverage.info" \
+        --args1="--libs=c509-certificate" \
+        --args2="--libs=cardano-chain-follower" \
+        --args3="--libs=cbork-cddl-parser" \
+        --args4="--libs=cbork-abnf-parser" \
+        --args5="--libs=hermes-ipfs" \
+        --args6="--libs=catalyst-voting" \
+        --args7="--libs=immutable-ledger" \
+        --args8="--bins=cbork/cbork" \
         --docs="true"
 
     SAVE ARTIFACT target/$TARGETARCH/doc doc
