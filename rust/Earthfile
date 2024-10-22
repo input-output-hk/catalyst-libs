@@ -11,9 +11,9 @@ COPY_SRC:
         c509-certificate \
         cardano-chain-follower \
         catalyst-voting \
-        immutable-ledger \
         cbork cbork-abnf-parser cbork-cddl-parser \
         hermes-ipfs \
+        immutable-ledger\
         .
 
 # builder : Set up our target toolchains, and copy our files.
@@ -52,12 +52,11 @@ build:
 
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
-        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
+        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs --libs=immutable-ledger" \
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
         --args3="--libs=catalyst-voting" \
-        --args4="--libs=immutable-ledger" \
-        --args5="--bins=cbork/cbork" \
-        --args6="--cov_report=$HOME/build/coverage-report.info" \
+        --args4="--bins=cbork/cbork" \
+        --args5="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \
         --junit="cat-libs.junit-report.xml" \
         --coverage="cat-libs.coverage.info" \
