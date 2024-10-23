@@ -46,7 +46,7 @@ V1 transaction representation in hex:
 
 <!-- markdownlint-disable line-length code-block-style -->
 1. Transaction size (u32): `0000037e`
-2. `00`
+2. Jörmungandr specific tag (u8): `00`
 3. Jörmungandr specific tag (u8): `0b`
 4. Vote plan id (32 byte hash): `36ad42885189a0ac3438cdb57bc8ac7f6542e05a59d1f2e4d1d38194c9d4ac7b`
 5. Proposal index (u8): `00`
@@ -135,7 +135,7 @@ Vote:
 * `choices` - a collection of voter choices for the proposal.
 * `proof` - a voter proof, could be `null`.
 * `prop_id` - a proposal id for which `choice` is made, could be `null`.
-  For that case where for the voting event defined only **one** proposal,
+  For that case where for the `event` defined only **one** proposal,
   so it's redundant to provide an additional identifier for the proposal,
   so it could be placed `null`.
 
