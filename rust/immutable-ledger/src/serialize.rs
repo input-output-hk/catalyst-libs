@@ -595,9 +595,9 @@ mod tests {
         let metadata = Some(Metadata(vec![1; 128]));
 
         let encoded_block_hdr = encode_block_header(
-            chain_id.clone(),
-            block_height.clone(),
-            block_ts.clone(),
+            chain_id,
+            block_height,
+            block_ts,
             &prev_block_height.clone(),
             &ledger_type.clone(),
             &purpose_id.clone(),
