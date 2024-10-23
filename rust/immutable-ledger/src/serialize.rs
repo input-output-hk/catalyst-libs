@@ -152,6 +152,7 @@ pub fn encode_block(
     let mut block_data_cbor_encoding_check = minicbor::Decoder::new(&binding);
     let _ = block_data_cbor_encoding_check.bytes()?;
 
+    // cbor encode block hdr
     let encoded_block_hdr = encode_block_header(
         block_hdr.0,
         block_hdr.1,
@@ -170,12 +171,10 @@ pub fn encode_block(
 
     // validator_signature MUST be a signature of the hashed block_header bytes
     // and the block_data bytes
-
     let data_to_sign = [hashed_block_header, block_data.0.clone()].concat();
 
     // if validator is only one id => validator_signature contains only 1 signature;
     // if validator is array => validator_signature contains an array with the same length;
-
     let signatures: Vec<[u8; 64]> = validator_keys
         .0
         .iter()
