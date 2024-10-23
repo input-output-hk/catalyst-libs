@@ -1,8 +1,8 @@
-# Transaction
+# Transactions
 
 ---
 
-Title: Voting Transaction
+Title: Voting Transactions
 
 Status: Proposed
 
@@ -46,7 +46,7 @@ V1 transaction representation in hex:
 
 <!-- markdownlint-disable line-length code-block-style -->
 1. Transaction size (u32): `0000037e`
-2. `00`
+2. Jörmungandr specific tag (u8): `00`
 3. Jörmungandr specific tag (u8): `0b`
 4. Vote plan id (32 byte hash): `36ad42885189a0ac3438cdb57bc8ac7f6542e05a59d1f2e4d1d38194c9d4ac7b`
 5. Proposal index (u8): `00`
@@ -87,8 +87,7 @@ the following properties are used:
 
 1. Each proposal, defined by the "Vote plan id" and "Proposal index", defines a number of possible options.
 2. [ristretto255] as a backend cryptographic group.
-3. [BLAKE2b-512] hash function.
-4. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
 
 #### Transaction signing (witness generation)
 
@@ -115,7 +114,56 @@ Expected witness (includes signature)
 
 <!-- markdownlint-disable code-block-style -->
 ```hex
-    0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
+0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
+```
+<!-- markdownlint-enable code-block-style -->
+
+### v2
+
+<!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
+??? note "V2 vote transaction definition: `tx_v2.cddl`"
+
+    ```CDDL
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2.cddl', indent=4) }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
+
+`event` - a set of different identifiers which is uniquely define a particular voting event.
+
+Vote:
+
+* `choices` - a collection of voter choices for the proposal.
+* `proof` - a voter proof, could be `null`.
+* `prop_id` - a proposal id for which `choice` is made, could be `null`.
+  For that case where for the `event` defined only **one** proposal,
+  so it's redundant to provide an additional identifier for the proposal,
+  so it could be placed `null`.
+
+`voters_data` - an any additional voter's specific data.
+
+#### Transaction signing
+
+[COSE] is used to define a transaction's signature structure.
+[COSE] is a flexible security protocol that supports various types of security messages.
+However, only `COSE Signed Data Object` or `COSE_Sign` type is used.
+
+The following header must be included in the [COSE] signature.
+
+`protected`:
+
+* `content type`: `application/cbor`
+  (this parameter is used to indicate the content type of the data in the payload or ciphertext fields).
+
+Any other headers as `alg`, `kid` etc. could be specified of any kind and not defined by this spec.
+
+##### Signature payload
+
+As mentioned earlier, the content type of the [COSE] signature payload is `application/cbor`.
+In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
+
+<!-- markdownlint-disable code-block-style -->
+```CDDL
+{{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2_cose_payload.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
 
@@ -131,6 +179,8 @@ Expected witness (includes signature)
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
-[BLAKE2b-256]: https://www.blake2.net/blake2.pdf\
-[BLAKE2b-512]: https://www.blake2.net/blake2.pdf\
+[BLAKE2b-256]: https://www.blake2.net/blake2.pdf
+[BLAKE2b-512]: https://www.blake2.net/blake2.pdf
 [ristretto255]: https://ristretto.group
+[COSE]: https://datatracker.ietf.org/doc/rfc9052/
+[CBOR]: https://datatracker.ietf.org/doc/rfc8949/
