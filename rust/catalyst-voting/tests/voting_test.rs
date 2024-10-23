@@ -17,17 +17,17 @@ use proptest::prelude::ProptestConfig;
 use test_strategy::{proptest, Arbitrary};
 
 const VOTING_OPTIONS: usize = 3;
+const VOTERS_NUMBER: usize = 100;
 
 #[derive(Arbitrary, Debug)]
 struct Voter {
     voting_power: u32,
-    // range from 0 to `VOTING_OPTIONS`
-    #[strategy(0..3_usize)]
+    #[strategy(0..VOTING_OPTIONS)]
     choice: usize,
 }
 
 #[proptest(ProptestConfig::with_cases(1))]
-fn voting_test(voters: [Voter; 100]) {
+fn voting_test(voters: [Voter; VOTERS_NUMBER]) {
     let election_secret_key = ElectionSecretKey::random_with_default_rng();
     let election_public_key = election_secret_key.public_key();
     let voter_proof_commitment = VoterProofCommitment::random_with_default_rng();

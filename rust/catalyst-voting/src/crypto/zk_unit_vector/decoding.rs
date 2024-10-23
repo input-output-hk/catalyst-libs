@@ -27,22 +27,34 @@ impl UnitVectorProof {
         let ann = (0..len)
             .map(|i| {
                 let bytes = read_array(reader)?;
-                Announcement::from_bytes(&bytes)
-                    .map_err(|e| anyhow!("Cannot decode announcement at {i}, error: {e}."))
+                Announcement::from_bytes(&bytes).map_err(|e| {
+                    anyhow!(
+                        "Cannot decode announcement at {i}, \
+                        error: {e}."
+                    )
+                })
             })
             .collect::<anyhow::Result<_>>()?;
         let dl = (0..len)
             .map(|i| {
                 let bytes = read_array(reader)?;
-                Ciphertext::from_bytes(&bytes)
-                    .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}."))
+                Ciphertext::from_bytes(&bytes).map_err(|e| {
+                    anyhow!(
+                        "Cannot decode ciphertext at {i}, \
+                        error: {e}."
+                    )
+                })
             })
             .collect::<anyhow::Result<_>>()?;
         let rr = (0..len)
             .map(|i| {
                 let bytes = read_array(reader)?;
-                ResponseRandomness::from_bytes(&bytes)
-                    .map_err(|e| anyhow!("Cannot decode response randomness at {i}, error: {e}."))
+                ResponseRandomness::from_bytes(&bytes).map_err(|e| {
+                    anyhow!(
+                        "Cannot decode response randomness at {i}, \
+                        error: {e}."
+                    )
+                })
             })
             .collect::<anyhow::Result<_>>()?;
 
