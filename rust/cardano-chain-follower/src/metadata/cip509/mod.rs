@@ -24,7 +24,7 @@ use pallas::{
         minicbor::{Encode, Encoder},
         utils::Bytes,
     },
-    ledger::traverse::MultiEraTx,
+    ledger::traverse::MultiEraTxWithRawAuxiliary,
 };
 use rbac::{certs::C509Cert, role_data::RoleData};
 use strum::FromRepr;
@@ -189,8 +189,8 @@ impl Cip509 {
     ///
     /// Nothing.  IF CIP509 Metadata is found it will be updated in `decoded_metadata`.
     pub(crate) fn decode_and_validate(
-        decoded_metadata: &DecodedMetadata, txn: &MultiEraTx, raw_aux_data: &RawAuxData,
-        txn_idx: usize,
+        decoded_metadata: &DecodedMetadata, txn: &MultiEraTxWithRawAuxiliary,
+        raw_aux_data: &RawAuxData, txn_idx: usize,
     ) {
         // Get the CIP509 metadata if possible
         let Some(k509) = raw_aux_data.get_metadata(LABEL) else {
@@ -297,13 +297,13 @@ impl Cip509 {
     /// Transaction inputs hash validation.
     /// Must exist and match the hash of the transaction inputs.
     fn validate_txn_inputs_hash(
-        &self, txn: &MultiEraTx, validation_report: &mut ValidationReport,
+        &self, txn: &MultiEraTxWithRawAuxiliary, validation_report: &mut ValidationReport,
         decoded_metadata: &DecodedMetadata,
     ) -> Option<bool> {
         let mut buffer = Vec::new();
         let mut e = Encoder::new(&mut buffer);
         match txn {
-            MultiEraTx::AlonzoCompatible(tx, _) => {
+            MultiEraTxWithRawAuxiliary::AlonzoCompatible(tx, _) => {
                 let inputs = tx.transaction_body.inputs.clone();
                 if let Err(e) = e.array(inputs.len() as u64) {
                     self.validation_failure(
@@ -324,7 +324,7 @@ impl Cip509 {
                     }
                 }
             },
-            MultiEraTx::Babbage(tx) => {
+            MultiEraTxWithRawAuxiliary::Babbage(tx) => {
                 let inputs = tx.transaction_body.inputs.clone();
                 if let Err(e) = e.array(inputs.len() as u64) {
                     self.validation_failure(
@@ -345,7 +345,7 @@ impl Cip509 {
                     }
                 }
             },
-            MultiEraTx::Conway(tx) => {
+            MultiEraTxWithRawAuxiliary::Conway(tx) => {
                 let inputs = tx.transaction_body.inputs.clone();
                 if let Err(e) = e.array(inputs.len() as u64) {
                     self.validation_failure(
@@ -398,11 +398,11 @@ impl Cip509 {
     /// Also log out the pre-computed hash where the validation signature (99) set to
     /// zero.
     fn validate_aux(
-        &mut self, txn: &MultiEraTx, validation_report: &mut ValidationReport,
+        &mut self, txn: &MultiEraTxWithRawAuxiliary, validation_report: &mut ValidationReport,
         decoded_metadata: &DecodedMetadata,
     ) -> Option<bool> {
         match txn {
-            MultiEraTx::AlonzoCompatible(tx, _) => {
+            MultiEraTxWithRawAuxiliary::AlonzoCompatible(tx, _) => {
                 if let pallas::codec::utils::Nullable::Some(a) = &tx.auxiliary_data {
                     let original_aux = a.raw_cbor();
                     let aux_data_hash =
@@ -432,7 +432,7 @@ impl Cip509 {
                     None
                 }
             },
-            MultiEraTx::Babbage(tx) => {
+            MultiEraTxWithRawAuxiliary::Babbage(tx) => {
                 if let pallas::codec::utils::Nullable::Some(a) = &tx.auxiliary_data {
                     let original_aux = a.raw_cbor();
                     let aux_data_hash =
@@ -462,7 +462,7 @@ impl Cip509 {
                     None
                 }
             },
-            MultiEraTx::Conway(tx) => {
+            MultiEraTxWithRawAuxiliary::Conway(tx) => {
                 if let pallas::codec::utils::Nullable::Some(a) = &tx.auxiliary_data {
                     let original_aux = a.raw_cbor();
                     let aux_data_hash =
@@ -535,12 +535,14 @@ impl Cip509 {
     /// Validate the stake public key in the certificate with witness set in transaction.
     #[allow(clippy::too_many_lines)]
     fn validate_stake_public_key(
-        &self, txn: &MultiEraTx, validation_report: &mut ValidationReport,
+        &self, txn: &MultiEraTxWithRawAuxiliary, validation_report: &mut ValidationReport,
         decoded_metadata: &DecodedMetadata, txn_idx: usize,
     ) -> Option<bool> {
         let mut pk_addrs = Vec::new();
         match txn {
-            MultiEraTx::AlonzoCompatible(..) | MultiEraTx::Babbage(_) | MultiEraTx::Conway(_) => {
+            MultiEraTxWithRawAuxiliary::AlonzoCompatible(..)
+            | MultiEraTxWithRawAuxiliary::Babbage(_)
+            | MultiEraTxWithRawAuxiliary::Conway(_) => {
                 // X509 certificate
                 if let Some(x509_certs) = &self.x509_chunks.0.x509_certs {
                     for cert in x509_certs {
@@ -740,7 +742,7 @@ impl Cip509 {
     /// Validate the payment key
     #[allow(clippy::too_many_lines)]
     fn validate_payment_key(
-        &self, txn: &MultiEraTx, validation_report: &mut ValidationReport,
+        &self, txn: &MultiEraTxWithRawAuxiliary, validation_report: &mut ValidationReport,
         decoded_metadata: &DecodedMetadata, txn_idx: usize, role_data: &RoleData,
     ) -> Option<bool> {
         if let Some(payment_key) = role_data.payment_key {
@@ -754,7 +756,7 @@ impl Cip509 {
                 return None;
             }
             match txn {
-                MultiEraTx::AlonzoCompatible(tx, _) => {
+                MultiEraTxWithRawAuxiliary::AlonzoCompatible(tx, _) => {
                     // Handle negative payment keys (reference to tx output)
                     if payment_key < 0 {
                         let witness = match TxWitness::new(&[txn.clone()]) {
@@ -819,7 +821,7 @@ impl Cip509 {
                     }
                     return Some(true);
                 },
-                MultiEraTx::Babbage(tx) => {
+                MultiEraTxWithRawAuxiliary::Babbage(tx) => {
                     // Negative indicates reference to tx output
                     if payment_key < 0 {
                         let index = match decremented_index(payment_key.abs()) {
@@ -887,7 +889,7 @@ impl Cip509 {
                     }
                     return Some(true);
                 },
-                MultiEraTx::Conway(tx) => {
+                MultiEraTxWithRawAuxiliary::Conway(tx) => {
                     // Negative indicates reference to tx output
                     if payment_key < 0 {
                         let index = match decremented_index(payment_key.abs()) {
@@ -1025,7 +1027,7 @@ mod tests {
         .expect("Failed to decode hex block.")
     }
 
-    fn cip_509_aux_data(tx: &MultiEraTx<'_>) -> Vec<u8> {
+    fn cip_509_aux_data(tx: &pallas::ledger::traverse::MultiEraTxWithRawAuxiliary<'_>) -> Vec<u8> {
         let raw_auxiliary_data = tx
             .as_conway()
             .unwrap()
@@ -1079,8 +1081,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1101,8 +1104,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1124,8 +1128,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1147,8 +1152,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_1();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
@@ -1183,8 +1189,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_3();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // First transaction of this test data contains the CIP509 auxiliary data
@@ -1220,8 +1227,9 @@ mod tests {
         let decoded_metadata = DecodedMetadata(DashMap::new());
         let mut validation_report = ValidationReport::new();
         let conway_block_data = conway_2();
-        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
-            .expect("Failed to decode MultiEraBlock");
+        let multi_era_block =
+            pallas::ledger::traverse::MultiEraBlockWithRawAuxiliary::decode(&conway_block_data)
+                .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data

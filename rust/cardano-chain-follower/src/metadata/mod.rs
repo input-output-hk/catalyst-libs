@@ -5,7 +5,7 @@ use std::{fmt::Debug, sync::Arc};
 use cip36::Cip36;
 use cip509::Cip509;
 use dashmap::DashMap;
-use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
+use pallas::ledger::traverse::{MultiEraBlockWithRawAuxiliary, MultiEraTxWithRawAuxiliary};
 use raw_aux_data::RawAuxData;
 use tracing::error;
 
@@ -50,7 +50,8 @@ pub(crate) struct DecodedMetadata(DashMap<u64, Arc<DecodedMetadataItem>>);
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
     fn new(
-        chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData, txn_idx: usize,
+        chain: Network, slot: u64, txn: &MultiEraTxWithRawAuxiliary, raw_aux_data: &RawAuxData,
+        txn_idx: usize,
     ) -> Self {
         let decoded_metadata = Self(DashMap::new());
 
@@ -98,7 +99,7 @@ impl DecodedTransaction {
     /// Insert another transaction worth of data into the Decoded Aux Data
     fn insert(
         &mut self, chain: Network, slot: u64, txn_idx: u32, cbor_data: &[u8],
-        transactions: &[MultiEraTx],
+        transactions: &[MultiEraTxWithRawAuxiliary],
     ) {
         let txn_idx = usize_from_saturating(txn_idx);
 
@@ -115,7 +116,7 @@ impl DecodedTransaction {
     }
 
     /// Create a new `DecodedTransaction`.
-    pub(crate) fn new(chain: Network, block: &MultiEraBlock) -> Self {
+    pub(crate) fn new(chain: Network, block: &MultiEraBlockWithRawAuxiliary) -> Self {
         let mut decoded_aux_data = DecodedTransaction {
             raw: DashMap::new(),
             decoded: DashMap::new(),

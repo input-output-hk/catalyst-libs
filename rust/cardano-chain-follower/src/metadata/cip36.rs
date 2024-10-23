@@ -4,7 +4,7 @@ use std::sync::Arc;
 
 use ed25519_dalek::Verifier;
 use minicbor::Decoder;
-use pallas::ledger::traverse::MultiEraTx;
+use pallas::ledger::traverse::MultiEraTxWithRawAuxiliary;
 use tracing::debug;
 
 use super::{
@@ -91,8 +91,8 @@ impl Cip36 {
     /// Nothing.  IF CIP36 Metadata is found it will be updated in `decoded_metadata`.
     #[allow(clippy::too_many_lines)]
     pub(crate) fn decode_and_validate(
-        decoded_metadata: &DecodedMetadata, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData,
-        catalyst_strict: bool, chain: Network,
+        decoded_metadata: &DecodedMetadata, slot: u64, txn: &MultiEraTxWithRawAuxiliary,
+        raw_aux_data: &RawAuxData, catalyst_strict: bool, chain: Network,
     ) {
         let k61284 = raw_aux_data.get_metadata(LABEL);
         let k61285 = raw_aux_data.get_metadata(SIG_LABEL);
@@ -377,7 +377,7 @@ impl Cip36 {
     /// Decode the Payment Address Metadata in the CIP36 Metadata map.
     fn decode_payment_address(
         &mut self, decoder: &mut Decoder, validation_report: &mut ValidationReport,
-        decoded_metadata: &DecodedMetadata, _txn: &MultiEraTx, chain: Network,
+        decoded_metadata: &DecodedMetadata, _txn: &MultiEraTxWithRawAuxiliary, chain: Network,
     ) -> Option<usize> {
         let raw_address = match decoder.bytes() {
             Ok(address) => address,
@@ -969,7 +969,7 @@ mod tests {
         let mut cip36 = create_empty_cip36(false);
         let mut decoder = Decoder::new(&hex_data);
         let mut report = ValidationReport::new();
-        let multi_era_tx: *const MultiEraTx = std::ptr::null();
+        let multi_era_tx: *const MultiEraTxWithRawAuxiliary = std::ptr::null();
         let multi_era_tx = unsafe { &*multi_era_tx };
 
         let rc = cip36.decode_payment_address(
