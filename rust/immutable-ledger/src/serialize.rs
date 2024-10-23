@@ -61,9 +61,9 @@ pub struct BlockHeaderSize(usize);
 #[derive(Debug, Clone, PartialEq)]
 pub struct EncodedBlockHeader(pub Vec<u8>);
 
-/// Decoded block data
+/// Block data
 #[derive(Debug, Clone, PartialEq)]
-pub struct DecodedBlockData(Vec<u8>);
+pub struct BlockData(Vec<u8>);
 
 /// Encoded block data as cbor
 #[derive(Debug, Clone, PartialEq)]
@@ -82,7 +82,7 @@ pub struct Signatures(Vec<Signature>);
 pub struct ValidatorKeys(pub Vec<[u8; SECRET_KEY_LENGTH]>);
 
 /// Decoded block
-pub type DecodedBlock = (DecodedBlockHeader, DecodedBlockData, Signatures);
+pub type DecodedBlock = (DecodedBlockHeader, BlockData, Signatures);
 
 /// Block header
 pub struct BlockHeader(
@@ -228,11 +228,7 @@ pub fn decode_block(encoded_block: &[u8]) -> anyhow::Result<DecodedBlock> {
         sigs.push(Signature::from_bytes(&sig));
     }
 
-    Ok((
-        block_hdr,
-        DecodedBlockData(block_data.to_vec()),
-        Signatures(sigs),
-    ))
+    Ok((block_hdr, BlockData(block_data.to_vec()), Signatures(sigs)))
 }
 
 /// Produce BLAKE3 hash
