@@ -65,7 +65,6 @@ Before any voting will start an initial setup procedure should be performed.
 * As most of the crypto algorithms are group dependent
   (more about this you can read in [appendix A](#a-group-definition)),
   it is needed to specifically define which cryptographically secure group would be used.
-* Define a hash function which will be used by the underlying crypto algorithms.
 * Define a commitment key $ck$,
   which will be used during the voter proof generation and verification procedures.
 
@@ -502,7 +501,7 @@ To compute it, prover needs to perform the next steps:
     * $A_l = g^{i_l * \beta_l} \circ ck^{\delta_l}, A_l \in \mathbb{G}$.
 5. Calculate a first verifier challenge
   $ch_1 = H(ck, pk, \{c_j\}, \{I_l\}, \{B_l\}, \{A_l\})$,
-  where $H$ is a hash function,
+  where $H$ is [BLAKE2b-512] hash function,
   $j \in [0, \ldots, N-1]$
   and $l \in [0, \ldots, log_2(N)-1]$.
 6. For $j \in [0, \ldots, N-1]$ calculate polynomials
@@ -518,7 +517,7 @@ To compute it, prover needs to perform the next steps:
   and $p_{j,l}$ - corresponding coefficients of the polynomial $p_j(x)$ calculated on step `7`.
 9. Calculate a second verifier challenge
   $ch_2 = H(ch_1, \{D_l\})$,
-  where $H$ is a hash function
+  where $H$ is [BLAKE2b-512] hash function
   and $l \in [0, \ldots, log_2(N)-1]$.
 10. For $l \in [0, \ldots, log_2(N)-1]$ calculate:
     * $z_l = i_l * ch_2 + \beta_l, z_l \in \mathbb{Z}_q$.
@@ -558,12 +557,12 @@ verifier needs to perform the next steps:
   So the resulted $\mathbf{c} = (c_1, \ldots, c_M, \{c_j\})$.
 2. Calculate the first verifier challenge
   $ch_1 = H(ck, pk, \{c_j\}, \{I_l\}, \{B_l\}, \{A_l\})$,
-  where $H$ is a hash function,
+  where $H$ is [BLAKE2b-512] hash function,
   $j \in [0, \ldots, N-1]$
   and $l \in [0, \ldots, log_2(N)-1]$.
 3. Calculate a second verifier challenge
   $ch_2 = H(ch_1, \{D_l\})$,
-  where $H$ is a hash function
+  where $H$ is [BLAKE2b-512] hash function
   and $l \in [0, \ldots, log_2(N)-1]$.
 4. For $l \in [0, \ldots, log_2(N)-1]$ verify that the following statements are `true`,
   where $g$ is the group generator:
@@ -683,3 +682,4 @@ If step `6` returns `true` so the final result is `true` otherwise return `false
 [treasury_system_paper]: https://eprint.iacr.org/2018/435.pdf
 [treasury_system_spec]: https://github.com/input-output-hk/treasury-crypto/blob/master/docs/voting_protocol_spec/Treasury_voting_protocol_spec.pdf
 [crypto_book]: https://gnanavelrec.wordpress.com/wp-content/uploads/2019/06/2.understanding-cryptography-by-christof-paar-.pdf
+[BLAKE2b-512]: https://www.blake2.net/blake2.pdf
