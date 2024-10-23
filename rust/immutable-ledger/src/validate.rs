@@ -141,9 +141,9 @@ mod tests {
 
     use super::{block_validation, genesis_validation};
     use crate::serialize::{
-        blake2b_512, encode_block, encode_block_header, encode_genesis, BlockTimeStamp, ChainId,
-        EncodedBlockData, EncodedBlockHeader, HashFunction::Blake2b, Height, Kid, LedgerType,
-        Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
+        blake2b_512, encode_block, encode_genesis, BlockHeader, BlockTimeStamp, ChainId,
+        EncodedBlockData, HashFunction::Blake2b, Height, Kid, LedgerType, Metadata,
+        PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
     };
 
     #[test]
@@ -165,23 +165,22 @@ mod tests {
         let chain_id = ChainId(Ulid::new());
         let block_height = Height(5);
         let block_ts = BlockTimeStamp(1_728_474_515);
-        let prev_block_height = PreviousBlockHash(vec![0; 64]);
+        let prev_block_hash = PreviousBlockHash(vec![0; 64]);
         let ledger_type = LedgerType(Uuid::new_v4());
         let purpose_id = PurposeId(Ulid::new());
         let validators = Validator(vec![Kid(kid_a), Kid(kid_b)]);
         let metadata = Some(Metadata(vec![1; 128]));
 
-        let encoded_block_hdr = encode_block_header(
+        let block_hdr = BlockHeader(
             chain_id,
             block_height,
             block_ts,
-            &prev_block_height.clone(),
-            &ledger_type.clone(),
-            &purpose_id.clone(),
-            &validators.clone(),
+            prev_block_hash.clone(),
+            ledger_type.clone(),
+            purpose_id.clone(),
+            validators.clone(),
             metadata.clone(),
-        )
-        .unwrap();
+        );
 
         // validators
         let validator_secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
@@ -204,7 +203,7 @@ mod tests {
         let encoded_block_data = block_data.writer().clone();
 
         let previous_block = encode_block(
-            EncodedBlockHeader(encoded_block_hdr.clone()),
+            block_hdr,
             &EncodedBlockData(encoded_block_data.clone()),
             &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
             &Blake2b,
@@ -220,22 +219,21 @@ mod tests {
         let validators = Validator(vec![Kid(kid_a), Kid(kid_b)]);
         let metadata = Some(Metadata(vec![1; 128]));
 
-        let encoded_block_hdr = encode_block_header(
+        let block_hdr = BlockHeader(
             chain_id,
             block_height,
             block_ts,
-            &prev_block_hash,
-            &ledger_type.clone(),
-            &purpose_id.clone(),
-            &validators.clone(),
+            prev_block_hash.clone(),
+            ledger_type.clone(),
+            purpose_id.clone(),
+            validators.clone(),
             metadata.clone(),
-        )
-        .unwrap();
+        );
 
         block_data.bytes(block_data_bytes).unwrap();
 
         let current_block = encode_block(
-            EncodedBlockHeader(encoded_block_hdr.clone()),
+            block_hdr,
             &EncodedBlockData(encoded_block_data.clone()),
             &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
             &Blake2b,

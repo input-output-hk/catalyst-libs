@@ -84,6 +84,18 @@ pub struct ValidatorKeys(pub Vec<[u8; SECRET_KEY_LENGTH]>);
 /// Decoded block
 pub type DecodedBlock = (DecodedBlockHeader, DecodedBlockData, Signatures);
 
+/// Block header
+pub struct BlockHeader(
+    pub ChainId,
+    pub Height,
+    pub BlockTimeStamp,
+    pub PreviousBlockHash,
+    pub LedgerType,
+    pub PurposeId,
+    pub Validator,
+    pub Option<Metadata>,
+);
+
 /// Decoded block header
 pub type DecodedBlockHeader = (
     ChainId,
@@ -131,23 +143,29 @@ pub enum HashFunction {
 ///
 /// Returns an error if block encoding fails
 pub fn encode_block(
-    block_hdr: EncodedBlockHeader, block_data: &EncodedBlockData, validator_keys: &ValidatorKeys,
+    block_hdr: BlockHeader, block_data: &EncodedBlockData, validator_keys: &ValidatorKeys,
     hasher: &HashFunction,
 ) -> anyhow::Result<EncodedBlock> {
-    // Ensure block header is cbor encoded
-    let binding = block_hdr.0.clone();
-    let mut block_hdr_cbor_encoding_check = minicbor::Decoder::new(&binding);
-    let _ = block_hdr_cbor_encoding_check.bytes()?;
-
     // Enforce block data to be cbor encoded in the form of CBOR byte strings
     // which are just (ordered) series of bytes without further interpretation
     let binding = block_data.0.clone();
     let mut block_data_cbor_encoding_check = minicbor::Decoder::new(&binding);
     let _ = block_data_cbor_encoding_check.bytes()?;
 
+    let encoded_block_hdr = encode_block_header(
+        block_hdr.0,
+        block_hdr.1,
+        block_hdr.2,
+        &block_hdr.3,
+        &block_hdr.4,
+        &block_hdr.5,
+        &block_hdr.6,
+        block_hdr.7,
+    )?;
+
     let hashed_block_header = match hasher {
-        HashFunction::Blake3 => blake3(&block_hdr.0)?.to_vec(),
-        HashFunction::Blake2b => blake2b_512(&block_hdr.0)?.to_vec(),
+        HashFunction::Blake3 => blake3(&encoded_block_hdr)?.to_vec(),
+        HashFunction::Blake2b => blake2b_512(&encoded_block_hdr)?.to_vec(),
     };
 
     // validator_signature MUST be a signature of the hashed block_header bytes
@@ -178,7 +196,7 @@ pub fn encode_block(
 
     let block_data_with_sigs = encoder.writer().clone();
     // block hdr + block data + sigs
-    let encoded_block = [block_hdr.0, block_data_with_sigs].concat();
+    let encoded_block = [encoded_block_hdr, block_data_with_sigs].concat();
 
     Ok(encoded_block)
 }
@@ -512,8 +530,8 @@ mod tests {
     use super::{decode_genesis_block, encode_genesis};
     use crate::serialize::{
         blake2b_512, decode_block, decode_block_header, encode_block, encode_block_header,
-        BlockTimeStamp, ChainId, EncodedBlockData, EncodedBlockHeader, HashFunction::Blake2b,
-        Height, Kid, LedgerType, Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
+        BlockHeader, BlockTimeStamp, ChainId, EncodedBlockData, HashFunction::Blake2b, Height, Kid,
+        LedgerType, Metadata, PreviousBlockHash, PurposeId, Validator, ValidatorKeys,
     };
     #[test]
     fn block_header_encode_decode() {
@@ -582,9 +600,9 @@ mod tests {
         let metadata = Some(Metadata(vec![1; 128]));
 
         let encoded_block_hdr = encode_block_header(
-            chain_id,
-            block_height,
-            block_ts,
+            chain_id.clone(),
+            block_height.clone(),
+            block_ts.clone(),
             &prev_block_height.clone(),
             &ledger_type.clone(),
             &purpose_id.clone(),
@@ -592,6 +610,17 @@ mod tests {
             metadata.clone(),
         )
         .unwrap();
+
+        let block_hdr = BlockHeader(
+            chain_id,
+            block_height,
+            block_ts,
+            prev_block_height.clone(),
+            ledger_type.clone(),
+            purpose_id.clone(),
+            validators.clone(),
+            metadata.clone(),
+        );
 
         // validators
         let validator_secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [
@@ -614,7 +643,7 @@ mod tests {
         let encoded_block_data = block_data.writer().clone();
 
         let encoded_block = encode_block(
-            EncodedBlockHeader(encoded_block_hdr.clone()),
+            block_hdr,
             &EncodedBlockData(encoded_block_data.clone()),
             &ValidatorKeys(vec![validator_secret_key_bytes, validator_secret_key_bytes]),
             &Blake2b,
