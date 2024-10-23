@@ -19,6 +19,7 @@ jobs:
         rust/c509-certificate
         rust/cardano-chain-follower
         rust/catalyst-voting
+        rust/immutable-ledger
         rust/cbork
         rust/hermes-ipfs
         dart
