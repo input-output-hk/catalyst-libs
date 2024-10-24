@@ -30,7 +30,7 @@ Project "Catalyst" requires a structure to keep people vote's data in the secure
 ??? note "V1 vote transaction definition: `tx_v1.abnf`"
 
     ```abnf
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v1.abnf', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/abnf/tx_v1.abnf', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
@@ -124,7 +124,7 @@ Expected witness (includes signature)
 ??? note "V2 vote transaction definition: `tx_v2.cddl`"
 
     ```CDDL
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2.cddl', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/tx_v2.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
@@ -163,7 +163,7 @@ In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 
 <!-- markdownlint-disable code-block-style -->
 ```CDDL
-{{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2_cose_payload.cddl') }}
+{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/tx_v2_cose_payload.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
 
