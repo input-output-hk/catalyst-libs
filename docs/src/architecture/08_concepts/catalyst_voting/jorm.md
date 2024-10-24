@@ -124,8 +124,6 @@ defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specificati
 
 Following that spec we need define a format of `choice`, `proof` and `prop_id`.
 
-If `choice` is a public one, `proof` **must** be `null`.
-
 `jorm_v2/choice.cddl`:
 
 <!-- markdownlint-disable code-block-style -->
@@ -149,6 +147,10 @@ If `choice` is a public one, `proof` **must** be `null`.
 {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/prop_id.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
+
+!!! note
+
+    If `choice` is a public one, `proof` **must** be `null`.
 
 #### Vote generation
 
