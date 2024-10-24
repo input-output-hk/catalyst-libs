@@ -16,8 +16,8 @@ event_key = int / text
 votes = [+ vote]
 vote = [
     choices: encoded-cbor,
-    proof: encoded-cbor / null,
-    prop_id: encoded-cbor / null,
+    proof: encoded-cbor,
+    prop_id: encoded-cbor,
 ]
 choices = [+ choice]
 choice = encoded-cbor

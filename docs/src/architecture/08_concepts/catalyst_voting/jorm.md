@@ -124,10 +124,12 @@ defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specificati
 
 Following that spec we need define a format of `choice`, `proof` and `prop_id`.
 
+If `choice` is a public one, `proof` **must** be `null`.
+
 `jorm_v2/choice.cddl`:
 
 <!-- markdownlint-disable code-block-style -->
-```abnf
+```cddl
 {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/choice.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
@@ -135,7 +137,7 @@ Following that spec we need define a format of `choice`, `proof` and `prop_id`.
 `jorm_v2/proof.cddl`:
 
 <!-- markdownlint-disable code-block-style -->
-```abnf
+```cddl
 {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/proof.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
@@ -143,7 +145,7 @@ Following that spec we need define a format of `choice`, `proof` and `prop_id`.
 `jorm_v2/prop_id.cddl`:
 
 <!-- markdownlint-disable code-block-style -->
-```abnf
+```cddl
 {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/prop_id.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
