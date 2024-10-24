@@ -1,4 +1,0 @@
-prop_id = [vote_plan_id, proposal_index]
-
-vote_plan_id = bytes .size 32
-proposal_index = uint .size 1 ; 1-byte unsigned integer

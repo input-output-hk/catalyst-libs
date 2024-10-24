@@ -24,10 +24,10 @@ Project "Catalyst" requires a structure to keep people vote's data in the secure
 ## Specification
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "vote transaction definition: `tx.cddl`"
+??? note "vote transaction definition: `gen_vote_tx.cddl`"
 
     ```CDDL
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/tx.cddl', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
@@ -66,7 +66,7 @@ In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 
 <!-- markdownlint-disable code-block-style -->
 ```CDDL
-{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/tx_cose_payload.cddl') }}
+{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/get_vote_tx_cose_payload.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
 
