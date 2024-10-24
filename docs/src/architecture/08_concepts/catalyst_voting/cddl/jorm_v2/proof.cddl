@@ -1,6 +1,6 @@
 proof = zk_proof \ null
 
-zk_proof = [ [+ (announcement, ciphertext, r-response)], scalar]
+zk_proof = [[+ (announcement, ciphertext, r-response)], scalar]
 
 announcement = (group_element, group_element, group_element)
 ciphertext = (group_element, group_element)

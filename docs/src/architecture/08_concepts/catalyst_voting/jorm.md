@@ -77,18 +77,18 @@ V1 transaction representation in hex:
         * legacy signature (64 byte): `e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d`
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-#### Transaction vote generation
+#### Vote generation
 
 To generate a cryptographically secured `ENCRYPTED-VOTE` and `PROOF-VOTE` parts you can follow this [spec](./crypto.md#vote).
 Important to note,
 that as part of [*initial setup*](./crypto.md#initial-setup) of the voting procedure,
 the following properties are used:
 
-1. Each proposal, defined by the "Vote plan id" and "Proposal index", defines a number of possible options.
+1. Each proposal, defined by the `VOTE-PLAN-ID` and `PROPOSAL-INDEX`, defines a number of possible options.
 2. [ristretto255] as a backend cryptographic group.
-3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `VOTE-PLAN-ID` bytes.
 
-#### Transaction signing (witness generation)
+#### Signing (witness generation)
 
 Signature generated from the [BLAKE2b-256] hashed  `VOTE-PAYLOAD` bytes except of the `WITNESS` part
 (the last part from the bytes array):
@@ -149,6 +149,18 @@ If `choice` is a public one, `proof` **must** be `null`.
 {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/prop_id.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
+
+#### Vote generation
+
+To generate a cryptographically secured `private_choice` and `zk_proof` parts you can follow this [spec](./crypto.md#vote).
+Important to note,
+that as part of [*initial setup*](./crypto.md#initial-setup) of the voting procedure,
+the following properties are used:
+
+1. Each proposal,
+   defined by the `vote_plan_id` and `proposal_index`, defines a number of possible options.
+2. [ristretto255] as a backend cryptographic group.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `vote_plan_id` bytes.
 
 ## Rationale
 
