@@ -1,0 +1,7 @@
+choice = public_choice / private_choice
+
+public_choice = uint
+private_choice = ciphertext
+
+ciphertext = [group_element, group_element]
+group_element = bytes .size 32

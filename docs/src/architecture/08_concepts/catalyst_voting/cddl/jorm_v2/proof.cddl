@@ -1,0 +1,8 @@
+proof = [ [+ (announcement, ciphertext, r-response)], scalar]
+
+announcement = (group_element, group_element, group_element)
+ciphertext = (group_element, group_element)
+r-response = (scalar, scalar, scalar)
+
+scalar = bytes .size 32
+group_element = bytes .size 32

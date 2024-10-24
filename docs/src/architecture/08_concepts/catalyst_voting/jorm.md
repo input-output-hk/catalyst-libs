@@ -26,7 +26,7 @@ This document decribes a different definitions of the Jörmungandr based transac
 An original Jörmungandr blockchain's transaction structure.
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "V1 vote transaction definition: `jorm_v1.abnf`"
+??? note "V1 transaction definition: `jorm_v1.abnf`"
 
     ```abnf
     {{ include_file('src/architecture/08_concepts/catalyst_voting/abnf/jorm_v1.abnf', indent=4) }}
@@ -118,6 +118,35 @@ Expected witness (includes signature)
 <!-- markdownlint-enable code-block-style -->
 
 ### v2
+
+It is a Jörmungandr based transaction
+defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specification) structure.
+
+Following that spec we need define a format of `choice`, `proof` and `prop_id`.
+
+`jorm_v2/choice.cddl`:
+
+<!-- markdownlint-disable code-block-style -->
+```abnf
+{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/choice.cddl') }}
+```
+<!-- markdownlint-enable code-block-style -->
+
+`jorm_v2/proof.cddl`:
+
+<!-- markdownlint-disable code-block-style -->
+```abnf
+{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/proof.cddl') }}
+```
+<!-- markdownlint-enable code-block-style -->
+
+`jorm_v2/prop_id.cddl`:
+
+<!-- markdownlint-disable code-block-style -->
+```abnf
+{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/jorm_v2/prop_id.cddl') }}
+```
+<!-- markdownlint-enable code-block-style -->
 
 ## Rationale
 
