@@ -1,36 +1,35 @@
-# Transactions
+# Jörmungandr
 
 ---
 
-Title: Voting Transactions
+Title: Jörmungandr Voting Transactions
 
 Status: Proposed
 
 Authors:
     - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
 
-Created: 2024-09-04
+Created: 2024-10-24
 
 ---
 
 ## Abstract
 
-This document describes a specification of the different versions "Catalyst" voting transaction structure.
-From the old one (Jörmungandr) to the newest.
+This document decribes a different definitions of the Jörmungandr based transactions.
 
 ## Motivation
 
-Project "Catalyst" requires a structure to keep people vote's data in the secure way, anonymous and verifiable way.
-
 ## Specification
 
-### v1 (Jörmungandr)
+### v1 (Jörmungandr blockchain)
+
+An original Jörmungandr blockchain's transaction structure.
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "V1 vote transaction definition: `tx_v1.abnf`"
+??? note "V1 transaction definition: `jorm_v1.abnf`"
 
     ```abnf
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v1.abnf', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/abnf/jorm_v1.abnf', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
@@ -78,18 +77,18 @@ V1 transaction representation in hex:
         * legacy signature (64 byte): `e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d`
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-#### Transaction vote generation
+#### Vote generation
 
 To generate a cryptographically secured `ENCRYPTED-VOTE` and `PROOF-VOTE` parts you can follow this [spec](./crypto.md#vote).
 Important to note,
 that as part of [*initial setup*](./crypto.md#initial-setup) of the voting procedure,
 the following properties are used:
 
-1. Each proposal, defined by the "Vote plan id" and "Proposal index", defines a number of possible options.
+1. Each proposal, defined by the `VOTE-PLAN-ID` and `PROPOSAL-INDEX`, defines a number of possible options.
 2. [ristretto255] as a backend cryptographic group.
-3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `VOTE-PLAN-ID` bytes.
 
-#### Transaction signing (witness generation)
+#### Signing (witness generation)
 
 Signature generated from the [BLAKE2b-256] hashed  `VOTE-PAYLOAD` bytes except of the `WITNESS` part
 (the last part from the bytes array):
@@ -120,52 +119,34 @@ Expected witness (includes signature)
 
 ### v2
 
+It is a Jörmungandr based transaction
+defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specification) structure.
+
+Following that spec we need define a format of `choice`, `proof` and `prop_id`.
+
+!!! note
+
+    If `choice` is a public one, `proof` **must** be `null`.
+
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "V2 vote transaction definition: `tx_v2.cddl`"
+??? note "vote transaction v2 definition: `vote_tx_v2.cddl`"
 
     ```CDDL
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2.cddl', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/vote_tx_v2.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-`event` - a set of different identifiers which is uniquely define a particular voting event.
+#### Vote generation
 
-Vote:
+To generate a cryptographically secured `private_choice` and `zk_proof` parts you can follow this [spec](./crypto.md#vote).
+Important to note,
+that as part of [*initial setup*](./crypto.md#initial-setup) of the voting procedure,
+the following properties are used:
 
-* `choices` - a collection of voter choices for the proposal.
-* `proof` - a voter proof, could be `null`.
-* `prop_id` - a proposal id for which `choice` is made, could be `null`.
-  For that case where for the `event` defined only **one** proposal,
-  so it's redundant to provide an additional identifier for the proposal,
-  so it could be placed `null`.
-
-`voters_data` - an any additional voter's specific data.
-
-#### Transaction signing
-
-[COSE] is used to define a transaction's signature structure.
-[COSE] is a flexible security protocol that supports various types of security messages.
-However, only `COSE Signed Data Object` or `COSE_Sign` type is used.
-
-The following header must be included in the [COSE] signature.
-
-`protected`:
-
-* `content type`: `application/cbor`
-  (this parameter is used to indicate the content type of the data in the payload or ciphertext fields).
-
-Any other headers as `alg`, `kid` etc. could be specified of any kind and not defined by this spec.
-
-##### Signature payload
-
-As mentioned earlier, the content type of the [COSE] signature payload is `application/cbor`.
-In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
-
-<!-- markdownlint-disable code-block-style -->
-```CDDL
-{{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v2_cose_payload.cddl') }}
-```
-<!-- markdownlint-enable code-block-style -->
+1. Each proposal,
+   defined by the `vote_plan_id` and `proposal_index`, defines a number of possible options.
+2. [ristretto255] as a backend cryptographic group.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `vote_plan_id` bytes.
 
 ## Rationale
 
@@ -182,5 +163,5 @@ In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 [BLAKE2b-256]: https://www.blake2.net/blake2.pdf
 [BLAKE2b-512]: https://www.blake2.net/blake2.pdf
 [ristretto255]: https://ristretto.group
-[COSE]: https://datatracker.ietf.org/doc/rfc9052/
-[CBOR]: https://datatracker.ietf.org/doc/rfc8949/
+<!-- [COSE]: https://datatracker.ietf.org/doc/rfc9052/ -->
+<!-- [CBOR]: https://datatracker.ietf.org/doc/rfc8949/ -->

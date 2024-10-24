@@ -1,0 +1,26 @@
+choice =  #6.24(bstr(choice_data))
+proof = #6.24(bstr(proof_data)) \ null
+prop_id = #6.24(bstr(proposal)) \ null
+
+
+choice_data = public_choice / private_choice
+
+public_choice = uint
+private_choice = ciphertext
+
+ciphertext = [group_element, group_element]
+group_element = bytes .size 32
+
+proposal = UUID
+
+proof_data = zk_proof
+
+zk_proof = [[+ (announcement, ciphertext, r-response)], scalar]
+
+announcement = (group_element, group_element, group_element)
+ciphertext = (group_element, group_element)
+r-response = (scalar, scalar, scalar)
+
+scalar = bytes .size 32
+group_element = bytes .size 32
+
