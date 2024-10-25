@@ -1,4 +1,9 @@
 //! `catalyst_voting::vote_protocol` benchmark
+//!
+//! To run these benchmarks use
+//! ```shell
+//! SAMPLE_SIZE=<sample size> VOTERS_NUMBER=<voters number> cargo bench -p catalyst-voting vote_protocol
+//! ```
 #![allow(
     missing_docs,
     clippy::missing_docs_in_private_items,
@@ -24,14 +29,19 @@ use catalyst_voting::{
 };
 use criterion::{criterion_group, criterion_main, Criterion};
 use proptest::{
-    prelude::{any, Strategy},
+    prelude::{any_with, Strategy},
+    sample::size_range,
     strategy::ValueTree,
     test_runner::TestRunner,
 };
 use test_strategy::Arbitrary;
 
+const VOTERS_NUMBER_ENV: &str = "VOTERS_NUMBER";
+const SAMPLE_SIZE_ENV: &str = "SAMPLE_SIZE";
+const DEFAULT_SAMPLE_SIZE: usize = 10;
+const DEFAULT_VOTERS_NUMBER: usize = 1;
+
 const VOTING_OPTIONS: usize = 3;
-const VOTERS_NUMBER: usize = 100;
 
 #[derive(Arbitrary, Debug)]
 struct Voter {
@@ -43,7 +53,9 @@ struct Voter {
 struct Choices(Vec<usize>);
 struct VotingPowers(Vec<u64>);
 
-fn initial_setup() -> (
+fn rand_generate_vote_data(
+    voters_number: usize,
+) -> (
     Choices,
     VotingPowers,
     ElectionSecretKey,
@@ -52,7 +64,7 @@ fn initial_setup() -> (
 ) {
     let mut runner = TestRunner::default();
 
-    let (choices, voting_powers) = any::<[Voter; VOTERS_NUMBER]>()
+    let (choices, voting_powers) = any_with::<Vec<Voter>>((size_range(voters_number), ()))
         .prop_map(|voter| {
             (
                 voter.iter().map(|v| v.choice).collect(),
@@ -78,11 +90,19 @@ fn initial_setup() -> (
 
 #[allow(clippy::too_many_lines)]
 fn vote_protocol_benches(c: &mut Criterion) {
+    let sample_size = std::env::var(SAMPLE_SIZE_ENV)
+        .map(|s| s.parse().unwrap())
+        .unwrap_or(DEFAULT_SAMPLE_SIZE);
+    let voters_number = std::env::var(VOTERS_NUMBER_ENV)
+        .map(|s| s.parse().unwrap())
+        .unwrap_or(DEFAULT_VOTERS_NUMBER);
+
     let mut group = c.benchmark_group("vote protocol benchmark");
-    group.sample_size(10);
+    group.sample_size(sample_size);
 
     let (choices, voting_powers, election_secret_key, election_public_key, voter_proof_commitment) =
-        initial_setup();
+        rand_generate_vote_data(voters_number);
+
     let votes: Vec<_> = choices
         .0
         .iter()
