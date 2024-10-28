@@ -1,9 +1,9 @@
-vote-tx = [
-    vote-tx-body,
+gen-vote-tx = [
+    tx-body,
     signature
 ]
 
-vote-tx-body = [
+tx-body = [
     vote-type
     event,
     votes,

@@ -28,7 +28,8 @@ Following that spec we need define a format of `choice`, `proof` and `prop_id`.
 
 !!! note
 
-    If `choice` is a public one, `proof` **must** be `null`.
+    - If `choice` is a *public* one, `proof` **must** be `null`.
+    - If `choice` is *private* one, `proof` **must** be **not** `null`.
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
 ??? note "vote transaction v2 definition: `vote_tx_v2.cddl`"
