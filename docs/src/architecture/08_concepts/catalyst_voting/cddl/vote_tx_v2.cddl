@@ -1,7 +1,8 @@
-choice =  #6.24(bstr(choice_data))
-proof = #6.24(bstr(proof_data)) \ null
-prop_id = #6.24(bstr(proposal)) \ null
+vote_tx_v2 = vote_tx
 
+choice =  #6.24(bstr(choice_data))
+proof = #6.24(bstr(proof_data))
+prop_id = #6.24(bstr(proposal))
 
 choice_data = public_choice / private_choice
 
@@ -23,4 +24,6 @@ r-response = (scalar, scalar, scalar)
 
 scalar = bytes .size 32
 group_element = bytes .size 32
+
+;# include gen_vote_tx
 
