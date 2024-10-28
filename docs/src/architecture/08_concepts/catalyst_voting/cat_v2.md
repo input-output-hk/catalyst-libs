@@ -15,7 +15,7 @@ Created: 2024-10-24
 
 ## Abstract
 
-This document decribes a Catalyst V2 vote transaction structure.
+This document describes a Catalyst V2 vote transaction structure.
 
 ## Motivation
 
@@ -26,10 +26,12 @@ defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specificati
 
 Following that spec we need define a format of `choice`, `proof` and `prop_id`.
 
+<!-- markdownlint-disable max-one-sentence-per-line -->
 !!! note
 
     - If `choice` is a *public* one, `proof` **must** be `null`.
     - If `choice` is *private* one, `proof` **must** be **not** `null`.
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
 ??? note "vote transaction v2 definition: `vote_tx_v2.cddl`"
@@ -63,7 +65,6 @@ the following properties are used:
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
-[BLAKE2b-256]: https://www.blake2.net/blake2.pdf
 [BLAKE2b-512]: https://www.blake2.net/blake2.pdf
 [ristretto255]: https://ristretto.group
 <!-- [COSE]: https://datatracker.ietf.org/doc/rfc9052/ -->

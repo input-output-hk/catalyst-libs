@@ -15,7 +15,7 @@ Created: 2024-09-04
 
 ## Abstract
 
-This document defines a generilized view of the "Catalyst" voting transaction.
+This document defines a generalized view of the "Catalyst" voting transaction.
 
 ## Motivation
 

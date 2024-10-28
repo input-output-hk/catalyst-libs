@@ -15,7 +15,7 @@ Created: 2024-10-24
 
 ## Abstract
 
-This document decribes a definition of the original Jörmungandr `VoteCast` transaction.
+This document describes a definition of the original Jörmungandr `VoteCast` transaction.
 
 ## Motivation
 
