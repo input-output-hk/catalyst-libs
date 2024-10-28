@@ -1,31 +1,31 @@
-vote_tx = [
-    vote_tx_body,
+vote-tx = [
+    vote-tx-body,
     signature
 ]
 
-vote_tx_body = [
-    vote_type
+vote-tx-body = [
+    vote-type
     event,
     votes,
-    voters_data,
+    voters-data,
 ]
 
-vote_type = UUID ; e.g. Public or Private vote
-event = { * event_key => any }
-event_key = int / text
+vote-type = UUID ; e.g. Public or Private vote
+event = { * event-key => any }
+event-key = int / text
 
 votes = [+ vote]
 vote = [
     choices,
     proof \ null,
-    prop_id \ null,
+    prop-id \ null,
 ]
 choices = [+ choice]
 choice = encoded-cbor
 proof = encoded-cbor
-prop_id = encoded-cbor
+prop-id = encoded-cbor
 
-voters_data = encoded-cbor
+voters-data = encoded-cbor
 
 UUID = #6.37(bytes) ; UUID type
 signature = #6.98(COSE_Sign) ; COSE signature

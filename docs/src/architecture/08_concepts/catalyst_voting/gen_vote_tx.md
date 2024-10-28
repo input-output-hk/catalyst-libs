@@ -37,12 +37,12 @@ Vote:
 
 * `choices` - a collection of voter choices for the proposal.
 * `proof` - a voter proof, could be `null`.
-* `prop_id` - a proposal id for which `choice` is made, could be `null`.
+* `prop-id` - a proposal id for which `choice` is made, could be `null`.
   For that case where for the `event` defined only **one** proposal,
   so it's redundant to provide an additional identifier for the proposal,
   so it could be placed `null`.
 
-`voters_data` - an any additional voter's specific data.
+`voters-data` - an any additional voter's specific data.
 
 ### Transaction signing
 
