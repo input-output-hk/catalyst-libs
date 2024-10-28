@@ -3,3 +3,4 @@ arrange:
     - crypto.md
     - gen_vote_tx.md
     - jorm.md
+    - cat_v2.md

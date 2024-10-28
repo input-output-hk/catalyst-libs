@@ -17,13 +17,13 @@ event_key = int / text
 votes = [+ vote]
 vote = [
     choices,
-    proof,
-    prop_id,
+    proof \ null,
+    prop_id \ null,
 ]
 choices = [+ choice]
 choice = encoded-cbor
-proof = encoded-cbor \ null
-prop_id = encoded-cbor \ null
+proof = encoded-cbor
+prop_id = encoded-cbor
 
 voters_data = encoded-cbor
 

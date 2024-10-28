@@ -2,7 +2,7 @@
 
 ---
 
-Title: Jörmungandr Voting Transactions
+Title: Jörmungandr Voting Transaction
 
 Status: Proposed
 
@@ -15,25 +15,23 @@ Created: 2024-10-24
 
 ## Abstract
 
-This document decribes a different definitions of the Jörmungandr based transactions.
+This document decribes a definition of the original Jörmungandr `VoteCast` transaction.
 
 ## Motivation
 
 ## Specification
 
-### v1 (Jörmungandr blockchain)
-
-An original Jörmungandr blockchain's transaction structure.
+An original Jörmungandr blockchain's `VoteCast` transaction structure.
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "V1 transaction definition: `jorm_v1.abnf`"
+??? note "V1 transaction definition: `jorm.abnf`"
 
     ```abnf
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/abnf/jorm_v1.abnf', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/abnf/jorm.abnf', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-#### Example
+### Example
 
 V1 transaction representation in hex:
 
@@ -77,7 +75,7 @@ V1 transaction representation in hex:
         * legacy signature (64 byte): `e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d`
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-#### Vote generation
+### Vote generation
 
 To generate a cryptographically secured `ENCRYPTED-VOTE` and `PROOF-VOTE` parts you can follow this [spec](./crypto.md#vote).
 Important to note,
@@ -88,7 +86,7 @@ the following properties are used:
 2. [ristretto255] as a backend cryptographic group.
 3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `VOTE-PLAN-ID` bytes.
 
-#### Signing (witness generation)
+### Signing (witness generation)
 
 Signature generated from the [BLAKE2b-256] hashed  `VOTE-PAYLOAD` bytes except of the `WITNESS` part
 (the last part from the bytes array):
@@ -116,37 +114,6 @@ Expected witness (includes signature)
 0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
 ```
 <!-- markdownlint-enable code-block-style -->
-
-### v2
-
-It is a Jörmungandr based transaction
-defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specification) structure.
-
-Following that spec we need define a format of `choice`, `proof` and `prop_id`.
-
-!!! note
-
-    If `choice` is a public one, `proof` **must** be `null`.
-
-<!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "vote transaction v2 definition: `vote_tx_v2.cddl`"
-
-    ```CDDL
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/vote_tx_v2.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
-
-#### Vote generation
-
-To generate a cryptographically secured `private_choice` and `zk_proof` parts you can follow this [spec](./crypto.md#vote).
-Important to note,
-that as part of [*initial setup*](./crypto.md#initial-setup) of the voting procedure,
-the following properties are used:
-
-1. Each proposal,
-   defined by the `vote_plan_id` and `proposal_index`, defines a number of possible options.
-2. [ristretto255] as a backend cryptographic group.
-3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `vote_plan_id` bytes.
 
 ## Rationale
 
