@@ -66,7 +66,7 @@ In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 
 <!-- markdownlint-disable code-block-style -->
 ```CDDL
-{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/get_vote_tx_cose_payload.cddl') }}
+{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx_cose_payload.cddl') }}
 ```
 <!-- markdownlint-enable code-block-style -->
 

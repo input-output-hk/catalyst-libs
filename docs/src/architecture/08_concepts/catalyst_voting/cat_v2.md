@@ -24,12 +24,12 @@ This document describes a Catalyst V2 vote transaction structure.
 It is a Catalyst v2 voting transaction
 defined on top the ["Generalized Vote Transaction"](./gen_vote_tx.md#specification) structure.
 
-Following that spec we need define a format of `choice`, `proof` and `prop_id`.
+Following that spec need to define a format of `choice`, `proof` and `prop_id`.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 !!! note
 
-    - If `choice` is a *public* one, `proof` **must** be `null`.
+    - If `choice` is *public* one, `proof` **must** be `null`.
     - If `choice` is *private* one, `proof` **must** be **not** `null`.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
