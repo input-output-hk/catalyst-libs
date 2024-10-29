@@ -5,6 +5,7 @@ pub mod proof;
 
 use anyhow::{anyhow, bail, ensure};
 use rand_core::CryptoRngCore;
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use super::committee::{ElectionPublicKey, ElectionSecretKey};
 use crate::crypto::{
@@ -97,8 +98,8 @@ pub fn encrypt_vote<R: CryptoRngCore>(
 
     let unit_vector = vote.to_unit_vector();
     let ciphers = unit_vector
-        .iter()
-        .zip(randomness.0.iter())
+        .par_iter()
+        .zip(randomness.0.par_iter())
         .map(|(m, r)| encrypt(m, &public_key.0, r))
         .collect();
 
