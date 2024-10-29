@@ -112,14 +112,16 @@ impl Tx {
         let padding_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing padding tag field."))?;
         ensure!(
             padding_tag == PADDING_TAG,
-            "Invalid padding tag field value, must be equals to {PADDING_TAG}, provided: {padding_tag}.",
+            "Invalid padding tag field value, must be equals to {PADDING_TAG}, \
+            provided: {padding_tag}.",
         );
 
         let fragment_tag =
             read_be_u8(reader).map_err(|_| anyhow!("Missing fragment tag field."))?;
         ensure!(
             fragment_tag == FRAGMENT_TAG,
-            "Invalid fragment tag field value, must be equals to {FRAGMENT_TAG}, provided: {fragment_tag}.",
+            "Invalid fragment tag field value, must be equals to {FRAGMENT_TAG}, \
+            provided: {fragment_tag}.",
         );
 
         let vote_plan_id =
@@ -148,7 +150,8 @@ impl Tx {
             },
             tag => {
                 bail!(
-                    "Invalid vote tag value, must be equals to {PUBLIC_VOTE_TAG} or {PRIVATE_VOTE_TAG}, provided: {tag}"
+                    "Invalid vote tag value, \
+                    must be equals to {PUBLIC_VOTE_TAG} or {PRIVATE_VOTE_TAG}, provided: {tag}"
                 )
             },
         };
@@ -160,20 +163,23 @@ impl Tx {
             read_be_u8(reader).map_err(|_| anyhow!("Missing inputs amount field."))?;
         ensure!(
             inputs_amount == NUMBER_OF_INPUTS,
-            "Invalid number of inputs, expected: {NUMBER_OF_INPUTS}, provided: {inputs_amount}",
+            "Invalid number of inputs, expected: {NUMBER_OF_INPUTS}, \
+            provided: {inputs_amount}",
         );
 
         let outputs_amount =
             read_be_u8(reader).map_err(|_| anyhow!("Missing outputs amount field."))?;
         ensure!(
             outputs_amount == NUMBER_OF_OUTPUTS,
-            "Invalid number of outputs, expected: {NUMBER_OF_OUTPUTS}, provided: {outputs_amount}",
+            "Invalid number of outputs, expected: {NUMBER_OF_OUTPUTS}, \
+            provided: {outputs_amount}",
         );
 
         let input_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing input tag field."))?;
         ensure!(
             input_tag == INPUT_TAG,
-            "Invalid input tag, expected: {INPUT_TAG}, provided: {input_tag}",
+            "Invalid input tag, expected: {INPUT_TAG}, \
+            provided: {input_tag}",
         );
 
         // skip value
@@ -187,7 +193,8 @@ impl Tx {
         let witness_tag = read_be_u8(reader).map_err(|_| anyhow!("Missing witness tag field."))?;
         ensure!(
             witness_tag == WITNESS_TAG,
-            "Invalid witness tag, expected: {WITNESS_TAG}, provided: {witness_tag}",
+            "Invalid witness tag, expected: {WITNESS_TAG}, \
+            provided: {witness_tag}",
         );
 
         // Skip nonce field
