@@ -1,0 +1,31 @@
+gen-vote-tx = [
+    tx-body,
+    signature
+]
+
+tx-body = [
+    vote-type
+    event,
+    votes,
+    voters-data,
+]
+
+vote-type = UUID ; e.g. Public or Private vote
+event = { * event-key => any }
+event-key = int / text
+
+votes = [+ vote]
+vote = [
+    choices,
+    proof \ null,
+    prop-id \ null,
+]
+choices = [+ choice]
+choice = encoded-cbor
+proof = encoded-cbor
+prop-id = encoded-cbor
+
+voters-data = encoded-cbor
+
+UUID = #6.37(bytes) ; UUID type
+signature = #6.98(COSE_Sign) ; COSE signature
