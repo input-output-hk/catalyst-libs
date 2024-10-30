@@ -58,18 +58,22 @@ pub fn tally(
 ) -> anyhow::Result<EncryptedTally> {
     ensure!(
         votes.len() == voting_powers.len(),
-        "Votes and voting power length mismatch. Votes amount: {0}. Voting powers amount: {1}.",
+        "Votes and voting power length mismatch. Votes amount: {0}. \
+        Voting powers amount: {1}.",
         votes.len(),
         voting_powers.len(),
     );
 
-    let mut ciphertexts_per_voting_option = Vec::new();
-    for (i, vote) in votes.iter().enumerate() {
-        let ciphertext = vote
-            .get_ciphertext_for_choice(voting_option)
-            .ok_or(anyhow!("Invalid encrypted vote at index {i}. Does not have a ciphertext for the voting option {voting_option}.") )?;
-        ciphertexts_per_voting_option.push(ciphertext);
-    }
+    let ciphertexts_per_voting_option = votes
+        .iter()
+        .enumerate()
+        .map(|(i, v)| {
+            v.get_ciphertext_for_choice(voting_option).ok_or(anyhow!(
+                "Invalid encrypted vote at index {i}. \
+                Does not have a ciphertext for the voting option {voting_option}."
+            ))
+        })
+        .collect::<anyhow::Result<Vec<_>>>()?;
 
     let zero_ciphertext = Ciphertext::zero();
 
@@ -97,9 +101,11 @@ pub fn decrypt_tally(
 ) -> anyhow::Result<u64> {
     let ge = decrypt(&tally_result.0, &secret_key.0);
 
-    let res = setup
-        .discrete_log_setup
-        .discrete_log(ge)
-        .map_err(|_| anyhow!("Cannot decrypt tally result. Provided an invalid secret key or invalid encrypted tally result."))?;
+    let res = setup.discrete_log_setup.discrete_log(ge).map_err(|_| {
+        anyhow!(
+            "Cannot decrypt tally result. \
+            Provided an invalid secret key or invalid encrypted tally result."
+        )
+    })?;
     Ok(res)
 }

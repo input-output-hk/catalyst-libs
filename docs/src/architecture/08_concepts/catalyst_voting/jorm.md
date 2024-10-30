@@ -1,40 +1,37 @@
-# Transaction
+# Jörmungandr
 
 ---
 
-Title: Voting Transaction
+Title: Jörmungandr Voting Transaction
 
 Status: Proposed
 
 Authors:
     - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
 
-Created: 2024-09-04
+Created: 2024-10-24
 
 ---
 
 ## Abstract
 
-This document describes a specification of the different versions "Catalyst" voting transaction structure.
-From the old one (Jörmungandr) to the newest.
+This document describes a definition of the original Jörmungandr `VoteCast` transaction.
 
 ## Motivation
 
-Project "Catalyst" requires a structure to keep people vote's data in the secure way, anonymous and verifiable way.
-
 ## Specification
 
-### v1 (Jörmungandr)
+An original Jörmungandr blockchain's `VoteCast` transaction structure.
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "V1 vote transaction definition: `tx_v1.abnf`"
+??? note "V1 transaction definition: `jorm.abnf`"
 
     ```abnf
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/tx_v1.abnf', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/catalyst_voting/abnf/jorm.abnf', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-#### Example
+### Example
 
 V1 transaction representation in hex:
 
@@ -46,7 +43,7 @@ V1 transaction representation in hex:
 
 <!-- markdownlint-disable line-length code-block-style -->
 1. Transaction size (u32): `0000037e`
-2. `00`
+2. Jörmungandr specific tag (u8): `00`
 3. Jörmungandr specific tag (u8): `0b`
 4. Vote plan id (32 byte hash): `36ad42885189a0ac3438cdb57bc8ac7f6542e05a59d1f2e4d1d38194c9d4ac7b`
 5. Proposal index (u8): `00`
@@ -78,19 +75,18 @@ V1 transaction representation in hex:
         * legacy signature (64 byte): `e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d`
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-#### Transaction vote generation
+### Vote generation
 
 To generate a cryptographically secured `ENCRYPTED-VOTE` and `PROOF-VOTE` parts you can follow this [spec](./crypto.md#vote).
 Important to note,
 that as part of [*initial setup*](./crypto.md#initial-setup) of the voting procedure,
 the following properties are used:
 
-1. Each proposal, defined by the "Vote plan id" and "Proposal index", defines a number of possible options.
+1. Each proposal, defined by the `VOTE-PLAN-ID` and `PROPOSAL-INDEX`, defines a number of possible options.
 2. [ristretto255] as a backend cryptographic group.
-3. [BLAKE2b-512] hash function.
-4. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the "Vote plan id" bytes.
+3. A commitment key $ck$ defined as a [BLAKE2b-512] hash of the `VOTE-PLAN-ID` bytes.
 
-#### Transaction signing (witness generation)
+### Signing (witness generation)
 
 Signature generated from the [BLAKE2b-256] hashed  `VOTE-PAYLOAD` bytes except of the `WITNESS` part
 (the last part from the bytes array):
@@ -115,7 +111,7 @@ Expected witness (includes signature)
 
 <!-- markdownlint-disable code-block-style -->
 ```hex
-    0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
+0200000000e6c8aa48925e37fdab75db13aca7c4f39068e12eeb3af8fd1f342005cae5ab9a1ef5344fab2374e9436a67f57041899693d333610dfe785d329988736797950d
 ```
 <!-- markdownlint-enable code-block-style -->
 
@@ -131,6 +127,8 @@ Expected witness (includes signature)
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
-[BLAKE2b-256]: https://www.blake2.net/blake2.pdf\
-[BLAKE2b-512]: https://www.blake2.net/blake2.pdf\
+[BLAKE2b-256]: https://www.blake2.net/blake2.pdf
+[BLAKE2b-512]: https://www.blake2.net/blake2.pdf
 [ristretto255]: https://ristretto.group
+<!-- [COSE]: https://datatracker.ietf.org/doc/rfc9052/ -->
+<!-- [CBOR]: https://datatracker.ietf.org/doc/rfc8949/ -->
