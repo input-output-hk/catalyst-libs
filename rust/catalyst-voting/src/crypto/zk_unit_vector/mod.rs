@@ -16,7 +16,6 @@ use std::ops::Mul;
 
 use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash};
 use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
-use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use utils::get_bit;
@@ -24,6 +23,7 @@ use utils::get_bit;
 use crate::crypto::{
     elgamal::{encrypt, Ciphertext},
     group::{GroupElement, Scalar},
+    rng::rand_core::CryptoRngCore,
 };
 
 /// Unit vector proof struct

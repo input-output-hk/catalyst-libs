@@ -5,7 +5,8 @@ mod decoding;
 use ed25519_dalek::{
     ed25519::signature::Signer, Signature as Ed25519Signature, SigningKey, VerifyingKey,
 };
-use rand_core::CryptoRngCore;
+
+use crate::crypto::rng::rand_core::CryptoRngCore;
 
 /// `Ed25519` private key struct.
 #[must_use]

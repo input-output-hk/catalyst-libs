@@ -4,14 +4,13 @@
 use std::ops::Mul;
 
 use anyhow::ensure;
-use rand_core::CryptoRngCore;
 
 use super::{EncryptedVote, EncryptionRandomness, Vote};
 use crate::{
     crypto::{
-        default_rng,
         group::{GroupElement, Scalar},
         hash::digest::{consts::U64, Digest},
+        rng::{default_rng, rand_core::CryptoRngCore},
         zk_unit_vector::{generate_unit_vector_proof, verify_unit_vector_proof, UnitVectorProof},
     },
     vote_protocol::committee::ElectionPublicKey,

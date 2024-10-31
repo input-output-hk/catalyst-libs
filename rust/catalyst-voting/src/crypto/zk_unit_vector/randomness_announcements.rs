@@ -4,9 +4,10 @@
 
 use std::ops::Mul;
 
-use rand_core::CryptoRngCore;
-
-use crate::crypto::group::{GroupElement, Scalar};
+use crate::crypto::{
+    group::{GroupElement, Scalar},
+    rng::rand_core::CryptoRngCore,
+};
 
 /// Randomness generated in the proof, used for the hiding property.
 #[derive(Clone, Debug, Eq, PartialEq)]

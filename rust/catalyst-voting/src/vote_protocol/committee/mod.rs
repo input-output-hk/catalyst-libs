@@ -2,12 +2,10 @@
 
 mod decoding;
 
-use rand_core::CryptoRngCore;
-
 use crate::crypto::{
-    default_rng,
     elgamal::generate_public_key,
     group::{GroupElement, Scalar},
+    rng::{default_rng, rand_core::CryptoRngCore},
 };
 
 /// Election secret key.

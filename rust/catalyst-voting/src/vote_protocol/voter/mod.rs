@@ -4,15 +4,14 @@ mod decoding;
 pub mod proof;
 
 use anyhow::{anyhow, bail, ensure};
-use rand_core::CryptoRngCore;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use super::committee::{ElectionPublicKey, ElectionSecretKey};
 use crate::crypto::{
     babystep_giantstep::BabyStepGiantStep,
-    default_rng,
     elgamal::{decrypt, encrypt, Ciphertext},
     group::Scalar,
+    rng::{default_rng, rand_core::CryptoRngCore},
 };
 
 /// A representation of the voter's voting choice.

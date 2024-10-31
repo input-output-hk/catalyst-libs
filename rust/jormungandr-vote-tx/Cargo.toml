@@ -1,19 +1,20 @@
 [package]
 name = "jormungandr-vote-tx"
-version = "0.1.0"
+version = "0.0.1"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
 repository.workspace = true
 license.workspace = true
 
+[lints]
+workspace = true
+
 [dependencies]
 catalyst-voting = { path = "../catalyst-voting" }
+anyhow = "1.0.89"
 
 proptest = { version = "1.5.0" }
 # Potentially it could be replaced with using `proptest::property_test` attribute macro,
 # after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
 test-strategy = "0.4.0"
-
-[lints]
-workspace = true

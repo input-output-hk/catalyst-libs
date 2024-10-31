@@ -15,9 +15,11 @@ use curve25519_dalek::{
     traits::Identity,
     RistrettoPoint,
 };
-use rand_core::CryptoRngCore;
 
-use crate::crypto::hash::digest::{consts::U64, Digest};
+use crate::crypto::{
+    hash::digest::{consts::U64, Digest},
+    rng::rand_core::CryptoRngCore,
+};
 
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
