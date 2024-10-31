@@ -18,6 +18,7 @@ use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash
 use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
 use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
+use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use utils::get_bit;
 
 use crate::crypto::{
@@ -67,7 +68,7 @@ pub fn generate_unit_vector_proof<R: CryptoRngCore>(
         .collect();
 
     let announcements: Vec<_> = blinding_randomness
-        .iter()
+        .par_iter()
         .enumerate()
         .map(|(l, r)| {
             let i_bit = get_bit(i, l);
@@ -110,7 +111,7 @@ fn generate_dl_and_rl<R: CryptoRngCore>(
     let r_l: Vec<_> = (0..log_n).map(|_| Scalar::random(rng)).collect();
 
     let d_l: Vec<_> = r_l
-        .iter()
+        .par_iter()
         .enumerate()
         .map(|(l, r_l)| {
             let (sum, _) = polynomials.iter().fold(
