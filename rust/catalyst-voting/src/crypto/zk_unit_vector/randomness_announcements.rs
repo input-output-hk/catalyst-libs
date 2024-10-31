@@ -79,8 +79,8 @@ impl ResponseRandomness {
     }
 }
 
-#[cfg(test)]
-mod tests {
+#[cfg(any(test, feature = "proptest-arbitrary"))]
+mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},

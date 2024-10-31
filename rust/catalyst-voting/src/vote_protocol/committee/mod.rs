@@ -36,8 +36,8 @@ impl ElectionSecretKey {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElectionPublicKey(pub(crate) GroupElement);
 
-#[cfg(test)]
-mod tests {
+#[cfg(any(test, feature = "proptest-arbitrary"))]
+mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
 
     use super::*;

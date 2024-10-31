@@ -31,3 +31,8 @@ proptest = { version = "1.5.0" }
 # Potentially it could be replaced with using `proptest::property_test` attribute macro,
 # after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
 test-strategy = "0.4.0"
+
+[features]
+# Feature which makes publicly available
+# `proptest::prelude::Arbitrary` trait implementation for some types
+proptest-arbitrary = []

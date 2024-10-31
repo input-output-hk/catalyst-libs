@@ -235,16 +235,14 @@ fn check_2(
     &right_1 + &right_2 == left
 }
 
-#[cfg(test)]
-mod tests {
+#[cfg(any(test, feature = "proptest-arbitrary"))]
+mod arbitrary_impl {
     use proptest::{
         prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
         sample::size_range,
     };
-    use rand_core::OsRng;
-    use test_strategy::proptest;
 
-    use super::{super::elgamal::generate_public_key, *};
+    use super::*;
 
     impl Arbitrary for UnitVectorProof {
         type Parameters = usize;
@@ -263,6 +261,15 @@ mod tests {
             .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::sample::size_range;
+    use rand_core::OsRng;
+    use test_strategy::proptest;
+
+    use super::{super::elgamal::generate_public_key, *};
 
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();

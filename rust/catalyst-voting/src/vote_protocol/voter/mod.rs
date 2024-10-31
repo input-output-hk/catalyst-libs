@@ -141,8 +141,8 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
     bail!("Invalid encrypted vote, not a valid unit vector.")
 }
 
-#[cfg(test)]
-mod tests {
+#[cfg(any(test, feature = "proptest-arbitrary"))]
+mod arbitrary_impl {
     use proptest::{
         prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
         sample::size_range,
@@ -160,6 +160,11 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 
     #[test]
     fn vote_test() {

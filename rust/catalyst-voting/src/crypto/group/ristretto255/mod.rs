@@ -159,13 +159,12 @@ impl Sub<&GroupElement> for &GroupElement {
     }
 }
 
-#[cfg(test)]
-mod tests {
+#[cfg(any(test, feature = "proptest-arbitrary"))]
+mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
-    use test_strategy::proptest;
 
     use super::*;
 
@@ -188,6 +187,13 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::*;
 
     #[proptest]
     fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {

@@ -46,10 +46,9 @@ pub fn verify_signature(pk: &PublicKey, msg: &[u8], sig: &Signature) -> bool {
     pk.0.verify_strict(msg, &sig.0).is_ok()
 }
 
-#[cfg(test)]
-mod tests {
+#[cfg(any(test, feature = "proptest-arbitrary"))]
+mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
-    use test_strategy::proptest;
 
     use super::*;
 
@@ -63,6 +62,13 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::*;
 
     #[proptest]
     fn sign_test(private_key: PrivateKey, msg: Vec<u8>) {
