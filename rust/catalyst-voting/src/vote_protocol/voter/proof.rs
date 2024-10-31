@@ -108,10 +108,11 @@ pub fn verify_voter_proof(
 }
 
 #[cfg(any(test, feature = "proptest-arbitrary"))]
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::prelude::{any_with, Arbitrary, BoxedStrategy, Strategy};
 
-    use super::*;
+    use super::{UnitVectorProof, VoterProof};
 
     impl Arbitrary for VoterProof {
         type Parameters = usize;

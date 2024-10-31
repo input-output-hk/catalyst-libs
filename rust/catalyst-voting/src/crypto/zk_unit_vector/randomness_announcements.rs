@@ -80,13 +80,14 @@ impl ResponseRandomness {
 }
 
 #[cfg(any(test, feature = "proptest-arbitrary"))]
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
 
-    use super::*;
+    use super::{Announcement, BlindingRandomness, GroupElement, ResponseRandomness, Scalar};
 
     impl Arbitrary for BlindingRandomness {
         type Parameters = ();

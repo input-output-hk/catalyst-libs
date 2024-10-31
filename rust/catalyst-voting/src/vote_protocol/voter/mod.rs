@@ -142,13 +142,14 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
 }
 
 #[cfg(any(test, feature = "proptest-arbitrary"))]
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::{
         prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
         sample::size_range,
     };
 
-    use super::*;
+    use super::{Ciphertext, EncryptedVote};
 
     impl Arbitrary for EncryptedVote {
         type Parameters = usize;

@@ -67,13 +67,14 @@ impl Add<&Ciphertext> for &Ciphertext {
 }
 
 #[cfg(any(test, feature = "proptest-arbitrary"))]
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
 
-    use super::*;
+    use super::{Ciphertext, GroupElement};
 
     impl Arbitrary for Ciphertext {
         type Parameters = ();

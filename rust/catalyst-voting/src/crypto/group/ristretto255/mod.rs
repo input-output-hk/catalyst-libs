@@ -160,13 +160,14 @@ impl Sub<&GroupElement> for &GroupElement {
 }
 
 #[cfg(any(test, feature = "proptest-arbitrary"))]
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
 
-    use super::*;
+    use super::{GroupElement, Mul, Scalar};
 
     impl Arbitrary for Scalar {
         type Parameters = ();

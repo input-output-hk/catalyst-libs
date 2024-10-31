@@ -47,10 +47,11 @@ pub fn verify_signature(pk: &PublicKey, msg: &[u8], sig: &Signature) -> bool {
 }
 
 #[cfg(any(test, feature = "proptest-arbitrary"))]
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
 
-    use super::*;
+    use super::{PrivateKey, SigningKey};
 
     impl Arbitrary for PrivateKey {
         type Parameters = ();
