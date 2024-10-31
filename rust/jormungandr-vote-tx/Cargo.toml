@@ -11,19 +11,11 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-voting = { version = "0.0.1",  path = "../catalyst-voting" }
+catalyst-voting = { version = "0.0.1", path = "../catalyst-voting" }
 anyhow = "1.0.89"
-proptest = { version = "1.5.0", optional = true }
+proptest = { version = "1.5.0" }
 
 [dev-dependencies]
-catalyst-voting = { version = "0.0.1", path = "../catalyst-voting", features = ["proptest-arbitrary"] }
-
-proptest = { version = "1.5.0" }
 # Potentially it could be replaced with using `proptest::property_test` attribute macro,
 # after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
 test-strategy = "0.4.0"
-
-[features]
-# Feature which makes publicly available
-# `proptest::prelude::Arbitrary` trait implementation for some types
-proptest-arbitrary = ["catalyst-voting/proptest-arbitrary", "dep:proptest"]

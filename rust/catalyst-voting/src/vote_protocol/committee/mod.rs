@@ -36,7 +36,6 @@ impl ElectionSecretKey {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElectionPublicKey(pub(crate) GroupElement);
 
-#[cfg(any(test, feature = "proptest-arbitrary"))]
 #[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};

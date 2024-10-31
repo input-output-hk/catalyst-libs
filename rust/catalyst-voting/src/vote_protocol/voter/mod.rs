@@ -141,7 +141,6 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
     bail!("Invalid encrypted vote, not a valid unit vector.")
 }
 
-#[cfg(any(test, feature = "proptest-arbitrary"))]
 #[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
     use proptest::{
