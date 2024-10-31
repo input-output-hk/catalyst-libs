@@ -2,10 +2,10 @@
 //!
 //! ```rust
 //! use catalyst_voting::{
-//!     crypto::{default_rng, ed25519::PrivateKey},
-//!     txs::v1::Tx,
+//!     crypto::{ed25519::PrivateKey, rng::default_rng},
 //!     vote_protocol::committee::ElectionSecretKey,
 //! };
+//! use jormungandr_vote_tx::Tx;
 //!
 //! let vote_plan_id = [0u8; 32];
 //! let proposal_index = 0u8;
@@ -14,7 +14,8 @@
 //! let choice = 1;
 //!
 //! let users_private_key = PrivateKey::random(&mut default_rng());
-//! let election_public_key = ElectionSecretKey::random_with_default_rng().public_key();
+//! let election_secret_key = ElectionSecretKey::random_with_default_rng();
+//! let election_public_key = election_secret_key.public_key();
 //!
 //! let public_tx = Tx::new_public(
 //!     vote_plan_id,
@@ -25,6 +26,8 @@
 //! )
 //! .unwrap();
 //! public_tx.verify_signature().unwrap();
+//! let tx_choice = public_tx.public_choice().unwrap();
+//! assert_eq!(tx_choice, choice);
 //!
 //! let private_tx = Tx::new_private_with_default_rng(
 //!     vote_plan_id,
@@ -37,6 +40,8 @@
 //! .unwrap();
 //! private_tx.verify_signature().unwrap();
 //! private_tx.verify_proof(&election_public_key).unwrap();
+//! let tx_choice = private_tx.private_choice(&election_secret_key).unwrap();
+//! assert_eq!(tx_choice, choice);
 //! ```
 
 mod decoding;
