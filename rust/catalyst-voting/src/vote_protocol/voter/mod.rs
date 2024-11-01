@@ -4,15 +4,14 @@ mod decoding;
 pub mod proof;
 
 use anyhow::{anyhow, bail, ensure};
-use rand_core::CryptoRngCore;
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
 use super::committee::{ElectionPublicKey, ElectionSecretKey};
 use crate::crypto::{
     babystep_giantstep::BabyStepGiantStep,
-    default_rng,
     elgamal::{decrypt, encrypt, Ciphertext},
     group::Scalar,
+    rng::{default_rng, rand_core::CryptoRngCore},
 };
 
 /// A representation of the voter's voting choice.
@@ -142,14 +141,14 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
     bail!("Invalid encrypted vote, not a valid unit vector.")
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::{
         prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
         sample::size_range,
     };
 
-    use super::*;
+    use super::{Ciphertext, EncryptedVote};
 
     impl Arbitrary for EncryptedVote {
         type Parameters = usize;
@@ -161,6 +160,11 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
 
     #[test]
     fn vote_test() {
