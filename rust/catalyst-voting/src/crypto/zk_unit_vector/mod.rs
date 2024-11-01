@@ -16,7 +16,6 @@ use std::ops::Mul;
 
 use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash};
 use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
-use rand_core::CryptoRngCore;
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use utils::get_bit;
@@ -24,6 +23,7 @@ use utils::get_bit;
 use crate::crypto::{
     elgamal::{encrypt, Ciphertext},
     group::{GroupElement, Scalar},
+    rng::rand_core::CryptoRngCore,
 };
 
 /// Unit vector proof struct
@@ -235,16 +235,14 @@ fn check_2(
     &right_1 + &right_2 == left
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::{
         prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
         sample::size_range,
     };
-    use rand_core::OsRng;
-    use test_strategy::proptest;
 
-    use super::{super::elgamal::generate_public_key, *};
+    use super::{Announcement, Ciphertext, ResponseRandomness, Scalar, UnitVectorProof};
 
     impl Arbitrary for UnitVectorProof {
         type Parameters = usize;
@@ -263,6 +261,15 @@ mod tests {
             .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use proptest::sample::size_range;
+    use rand_core::OsRng;
+    use test_strategy::proptest;
+
+    use super::{super::elgamal::generate_public_key, *};
 
     fn is_unit_vector(vector: &[Scalar]) -> bool {
         let ones = vector.iter().filter(|s| s == &&Scalar::one()).count();

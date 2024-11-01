@@ -7,7 +7,7 @@ members = [
     "cbork",
     "cbork-abnf-parser",
     "cbork-cddl-parser",
-    "catalyst-voting",
+    "catalyst-voting", "jormungandr-vote-tx",
 ]
 
 [workspace.package]

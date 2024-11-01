@@ -3,13 +3,11 @@
 
 use std::ops::Mul;
 
-use rand_core::CryptoRngCore;
-
 use super::EncryptedTally;
 use crate::{
     crypto::{
-        default_rng,
         group::{GroupElement, Scalar},
+        rng::{default_rng, rand_core::CryptoRngCore},
         zk_dl_equality::{generate_dleq_proof, verify_dleq_proof, DleqProof},
     },
     vote_protocol::committee::{ElectionPublicKey, ElectionSecretKey},

@@ -2,12 +2,10 @@
 
 mod decoding;
 
-use rand_core::CryptoRngCore;
-
 use crate::crypto::{
-    default_rng,
     elgamal::generate_public_key,
     group::{GroupElement, Scalar},
+    rng::{default_rng, rand_core::CryptoRngCore},
 };
 
 /// Election secret key.
@@ -38,11 +36,11 @@ impl ElectionSecretKey {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ElectionPublicKey(pub(crate) GroupElement);
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
 
-    use super::*;
+    use super::{ElectionSecretKey, Scalar};
 
     impl Arbitrary for ElectionSecretKey {
         type Parameters = ();

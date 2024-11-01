@@ -12,7 +12,7 @@
 )]
 
 use catalyst_voting::{
-    crypto::default_rng,
+    crypto::rng::default_rng,
     vote_protocol::{
         committee::{ElectionPublicKey, ElectionSecretKey},
         tally::{

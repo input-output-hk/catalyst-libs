@@ -4,14 +4,13 @@
 use std::ops::Mul;
 
 use anyhow::ensure;
-use rand_core::CryptoRngCore;
 
 use super::{EncryptedVote, EncryptionRandomness, Vote};
 use crate::{
     crypto::{
-        default_rng,
         group::{GroupElement, Scalar},
         hash::digest::{consts::U64, Digest},
+        rng::{default_rng, rand_core::CryptoRngCore},
         zk_unit_vector::{generate_unit_vector_proof, verify_unit_vector_proof, UnitVectorProof},
     },
     vote_protocol::committee::ElectionPublicKey,
@@ -108,11 +107,11 @@ pub fn verify_voter_proof(
     verify_unit_vector_proof(&proof.0, encrypted_vote.0, &public_key.0, &commitment.0)
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::prelude::{any_with, Arbitrary, BoxedStrategy, Strategy};
 
-    use super::*;
+    use super::{UnitVectorProof, VoterProof};
 
     impl Arbitrary for VoterProof {
         type Parameters = usize;
