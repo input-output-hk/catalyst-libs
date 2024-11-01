@@ -1,7 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:feat/cargo-deny-check AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/cargo-deny-check AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:feat/deny.toml AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/deny.toml AS cspell-ci
 
 FROM debian:stable-slim
 
