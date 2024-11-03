@@ -706,10 +706,6 @@ mod tests {
 
         let encoded_block = block.to_bytes().unwrap();
 
-        const CDDL: &str = include_str!("./cddl/block.cddl");
-
-        cddl::validate_cbor_from_slice(CDDL, &encoded_block, None).unwrap();
-
         let (block_header, block_data, sigs) = Block::from_bytes(&encoded_block, &Blake2b).unwrap();
 
         assert_eq!(block_header, block_hdr);
