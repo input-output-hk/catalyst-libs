@@ -2,57 +2,22 @@
 
 #![allow(missing_docs)] // TODO(apskhem): Temporary, to bo removed in a subsequent PR
 
+mod parser;
+
 use derive_more::{Display, From};
 pub use pest::Parser;
 use pest::{error::Error, iterators::Pairs};
 
-pub mod rfc_8610 {
-    pub use pest::Parser;
-
-    #[derive(pest_derive::Parser)]
-    #[grammar = "grammar/rfc_8610.pest"]
-    pub struct RFC8610Parser;
-}
-
-pub mod rfc_9165 {
-    pub use pest::Parser;
-
-    #[derive(pest_derive::Parser)]
-    #[grammar = "grammar/rfc_8610.pest"]
-    #[grammar = "grammar/rfc_9165.pest"]
-    pub struct RFC8610Parser;
-}
-
-pub mod cddl {
-    pub use pest::Parser;
-
-    #[derive(pest_derive::Parser)]
-    #[grammar = "grammar/rfc_8610.pest"]
-    #[grammar = "grammar/rfc_9165.pest"]
-    #[grammar = "grammar/cddl_modules.pest"]
-    pub struct RFC8610Parser;
-}
-
-pub mod cddl_test {
-    pub use pest::Parser;
-
-    // Parser with DEBUG rules. These rules are only used in tests.
-    #[derive(pest_derive::Parser)]
-    #[grammar = "grammar/rfc_8610.pest"]
-    #[grammar = "grammar/rfc_9165.pest"]
-    #[grammar = "grammar/cddl_modules.pest"]
-    #[grammar = "grammar/cddl_test.pest"] // Ideally this would only be used in tests.
-    pub struct CDDLTestParser;
-}
+pub use crate::parser::{cddl, cddl_test, rfc_8610, rfc_9165};
 
 /// Represents different parser extensions for handling CDDL specifications.
 pub enum Extension {
     /// RFC8610 ONLY limited parser.
-    RFC8610Parser,
+    RFC8610,
     /// RFC8610 and RFC9165 limited parser.
-    RFC9165Parser,
+    RFC9165,
     /// RFC8610, RFC9165, and CDDL modules.
-    CDDLParser,
+    CDDL,
 }
 
 // CDDL Standard Postlude - read from an external file
@@ -120,18 +85,18 @@ pub fn parse_cddl<'a>(
     input.push_str(POSTLUDE);
 
     let result = match extension {
-        Extension::RFC8610Parser => {
-            rfc_8610::RFC8610Parser::parse(rfc_8610::Rule::cddl, input)
+        Extension::RFC8610 => {
+            rfc_8610::Parser::parse(rfc_8610::Rule::cddl, input)
                 .map(AST::RFC8610)
                 .map_err(CDDLErrorType::RFC8610)
         },
-        Extension::RFC9165Parser => {
-            rfc_9165::RFC8610Parser::parse(rfc_9165::Rule::cddl, input)
+        Extension::RFC9165 => {
+            rfc_9165::Parser::parse(rfc_9165::Rule::cddl, input)
                 .map(AST::RFC9165)
                 .map_err(CDDLErrorType::RFC9165)
         },
-        Extension::CDDLParser => {
-            cddl::RFC8610Parser::parse(cddl::Rule::cddl, input)
+        Extension::CDDL => {
+            cddl::Parser::parse(cddl::Rule::cddl, input)
                 .map(AST::CDDL)
                 .map_err(CDDLErrorType::CDDL)
         },
@@ -147,7 +112,7 @@ mod tests {
     #[test]
     fn it_works() {
         let mut input = String::new();
-        let result = parse_cddl(&mut input, &Extension::CDDLParser);
+        let result = parse_cddl(&mut input, &Extension::CDDL);
 
         match result {
             Ok(c) => println!("{c:?}"),

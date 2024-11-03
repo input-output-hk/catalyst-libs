@@ -32,7 +32,7 @@ fn parse_cddl_files() {
     for file_path in valid_file_paths {
         let mut content = fs::read_to_string(file_path).unwrap();
 
-        if let Err(e) = parse_cddl(&mut content, &Extension::CDDLParser) {
+        if let Err(e) = parse_cddl(&mut content, &Extension::CDDL) {
             err_messages.push(format!("{}) {file_path:?} {e}", err_messages.len() + 1));
         }
     }
@@ -41,7 +41,7 @@ fn parse_cddl_files() {
     for file_path in invalid_file_paths {
         let mut content = fs::read_to_string(file_path).unwrap();
 
-        let result = parse_cddl(&mut content, &Extension::CDDLParser);
+        let result = parse_cddl(&mut content, &Extension::CDDL);
 
         assert!(result.is_err(), "{:?} is expected to fail", &file_path);
     }
