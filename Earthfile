@@ -1,7 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.2.15 AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.2.15 AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:feat/deny.toml AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/deny.toml  AS cspell-ci
 
 FROM debian:stable-slim
 
