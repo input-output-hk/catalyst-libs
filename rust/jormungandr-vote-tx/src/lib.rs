@@ -1,11 +1,12 @@
-//! A Jörmungandr transaction object structured following this [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/transaction/#v1-jormungandr)
+//! A Jörmungandr transaction object structured following this
+//! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/jorm/)
 //!
 //! ```rust
 //! use catalyst_voting::{
-//!     crypto::{default_rng, ed25519::PrivateKey},
-//!     txs::v1::Tx,
+//!     crypto::{ed25519::PrivateKey, rng::default_rng},
 //!     vote_protocol::committee::ElectionSecretKey,
 //! };
+//! use jormungandr_vote_tx::Tx;
 //!
 //! let vote_plan_id = [0u8; 32];
 //! let proposal_index = 0u8;
@@ -14,7 +15,8 @@
 //! let choice = 1;
 //!
 //! let users_private_key = PrivateKey::random(&mut default_rng());
-//! let election_public_key = ElectionSecretKey::random_with_default_rng().public_key();
+//! let election_secret_key = ElectionSecretKey::random_with_default_rng();
+//! let election_public_key = election_secret_key.public_key();
 //!
 //! let public_tx = Tx::new_public(
 //!     vote_plan_id,
@@ -25,6 +27,8 @@
 //! )
 //! .unwrap();
 //! public_tx.verify_signature().unwrap();
+//! let tx_choice = public_tx.public_choice().unwrap();
+//! assert_eq!(tx_choice, choice);
 //!
 //! let private_tx = Tx::new_private_with_default_rng(
 //!     vote_plan_id,
@@ -37,18 +41,19 @@
 //! .unwrap();
 //! private_tx.verify_signature().unwrap();
 //! private_tx.verify_proof(&election_public_key).unwrap();
+//! let tx_choice = private_tx.private_choice(&election_secret_key).unwrap();
+//! assert_eq!(tx_choice, choice);
 //! ```
 
 mod decoding;
+mod utils;
 
 use anyhow::ensure;
-use rand_core::CryptoRngCore;
-
-use crate::{
+use catalyst_voting::{
     crypto::{
-        default_rng,
         ed25519::{sign, verify_signature, PrivateKey, PublicKey, Signature},
         hash::{digest::Digest, Blake2b256Hasher, Blake2b512Hasher},
+        rng::{default_rng, rand_core::CryptoRngCore},
     },
     vote_protocol::{
         committee::{ElectionPublicKey, ElectionSecretKey},
@@ -290,12 +295,71 @@ impl VotePayload {
     }
 }
 
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
+    use catalyst_voting::crypto::ed25519::PrivateKey;
+    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
+
+    use super::{EncryptedVote, Signature, Tx, VotePayload, VoterProof};
+
+    impl Arbitrary for Tx {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<(
+                [u8; 32],
+                u8,
+                VotePayload,
+                PrivateKey,
+                [u8; Signature::BYTES_SIZE],
+            )>()
+            .prop_map(
+                |(vote_plan_id, proposal_index, vote, sk, signature_bytes)| {
+                    Tx {
+                        vote_plan_id,
+                        proposal_index,
+                        vote,
+                        public_key: sk.public_key(),
+                        signature: Signature::from_bytes(&signature_bytes),
+                    }
+                },
+            )
+            .boxed()
+        }
+    }
+
+    impl Arbitrary for VotePayload {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<bool>()
+                .prop_flat_map(|b| {
+                    if b {
+                        any::<u8>().prop_map(VotePayload::Public).boxed()
+                    } else {
+                        any::<(u8, u8)>()
+                            .prop_flat_map(|(s1, s2)| {
+                                any_with::<(EncryptedVote, VoterProof)>((s1.into(), s2.into()))
+                                    .prop_map(|(v, p)| VotePayload::Private(v, p))
+                            })
+                            .boxed()
+                    }
+                })
+                .boxed()
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use catalyst_voting::{
+        crypto::ed25519::PrivateKey, vote_protocol::committee::ElectionSecretKey,
+    };
     use test_strategy::proptest;
 
     use super::*;
-    use crate::{crypto::ed25519::PrivateKey, vote_protocol::committee::ElectionSecretKey};
 
     #[proptest]
     fn tx_test(

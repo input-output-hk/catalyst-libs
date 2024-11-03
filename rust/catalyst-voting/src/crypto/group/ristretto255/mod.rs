@@ -15,9 +15,11 @@ use curve25519_dalek::{
     traits::Identity,
     RistrettoPoint,
 };
-use rand_core::CryptoRngCore;
 
-use crate::crypto::hash::digest::{consts::U64, Digest};
+use crate::crypto::{
+    hash::digest::{consts::U64, Digest},
+    rng::rand_core::CryptoRngCore,
+};
 
 /// Ristretto group scalar.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -157,15 +159,14 @@ impl Sub<&GroupElement> for &GroupElement {
     }
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
-    use test_strategy::proptest;
 
-    use super::*;
+    use super::{GroupElement, Mul, Scalar};
 
     impl Arbitrary for Scalar {
         type Parameters = ();
@@ -186,6 +187,13 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::*;
 
     #[proptest]
     fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {

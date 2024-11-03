@@ -5,7 +5,8 @@ mod decoding;
 use ed25519_dalek::{
     ed25519::signature::Signer, Signature as Ed25519Signature, SigningKey, VerifyingKey,
 };
-use rand_core::CryptoRngCore;
+
+use crate::crypto::rng::rand_core::CryptoRngCore;
 
 /// `Ed25519` private key struct.
 #[must_use]
@@ -45,12 +46,11 @@ pub fn verify_signature(pk: &PublicKey, msg: &[u8], sig: &Signature) -> bool {
     pk.0.verify_strict(msg, &sig.0).is_ok()
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
-    use test_strategy::proptest;
 
-    use super::*;
+    use super::{PrivateKey, SigningKey};
 
     impl Arbitrary for PrivateKey {
         type Parameters = ();
@@ -62,6 +62,13 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::*;
 
     #[proptest]
     fn sign_test(private_key: PrivateKey, msg: Vec<u8>) {
