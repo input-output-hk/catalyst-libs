@@ -158,11 +158,15 @@ impl Block {
             encoder.bytes(&sig)?;
         }
 
-        Ok([
+        let signatures = encoder.writer().clone();
+
+        let block_encoding = [
             [encoded_block_hdr, self.block_data.0.clone()].concat(),
-            encoder.writer().to_vec(),
+            signatures,
         ]
-        .concat())
+        .concat();
+
+        Ok(block_encoding)
     }
 
     /// Decode block
@@ -480,7 +484,7 @@ impl BlockHeader {
         let metadata = cbor_decoder
             .bytes()
             .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for metadata : {e}")))?
-            .try_into()?;
+            .into();
 
         let block_header = BlockHeader {
             chain_id,
@@ -590,6 +594,8 @@ impl GenesisPreviousHash {
 }
 
 #[cfg(test)]
+#[allow(clippy::zero_prefixed_literal)]
+#[allow(clippy::items_after_statements)]
 mod tests {
 
     use ed25519_dalek::{SigningKey, SECRET_KEY_LENGTH};
