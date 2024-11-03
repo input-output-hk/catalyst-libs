@@ -1,8 +1,4 @@
-vote-tx-v2 = gen-vote-tx
-
-choice =  #6.24(bstr(choice-data))
-proof = #6.24(bstr(proof-data))
-prop-id = #6.24(bstr(proposal))
+vote-tx-v2 = gen-vote-tx<choice-data, proof-data, proposal>
 
 choice-data = public-choice / private-choice
 
@@ -16,10 +12,9 @@ proposal = UUID
 
 proof-data = zk-proof
 
-zk-proof = [[+ (announcement, ciphertext, r-response)], scalar]
+zk-proof = [[+ (announcement, ~ciphertext, r-response)], scalar]
 
 announcement = (group-element, group-element, group-element)
-ciphertext = (group-element, group-element)
 r-response = (scalar, scalar, scalar)
 
 scalar = bytes .size 32

@@ -15,15 +15,15 @@ event = { * event-key => any }
 event-key = int / text
 
 votes = [+ vote]
-vote = [
-    choices,
-    proof \ null,
-    prop-id \ null,
+vote<choice-t, proof-t, prop-id-t>  = [
+    choices<choice-t>,
+    proof<proof-t> / null,
+    prop-id<prop-id-t> / null,
 ]
-choices = [+ choice]
-choice = encoded-cbor
-proof = encoded-cbor
-prop-id = encoded-cbor
+choices<choice-t> = [+ choice<choice-t>]
+choice<choice-t> = #6.24(bytes .cbor choice-t) ; encoded-cbor
+proof<proof-t> = #6.24(bytes .cbor proof-t) ; encoded-cbor
+prop-id<prop-id-t> = #6.24(bytes .cbor prop-id-t) ; encoded-cbor
 
 voters-data = encoded-cbor
 
