@@ -1,6 +1,6 @@
 //! Block structure
 
-use core::result::Result::Ok as ResultOk;
+//! Block structure
 
 use anyhow::Ok;
 use blake2b_simd::{self, Params};
@@ -73,6 +73,24 @@ pub struct BlockData(Vec<u8>);
 /// validator.
 pub struct ValidatorKeys(pub Vec<[u8; SECRET_KEY_LENGTH]>);
 
+/// CBOR tag for timestamp
+const TIMESTAMP_CBOR_TAG: u64 = 1;
+
+/// CBOR tag for UUID
+const UUID_CBOR_TAG: u64 = 37;
+
+/// CBOR tag for UUID
+const ULID_CBOR_TAG: u64 = 32780;
+
+/// CBOR tags for BLAKE2 [2] and BLAKE3 [3] hash functions
+/// `https://github.com/input-output-hk/catalyst-voices/blob/main/docs/src/catalyst-standards/cbor_tags/blake.md`
+
+/// CBOR tag for UUID
+const BLAKE3_CBOR_TAG: u64 = 32781;
+
+/// CBOR tag for blake2b
+const BLAKE_2B_CBOR_TAG: u64 = 32782;
+
 /// Block
 pub struct Block {
     /// Block header
@@ -135,18 +153,16 @@ impl Block {
 
         let out: Vec<u8> = Vec::new();
         let mut encoder = minicbor::Encoder::new(out);
-
-        encoder.bytes(&self.block_data.0)?;
-
-        for sig in &signatures {
-            encoder.bytes(sig)?;
+        encoder.array(signatures.len().try_into()?)?;
+        for sig in signatures {
+            encoder.bytes(&sig)?;
         }
 
-        let block_data_with_sigs = encoder.writer().clone();
-        // block hdr + block data + sigs
-        let encoded_block = [encoded_block_hdr, block_data_with_sigs].concat();
-
-        Ok(encoded_block)
+        Ok([
+            [encoded_block_hdr, self.block_data.0.clone()].concat(),
+            encoder.writer().to_vec(),
+        ]
+        .concat())
     }
 
     /// Decode block
@@ -168,9 +184,13 @@ impl Block {
             .bytes()
             .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for block data : {e}")))?;
 
-        // Extract signatures, block hdr indicates how many validators.
+        // Extract signatures
+        let number_of_sigs = cbor_decoder
+            .array()?
+            .ok_or(anyhow::anyhow!(format!("Invalid signature.")))?;
+
         let mut sigs = Vec::new();
-        for _sig in 0..block_hdr.validator.len() {
+        for _sig in 0..number_of_sigs {
             let sig: [u8; SIGNATURE_LENGTH] = cbor_decoder
                 .bytes()
                 .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for signature : {e}")))?
@@ -307,8 +327,8 @@ pub struct BlockHeader {
     pub purpose_id: Ulid,
     /// Identifier or identifiers of the entity who was produced and processed a block.
     pub validator: Vec<Kid>,
-    /// Optional field, to add some arbitrary metadata to the block.
-    pub metadata: Option<Vec<u8>>,
+    /// Add arbitrary metadata to the block.
+    pub metadata: Vec<u8>,
 }
 
 impl BlockHeader {
@@ -317,7 +337,7 @@ impl BlockHeader {
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         chain_id: Ulid, height: i64, block_time_stamp: i64, previous_block_hash: Vec<u8>,
-        ledger_type: Uuid, purpose_id: Ulid, validator: Vec<Kid>, metadata: Option<Vec<u8>>,
+        ledger_type: Uuid, purpose_id: Ulid, validator: Vec<Kid>, metadata: Vec<u8>,
     ) -> Self {
         Self {
             chain_id,
@@ -335,26 +355,52 @@ impl BlockHeader {
     /// ## Errors
     ///
     /// Returns an error encoding fails
-    pub fn to_bytes(&self, _hasher: &HashFunction) -> anyhow::Result<Vec<u8>> {
+    pub fn to_bytes(&self, hasher: &HashFunction) -> anyhow::Result<Vec<u8>> {
+        /// # of elements in block header
+        const BLOCK_HEADER_SIZE: u64 = 8;
+
         let out: Vec<u8> = Vec::new();
         let mut encoder = minicbor::Encoder::new(out);
 
+        encoder.array(BLOCK_HEADER_SIZE)?;
+
+        // Chain id
+        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
         encoder.bytes(&self.chain_id.to_bytes())?;
-        encoder.bytes(&self.height.to_be_bytes())?;
-        encoder.bytes(&self.block_time_stamp.to_be_bytes())?;
-        encoder.bytes(self.previous_block_hash.as_slice())?;
+
+        // Block height
+        encoder.int(self.height.into())?;
+
+        // Block timestamp
+        encoder.tag(minicbor::data::Tag::new(TIMESTAMP_CBOR_TAG))?;
+        encoder.int(self.block_time_stamp.into())?;
+
+        let cbor_hash_tag = match hasher {
+            HashFunction::Blake3 => BLAKE3_CBOR_TAG,
+            HashFunction::Blake2b => BLAKE_2B_CBOR_TAG,
+        };
+
+        // Prev block hash
+        encoder.tag(minicbor::data::Tag::new(cbor_hash_tag))?;
+        encoder.bytes(&self.previous_block_hash)?;
+
+        // Ledger type
+        encoder.tag(minicbor::data::Tag::new(UUID_CBOR_TAG))?;
         encoder.bytes(self.ledger_type.as_bytes())?;
+
+        // Purpose id
+        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
         encoder.bytes(&self.purpose_id.to_bytes())?;
 
-        // marks how many validators for decoding side.
-        encoder.bytes(&self.validator.len().to_be_bytes())?;
-        for validator in self.validator.clone() {
-            encoder.bytes(&validator.0)?;
+        // Validators
+        encoder.array(self.validator.len().try_into()?)?;
+        for val in self.validator.clone() {
+            encoder.tag(minicbor::data::Tag::new(cbor_hash_tag))?;
+            encoder.bytes(&val.0)?;
         }
 
-        if let Some(meta) = &self.metadata {
-            encoder.bytes(meta)?;
-        }
+        // Metadata
+        encoder.bytes(&self.metadata)?;
 
         Ok(encoder.writer().clone())
     }
@@ -372,8 +418,10 @@ impl BlockHeader {
     )> {
         // Decode cbor to bytes
         let mut cbor_decoder = minicbor::Decoder::new(block);
+        cbor_decoder.array()?;
 
         // Raw chain_id
+        cbor_decoder.tag()?;
         let chain_id = Ulid::from_bytes(
             cbor_decoder
                 .bytes()
@@ -382,28 +430,21 @@ impl BlockHeader {
         );
 
         // Raw Block height
-        let block_height = i64::from_be_bytes(
-            cbor_decoder
-                .bytes()
-                .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for block height : {e}")))?
-                .try_into()?,
-        );
+        let block_height: i64 = cbor_decoder.int()?.try_into()?;
 
         // Raw time stamp
-        let ts = i64::from_be_bytes(
-            cbor_decoder
-                .bytes()
-                .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for timestamp : {e}")))?
-                .try_into()?,
-        );
+        cbor_decoder.tag()?;
+        let ts: i64 = cbor_decoder.int()?.try_into()?;
 
         // Raw prev block hash
+        cbor_decoder.tag()?;
         let prev_block_hash = cbor_decoder
             .bytes()
             .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for prev block hash : {e}")))?
             .to_vec();
 
         // Raw ledger type
+        cbor_decoder.tag()?;
         let ledger_type = Uuid::from_bytes(
             cbor_decoder
                 .bytes()
@@ -412,6 +453,7 @@ impl BlockHeader {
         );
 
         // Raw purpose id
+        cbor_decoder.tag()?;
         let purpose_id = Ulid::from_bytes(
             cbor_decoder
                 .bytes()
@@ -419,19 +461,14 @@ impl BlockHeader {
                 .try_into()?,
         );
 
-        // Number of validators
-        let number_of_validators = usize::from_be_bytes(
-            cbor_decoder
-                .bytes()
-                .map_err(|e| {
-                    anyhow::anyhow!(format!("Invalid cbor for number of validators : {e}"))
-                })?
-                .try_into()?,
-        );
-
-        // Extract validators
+        // Validators
         let mut validators = Vec::new();
+        let number_of_validators = cbor_decoder.array()?.ok_or(anyhow::anyhow!(format!(
+            "Invalid amount of validators, should be at least two"
+        )))?;
+
         for _validator in 0..number_of_validators {
+            cbor_decoder.tag()?;
             let validator_kid: [u8; 16] = cbor_decoder
                 .bytes()
                 .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for validators : {e}")))?
@@ -440,10 +477,10 @@ impl BlockHeader {
             validators.push(Kid(validator_kid));
         }
 
-        let metadata = match cbor_decoder.bytes() {
-            ResultOk(meta) => Some(meta.to_vec()),
-            Err(_) => None,
-        };
+        let metadata = cbor_decoder
+            .bytes()
+            .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for metadata : {e}")))?
+            .try_into()?;
 
         let block_header = BlockHeader {
             chain_id,
@@ -497,19 +534,39 @@ impl GenesisPreviousHash {
     /// ## Errors
     ///
     /// Returns an error encoding fails
-    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn to_bytes(&self, hasher: &HashFunction) -> anyhow::Result<Vec<u8>> {
+        // # of elements in Genesis to previous block hash
+        //     const GENESIS_TO_PREV_HASH_SIZE: u64 = 5;
         let out: Vec<u8> = Vec::new();
         let mut encoder = minicbor::Encoder::new(out);
+        encoder.array(5)?;
 
+        // Chain id
+        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
         encoder.bytes(&self.chain_id.to_bytes())?;
-        encoder.bytes(&self.block_time_stamp.to_be_bytes())?;
+
+        // Block timestamp
+        encoder.tag(minicbor::data::Tag::new(TIMESTAMP_CBOR_TAG))?;
+        encoder.int(self.block_time_stamp.into())?;
+
+        let cbor_hash_tag = match hasher {
+            HashFunction::Blake3 => BLAKE3_CBOR_TAG,
+            HashFunction::Blake2b => BLAKE_2B_CBOR_TAG,
+        };
+
+        // Ledger type
+        encoder.tag(minicbor::data::Tag::new(UUID_CBOR_TAG))?;
         encoder.bytes(self.ledger_type.as_bytes())?;
+
+        // Purpose id
+        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
         encoder.bytes(&self.purpose_id.to_bytes())?;
 
-        // marks how many validators for decoding side.
-        encoder.bytes(&self.validator.len().to_be_bytes())?;
-        for validator in self.validator.clone() {
-            encoder.bytes(&validator.0)?;
+        // Validators
+        encoder.array(self.validator.len().try_into()?)?;
+        for val in self.validator.clone() {
+            encoder.tag(minicbor::data::Tag::new(cbor_hash_tag))?;
+            encoder.bytes(&val.0)?;
         }
 
         Ok(encoder.writer().clone())
@@ -520,7 +577,7 @@ impl GenesisPreviousHash {
     ///
     /// Returns an error if hashing fails
     pub fn hash(&self, hasher: &HashFunction) -> anyhow::Result<Vec<u8>> {
-        let encoding = self.to_bytes()?;
+        let encoding = self.to_bytes(hasher)?;
 
         // get hash of genesis_to_prev_hash
         let genesis_prev_hash = match hasher {
@@ -539,8 +596,10 @@ mod tests {
     use ulid::Ulid;
     use uuid::Uuid;
 
-    use super::{Block, BlockData, BlockHeader, Kid, ValidatorKeys};
-    use crate::serialize::{blake2b_512, GenesisPreviousHash, HashFunction::Blake2b};
+    use super::{BlockHeader, Kid};
+    use crate::serialize::{
+        blake2b_512, Block, BlockData, GenesisPreviousHash, HashFunction::Blake2b, ValidatorKeys,
+    };
 
     #[test]
     fn block_header_encoding() {
@@ -562,10 +621,14 @@ mod tests {
             Uuid::new_v4(),
             Ulid::new(),
             vec![Kid(kid_a), Kid(kid_b)],
-            Some(vec![1; 128]),
+            vec![7; 356],
         );
 
         let encoded_block_hdr = block_hdr.to_bytes(&Blake2b).unwrap();
+
+        const CDDL: &str = include_str!("./cddl/block_header.cddl");
+
+        cddl::validate_cbor_from_slice(CDDL, &encoded_block_hdr, None).unwrap();
 
         let (block_hdr_from_bytes, ..) =
             BlockHeader::from_bytes(&encoded_block_hdr, &Blake2b).unwrap();
@@ -582,10 +645,7 @@ mod tests {
         assert_eq!(block_hdr_from_bytes.ledger_type, block_hdr.ledger_type);
         assert_eq!(block_hdr_from_bytes.purpose_id, block_hdr.purpose_id);
         assert_eq!(block_hdr_from_bytes.validator, block_hdr.validator);
-        assert_eq!(
-            block_hdr_from_bytes.metadata,
-            Some(block_hdr.metadata.unwrap())
-        );
+        assert_eq!(block_hdr_from_bytes.metadata, block_hdr.metadata);
     }
 
     #[test]
@@ -614,7 +674,7 @@ mod tests {
             Uuid::new_v4(),
             Ulid::new(),
             vec![Kid(kid_a), Kid(kid_b)],
-            Some(vec![1; 128]),
+            vec![1; 128],
         );
 
         let out: Vec<u8> = Vec::new();
@@ -640,20 +700,28 @@ mod tests {
 
         let encoded_block = block.to_bytes().unwrap();
 
-        let decoded_block = Block::from_bytes(&encoded_block.clone(), &Blake2b).unwrap();
-        assert_eq!(decoded_block.0, block_hdr);
+        const CDDL: &str = include_str!("./cddl/block.cddl");
 
+        cddl::validate_cbor_from_slice(CDDL, &encoded_block, None).unwrap();
+
+        let (block_header, block_data, sigs) = Block::from_bytes(&encoded_block, &Blake2b).unwrap();
+
+        assert_eq!(block_header, block_hdr);
+
+        // signatures are over encoded block data
+        // block data is returned as plain bytes decoded from cbor
+        assert_eq!(block_data.0, block_data_bytes);
         let data_to_sign = [
             blake2b_512(&block_hdr.to_bytes(&Blake2b).unwrap())
                 .unwrap()
                 .to_vec(),
-            encoded_block_data.clone(),
+            encoded_block_data,
         ]
         .concat();
 
         let verifying_key = SigningKey::from_bytes(&validator_secret_key_bytes);
 
-        for sig in decoded_block.2 .0 {
+        for sig in sigs.0 {
             verifying_key.verify_strict(&data_to_sign, &sig).unwrap();
         }
 
@@ -702,7 +770,7 @@ mod tests {
             ledger_type,
             purpose_id,
             vec![Kid(kid_a), Kid(kid_b)],
-            Some(vec![1; 128]),
+            vec![1; 128],
         );
 
         let out: Vec<u8> = Vec::new();
@@ -738,7 +806,7 @@ mod tests {
             ledger_type,
             purpose_id,
             vec![Kid(kid_a), Kid(kid_b)],
-            Some(vec![1; 128]),
+            vec![1; 128],
         );
 
         let out: Vec<u8> = Vec::new();
@@ -798,7 +866,7 @@ mod tests {
             ledger_type,
             purpose_id,
             validator.clone(),
-            Some(vec![1; 128]),
+            vec![1; 128],
         );
 
         let out: Vec<u8> = Vec::new();
@@ -834,7 +902,7 @@ mod tests {
             ledger_type,
             purpose_id,
             validator,
-            Some(vec![1; 128]),
+            vec![1; 128],
         );
 
         let block = Block::new(

@@ -6,6 +6,3 @@
 
 /// Block encoding decoding and validation
 pub mod serialize;
-
-/// ac
-pub mod ser;
