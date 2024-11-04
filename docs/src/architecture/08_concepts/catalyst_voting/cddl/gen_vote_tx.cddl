@@ -28,4 +28,6 @@ prop-id<prop-id-t> = #6.24(bytes .cbor prop-id-t) ; encoded-cbor
 voters-data = encoded-cbor
 
 UUID = #6.37(bytes) ; UUID type
-signature = #6.98(COSE_Sign) ; COSE signature
+signature = #6.98(cose.COSE_Sign) ; COSE signature
+
+;# import rfc9052 as cose
