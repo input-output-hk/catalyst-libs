@@ -7,7 +7,8 @@ check-cddl:
 
     WORKDIR /cddl
 
-    COPY ./block.cddl ./genesis_to_prev_hash.cddl .
+    COPY ./block.cddl ./genesis_to_prev_hash.cddl ./hash.cddl .
 
+    RUN cddlc -2 hash.cddl
     RUN cddlc -2 block.cddl
     RUN cddlc -2 genesis_to_prev_hash.cddl
