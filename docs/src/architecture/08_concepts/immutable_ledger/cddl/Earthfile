@@ -1,0 +1,13 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:feat/cddl AS cddl-ci
+
+check-cddl:
+    FROM cddl-ci+cddl-base
+
+    WORKDIR /cddl
+
+    COPY ./block.cddl ./genesis_to_prev_hash.cddl .
+
+    RUN cddlc -2 block.cddl
+    RUN cddlc -2 genesis_to_prev_hash.cddl
