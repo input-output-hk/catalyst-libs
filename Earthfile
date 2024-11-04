@@ -41,17 +41,3 @@ repo-docs:
     COPY --dir *.md LICENSE-APACHE LICENSE-MIT .
 
     SAVE ARTIFACT /repo repo
-
-cddlc:
-    FROM ruby:3.3.0-alpine
-
-    WORKDIR /cddl
-
-    RUN gem install cddlc
-
-    COPY ./docs/src/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl .
-    COPY ./docs/src/architecture/08_concepts/catalyst_voting/cddl/vote_tx_v2.cddl .
-
-    RUN cddlc -u2tcddl vote_tx_v2.cddl
-
-    
