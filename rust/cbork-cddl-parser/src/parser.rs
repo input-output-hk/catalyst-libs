@@ -7,32 +7,32 @@ use crate::Extension;
 
 /// RFC-8610 parser.
 #[allow(missing_docs)]
-mod rfc_8610 {
+pub(crate) mod rfc_8610 {
     /// A Pest parser for RFC-8610.
     #[derive(pest_derive::Parser)]
     #[grammar = "grammar/rfc_8610.pest"]
-    pub struct Parser;
+    pub(crate) struct Parser;
 }
 
 /// RFC-9165 parser.
 #[allow(missing_docs)]
-mod rfc_9165 {
+pub(crate) mod rfc_9165 {
     /// A Pest parser for RFC-9165.
     #[derive(pest_derive::Parser)]
     #[grammar = "grammar/rfc_8610.pest"]
     #[grammar = "grammar/rfc_9165.pest"]
-    pub struct Parser;
+    pub(crate) struct Parser;
 }
 
 /// Full CDDL syntax parser.
 #[allow(missing_docs)]
-mod cddl {
+pub(crate) mod cddl {
     /// A Pest parser for a full CDDL syntax.
     #[derive(pest_derive::Parser)]
     #[grammar = "grammar/rfc_8610.pest"]
     #[grammar = "grammar/rfc_9165.pest"]
     #[grammar = "grammar/cddl_modules.pest"]
-    pub struct Parser;
+    pub(crate) struct Parser;
 }
 
 /// Full CDDL syntax test parser.
@@ -55,7 +55,7 @@ const POSTLUDE: &str = include_str!("grammar/postlude.cddl");
 /// Abstract Syntax Tree (AST) representing parsed CDDL syntax.
 #[derive(Debug)]
 #[allow(dead_code)]
-pub enum Ast<'a> {
+pub(crate) enum Ast<'a> {
     /// Represents the AST for RFC-8610 CDDL rules.
     Rfc8610(Pairs<'a, rfc_8610::Rule>),
     /// Represents the AST for RFC-9165 CDDL rules.
@@ -86,13 +86,14 @@ pub(crate) fn parse_cddl<'a>(
     input.push_str("\n\n");
     input.push_str(POSTLUDE);
 
-    match extension {
+    let ast = match extension {
         Extension::RFC8610 => {
-            Ok(rfc_8610::Parser::parse(rfc_8610::Rule::cddl, input).map(Ast::Rfc8610)?)
+            rfc_8610::Parser::parse(rfc_8610::Rule::cddl, input).map(Ast::Rfc8610)?
         },
         Extension::RFC9165 => {
-            Ok(rfc_9165::Parser::parse(rfc_9165::Rule::cddl, input).map(Ast::Rfc9165)?)
+            rfc_9165::Parser::parse(rfc_9165::Rule::cddl, input).map(Ast::Rfc9165)?
         },
-        Extension::CDDL => Ok(cddl::Parser::parse(cddl::Rule::cddl, input).map(Ast::Cddl)?),
-    }
+        Extension::CDDL => cddl::Parser::parse(cddl::Rule::cddl, input).map(Ast::Cddl)?,
+    };
+    Ok(ast)
 }

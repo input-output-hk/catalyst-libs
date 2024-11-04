@@ -1,6 +1,7 @@
 //! A parser for CDDL, utilized for parsing in accordance with RFC 8610.
 
 mod parser;
+mod processor;
 
 pub use crate::parser::cddl_test;
 
