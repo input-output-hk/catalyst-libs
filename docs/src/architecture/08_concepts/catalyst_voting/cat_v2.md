@@ -1,4 +1,4 @@
-# Catalyst V2
+# V2
 
 ---
 
