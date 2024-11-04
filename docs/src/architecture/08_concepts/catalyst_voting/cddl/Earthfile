@@ -7,8 +7,13 @@ check-cddl:
 
     WORKDIR /cddl
 
-    COPY ./gen_vote_tx.cddl ./vote_tx_v2.cddl ./gen_vote_tx_cose_payload.cddl .
+    COPY ./gen_vote_tx.cddl \
+         ./vote_tx_v2_public.cddl \
+         ./vote_tx_v2_private.cddl \
+         ./gen_vote_tx_cose_payload.cddl \
+        .
 
     RUN cddlc -2 gen_vote_tx_cose_payload.cddl
     RUN cddlc -2 gen_vote_tx.cddl
-    RUN cddlc -2 vote_tx_v2.cddl
+    RUN cddlc -2 vote_tx_v2_public.cddl
+    RUN cddlc -2 vote_tx_v2_private.cddl

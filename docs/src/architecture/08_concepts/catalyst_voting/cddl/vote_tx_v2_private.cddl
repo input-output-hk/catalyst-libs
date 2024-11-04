@@ -1,12 +1,7 @@
 vote-tx-v2 = gen-vote-tx<choice-data, proof-data, proposal>
 
-choice-data = public-choice / private-choice
-
-public-choice = uint
-private-choice = ciphertext
-
+choice-data = ciphertext
 ciphertext = [group-element, group-element]
-group-element = bytes .size 32
 
 proposal = UUID
 
