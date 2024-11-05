@@ -2,5 +2,5 @@ title: Catalyst Voting
 arrange:
     - crypto.md
     - gen_vote_tx.md
-    - jorm.md
-    - cat_v2.md
+    - v1.md
+    - v2.md
