@@ -1,4 +1,4 @@
-# Jörmungandr
+# V1 (Jörmungandr)
 
 ---
 
@@ -16,6 +16,8 @@ Created: 2024-10-24
 ## Abstract
 
 This document describes a definition of the original Jörmungandr `VoteCast` transaction.
+It's not based on the ["General Voting Transaction"](./gen_vote_tx.md) specification
+and just represents an original transaction structure from the Jörmungandr blockchain.
 
 ## Motivation
 
@@ -130,5 +132,3 @@ Expected witness (includes signature)
 [BLAKE2b-256]: https://www.blake2.net/blake2.pdf
 [BLAKE2b-512]: https://www.blake2.net/blake2.pdf
 [ristretto255]: https://ristretto.group
-<!-- [COSE]: https://datatracker.ietf.org/doc/rfc9052/ -->
-<!-- [CBOR]: https://datatracker.ietf.org/doc/rfc8949/ -->

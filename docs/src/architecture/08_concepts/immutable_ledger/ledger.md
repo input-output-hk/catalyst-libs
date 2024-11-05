@@ -82,17 +82,17 @@ Which is well suited where it comes to process some temporary event e.g. voting.
 
 Header:
 
-* `chain_id` - unique identifier of the chain.
+* `chain-id` - unique identifier of the chain.
 * `height` - block's height.
   Also is used to identify the block type: *genesis*, *regular*, *final*
   (in more details described in [validation section](#block-validation-rules)).
 * `timestamp` - block's timestamp.
-* `prev_block_id` - previous block hash.
-* `ledger_type` - unique identifier of the ledger type.
-  In general, this is the way to strictly bound and specify `block_data` of the ledger for the specific `ledger_type`.
+* `prev-block-id` - previous block hash.
+* `ledger-type` - unique identifier of the ledger type.
+  In general, this is the way to strictly bound and specify `block-data` of the ledger for the specific `ledger-type`.
   But such rules will be a part of the specific ledger type definition,
   and not specified by this document.
-* `purpose_id` - unique identifier of the purpose.
+* `purpose-id` - unique identifier of the purpose.
   As it was stated before,
   each Ledger instance will have a strict time boundaries,
   so each of them will run for different purposes.
@@ -102,13 +102,13 @@ Header:
 
 Block:
 
-* `block_header` - block header described above,
-* `block_data` - an array of some CBOR encoded data
-* `validator_signature` - a signature or signatures of the validator's.
+* `block-header` - block header described above,
+* `block-data` - an array of some CBOR encoded data
+* `validator-signature` - a signature or signatures of the validator's.
 
 ### Block validation rules
 
-* `chain_id` **MUST** be the same as for the previous block (except for genesis).
+* `chain-id` **MUST** be the same as for the previous block (except for genesis).
 * `height` **MUST** be incremented by `1` from the previous block height value (except for genesis and final block).
   *Genesis* block **MUST** have `0` value.
   *Final* block **MUST** hash be incremented by `1` from the previous block height and changed the sign to negative.
@@ -116,25 +116,25 @@ Block:
 * *Final* block is the last one for the specific chain and any other block could not be referenced to the *Final* one.
 
 * `timestamp` **MUST** be greater or equals than the `timestamp` of the previous block (except for genesis).
-* `prev_block_id` **MUST** be a hash of the previous block bytes (except for genesis).
+* `prev-block-id` **MUST** be a hash of the previous block bytes (except for genesis).
 
-* `ledger_type` **MUST** be the same as for the previous block if present (except for genesis).
+* `ledger-type` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
-* `purpose_id` **MUST** be the same as for the previous block if present (except for genesis).
+* `purpose-id` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
 * `validator` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
-* `prev_block_id`'s CBOR tag value and `bstr` size **MUST** be the same as for the previous block (except for genesis).
+* `prev-block-id`'s CBOR tag value and `bstr` size **MUST** be the same as for the previous block (except for genesis).
   Means that the hash function type and hash size itself must be the same.
-* `prev_block_id` and `validator_signature` **MUST** use the same hash function, defined with the
-  `hash_bytes`.
+* `prev-block-id` and `validator-signature` **MUST** use the same hash function, defined with the
+  `hash-bytes`.
 
-* `prev_block_id` for the *Genesis* block **MUST** be a hash of the `genesis_to_prev_hash` bytes.
+* `prev-block-id` for the *Genesis* block **MUST** be a hash of the `genesis-to-prev-hash` bytes.
 
-* `block_data` **MUST** be a [deterministically][CBOR-deterministically-encoded] encoded CBOR.
+* `block-data` **MUST** be a [deterministically][CBOR-deterministically-encoded] encoded CBOR.
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "Genesis to previous block hash CDDL definition: `genesis_to_prev_hash.cddl`"
+??? note "Genesis to previous block hash CDDL definition: `genesis-to-prev-hash.cddl`"
 
     ```CDDL
     {{ include_file('src/architecture/08_concepts/immutable_ledger/cddl/genesis_to_prev_hash.cddl',indent=4) }}
@@ -143,16 +143,16 @@ Block:
 
 #### Signature rules
 
-`validator_signature`
-**MUST** be a signature of the hashed `block_header` bytes and the `block_data` bytes
+`validator-signature`
+**MUST** be a signature of the hashed `block-header` bytes and the `block-data` bytes
 (with the order the same as defined for `block`).
 Signed by the validator's keys defined in the corresponding certificates referenced by the `validator`.
 Signature algorithm is defined by the certificate.
 The format and size of this field **MUST** be totally the same as `validator` field:
 
-* if `validator` is only one id => `validator_signature` contains only 1 signature;
-* if `validator` is array => `validator_signature` contains an array with the same length;
-* order of signatures from the `validator_signature`'s array corresponds to the validators order of `validator`'s array.
+* if `validator` is only one id => `validator-signature` contains only 1 signature;
+* if `validator` is array => `validator-signature` contains an array with the same length;
+* order of signatures from the `validator-signature`'s array corresponds to the validators order of `validator`'s array.
 
 ## Rationale
 
