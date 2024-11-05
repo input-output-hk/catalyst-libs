@@ -1,9 +1,11 @@
 //! A CDDL AST processor
 
 mod expr;
+mod rules;
 
 use anyhow::{anyhow, ensure};
 use pest::{iterators::Pairs, RuleType};
+use rules::try_expr;
 
 use crate::parser::Ast;
 
@@ -11,8 +13,14 @@ use crate::parser::Ast;
 trait CddlExpr: RuleType {
     /// `cddl` rule
     const CDDL: Self;
-    /// `rule` rule
-    const RULE: Self;
+    /// `expr` rule
+    const EXPR: Self;
+    /// `typename` rule
+    const TYPENAME: Self;
+    /// `groupname` rule
+    const GROUPNAME: Self;
+    /// `genericparm` rule
+    const GENERIC_PARAM: Self;
 }
 
 /// Processes the AST.
@@ -27,7 +35,7 @@ pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
 
 /// Process AST implementation
 fn process_ast_impl<E: CddlExpr>(mut ast: Pairs<'_, E>) -> anyhow::Result<()> {
-    let ast_root = ast.next().ok_or(anyhow!("Empty AST"))?;
+    let ast_root = ast.next().ok_or(anyhow!("Missing `cddl` rule."))?;
     ensure!(
         ast_root.as_rule() == E::CDDL && ast.next().is_none(),
         "AST must have only one root rule, which must be a `cddl` rule."
@@ -36,7 +44,7 @@ fn process_ast_impl<E: CddlExpr>(mut ast: Pairs<'_, E>) -> anyhow::Result<()> {
     let pairs = ast_root.into_inner();
 
     for pair in pairs {
-        if pair.as_rule() == E::RULE {}
+        try_expr(pair)?;
     }
 
     Ok(())
