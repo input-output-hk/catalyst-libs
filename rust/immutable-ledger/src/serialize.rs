@@ -173,7 +173,7 @@ impl Block {
     /// ## Errors
     ///
     /// Returns an error if decoding fails.
-    pub fn from_bytes(encoded_block: &[u8], hasher: &HashFunction) -> anyhow::Result<DecodedBlock> {
+    pub fn from_bytes(encoded_block: &[u8], hasher: &HashFunction) -> anyhow::Result<Block> {
         // Decoded block hdr
         let (block_hdr, block_hdr_size, _) = BlockHeader::from_bytes(encoded_block, hasher)?;
 
