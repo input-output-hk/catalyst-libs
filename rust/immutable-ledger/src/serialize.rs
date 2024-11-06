@@ -122,7 +122,7 @@ impl Block {
     /// ## Errors
     ///
     /// Returns an error if encoding fails.
-    pub fn to_bytes(&self) -> anyhow::Result<EncodedBlock> {
+    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         // Enforce block data to be cbor encoded in the form of CBOR byte strings
         // which are just (ordered) series of bytes without further interpretation
         let _ = minicbor::Decoder::new(&self.block_data.0).bytes()?;
