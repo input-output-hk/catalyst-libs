@@ -7,7 +7,14 @@ homepage.workspace = true
 repository.workspace = true
 license.workspace = true
 
+[lib]
+crate-type = ["lib", "cdylib"]
+
 [lints]
 workspace = true
 
 [dependencies]
+anyhow = "1.0.89"
+ciborium = { version = "0.2.2", default-features = false }
+cddl = { version = "0.9.4" }
+coset = { version = "0.3.8" }
