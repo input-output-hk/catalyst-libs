@@ -66,15 +66,14 @@ impl Add<&Ciphertext> for &Ciphertext {
     }
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
-    use test_strategy::proptest;
 
-    use super::*;
+    use super::{Ciphertext, GroupElement};
 
     impl Arbitrary for Ciphertext {
         type Parameters = ();
@@ -86,6 +85,13 @@ mod tests {
                 .boxed()
         }
     }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::*;
 
     #[proptest]
     fn ciphertext_add_test(e1: Scalar, e2: Scalar, e3: Scalar, e4: Scalar) {

@@ -4,9 +4,10 @@
 
 use std::ops::Mul;
 
-use rand_core::CryptoRngCore;
-
-use crate::crypto::group::{GroupElement, Scalar};
+use crate::crypto::{
+    group::{GroupElement, Scalar},
+    rng::rand_core::CryptoRngCore,
+};
 
 /// Randomness generated in the proof, used for the hiding property.
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -78,14 +79,14 @@ impl ResponseRandomness {
     }
 }
 
-#[cfg(test)]
-mod tests {
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+mod arbitrary_impl {
     use proptest::{
         arbitrary::any,
         prelude::{Arbitrary, BoxedStrategy, Strategy},
     };
 
-    use super::*;
+    use super::{Announcement, BlindingRandomness, GroupElement, ResponseRandomness, Scalar};
 
     impl Arbitrary for BlindingRandomness {
         type Parameters = ();

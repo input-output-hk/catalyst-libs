@@ -12,7 +12,8 @@ use crate::{
 
 impl EncryptedVote {
     /// Get an underlying vector length.
-    pub(crate) fn size(&self) -> usize {
+    #[must_use]
+    pub fn size(&self) -> usize {
         self.0.len()
     }
 
