@@ -13,18 +13,18 @@ use pest::{
     RuleType,
 };
 
-use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
+use crate::parser::{cddl, rfc_8610, rfc_9165, PestAst};
 
 /// Processes the AST.
-pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
+pub(crate) fn process_ast(ast: PestAst) -> anyhow::Result<()> {
     match ast {
-        Ast::Rfc8610(ast) => {
+        PestAst::Rfc8610(ast) => {
             let _exprs = process_root(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr)?;
         },
-        Ast::Rfc9165(ast) => {
+        PestAst::Rfc9165(ast) => {
             let _exprs = process_root(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr)?;
         },
-        Ast::Cddl(ast) => {
+        PestAst::Cddl(ast) => {
             let exprs = process_root(ast, cddl::Rule::cddl, cddl::Rule::expr)?;
 
             for expr in exprs {

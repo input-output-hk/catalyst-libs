@@ -52,10 +52,10 @@ pub mod cddl_test {
 /// CDDL Standard Postlude - read from an external file
 const POSTLUDE: &str = include_str!("grammar/postlude.cddl");
 
-/// Abstract Syntax Tree (AST) representing parsed CDDL syntax.
+/// PEST Abstract Syntax Tree (AST) representing parsed CDDL syntax.
 #[derive(Debug)]
 #[allow(dead_code)]
-pub(crate) enum Ast<'a> {
+pub(crate) enum PestAst<'a> {
     /// Represents the AST for RFC-8610 CDDL rules.
     Rfc8610(Pairs<'a, rfc_8610::Rule>),
     /// Represents the AST for RFC-9165 CDDL rules.
@@ -82,18 +82,18 @@ pub(crate) enum Ast<'a> {
 /// - If there is an issue with parsing the CDDL input.
 pub(crate) fn parse_cddl<'a>(
     input: &'a mut String, extension: &Extension,
-) -> anyhow::Result<Ast<'a>> {
+) -> anyhow::Result<PestAst<'a>> {
     input.push_str("\n\n");
     input.push_str(POSTLUDE);
 
     let ast = match extension {
         Extension::RFC8610 => {
-            rfc_8610::Parser::parse(rfc_8610::Rule::cddl, input).map(Ast::Rfc8610)?
+            rfc_8610::Parser::parse(rfc_8610::Rule::cddl, input).map(PestAst::Rfc8610)?
         },
         Extension::RFC9165 => {
-            rfc_9165::Parser::parse(rfc_9165::Rule::cddl, input).map(Ast::Rfc9165)?
+            rfc_9165::Parser::parse(rfc_9165::Rule::cddl, input).map(PestAst::Rfc9165)?
         },
-        Extension::CDDL => cddl::Parser::parse(cddl::Rule::cddl, input).map(Ast::Cddl)?,
+        Extension::CDDL => cddl::Parser::parse(cddl::Rule::cddl, input).map(PestAst::Cddl)?,
     };
     Ok(ast)
 }
