@@ -1,7 +1,7 @@
 //! A parser for CDDL, utilized for parsing in accordance with RFC 8610.
 
 mod parser;
-mod processor;
+mod preprocessor;
 
 pub use crate::parser::cddl_test;
 
@@ -23,6 +23,7 @@ pub enum Extension {
 ///
 /// - If there is an issue with parsing the CDDL input.
 pub fn validate_cddl(input: &mut String, extension: &Extension) -> anyhow::Result<()> {
-    parser::parse_cddl(input, extension)?;
+    let ast = parser::parse_cddl(input, extension)?;
+    preprocessor::process_ast(ast)?;
     Ok(())
 }
