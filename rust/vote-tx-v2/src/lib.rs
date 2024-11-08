@@ -33,11 +33,11 @@ pub struct GeneralisedTxBody {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Vote {
     /// `choice` field
-    choice: ciborium::Value,
+    choice: Vec<u8>,
     /// `proof` field
-    proof: ciborium::Value,
+    proof: Vec<u8>,
     /// `prop-id` field
-    prop_id: ciborium::Value,
+    prop_id: Vec<u8>,
 }
 
 impl Vote {
@@ -47,9 +47,18 @@ impl Vote {
     ///  - Cannot encode `Vote` to CBOR
     pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         let cbor_array = ciborium::Value::Array(vec![
-            ciborium::Value::Tag(ENCODED_CBOR_TAG, self.choice.clone().into()),
-            ciborium::Value::Tag(ENCODED_CBOR_TAG, self.proof.clone().into()),
-            ciborium::Value::Tag(ENCODED_CBOR_TAG, self.prop_id.clone().into()),
+            ciborium::Value::Tag(
+                ENCODED_CBOR_TAG,
+                ciborium::Value::Bytes(self.choice.clone()).into(),
+            ),
+            ciborium::Value::Tag(
+                ENCODED_CBOR_TAG,
+                ciborium::Value::Bytes(self.proof.clone()).into(),
+            ),
+            ciborium::Value::Tag(
+                ENCODED_CBOR_TAG,
+                ciborium::Value::Bytes(self.prop_id.clone()).into(),
+            ),
         ]);
 
         cbor_array
@@ -62,44 +71,56 @@ impl Vote {
     /// # Errors
     ///  - Invalid `Vote` CBOR encoded bytes.
     pub fn from_bytes(bytes: &[u8]) -> anyhow::Result<Self> {
+        /// Invalid `Vote` CBOR encoded bytes error msg.
+        const INVALID_CBOR_BYTES_ERR: &str = "Invalid `Vote` CBOR encoded bytes";
+
         let val = ciborium::Value::from_slice(bytes)
-            .map_err(|_| anyhow!("Invalid `Vote` CBOR encoded bytes, not a CBOR encoded."))?;
+            .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, not a CBOR encoded."))?;
         let array = val
             .into_array()
-            .map_err(|_| anyhow!("Invalid `Vote` CBOR encoded bytes, must be an array."))?;
+            .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, must be array type."))?;
 
         ensure!(
             array.len() == 3,
-            "Invalid `Vote` CBOR encoded bytes, must be an array of length 3.",
+            "{INVALID_CBOR_BYTES_ERR}, must be an array of length 3.",
         );
 
         let mut iter = array.into_iter();
 
-        let ciborium::Value::Tag(ENCODED_CBOR_TAG, choice) = iter.next().ok_or(anyhow!(
-            "Invalid `Vote` CBOR encoded bytes, missing `choice` field."
-        ))?
+        let ciborium::Value::Tag(ENCODED_CBOR_TAG, choice) = iter
+            .next()
+            .ok_or(anyhow!("{INVALID_CBOR_BYTES_ERR}, missing `choice` field."))?
         else {
-            bail!("Invalid `Vote` CBOR encoded bytes, must be a major type 6 with tag {ENCODED_CBOR_TAG}.");
+            bail!("{INVALID_CBOR_BYTES_ERR}, must be a major type 6 with tag {ENCODED_CBOR_TAG}.");
         };
+        let choice = choice
+            .into_bytes()
+            .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, `choice` must be bytes type."))?;
 
-        let ciborium::Value::Tag(ENCODED_CBOR_TAG, proof) = iter.next().ok_or(anyhow!(
-            "Invalid `Vote` CBOR encoded bytes, missing `proof` field."
-        ))?
+        let ciborium::Value::Tag(ENCODED_CBOR_TAG, proof) = iter
+            .next()
+            .ok_or(anyhow!("{INVALID_CBOR_BYTES_ERR}, missing `proof` field."))?
         else {
-            bail!("Invalid `Vote` CBOR encoded bytes, must be a major type 6 with tag {ENCODED_CBOR_TAG}.");
+            bail!("{INVALID_CBOR_BYTES_ERR}, must be a major type 6 with tag {ENCODED_CBOR_TAG}.");
         };
+        let proof = proof
+            .into_bytes()
+            .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, `proof` must be bytes type."))?;
 
         let ciborium::Value::Tag(ENCODED_CBOR_TAG, prop_id) = iter.next().ok_or(anyhow!(
-            "Invalid `Vote` CBOR encoded bytes, missing `prod-id` field."
+            "{INVALID_CBOR_BYTES_ERR}, missing `prod-id` field."
         ))?
         else {
-            bail!("Invalid `Vote` CBOR encoded bytes, must be a major type 6 with tag {ENCODED_CBOR_TAG}.");
+            bail!("{INVALID_CBOR_BYTES_ERR}, must be a major type 6 with tag {ENCODED_CBOR_TAG}.");
         };
+        let prop_id = prop_id
+            .into_bytes()
+            .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, `prop-id` must be bytes type."))?;
 
         Ok(Self {
-            choice: *choice,
-            proof: *proof,
-            prop_id: *prop_id,
+            choice,
+            proof,
+            prop_id,
         })
     }
 }
