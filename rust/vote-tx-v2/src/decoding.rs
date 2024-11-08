@@ -1,7 +1,6 @@
 //! CBOR encoding and decoding implementation.
 
 use anyhow::{anyhow, bail, ensure};
-use coset::CborSerializable;
 
 use crate::Vote;
 
@@ -13,7 +12,7 @@ impl Vote {
     ///
     /// # Errors
     ///  - Cannot encode `Vote` to CBOR
-    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
+    pub fn write_to_bytes(&self, buf: &mut Vec<u8>) -> anyhow::Result<()> {
         let cbor_array = ciborium::Value::Array(vec![
             ciborium::Value::Tag(
                 ENCODED_CBOR_TAG,
@@ -35,10 +34,18 @@ impl Vote {
                 ciborium::Value::Bytes(self.prop_id.clone()).into(),
             ),
         ]);
-
-        cbor_array
-            .to_vec()
+        ciborium::ser::into_writer(&cbor_array, buf)
             .map_err(|_| anyhow!("Cannot encode `Vote` to CBOR"))
+    }
+
+    /// Encodes `Vote` to CBOR encoded bytes.
+    ///
+    /// # Errors
+    ///  - Cannot encode `Vote` to CBOR
+    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
+        let mut bytes = Vec::new();
+        self.write_to_bytes(&mut bytes)?;
+        Ok(bytes)
     }
 
     /// Decodes `Vote` from the CBOR encoded bytes.
@@ -49,8 +56,9 @@ impl Vote {
         /// Invalid `Vote` CBOR encoded bytes error msg.
         const INVALID_CBOR_BYTES_ERR: &str = "Invalid `Vote` CBOR encoded bytes";
 
-        let val = ciborium::Value::from_slice(bytes)
+        let val: ciborium::Value = ciborium::de::from_reader(bytes)
             .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, not a CBOR encoded."))?;
+
         let array = val
             .into_array()
             .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, must be array type."))?;
