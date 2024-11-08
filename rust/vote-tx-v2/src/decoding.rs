@@ -4,7 +4,7 @@ use std::fmt::Display;
 
 use anyhow::{anyhow, bail, ensure};
 
-use crate::{GeneralisedTxBody, Vote};
+use crate::Vote;
 
 /// `encoded-cbor` tag number
 const ENCODED_CBOR_TAG: u64 = 24;
@@ -19,46 +19,11 @@ fn cbor_encoding_err<T>(reason: impl Display) -> anyhow::Error {
     anyhow!("Cannot encode `{}`, {reason}.", std::any::type_name::<T>())
 }
 
-impl GeneralisedTxBody {
-    /// Encodes `Vote` to CBOR encoded bytes.
-    ///
-    /// # Errors
-    ///  - Cannot encode `Vote` to CBOR
-    pub fn write_to_bytes(&self, buf: &mut Vec<u8>) -> anyhow::Result<()> {
-        let cbor_array = ciborium::Value::Array(vec![]);
-        ciborium::ser::into_writer(&cbor_array, buf)
-            .map_err(|_| cbor_encoding_err::<Self>("interal `ciborioum` error"))
-    }
-
-    /// Encodes `Vote` to CBOR encoded bytes.
-    ///
-    /// # Errors
-    ///  - Cannot encode `Vote` to CBOR
-    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
-        let mut bytes = Vec::new();
-        self.write_to_bytes(&mut bytes)?;
-        Ok(bytes)
-    }
-
-    // /// Decodes `Vote` from the CBOR encoded bytes.
-    // ///
-    // /// # Errors
-    // ///  - Invalid `Vote` CBOR encoded bytes.
-    // pub fn from_bytes(bytes: &[u8]) -> anyhow::Result<Self> {
-    //     /// Invalid `Vote` CBOR encoded bytes error msg.
-    //     const INVALID_CBOR_BYTES_ERR: &str = "Invalid `GeneralisedTxBody` CBOR encoded
-    // bytes";
-
-    //     let val: ciborium::Value = ciborium::de::from_reader(bytes)
-    //         .map_err(|_| anyhow!("{INVALID_CBOR_BYTES_ERR}, not a CBOR encoded."))?;
-    // }
-}
-
 impl Vote {
     /// Encodes `Vote` to CBOR encoded bytes.
     ///
     /// # Errors
-    ///  - Cannot encode `Vote` to CBOR
+    ///  - Cannot encode `Vote`
     pub fn write_to_bytes(&self, buf: &mut Vec<u8>) -> anyhow::Result<()> {
         let cbor_array = ciborium::Value::Array(vec![
             ciborium::Value::Tag(
@@ -88,7 +53,7 @@ impl Vote {
     /// Encodes `Vote` to CBOR encoded bytes.
     ///
     /// # Errors
-    ///  - Cannot encode `Vote` to CBOR
+    ///  - Cannot encode `Vote`
     pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         let mut bytes = Vec::new();
         self.write_to_bytes(&mut bytes)?;
@@ -98,7 +63,7 @@ impl Vote {
     /// Decodes `Vote` from the CBOR encoded bytes.
     ///
     /// # Errors
-    ///  - Invalid `Vote` CBOR encoded bytes.
+    ///  - Cannot decode `GeneralisedTxBody`
     pub fn from_bytes(bytes: &[u8]) -> anyhow::Result<Self> {
         let val: ciborium::Value = ciborium::de::from_reader(bytes)
             .map_err(|_| cbor_decoding_err::<Self>("not a CBOR encoded"))?;
@@ -176,5 +141,19 @@ impl Vote {
             proof,
             prop_id,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_strategy::proptest;
+
+    use super::Vote;
+
+    #[proptest]
+    fn vote_from_bytes_to_bytes_test(vote: Vote) {
+        let bytes = vote.to_bytes().unwrap();
+        let decoded = Vote::from_bytes(&bytes).unwrap();
+        assert_eq!(vote, decoded);
     }
 }

@@ -17,4 +17,9 @@ workspace = true
 anyhow = "1.0.89"
 ciborium = { version = "0.2.2", default-features = false }
 cddl = { version = "0.9.4" }
-coset = { version = "0.3.8" }
+proptest = { version = "1.5.0" }
+
+[dev-dependencies]
+# Potentially it could be replaced with using `proptest::property_test` attribute macro,
+# after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
+test-strategy = "0.4.0"
