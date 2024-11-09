@@ -1,48 +1,37 @@
 //! A CDDL AST preprocessor.
-//! First processing step, which takes a CDDL `AST` and returning a list of CDDL
-//! `Expression`.
 //!
-//! Preprocessor steps:
-//! - Resolve #include and #import directives, by just adding the imported rules into the
-//!   final expression list
-//! - Resolves all generics by taking the generic arguments and substituting it.
+//! - Validates the root rule of the AST to be a `cddl` rule.
+//! - Filters out all rules that are not `expr` rules.
+//! - (TODO) Resolve #include and #import directives, by just adding the imported rules
+//!   into the final expression list
 
 use anyhow::{anyhow, ensure};
-use pest::{
-    iterators::{Pair, Pairs},
-    RuleType,
-};
+use pest::{iterators::Pair, RuleType};
 
-use crate::parser::{cddl, rfc_8610, rfc_9165, PestAst};
+use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
 
 /// Processes the AST.
-pub(crate) fn process_ast(ast: PestAst) -> anyhow::Result<()> {
+pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<Ast> {
     match ast {
-        PestAst::Rfc8610(ast) => {
-            let _exprs = process_root(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr)?;
+        Ast::Rfc8610(ast) => {
+            process_root(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr).map(Ast::Rfc8610)
         },
-        PestAst::Rfc9165(ast) => {
-            let _exprs = process_root(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr)?;
+        Ast::Rfc9165(ast) => {
+            process_root(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr).map(Ast::Rfc9165)
         },
-        PestAst::Cddl(ast) => {
-            let exprs = process_root(ast, cddl::Rule::cddl, cddl::Rule::expr)?;
-
-            for expr in exprs {
-                println!("{:?}", expr.as_rule());
-            }
-        },
+        Ast::Cddl(ast) => process_root(ast, cddl::Rule::cddl, cddl::Rule::expr).map(Ast::Cddl),
     }
-    Ok(())
 }
 
 /// Process the root rule of the AST.
 /// Returns a vector of expressions of the underlying AST.
 fn process_root<R: RuleType>(
-    mut ast: Pairs<'_, R>, root_rule: R, expr_rule: R,
+    ast: Vec<Pair<'_, R>>, root_rule: R, expr_rule: R,
 ) -> anyhow::Result<Vec<Pair<'_, R>>> {
-    let ast_root = ast.next().ok_or(anyhow!("Empty AST."))?;
+    let mut ast_iter = ast.into_iter();
+    let ast_root = ast_iter.next().ok_or(anyhow!("Empty AST."))?;
     ensure!(
-        ast_root.as_rule() == root_rule && ast.next().is_none(),
+        ast_root.as_rule() == root_rule && ast_iter.next().is_none(),
         "AST must have only one root rule, which must be a `{root_rule:?}` rule."
     );
     Ok(ast_root
