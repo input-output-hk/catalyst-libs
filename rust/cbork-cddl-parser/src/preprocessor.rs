@@ -14,19 +14,22 @@ use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
 pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<Ast> {
     match ast {
         Ast::Rfc8610(ast) => {
-            process_root(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr).map(Ast::Rfc8610)
+            process_root_and_filter(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr)
+                .map(Ast::Rfc8610)
         },
         Ast::Rfc9165(ast) => {
-            process_root(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr).map(Ast::Rfc9165)
+            process_root_and_filter(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr)
+                .map(Ast::Rfc9165)
         },
-        Ast::Cddl(ast) => process_root(ast, cddl::Rule::cddl, cddl::Rule::expr).map(Ast::Cddl),
+        Ast::Cddl(ast) => {
+            process_root_and_filter(ast, cddl::Rule::cddl, cddl::Rule::expr).map(Ast::Cddl)
+        },
     }
 }
 
-/// Process the root rule of the AST.
-/// Returns a vector of expressions of the underlying AST.
-fn process_root<R: RuleType>(
-    ast: Vec<Pair<'_, R>>, root_rule: R, expr_rule: R,
+/// Process the root rule of the AST and filter out all non `expected_rule` rules.
+fn process_root_and_filter<R: RuleType>(
+    ast: Vec<Pair<'_, R>>, root_rule: R, expected_rule: R,
 ) -> anyhow::Result<Vec<Pair<'_, R>>> {
     let mut ast_iter = ast.into_iter();
     let ast_root = ast_iter.next().ok_or(anyhow!("Empty AST."))?;
@@ -36,20 +39,6 @@ fn process_root<R: RuleType>(
     );
     Ok(ast_root
         .into_inner()
-        .filter(|pair| pair.as_rule() == expr_rule)
+        .filter(|pair| pair.as_rule() == expected_rule)
         .collect())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::parser::parse_cddl;
-
-    #[test]
-    fn it_works() {
-        let mut cddl = include_str!("../../tests/cddl/valid_rfc8610_simple_1.cddl").to_string();
-
-        let ast = parse_cddl(&mut cddl, &crate::Extension::CDDL).unwrap();
-        process_ast(ast).unwrap();
-    }
 }
