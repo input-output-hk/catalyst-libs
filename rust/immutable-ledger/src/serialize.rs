@@ -181,14 +181,18 @@ impl Block {
         if let Some(previous_block) = previous_block {
             // Standard block
             let hashed_previous_block = match self.block_header.previous_block_hash.0 {
-                HashFunction::Blake3 => (
-                    HashFunction::Blake3,
-                    blake3(&previous_block.to_bytes()?)?.to_vec(),
-                ),
-                HashFunction::Blake2b => (
-                    HashFunction::Blake2b,
-                    blake2b_512(&previous_block.to_bytes()?)?.to_vec(),
-                ),
+                HashFunction::Blake3 => {
+                    (
+                        HashFunction::Blake3,
+                        blake3(&previous_block.to_bytes()?)?.to_vec(),
+                    )
+                },
+                HashFunction::Blake2b => {
+                    (
+                        HashFunction::Blake2b,
+                        blake2b_512(&previous_block.to_bytes()?)?.to_vec(),
+                    )
+                },
             };
 
             // chain_id MUST be the same as for the previous block (except for genesis).
