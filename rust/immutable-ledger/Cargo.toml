@@ -25,3 +25,6 @@ workspace = true
 
 [dev-dependencies]
 test-strategy = "0.4.0"
+
+[package.metadata.cargo-machete]
+ignored = ["proptest"]
