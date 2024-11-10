@@ -73,7 +73,7 @@ const UUID_CBOR_TAG: u64 = 37;
 /// CBOR tag for UUID
 const ULID_CBOR_TAG: u64 = 32780;
 
-/// CBOR tags for BLAKE2 [2] and BLAKE3 [3] hash functions
+/// CBOR tags for BLAKE2 and BLAKE3 hash functions
 /// `https://github.com/input-output-hk/catalyst-voices/blob/main/docs/src/catalyst-standards/cbor_tags/blake.md`
 
 /// CBOR tag for UUID
