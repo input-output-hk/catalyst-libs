@@ -18,6 +18,10 @@ blake2b_simd = "1.0.2"
 blake3 = "=0.1.3"
 proptest = { version = "1.5.0" }
 
+[package.metadata.cargo-machete]
+ignored = ["proptest"]
+
+
 
 [lints]
 workspace = true
@@ -26,5 +30,4 @@ workspace = true
 [dev-dependencies]
 test-strategy = "0.4.0"
 
-[package.metadata.cargo-machete]
-ignored = ["proptest"]
+
