@@ -4,15 +4,27 @@
 mod decoding;
 
 /// A vote struct.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Vote {
     /// `choices` field
-    choices: Vec<Vec<u8>>,
+    choices: Vec<Choice>,
     /// `proof` field
-    proof: Vec<u8>,
+    proof: Proof,
     /// `prop-id` field
-    prop_id: Vec<u8>,
+    prop_id: PropId,
 }
+
+/// A choice struct.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Choice(Vec<u8>);
+
+/// A proof struct.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Proof(Vec<u8>);
+
+/// A prop id struct.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PropId(Vec<u8>);
 
 #[allow(missing_docs, clippy::missing_docs_in_private_items)]
 mod arbitrary_impl {
@@ -21,7 +33,7 @@ mod arbitrary_impl {
         sample::size_range,
     };
 
-    use super::Vote;
+    use super::{Choice, Proof, PropId, Vote};
 
     impl Arbitrary for Vote {
         type Parameters = ();
@@ -35,9 +47,9 @@ mod arbitrary_impl {
             ))
             .prop_map(|(choices, proof, prop_id)| {
                 Self {
-                    choices,
-                    proof,
-                    prop_id,
+                    choices: choices.into_iter().map(Choice).collect(),
+                    proof: Proof(proof),
+                    prop_id: PropId(prop_id),
                 }
             })
             .boxed()

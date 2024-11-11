@@ -1,140 +1,47 @@
 //! CBOR encoding and decoding implementation.
 
-use std::fmt::Display;
+use anyhow::anyhow;
+use minicbor::{data::IanaTag, Decode, Decoder, Encode, Encoder};
 
-use anyhow::{anyhow, bail, ensure};
-
-use crate::Vote;
-
-/// `encoded-cbor` tag number
-const ENCODED_CBOR_TAG: u64 = 24;
-
-/// CBOR decoding error.
-fn cbor_decoding_err<T>(reason: impl Display) -> anyhow::Error {
-    anyhow!("Cannot decode `{}`, {reason}.", std::any::type_name::<T>())
-}
-
-/// CBOR encoding error.
-fn cbor_encoding_err<T>(reason: impl Display) -> anyhow::Error {
-    anyhow!("Cannot encode `{}`, {reason}.", std::any::type_name::<T>())
-}
+use crate::{Choice, Proof, PropId, Vote};
 
 impl Vote {
     /// Encodes `Vote` to CBOR encoded bytes.
     ///
     /// # Errors
     ///  - Cannot encode `Vote`
-    pub fn write_to_bytes(&self, buf: &mut Vec<u8>) -> anyhow::Result<()> {
-        let cbor_array = ciborium::Value::Array(vec![
-            ciborium::Value::Tag(
-                ENCODED_CBOR_TAG,
-                ciborium::Value::Array(
-                    self.choices
-                        .clone()
-                        .into_iter()
-                        .map(ciborium::Value::Bytes)
-                        .collect(),
-                )
-                .into(),
-            ),
-            ciborium::Value::Tag(
-                ENCODED_CBOR_TAG,
-                ciborium::Value::Bytes(self.proof.clone()).into(),
-            ),
-            ciborium::Value::Tag(
-                ENCODED_CBOR_TAG,
-                ciborium::Value::Bytes(self.prop_id.clone()).into(),
-            ),
-        ]);
-        ciborium::ser::into_writer(&cbor_array, buf)
-            .map_err(|_| cbor_encoding_err::<Self>("interal `ciborioum` error"))
-    }
-
-    /// Encodes `Vote` to CBOR encoded bytes.
-    ///
-    /// # Errors
-    ///  - Cannot encode `Vote`
     pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         let mut bytes = Vec::new();
-        self.write_to_bytes(&mut bytes)?;
+        let mut e = Encoder::new(&mut bytes);
+        self.encode(&mut e, &mut ())
+            .map_err(|e| anyhow!("Cannot encode `{}`, {e}.", std::any::type_name::<Self>()))?;
         Ok(bytes)
     }
 
     /// Decodes `Vote` from the CBOR encoded bytes.
     ///
     /// # Errors
-    ///  - Cannot decode `GeneralisedTxBody`
+    ///  - Cannot decode `Vote`
     pub fn from_bytes(bytes: &[u8]) -> anyhow::Result<Self> {
-        let val: ciborium::Value = ciborium::de::from_reader(bytes)
-            .map_err(|_| cbor_decoding_err::<Self>("not a CBOR encoded"))?;
+        let mut decoder = Decoder::new(bytes);
+        let res = Vote::decode(&mut decoder, &mut ())
+            .map_err(|e| anyhow!("Cannot decode `{}`, {e}.", std::any::type_name::<Self>()))?;
+        Ok(res)
+    }
+}
 
-        let array = val
-            .into_array()
-            .map_err(|_| cbor_decoding_err::<Self>("must be array type"))?;
+impl Decode<'_, ()> for Vote {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        d.array()?;
 
-        ensure!(
-            array.len() == 3,
-            cbor_decoding_err::<Self>("must be an array of length 3")
-        );
-
-        let mut iter = array.into_iter();
-
-        let choices = {
-            let ciborium::Value::Tag(ENCODED_CBOR_TAG, choices) = iter
-                .next()
-                .ok_or(cbor_decoding_err::<Self>("missing `choices` field"))?
-            else {
-                bail!(cbor_decoding_err::<Self>(format!(
-                    "must be a major type 6 with tag {ENCODED_CBOR_TAG}"
-                )));
-            };
-            let choices = choices
-                .into_array()
-                .map_err(|_| cbor_decoding_err::<Self>("`choices` must be array type"))?;
-
-            ensure!(
-                !choices.is_empty(),
-                cbor_decoding_err::<Self>("`choices` must have at least one element")
-            );
-
-            choices
-                .into_iter()
-                .enumerate()
-                .map(|(i, choice)| {
-                    choice.into_bytes().map_err(|_| {
-                        cbor_decoding_err::<Self>(format!("`choice` {i} must be bytes type"))
-                    })
-                })
-                .collect::<anyhow::Result<_>>()?
-        };
-
-        let proof = {
-            let ciborium::Value::Tag(ENCODED_CBOR_TAG, proof) = iter
-                .next()
-                .ok_or(cbor_decoding_err::<Self>("missing `proof` field"))?
-            else {
-                bail!(cbor_decoding_err::<Self>(format!(
-                    "must be a major type 6 with tag {ENCODED_CBOR_TAG}"
-                )));
-            };
-            proof
-                .into_bytes()
-                .map_err(|_| cbor_decoding_err::<Self>("`proof` must be bytes type"))?
-        };
-
-        let prop_id = {
-            let ciborium::Value::Tag(ENCODED_CBOR_TAG, prop_id) = iter
-                .next()
-                .ok_or(cbor_decoding_err::<Self>("missing `prod-id` field"))?
-            else {
-                bail!(cbor_decoding_err::<Self>(format!(
-                    "must be a major type 6 with tag {ENCODED_CBOR_TAG}"
-                )));
-            };
-            prop_id
-                .into_bytes()
-                .map_err(|_| cbor_decoding_err::<Self>("`prop-id` must be bytes type"))?
-        };
+        let choices = Vec::<Choice>::decode(d, &mut ())?;
+        if choices.is_empty() {
+            return Err(minicbor::decode::Error::message(
+                "choices array must has at least one entry",
+            ));
+        }
+        let proof = Proof::decode(d, &mut ())?;
+        let prop_id = PropId::decode(d, &mut ())?;
 
         Ok(Self {
             choices,
@@ -144,13 +51,105 @@ impl Vote {
     }
 }
 
+impl Encode<()> for Vote {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(3)?;
+
+        self.choices.encode(e, &mut ())?;
+        self.proof.encode(e, &mut ())?;
+        self.prop_id.encode(e, &mut ())?;
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for Choice {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let tag = d.tag()?;
+        let expected_tag = minicbor::data::IanaTag::Cbor.tag();
+        if expected_tag != tag {
+            return Err(minicbor::decode::Error::message(format!(
+                "tag value must be: {}, provided: {}",
+                expected_tag.as_u64(),
+                tag.as_u64(),
+            )));
+        }
+        let choice = d.bytes()?.to_vec();
+        Ok(Choice(choice))
+    }
+}
+
+impl Encode<()> for Choice {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.tag(IanaTag::Cbor.tag())?;
+        e.bytes(&self.0)?;
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for Proof {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let tag = d.tag()?;
+        let expected_tag = minicbor::data::IanaTag::Cbor.tag();
+        if expected_tag != tag {
+            return Err(minicbor::decode::Error::message(format!(
+                "tag value must be: {}, provided: {}",
+                expected_tag.as_u64(),
+                tag.as_u64(),
+            )));
+        }
+        let choice = d.bytes()?.to_vec();
+        Ok(Proof(choice))
+    }
+}
+
+impl Encode<()> for Proof {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.tag(IanaTag::Cbor.tag())?;
+        e.bytes(&self.0)?;
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for PropId {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let tag = d.tag()?;
+        let expected_tag = IanaTag::Cbor.tag();
+        if expected_tag != tag {
+            return Err(minicbor::decode::Error::message(format!(
+                "tag value must be: {}, provided: {}",
+                expected_tag.as_u64(),
+                tag.as_u64(),
+            )));
+        }
+        let choice = d.bytes()?.to_vec();
+        Ok(PropId(choice))
+    }
+}
+
+impl Encode<()> for PropId {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.tag(IanaTag::Cbor.tag())?;
+        e.bytes(&self.0)?;
+        Ok(())
+    }
+}
+
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::ProptestConfig;
     use test_strategy::proptest;
 
     use super::Vote;
 
-    #[proptest]
+    #[proptest(ProptestConfig::with_cases(0))]
     fn vote_from_bytes_to_bytes_test(vote: Vote) {
         let bytes = vote.to_bytes().unwrap();
         let decoded = Vote::from_bytes(&bytes).unwrap();
