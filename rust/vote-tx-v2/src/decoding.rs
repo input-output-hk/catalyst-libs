@@ -1,7 +1,9 @@
 //! CBOR encoding and decoding implementation.
 
-use anyhow::anyhow;
-use minicbor::{data::IanaTag, Decode, Decoder, Encode, Encoder};
+use minicbor::{
+    data::{IanaTag, Tag},
+    Decode, Decoder, Encode, Encoder,
+};
 
 use crate::{Choice, Proof, PropId, TxBody, Uuid, Vote, VoterData};
 
@@ -13,31 +15,6 @@ const VOTE_LEN: u64 = 3;
 
 /// `TxBody` array struct length
 const TX_BODY_LEN: u64 = 3;
-
-impl TxBody {
-    /// Encodes `TxBody` to CBOR encoded bytes.
-    ///
-    /// # Errors
-    ///  - Cannot encode `TxBody`
-    pub fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
-        let mut bytes = Vec::new();
-        let mut e = Encoder::new(&mut bytes);
-        self.encode(&mut e, &mut ())
-            .map_err(|e| anyhow!("Cannot encode `{}`, {e}.", std::any::type_name::<Self>()))?;
-        Ok(bytes)
-    }
-
-    /// Decodes `TxBody` from the CBOR encoded bytes.
-    ///
-    /// # Errors
-    ///  - Cannot decode `TxBody`
-    pub fn from_bytes(bytes: &[u8]) -> anyhow::Result<Self> {
-        let mut decoder = Decoder::new(bytes);
-        let res = Self::decode(&mut decoder, &mut ())
-            .map_err(|e| anyhow!("Cannot decode `{}`, {e}.", std::any::type_name::<Self>()))?;
-        Ok(res)
-    }
-}
 
 impl Decode<'_, ()> for TxBody {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
@@ -114,7 +91,7 @@ impl Encode<()> for Uuid {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(IanaTag::Cbor.tag())?;
+        e.tag(Tag::new(CBOR_UUID_TAG))?;
         e.bytes(&self.0)?;
         Ok(())
     }
@@ -237,15 +214,22 @@ impl Encode<()> for PropId {
 
 #[cfg(test)]
 mod tests {
-    use proptest::prelude::ProptestConfig;
     use test_strategy::proptest;
 
-    use super::TxBody;
+    use super::*;
+    use crate::Cbor;
 
-    #[proptest(ProptestConfig::with_cases(0))]
-    fn vote_from_bytes_to_bytes_test(tx_body: TxBody) {
+    #[proptest]
+    fn tx_body_from_bytes_to_bytes_test(tx_body: TxBody) {
         let bytes = tx_body.to_bytes().unwrap();
         let decoded = TxBody::from_bytes(&bytes).unwrap();
         assert_eq!(tx_body, decoded);
+    }
+
+    #[proptest]
+    fn vote_from_bytes_to_bytes_test(vote: Vote) {
+        let bytes = vote.to_bytes().unwrap();
+        let decoded = Vote::from_bytes(&bytes).unwrap();
+        assert_eq!(vote, decoded);
     }
 }
