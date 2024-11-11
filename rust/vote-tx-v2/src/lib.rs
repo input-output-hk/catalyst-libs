@@ -6,9 +6,9 @@ use minicbor::{Decode, Decoder, Encode, Encoder};
 
 mod decoding;
 
-/// A geeneralised tx struct.
+/// A generalized tx struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct GeneralisedTx {
+pub struct GeneralizedTx {
     /// `tx-body`
     tx_body: TxBody,
 }
@@ -90,9 +90,9 @@ mod arbitrary_impl {
         sample::size_range,
     };
 
-    use super::{Choice, GeneralisedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
+    use super::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
 
-    impl Arbitrary for GeneralisedTx {
+    impl Arbitrary for GeneralizedTx {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
 

@@ -6,7 +6,7 @@ use minicbor::{
     Decode, Decoder, Encode, Encoder,
 };
 
-use crate::{Choice, GeneralisedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
+use crate::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const CBOR_UUID_TAG: u64 = 37;
@@ -17,10 +17,10 @@ const VOTE_LEN: u64 = 3;
 /// `TxBody` array struct length
 const TX_BODY_LEN: u64 = 3;
 
-/// `GeneralisedTx` array struct length
-const GENERALISED_TX_LEN: u64 = 1;
+/// `GeneralizedTx` array struct length
+const GENERALIZED_TX_LEN: u64 = 1;
 
-impl Decode<'_, ()> for GeneralisedTx {
+impl Decode<'_, ()> for GeneralizedTx {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         d.array()?;
         let tx_body = TxBody::decode(d, &mut ())?;
@@ -28,11 +28,11 @@ impl Decode<'_, ()> for GeneralisedTx {
     }
 }
 
-impl Encode<()> for GeneralisedTx {
+impl Encode<()> for GeneralizedTx {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.array(GENERALISED_TX_LEN)?;
+        e.array(GENERALIZED_TX_LEN)?;
         self.tx_body.encode(e, &mut ())?;
         Ok(())
     }
@@ -231,10 +231,10 @@ mod tests {
     use crate::Cbor;
 
     #[proptest]
-    fn generalised_tx_from_bytes_to_bytes_test(generalised_tx: GeneralisedTx) {
-        let bytes = generalised_tx.to_bytes().unwrap();
-        let decoded = GeneralisedTx::from_bytes(&bytes).unwrap();
-        assert_eq!(generalised_tx, decoded);
+    fn generalized_tx_from_bytes_to_bytes_test(generalized_tx: GeneralizedTx) {
+        let bytes = generalized_tx.to_bytes().unwrap();
+        let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
+        assert_eq!(generalized_tx, decoded);
     }
 
     #[proptest]
