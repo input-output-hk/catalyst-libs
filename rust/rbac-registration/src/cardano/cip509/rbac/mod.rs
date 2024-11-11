@@ -5,6 +5,7 @@
 pub mod certs;
 pub mod pub_key;
 pub mod role_data;
+pub(crate) mod tag;
 
 use std::collections::HashMap;
 
