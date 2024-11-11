@@ -5,7 +5,7 @@ use minicbor::{
     Decode, Decoder, Encode, Encoder,
 };
 
-use crate::{Choice, Proof, PropId, TxBody, Uuid, Vote, VoterData};
+use crate::{Choice, GeneralisedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const CBOR_UUID_TAG: u64 = 37;
@@ -16,18 +16,34 @@ const VOTE_LEN: u64 = 3;
 /// `TxBody` array struct length
 const TX_BODY_LEN: u64 = 3;
 
+/// `GeneralisedTx` array struct length
+const GENERALISED_TX_LEN: u64 = 1;
+
+impl Decode<'_, ()> for GeneralisedTx {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        d.array()?;
+        let tx_body = TxBody::decode(d, &mut ())?;
+        Ok(Self { tx_body })
+    }
+}
+
+impl Encode<()> for GeneralisedTx {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(GENERALISED_TX_LEN)?;
+        self.tx_body.encode(e, &mut ())?;
+        Ok(())
+    }
+}
+
 impl Decode<'_, ()> for TxBody {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let Some(TX_BODY_LEN) = d.array()? else {
-            return Err(minicbor::decode::Error::message(format!(
-                "must be a defined sized array with {TX_BODY_LEN} entries"
-            )));
-        };
-
+        d.array()?;
         let vote_type = Uuid::decode(d, &mut ())?;
         let votes = Vec::<Vote>::decode(d, &mut ())?;
         let voter_data = VoterData::decode(d, &mut ())?;
-        Ok(TxBody {
+        Ok(Self {
             vote_type,
             votes,
             voter_data,
@@ -99,12 +115,7 @@ impl Encode<()> for Uuid {
 
 impl Decode<'_, ()> for Vote {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let Some(VOTE_LEN) = d.array()? else {
-            return Err(minicbor::decode::Error::message(format!(
-                "must be a defined sized array with {VOTE_LEN} entries"
-            )));
-        };
-
+        d.array()?;
         let choices = Vec::<Choice>::decode(d, &mut ())?;
         if choices.is_empty() {
             return Err(minicbor::decode::Error::message(
@@ -113,7 +124,6 @@ impl Decode<'_, ()> for Vote {
         }
         let proof = Proof::decode(d, &mut ())?;
         let prop_id = PropId::decode(d, &mut ())?;
-
         Ok(Self {
             choices,
             proof,
@@ -218,6 +228,13 @@ mod tests {
 
     use super::*;
     use crate::Cbor;
+
+    #[proptest]
+    fn generalised_tx_from_bytes_to_bytes_test(generalised_tx: GeneralisedTx) {
+        let bytes = generalised_tx.to_bytes().unwrap();
+        let decoded = GeneralisedTx::from_bytes(&bytes).unwrap();
+        assert_eq!(generalised_tx, decoded);
+    }
 
     #[proptest]
     fn tx_body_from_bytes_to_bytes_test(tx_body: TxBody) {

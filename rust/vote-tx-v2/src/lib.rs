@@ -6,6 +6,13 @@ use minicbor::{Decode, Decoder, Encode, Encoder};
 
 mod decoding;
 
+/// A geeneralised tx struct.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GeneralisedTx {
+    /// `tx-body`
+    tx_body: TxBody,
+}
+
 /// A tx body struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TxBody {
@@ -83,8 +90,16 @@ mod arbitrary_impl {
         sample::size_range,
     };
 
-    use super::{Choice, Proof, PropId, Uuid, Vote, VoterData};
-    use crate::TxBody;
+    use super::{Choice, GeneralisedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
+
+    impl Arbitrary for GeneralisedTx {
+        type Parameters = ();
+        type Strategy = BoxedStrategy<Self>;
+
+        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
+            any::<TxBody>().prop_map(|tx_body| Self { tx_body }).boxed()
+        }
+    }
 
     impl Arbitrary for TxBody {
         type Parameters = ();
