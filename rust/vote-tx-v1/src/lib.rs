@@ -6,7 +6,7 @@
 //!     crypto::{ed25519::PrivateKey, rng::default_rng},
 //!     vote_protocol::committee::ElectionSecretKey,
 //! };
-//! use jormungandr_vote_tx::Tx;
+//! use vote_tx_v1::Tx;
 //!
 //! let vote_plan_id = [0u8; 32];
 //! let proposal_index = 0u8;
