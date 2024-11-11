@@ -1,4 +1,5 @@
 //! CBOR encoding and decoding implementation.
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl>
 
 use minicbor::{
     data::{IanaTag, Tag},
