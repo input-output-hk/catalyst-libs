@@ -22,7 +22,12 @@ const GENERALIZED_TX_LEN: u64 = 1;
 
 impl Decode<'_, ()> for GeneralizedTx {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        d.array()?;
+        let Some(GENERALIZED_TX_LEN) = d.array()? else {
+            return Err(minicbor::decode::Error::message(format!(
+                "must be a defined sized array with {GENERALIZED_TX_LEN} entries"
+            )));
+        };
+
         let tx_body = TxBody::decode(d, &mut ())?;
         Ok(Self { tx_body })
     }
@@ -40,7 +45,12 @@ impl Encode<()> for GeneralizedTx {
 
 impl Decode<'_, ()> for TxBody {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        d.array()?;
+        let Some(TX_BODY_LEN) = d.array()? else {
+            return Err(minicbor::decode::Error::message(format!(
+                "must be a defined sized array with {GENERALIZED_TX_LEN} entries"
+            )));
+        };
+
         let vote_type = Uuid::decode(d, &mut ())?;
         let votes = Vec::<Vote>::decode(d, &mut ())?;
         let voter_data = VoterData::decode(d, &mut ())?;
@@ -116,7 +126,12 @@ impl Encode<()> for Uuid {
 
 impl Decode<'_, ()> for Vote {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        d.array()?;
+        let Some(VOTE_LEN) = d.array()? else {
+            return Err(minicbor::decode::Error::message(format!(
+                "must be a defined sized array with {VOTE_LEN} entries"
+            )));
+        };
+
         let choices = Vec::<Choice>::decode(d, &mut ())?;
         if choices.is_empty() {
             return Err(minicbor::decode::Error::message(
