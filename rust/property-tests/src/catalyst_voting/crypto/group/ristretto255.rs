@@ -10,10 +10,10 @@ use proptest::{
 use test_strategy::proptest;
 
 #[derive(Debug)]
-pub struct Scalar(pub LibScalar);
+pub(crate) struct Scalar(pub(crate) LibScalar);
 
 #[derive(Debug)]
-pub struct GroupElement(pub LibGroupElement);
+pub(crate) struct GroupElement(pub(crate) LibGroupElement);
 
 impl Arbitrary for Scalar {
     type Parameters = ();
@@ -68,4 +68,20 @@ fn group_element_arithmetic_tests(e1: Scalar, e2: Scalar) {
 
     let ge = LibGroupElement::GENERATOR.mul(&e1).mul(&e1.inverse());
     assert_eq!(ge, LibGroupElement::GENERATOR);
+}
+
+#[proptest]
+fn scalar_to_bytes_from_bytes_test(e1: Scalar) {
+    let e1 = e1.0;
+    let bytes = e1.to_bytes();
+    let e2 = LibScalar::from_bytes(bytes).unwrap();
+    assert_eq!(e1, e2);
+}
+
+#[proptest]
+fn group_element_to_bytes_from_bytes_test(ge1: GroupElement) {
+    let ge1 = ge1.0;
+    let bytes = ge1.to_bytes();
+    let ge2 = LibGroupElement::from_bytes(&bytes).unwrap();
+    assert_eq!(ge1, ge2);
 }

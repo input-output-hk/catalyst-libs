@@ -10,7 +10,7 @@ members = [
     "catalyst-voting",
     "vote-tx-v1",
     "vote-tx-v2",
-    "proptest-entities",
+    "property-tests",
 ]
 
 [workspace.package]
