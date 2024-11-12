@@ -1,1 +1,1 @@
-pub mod crypto;
+pub(crate) mod crypto;

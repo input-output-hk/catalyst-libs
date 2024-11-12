@@ -1,1 +1,1 @@
-pub mod ristretto255;
+pub(crate) mod ristretto255;
