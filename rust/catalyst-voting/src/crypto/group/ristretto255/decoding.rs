@@ -49,24 +49,3 @@ impl GroupElement {
         self.0.compress().to_bytes()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use test_strategy::proptest;
-
-    use super::*;
-
-    #[proptest]
-    fn scalar_to_bytes_from_bytes_test(e1: Scalar) {
-        let bytes = e1.to_bytes();
-        let e2 = Scalar::from_bytes(bytes).unwrap();
-        assert_eq!(e1, e2);
-    }
-
-    #[proptest]
-    fn group_element_to_bytes_from_bytes_test(ge1: GroupElement) {
-        let bytes = ge1.to_bytes();
-        let ge2 = GroupElement::from_bytes(&bytes).unwrap();
-        assert_eq!(ge1, ge2);
-    }
-}

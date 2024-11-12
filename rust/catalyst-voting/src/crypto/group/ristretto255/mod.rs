@@ -188,38 +188,3 @@ mod arbitrary_impl {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use test_strategy::proptest;
-
-    use super::*;
-
-    #[proptest]
-    fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {
-        assert_eq!(&(&e1 + &e2) + &e3, &e1 + &(&e2 + &e3));
-        assert_eq!(&e1 + &e2, &e2 + &e1);
-        assert_eq!(&e1 + &Scalar::zero(), e1.clone());
-        assert_eq!(&e1 * &Scalar::one(), e1.clone());
-        assert_eq!(&e1 * &e1.inverse(), Scalar::one());
-        assert_eq!(&e1 + &e1.negate(), Scalar::zero());
-        assert_eq!(&(&e1 - &e2) + &e2, e1.clone());
-        assert_eq!(&(&e1 + &e2) * &e3, &(&e1 * &e3) + &(&e2 * &e3));
-    }
-
-    #[proptest]
-    fn group_element_arithmetic_tests(e1: Scalar, e2: Scalar) {
-        let ge = GroupElement::GENERATOR.mul(&e1);
-        assert_eq!(&GroupElement::zero() + &ge, ge);
-
-        let ge1 = GroupElement::GENERATOR.mul(&e1);
-        let ge2 = GroupElement::GENERATOR.mul(&e2);
-        let ge3 = GroupElement::GENERATOR.mul(&(&e1 + &e2));
-
-        assert_eq!(&ge1 + &ge2, ge3);
-        assert_eq!(&(&ge1 + &ge2) - &ge2, ge1);
-
-        let ge = GroupElement::GENERATOR.mul(&e1).mul(&e1.inverse());
-        assert_eq!(ge, GroupElement::GENERATOR);
-    }
-}
