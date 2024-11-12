@@ -9,7 +9,8 @@ members = [
     "cbork-cddl-parser",
     "catalyst-voting",
     "vote-tx-v1",
-    "vote-tx-v2", "proptest-entities",
+    "vote-tx-v2",
+    "proptest-entities",
 ]
 
 [workspace.package]

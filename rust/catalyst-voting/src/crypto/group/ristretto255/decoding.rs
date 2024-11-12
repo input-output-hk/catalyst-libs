@@ -20,6 +20,7 @@ impl Scalar {
     }
 
     /// Convert this `Scalar` to its underlying sequence of bytes.
+    #[must_use]
     pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
         self.0.to_bytes()
     }
@@ -43,6 +44,7 @@ impl GroupElement {
 
     /// Convert this `GroupElement` to its underlying sequence of bytes.
     /// Always encode the compressed value.
+    #[must_use]
     pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
         self.0.compress().to_bytes()
     }
