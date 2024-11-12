@@ -3,4 +3,5 @@
 
 mod ristretto255;
 
-pub(crate) use ristretto255::{GroupElement, Scalar};
+#[allow(clippy::module_name_repetitions)]
+pub use ristretto255::{GroupElement, Scalar};
