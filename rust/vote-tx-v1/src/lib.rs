@@ -295,7 +295,7 @@ impl VotePayload {
     }
 }
 
-#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+#[cfg(test)]
 mod arbitrary_impl {
     use catalyst_voting::crypto::ed25519::PrivateKey;
     use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
@@ -364,9 +364,10 @@ mod tests {
     #[proptest]
     fn tx_test(
         vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
-        #[strategy(0..#voting_options)] choice: u8, users_private_key: PrivateKey,
-        election_secret_key: ElectionSecretKey,
+        #[strategy(0..#voting_options)] choice: u8,
     ) {
+        let users_private_key = PrivateKey::random_with_default_rng();
+        let election_secret_key = ElectionSecretKey::random_with_default_rng();
         let election_public_key = election_secret_key.public_key();
 
         let tx = Tx::new_public(
