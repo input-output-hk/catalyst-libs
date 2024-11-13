@@ -10,7 +10,7 @@ COPY_SRC:
         .cargo .config \
         c509-certificate \
         cardano-chain-follower \
-        catalyst-voting jormungandr-vote-tx \
+        catalyst-voting vote-tx-v1 vote-tx-v2 \
         cbork cbork-abnf-parser cbork-cddl-parser \
         hermes-ipfs \
         .
@@ -53,7 +53,7 @@ build:
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting --libs=jormungandr-vote-tx" \
+        --args3="--libs=catalyst-voting --libs=vote-tx-v1 --libs=vote-tx-v2" \
         --args4="--bins=cbork/cbork" \
         --args5="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \

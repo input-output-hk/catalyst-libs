@@ -7,7 +7,7 @@ tx-body<choice-t, proof-t, prop-id-t> = [
     vote-type
     event,
     votes<choice-t, proof-t, prop-id-t>,
-    voters-data,
+    voter-data,
 ]
 
 vote-type = UUID ; e.g. Public or Private vote
@@ -25,7 +25,7 @@ choice<choice-t> = #6.24(bytes .cbor choice-t) ; encoded-cbor
 proof<proof-t> = #6.24(bytes .cbor proof-t) ; encoded-cbor
 prop-id<prop-id-t> = #6.24(bytes .cbor prop-id-t) ; encoded-cbor
 
-voters-data = encoded-cbor
+voter-data = encoded-cbor
 
 UUID = #6.37(bytes) ; UUID type
 signature = #6.98(cose.COSE_Sign) ; COSE signature

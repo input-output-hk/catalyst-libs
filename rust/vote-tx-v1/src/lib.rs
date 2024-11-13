@@ -1,12 +1,12 @@
-//! A Jörmungandr transaction object structured following this
-//! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/jorm/)
+//! A Catalyst v1 (Jörmungandr) vote transaction object, structured following this
+//! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/v1/)
 //!
 //! ```rust
 //! use catalyst_voting::{
 //!     crypto::{ed25519::PrivateKey, rng::default_rng},
 //!     vote_protocol::committee::ElectionSecretKey,
 //! };
-//! use jormungandr_vote_tx::Tx;
+//! use vote_tx_v1::Tx;
 //!
 //! let vote_plan_id = [0u8; 32];
 //! let proposal_index = 0u8;
@@ -65,7 +65,7 @@ use catalyst_voting::{
     },
 };
 
-/// A v1 (Jörmungandr) transaction struct
+/// A v1 (Jörmungandr) vote transaction struct
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct Tx {
