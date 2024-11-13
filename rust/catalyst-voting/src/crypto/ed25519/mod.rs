@@ -52,7 +52,7 @@ pub fn verify_signature(pk: &PublicKey, msg: &[u8], sig: &Signature) -> bool {
     pk.0.verify_strict(msg, &sig.0).is_ok()
 }
 
-#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+#[cfg(test)]
 mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
 
