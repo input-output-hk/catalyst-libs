@@ -297,56 +297,51 @@ impl VotePayload {
 
 #[cfg(test)]
 mod arbitrary_impl {
-    use catalyst_voting::crypto::ed25519::PrivateKey;
-    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
+    use catalyst_voting::crypto::{ed25519::PrivateKey, rng::default_rng};
+    use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
 
-    use super::{EncryptedVote, Signature, Tx, VotePayload, VoterProof};
+    use super::{ElectionSecretKey, Tx};
 
     impl Arbitrary for Tx {
         type Parameters = ();
         type Strategy = BoxedStrategy<Self>;
 
         fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<(
-                [u8; 32],
-                u8,
-                VotePayload,
-                PrivateKey,
-                [u8; Signature::BYTES_SIZE],
-            )>()
-            .prop_map(
-                |(vote_plan_id, proposal_index, vote, sk, signature_bytes)| {
-                    Tx {
-                        vote_plan_id,
-                        proposal_index,
-                        vote,
-                        public_key: sk.public_key(),
-                        signature: Signature::from_bytes(&signature_bytes),
-                    }
-                },
-            )
-            .boxed()
-        }
-    }
-
-    impl Arbitrary for VotePayload {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<bool>()
-                .prop_flat_map(|b| {
-                    if b {
-                        any::<u8>().prop_map(VotePayload::Public).boxed()
-                    } else {
-                        any::<(u8, u8)>()
-                            .prop_flat_map(|(s1, s2)| {
-                                any_with::<(EncryptedVote, VoterProof)>((s1.into(), s2.into()))
-                                    .prop_map(|(v, p)| VotePayload::Private(v, p))
+            any::<([u8; 32], bool, u8, u8)>()
+                .prop_flat_map(
+                    |(vote_plan_id, is_public, voting_options, proposal_index)| {
+                        (0..voting_options)
+                            .prop_map(move |choice| {
+                                let mut rng = default_rng();
+                                if is_public {
+                                    let users_private_key = PrivateKey::random(&mut rng);
+                                    Tx::new_public(
+                                        vote_plan_id,
+                                        proposal_index,
+                                        voting_options,
+                                        choice,
+                                        &users_private_key,
+                                    )
+                                    .unwrap()
+                                } else {
+                                    let users_private_key = PrivateKey::random(&mut rng);
+                                    let election_secret_key =
+                                        ElectionSecretKey::random_with_default_rng();
+                                    let election_public_key = election_secret_key.public_key();
+                                    Tx::new_private_with_default_rng(
+                                        vote_plan_id,
+                                        proposal_index,
+                                        voting_options,
+                                        choice,
+                                        &election_public_key,
+                                        &users_private_key,
+                                    )
+                                    .unwrap()
+                                }
                             })
                             .boxed()
-                    }
-                })
+                    },
+                )
                 .boxed()
         }
     }
