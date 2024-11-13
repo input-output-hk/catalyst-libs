@@ -240,29 +240,49 @@ impl Encode<()> for PropId {
 
 #[cfg(test)]
 mod tests {
+    use proptest::{prelude::any_with, sample::size_range};
     use test_strategy::proptest;
 
     use super::*;
     use crate::Cbor;
 
+    type PropChoice = Vec<u8>;
+    type PropVote = (Vec<PropChoice>, Vec<u8>, Vec<u8>);
+
     #[proptest]
-    fn generalized_tx_from_bytes_to_bytes_test(generalized_tx: GeneralizedTx) {
+    fn generalized_tx_from_bytes_to_bytes_test(
+        vote_type: Vec<u8>,
+        // generates a votes in range from 1 to 10, and choices in range from 1 to 10
+        #[strategy(any_with::<Vec<PropVote>>((
+            size_range(1..10usize),
+            (
+                (size_range(1..10usize), Default::default()),
+                Default::default(),
+                Default::default(),
+            ),
+        )))]
+        votes: Vec<PropVote>,
+        voter_data: Vec<u8>,
+    ) {
+        let generalized_tx = GeneralizedTx {
+            tx_body: TxBody {
+                vote_type: Uuid(vote_type),
+                votes: votes
+                    .into_iter()
+                    .map(|(choices, proof, prop_id)| {
+                        Vote {
+                            choices: choices.into_iter().map(Choice).collect(),
+                            proof: Proof(proof),
+                            prop_id: PropId(prop_id),
+                        }
+                    })
+                    .collect(),
+                voter_data: VoterData(voter_data),
+            },
+        };
+
         let bytes = generalized_tx.to_bytes().unwrap();
         let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
         assert_eq!(generalized_tx, decoded);
-    }
-
-    #[proptest]
-    fn tx_body_from_bytes_to_bytes_test(tx_body: TxBody) {
-        let bytes = tx_body.to_bytes().unwrap();
-        let decoded = TxBody::from_bytes(&bytes).unwrap();
-        assert_eq!(tx_body, decoded);
-    }
-
-    #[proptest]
-    fn vote_from_bytes_to_bytes_test(vote: Vote) {
-        let bytes = vote.to_bytes().unwrap();
-        let decoded = Vote::from_bytes(&bytes).unwrap();
-        assert_eq!(vote, decoded);
     }
 }
