@@ -245,24 +245,32 @@ mod tests {
     use super::*;
     use crate::Cbor;
 
+    type PropChoice = Vec<u8>;
+    type PropVote = (Vec<PropChoice>, Vec<u8>, Vec<u8>);
+
     #[proptest]
-    fn generalized_tx_from_bytes_to_bytes_test(generalized_tx: GeneralizedTx) {
+    fn generalized_tx_from_bytes_to_bytes_test(
+        vote_type: Vec<u8>, votes: Vec<PropVote>, voter_data: Vec<u8>,
+    ) {
+        let generalized_tx = GeneralizedTx {
+            tx_body: TxBody {
+                vote_type: Uuid(vote_type),
+                votes: votes
+                    .into_iter()
+                    .map(|(choices, proof, prop_id)| {
+                        Vote {
+                            choices: choices.into_iter().map(Choice).collect(),
+                            proof: Proof(proof),
+                            prop_id: PropId(prop_id),
+                        }
+                    })
+                    .collect(),
+                voter_data: VoterData(voter_data),
+            },
+        };
+
         let bytes = generalized_tx.to_bytes().unwrap();
         let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
         assert_eq!(generalized_tx, decoded);
-    }
-
-    #[proptest]
-    fn tx_body_from_bytes_to_bytes_test(tx_body: TxBody) {
-        let bytes = tx_body.to_bytes().unwrap();
-        let decoded = TxBody::from_bytes(&bytes).unwrap();
-        assert_eq!(tx_body, decoded);
-    }
-
-    #[proptest]
-    fn vote_from_bytes_to_bytes_test(vote: Vote) {
-        let bytes = vote.to_bytes().unwrap();
-        let decoded = Vote::from_bytes(&bytes).unwrap();
-        assert_eq!(vote, decoded);
     }
 }
