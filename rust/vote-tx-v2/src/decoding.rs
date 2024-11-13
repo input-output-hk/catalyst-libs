@@ -240,6 +240,7 @@ impl Encode<()> for PropId {
 
 #[cfg(test)]
 mod tests {
+    use proptest::{prelude::any_with, sample::size_range};
     use test_strategy::proptest;
 
     use super::*;
@@ -250,7 +251,18 @@ mod tests {
 
     #[proptest]
     fn generalized_tx_from_bytes_to_bytes_test(
-        vote_type: Vec<u8>, votes: Vec<PropVote>, voter_data: Vec<u8>,
+        vote_type: Vec<u8>,
+        // generates a votes in range from 1 to 10, and choices in range from 1 to 10
+        #[strategy(any_with::<Vec<PropVote>>((
+            size_range(1..10usize),
+            (
+                (size_range(1..10usize), Default::default()),
+                Default::default(),
+                Default::default(),
+            ),
+        )))]
+        votes: Vec<PropVote>,
+        voter_data: Vec<u8>,
     ) {
         let generalized_tx = GeneralizedTx {
             tx_body: TxBody {
