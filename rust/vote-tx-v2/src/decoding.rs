@@ -36,9 +36,12 @@ impl Decode<'_, ()> for GeneralizedTx {
         let signature = {
             let sign_bytes = read_cbor_bytes(d)
                 .map_err(|_| minicbor::decode::Error::message("missing `signature` field"))?;
-            coset::CoseSign::from_slice(&sign_bytes).map_err(|_| {
+            let mut sign = coset::CoseSign::from_slice(&sign_bytes).map_err(|_| {
                 minicbor::decode::Error::message("`signature` must be COSE_Sign encoded object")
-            })?
+            })?;
+            // We dont need to hold the original encoded data of the COSE protected header
+            sign.protected.original_data = None;
+            sign
         };
 
         Ok(Self { tx_body, signature })
