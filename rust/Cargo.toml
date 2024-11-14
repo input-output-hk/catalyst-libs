@@ -8,6 +8,8 @@ members = [
     "cbork-abnf-parser",
     "cbork-cddl-parser",
     "catalyst-voting",
+    "catalyst-voting", 
+    "immutable-ledger",
     "vote-tx-v1",
     "vote-tx-v2",
 ]

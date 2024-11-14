@@ -2,6 +2,7 @@ VERSION 0.8
 
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust::v3.2.23 AS rust-ci
 
+
 IMPORT .. AS rust-local
 
 # Run build using the most efficient host tooling
