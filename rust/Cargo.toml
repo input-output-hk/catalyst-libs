@@ -10,6 +10,8 @@ members = [
     "catalyst-voting",
     "catalyst-voting", "jormungandr-vote-tx",
     "immutable-ledger",
+    "vote-tx-v1",
+    "vote-tx-v2",
 ]
 
 [workspace.package]

@@ -20,6 +20,8 @@ jobs:
         rust/cardano-chain-follower
         rust/catalyst-voting
         rust/immutable-ledger
+        rust/vote-tx-v1
+        rust/vote-tx-v2
         rust/cbork
         rust/hermes-ipfs
         dart
