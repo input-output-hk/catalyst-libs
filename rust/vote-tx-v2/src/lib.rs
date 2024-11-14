@@ -72,6 +72,24 @@ pub struct Proof(Vec<u8>);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PropId(Vec<u8>);
 
+impl GeneralizedTx {
+    /// Creates a new `GeneralizedTx` struct.
+    #[must_use]
+    pub fn new(tx_body: TxBody) -> Self {
+        let signature = coset::CoseSignBuilder::new()
+            .protected(Self::cose_protected_header())
+            .build();
+        Self { tx_body, signature }
+    }
+
+    /// Returns the COSE protected header.
+    fn cose_protected_header() -> coset::Header {
+        coset::HeaderBuilder::new()
+            .content_format(coset::iana::CoapContentFormat::Cbor)
+            .build()
+    }
+}
+
 /// Cbor encodable and decodable type trait.
 pub trait Cbor<'a>: Encode<()> + Decode<'a, ()> {
     /// Encodes to CBOR encoded bytes.

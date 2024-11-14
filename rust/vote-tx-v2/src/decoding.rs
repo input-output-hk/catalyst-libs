@@ -407,8 +407,7 @@ mod tests {
             voter_data: VoterData(voter_data),
         };
 
-        let signature = coset::CoseSign::default();
-        let generalized_tx = GeneralizedTx { tx_body, signature };
+        let generalized_tx = GeneralizedTx::new(tx_body);
 
         let bytes = generalized_tx.to_bytes().unwrap();
         let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
