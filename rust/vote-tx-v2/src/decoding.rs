@@ -2,11 +2,13 @@
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl>
 
 use minicbor::{
-    data::{IanaTag, Tag},
+    data::{IanaTag, Tag, Token},
     Decode, Decoder, Encode, Encoder,
 };
 
-use crate::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
+use crate::{
+    Cbor, Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
+};
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const CBOR_UUID_TAG: u64 = 37;
@@ -15,7 +17,7 @@ const CBOR_UUID_TAG: u64 = 37;
 const VOTE_LEN: u64 = 3;
 
 /// `TxBody` array struct length
-const TX_BODY_LEN: u64 = 3;
+const TX_BODY_LEN: u64 = 4;
 
 /// `GeneralizedTx` array struct length
 const GENERALIZED_TX_LEN: u64 = 1;
@@ -52,10 +54,12 @@ impl Decode<'_, ()> for TxBody {
         };
 
         let vote_type = Uuid::decode(d, &mut ())?;
+        let event = EventMap::decode(d, &mut ())?;
         let votes = Vec::<Vote>::decode(d, &mut ())?;
         let voter_data = VoterData::decode(d, &mut ())?;
         Ok(Self {
             vote_type,
+            event,
             votes,
             voter_data,
         })
@@ -68,8 +72,78 @@ impl Encode<()> for TxBody {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(TX_BODY_LEN)?;
         self.vote_type.encode(e, &mut ())?;
+        self.event.encode(e, &mut ())?;
         self.votes.encode(e, &mut ())?;
         self.voter_data.encode(e, &mut ())?;
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for EventMap {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let Some(len) = d.map()? else {
+            return Err(minicbor::decode::Error::message(
+                "must be a defined sized map",
+            ));
+        };
+
+        let map = (0..len)
+            .map(|_| {
+                let key = EventKey::decode(d, &mut ())?;
+                let value = Token::decode(d, &mut ())?.to_bytes().map_err(|_| {
+                    minicbor::decode::Error::message(
+                        "`minicbor::Token` encoding/decoding issue, must be CBOR encodable",
+                    )
+                })?;
+                Ok((key, value))
+            })
+            .collect::<Result<_, _>>()?;
+
+        Ok(EventMap(map))
+    }
+}
+
+impl Encode<()> for EventMap {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.map(self.0.len() as u64)?;
+
+        for (key, value) in &self.0 {
+            key.encode(e, &mut ())?;
+            let token = Token::from_bytes(value).map_err(|_| {
+                minicbor::encode::Error::message("Invalid map `value` bytes, must be cbor encoded")
+            })?;
+            token.encode(e, &mut ())?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for EventKey {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let pos = d.position();
+        // try to decode as int
+        if let Ok(i) = d.int() {
+            Ok(EventKey::Int(i))
+        } else {
+            // try to decode as text
+            d.set_position(pos);
+            let str = d.str()?;
+            Ok(EventKey::Text(str.to_string()))
+        }
+    }
+}
+
+impl Encode<()> for EventKey {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        match self {
+            EventKey::Int(i) => e.int(*i)?,
+            EventKey::Text(s) => e.str(s)?,
+        };
         Ok(())
     }
 }
@@ -241,6 +315,7 @@ impl Encode<()> for PropId {
 #[cfg(test)]
 mod tests {
     use proptest::{prelude::any_with, sample::size_range};
+    use proptest_derive::Arbitrary;
     use test_strategy::proptest;
 
     use super::*;
@@ -248,6 +323,13 @@ mod tests {
 
     type PropChoice = Vec<u8>;
     type PropVote = (Vec<PropChoice>, Vec<u8>, Vec<u8>);
+
+    #[derive(Debug, Arbitrary)]
+    enum PropEventKey {
+        Text(String),
+        U64(u64),
+        I64(i64),
+    }
 
     #[proptest]
     fn generalized_tx_from_bytes_to_bytes_test(
@@ -262,11 +344,26 @@ mod tests {
             ),
         )))]
         votes: Vec<PropVote>,
+        event: Vec<(PropEventKey, u64)>,
         voter_data: Vec<u8>,
     ) {
+        let event = event
+            .into_iter()
+            .map(|(key, val)| {
+                let key = match key {
+                    PropEventKey::Text(key) => EventKey::Text(key),
+                    PropEventKey::U64(val) => EventKey::Int(val.into()),
+                    PropEventKey::I64(val) => EventKey::Int(val.into()),
+                };
+                let value = Token::U64(val).to_bytes().unwrap();
+                (key, value)
+            })
+            .collect();
+
         let generalized_tx = GeneralizedTx {
             tx_body: TxBody {
                 vote_type: Uuid(vote_type),
+                event: EventMap(event),
                 votes: votes
                     .into_iter()
                     .map(|(choices, proof, prop_id)| {

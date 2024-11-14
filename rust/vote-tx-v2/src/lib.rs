@@ -2,7 +2,7 @@
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/v2/)
 
 use anyhow::anyhow;
-use minicbor::{Decode, Decoder, Encode, Encoder};
+use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 
 mod decoding;
 
@@ -18,6 +18,8 @@ pub struct GeneralizedTx {
 pub struct TxBody {
     /// `vote-type` field
     vote_type: Uuid,
+    /// `event` field
+    event: EventMap,
     /// `votes` field
     votes: Vec<Vote>,
     /// `voter-data` field
@@ -33,6 +35,19 @@ pub struct Vote {
     proof: Proof,
     /// `prop-id` field
     prop_id: PropId,
+}
+
+/// A CBOR map
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventMap(Vec<(EventKey, Vec<u8>)>);
+
+/// An `event-key` type defintion.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EventKey {
+    /// CBOR `int` type
+    Int(Int),
+    /// CBOR `text` type
+    Text(String),
 }
 
 /// A UUID struct.
