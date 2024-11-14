@@ -1,13 +1,14 @@
 //! CBOR encoding and decoding implementation.
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl>
 
+use coset::CborSerializable;
 use minicbor::{
-    data::{IanaTag, Tag, Token},
+    data::{IanaTag, Tag},
     Decode, Decoder, Encode, Encoder,
 };
 
 use crate::{
-    Cbor, Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
+    Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
 };
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
@@ -20,7 +21,7 @@ const VOTE_LEN: u64 = 3;
 const TX_BODY_LEN: u64 = 4;
 
 /// `GeneralizedTx` array struct length
-const GENERALIZED_TX_LEN: u64 = 1;
+const GENERALIZED_TX_LEN: u64 = 2;
 
 impl Decode<'_, ()> for GeneralizedTx {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
@@ -31,7 +32,16 @@ impl Decode<'_, ()> for GeneralizedTx {
         };
 
         let tx_body = TxBody::decode(d, &mut ())?;
-        Ok(Self { tx_body })
+
+        let signature = {
+            let sign_bytes = read_cbor_bytes(d)
+                .map_err(|_| minicbor::decode::Error::message("missing `signature` field"))?;
+            coset::CoseSign::from_slice(&sign_bytes).map_err(|_| {
+                minicbor::decode::Error::message("`signature` must be COSE_Sign encoded object")
+            })?
+        };
+
+        Ok(Self { tx_body, signature })
     }
 }
 
@@ -41,6 +51,16 @@ impl Encode<()> for GeneralizedTx {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(GENERALIZED_TX_LEN)?;
         self.tx_body.encode(e, &mut ())?;
+
+        let sign_bytes = self
+            .signature
+            .clone()
+            .to_vec()
+            .map_err(minicbor::encode::Error::message)?;
+        e.writer_mut()
+            .write_all(&sign_bytes)
+            .map_err(minicbor::encode::Error::write)?;
+
         Ok(())
     }
 }
@@ -90,10 +110,9 @@ impl Decode<'_, ()> for EventMap {
         let map = (0..len)
             .map(|_| {
                 let key = EventKey::decode(d, &mut ())?;
-                let value = Token::decode(d, &mut ())?.to_bytes().map_err(|_| {
-                    minicbor::decode::Error::message(
-                        "`minicbor::Token` encoding/decoding issue, must be CBOR encodable",
-                    )
+
+                let value = read_cbor_bytes(d).map_err(|_| {
+                    minicbor::decode::Error::message("missing event map `value` field")
                 })?;
                 Ok((key, value))
             })
@@ -111,10 +130,10 @@ impl Encode<()> for EventMap {
 
         for (key, value) in &self.0 {
             key.encode(e, &mut ())?;
-            let token = Token::from_bytes(value).map_err(|_| {
-                minicbor::encode::Error::message("Invalid map `value` bytes, must be cbor encoded")
-            })?;
-            token.encode(e, &mut ())?;
+
+            e.writer_mut()
+                .write_all(value)
+                .map_err(minicbor::encode::Error::write)?;
         }
 
         Ok(())
@@ -312,6 +331,19 @@ impl Encode<()> for PropId {
     }
 }
 
+/// Reads CBOR bytes from the decoder and returns them as bytes.
+fn read_cbor_bytes(d: &mut Decoder<'_>) -> Result<Vec<u8>, minicbor::decode::Error> {
+    let start = d.position();
+    d.skip()?;
+    let end = d.position();
+    let bytes = d
+        .input()
+        .get(start..end)
+        .ok_or(minicbor::decode::Error::end_of_input())?
+        .to_vec();
+    Ok(bytes)
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::{prelude::any_with, sample::size_range};
@@ -355,28 +387,28 @@ mod tests {
                     PropEventKey::U64(val) => EventKey::Int(val.into()),
                     PropEventKey::I64(val) => EventKey::Int(val.into()),
                 };
-                let value = Token::U64(val).to_bytes().unwrap();
+                let value = val.to_bytes().unwrap();
                 (key, value)
             })
             .collect();
-
-        let generalized_tx = GeneralizedTx {
-            tx_body: TxBody {
-                vote_type: Uuid(vote_type),
-                event: EventMap(event),
-                votes: votes
-                    .into_iter()
-                    .map(|(choices, proof, prop_id)| {
-                        Vote {
-                            choices: choices.into_iter().map(Choice).collect(),
-                            proof: Proof(proof),
-                            prop_id: PropId(prop_id),
-                        }
-                    })
-                    .collect(),
-                voter_data: VoterData(voter_data),
-            },
+        let tx_body = TxBody {
+            vote_type: Uuid(vote_type),
+            event: EventMap(event),
+            votes: votes
+                .into_iter()
+                .map(|(choices, proof, prop_id)| {
+                    Vote {
+                        choices: choices.into_iter().map(Choice).collect(),
+                        proof: Proof(proof),
+                        prop_id: PropId(prop_id),
+                    }
+                })
+                .collect(),
+            voter_data: VoterData(voter_data),
         };
+
+        let signature = coset::CoseSign::default();
+        let generalized_tx = GeneralizedTx { tx_body, signature };
 
         let bytes = generalized_tx.to_bytes().unwrap();
         let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();

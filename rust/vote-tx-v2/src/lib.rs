@@ -7,10 +7,12 @@ use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 mod decoding;
 
 /// A generalized tx struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeneralizedTx {
-    /// `tx-body`
+    /// `tx-body` field
     tx_body: TxBody,
+    /// `signature` field
+    signature: coset::CoseSign,
 }
 
 /// A tx body struct.
