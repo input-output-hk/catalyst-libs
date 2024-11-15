@@ -7,7 +7,7 @@ use minicbor::{
     Decode, Decoder, Encode, Encoder,
 };
 
-use crate::{
+use super::{
     Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
 };
 
