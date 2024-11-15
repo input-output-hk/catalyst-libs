@@ -1,16 +1,20 @@
 //! A Catalyst vote transaction v1 object, structured following this
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/v2/)
 
+// cspell: words Coap
+
 use anyhow::anyhow;
-use minicbor::{Decode, Decoder, Encode, Encoder};
+use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 
 mod decoding;
 
 /// A generalized tx struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct GeneralizedTx {
-    /// `tx-body`
+    /// `tx-body` field
     tx_body: TxBody,
+    /// `signature` field
+    signature: coset::CoseSign,
 }
 
 /// A tx body struct.
@@ -18,6 +22,8 @@ pub struct GeneralizedTx {
 pub struct TxBody {
     /// `vote-type` field
     vote_type: Uuid,
+    /// `event` field
+    event: EventMap,
     /// `votes` field
     votes: Vec<Vote>,
     /// `voter-data` field
@@ -33,6 +39,19 @@ pub struct Vote {
     proof: Proof,
     /// `prop-id` field
     prop_id: PropId,
+}
+
+/// A CBOR map
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EventMap(Vec<(EventKey, Vec<u8>)>);
+
+/// An `event-key` type definition.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum EventKey {
+    /// CBOR `int` type
+    Int(Int),
+    /// CBOR `text` type
+    Text(String),
 }
 
 /// A UUID struct.
@@ -54,6 +73,24 @@ pub struct Proof(Vec<u8>);
 /// A prop id struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PropId(Vec<u8>);
+
+impl GeneralizedTx {
+    /// Creates a new `GeneralizedTx` struct.
+    #[must_use]
+    pub fn new(tx_body: TxBody) -> Self {
+        let signature = coset::CoseSignBuilder::new()
+            .protected(Self::cose_protected_header())
+            .build();
+        Self { tx_body, signature }
+    }
+
+    /// Returns the COSE protected header.
+    fn cose_protected_header() -> coset::Header {
+        coset::HeaderBuilder::new()
+            .content_format(coset::iana::CoapContentFormat::Cbor)
+            .build()
+    }
+}
 
 /// Cbor encodable and decodable type trait.
 pub trait Cbor<'a>: Encode<()> + Decode<'a, ()> {

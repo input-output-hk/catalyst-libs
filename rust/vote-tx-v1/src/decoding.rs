@@ -1,4 +1,5 @@
 //! V1 transaction objects decoding implementation.
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/abnf/jorm.abnf>
 
 use std::io::Read;
 

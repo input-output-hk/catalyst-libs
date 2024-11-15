@@ -15,10 +15,12 @@ workspace = true
 
 [dependencies]
 anyhow = "1.0.89"
-minicbor = { version = "0.25.1", features = ["alloc"] }
+minicbor = { version = "0.25.1", features = ["alloc", "half"] }
+coset = { version = "0.3.8" }
 
 [dev-dependencies]
 proptest = { version = "1.5.0" }
+proptest-derive = { version = "0.5.0" }
 # Potentially it could be replaced with using `proptest::property_test` attribute macro,
 # after this PR will be merged https://github.com/proptest-rs/proptest/pull/523
 test-strategy = "0.4.0"

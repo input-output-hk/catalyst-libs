@@ -1,12 +1,15 @@
 //! CBOR encoding and decoding implementation.
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl>
 
+use coset::CborSerializable;
 use minicbor::{
     data::{IanaTag, Tag},
     Decode, Decoder, Encode, Encoder,
 };
 
-use crate::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData};
+use crate::{
+    Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
+};
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const CBOR_UUID_TAG: u64 = 37;
@@ -15,10 +18,10 @@ const CBOR_UUID_TAG: u64 = 37;
 const VOTE_LEN: u64 = 3;
 
 /// `TxBody` array struct length
-const TX_BODY_LEN: u64 = 3;
+const TX_BODY_LEN: u64 = 4;
 
 /// `GeneralizedTx` array struct length
-const GENERALIZED_TX_LEN: u64 = 1;
+const GENERALIZED_TX_LEN: u64 = 2;
 
 impl Decode<'_, ()> for GeneralizedTx {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
@@ -29,7 +32,19 @@ impl Decode<'_, ()> for GeneralizedTx {
         };
 
         let tx_body = TxBody::decode(d, &mut ())?;
-        Ok(Self { tx_body })
+
+        let signature = {
+            let sign_bytes = read_cbor_bytes(d)
+                .map_err(|_| minicbor::decode::Error::message("missing `signature` field"))?;
+            let mut sign = coset::CoseSign::from_slice(&sign_bytes).map_err(|_| {
+                minicbor::decode::Error::message("`signature` must be COSE_Sign encoded object")
+            })?;
+            // We don't need to hold the original encoded data of the COSE protected header
+            sign.protected.original_data = None;
+            sign
+        };
+
+        Ok(Self { tx_body, signature })
     }
 }
 
@@ -39,6 +54,16 @@ impl Encode<()> for GeneralizedTx {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(GENERALIZED_TX_LEN)?;
         self.tx_body.encode(e, &mut ())?;
+
+        let sign_bytes = self
+            .signature
+            .clone()
+            .to_vec()
+            .map_err(minicbor::encode::Error::message)?;
+        e.writer_mut()
+            .write_all(&sign_bytes)
+            .map_err(minicbor::encode::Error::write)?;
+
         Ok(())
     }
 }
@@ -52,10 +77,12 @@ impl Decode<'_, ()> for TxBody {
         };
 
         let vote_type = Uuid::decode(d, &mut ())?;
+        let event = EventMap::decode(d, &mut ())?;
         let votes = Vec::<Vote>::decode(d, &mut ())?;
         let voter_data = VoterData::decode(d, &mut ())?;
         Ok(Self {
             vote_type,
+            event,
             votes,
             voter_data,
         })
@@ -68,8 +95,77 @@ impl Encode<()> for TxBody {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(TX_BODY_LEN)?;
         self.vote_type.encode(e, &mut ())?;
+        self.event.encode(e, &mut ())?;
         self.votes.encode(e, &mut ())?;
         self.voter_data.encode(e, &mut ())?;
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for EventMap {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let Some(len) = d.map()? else {
+            return Err(minicbor::decode::Error::message(
+                "must be a defined sized map",
+            ));
+        };
+
+        let map = (0..len)
+            .map(|_| {
+                let key = EventKey::decode(d, &mut ())?;
+
+                let value = read_cbor_bytes(d).map_err(|_| {
+                    minicbor::decode::Error::message("missing event map `value` field")
+                })?;
+                Ok((key, value))
+            })
+            .collect::<Result<_, _>>()?;
+
+        Ok(EventMap(map))
+    }
+}
+
+impl Encode<()> for EventMap {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.map(self.0.len() as u64)?;
+
+        for (key, value) in &self.0 {
+            key.encode(e, &mut ())?;
+
+            e.writer_mut()
+                .write_all(value)
+                .map_err(minicbor::encode::Error::write)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Decode<'_, ()> for EventKey {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let pos = d.position();
+        // try to decode as int
+        if let Ok(i) = d.int() {
+            Ok(EventKey::Int(i))
+        } else {
+            // try to decode as text
+            d.set_position(pos);
+            let str = d.str()?;
+            Ok(EventKey::Text(str.to_string()))
+        }
+    }
+}
+
+impl Encode<()> for EventKey {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut Encoder<W>, (): &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        match self {
+            EventKey::Int(i) => e.int(*i)?,
+            EventKey::Text(s) => e.str(s)?,
+        };
         Ok(())
     }
 }
@@ -238,9 +334,23 @@ impl Encode<()> for PropId {
     }
 }
 
+/// Reads CBOR bytes from the decoder and returns them as bytes.
+fn read_cbor_bytes(d: &mut Decoder<'_>) -> Result<Vec<u8>, minicbor::decode::Error> {
+    let start = d.position();
+    d.skip()?;
+    let end = d.position();
+    let bytes = d
+        .input()
+        .get(start..end)
+        .ok_or(minicbor::decode::Error::end_of_input())?
+        .to_vec();
+    Ok(bytes)
+}
+
 #[cfg(test)]
 mod tests {
     use proptest::{prelude::any_with, sample::size_range};
+    use proptest_derive::Arbitrary;
     use test_strategy::proptest;
 
     use super::*;
@@ -248,6 +358,13 @@ mod tests {
 
     type PropChoice = Vec<u8>;
     type PropVote = (Vec<PropChoice>, Vec<u8>, Vec<u8>);
+
+    #[derive(Debug, Arbitrary)]
+    enum PropEventKey {
+        Text(String),
+        U64(u64),
+        I64(i64),
+    }
 
     #[proptest]
     fn generalized_tx_from_bytes_to_bytes_test(
@@ -262,24 +379,38 @@ mod tests {
             ),
         )))]
         votes: Vec<PropVote>,
+        event: Vec<(PropEventKey, u64)>,
         voter_data: Vec<u8>,
     ) {
-        let generalized_tx = GeneralizedTx {
-            tx_body: TxBody {
-                vote_type: Uuid(vote_type),
-                votes: votes
-                    .into_iter()
-                    .map(|(choices, proof, prop_id)| {
-                        Vote {
-                            choices: choices.into_iter().map(Choice).collect(),
-                            proof: Proof(proof),
-                            prop_id: PropId(prop_id),
-                        }
-                    })
-                    .collect(),
-                voter_data: VoterData(voter_data),
-            },
+        let event = event
+            .into_iter()
+            .map(|(key, val)| {
+                let key = match key {
+                    PropEventKey::Text(key) => EventKey::Text(key),
+                    PropEventKey::U64(val) => EventKey::Int(val.into()),
+                    PropEventKey::I64(val) => EventKey::Int(val.into()),
+                };
+                let value = val.to_bytes().unwrap();
+                (key, value)
+            })
+            .collect();
+        let tx_body = TxBody {
+            vote_type: Uuid(vote_type),
+            event: EventMap(event),
+            votes: votes
+                .into_iter()
+                .map(|(choices, proof, prop_id)| {
+                    Vote {
+                        choices: choices.into_iter().map(Choice).collect(),
+                        proof: Proof(proof),
+                        prop_id: PropId(prop_id),
+                    }
+                })
+                .collect(),
+            voter_data: VoterData(voter_data),
         };
+
+        let generalized_tx = GeneralizedTx::new(tx_body);
 
         let bytes = generalized_tx.to_bytes().unwrap();
         let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
