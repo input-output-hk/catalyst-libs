@@ -39,7 +39,7 @@ impl Decode<'_, ()> for GeneralizedTx {
             let mut sign = coset::CoseSign::from_slice(&sign_bytes).map_err(|_| {
                 minicbor::decode::Error::message("`signature` must be COSE_Sign encoded object")
             })?;
-            // We dont need to hold the original encoded data of the COSE protected header
+            // We don't need to hold the original encoded data of the COSE protected header
             sign.protected.original_data = None;
             sign
         };

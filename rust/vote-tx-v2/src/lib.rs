@@ -1,6 +1,8 @@
 //! A Catalyst vote transaction v1 object, structured following this
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/v2/)
 
+// cspell: words Coap
+
 use anyhow::anyhow;
 use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 
@@ -43,7 +45,7 @@ pub struct Vote {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EventMap(Vec<(EventKey, Vec<u8>)>);
 
-/// An `event-key` type defintion.
+/// An `event-key` type definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum EventKey {
     /// CBOR `int` type
