@@ -7,6 +7,7 @@ use anyhow::anyhow;
 use minicbor::{Decode, Decoder, Encode, Encoder};
 
 pub mod gen_tx;
+pub mod public_tx;
 
 /// Cbor encodable and decodable type trait.
 pub trait Cbor<'a>: Encode<()> + Decode<'a, ()> {
