@@ -13,7 +13,7 @@ COPY_SRC:
         catalyst-voting vote-tx-v1 vote-tx-v2 \
         cbork cbork-abnf-parser cbork-cddl-parser \
         hermes-ipfs \
-        .
+        immutable-ledger .
 
 # builder : Set up our target toolchains, and copy our files.
 builder:
