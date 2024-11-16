@@ -10,6 +10,7 @@ use minicbor::{
 use super::{
     Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
 };
+use crate::Cbor;
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const CBOR_UUID_TAG: u64 = 37;
@@ -23,7 +24,9 @@ const TX_BODY_LEN: u64 = 4;
 /// `GeneralizedTx` array struct length
 const GENERALIZED_TX_LEN: u64 = 2;
 
-impl Decode<'_, ()> for GeneralizedTx {
+impl<ChoiceT> Decode<'_, ()> for GeneralizedTx<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(GENERALIZED_TX_LEN) = d.array()? else {
             return Err(minicbor::decode::Error::message(format!(
@@ -48,7 +51,9 @@ impl Decode<'_, ()> for GeneralizedTx {
     }
 }
 
-impl Encode<()> for GeneralizedTx {
+impl<ChoiceT> Encode<()> for GeneralizedTx<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
@@ -68,7 +73,9 @@ impl Encode<()> for GeneralizedTx {
     }
 }
 
-impl Decode<'_, ()> for TxBody {
+impl<ChoiceT> Decode<'_, ()> for TxBody<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(TX_BODY_LEN) = d.array()? else {
             return Err(minicbor::decode::Error::message(format!(
@@ -78,7 +85,7 @@ impl Decode<'_, ()> for TxBody {
 
         let vote_type = Uuid::decode(d, &mut ())?;
         let event = EventMap::decode(d, &mut ())?;
-        let votes = Vec::<Vote>::decode(d, &mut ())?;
+        let votes = Vec::<Vote<_>>::decode(d, &mut ())?;
         let voter_data = VoterData::decode(d, &mut ())?;
         Ok(Self {
             vote_type,
@@ -89,7 +96,9 @@ impl Decode<'_, ()> for TxBody {
     }
 }
 
-impl Encode<()> for TxBody {
+impl<ChoiceT> Encode<()> for TxBody<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
@@ -220,7 +229,9 @@ impl Encode<()> for Uuid {
     }
 }
 
-impl Decode<'_, ()> for Vote {
+impl<ChoiceT> Decode<'_, ()> for Vote<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(VOTE_LEN) = d.array()? else {
             return Err(minicbor::decode::Error::message(format!(
@@ -228,7 +239,7 @@ impl Decode<'_, ()> for Vote {
             )));
         };
 
-        let choices = Vec::<Choice>::decode(d, &mut ())?;
+        let choices = Vec::<Choice<_>>::decode(d, &mut ())?;
         if choices.is_empty() {
             return Err(minicbor::decode::Error::message(
                 "choices array must has at least one entry",
@@ -244,7 +255,9 @@ impl Decode<'_, ()> for Vote {
     }
 }
 
-impl Encode<()> for Vote {
+impl<ChoiceT> Encode<()> for Vote<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
@@ -256,7 +269,9 @@ impl Encode<()> for Vote {
     }
 }
 
-impl Decode<'_, ()> for Choice {
+impl<ChoiceT> Decode<'_, ()> for Choice<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let tag = d.tag()?;
         let expected_tag = minicbor::data::IanaTag::Cbor.tag();
@@ -267,17 +282,27 @@ impl Decode<'_, ()> for Choice {
                 tag.as_u64(),
             )));
         }
-        let choice = d.bytes()?.to_vec();
+        let choice_bytes = d.bytes()?.to_vec();
+        let choice =
+            ChoiceT::from_bytes(&choice_bytes).map_err(minicbor::decode::Error::message)?;
         Ok(Self(choice))
     }
 }
 
-impl Encode<()> for Choice {
+impl<ChoiceT> Encode<()> for Choice<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.tag(IanaTag::Cbor.tag())?;
-        e.bytes(&self.0)?;
+
+        let choice_bytes = self
+            .0
+            .to_bytes()
+            .map_err(minicbor::encode::Error::message)?;
+
+        e.bytes(&choice_bytes)?;
         Ok(())
     }
 }

@@ -8,7 +8,7 @@ use crate::gen_tx::{GeneralizedTx, Uuid};
 mod decoding;
 
 /// A public vote tx struct.
-pub struct PublicTx(GeneralizedTx);
+pub struct PublicTx(GeneralizedTx<Choice>);
 
 /// A public voting choice struct.
 pub struct Choice(pub u64);
@@ -17,7 +17,7 @@ pub struct Choice(pub u64);
 pub struct Proposal(pub Uuid);
 
 impl Deref for PublicTx {
-    type Target = GeneralizedTx;
+    type Target = GeneralizedTx<Choice>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

@@ -3,7 +3,7 @@
 
 use minicbor::{Decode, Encode};
 
-use super::{GeneralizedTx, PublicTx};
+use super::{Choice, GeneralizedTx, PublicTx};
 
 impl Decode<'_, ()> for PublicTx {
     fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
@@ -13,6 +13,21 @@ impl Decode<'_, ()> for PublicTx {
 }
 
 impl Encode<()> for PublicTx {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        self.0.encode(e, ctx)
+    }
+}
+
+impl Decode<'_, ()> for Choice {
+    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let choice = d.u64()?;
+        Ok(Choice(choice))
+    }
+}
+
+impl Encode<()> for Choice {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {

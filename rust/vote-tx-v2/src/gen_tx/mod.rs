@@ -7,33 +7,41 @@ mod decoding;
 
 use minicbor::data::Int;
 
+use crate::Cbor;
+
 /// A generalized tx struct.
 #[derive(Debug, Clone, PartialEq)]
-pub struct GeneralizedTx {
+pub struct GeneralizedTx<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     /// `tx-body` field
-    tx_body: TxBody,
+    tx_body: TxBody<ChoiceT>,
     /// `signature` field
     signature: coset::CoseSign,
 }
 
 /// A tx body struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TxBody {
+pub struct TxBody<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     /// `vote-type` field
     vote_type: Uuid,
     /// `event` field
     event: EventMap,
     /// `votes` field
-    votes: Vec<Vote>,
+    votes: Vec<Vote<ChoiceT>>,
     /// `voter-data` field
     voter_data: VoterData,
 }
 
 /// A vote struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Vote {
+pub struct Vote<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     /// `choices` field
-    choices: Vec<Choice>,
+    choices: Vec<Choice<ChoiceT>>,
     /// `proof` field
     proof: Proof,
     /// `prop-id` field
@@ -63,7 +71,8 @@ pub struct VoterData(Vec<u8>);
 
 /// A choice struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Choice(Vec<u8>);
+pub struct Choice<T>(T)
+where T: for<'a> Cbor<'a>;
 
 /// A proof struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,10 +82,12 @@ pub struct Proof(Vec<u8>);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PropId(Vec<u8>);
 
-impl GeneralizedTx {
+impl<ChoiceT> GeneralizedTx<ChoiceT>
+where ChoiceT: for<'a> Cbor<'a>
+{
     /// Creates a new `GeneralizedTx` struct.
     #[must_use]
-    pub fn new(tx_body: TxBody) -> Self {
+    pub fn new(tx_body: TxBody<ChoiceT>) -> Self {
         let signature = coset::CoseSignBuilder::new()
             .protected(Self::cose_protected_header())
             .build();
