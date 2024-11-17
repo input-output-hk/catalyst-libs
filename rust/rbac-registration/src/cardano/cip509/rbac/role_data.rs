@@ -14,9 +14,9 @@ pub struct RoleData {
     /// Role number.
     pub role_number: u8,
     /// Optional role signing key.
-    pub role_signing_key: Option<KeyLocalRef>,
+    pub role_signing_key: Option<Vec<KeyLocalRef>>,
     /// Optional role encryption key.
-    pub role_encryption_key: Option<KeyLocalRef>,
+    pub role_encryption_key: Option<Vec<KeyLocalRef>>,
     /// Optional payment key.
     pub payment_key: Option<i16>,
     /// Optional role extended data keys.
@@ -56,10 +56,20 @@ impl Decode<'_, ()> for RoleData {
                         role_data.role_number = decode_helper(d, "RoleNumber in RoleData", ctx)?;
                     },
                     RoleDataInt::RoleSigningKey => {
-                        role_data.role_signing_key = Some(KeyLocalRef::decode(d, ctx)?);
+                        let arr_len = decode_array_len(d, "RoleSigningKey")?;
+                        let mut role_signing_key = Vec::new();
+                        for _ in 0..arr_len {
+                            role_signing_key.push(KeyLocalRef::decode(d, ctx)?);
+                        }
+                        role_data.role_signing_key = Some(role_signing_key);
                     },
                     RoleDataInt::RoleEncryptionKey => {
-                        role_data.role_encryption_key = Some(KeyLocalRef::decode(d, ctx)?);
+                        let arr_len = decode_array_len(d, "RoleEncryptionKey")?;
+                        let mut role_encryption_key = Vec::new();
+                        for _ in 0..arr_len {
+                            role_encryption_key.push(KeyLocalRef::decode(d, ctx)?);
+                        }
+                        role_data.role_encryption_key = Some(role_encryption_key);
                     },
                     RoleDataInt::PaymentKey => {
                         role_data.payment_key =
@@ -101,7 +111,6 @@ pub enum LocalRefInt {
 
 impl Decode<'_, ()> for KeyLocalRef {
     fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
-        decode_array_len(d, "KeyLocalRef")?;
         let local_ref = LocalRefInt::from_repr(decode_helper(d, "LocalRef in KeyLocalRef", ctx)?)
             .ok_or(decode::Error::message("Invalid local reference"))?;
         let key_offset: u64 = decode_helper(d, "KeyOffset in KeyLocalRef", ctx)?;
