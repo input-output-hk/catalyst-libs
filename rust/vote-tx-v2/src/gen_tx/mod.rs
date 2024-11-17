@@ -11,41 +11,50 @@ use crate::Cbor;
 
 /// A generalized tx struct.
 #[derive(Debug, Clone, PartialEq)]
-pub struct GeneralizedTx<ChoiceT>
-where ChoiceT: for<'a> Cbor<'a>
+pub struct GeneralizedTx<ChoiceT, ProofT, ProopIdT>
+where
+    ChoiceT: for<'a> Cbor<'a>,
+    ProofT: for<'a> Cbor<'a>,
+    ProopIdT: for<'a> Cbor<'a>,
 {
     /// `tx-body` field
-    tx_body: TxBody<ChoiceT>,
+    tx_body: TxBody<ChoiceT, ProofT, ProopIdT>,
     /// `signature` field
     signature: coset::CoseSign,
 }
 
 /// A tx body struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TxBody<ChoiceT>
-where ChoiceT: for<'a> Cbor<'a>
+pub struct TxBody<ChoiceT, ProofT, ProopIdT>
+where
+    ChoiceT: for<'a> Cbor<'a>,
+    ProofT: for<'a> Cbor<'a>,
+    ProopIdT: for<'a> Cbor<'a>,
 {
     /// `vote-type` field
     vote_type: Uuid,
     /// `event` field
     event: EventMap,
     /// `votes` field
-    votes: Vec<Vote<ChoiceT>>,
+    votes: Vec<Vote<ChoiceT, ProofT, ProopIdT>>,
     /// `voter-data` field
     voter_data: VoterData,
 }
 
 /// A vote struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Vote<ChoiceT>
-where ChoiceT: for<'a> Cbor<'a>
+pub struct Vote<ChoiceT, ProofT, ProopIdT>
+where
+    ChoiceT: for<'a> Cbor<'a>,
+    ProofT: for<'a> Cbor<'a>,
+    ProopIdT: for<'a> Cbor<'a>,
 {
     /// `choices` field
     choices: Vec<Choice<ChoiceT>>,
     /// `proof` field
-    proof: Proof,
+    proof: Proof<ProofT>,
     /// `prop-id` field
-    prop_id: PropId,
+    prop_id: PropId<ProopIdT>,
 }
 
 /// A CBOR map
@@ -76,18 +85,23 @@ where T: for<'a> Cbor<'a>;
 
 /// A proof struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Proof(Vec<u8>);
+pub struct Proof<T>(T)
+where T: for<'a> Cbor<'a>;
 
 /// A prop id struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PropId(Vec<u8>);
+pub struct PropId<T>(T)
+where T: for<'a> Cbor<'a>;
 
-impl<ChoiceT> GeneralizedTx<ChoiceT>
-where ChoiceT: for<'a> Cbor<'a>
+impl<ChoiceT, ProofT, ProopIdT> GeneralizedTx<ChoiceT, ProofT, ProopIdT>
+where
+    ChoiceT: for<'a> Cbor<'a>,
+    ProofT: for<'a> Cbor<'a>,
+    ProopIdT: for<'a> Cbor<'a>,
 {
     /// Creates a new `GeneralizedTx` struct.
     #[must_use]
-    pub fn new(tx_body: TxBody<ChoiceT>) -> Self {
+    pub fn new(tx_body: TxBody<ChoiceT, ProofT, ProopIdT>) -> Self {
         let signature = coset::CoseSignBuilder::new()
             .protected(Self::cose_protected_header())
             .build();
