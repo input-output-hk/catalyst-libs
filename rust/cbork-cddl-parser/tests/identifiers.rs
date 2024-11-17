@@ -1,12 +1,8 @@
 // cspell: words aname groupsocket typesocket groupsocket
 
-use cbork_cddl_parser::{
-    self,
-    cddl_test::{CDDLTestParser, Parser, Rule},
-};
-
 mod common;
-use common::identifiers::*;
+use common::{identifiers::*, CDDLTestParser, Rule};
+use pest::Parser;
 
 #[test]
 /// Check if the name components pass properly.

@@ -1,9 +1,7 @@
 // cspell: words hexpair rstuvw abcdefghijklmnopqrstuvwyz rstuvw Xhhb Bhcm
 
-use cbork_cddl_parser::cddl_test::Rule;
-
 mod common;
-use common::byte_sequences::*;
+use common::{byte_sequences::*, Rule};
 
 #[test]
 /// Test if the `HEX_PAIR` rule passes properly.

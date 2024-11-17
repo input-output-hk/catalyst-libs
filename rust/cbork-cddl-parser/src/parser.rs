@@ -35,20 +35,6 @@ pub(crate) mod cddl {
     pub(crate) struct Parser;
 }
 
-/// Full CDDL syntax test parser.
-/// Parser with DEBUG rules. These rules are only used in tests.
-#[allow(missing_docs)]
-pub mod cddl_test {
-    pub use pest::Parser;
-    /// A Pest test parser for a full CDDL syntax.
-    #[derive(pest_derive::Parser)]
-    #[grammar = "grammar/rfc_8610.pest"]
-    #[grammar = "grammar/rfc_9165.pest"]
-    #[grammar = "grammar/cddl_modules.pest"]
-    #[grammar = "grammar/cddl_test.pest"] // Ideally this would only be used in tests.
-    pub struct CDDLTestParser;
-}
-
 /// CDDL Standard Postlude - read from an external file
 const POSTLUDE: &str = include_str!("grammar/postlude.cddl");
 

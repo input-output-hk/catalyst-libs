@@ -1,13 +1,9 @@
 // cspell: words GENERICARG bigfloat ASSIGNG GROUPNAME tstr genericarg GENERICARG
 // cspell: words assigng assignt ASSIGNT GENERICPARM genericparm
 
-use cbork_cddl_parser::{
-    self,
-    cddl_test::{CDDLTestParser, Parser, Rule},
-};
-
 mod common;
-use common::{rules::*, type_declarations::*};
+use common::{rules::*, type_declarations::*, CDDLTestParser, Rule};
+use pest::Parser;
 
 #[test]
 /// Test if the `genericarg` rule passes properly.

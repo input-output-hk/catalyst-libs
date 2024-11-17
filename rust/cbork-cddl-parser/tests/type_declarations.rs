@@ -1,13 +1,9 @@
 // cspell: words CTLOP aname groupsocket typesocket RANGEOP tstr ctlop
 // cspell: words rangeop RANGEOP
 
-use cbork_cddl_parser::{
-    self,
-    cddl_test::{CDDLTestParser, Parser, Rule},
-};
-
 mod common;
-use common::type_declarations::*;
+use common::{type_declarations::*, CDDLTestParser, Rule};
+use pest::Parser;
 
 #[test]
 /// Test if the `ctlop` rule passes properly.

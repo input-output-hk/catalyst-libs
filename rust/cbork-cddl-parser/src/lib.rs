@@ -3,8 +3,6 @@
 mod parser;
 mod preprocessor;
 
-pub use crate::parser::cddl_test;
-
 /// Represents different grammar extensions for handling CDDL specifications.
 pub enum Extension {
     /// RFC8610 ONLY limited grammar.

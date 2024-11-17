@@ -1,9 +1,8 @@
 // cspell: words PCHAR pchar BCHAR bchar SESC sesc SCHAR schar fffd fffe
 
-use cbork_cddl_parser::{
-    self,
-    cddl_test::{CDDLTestParser, Parser, Rule},
-};
+mod common;
+use common::{CDDLTestParser, Rule};
+use pest::Parser;
 
 #[test]
 /// Test if the `WHITESPACE` rule passes properly.
