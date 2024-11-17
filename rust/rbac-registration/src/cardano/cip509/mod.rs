@@ -5,6 +5,7 @@
 // cspell: words pkix
 
 pub mod rbac;
+pub mod types;
 pub mod x509_chunks;
 
 use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
@@ -150,19 +151,30 @@ impl Cip509 {
     /// * `txn` - Transaction data was attached to and to be validated/decoded against.
     /// * `txn_idx` - Transaction Index
     /// * `validation_report` - Validation report to store the validation result.
-    pub fn validate(&self, txn: &MultiEraTx, txn_idx: usize, validation_report: &mut Vec<String>) {
-        self.validate_txn_inputs_hash(txn, validation_report);
-        self.validate_aux(txn, validation_report);
+    pub fn validate(
+        &self, txn: &MultiEraTx, txn_idx: usize, validation_report: &mut Vec<String>,
+    ) -> bool {
+        let tx_input_validate = self
+            .validate_txn_inputs_hash(txn, validation_report)
+            .unwrap_or(false);
+        let aux_validate = self.validate_aux(txn, validation_report).unwrap_or(false);
+        let mut stake_key_validate = true;
+        let mut payment_key_validate = true;
         // Validate the role 0
         if let Some(role_set) = &self.x509_chunks.0.role_set {
             // Validate only role 0
             for role in role_set {
                 if role.role_number == 0 {
-                    self.validate_stake_public_key(txn, txn_idx, validation_report);
-                    self.validate_payment_key(txn, txn_idx, role, validation_report);
+                    stake_key_validate = self
+                        .validate_stake_public_key(txn, txn_idx, validation_report)
+                        .unwrap_or(false);
+                    payment_key_validate = self
+                        .validate_payment_key(txn, txn_idx, role, validation_report)
+                        .unwrap_or(false);
                 }
             }
         }
+        tx_input_validate && aux_validate && stake_key_validate && payment_key_validate
     }
 
     /// Transaction inputs hash validation.
