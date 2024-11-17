@@ -260,82 +260,91 @@ impl Cip509 {
         if let MultiEraTx::Conway(_) = txn {
             // X509 certificate
             if let Some(x509_certs) = &self.x509_chunks.0.x509_certs {
-                for cert in x509_certs {
-                    // Attempt to decode the DER certificate
-                    let der_cert = match x509_cert::Certificate::from_der(&cert.0) {
-                        Ok(cert) => cert,
-                        Err(e) => {
-                            validation_report
-                                .push(format!("Failed to decode x509 certificate DER: {e}"));
-                            return None;
-                        },
-                    };
+                for x509_cert in x509_certs {
+                    match x509_cert {
+                        rbac::certs::X509DerCert::X509Cert(cert) => {
+                            // Attempt to decode the DER certificate
+                            let der_cert = match x509_cert::Certificate::from_der(cert) {
+                                Ok(cert) => cert,
+                                Err(e) => {
+                                    validation_report.push(format!(
+                                        "Failed to decode x509 certificate DER: {e}"
+                                    ));
+                                    return None;
+                                },
+                            };
 
-                    // Find the Subject Alternative Name extension
-                    let san_ext = der_cert
-                        .tbs_certificate
-                        .extensions
-                        .as_ref()
-                        .and_then(|exts| {
-                            exts.iter()
-                                .find(|ext| ext.extn_id == ID_CE_SUBJECT_ALT_NAME)
-                        });
+                            // Find the Subject Alternative Name extension
+                            let san_ext =
+                                der_cert
+                                    .tbs_certificate
+                                    .extensions
+                                    .as_ref()
+                                    .and_then(|exts| {
+                                        exts.iter()
+                                            .find(|ext| ext.extn_id == ID_CE_SUBJECT_ALT_NAME)
+                                    });
 
-                    // Subject Alternative Name extension if it exists
-                    if let Some(san_ext) = san_ext {
-                        match parse_der_sequence(san_ext.extn_value.as_bytes()) {
-                            Ok((_, parsed_seq)) => {
-                                for data in parsed_seq.ref_iter() {
-                                    // Check for context-specific primitive type with tag number
-                                    // 6 (raw_tag 134)
-                                    if data.header.raw_tag() == Some(&[URI]) {
-                                        match data.content.as_slice() {
-                                            Ok(content) => {
-                                                // Decode the UTF-8 string
-                                                let addr: String = match decode_utf8(content) {
-                                                    Ok(addr) => addr,
-                                                    Err(e) => {
-                                                        validation_report.push(format!(
+                            // Subject Alternative Name extension if it exists
+                            if let Some(san_ext) = san_ext {
+                                match parse_der_sequence(san_ext.extn_value.as_bytes()) {
+                                    Ok((_, parsed_seq)) => {
+                                        for data in parsed_seq.ref_iter() {
+                                            // Check for context-specific primitive type with tag number
+                                            // 6 (raw_tag 134)
+                                            if data.header.raw_tag() == Some(&[URI]) {
+                                                match data.content.as_slice() {
+                                                    Ok(content) => {
+                                                        // Decode the UTF-8 string
+                                                        let addr: String = match decode_utf8(
+                                                            content,
+                                                        ) {
+                                                            Ok(addr) => addr,
+                                                            Err(e) => {
+                                                                validation_report.push(format!(
                                                                     "Failed to decode UTF-8 string for context-specific primitive type with raw tag 134: {e}",
                                                                 ),
                                                             );
+                                                                return None;
+                                                            },
+                                                        };
+
+                                                        // Extract the CIP19 hash and push into
+                                                        // array
+                                                        if let Some(h) =
+                                                            extract_cip19_hash(&addr, Some("stake"))
+                                                        {
+                                                            pk_addrs.push(h);
+                                                        }
+                                                    },
+                                                    Err(e) => {
+                                                        validation_report.push(
+                                                        format!("Failed to process content for context-specific primitive type with raw tag 134: {e}"));
                                                         return None;
                                                     },
-                                                };
-
-                                                // Extract the CIP19 hash and push into
-                                                // array
-                                                if let Some(h) =
-                                                    extract_cip19_hash(&addr, Some("stake"))
-                                                {
-                                                    pk_addrs.push(h);
                                                 }
-                                            },
-                                            Err(e) => {
-                                                validation_report.push(
-                                                        format!("Failed to process content for context-specific primitive type with raw tag 134: {e}"));
-                                                return None;
-                                            },
+                                            }
                                         }
-                                    }
-                                }
-                            },
-                            Err(e) => {
-                                validation_report.push(
+                                    },
+                                    Err(e) => {
+                                        validation_report.push(
                                         format!(
                                             "Failed to parse DER sequence for Subject Alternative Name extension: {e}"
                                         )
                                     );
-                                return None;
-                            },
-                        }
+                                        return None;
+                                    },
+                                }
+                            }
+                        },
+                        _ => continue,
                     }
                 }
             }
             // C509 Certificate
             if let Some(c509_certs) = &self.x509_chunks.0.c509_certs {
-                for cert in c509_certs {
-                    match cert {
+                for c509_cert in c509_certs {
+                    match c509_cert {
                         C509Cert::C509CertInMetadatumReference(_) => {
                             validation_report.push(
                                 "C509 metadatum reference is currently not supported".to_string(),
@@ -383,6 +392,7 @@ impl Cip509 {
                                 }
                             }
                         },
+                        _ => continue,
                     }
                 }
             }
