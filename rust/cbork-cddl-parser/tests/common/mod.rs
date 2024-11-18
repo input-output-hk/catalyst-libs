@@ -19,14 +19,16 @@ pub struct CDDLTestParser;
 
 /// # Panics
 #[allow(dead_code)]
-pub(crate) fn check_tests_rule(rule_type: Rule, passes: &[&str], fails: &[&str]) {
+pub(crate) fn check_tests_rule(
+    rule_type: Rule, passes: &[impl AsRef<str>], fails: &[impl AsRef<str>],
+) {
     for test in passes {
-        let parse = CDDLTestParser::parse(rule_type, test);
+        let parse = CDDLTestParser::parse(rule_type, test.as_ref());
         assert!(parse.is_ok());
     }
 
     for test in fails {
-        let parse = CDDLTestParser::parse(rule_type, test);
+        let parse = CDDLTestParser::parse(rule_type, test.as_ref());
         assert!(parse.is_err());
     }
 }

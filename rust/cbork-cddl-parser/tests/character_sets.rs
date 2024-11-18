@@ -1,149 +1,95 @@
 // cspell: words PCHAR pchar BCHAR bchar SESC sesc SCHAR schar fffd fffe
 
 mod common;
-use common::{CDDLTestParser, Rule};
-use pest::Parser;
+use common::Rule;
 
-#[test]
 /// Test if the `WHITESPACE` rule passes properly.
+#[test]
 fn check_whitespace() {
-    let whitespace = vec![" ", "\t", "\r", "\n", "\r\n"];
-
-    let not_whitespace = "not";
-
-    for ws in whitespace {
-        let parse = CDDLTestParser::parse(Rule::WHITESPACE, ws);
-        assert!(parse.is_ok());
-    }
-
-    let parse = CDDLTestParser::parse(Rule::WHITESPACE, not_whitespace);
-    assert!(parse.is_err());
+    common::check_tests_rule(Rule::WHITESPACE, &[" ", "\t", "\r", "\n", "\r\n"], &["not"]);
 }
 
-#[test]
 /// Test if the `PCHAR` rule passes properly.
+#[test]
 fn check_pchar() {
-    for x in ('\u{0}'..='\u{ff}').map(char::from) {
-        let test = format!("{x}");
-        let parse = CDDLTestParser::parse(Rule::PCHAR, &test);
-        if x < ' ' || x == '\u{7f}' {
-            assert!(parse.is_err());
-        } else {
-            assert!(parse.is_ok());
-        }
-    }
-
-    let parse = CDDLTestParser::parse(Rule::ASCII_VISIBLE, "\r");
-    assert!(parse.is_err());
+    let passes = ('\u{0}'..='\u{ff}')
+        .filter(|x| x >= &' ' && x != &'\u{7f}')
+        .map(String::from)
+        .collect::<Vec<_>>();
+    let fails = ('\u{0}'..='\u{ff}')
+        .filter(|x| x < &' ' || x == &'\u{7f}')
+        .map(String::from)
+        .collect::<Vec<_>>();
+    common::check_tests_rule(Rule::PCHAR, &passes, &fails);
 }
 
-#[test]
 /// Test if the `BCHAR` rule passes properly.
+#[test]
 fn check_bchar() {
-    for x in ('\u{0}'..='\u{ff}').map(char::from) {
-        let test = format!("{x}");
-        let parse = CDDLTestParser::parse(Rule::BCHAR, &test);
-        if !matches!(x, '\n' | '\r') && x < ' ' || matches!(x, '\t' | '\'' | '\\' | '\u{7f}') {
-            assert!(parse.is_err());
-        } else {
-            assert!(parse.is_ok());
-        }
-    }
+    let passes = ('\u{0}'..='\u{ff}')
+        .filter(|x| {
+            (x >= &' ' && !matches!(x, '\t' | '\'' | '\\' | '\u{7f}')) || matches!(x, '\n' | '\r')
+        })
+        .map(String::from)
+        .collect::<Vec<_>>();
 
-    let parse = CDDLTestParser::parse(Rule::ASCII_VISIBLE, "\r");
-    assert!(parse.is_err());
+    let fails = ('\u{0}'..='\u{ff}')
+        .filter(|x| {
+            x < &' ' && !matches!(x, '\n' | '\r') || matches!(x, '\t' | '\'' | '\\' | '\u{7f}')
+        })
+        .map(String::from)
+        .collect::<Vec<_>>();
+
+    common::check_tests_rule(Rule::BCHAR, &passes, &fails);
 }
 
-#[test]
 /// Test if the `SESC` rule passes properly.
+#[test]
 fn check_sesc() {
-    for x in (' '..='\u{ff}').map(char::from) {
-        let test = format!("\\{x}");
-        let parse = CDDLTestParser::parse(Rule::SESC, &test);
-        if x == '\u{7f}' {
-            assert!(parse.is_err());
-        } else {
-            assert!(parse.is_ok());
-        }
-    }
-
-    let parse = CDDLTestParser::parse(Rule::ASCII_VISIBLE, "\r");
-    assert!(parse.is_err());
+    let passes = (' '..='\u{ff}')
+        .filter(|x| x != &'\u{7f}')
+        .map(|x| format!("\\{x}"))
+        .collect::<Vec<_>>();
+    common::check_tests_rule(Rule::SESC, &passes, &["\u{7f}"]);
 }
 
-#[test]
 /// Test if the `ASCII_VISIBLE` rule passes properly.
+#[test]
 fn check_ascii_visible() {
-    for x in (b' '..=b'~').map(char::from) {
-        let test = x.to_string();
-        let parse = CDDLTestParser::parse(Rule::ASCII_VISIBLE, &test);
-        assert!(parse.is_ok());
-    }
-
-    let parse = CDDLTestParser::parse(Rule::ASCII_VISIBLE, "\r");
-    assert!(parse.is_err());
-
-    let parse = CDDLTestParser::parse(Rule::ASCII_VISIBLE, "\u{80}");
-    assert!(parse.is_err());
+    let passes = (' '..='~').map(String::from).collect::<Vec<_>>();
+    common::check_tests_rule(Rule::ASCII_VISIBLE, &passes, &["\r", "\u{80}"]);
 }
 
-#[test]
 /// Test if the `SCHAR_ASCII_VISIBLE` rule passes properly.
+#[test]
 fn check_schar_ascii_visible() {
-    let invalids = "\"\\";
-    for x in (b' '..=b'~').map(char::from) {
-        let test = x.to_string();
-        let parse = CDDLTestParser::parse(Rule::SCHAR_ASCII_VISIBLE, &test);
-        if invalids.contains(x) {
-            assert!(parse.is_err());
-        } else {
-            assert!(parse.is_ok());
-        }
-    }
-
-    let parse = CDDLTestParser::parse(Rule::SCHAR_ASCII_VISIBLE, "\r");
-    assert!(parse.is_err());
-
-    let parse = CDDLTestParser::parse(Rule::SCHAR_ASCII_VISIBLE, "\u{80}");
-    assert!(parse.is_err());
+    let passes = (' '..='~')
+        .filter(|c| c != &'"' && c != &'\\')
+        .map(String::from)
+        .collect::<Vec<_>>();
+    common::check_tests_rule(Rule::SCHAR_ASCII_VISIBLE, &passes, &[
+        "\"", "\\", "\r", "\u{80}",
+    ]);
 }
 
-#[test]
 /// Test if the `BCHAR_ASCII_VISIBLE` rule passes properly.
+#[test]
 fn check_bchar_ascii_visible() {
-    let invalids = "'\\";
-    for x in (b' '..=b'~').map(char::from) {
-        let test = x.to_string();
-        let parse = CDDLTestParser::parse(Rule::BCHAR_ASCII_VISIBLE, &test);
-        if invalids.contains(x) {
-            assert!(parse.is_err());
-        } else {
-            assert!(parse.is_ok());
-        }
-    }
-
-    let parse = CDDLTestParser::parse(Rule::BCHAR_ASCII_VISIBLE, "\r");
-    assert!(parse.is_err());
-
-    let parse = CDDLTestParser::parse(Rule::BCHAR_ASCII_VISIBLE, "\u{80}");
-    assert!(parse.is_err());
+    let passes = (' '..='~')
+        .filter(|c| c != &'\'' && c != &'\\')
+        .map(String::from)
+        .collect::<Vec<_>>();
+    common::check_tests_rule(Rule::BCHAR_ASCII_VISIBLE, &passes, &[
+        "'", "\\", "\r", "\u{80}",
+    ]);
 }
 
-#[test]
 /// Test if the `UNICODE_CHAR` rule passes properly.
+#[test]
 fn check_unicode() {
-    let parse = CDDLTestParser::parse(Rule::UNICODE_CHAR, "\r");
-    assert!(parse.is_err());
-
-    let parse = CDDLTestParser::parse(Rule::UNICODE_CHAR, "\u{80}");
-    assert!(parse.is_ok());
-
-    let parse = CDDLTestParser::parse(Rule::UNICODE_CHAR, "\u{10fffd}");
-    assert!(parse.is_ok());
-
-    let parse = CDDLTestParser::parse(Rule::UNICODE_CHAR, "\u{7ffff}");
-    assert!(parse.is_ok());
-
-    let parse = CDDLTestParser::parse(Rule::UNICODE_CHAR, "\u{10fffe}");
-    assert!(parse.is_err());
+    common::check_tests_rule(
+        Rule::UNICODE_CHAR,
+        &["\u{80}", "\u{10fffd}", "\u{7ffff}"],
+        &["\r", "\u{10fffe}"],
+    );
 }
