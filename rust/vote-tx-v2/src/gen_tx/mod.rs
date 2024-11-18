@@ -72,6 +72,13 @@ where
             })?;
             // We don't need to hold the original encoded data of the COSE protected header
             sign.protected.original_data = None;
+
+            if sign.protected.header != cose_protected_header() {
+                return Err(minicbor::decode::Error::message(
+                    "invalid `signature` COSE_Sign protected header",
+                ));
+            }
+
             sign
         };
 
@@ -174,27 +181,11 @@ fn read_cbor_bytes(d: &mut Decoder<'_>) -> Result<Vec<u8>, minicbor::decode::Err
     Ok(bytes)
 }
 
-impl<ChoiceT, ProofT, ProopIdT> GeneralizedTx<ChoiceT, ProofT, ProopIdT>
-where
-    ChoiceT: for<'a> Cbor<'a>,
-    ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
-{
-    /// Creates a new `GeneralizedTx` struct.
-    #[must_use]
-    pub fn new(tx_body: TxBody<ChoiceT, ProofT, ProopIdT>) -> Self {
-        let signature = coset::CoseSignBuilder::new()
-            .protected(Self::cose_protected_header())
-            .build();
-        Self { tx_body, signature }
-    }
-
-    /// Returns the COSE protected header.
-    fn cose_protected_header() -> coset::Header {
-        coset::HeaderBuilder::new()
-            .content_format(coset::iana::CoapContentFormat::Cbor)
-            .build()
-    }
+/// Returns the COSE protected header for `GeneralizedTx` signature.
+fn cose_protected_header() -> coset::Header {
+    coset::HeaderBuilder::new()
+        .content_format(coset::iana::CoapContentFormat::Cbor)
+        .build()
 }
 
 #[cfg(test)]
@@ -268,16 +259,47 @@ mod tests {
             votes,
             voter_data: VoterData(voter_data),
         };
+        let signature = coset::CoseSignBuilder::new()
+            .protected(cose_protected_header())
+            .build();
 
-        let generalized_tx = GeneralizedTx::<ChoiceT, ProofT, PropIdT>::new(tx_body);
-
+        let generalized_tx = GeneralizedTx { tx_body, signature };
         let bytes = generalized_tx.to_bytes().unwrap();
         let decoded = GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).unwrap();
         assert_eq!(generalized_tx, decoded);
     }
 
     #[proptest]
-    fn invalid_generalized_tx_from_bytes_to_bytes_test(
+    fn generalized_tx_with_empty_votes_from_bytes_to_bytes_test(
+        vote_type: Vec<u8>, event: Vec<(PropEventKey, u64)>, voter_data: Vec<u8>,
+    ) {
+        let event: Vec<_> = event
+            .into_iter()
+            .map(|(key, val)| {
+                let key = key.into();
+                let value = val.to_bytes().unwrap();
+                (key, value)
+            })
+            .collect();
+
+        let empty_votes = Vec::<Vote<ChoiceT, ProofT, PropIdT>>::new();
+        let tx_body = TxBody {
+            vote_type: Uuid(vote_type.clone()),
+            event: EventMap(event.clone()),
+            votes: empty_votes,
+            voter_data: VoterData(voter_data.clone()),
+        };
+        let signature = coset::CoseSignBuilder::new()
+            .protected(cose_protected_header())
+            .build();
+
+        let generalized_tx = GeneralizedTx { tx_body, signature };
+        let bytes = generalized_tx.to_bytes().unwrap();
+        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+    }
+
+    #[proptest]
+    fn generalized_tx_with_empty_choices_from_bytes_to_bytes_test(
         vote_type: Vec<u8>, votes: Vec<PropVote>, event: Vec<(PropEventKey, u64)>,
         voter_data: Vec<u8>,
     ) {
@@ -289,43 +311,66 @@ mod tests {
                 (key, value)
             })
             .collect();
-        // Empty votes case
-        {
-            let empty_votes = Vec::<Vote<ChoiceT, ProofT, PropIdT>>::new();
-            let tx_body = TxBody {
-                vote_type: Uuid(vote_type.clone()),
-                event: EventMap(event.clone()),
-                votes: empty_votes,
-                voter_data: VoterData(voter_data.clone()),
-            };
 
-            let generalized_tx = GeneralizedTx::new(tx_body);
-            let bytes = generalized_tx.to_bytes().unwrap();
-            assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
-        }
+        let votes_with_empty_choices = votes
+            .into_iter()
+            .map(|(_, proof, prop_id)| {
+                Vote {
+                    choices: Vec::<EncodedCbor<ChoiceT>>::new(),
+                    proof: EncodedCbor(proof),
+                    prop_id: EncodedCbor(prop_id),
+                }
+            })
+            .collect();
+        let tx_body = TxBody {
+            vote_type: Uuid(vote_type),
+            event: EventMap(event),
+            votes: votes_with_empty_choices,
+            voter_data: VoterData(voter_data),
+        };
+        let signature = coset::CoseSignBuilder::new()
+            .protected(cose_protected_header())
+            .build();
 
-        // Empty choices case
-        {
-            let votes_with_empty_choices = votes
-                .into_iter()
-                .map(|(_, proof, prop_id)| {
-                    Vote {
-                        choices: Vec::<EncodedCbor<ChoiceT>>::new(),
-                        proof: EncodedCbor(proof),
-                        prop_id: EncodedCbor(prop_id),
-                    }
-                })
-                .collect();
-            let tx_body = TxBody {
-                vote_type: Uuid(vote_type),
-                event: EventMap(event),
-                votes: votes_with_empty_choices,
-                voter_data: VoterData(voter_data),
-            };
+        let generalized_tx = GeneralizedTx { tx_body, signature };
+        let bytes = generalized_tx.to_bytes().unwrap();
+        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+    }
 
-            let generalized_tx = GeneralizedTx::new(tx_body);
-            let bytes = generalized_tx.to_bytes().unwrap();
-            assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
-        }
+    #[proptest]
+    fn generalized_tx_with_wrong_signature_from_bytes_to_bytes_test(
+        vote_type: Vec<u8>, votes: Vec<PropVote>, event: Vec<(PropEventKey, u64)>,
+        voter_data: Vec<u8>,
+    ) {
+        let event: Vec<_> = event
+            .into_iter()
+            .map(|(key, val)| {
+                let key = key.into();
+                let value = val.to_bytes().unwrap();
+                (key, value)
+            })
+            .collect();
+
+        let votes = votes
+            .into_iter()
+            .map(|(choices, proof, prop_id)| {
+                Vote {
+                    choices: choices.into_iter().map(EncodedCbor).collect(),
+                    proof: EncodedCbor(proof),
+                    prop_id: EncodedCbor(prop_id),
+                }
+            })
+            .collect();
+        let tx_body = TxBody {
+            vote_type: Uuid(vote_type),
+            event: EventMap(event),
+            votes,
+            voter_data: VoterData(voter_data),
+        };
+        let signature = coset::CoseSignBuilder::new().build();
+
+        let generalized_tx = GeneralizedTx { tx_body, signature };
+        let bytes = generalized_tx.to_bytes().unwrap();
+        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
     }
 }
