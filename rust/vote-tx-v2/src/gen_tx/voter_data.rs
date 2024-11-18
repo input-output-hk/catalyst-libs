@@ -4,7 +4,7 @@ use minicbor::{data::IanaTag, Decode, Decoder, Encode};
 
 /// A voter's data struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VoterData(pub(super) Vec<u8>);
+pub struct VoterData(pub Vec<u8>);
 
 impl Decode<'_, ()> for VoterData {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {

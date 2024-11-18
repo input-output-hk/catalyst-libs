@@ -1,7 +1,5 @@
 //! A Catalyst generalised vote transaction builder
 
-#![allow(dead_code)]
-
 use anyhow::ensure;
 
 use super::{
@@ -52,6 +50,8 @@ where
     }
 
     /// Adds an `EventMap` entry to the `event` field.
+    ///
+    /// # Errors
     pub fn with_event<ValueT>(mut self, key: EventKey, value: ValueT) -> anyhow::Result<Self>
     where ValueT: for<'a> Cbor<'a> + Clone {
         let value = value.to_bytes()?;
@@ -82,21 +82,19 @@ where
     ///
     /// # Errors
     ///  - `votes` array must has at least one entry
-    pub fn build(&self) -> anyhow::Result<GeneralizedTx<ChoiceT, ProofT, ProopIdT>> {
+    pub fn build(self) -> anyhow::Result<GeneralizedTx<ChoiceT, ProofT, ProopIdT>> {
         ensure!(
             !self.votes.is_empty(),
             "`votes` array must has at least one entry"
         );
 
         let tx_body = TxBody {
-            vote_type: self.vote_type.clone(),
-            event: self.event.clone(),
-            votes: self.votes.clone(),
-            voter_data: self.voter_data.clone(),
+            vote_type: self.vote_type,
+            event: self.event,
+            votes: self.votes,
+            voter_data: self.voter_data,
         };
-        let signature = coset::CoseSignBuilder::new()
-            .protected(cose_protected_header())
-            .build();
+        let signature = self.sign_builder.build();
         Ok(GeneralizedTx { tx_body, signature })
     }
 }

@@ -9,6 +9,7 @@ mod tx_body;
 mod vote;
 mod voter_data;
 
+pub use builder::GeneralizedTxBuilder;
 use coset::CborSerializable;
 pub use event_map::{EventKey, EventMap};
 use minicbor::{data::Tag, Decode, Decoder, Encode, Encoder};
@@ -34,7 +35,7 @@ where
 
 /// A UUID struct, CBOR tag 37.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Uuid(Vec<u8>);
+pub struct Uuid(pub Vec<u8>);
 
 /// An encoded CBOR struct, CBOR tag 24.
 #[derive(Debug, Clone, PartialEq, Eq)]
