@@ -3,6 +3,7 @@
 
 // cspell: words Coap
 
+mod builder;
 mod event_map;
 mod tx_body;
 mod vote;
