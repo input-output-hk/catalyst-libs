@@ -7,7 +7,7 @@ use minicbor::{
     Decode, Decoder, Encode, Encoder,
 };
 
-use super::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid, VoterData};
+use super::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid};
 use crate::Cbor;
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
@@ -67,32 +67,6 @@ where
             .write_all(&sign_bytes)
             .map_err(minicbor::encode::Error::write)?;
 
-        Ok(())
-    }
-}
-
-impl Decode<'_, ()> for VoterData {
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let tag = d.tag()?;
-        let expected_tag = minicbor::data::IanaTag::Cbor.tag();
-        if expected_tag != tag {
-            return Err(minicbor::decode::Error::message(format!(
-                "tag value must be: {}, provided: {}",
-                expected_tag.as_u64(),
-                tag.as_u64(),
-            )));
-        }
-        let choice = d.bytes()?.to_vec();
-        Ok(Self(choice))
-    }
-}
-
-impl Encode<()> for VoterData {
-    fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(IanaTag::Cbor.tag())?;
-        e.bytes(&self.0)?;
         Ok(())
     }
 }
@@ -246,7 +220,7 @@ mod tests {
     use test_strategy::proptest;
 
     use super::{
-        super::{EventKey, EventMap, Vote},
+        super::{EventKey, EventMap, Vote, VoterData},
         *,
     };
 

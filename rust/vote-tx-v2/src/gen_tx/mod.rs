@@ -7,10 +7,12 @@ mod decoding;
 mod event_map;
 mod tx_body;
 mod vote;
+mod voter_data;
 
 pub use event_map::{EventKey, EventMap};
 pub use tx_body::TxBody;
 pub use vote::Vote;
+pub use voter_data::VoterData;
 
 use crate::Cbor;
 
@@ -31,10 +33,6 @@ where
 /// A UUID struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Uuid(Vec<u8>);
-
-/// A voter's data struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct VoterData(Vec<u8>);
 
 /// A choice struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
