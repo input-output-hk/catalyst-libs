@@ -2,6 +2,8 @@
 
 use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 
+use super::read_cbor_bytes;
+
 /// A CBOR map
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EventMap(pub(super) Vec<(EventKey, Vec<u8>)>);
@@ -81,17 +83,4 @@ impl Encode<()> for EventKey {
         };
         Ok(())
     }
-}
-
-/// Reads CBOR bytes from the decoder and returns them as bytes.
-fn read_cbor_bytes(d: &mut Decoder<'_>) -> Result<Vec<u8>, minicbor::decode::Error> {
-    let start = d.position();
-    d.skip()?;
-    let end = d.position();
-    let bytes = d
-        .input()
-        .get(start..end)
-        .ok_or(minicbor::decode::Error::end_of_input())?
-        .to_vec();
-    Ok(bytes)
 }
