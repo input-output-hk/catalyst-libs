@@ -10,10 +10,7 @@ mod voter_data;
 
 use coset::CborSerializable;
 pub use event_map::{EventKey, EventMap};
-use minicbor::{
-    data::{IanaTag, Tag},
-    Decode, Decoder, Encode, Encoder,
-};
+use minicbor::{data::Tag, Decode, Decoder, Encode, Encoder};
 pub use tx_body::TxBody;
 pub use vote::{Choice, Proof, PropId, Vote};
 pub use voter_data::VoterData;
@@ -44,7 +41,10 @@ pub struct EncodedCbor<T>(T)
 where T: for<'a> Cbor<'a>;
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
-const CBOR_UUID_TAG: u64 = 37;
+const UUID_TAG: u64 = 37;
+
+/// encoded-cbor CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
+const ENCODED_CBOR_TAG: u64 = 24;
 
 /// `GeneralizedTx` array struct length
 const GENERALIZED_TX_LEN: u64 = 2;
@@ -107,9 +107,9 @@ where
 impl Decode<'_, ()> for Uuid {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let tag = d.tag()?;
-        if CBOR_UUID_TAG != tag.as_u64() {
+        if UUID_TAG != tag.as_u64() {
             return Err(minicbor::decode::Error::message(format!(
-                "tag value must be: {CBOR_UUID_TAG}, provided: {}",
+                "tag value must be: {UUID_TAG}, provided: {}",
                 tag.as_u64(),
             )));
         }
@@ -122,7 +122,7 @@ impl Encode<()> for Uuid {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(Tag::new(CBOR_UUID_TAG))?;
+        e.tag(Tag::new(UUID_TAG))?;
         e.bytes(&self.0)?;
         Ok(())
     }
@@ -133,11 +133,9 @@ where T: for<'a> Cbor<'a>
 {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let tag = d.tag()?;
-        let expected_tag = minicbor::data::IanaTag::Cbor.tag();
-        if expected_tag != tag {
+        if ENCODED_CBOR_TAG != tag.as_u64() {
             return Err(minicbor::decode::Error::message(format!(
-                "tag value must be: {}, provided: {}",
-                expected_tag.as_u64(),
+                "tag value must be: {ENCODED_CBOR_TAG}, provided: {}",
                 tag.as_u64(),
             )));
         }
@@ -153,7 +151,7 @@ where T: for<'a> Cbor<'a>
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(IanaTag::Cbor.tag())?;
+        e.tag(Tag::new(ENCODED_CBOR_TAG))?;
         let cbor_bytes = self
             .0
             .to_bytes()
