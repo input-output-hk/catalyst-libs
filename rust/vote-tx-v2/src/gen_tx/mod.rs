@@ -7,28 +7,27 @@ mod builder;
 mod event_map;
 mod tx_body;
 mod vote;
-mod voter_data;
 
 pub use builder::GeneralizedTxBuilder;
 use coset::CborSerializable;
 pub use event_map::{EventKey, EventMap};
 use minicbor::{data::Tag, Decode, Decoder, Encode, Encoder};
-pub use tx_body::TxBody;
+pub use tx_body::{TxBody, VoterData};
 pub use vote::{Choice, Proof, PropId, Vote};
-pub use voter_data::VoterData;
 
 use crate::Cbor;
 
 /// A generalized tx struct.
 #[derive(Debug, Clone, PartialEq)]
-pub struct GeneralizedTx<ChoiceT, ProofT, ProopIdT>
+pub struct GeneralizedTx<ChoiceT, ProofT, ProopIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     ProopIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     /// `tx-body` field
-    tx_body: TxBody<ChoiceT, ProofT, ProopIdT>,
+    tx_body: TxBody<ChoiceT, ProofT, ProopIdT, VoterDataT>,
     /// `signature` field
     signature: coset::CoseSign,
 }
@@ -51,11 +50,13 @@ const ENCODED_CBOR_TAG: u64 = 24;
 /// `GeneralizedTx` array struct length
 const GENERALIZED_TX_LEN: u64 = 2;
 
-impl<ChoiceT, ProofT, ProopIdT> Decode<'_, ()> for GeneralizedTx<ChoiceT, ProofT, ProopIdT>
+impl<ChoiceT, ProofT, ProopIdT, VoterDataT> Decode<'_, ()>
+    for GeneralizedTx<ChoiceT, ProofT, ProopIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     ProopIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(GENERALIZED_TX_LEN) = d.array()? else {
@@ -88,11 +89,13 @@ where
     }
 }
 
-impl<ChoiceT, ProofT, PropIdT> Encode<()> for GeneralizedTx<ChoiceT, ProofT, PropIdT>
+impl<ChoiceT, ProofT, PropIdT, VoterDataT> Encode<()>
+    for GeneralizedTx<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     PropIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut Encoder<W>, (): &mut (),
@@ -201,6 +204,7 @@ mod tests {
     type ChoiceT = Vec<u8>;
     type ProofT = Vec<u8>;
     type PropIdT = Vec<u8>;
+    type VoterDataT = Vec<u8>;
 
     type PropVote = (Vec<ChoiceT>, ProofT, PropIdT);
 
@@ -259,7 +263,7 @@ mod tests {
             vote_type: Uuid(vote_type),
             event: EventMap(event),
             votes,
-            voter_data: VoterData(voter_data),
+            voter_data: EncodedCbor(voter_data),
         };
         let signature = coset::CoseSignBuilder::new()
             .protected(cose_protected_header())
@@ -267,7 +271,7 @@ mod tests {
 
         let generalized_tx = GeneralizedTx { tx_body, signature };
         let bytes = generalized_tx.to_bytes().unwrap();
-        let decoded = GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).unwrap();
+        let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
         assert_eq!(generalized_tx, decoded);
     }
 
@@ -289,7 +293,7 @@ mod tests {
             vote_type: Uuid(vote_type.clone()),
             event: EventMap(event.clone()),
             votes: empty_votes,
-            voter_data: VoterData(voter_data.clone()),
+            voter_data: EncodedCbor(voter_data.clone()),
         };
         let signature = coset::CoseSignBuilder::new()
             .protected(cose_protected_header())
@@ -297,7 +301,7 @@ mod tests {
 
         let generalized_tx = GeneralizedTx { tx_body, signature };
         let bytes = generalized_tx.to_bytes().unwrap();
-        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT, VoterDataT>::from_bytes(&bytes).is_err());
     }
 
     #[proptest]
@@ -328,7 +332,7 @@ mod tests {
             vote_type: Uuid(vote_type),
             event: EventMap(event),
             votes: votes_with_empty_choices,
-            voter_data: VoterData(voter_data),
+            voter_data: EncodedCbor(voter_data),
         };
         let signature = coset::CoseSignBuilder::new()
             .protected(cose_protected_header())
@@ -336,7 +340,7 @@ mod tests {
 
         let generalized_tx = GeneralizedTx { tx_body, signature };
         let bytes = generalized_tx.to_bytes().unwrap();
-        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT, VoterDataT>::from_bytes(&bytes).is_err());
     }
 
     #[proptest]
@@ -367,12 +371,12 @@ mod tests {
             vote_type: Uuid(vote_type),
             event: EventMap(event),
             votes,
-            voter_data: VoterData(voter_data),
+            voter_data: EncodedCbor(voter_data),
         };
         let signature = coset::CoseSignBuilder::new().build();
 
         let generalized_tx = GeneralizedTx { tx_body, signature };
         let bytes = generalized_tx.to_bytes().unwrap();
-        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+        assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT, VoterDataT>::from_bytes(&bytes).is_err());
     }
 }

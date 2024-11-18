@@ -2,19 +2,23 @@
 
 use minicbor::{Decode, Decoder, Encode, Encoder};
 
-use super::{EventMap, Uuid, Vote, VoterData};
+use super::{EncodedCbor, EventMap, Uuid, Vote};
 use crate::Cbor;
 
 /// `TxBody` array struct length
 const TX_BODY_LEN: u64 = 4;
 
+/// A voter's data type.
+pub type VoterData<T> = EncodedCbor<T>;
+
 /// A tx body struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TxBody<ChoiceT, ProofT, ProopIdT>
+pub struct TxBody<ChoiceT, ProofT, ProopIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     ProopIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     /// `vote-type` field
     pub(super) vote_type: Uuid,
@@ -23,14 +27,16 @@ where
     /// `votes` field
     pub(super) votes: Vec<Vote<ChoiceT, ProofT, ProopIdT>>,
     /// `voter-data` field
-    pub(super) voter_data: VoterData,
+    pub(super) voter_data: VoterData<VoterDataT>,
 }
 
-impl<ChoiceT, ProofT, PropIdT> Decode<'_, ()> for TxBody<ChoiceT, ProofT, PropIdT>
+impl<ChoiceT, ProofT, PropIdT, VoterDataT> Decode<'_, ()>
+    for TxBody<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     PropIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(TX_BODY_LEN) = d.array()? else {
@@ -57,11 +63,13 @@ where
     }
 }
 
-impl<ChoiceT, ProofT, PropIdT> Encode<()> for TxBody<ChoiceT, ProofT, PropIdT>
+impl<ChoiceT, ProofT, PropIdT, VoterDataT> Encode<()>
+    for TxBody<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     PropIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut Encoder<W>, (): &mut (),

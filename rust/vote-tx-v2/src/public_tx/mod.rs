@@ -3,12 +3,16 @@
 
 use std::ops::{Deref, DerefMut};
 
-use crate::gen_tx::{GeneralizedTx, Uuid};
+use crate::{
+    gen_tx::{GeneralizedTx, Uuid},
+    Cbor,
+};
 
 mod decoding;
 
 /// A public vote tx struct.
-pub struct PublicTx(GeneralizedTx<Choice, Proof, PropId>);
+pub struct PublicTx<VoteDataT>(GeneralizedTx<Choice, Proof, PropId, VoteDataT>)
+where VoteDataT: for<'a> Cbor<'a>;
 
 /// A public voting choice struct.
 pub struct Choice(pub u64);
@@ -19,15 +23,19 @@ pub struct Proof;
 /// A public voting proposal id struct.
 pub struct PropId(pub Uuid);
 
-impl Deref for PublicTx {
-    type Target = GeneralizedTx<Choice, Proof, PropId>;
+impl<VoteDataT> Deref for PublicTx<VoteDataT>
+where VoteDataT: for<'a> Cbor<'a>
+{
+    type Target = GeneralizedTx<Choice, Proof, PropId, VoteDataT>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl DerefMut for PublicTx {
+impl<VoteDataT> DerefMut for PublicTx<VoteDataT>
+where VoteDataT: for<'a> Cbor<'a>
+{
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }

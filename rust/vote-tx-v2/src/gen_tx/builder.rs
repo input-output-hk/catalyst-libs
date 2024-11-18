@@ -10,11 +10,12 @@ use crate::Cbor;
 
 /// `GeneralizedTx` builder struct
 #[allow(clippy::module_name_repetitions)]
-pub struct GeneralizedTxBuilder<ChoiceT, ProofT, ProopIdT>
+pub struct GeneralizedTxBuilder<ChoiceT, ProofT, ProopIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
     ProopIdT: for<'a> Cbor<'a>,
+    VoterDataT: for<'a> Cbor<'a>,
 {
     /// The `vote_type` field
     vote_type: Uuid,
@@ -23,20 +24,22 @@ where
     /// The `votes` field
     votes: Vec<Vote<ChoiceT, ProofT, ProopIdT>>,
     /// The `voter_data` field
-    voter_data: VoterData,
+    voter_data: VoterData<VoterDataT>,
     /// The `signature` builder field
     sign_builder: coset::CoseSignBuilder,
 }
 
-impl<ChoiceT, ProofT, ProopIdT> GeneralizedTxBuilder<ChoiceT, ProofT, ProopIdT>
+impl<ChoiceT, ProofT, ProopIdT, VoterDataT>
+    GeneralizedTxBuilder<ChoiceT, ProofT, ProopIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a> + Clone,
     ProofT: for<'a> Cbor<'a> + Clone,
     ProopIdT: for<'a> Cbor<'a> + Clone,
+    VoterDataT: for<'a> Cbor<'a> + Clone,
 {
     /// Creates a new `GeneralizedTxBuilder` struct
     #[must_use]
-    pub fn new(vote_type: Uuid, voter_data: VoterData) -> Self {
+    pub fn new(vote_type: Uuid, voter_data: VoterData<VoterDataT>) -> Self {
         let event = EventMap::default();
         let votes = Vec::default();
         let sign_builder = coset::CoseSignBuilder::new().protected(cose_protected_header());
@@ -82,7 +85,7 @@ where
     ///
     /// # Errors
     ///  - `votes` array must has at least one entry
-    pub fn build(self) -> anyhow::Result<GeneralizedTx<ChoiceT, ProofT, ProopIdT>> {
+    pub fn build(self) -> anyhow::Result<GeneralizedTx<ChoiceT, ProofT, ProopIdT, VoterDataT>> {
         ensure!(
             !self.votes.is_empty(),
             "`votes` array must has at least one entry"

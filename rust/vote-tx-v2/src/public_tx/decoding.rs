@@ -4,15 +4,20 @@
 use minicbor::{Decode, Encode};
 
 use super::{Choice, GeneralizedTx, Proof, PropId, PublicTx, Uuid};
+use crate::Cbor;
 
-impl Decode<'_, ()> for PublicTx {
+impl<VoteDataT> Decode<'_, ()> for PublicTx<VoteDataT>
+where VoteDataT: for<'a> Cbor<'a>
+{
     fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let gen_tx = GeneralizedTx::decode(d, &mut ())?;
         Ok(Self(gen_tx))
     }
 }
 
-impl Encode<()> for PublicTx {
+impl<VoteDataT> Encode<()> for PublicTx<VoteDataT>
+where VoteDataT: for<'a> Cbor<'a>
+{
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
