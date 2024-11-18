@@ -10,11 +10,24 @@ pub mod gen_tx;
 pub mod public_tx;
 
 /// Cbor encodable and decodable type trait.
-pub trait Cbor<'a>: Encode<()> + Decode<'a, ()> {
+pub trait Cbor<'a> {
     /// Encodes to CBOR encoded bytes.
     ///
     /// # Errors
     ///  - Cannot encode
+    fn to_bytes(&self) -> anyhow::Result<Vec<u8>>;
+
+    /// Decodes from the CBOR encoded bytes.
+    ///
+    /// # Errors
+    ///  - Cannot decode
+    fn from_bytes(bytes: &'a [u8]) -> anyhow::Result<Self>
+    where Self: Sized;
+}
+
+impl<'a, T> Cbor<'a> for T
+where T: Encode<()> + Decode<'a, ()>
+{
     fn to_bytes(&self) -> anyhow::Result<Vec<u8>> {
         let mut bytes = Vec::new();
         let mut e = Encoder::new(&mut bytes);
@@ -23,10 +36,6 @@ pub trait Cbor<'a>: Encode<()> + Decode<'a, ()> {
         Ok(bytes)
     }
 
-    /// Decodes from the CBOR encoded bytes.
-    ///
-    /// # Errors
-    ///  - Cannot decode
     fn from_bytes(bytes: &'a [u8]) -> anyhow::Result<Self> {
         let mut decoder = Decoder::new(bytes);
         let res = Self::decode(&mut decoder, &mut ())
@@ -34,5 +43,3 @@ pub trait Cbor<'a>: Encode<()> + Decode<'a, ()> {
         Ok(res)
     }
 }
-
-impl<'a, T> Cbor<'a> for T where T: Encode<()> + Decode<'a, ()> {}

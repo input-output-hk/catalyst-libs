@@ -5,11 +5,11 @@ use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 use super::read_cbor_bytes;
 
 /// A CBOR map
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct EventMap(pub(super) Vec<(EventKey, Vec<u8>)>);
 
 /// An `event-key` type definition.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum EventKey {
     /// CBOR `int` type
     Int(Int),

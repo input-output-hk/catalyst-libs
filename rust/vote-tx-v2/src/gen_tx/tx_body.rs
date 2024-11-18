@@ -12,7 +12,7 @@ const TX_BODY_LEN: u64 = 4;
 pub type VoterData<T> = EncodedCbor<T>;
 
 /// A tx body struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TxBody<ChoiceT, ProofT, ProopIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,

@@ -16,7 +16,7 @@ pub type Proof<T> = EncodedCbor<T>;
 pub type PropId<T> = EncodedCbor<T>;
 
 /// A vote struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Vote<ChoiceT, ProofT, ProopIdT>
 where
     ChoiceT: for<'a> Cbor<'a>,

@@ -33,11 +33,11 @@ where
 }
 
 /// A UUID struct, CBOR tag 37.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Uuid(pub Vec<u8>);
 
 /// An encoded CBOR struct, CBOR tag 24.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct EncodedCbor<T>(T)
 where T: for<'a> Cbor<'a>;
 
