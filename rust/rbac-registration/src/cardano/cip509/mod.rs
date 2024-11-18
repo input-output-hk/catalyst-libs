@@ -6,6 +6,7 @@
 
 pub mod rbac;
 pub mod x509_chunks;
+pub(crate) mod utils;
 
 use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
 use der_parser::der::parse_der_sequence;
@@ -22,12 +23,12 @@ use pallas::{
 };
 use rbac::{certs::C509Cert, role_data::RoleData};
 use strum_macros::FromRepr;
+use utils::cip19::{compare_key_hash, extract_cip19_hash, extract_key_hash};
 use x509_cert::{der::Decode as _, ext::pkix::ID_CE_SUBJECT_ALT_NAME};
 use x509_chunks::X509Chunks;
 
 use super::transaction::witness::TxWitness;
 use crate::utils::{
-    cip19::{compare_key_hash, extract_cip19_hash, extract_key_hash},
     decode_helper::{decode_bytes, decode_helper, decode_map_len},
     general::{decode_utf8, decremented_index},
     hashing::{blake2b_128, blake2b_256},
