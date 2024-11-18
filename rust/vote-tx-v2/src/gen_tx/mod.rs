@@ -4,10 +4,11 @@
 // cspell: words Coap
 
 mod decoding;
+mod event_map;
 mod tx_body;
 mod vote;
 
-use minicbor::data::Int;
+pub use event_map::{EventKey, EventMap};
 pub use tx_body::TxBody;
 pub use vote::Vote;
 
@@ -25,19 +26,6 @@ where
     tx_body: TxBody<ChoiceT, ProofT, ProopIdT>,
     /// `signature` field
     signature: coset::CoseSign,
-}
-
-/// A CBOR map
-#[derive(Debug, Clone, PartialEq, Eq, Default)]
-pub struct EventMap(Vec<(EventKey, Vec<u8>)>);
-
-/// An `event-key` type definition.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum EventKey {
-    /// CBOR `int` type
-    Int(Int),
-    /// CBOR `text` type
-    Text(String),
 }
 
 /// A UUID struct.
