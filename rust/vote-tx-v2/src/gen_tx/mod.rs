@@ -4,8 +4,10 @@
 // cspell: words Coap
 
 mod decoding;
+mod tx_body;
 
 use minicbor::data::Int;
+pub use tx_body::TxBody;
 
 use crate::Cbor;
 
@@ -21,24 +23,6 @@ where
     tx_body: TxBody<ChoiceT, ProofT, ProopIdT>,
     /// `signature` field
     signature: coset::CoseSign,
-}
-
-/// A tx body struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct TxBody<ChoiceT, ProofT, ProopIdT>
-where
-    ChoiceT: for<'a> Cbor<'a>,
-    ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
-{
-    /// `vote-type` field
-    vote_type: Uuid,
-    /// `event` field
-    event: EventMap,
-    /// `votes` field
-    votes: Vec<Vote<ChoiceT, ProofT, ProopIdT>>,
-    /// `voter-data` field
-    voter_data: VoterData,
 }
 
 /// A vote struct.
@@ -58,7 +42,7 @@ where
 }
 
 /// A CBOR map
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EventMap(Vec<(EventKey, Vec<u8>)>);
 
 /// An `event-key` type definition.
