@@ -11,7 +11,7 @@ mod voter_data;
 
 pub use event_map::{EventKey, EventMap};
 pub use tx_body::TxBody;
-pub use vote::Vote;
+pub use vote::{Choice, Proof, PropId, Vote};
 pub use voter_data::VoterData;
 
 use crate::Cbor;
@@ -30,23 +30,13 @@ where
     signature: coset::CoseSign,
 }
 
-/// A UUID struct.
+/// A UUID struct, CBOR tag 37.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Uuid(Vec<u8>);
 
-/// A choice struct.
+/// An encoded CBOR struct, CBOR tag 24.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Choice<T>(T)
-where T: for<'a> Cbor<'a>;
-
-/// A proof struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Proof<T>(T)
-where T: for<'a> Cbor<'a>;
-
-/// A prop id struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct PropId<T>(T)
+pub struct EncodedCbor<T>(T)
 where T: for<'a> Cbor<'a>;
 
 impl<ChoiceT, ProofT, ProopIdT> GeneralizedTx<ChoiceT, ProofT, ProopIdT>

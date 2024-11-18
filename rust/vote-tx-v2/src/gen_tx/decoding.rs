@@ -7,7 +7,7 @@ use minicbor::{
     Decode, Decoder, Encode, Encoder,
 };
 
-use super::{Choice, GeneralizedTx, Proof, PropId, TxBody, Uuid};
+use super::{EncodedCbor, GeneralizedTx, TxBody, Uuid};
 use crate::Cbor;
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
@@ -95,7 +95,7 @@ impl Encode<()> for Uuid {
     }
 }
 
-impl<T> Decode<'_, ()> for Choice<T>
+impl<T> Decode<'_, ()> for EncodedCbor<T>
 where T: for<'a> Cbor<'a>
 {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
@@ -108,94 +108,24 @@ where T: for<'a> Cbor<'a>
                 tag.as_u64(),
             )));
         }
-        let choice_bytes = d.bytes()?.to_vec();
-        let choice = T::from_bytes(&choice_bytes).map_err(minicbor::decode::Error::message)?;
-        Ok(Self(choice))
+        let cbor_bytes = d.bytes()?.to_vec();
+        let cbor = T::from_bytes(&cbor_bytes).map_err(minicbor::decode::Error::message)?;
+        Ok(Self(cbor))
     }
 }
 
-impl<T> Encode<()> for Choice<T>
+impl<T> Encode<()> for EncodedCbor<T>
 where T: for<'a> Cbor<'a>
 {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.tag(IanaTag::Cbor.tag())?;
-        let choice_bytes = self
+        let cbor_bytes = self
             .0
             .to_bytes()
             .map_err(minicbor::encode::Error::message)?;
-        e.bytes(&choice_bytes)?;
-        Ok(())
-    }
-}
-
-impl<T> Decode<'_, ()> for Proof<T>
-where T: for<'a> Cbor<'a>
-{
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let tag = d.tag()?;
-        let expected_tag = minicbor::data::IanaTag::Cbor.tag();
-        if expected_tag != tag {
-            return Err(minicbor::decode::Error::message(format!(
-                "tag value must be: {}, provided: {}",
-                expected_tag.as_u64(),
-                tag.as_u64(),
-            )));
-        }
-        let proof_bytes = d.bytes()?.to_vec();
-        let proof = T::from_bytes(&proof_bytes).map_err(minicbor::decode::Error::message)?;
-        Ok(Self(proof))
-    }
-}
-
-impl<T> Encode<()> for Proof<T>
-where T: for<'a> Cbor<'a>
-{
-    fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(IanaTag::Cbor.tag())?;
-        let proof_bytes = self
-            .0
-            .to_bytes()
-            .map_err(minicbor::encode::Error::message)?;
-        e.bytes(&proof_bytes)?;
-        Ok(())
-    }
-}
-
-impl<T> Decode<'_, ()> for PropId<T>
-where T: for<'a> Cbor<'a>
-{
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let tag = d.tag()?;
-        let expected_tag = IanaTag::Cbor.tag();
-        if expected_tag != tag {
-            return Err(minicbor::decode::Error::message(format!(
-                "tag value must be: {}, provided: {}",
-                expected_tag.as_u64(),
-                tag.as_u64(),
-            )));
-        }
-        let prop_id_bytes = d.bytes()?.to_vec();
-        let prop_id = T::from_bytes(&prop_id_bytes).map_err(minicbor::decode::Error::message)?;
-        Ok(Self(prop_id))
-    }
-}
-
-impl<T> Encode<()> for PropId<T>
-where T: for<'a> Cbor<'a>
-{
-    fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(IanaTag::Cbor.tag())?;
-        let prop_id_bytes = self
-            .0
-            .to_bytes()
-            .map_err(minicbor::encode::Error::message)?;
-        e.bytes(&prop_id_bytes)?;
+        e.bytes(&cbor_bytes)?;
         Ok(())
     }
 }
@@ -220,7 +150,7 @@ mod tests {
     use test_strategy::proptest;
 
     use super::{
-        super::{EventKey, EventMap, Vote, VoterData},
+        super::{EncodedCbor, EventKey, EventMap, Vote, VoterData},
         *,
     };
 
@@ -275,9 +205,9 @@ mod tests {
             .into_iter()
             .map(|(choices, proof, prop_id)| {
                 Vote {
-                    choices: choices.into_iter().map(Choice).collect(),
-                    proof: Proof(proof),
-                    prop_id: PropId(prop_id),
+                    choices: choices.into_iter().map(EncodedCbor).collect(),
+                    proof: EncodedCbor(proof),
+                    prop_id: EncodedCbor(prop_id),
                 }
             })
             .collect();
@@ -329,9 +259,9 @@ mod tests {
                 .into_iter()
                 .map(|(_, proof, prop_id)| {
                     Vote {
-                        choices: Vec::<Choice<ChoiceT>>::new(),
-                        proof: Proof(proof),
-                        prop_id: PropId(prop_id),
+                        choices: Vec::<EncodedCbor<ChoiceT>>::new(),
+                        proof: EncodedCbor(proof),
+                        prop_id: EncodedCbor(prop_id),
                     }
                 })
                 .collect();

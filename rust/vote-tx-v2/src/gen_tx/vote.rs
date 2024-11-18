@@ -2,11 +2,18 @@
 
 use minicbor::{Decode, Decoder, Encode};
 
-use super::{Choice, Proof, PropId};
+use super::EncodedCbor;
 use crate::Cbor;
 
 /// `Vote` array struct length
 const VOTE_LEN: u64 = 3;
+
+/// A vote choice type.
+pub type Choice<T> = EncodedCbor<T>;
+/// A vote proof type.
+pub type Proof<T> = EncodedCbor<T>;
+/// A vote prop-id type.
+pub type PropId<T> = EncodedCbor<T>;
 
 /// A vote struct.
 #[derive(Debug, Clone, PartialEq, Eq)]
