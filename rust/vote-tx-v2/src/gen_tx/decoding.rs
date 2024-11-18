@@ -95,6 +95,11 @@ where
         let vote_type = Uuid::decode(d, &mut ())?;
         let event = EventMap::decode(d, &mut ())?;
         let votes = Vec::<Vote<_, _, _>>::decode(d, &mut ())?;
+        if votes.is_empty() {
+            return Err(minicbor::decode::Error::message(
+                "votes array must has at least one entry",
+            ));
+        }
         let voter_data = VoterData::decode(d, &mut ())?;
         Ok(Self {
             vote_type,
@@ -414,14 +419,27 @@ mod tests {
     use super::*;
     use crate::Cbor;
 
-    type PropChoice = Vec<u8>;
-    type PropVote = (Vec<PropChoice>, Vec<u8>, Vec<u8>);
+    type ChoiceT = Vec<u8>;
+    type ProofT = Vec<u8>;
+    type PropIdT = Vec<u8>;
+
+    type PropVote = (Vec<ChoiceT>, ProofT, PropIdT);
 
     #[derive(Debug, Arbitrary)]
     enum PropEventKey {
         Text(String),
         U64(u64),
         I64(i64),
+    }
+
+    impl From<PropEventKey> for EventKey {
+        fn from(key: PropEventKey) -> Self {
+            match key {
+                PropEventKey::Text(text) => EventKey::Text(text),
+                PropEventKey::U64(val) => EventKey::Int(val.into()),
+                PropEventKey::I64(val) => EventKey::Int(val.into()),
+            }
+        }
     }
 
     #[proptest]
@@ -443,35 +461,85 @@ mod tests {
         let event = event
             .into_iter()
             .map(|(key, val)| {
-                let key = match key {
-                    PropEventKey::Text(key) => EventKey::Text(key),
-                    PropEventKey::U64(val) => EventKey::Int(val.into()),
-                    PropEventKey::I64(val) => EventKey::Int(val.into()),
-                };
+                let key = key.into();
                 let value = val.to_bytes().unwrap();
                 (key, value)
+            })
+            .collect();
+        let votes = votes
+            .into_iter()
+            .map(|(choices, proof, prop_id)| {
+                Vote {
+                    choices: choices.into_iter().map(Choice).collect(),
+                    proof: Proof(proof),
+                    prop_id: PropId(prop_id),
+                }
             })
             .collect();
         let tx_body = TxBody {
             vote_type: Uuid(vote_type),
             event: EventMap(event),
-            votes: votes
+            votes,
+            voter_data: VoterData(voter_data),
+        };
+
+        let generalized_tx = GeneralizedTx::<ChoiceT, ProofT, PropIdT>::new(tx_body);
+
+        let bytes = generalized_tx.to_bytes().unwrap();
+        let decoded = GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).unwrap();
+        assert_eq!(generalized_tx, decoded);
+    }
+
+    #[proptest]
+    fn invalid_generalized_tx_from_bytes_to_bytes_test(
+        vote_type: Vec<u8>, votes: Vec<PropVote>, event: Vec<(PropEventKey, u64)>,
+        voter_data: Vec<u8>,
+    ) {
+        let event: Vec<_> = event
+            .into_iter()
+            .map(|(key, val)| {
+                let key = key.into();
+                let value = val.to_bytes().unwrap();
+                (key, value)
+            })
+            .collect();
+        // Empty votes case
+        {
+            let empty_votes = Vec::<Vote<ChoiceT, ProofT, PropIdT>>::new();
+            let tx_body = TxBody {
+                vote_type: Uuid(vote_type.clone()),
+                event: EventMap(event.clone()),
+                votes: empty_votes,
+                voter_data: VoterData(voter_data.clone()),
+            };
+
+            let generalized_tx = GeneralizedTx::new(tx_body);
+            let bytes = generalized_tx.to_bytes().unwrap();
+            assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+        }
+
+        // Empty choices case
+        {
+            let votes_with_empty_choices = votes
                 .into_iter()
-                .map(|(choices, proof, prop_id)| {
+                .map(|(_, proof, prop_id)| {
                     Vote {
-                        choices: choices.into_iter().map(Choice).collect(),
+                        choices: Vec::<Choice<ChoiceT>>::new(),
                         proof: Proof(proof),
                         prop_id: PropId(prop_id),
                     }
                 })
-                .collect(),
-            voter_data: VoterData(voter_data),
-        };
+                .collect();
+            let tx_body = TxBody {
+                vote_type: Uuid(vote_type),
+                event: EventMap(event),
+                votes: votes_with_empty_choices,
+                voter_data: VoterData(voter_data),
+            };
 
-        let generalized_tx = GeneralizedTx::new(tx_body);
-
-        let bytes = generalized_tx.to_bytes().unwrap();
-        let decoded = GeneralizedTx::from_bytes(&bytes).unwrap();
-        assert_eq!(generalized_tx, decoded);
+            let generalized_tx = GeneralizedTx::new(tx_body);
+            let bytes = generalized_tx.to_bytes().unwrap();
+            assert!(GeneralizedTx::<ChoiceT, ProofT, PropIdT>::from_bytes(&bytes).is_err());
+        }
     }
 }
