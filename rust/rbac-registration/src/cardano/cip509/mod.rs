@@ -5,7 +5,6 @@
 // cspell: words pkix
 
 pub mod rbac;
-pub mod types;
 pub mod x509_chunks;
 
 use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
@@ -215,9 +214,9 @@ impl Cip509 {
             };
             Some(inputs_hash == self.txn_inputs_hash)
         } else {
-            validation_report.push(
-                "Unsupported transaction era for transaction inputs hash validation".to_string(),
-            );
+            validation_report.push(format!(
+                "Unsupported transaction era for transaction inputs hash validation"
+            ));
             None
         }
     }
@@ -234,17 +233,18 @@ impl Cip509 {
                         .as_ref()
                         .or_else(|| {
                             validation_report
-                                .push("Auxiliary data hash not found in transaction".to_string());
+                                .push(format!("Auxiliary data hash not found in transaction"));
                             None
                         })?;
                 validate_aux_helper(original_aux, aux_data_hash, validation_report)
             } else {
-                validation_report.push("Auxiliary data not found in transaction".to_string());
+                validation_report.push(format!("Auxiliary data not found in transaction"));
                 None
             }
         } else {
-            validation_report
-                .push("Unsupported transaction era for auxiliary data validation".to_string());
+            validation_report.push(format!(
+                "Unsupported transaction era for auxiliary data validation"
+            ));
             None
         }
     }
@@ -346,9 +346,9 @@ impl Cip509 {
                 for c509_cert in c509_certs {
                     match c509_cert {
                         C509Cert::C509CertInMetadatumReference(_) => {
-                            validation_report.push(
-                                "C509 metadatum reference is currently not supported".to_string(),
-                            );
+                            validation_report.push(format!(
+                                "C509 metadatum reference is currently not supported"
+                            ));
                         },
                         C509Cert::C509Certificate(c509) => {
                             for exts in c509.tbs_cert().extensions().extensions() {
@@ -369,7 +369,7 @@ impl Cip509 {
                                                                     },
                                                                     _ => {
                                                                         validation_report.push(
-                                                                            "Failed to get the value of subject alternative name".to_string(),
+                                                                            format!("Failed to get the value of subject alternative name"),
                                                                         );
                                                                     }
                                                                 }
@@ -378,14 +378,14 @@ impl Cip509 {
                                                     },
                                                     c509_certificate::extensions::alt_name::GeneralNamesOrText::Text(_) => {
                                                         validation_report.push(
-                                                            "Failed to find C509 general names in subject alternative name".to_string(),
+                                                            format!("Failed to find C509 general names in subject alternative name"),
                                                         );
                                                     }
                                                 }
                                             },
                                             _ => {
                                                 validation_report.push(
-                                                    "Failed to get C509 subject alternative name".to_string()
+                                                    format!("Failed to get C509 subject alternative name")
                                                 );
                                             }
                                         }
@@ -397,8 +397,9 @@ impl Cip509 {
                 }
             }
         } else {
-            validation_report
-                .push("Unsupported transaction era for stake public key validation".to_string());
+            validation_report.push(format!(
+                "Unsupported transaction era for stake public key validation"
+            ));
             return None;
         }
 
@@ -436,8 +437,7 @@ impl Cip509 {
     ) -> Option<bool> {
         if let Some(payment_key) = role_data.payment_key {
             if payment_key == 0 {
-                validation_report
-                    .push("Invalid payment reference key, 0 is not allowed".to_string());
+                validation_report.push(format!("Invalid payment reference key, 0 is not allowed"));
                 return None;
             }
             // CIP-0509 is expected to be in conway era
@@ -471,10 +471,9 @@ impl Cip509 {
                                 },
                             };
                     }
-                    validation_report.push(
+                    validation_report.push(format!(
                         "Role payment key reference index is not found in transaction outputs"
-                            .to_string(),
-                    );
+                    ));
                     return None;
                 }
                 // Positive indicates reference to tx input
@@ -488,17 +487,16 @@ impl Cip509 {
                 };
                 // Check whether the index exists in transaction inputs
                 if inputs.get(index).is_none() {
-                    validation_report.push(
+                    validation_report.push(format!(
                         "Role payment key reference index is not found in transaction inputs"
-                            .to_string(),
-                    );
+                    ));
                     return None;
                 }
                 Some(true)
             } else {
-                validation_report.push(
-                    "Unsupported transaction era for stake payment key validation".to_string(),
-                );
+                validation_report.push(format!(
+                    "Unsupported transaction era for stake payment key validation"
+                ));
                 None
             }
         } else {
@@ -539,7 +537,7 @@ fn validate_payment_output_key_helper(
         // Compare the key hash and return the result
         return Some(compare_key_hash(&[key], witness, idx).is_ok());
     }
-    validation_report.push("Failed to extract payment key hash from address".to_string());
+    validation_report.push(format!("Failed to extract payment key hash from address"));
     None
 }
 
