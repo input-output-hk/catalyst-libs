@@ -5,9 +5,11 @@
 
 mod decoding;
 mod tx_body;
+mod vote;
 
 use minicbor::data::Int;
 pub use tx_body::TxBody;
+pub use vote::Vote;
 
 use crate::Cbor;
 
@@ -23,22 +25,6 @@ where
     tx_body: TxBody<ChoiceT, ProofT, ProopIdT>,
     /// `signature` field
     signature: coset::CoseSign,
-}
-
-/// A vote struct.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Vote<ChoiceT, ProofT, ProopIdT>
-where
-    ChoiceT: for<'a> Cbor<'a>,
-    ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
-{
-    /// `choices` field
-    choices: Vec<Choice<ChoiceT>>,
-    /// `proof` field
-    proof: Proof<ProofT>,
-    /// `prop-id` field
-    prop_id: PropId<ProopIdT>,
 }
 
 /// A CBOR map

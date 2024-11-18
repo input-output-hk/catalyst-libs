@@ -7,16 +7,11 @@ use minicbor::{
     Decode, Decoder, Encode, Encoder,
 };
 
-use super::{
-    Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, Vote, VoterData,
-};
+use super::{Choice, EventKey, EventMap, GeneralizedTx, Proof, PropId, TxBody, Uuid, VoterData};
 use crate::Cbor;
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const CBOR_UUID_TAG: u64 = 37;
-
-/// `Vote` array struct length
-const VOTE_LEN: u64 = 3;
 
 /// `GeneralizedTx` array struct length
 const GENERALIZED_TX_LEN: u64 = 2;
@@ -194,52 +189,6 @@ impl Encode<()> for Uuid {
     }
 }
 
-impl<ChoiceT, ProofT, PropIdT> Decode<'_, ()> for Vote<ChoiceT, ProofT, PropIdT>
-where
-    ChoiceT: for<'a> Cbor<'a>,
-    ProofT: for<'a> Cbor<'a>,
-    PropIdT: for<'a> Cbor<'a>,
-{
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let Some(VOTE_LEN) = d.array()? else {
-            return Err(minicbor::decode::Error::message(format!(
-                "must be a defined sized array with {VOTE_LEN} entries"
-            )));
-        };
-
-        let choices = Vec::<Choice<_>>::decode(d, &mut ())?;
-        if choices.is_empty() {
-            return Err(minicbor::decode::Error::message(
-                "choices array must has at least one entry",
-            ));
-        }
-        let proof = Proof::decode(d, &mut ())?;
-        let prop_id = PropId::decode(d, &mut ())?;
-        Ok(Self {
-            choices,
-            proof,
-            prop_id,
-        })
-    }
-}
-
-impl<ChoiceT, ProofT, PropIdT> Encode<()> for Vote<ChoiceT, ProofT, PropIdT>
-where
-    ChoiceT: for<'a> Cbor<'a>,
-    ProofT: for<'a> Cbor<'a>,
-    PropIdT: for<'a> Cbor<'a>,
-{
-    fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.array(VOTE_LEN)?;
-        self.choices.encode(e, &mut ())?;
-        self.proof.encode(e, &mut ())?;
-        self.prop_id.encode(e, &mut ())?;
-        Ok(())
-    }
-}
-
 impl<T> Decode<'_, ()> for Choice<T>
 where T: for<'a> Cbor<'a>
 {
@@ -364,8 +313,7 @@ mod tests {
     use proptest_derive::Arbitrary;
     use test_strategy::proptest;
 
-    use super::*;
-    use crate::Cbor;
+    use super::{super::Vote, *};
 
     type ChoiceT = Vec<u8>;
     type ProofT = Vec<u8>;
