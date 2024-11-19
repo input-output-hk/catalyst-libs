@@ -2,8 +2,7 @@
 
 use minicbor::{Decode, Decoder, Encode};
 
-use super::EncodedCbor;
-use crate::Cbor;
+use crate::{encoded_cbor::EncodedCbor, Cbor};
 
 /// `Vote` array struct length
 const VOTE_LEN: u64 = 3;
