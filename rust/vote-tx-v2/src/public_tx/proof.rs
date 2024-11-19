@@ -3,6 +3,7 @@
 use minicbor::{Decode, Encode};
 
 /// A public voting proof struct, CBOR `undefined`.
+#[derive(Debug, Clone, PartialEq)]
 pub struct Proof;
 
 impl Decode<'_, ()> for Proof {

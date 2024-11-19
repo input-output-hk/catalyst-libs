@@ -3,7 +3,8 @@
 use minicbor::{Decode, Encode};
 
 /// A public voting choice struct.
-pub struct Choice(u64);
+#[derive(Debug, Clone, PartialEq)]
+pub struct Choice(pub u64);
 
 impl Decode<'_, ()> for Choice {
     fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
