@@ -144,7 +144,7 @@ impl Tx {
                     .map_err(|e| anyhow!("Invalid encrypted vote, error: {e}."))?;
 
                 let size = read_be_u8(reader).map_err(|_| anyhow!("Missing proof size field."))?;
-                let proof = VoterProof::from_bytes(reader, size.into())
+                let proof = VoterProof::from_bytes_with_len(reader, size.into())
                     .map_err(|e| anyhow!("Invalid voter proof, error: {e}."))?;
 
                 VotePayload::Private(vote, proof)
@@ -343,7 +343,7 @@ mod tests {
         let size = read_be_u8(&mut reader).unwrap();
         let vote = EncryptedVote::from_bytes(&mut reader, size.into()).unwrap();
         let size = read_be_u8(&mut reader).unwrap();
-        let proof = VoterProof::from_bytes(&mut reader, size.into()).unwrap();
+        let proof = VoterProof::from_bytes_with_len(&mut reader, size.into()).unwrap();
         assert_eq!(VotePayload::Private(vote, proof), t1.vote);
 
         let block_date = read_be_u64(&mut reader).unwrap();

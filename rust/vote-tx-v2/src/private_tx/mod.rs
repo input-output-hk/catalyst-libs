@@ -63,7 +63,11 @@ mod tests {
         crypto::rng::default_rng,
         vote_protocol::{
             committee::ElectionSecretKey,
-            voter::{encrypt_vote, Vote},
+            voter::{
+                encrypt_vote,
+                proof::{generate_voter_proof, VoterProofCommitment},
+                Vote,
+            },
         },
     };
     use test_strategy::proptest;
@@ -76,13 +80,21 @@ mod tests {
         vote_type: Vec<u8>, voter_data: Vec<u8>, #[strategy(1..5_usize)] voting_options: usize,
         #[strategy(0..#voting_options)] choice: usize, prop_id: Vec<u8>,
     ) {
-        let (encrypted_vote, _) = {
-            let mut rng = default_rng();
-            let election_private_key = ElectionSecretKey::random(&mut rng);
-            let election_public_key = election_private_key.public_key();
-            let vote = Vote::new(choice, voting_options).unwrap();
-            encrypt_vote(&vote, &election_public_key, &mut rng)
-        };
+        let mut rng = default_rng();
+        let election_private_key = ElectionSecretKey::random(&mut rng);
+        let election_public_key = election_private_key.public_key();
+        let commitment = VoterProofCommitment::random(&mut rng);
+        let vote = Vote::new(choice, voting_options).unwrap();
+        let (encrypted_vote, randomness) = encrypt_vote(&vote, &election_public_key, &mut rng);
+        let proof = generate_voter_proof(
+            &vote,
+            encrypted_vote.clone(),
+            randomness,
+            &election_public_key,
+            &commitment,
+            &mut rng,
+        )
+        .unwrap();
 
         let gen_tx_builder = GeneralizedTxBuilder::<Choice, Proof, PropId, _>::new(
             Uuid(vote_type),
@@ -97,7 +109,7 @@ mod tests {
             .collect();
 
         let gen_tx = gen_tx_builder
-            .with_vote(choices, Proof, Uuid(prop_id))
+            .with_vote(choices, Proof(proof), Uuid(prop_id))
             .unwrap()
             .build()
             .unwrap();

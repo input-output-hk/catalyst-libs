@@ -84,15 +84,28 @@ impl VoterProof {
         self.0.size()
     }
 
-    /// Decode `VoterProof` from bytes.
+    /// Decode `VoterProof` from bytes, with the provided underlying vector length.
     ///
     /// # Errors
     ///   - Cannot decode announcement value.
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
-        UnitVectorProof::from_bytes(reader, len).map(Self)
+    pub fn from_bytes_with_len<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
+        UnitVectorProof::from_bytes_with_len(reader, len).map(Self)
+    }
+
+    /// Decode `VoterProof` from bytes, with the provided bytes size.
+    ///
+    /// # Errors
+    ///   - Cannot decode announcement value.
+    ///   - Cannot decode ciphertext value.
+    ///   - Cannot decode response randomness value.
+    ///   - Cannot decode scalar value.
+    pub fn from_bytes_with_size<R: Read>(
+        reader: &mut R, bytes_size: usize,
+    ) -> anyhow::Result<Self> {
+        UnitVectorProof::from_bytes_with_size(reader, bytes_size).map(Self)
     }
 
     /// Encode `EncryptedVote` tos bytes.
