@@ -8,6 +8,7 @@ use minicbor::{Decode, Decoder, Encode, Encoder};
 
 pub mod encoded_cbor;
 pub mod gen_tx;
+pub mod private_tx;
 pub mod public_tx;
 pub mod uuid;
 
