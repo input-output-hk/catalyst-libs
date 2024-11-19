@@ -3,7 +3,7 @@
 
 use minicbor::{Decode, Encode};
 
-use super::{Choice, GeneralizedTx, Proof, PropId, PublicTx, Uuid};
+use super::{GeneralizedTx, Proof, PropId, PublicTx, Uuid};
 use crate::Cbor;
 
 impl<VoteDataT> Decode<'_, ()> for PublicTx<VoteDataT>
@@ -22,21 +22,6 @@ where VoteDataT: for<'a> Cbor<'a>
         &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.0.encode(e, ctx)
-    }
-}
-
-impl Decode<'_, ()> for Choice {
-    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let choice = d.u64()?;
-        Ok(Self(choice))
-    }
-}
-
-impl Encode<()> for Choice {
-    fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        self.0.encode(e, &mut ())
     }
 }
 
