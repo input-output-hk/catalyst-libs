@@ -1,4 +1,4 @@
-vote-tx-v2 = gen-vote-tx<choice-data, proof-data, proposal>
+vote-tx-v2<voter-data-t> = gen-vote-tx<choice-data, proof-data, proposal, voter-data-t>
 
 choice-data = ciphertext
 ciphertext = [group-element, group-element]

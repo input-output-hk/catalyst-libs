@@ -1,4 +1,4 @@
-vote-tx-v2-public = gen-vote-tx<choice-data, proof-data, proposal>
+vote-tx-v2-public<voter-data-t> = gen-vote-tx<choice-data, proof-data, proposal, voter-data-t>
 
 choice-data = uint
 proof-data = undefined
