@@ -1,4 +1,4 @@
-//! A generalised tx body struct.
+//! A generalized tx body struct.
 
 use minicbor::{Decode, Decoder, Encode, Encoder};
 
@@ -13,11 +13,11 @@ pub type VoterData<T> = EncodedCbor<T>;
 
 /// A tx body struct.
 #[derive(Debug, Clone, PartialEq)]
-pub struct TxBody<ChoiceT, ProofT, ProopIdT, VoterDataT>
+pub struct TxBody<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
+    PropIdT: for<'a> Cbor<'a>,
     VoterDataT: for<'a> Cbor<'a>,
 {
     /// `vote-type` field
@@ -25,7 +25,7 @@ where
     /// `event` field
     pub(super) event: EventMap,
     /// `votes` field
-    pub(super) votes: Vec<Vote<ChoiceT, ProofT, ProopIdT>>,
+    pub(super) votes: Vec<Vote<ChoiceT, ProofT, PropIdT>>,
     /// `voter-data` field
     pub(super) voter_data: VoterData<VoterDataT>,
 }

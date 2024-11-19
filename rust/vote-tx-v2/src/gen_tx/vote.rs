@@ -1,4 +1,4 @@
-//! A generalised tx vote struct.
+//! A generalized tx vote struct.
 
 use minicbor::{Decode, Decoder, Encode};
 
@@ -16,18 +16,18 @@ pub type PropId<T> = EncodedCbor<T>;
 
 /// A vote struct.
 #[derive(Debug, Clone, PartialEq)]
-pub struct Vote<ChoiceT, ProofT, ProopIdT>
+pub struct Vote<ChoiceT, ProofT, PropIdT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
+    PropIdT: for<'a> Cbor<'a>,
 {
     /// `choices` field
     pub(super) choices: Vec<Choice<ChoiceT>>,
     /// `proof` field
     pub(super) proof: Proof<ProofT>,
     /// `prop-id` field
-    pub(super) prop_id: PropId<ProopIdT>,
+    pub(super) prop_id: PropId<PropIdT>,
 }
 
 impl<ChoiceT, ProofT, PropIdT> Decode<'_, ()> for Vote<ChoiceT, ProofT, PropIdT>

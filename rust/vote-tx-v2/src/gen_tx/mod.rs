@@ -1,4 +1,4 @@
-//! A Catalyst generalised vote transaction object, structured following this
+//! A Catalyst generalized vote transaction object, structured following this
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/gen_vote_tx/)
 
 // cspell: words Coap
@@ -19,15 +19,15 @@ use crate::Cbor;
 
 /// A generalized tx struct.
 #[derive(Debug, Clone, PartialEq)]
-pub struct GeneralizedTx<ChoiceT, ProofT, ProopIdT, VoterDataT>
+pub struct GeneralizedTx<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
+    PropIdT: for<'a> Cbor<'a>,
     VoterDataT: for<'a> Cbor<'a>,
 {
     /// `tx-body` field
-    tx_body: TxBody<ChoiceT, ProofT, ProopIdT, VoterDataT>,
+    tx_body: TxBody<ChoiceT, ProofT, PropIdT, VoterDataT>,
     /// `signature` field
     signature: coset::CoseSign,
 }
@@ -35,12 +35,12 @@ where
 /// `GeneralizedTx` array struct length
 const GENERALIZED_TX_LEN: u64 = 2;
 
-impl<ChoiceT, ProofT, ProopIdT, VoterDataT> Decode<'_, ()>
-    for GeneralizedTx<ChoiceT, ProofT, ProopIdT, VoterDataT>
+impl<ChoiceT, ProofT, PropIdT, VoterDataT> Decode<'_, ()>
+    for GeneralizedTx<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
+    PropIdT: for<'a> Cbor<'a>,
     VoterDataT: for<'a> Cbor<'a>,
 {
     fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {

@@ -1,4 +1,4 @@
-//! A generalised tx event map struct.
+//! A generalized tx event map struct.
 
 use minicbor::{data::Int, Decode, Decoder, Encode, Encoder};
 

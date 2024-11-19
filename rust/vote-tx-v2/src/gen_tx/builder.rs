@@ -1,4 +1,4 @@
-//! A Catalyst generalised vote transaction builder
+//! A Catalyst generalized vote transaction builder
 
 use anyhow::ensure;
 
@@ -7,11 +7,11 @@ use crate::{encoded_cbor::EncodedCbor, uuid::Uuid, Cbor};
 
 /// `GeneralizedTx` builder struct
 #[allow(clippy::module_name_repetitions)]
-pub struct GeneralizedTxBuilder<ChoiceT, ProofT, ProopIdT, VoterDataT>
+pub struct GeneralizedTxBuilder<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a>,
     ProofT: for<'a> Cbor<'a>,
-    ProopIdT: for<'a> Cbor<'a>,
+    PropIdT: for<'a> Cbor<'a>,
     VoterDataT: for<'a> Cbor<'a>,
 {
     /// The `vote_type` field
@@ -19,19 +19,19 @@ where
     /// The `event` field
     event: EventMap,
     /// The `votes` field
-    votes: Vec<Vote<ChoiceT, ProofT, ProopIdT>>,
+    votes: Vec<Vote<ChoiceT, ProofT, PropIdT>>,
     /// The `voter_data` field
     voter_data: VoterData<VoterDataT>,
     /// The `signature` builder field
     sign_builder: coset::CoseSignBuilder,
 }
 
-impl<ChoiceT, ProofT, ProopIdT, VoterDataT>
-    GeneralizedTxBuilder<ChoiceT, ProofT, ProopIdT, VoterDataT>
+impl<ChoiceT, ProofT, PropIdT, VoterDataT>
+    GeneralizedTxBuilder<ChoiceT, ProofT, PropIdT, VoterDataT>
 where
     ChoiceT: for<'a> Cbor<'a> + Clone,
     ProofT: for<'a> Cbor<'a> + Clone,
-    ProopIdT: for<'a> Cbor<'a> + Clone,
+    PropIdT: for<'a> Cbor<'a> + Clone,
     VoterDataT: for<'a> Cbor<'a> + Clone,
 {
     /// Creates a new `GeneralizedTxBuilder` struct
@@ -64,7 +64,7 @@ where
     /// # Errors
     ///   - `choices` array must has at least one entry-
     pub fn with_vote(
-        mut self, choices: Vec<ChoiceT>, proof: ProofT, prop_id: ProopIdT,
+        mut self, choices: Vec<ChoiceT>, proof: ProofT, prop_id: PropIdT,
     ) -> anyhow::Result<Self> {
         ensure!(
             !choices.is_empty(),
@@ -82,7 +82,7 @@ where
     ///
     /// # Errors
     ///  - `votes` array must has at least one entry
-    pub fn build(self) -> anyhow::Result<GeneralizedTx<ChoiceT, ProofT, ProopIdT, VoterDataT>> {
+    pub fn build(self) -> anyhow::Result<GeneralizedTx<ChoiceT, ProofT, PropIdT, VoterDataT>> {
         ensure!(
             !self.votes.is_empty(),
             "`votes` array must has at least one entry"
