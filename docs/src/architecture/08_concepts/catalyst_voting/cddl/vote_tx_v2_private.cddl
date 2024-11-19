@@ -1,20 +1,8 @@
 vote-tx-v2<voter-data-t> = gen-vote-tx<choice-data, proof-data, proposal, voter-data-t>
 
 choice-data = encrypted-choice
-encrypted-choice = ciphertext
-ciphertext = bytes .size 64
-
+encrypted-choice = bytes .size 64
 proposal = UUID
-
-proof-data = zk-proof
-
-zk-proof = [[+ (announcement, ciphertext, r-response)], scalar]
-
-announcement = (group-element, group-element, group-element)
-r-response = (scalar, scalar, scalar)
-
-scalar = bytes .size 32
-group-element = bytes .size 32
+proof-data = bytes .size (288..) ; 288 is a lower bound which guarantees that proof is not empty 
 
 ;# include gen_vote_tx
-
