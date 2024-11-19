@@ -4,7 +4,7 @@ use std::io::Read;
 
 use anyhow::anyhow;
 
-use super::{proof::VoterProof, EncryptedVote};
+use super::{proof::VoterProof, EncryptedChoice, EncryptedVote};
 use crate::{
     crypto::{elgamal::Ciphertext, zk_unit_vector::UnitVectorProof},
     utils::read_array,
@@ -25,8 +25,9 @@ impl EncryptedVote {
         let ciphertexts = (0..size)
             .map(|i| {
                 let bytes = read_array(reader)?;
-                Ciphertext::from_bytes(&bytes)
-                    .map_err(|e| anyhow!("Cannot decode ciphertext at {i}, error: {e}"))
+                Ok(EncryptedChoice(Ciphertext::from_bytes(&bytes).map_err(
+                    |e| anyhow!("Cannot decode ciphertext at {i}, error: {e}"),
+                )?))
             })
             .collect::<anyhow::Result<_>>()?;
 

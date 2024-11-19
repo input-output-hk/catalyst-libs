@@ -64,25 +64,25 @@ pub fn tally(
         voting_powers.len(),
     );
 
-    let ciphertexts_per_voting_option = votes
+    let encrypted_choice = votes
         .iter()
         .enumerate()
         .map(|(i, v)| {
-            v.get_ciphertext_for_choice(voting_option).ok_or(anyhow!(
+            v.get_encrypted_choice(voting_option).ok_or(anyhow!(
                 "Invalid encrypted vote at index {i}. \
-                Does not have a ciphertext for the voting option {voting_option}."
+                Does not have an encrypted option for the voting option {voting_option}."
             ))
         })
         .collect::<anyhow::Result<Vec<_>>>()?;
 
     let zero_ciphertext = Ciphertext::zero();
 
-    let res = ciphertexts_per_voting_option
+    let res = encrypted_choice
         .iter()
         .zip(voting_powers.iter())
-        .map(|(ciphertext, voting_power)| {
+        .map(|(encrypted_choice, voting_power)| {
             let voting_power_scalar = Scalar::from(*voting_power);
-            ciphertext.mul(&voting_power_scalar)
+            encrypted_choice.mul(&voting_power_scalar)
         })
         .fold(zero_ciphertext, |acc, c| acc.add(&c));
 

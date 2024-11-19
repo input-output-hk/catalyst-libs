@@ -3,6 +3,8 @@
 mod decoding;
 pub mod proof;
 
+use std::ops::Deref;
+
 use anyhow::{anyhow, bail, ensure};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 
@@ -26,9 +28,21 @@ pub struct Vote {
     voting_options: usize,
 }
 
+/// A representation of the encrypted choice.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct EncryptedChoice(Ciphertext);
+
+impl Deref for EncryptedChoice {
+    type Target = Ciphertext;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 /// A representation of the encrypted vote.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct EncryptedVote(Vec<Ciphertext>);
+pub struct EncryptedVote(Vec<EncryptedChoice>);
 
 /// A representation of the encryption randomness, used to encrypt the vote.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -43,8 +57,14 @@ impl EncryptionRandomness {
 
 impl EncryptedVote {
     /// Get the ciphertext to the corresponding `voting_option`.
-    pub(crate) fn get_ciphertext_for_choice(&self, voting_option: usize) -> Option<&Ciphertext> {
+    pub(crate) fn get_encrypted_choice(&self, voting_option: usize) -> Option<&EncryptedChoice> {
         self.0.get(voting_option)
+    }
+
+    /// Create a new `EncryptedVote` from the given `encrypted_choices` vector.
+    #[must_use]
+    pub fn new(encrypted_choices: Vec<EncryptedChoice>) -> Self {
+        Self(encrypted_choices)
     }
 }
 
@@ -100,6 +120,7 @@ pub fn encrypt_vote<R: CryptoRngCore>(
         .par_iter()
         .zip(randomness.0.par_iter())
         .map(|(m, r)| encrypt(m, &public_key.0, r))
+        .map(EncryptedChoice)
         .collect();
 
     (EncryptedVote(ciphers), randomness)
@@ -126,8 +147,8 @@ pub fn decrypt_vote(vote: &EncryptedVote, secret_key: &ElectionSecretKey) -> any
     // the maximum log value is `1`.
     let setup = BabyStepGiantStep::new(1, None)?;
 
-    for (i, encrypted_choice_per_option) in vote.0.iter().enumerate() {
-        let decrypted_choice_per_option = decrypt(encrypted_choice_per_option, &secret_key.0);
+    for (i, encrypted_choice) in vote.0.iter().enumerate() {
+        let decrypted_choice_per_option = decrypt(&encrypted_choice.0, &secret_key.0);
         let choice_per_option = setup
             .discrete_log(decrypted_choice_per_option)
             .map_err(|_| anyhow!("Invalid encrypted vote, not a valid unit vector."))?;
@@ -148,7 +169,7 @@ mod arbitrary_impl {
         sample::size_range,
     };
 
-    use super::{Ciphertext, EncryptedVote};
+    use super::{Ciphertext, EncryptedChoice, EncryptedVote};
 
     impl Arbitrary for EncryptedVote {
         type Parameters = usize;
@@ -156,6 +177,7 @@ mod arbitrary_impl {
 
         fn arbitrary_with(size: Self::Parameters) -> Self::Strategy {
             any_with::<Vec<Ciphertext>>((size_range(size), ()))
+                .prop_map(|v| v.into_iter().map(EncryptedChoice).collect())
                 .prop_map(Self)
                 .boxed()
         }

@@ -64,9 +64,10 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
         randomness.0.len(),
     );
 
+    let encrypted_choices = encrypted_vote.0.into_iter().map(|v| v.0).collect();
     let proof = generate_unit_vector_proof(
         &vote.to_unit_vector(),
-        encrypted_vote.0,
+        encrypted_choices,
         randomness.0,
         &public_key.0,
         &commitment.0,
@@ -104,7 +105,8 @@ pub fn verify_voter_proof(
     encrypted_vote: EncryptedVote, public_key: &ElectionPublicKey,
     commitment: &VoterProofCommitment, proof: &VoterProof,
 ) -> bool {
-    verify_unit_vector_proof(&proof.0, encrypted_vote.0, &public_key.0, &commitment.0)
+    let encrypted_choices = encrypted_vote.0.into_iter().map(|v| v.0).collect();
+    verify_unit_vector_proof(&proof.0, encrypted_choices, &public_key.0, &commitment.0)
 }
 
 #[cfg(test)]
