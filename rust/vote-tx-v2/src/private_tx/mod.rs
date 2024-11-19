@@ -59,7 +59,13 @@ where VoteDataT: for<'a> Cbor<'a>
 
 #[cfg(test)]
 mod tests {
-    use proptest::sample::size_range;
+    use catalyst_voting::{
+        crypto::rng::default_rng,
+        vote_protocol::{
+            committee::ElectionSecretKey,
+            voter::{encrypt_vote, Vote},
+        },
+    };
     use test_strategy::proptest;
 
     use super::*;
@@ -67,14 +73,29 @@ mod tests {
 
     #[proptest]
     fn private_tx_from_bytes_to_bytes_test(
-        vote_type: Vec<u8>, voter_data: Vec<u8>,
-        #[any(size_range(1..10_usize).lift())] choices: Vec<u64>, prop_id: Vec<u8>,
+        vote_type: Vec<u8>, voter_data: Vec<u8>, #[strategy(1..5_usize)] voting_options: usize,
+        #[strategy(0..#voting_options)] choice: usize, prop_id: Vec<u8>,
     ) {
+        let (encrypted_vote, _) = {
+            let mut rng = default_rng();
+            let election_private_key = ElectionSecretKey::random(&mut rng);
+            let election_public_key = election_private_key.public_key();
+            let vote = Vote::new(choice, voting_options).unwrap();
+            encrypt_vote(&vote, &election_public_key, &mut rng)
+        };
+
         let gen_tx_builder = GeneralizedTxBuilder::<Choice, Proof, PropId, _>::new(
             Uuid(vote_type),
             EncodedCbor(voter_data),
         );
-        let choices = choices.into_iter().map(Choice).collect();
+
+        let choices = encrypted_vote
+            .get_encrypted_choices()
+            .clone()
+            .into_iter()
+            .map(Choice)
+            .collect();
+
         let gen_tx = gen_tx_builder
             .with_vote(choices, Proof, Uuid(prop_id))
             .unwrap()

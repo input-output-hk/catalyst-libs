@@ -61,6 +61,12 @@ impl EncryptedVote {
         self.0.get(voting_option)
     }
 
+    /// Get the underlying vector.
+    #[must_use]
+    pub fn get_encrypted_choices(&self) -> &Vec<EncryptedChoice> {
+        &self.0
+    }
+
     /// Create a new `EncryptedVote` from the given `encrypted_choices` vector.
     #[must_use]
     pub fn new(encrypted_choices: Vec<EncryptedChoice>) -> Self {

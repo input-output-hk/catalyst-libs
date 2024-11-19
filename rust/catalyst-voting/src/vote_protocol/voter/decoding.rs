@@ -10,6 +10,31 @@ use crate::{
     utils::read_array,
 };
 
+impl EncryptedChoice {
+    /// `EncryptedChoice` bytes size
+    pub const BYTES_SIZE: usize = Ciphertext::BYTES_SIZE;
+
+    /// Decode `EncryptedChoice` from bytes.
+    ///
+    /// # Errors
+    ///   - Cannot decode ciphertext.
+    pub fn from_bytes(bytes: &[u8; Self::BYTES_SIZE]) -> anyhow::Result<Self> {
+        Ok(EncryptedChoice(Ciphertext::from_bytes(bytes)?))
+    }
+
+    /// Get a deserialized bytes size
+    #[must_use]
+    pub fn bytes_size(&self) -> usize {
+        Ciphertext::BYTES_SIZE
+    }
+
+    /// Encode `EncryptedChoice` to bytes.
+    #[must_use]
+    pub fn to_bytes(&self) -> [u8; Self::BYTES_SIZE] {
+        self.0.to_bytes()
+    }
+}
+
 impl EncryptedVote {
     /// Get an underlying vector length.
     #[must_use]
@@ -20,14 +45,13 @@ impl EncryptedVote {
     /// Decode `EncryptedVote` from bytes.
     ///
     /// # Errors
-    ///   - Cannot decode ciphertext.
+    ///   - Cannot decode encrypted choice.
     pub fn from_bytes<R: Read>(reader: &mut R, size: usize) -> anyhow::Result<Self> {
         let ciphertexts = (0..size)
             .map(|i| {
                 let bytes = read_array(reader)?;
-                Ok(EncryptedChoice(Ciphertext::from_bytes(&bytes).map_err(
-                    |e| anyhow!("Cannot decode ciphertext at {i}, error: {e}"),
-                )?))
+                EncryptedChoice::from_bytes(&bytes)
+                    .map_err(|e| anyhow!("Cannot decode encrypted choice at {i}, error: {e}"))
             })
             .collect::<anyhow::Result<_>>()?;
 
