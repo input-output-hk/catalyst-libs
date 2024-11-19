@@ -32,17 +32,10 @@ where
     signature: coset::CoseSign,
 }
 
-/// A UUID struct, CBOR tag 37.
-#[derive(Debug, Clone, PartialEq)]
-pub struct Uuid(pub Vec<u8>);
-
 /// An encoded CBOR struct, CBOR tag 24.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EncodedCbor<T>(T)
 where T: for<'a> Cbor<'a>;
-
-/// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
-const UUID_TAG: u64 = 37;
 
 /// encoded-cbor CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const ENCODED_CBOR_TAG: u64 = 24;
@@ -116,30 +109,6 @@ where
     }
 }
 
-impl Decode<'_, ()> for Uuid {
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
-        let tag = d.tag()?;
-        if UUID_TAG != tag.as_u64() {
-            return Err(minicbor::decode::Error::message(format!(
-                "tag value must be: {UUID_TAG}, provided: {}",
-                tag.as_u64(),
-            )));
-        }
-        let choice = d.bytes()?.to_vec();
-        Ok(Self(choice))
-    }
-}
-
-impl Encode<()> for Uuid {
-    fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
-    ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.tag(Tag::new(UUID_TAG))?;
-        e.bytes(&self.0)?;
-        Ok(())
-    }
-}
-
 impl<T> Decode<'_, ()> for EncodedCbor<T>
 where T: for<'a> Cbor<'a>
 {
@@ -200,6 +169,7 @@ mod tests {
     use test_strategy::proptest;
 
     use super::*;
+    use crate::uuid::Uuid;
 
     type ChoiceT = Vec<u8>;
     type ProofT = Vec<u8>;

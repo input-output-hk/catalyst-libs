@@ -8,6 +8,7 @@ use minicbor::{Decode, Decoder, Encode, Encoder};
 
 pub mod gen_tx;
 pub mod public_tx;
+pub mod uuid;
 
 /// Cbor encodable and decodable type trait.
 pub trait Cbor<'a> {

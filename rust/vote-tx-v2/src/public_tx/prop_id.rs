@@ -2,7 +2,7 @@
 
 use minicbor::{Decode, Encode};
 
-use crate::gen_tx::Uuid;
+use crate::uuid::Uuid;
 
 /// A public voting proposal id struct.
 pub struct PropId(Uuid);

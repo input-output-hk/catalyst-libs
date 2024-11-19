@@ -3,10 +3,9 @@
 use anyhow::ensure;
 
 use super::{
-    cose_protected_header, EncodedCbor, EventKey, EventMap, GeneralizedTx, TxBody, Uuid, Vote,
-    VoterData,
+    cose_protected_header, EncodedCbor, EventKey, EventMap, GeneralizedTx, TxBody, Vote, VoterData,
 };
-use crate::Cbor;
+use crate::{uuid::Uuid, Cbor};
 
 /// `GeneralizedTx` builder struct
 #[allow(clippy::module_name_repetitions)]
