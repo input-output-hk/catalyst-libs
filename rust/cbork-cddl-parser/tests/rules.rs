@@ -59,12 +59,23 @@ fn check_rule_type_composition() {
         .enumerate();
 
     let assign_iter = ASSIGNT_PASSES.iter();
-    let type_iter = [TYPE_PASSES, TYPE_FAILS].into_iter().flatten().enumerate();
+    let type_iter = [
+        TYPE_PASSES,
+        TYPE1_PASSES,
+        TYPE2_PASSES,
+        TYPE_FAILS,
+        TYPE1_FAILS,
+        TYPE2_FAILS,
+    ]
+    .into_iter()
+    .flatten()
+    .enumerate();
 
     let rules_iter = typename_iter.zip(assign_iter).zip(type_iter).map(
-        |(((i, &test_i), &test_j), (k, &test_k))| {
-            let is_passes = i < TYPENAME_PASSES.len() && k < TYPE_PASSES.len();
-            let input = [test_i.to_string(), test_j.to_string(), test_k.to_string()].join(" ");
+        |(((i, typename), assign), (k, r#type))| {
+            let is_passes = i < TYPENAME_PASSES.len()
+                && k < TYPE_PASSES.len() + TYPE1_PASSES.len() + TYPE2_PASSES.len();
+            let input = [typename.to_owned(), assign.to_owned(), r#type.to_owned()].join(" ");
             (input, is_passes)
         },
     );

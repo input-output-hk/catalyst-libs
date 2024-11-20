@@ -18,7 +18,6 @@ pub(crate) mod type_declarations;
 pub struct CDDLTestParser;
 
 /// # Panics
-#[allow(dead_code)]
 pub(crate) fn check_tests_rule(
     rule_type: Rule, passes: &[impl AsRef<str>], fails: &[impl AsRef<str>],
 ) {
