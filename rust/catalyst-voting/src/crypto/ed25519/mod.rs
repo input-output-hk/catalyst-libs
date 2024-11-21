@@ -6,6 +6,7 @@ use ed25519_dalek::{
     ed25519::signature::Signer, Signature as Ed25519Signature, SigningKey, VerifyingKey,
 };
 
+use super::rng::default_rng;
 use crate::crypto::rng::rand_core::CryptoRngCore;
 
 /// `Ed25519` private key struct.
@@ -17,6 +18,11 @@ impl PrivateKey {
     /// Randomly generate the `Ed25519` private key.
     pub fn random<R: CryptoRngCore>(rng: &mut R) -> Self {
         Self(SigningKey::generate(rng))
+    }
+
+    /// Randomly generate the `ElectionSecretKey` with the `crypto::default_rng`.
+    pub fn random_with_default_rng() -> Self {
+        Self::random(&mut default_rng())
     }
 
     /// Get associated `Ed25519` public key.
@@ -46,7 +52,7 @@ pub fn verify_signature(pk: &PublicKey, msg: &[u8], sig: &Signature) -> bool {
     pk.0.verify_strict(msg, &sig.0).is_ok()
 }
 
-#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+#[cfg(test)]
 mod arbitrary_impl {
     use proptest::prelude::{any, Arbitrary, BoxedStrategy, Strategy};
 

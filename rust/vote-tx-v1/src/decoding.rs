@@ -1,4 +1,5 @@
 //! V1 transaction objects decoding implementation.
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/abnf/jorm.abnf>
 
 use std::io::Read;
 
@@ -216,12 +217,31 @@ impl Tx {
 
 #[cfg(test)]
 mod tests {
+    use catalyst_voting::{
+        crypto::{ed25519::PrivateKey, rng::rand_core::OsRng},
+        vote_protocol::committee::ElectionSecretKey,
+    };
     use test_strategy::proptest;
 
     use super::*;
 
     #[proptest]
-    fn tx_to_bytes_from_bytes_test(t1: Tx) {
+    fn tx_public_to_bytes_from_bytes_test(
+        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
+        #[strategy(0..#voting_options)] choice: u8,
+    ) {
+        let mut rng = OsRng;
+        let users_private_key = PrivateKey::random(&mut rng);
+
+        let t1 = Tx::new_public(
+            vote_plan_id,
+            proposal_index,
+            voting_options,
+            choice,
+            &users_private_key,
+        )
+        .unwrap();
+
         let bytes = t1.to_bytes();
 
         let mut reader = bytes.as_slice();
@@ -242,21 +262,89 @@ mod tests {
         assert_eq!(proposal_index, t1.proposal_index);
 
         let vote_tag = read_be_u8(&mut reader).unwrap();
-        assert!(vote_tag == PUBLIC_VOTE_TAG || vote_tag == PRIVATE_VOTE_TAG);
-        match vote_tag {
-            PUBLIC_VOTE_TAG => {
-                let vote = read_be_u8(&mut reader).unwrap();
-                assert_eq!(VotePayload::Public(vote), t1.vote);
-            },
-            PRIVATE_VOTE_TAG => {
-                let size = read_be_u8(&mut reader).unwrap();
-                let vote = EncryptedVote::from_bytes(&mut reader, size.into()).unwrap();
-                let size = read_be_u8(&mut reader).unwrap();
-                let proof = VoterProof::from_bytes(&mut reader, size.into()).unwrap();
-                assert_eq!(VotePayload::Private(vote, proof), t1.vote);
-            },
-            _ => {},
-        }
+        assert!(vote_tag == PUBLIC_VOTE_TAG);
+
+        let vote = read_be_u8(&mut reader).unwrap();
+        assert_eq!(VotePayload::Public(vote), t1.vote);
+
+        let block_date = read_be_u64(&mut reader).unwrap();
+        assert_eq!(block_date, 0);
+
+        let inputs_amount = read_be_u8(&mut reader).unwrap();
+        assert_eq!(inputs_amount, NUMBER_OF_INPUTS);
+
+        let outputs_amount = read_be_u8(&mut reader).unwrap();
+        assert_eq!(outputs_amount, NUMBER_OF_OUTPUTS);
+
+        let input_tag = read_be_u8(&mut reader).unwrap();
+        assert_eq!(input_tag, INPUT_TAG);
+
+        let value = read_be_u64(&mut reader).unwrap();
+        assert_eq!(value, 0);
+
+        let public_key = read_array(&mut reader).unwrap();
+        assert_eq!(PublicKey::from_bytes(&public_key).unwrap(), t1.public_key);
+
+        let witness_tag = read_be_u8(&mut reader).unwrap();
+        assert_eq!(witness_tag, WITNESS_TAG);
+
+        let nonce = read_be_u32(&mut reader).unwrap();
+        assert_eq!(nonce, 0);
+
+        let signature = read_array(&mut reader).unwrap();
+        assert_eq!(Signature::from_bytes(&signature), t1.signature);
+
+        let t2 = Tx::from_bytes(&mut bytes.as_slice()).unwrap();
+        assert_eq!(t1, t2);
+    }
+
+    #[proptest]
+    fn tx_private_to_bytes_from_bytes_test(
+        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
+        #[strategy(0..#voting_options)] choice: u8,
+    ) {
+        let mut rng = OsRng;
+        let users_private_key = PrivateKey::random(&mut rng);
+        let election_secret_key = ElectionSecretKey::random(&mut rng);
+        let election_public_key = election_secret_key.public_key();
+
+        let t1 = Tx::new_private(
+            vote_plan_id,
+            proposal_index,
+            voting_options,
+            choice,
+            &election_public_key,
+            &users_private_key,
+            &mut rng,
+        )
+        .unwrap();
+
+        let bytes = t1.to_bytes();
+
+        let mut reader = bytes.as_slice();
+
+        let size = read_be_u32(&mut reader).unwrap();
+        assert_eq!(size as usize, bytes.len() - 4);
+
+        let padding_tag = read_be_u8(&mut reader).unwrap();
+        assert_eq!(padding_tag, PADDING_TAG);
+
+        let fragment_tag = read_be_u8(&mut reader).unwrap();
+        assert_eq!(fragment_tag, FRAGMENT_TAG);
+
+        let vote_plan_id = read_array(&mut reader).unwrap();
+        assert_eq!(vote_plan_id, t1.vote_plan_id);
+
+        let proposal_index = read_be_u8(&mut reader).unwrap();
+        assert_eq!(proposal_index, t1.proposal_index);
+
+        let vote_tag = read_be_u8(&mut reader).unwrap();
+        assert!(vote_tag == PRIVATE_VOTE_TAG);
+        let size = read_be_u8(&mut reader).unwrap();
+        let vote = EncryptedVote::from_bytes(&mut reader, size.into()).unwrap();
+        let size = read_be_u8(&mut reader).unwrap();
+        let proof = VoterProof::from_bytes(&mut reader, size.into()).unwrap();
+        assert_eq!(VotePayload::Private(vote, proof), t1.vote);
 
         let block_date = read_be_u64(&mut reader).unwrap();
         assert_eq!(block_date, 0);
