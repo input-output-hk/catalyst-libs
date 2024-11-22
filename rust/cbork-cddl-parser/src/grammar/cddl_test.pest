@@ -7,8 +7,8 @@
 // cspell: words assigng genericparm genericarg rangeop ctlop
 // cspell: words grpchoice grpent memberkey bareword optcom
 
-/// Test Expression for the `rule` Rule.
-rule_TEST  = ${ SOI ~ expr ~ EOI }
+/// Test Expression for the `expr` Rule.
+expr_TEST  = ${ SOI ~ expr ~ EOI }
 
 /// Test Expression for the `typename` Rule.
 typename_TEST  = ${ SOI ~ typename ~ EOI }

@@ -91,11 +91,11 @@ fn check_rule_type_composition() {
         .map(|(input, _)| input)
         .collect::<Vec<_>>();
 
-    common::check_tests_rule(Rule::rule_TEST, &passes, &fails);
+    common::check_tests_rule(Rule::expr_TEST, &passes, &fails);
 }
 
 /// Test if the `rule` rule passes properly for group variant.
 #[test]
 fn check_rule_group() {
-    common::check_tests_rule(Rule::rule_TEST, RULE_GROUP_PASSES, RULE_GROUP_FAILS);
+    common::check_tests_rule(Rule::expr_TEST, RULE_GROUP_PASSES, RULE_GROUP_FAILS);
 }
