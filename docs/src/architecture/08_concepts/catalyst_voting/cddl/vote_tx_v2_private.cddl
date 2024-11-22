@@ -3,6 +3,8 @@ vote-tx-v2<voter-data-t> = gen-vote-tx<choice-data, proof-data, proposal, voter-
 choice-data = encrypted-choice
 encrypted-choice = bytes .size 64
 proposal = UUID
-proof-data = bytes .size (288..) ; 288 is a lower bound which guarantees that proof is not empty 
+; 288 is a lower bound which guarantees that proof is not empty
+; `18446744073709551615` is a CBOR uint MAX value (2^64 -1)
+proof-data = bytes .size (288..18446744073709551615)
 
 ;# include gen_vote_tx
