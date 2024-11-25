@@ -56,7 +56,7 @@ pub enum C509Cert {
     /// A c509 certificate in metadatum reference.
     C509CertInMetadatumReference(C509CertInMetadatumReference),
     /// A c509 certificate.
-    C509Certificate(C509),
+    C509Certificate(Box<C509>),
 }
 
 impl Decode<'_, ()> for C509Cert {
@@ -85,7 +85,10 @@ impl Decode<'_, ()> for C509Cert {
             minicbor::data::Type::Bytes => {
                 let c509 = decode_bytes(d, "C509Cert")?;
                 let mut c509_d = Decoder::new(&c509);
-                Ok(Self::C509Certificate(C509::decode(&mut c509_d, ctx)?))
+                Ok(Self::C509Certificate(Box::new(C509::decode(
+                    &mut c509_d,
+                    ctx,
+                )?)))
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
             _ => Err(decode::Error::message("Invalid datatype for C509Cert")),
@@ -117,13 +120,11 @@ impl Decode<'_, ()> for C509CertInMetadatumReference {
                 arr.map(Some)
             },
             minicbor::data::Type::Null => Ok(None),
-            _ => {
-                Ok(Some(vec![decode_helper(
-                    d,
-                    "C509CertInMetadatumReference",
-                    ctx,
-                )?]))
-            },
+            _ => Ok(Some(vec![decode_helper(
+                d,
+                "C509CertInMetadatumReference",
+                ctx,
+            )?])),
         }?;
         Ok(Self {
             txn_output_field,
