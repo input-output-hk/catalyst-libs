@@ -120,11 +120,13 @@ impl Decode<'_, ()> for C509CertInMetadatumReference {
                 arr.map(Some)
             },
             minicbor::data::Type::Null => Ok(None),
-            _ => Ok(Some(vec![decode_helper(
-                d,
-                "C509CertInMetadatumReference",
-                ctx,
-            )?])),
+            _ => {
+                Ok(Some(vec![decode_helper(
+                    d,
+                    "C509CertInMetadatumReference",
+                    ctx,
+                )?]))
+            },
         }?;
         Ok(Self {
             txn_output_field,
