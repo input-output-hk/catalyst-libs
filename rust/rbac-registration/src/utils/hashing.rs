@@ -3,7 +3,6 @@
 use blake2b_simd::{self, Params};
 
 /// Convert the given value to `blake2b_244` array.
-#[allow(dead_code)] // Its OK if we don't use this general utility function.
 pub(crate) fn blake2b_244(value: &[u8]) -> anyhow::Result<[u8; 28]> {
     let h = Params::new().hash_length(28).hash(value);
     let b = h.as_bytes();
@@ -12,7 +11,6 @@ pub(crate) fn blake2b_244(value: &[u8]) -> anyhow::Result<[u8; 28]> {
 }
 
 /// Convert the given value to `blake2b_256` array.
-#[allow(dead_code)] // Its OK if we don't use this general utility function.
 pub(crate) fn blake2b_256(value: &[u8]) -> anyhow::Result<[u8; 32]> {
     let h = Params::new().hash_length(32).hash(value);
     let b = h.as_bytes();

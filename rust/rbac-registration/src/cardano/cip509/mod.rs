@@ -56,7 +56,7 @@ pub struct Cip509 {
     pub validation_signature: Vec<u8>, // bytes size (1..64)
 }
 
-/// UUIDv4 representing in 16 bytes.
+/// `UUIDv4` representing in 16 bytes.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct UuidV4([u8; 16]);
 
@@ -227,7 +227,7 @@ impl Cip509 {
         let tx_input_validate = self
             .validate_txn_inputs_hash(txn, validation_report)
             .unwrap_or(false);
-        let aux_validate = self.validate_aux(txn, validation_report).unwrap_or(false);
+        let aux_validate = validate_aux(txn, validation_report).unwrap_or(false);
         let mut stake_key_validate = true;
         let mut payment_key_validate = true;
         // Validate the role 0
@@ -238,9 +238,9 @@ impl Cip509 {
                     stake_key_validate = self
                         .validate_stake_public_key(txn, txn_idx, validation_report)
                         .unwrap_or(false);
-                    payment_key_validate = self
-                        .validate_payment_key(txn, txn_idx, role, validation_report)
-                        .unwrap_or(false);
+                    payment_key_validate =
+                        validate_payment_key(txn, txn_idx, role, validation_report)
+                            .unwrap_or(false);
                 }
             }
         }
@@ -285,37 +285,9 @@ impl Cip509 {
             };
             Some(TxInputHash(inputs_hash) == self.txn_inputs_hash)
         } else {
-            validation_report.push(format!(
-                "Unsupported transaction era for transaction inputs hash validation"
-            ));
-            None
-        }
-    }
-
-    /// Validate the auxiliary data with the auxiliary data hash in the transaction.
-    fn validate_aux(&self, txn: &MultiEraTx, validation_report: &mut Vec<String>) -> Option<bool> {
-        // CIP-0509 is expected to be in conway era
-        if let MultiEraTx::Conway(tx) = txn {
-            if let pallas::codec::utils::Nullable::Some(a) = &tx.auxiliary_data {
-                let original_aux = a.raw_cbor();
-                let aux_data_hash =
-                    tx.transaction_body
-                        .auxiliary_data_hash
-                        .as_ref()
-                        .or_else(|| {
-                            validation_report
-                                .push(format!("Auxiliary data hash not found in transaction"));
-                            None
-                        })?;
-                validate_aux_helper(original_aux, aux_data_hash, validation_report)
-            } else {
-                validation_report.push(format!("Auxiliary data not found in transaction"));
-                None
-            }
-        } else {
-            validation_report.push(format!(
-                "Unsupported transaction era for auxiliary data validation"
-            ));
+            validation_report.push(
+                "Unsupported transaction era for transaction inputs hash validation".to_string(),
+            );
             None
         }
     }
@@ -418,9 +390,9 @@ impl Cip509 {
                 for c509_cert in c509_certs {
                     match c509_cert {
                         C509Cert::C509CertInMetadatumReference(_) => {
-                            validation_report.push(format!(
-                                "C509 metadatum reference is currently not supported"
-                            ));
+                            validation_report.push(
+                                "C509 metadatum reference is currently not supported".to_string(),
+                            );
                         },
                         C509Cert::C509Certificate(c509) => {
                             for exts in c509.tbs_cert().extensions().extensions() {
@@ -441,7 +413,7 @@ impl Cip509 {
                                                                     },
                                                                     _ => {
                                                                         validation_report.push(
-                                                                            format!("Failed to get the value of subject alternative name"),
+                                                                            "Failed to get the value of subject alternative name".to_string(),
                                                                         );
                                                                     }
                                                                 }
@@ -450,14 +422,14 @@ impl Cip509 {
                                                     },
                                                     c509_certificate::extensions::alt_name::GeneralNamesOrText::Text(_) => {
                                                         validation_report.push(
-                                                            format!("Failed to find C509 general names in subject alternative name"),
+                                                            "Failed to find C509 general names in subject alternative name".to_string(),
                                                         );
                                                     }
                                                 }
                                             },
                                             _ => {
                                                 validation_report.push(
-                                                    format!("Failed to get C509 subject alternative name")
+                                                    "Failed to get C509 subject alternative name".to_string()
                                                 );
                                             }
                                         }
@@ -469,9 +441,8 @@ impl Cip509 {
                 }
             }
         } else {
-            validation_report.push(format!(
-                "Unsupported transaction era for stake public key validation"
-            ));
+            validation_report
+                .push("Unsupported transaction era for stake public key validation".to_string());
             return None;
         }
 
@@ -501,79 +472,32 @@ impl Cip509 {
                 .is_ok(),
         )
     }
+}
 
-    /// Validate the payment key
-    fn validate_payment_key(
-        &self, txn: &MultiEraTx, txn_idx: usize, role_data: &RoleData,
-        validation_report: &mut Vec<String>,
-    ) -> Option<bool> {
-        if let Some(payment_key) = role_data.payment_key {
-            if payment_key == 0 {
-                validation_report.push(format!("Invalid payment reference key, 0 is not allowed"));
-                return None;
-            }
-            // CIP-0509 is expected to be in conway era
-            if let MultiEraTx::Conway(tx) = txn {
-                // Negative indicates reference to tx output
-                if payment_key < 0 {
-                    let index = match decremented_index(payment_key.abs()) {
-                        Ok(value) => value,
-                        Err(e) => {
-                            validation_report
-                                .push(format!("Failed to get index of payment key: {e}"));
-                            return None;
-                        },
-                    };
-                    let outputs = tx.transaction_body.outputs.clone();
-                    let witness = match TxWitness::new(&[txn.clone()]) {
-                        Ok(witnesses) => witnesses,
-                        Err(e) => {
-                            validation_report.push(format!("Failed to create TxWitness: {e}"));
-                            return None;
-                        },
-                    };
-
-                    if let Some(output) = outputs.get(index) {
-                        match output {
-                                pallas::ledger::primitives::conway::PseudoTransactionOutput::Legacy(o) => {
-                                    return validate_payment_output_key_helper(&o.address.to_vec(), validation_report, &witness, txn_idx);
-                                },
-                                pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(o) => {
-                                    return validate_payment_output_key_helper(&o.address.to_vec(), validation_report, &witness, txn_idx);
-                                },
-                            };
-                    }
-                    validation_report.push(format!(
-                        "Role payment key reference index is not found in transaction outputs"
-                    ));
-                    return None;
-                }
-                // Positive indicates reference to tx input
-                let inputs = &tx.transaction_body.inputs;
-                let index = match decremented_index(payment_key) {
-                    Ok(value) => value,
-                    Err(e) => {
-                        validation_report.push(format!("Failed to get index of payment key: {e}"));
-                        return None;
-                    },
-                };
-                // Check whether the index exists in transaction inputs
-                if inputs.get(index).is_none() {
-                    validation_report.push(format!(
-                        "Role payment key reference index is not found in transaction inputs"
-                    ));
-                    return None;
-                }
-                Some(true)
-            } else {
-                validation_report.push(format!(
-                    "Unsupported transaction era for stake payment key validation"
-                ));
-                None
-            }
+/// Validate the auxiliary data with the auxiliary data hash in the transaction.
+fn validate_aux(txn: &MultiEraTx, validation_report: &mut Vec<String>) -> Option<bool> {
+    // CIP-0509 is expected to be in conway era
+    if let MultiEraTx::Conway(tx) = txn {
+        if let pallas::codec::utils::Nullable::Some(a) = &tx.auxiliary_data {
+            let original_aux = a.raw_cbor();
+            let aux_data_hash = tx
+                .transaction_body
+                .auxiliary_data_hash
+                .as_ref()
+                .or_else(|| {
+                    validation_report
+                        .push("Auxiliary data hash not found in transaction".to_string());
+                    None
+                })?;
+            validate_aux_helper(original_aux, aux_data_hash, validation_report)
         } else {
-            Some(false)
+            validation_report.push("Auxiliary data not found in transaction".to_string());
+            None
         }
+    } else {
+        validation_report
+            .push("Unsupported transaction era for auxiliary data validation".to_string());
+        None
     }
 }
 
@@ -593,6 +517,91 @@ fn validate_aux_helper(
     }
 }
 
+/// Validate the payment key
+fn validate_payment_key(
+    txn: &MultiEraTx, txn_idx: usize, role_data: &RoleData, validation_report: &mut Vec<String>,
+) -> Option<bool> {
+    if let Some(payment_key) = role_data.payment_key {
+        if payment_key == 0 {
+            validation_report.push("Invalid payment reference key, 0 is not allowed".to_string());
+            return None;
+        }
+        // CIP-0509 is expected to be in conway era
+        if let MultiEraTx::Conway(tx) = txn {
+            // Negative indicates reference to tx output
+            if payment_key < 0 {
+                let index = match decremented_index(payment_key.abs()) {
+                    Ok(value) => value,
+                    Err(e) => {
+                        validation_report.push(format!("Failed to get index of payment key: {e}"));
+                        return None;
+                    },
+                };
+                let outputs = tx.transaction_body.outputs.clone();
+                let witness = match TxWitness::new(&[txn.clone()]) {
+                    Ok(witnesses) => witnesses,
+                    Err(e) => {
+                        validation_report.push(format!("Failed to create TxWitness: {e}"));
+                        return None;
+                    },
+                };
+
+                if let Some(output) = outputs.get(index) {
+                    match output {
+                        pallas::ledger::primitives::conway::PseudoTransactionOutput::Legacy(o) => {
+                            return validate_payment_output_key_helper(
+                                &o.address.to_vec(),
+                                validation_report,
+                                &witness,
+                                txn_idx,
+                            );
+                        },
+                        pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(
+                            o,
+                        ) => {
+                            return validate_payment_output_key_helper(
+                                &o.address.to_vec(),
+                                validation_report,
+                                &witness,
+                                txn_idx,
+                            );
+                        },
+                    };
+                }
+                validation_report.push(
+                    "Role payment key reference index is not found in transaction outputs"
+                        .to_string(),
+                );
+                return None;
+            }
+            // Positive indicates reference to tx input
+            let inputs = &tx.transaction_body.inputs;
+            let index = match decremented_index(payment_key) {
+                Ok(value) => value,
+                Err(e) => {
+                    validation_report.push(format!("Failed to get index of payment key: {e}"));
+                    return None;
+                },
+            };
+            // Check whether the index exists in transaction inputs
+            if inputs.get(index).is_none() {
+                validation_report.push(
+                    "Role payment key reference index is not found in transaction inputs"
+                        .to_string(),
+                );
+                return None;
+            }
+            Some(true)
+        } else {
+            validation_report
+                .push("Unsupported transaction era for stake payment key validation".to_string());
+            None
+        }
+    } else {
+        Some(false)
+    }
+}
+
 /// Helper function for validating payment output key.
 fn validate_payment_output_key_helper(
     output_address: &[u8], validation_report: &mut Vec<String>, witness: &TxWitness, txn_idx: usize,
@@ -609,7 +618,7 @@ fn validate_payment_output_key_helper(
         // Compare the key hash and return the result
         return Some(compare_key_hash(&[key], witness, idx).is_ok());
     }
-    validation_report.push(format!("Failed to extract payment key hash from address"));
+    validation_report.push("Failed to extract payment key hash from address".to_string());
     None
 }
 
@@ -716,12 +725,12 @@ mod tests {
             .get(3)
             .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(tx);
+        // let aux_data = cip_509_aux_data(tx);
 
-        let mut decoder = Decoder::new(aux_data.as_slice());
-        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
-        cip509.validate_aux(tx, &mut validation_report);
-        assert!(cip509.validate_aux(tx, &mut validation_report).unwrap());
+        // let mut decoder = Decoder::new(aux_data.as_slice());
+        // let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        validate_aux(tx, &mut validation_report);
+        assert!(validate_aux(tx, &mut validation_report).unwrap());
     }
 
     #[test]
@@ -767,9 +776,7 @@ mod tests {
         if let Some(role_set) = &cip509.x509_chunks.0.role_set {
             for role in role_set {
                 if role.role_number == 0 {
-                    assert!(cip509
-                        .validate_payment_key(tx, 0, role, &mut validation_report,)
-                        .unwrap());
+                    assert!(validate_payment_key(tx, 0, role, &mut validation_report,).unwrap());
                 }
             }
         }
@@ -798,7 +805,7 @@ mod tests {
                 if role.role_number == 0 {
                     println!(
                         "{:?}",
-                        cip509.validate_payment_key(tx, 0, role, &mut validation_report,)
+                        validate_payment_key(tx, 0, role, &mut validation_report,)
                     );
                 }
             }
