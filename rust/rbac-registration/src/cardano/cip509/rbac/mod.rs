@@ -19,7 +19,7 @@ use crate::utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
 
-/// Struct of Cip509 RBAC metadata.
+/// Cip509 RBAC metadata.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509RbacMetadata {
     /// Optional list of x509 certificates.
@@ -30,12 +30,22 @@ pub struct Cip509RbacMetadata {
     /// Optional list of Public keys.
     pub pub_keys: Option<Vec<SimplePublicKeyType>>,
     /// Optional list of revocation list.
-    pub revocation_list: Option<Vec<[u8; 16]>>,
+    pub revocation_list: Option<Vec<CertKeyHash>>,
     /// Optional list of role data.
     pub role_set: Option<Vec<RoleData>>,
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
     pub purpose_key_data: HashMap<u16, Vec<u8>>,
+}
+
+/// Certificate key hash use in revocation list.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct CertKeyHash([u8; 16]);
+
+impl From<[u8; 16]> for CertKeyHash {
+    fn from(bytes: [u8; 16]) -> Self {
+        CertKeyHash(bytes)
+    }
 }
 
 /// The first valid purpose key.
@@ -88,7 +98,7 @@ impl Cip509RbacMetadata {
     }
 
     /// Set the revocation list.
-    fn set_revocation_list(&mut self, revocation_list: Vec<[u8; 16]>) {
+    fn set_revocation_list(&mut self, revocation_list: Vec<CertKeyHash>) {
         self.revocation_list = Some(revocation_list);
     }
 
@@ -154,7 +164,7 @@ where T: Decode<'b, ()> {
 }
 
 /// Decode an array of revocation list.
-fn decode_revocation_list(d: &mut Decoder) -> Result<Vec<[u8; 16]>, decode::Error> {
+fn decode_revocation_list(d: &mut Decoder) -> Result<Vec<CertKeyHash>, decode::Error> {
     let len = decode_array_len(d, "revocation list Cip509RbacMetadata")?;
     let mut revocation_list =
         Vec::with_capacity(usize::try_from(len).map_err(decode::Error::message)?);
@@ -162,7 +172,7 @@ fn decode_revocation_list(d: &mut Decoder) -> Result<Vec<[u8; 16]>, decode::Erro
         let arr: [u8; 16] = decode_bytes(d, "revocation list Cip509RbacMetadata")?
             .try_into()
             .map_err(|_| decode::Error::message("Invalid revocation list size"))?;
-        revocation_list.push(arr);
+        revocation_list.push(CertKeyHash::from(arr));
     }
     Ok(revocation_list)
 }

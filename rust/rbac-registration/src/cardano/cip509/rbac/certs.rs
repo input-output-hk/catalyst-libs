@@ -4,9 +4,8 @@ use c509_certificate::c509::C509;
 use minicbor::{decode, Decode, Decoder};
 use x509_cert::{der::Decode as x509Decode, Certificate};
 
-use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_tag};
-
 use super::tag::KeyTag;
+use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_tag};
 
 // ------------------x509------------------------
 
@@ -94,7 +93,7 @@ impl Decode<'_, ()> for C509Cert {
     }
 }
 
-/// A struct of c509 certificate in metadatum reference.
+/// C509 certificate in metadatum reference.
 #[derive(Debug, PartialEq, Clone)]
 pub struct C509CertInMetadatumReference {
     /// Transaction output field.
@@ -118,11 +117,13 @@ impl Decode<'_, ()> for C509CertInMetadatumReference {
                 arr.map(Some)
             },
             minicbor::data::Type::Null => Ok(None),
-            _ => Ok(Some(vec![decode_helper(
-                d,
-                "C509CertInMetadatumReference",
-                ctx,
-            )?])),
+            _ => {
+                Ok(Some(vec![decode_helper(
+                    d,
+                    "C509CertInMetadatumReference",
+                    ctx,
+                )?]))
+            },
         }?;
         Ok(Self {
             txn_output_field,

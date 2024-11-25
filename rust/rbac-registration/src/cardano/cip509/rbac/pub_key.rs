@@ -2,9 +2,8 @@
 
 use minicbor::{decode, Decode, Decoder};
 
-use crate::utils::decode_helper::{decode_bytes, decode_tag};
-
 use super::tag::KeyTag;
+use crate::utils::decode_helper::{decode_bytes, decode_tag};
 
 /// Enum of possible public key type.
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -14,8 +13,18 @@ pub enum SimplePublicKeyType {
     Undefined,
     /// Deleted indicates the key is deleted.
     Deleted,
-    /// Ed25519 key.
-    Ed25519([u8; 32]),
+    /// Ed25519 public key.
+    Ed25519(Ed25519PublicKey),
+}
+
+/// 32 bytes Ed25519 public key.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct Ed25519PublicKey([u8; 32]);
+
+impl From<[u8; 32]> for Ed25519PublicKey {
+    fn from(bytes: [u8; 32]) -> Self {
+        Ed25519PublicKey(bytes)
+    }
 }
 
 impl Decode<'_, ()> for SimplePublicKeyType {
@@ -30,7 +39,7 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                         let mut ed25519 = [0u8; 32];
                         if bytes.len() == 32 {
                             ed25519.copy_from_slice(&bytes);
-                            Ok(Self::Ed25519(ed25519))
+                            Ok(Self::Ed25519(Ed25519PublicKey(ed25519)))
                         } else {
                             Err(decode::Error::message("Invalid length for Ed25519 key"))
                         }
@@ -39,9 +48,11 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                 }
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
-            _ => Err(decode::Error::message(
-                "Invalid datatype for SimplePublicKeyType",
-            )),
+            _ => {
+                Err(decode::Error::message(
+                    "Invalid datatype for SimplePublicKeyType",
+                ))
+            },
         }
     }
 }

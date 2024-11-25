@@ -8,7 +8,7 @@ use strum_macros::FromRepr;
 use super::{decode_any, decode_map_len, Cip509RbacMetadataInt};
 use crate::utils::decode_helper::{decode_array_len, decode_helper};
 
-/// Struct of role data.
+/// Role data.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct RoleData {
     /// Role number.
@@ -88,7 +88,7 @@ impl Decode<'_, ()> for RoleData {
         Ok(role_data)
     }
 }
-/// Struct of key local reference.
+/// Local key reference.
 #[derive(Debug, PartialEq, Clone)]
 pub struct KeyLocalRef {
     /// Local reference.

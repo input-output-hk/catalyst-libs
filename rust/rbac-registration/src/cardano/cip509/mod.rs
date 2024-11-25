@@ -5,8 +5,8 @@
 // cspell: words pkix
 
 pub mod rbac;
-pub mod x509_chunks;
 pub(crate) mod utils;
+pub mod x509_chunks;
 
 use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
 use der_parser::der::parse_der_sequence;
@@ -45,15 +45,87 @@ pub(crate) const URI: u8 = 134;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// `UUIDv4` Purpose .
-    pub purpose: [u8; 16], // (bytes .size 16)
+    pub purpose: UuidV4, // (bytes .size 16)
     /// Transaction inputs hash.
-    pub txn_inputs_hash: [u8; 16], // bytes .size 16
+    pub txn_inputs_hash: TxInputHash, // bytes .size 16
     /// Optional previous transaction ID.
-    pub prv_tx_id: Option<[u8; 32]>, // bytes .size 32
+    pub prv_tx_id: Option<TxHash>, // bytes .size 32
     /// x509 chunks.
     pub x509_chunks: X509Chunks, // chunk_type => [ + x509_chunk ]
     /// Validation signature.
     pub validation_signature: Vec<u8>, // bytes size (1..64)
+}
+
+/// UUIDv4 representing in 16 bytes.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct UuidV4([u8; 16]);
+
+impl From<[u8; 16]> for UuidV4 {
+    fn from(bytes: [u8; 16]) -> Self {
+        UuidV4(bytes)
+    }
+}
+
+impl TryFrom<Vec<u8>> for UuidV4 {
+    type Error = &'static str;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        if vec.len() == 16 {
+            let mut array = [0u8; 16];
+            array.copy_from_slice(&vec);
+            Ok(UuidV4(array))
+        } else {
+            Err("Input Vec must be exactly 16 bytes")
+        }
+    }
+}
+
+/// Transaction hash representing in 32 bytes.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct TxHash([u8; 32]);
+
+impl From<[u8; 32]> for TxHash {
+    fn from(bytes: [u8; 32]) -> Self {
+        TxHash(bytes)
+    }
+}
+
+impl TryFrom<Vec<u8>> for TxHash {
+    type Error = &'static str;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        if vec.len() == 32 {
+            let mut array = [0u8; 32];
+            array.copy_from_slice(&vec);
+            Ok(TxHash(array))
+        } else {
+            Err("Input Vec must be exactly 32 bytes")
+        }
+    }
+}
+
+/// Transaction input hash representing in 16 bytes.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct TxInputHash([u8; 16]);
+
+impl From<[u8; 16]> for TxInputHash {
+    fn from(bytes: [u8; 16]) -> Self {
+        TxInputHash(bytes)
+    }
+}
+
+impl TryFrom<Vec<u8>> for TxInputHash {
+    type Error = &'static str;
+
+    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
+        if vec.len() == 16 {
+            let mut array = [0u8; 16];
+            array.copy_from_slice(&vec);
+            Ok(TxInputHash(array))
+        } else {
+            Err("Input Vec must be exactly 16 bytes")
+        }
+    }
 }
 
 /// Enum of CIP509 metadatum with its associated unsigned integer value.
@@ -83,25 +155,23 @@ impl Decode<'_, ()> for Cip509 {
                 let _: u8 = decode_helper(d, "CIP509", ctx)?;
                 match key {
                     Cip509IntIdentifier::Purpose => {
-                        cip509_metadatum.purpose = decode_bytes(d, "CIP509 purpose")?
-                            .try_into()
-                            .map_err(|_| decode::Error::message("Invalid data size of Purpose"))?;
+                        cip509_metadatum.purpose =
+                            UuidV4::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(|_| {
+                                decode::Error::message("Invalid data size of Purpose")
+                            })?;
                     },
                     Cip509IntIdentifier::TxInputsHash => {
                         cip509_metadatum.txn_inputs_hash =
-                            decode_bytes(d, "CIP509 txn inputs hash")?
-                                .try_into()
+                            TxInputHash::try_from(decode_bytes(d, "CIP509 txn inputs hash")?)
                                 .map_err(|_| {
                                     decode::Error::message("Invalid data size of TxInputsHash")
                                 })?;
                     },
                     Cip509IntIdentifier::PreviousTxId => {
                         cip509_metadatum.prv_tx_id = Some(
-                            decode_bytes(d, "CIP509 previous tx ID")?
-                                .try_into()
-                                .map_err(|_| {
-                                    decode::Error::message("Invalid data size of PreviousTxId")
-                                })?,
+                            TxHash::try_from(decode_bytes(d, "CIP509 previous tx ID")?).map_err(
+                                |_| decode::Error::message("Invalid data size of PreviousTxId"),
+                            )?,
                         );
                     },
                     Cip509IntIdentifier::ValidationSignature => {
@@ -213,7 +283,7 @@ impl Cip509 {
                     return None;
                 },
             };
-            Some(inputs_hash == self.txn_inputs_hash)
+            Some(TxInputHash(inputs_hash) == self.txn_inputs_hash)
         } else {
             validation_report.push(format!(
                 "Unsupported transaction era for transaction inputs hash validation"
@@ -291,7 +361,8 @@ impl Cip509 {
                                 match parse_der_sequence(san_ext.extn_value.as_bytes()) {
                                     Ok((_, parsed_seq)) => {
                                         for data in parsed_seq.ref_iter() {
-                                            // Check for context-specific primitive type with tag number
+                                            // Check for context-specific primitive type with tag
+                                            // number
                                             // 6 (raw_tag 134)
                                             if data.header.raw_tag() == Some(&[URI]) {
                                                 match data.content.as_slice() {
@@ -605,9 +676,9 @@ mod tests {
                 .unwrap();
         let validation_signature = hex::decode("e0427f23196c17cf13f030595335343030c11d914bc7a84b56af7040930af4110fd4ca29b0bc0e83789adb8668ea2ef28c1dd10dc1fd35ea6ae8c06ee769540d").unwrap();
 
-        assert_eq!(decoded_cip509.purpose, purpose);
-        assert_eq!(decoded_cip509.txn_inputs_hash, txn_inputs_hash);
-        assert_eq!(decoded_cip509.prv_tx_id, Some(prv_tx_id));
+        assert_eq!(decoded_cip509.purpose, UuidV4(purpose));
+        assert_eq!(decoded_cip509.txn_inputs_hash, TxInputHash(txn_inputs_hash));
+        assert_eq!(decoded_cip509.prv_tx_id, Some(TxHash(prv_tx_id)));
         assert_eq!(decoded_cip509.validation_signature, validation_signature);
     }
 

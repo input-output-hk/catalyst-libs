@@ -21,7 +21,7 @@ pub enum CompressionAlgorithm {
     Zstd = 12,
 }
 
-/// Struct of x509 chunks.
+/// x509 chunks.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct X509Chunks(pub Cip509RbacMetadata);
 
