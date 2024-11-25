@@ -1,12 +1,12 @@
-//! A Jörmungandr transaction object structured following this
-//! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/jorm/)
+//! A Catalyst v1 (Jörmungandr) vote transaction object, structured following this
+//! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/v1/)
 //!
 //! ```rust
 //! use catalyst_voting::{
 //!     crypto::{ed25519::PrivateKey, rng::default_rng},
 //!     vote_protocol::committee::ElectionSecretKey,
 //! };
-//! use jormungandr_vote_tx::Tx;
+//! use vote_tx_v1::Tx;
 //!
 //! let vote_plan_id = [0u8; 32];
 //! let proposal_index = 0u8;
@@ -65,7 +65,7 @@ use catalyst_voting::{
     },
 };
 
-/// A v1 (Jörmungandr) transaction struct
+/// A v1 (Jörmungandr) vote transaction struct
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[must_use]
 pub struct Tx {
@@ -295,63 +295,6 @@ impl VotePayload {
     }
 }
 
-#[allow(missing_docs, clippy::missing_docs_in_private_items)]
-mod arbitrary_impl {
-    use catalyst_voting::crypto::ed25519::PrivateKey;
-    use proptest::prelude::{any, any_with, Arbitrary, BoxedStrategy, Strategy};
-
-    use super::{EncryptedVote, Signature, Tx, VotePayload, VoterProof};
-
-    impl Arbitrary for Tx {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<(
-                [u8; 32],
-                u8,
-                VotePayload,
-                PrivateKey,
-                [u8; Signature::BYTES_SIZE],
-            )>()
-            .prop_map(
-                |(vote_plan_id, proposal_index, vote, sk, signature_bytes)| {
-                    Tx {
-                        vote_plan_id,
-                        proposal_index,
-                        vote,
-                        public_key: sk.public_key(),
-                        signature: Signature::from_bytes(&signature_bytes),
-                    }
-                },
-            )
-            .boxed()
-        }
-    }
-
-    impl Arbitrary for VotePayload {
-        type Parameters = ();
-        type Strategy = BoxedStrategy<Self>;
-
-        fn arbitrary_with((): Self::Parameters) -> Self::Strategy {
-            any::<bool>()
-                .prop_flat_map(|b| {
-                    if b {
-                        any::<u8>().prop_map(VotePayload::Public).boxed()
-                    } else {
-                        any::<(u8, u8)>()
-                            .prop_flat_map(|(s1, s2)| {
-                                any_with::<(EncryptedVote, VoterProof)>((s1.into(), s2.into()))
-                                    .prop_map(|(v, p)| VotePayload::Private(v, p))
-                            })
-                            .boxed()
-                    }
-                })
-                .boxed()
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use catalyst_voting::{
@@ -364,9 +307,10 @@ mod tests {
     #[proptest]
     fn tx_test(
         vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
-        #[strategy(0..#voting_options)] choice: u8, users_private_key: PrivateKey,
-        election_secret_key: ElectionSecretKey,
+        #[strategy(0..#voting_options)] choice: u8,
     ) {
+        let users_private_key = PrivateKey::random_with_default_rng();
+        let election_secret_key = ElectionSecretKey::random_with_default_rng();
         let election_public_key = election_secret_key.public_key();
 
         let tx = Tx::new_public(

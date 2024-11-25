@@ -42,7 +42,7 @@ Vote:
   so it's redundant to provide an additional identifier for the proposal,
   so it could be placed `null`.
 
-`voters-data` - an any additional voter's specific data.
+`voter-data` - an any additional voter's specific data.
 
 ### Transaction signing
 
