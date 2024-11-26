@@ -12,7 +12,8 @@
 //!        should match some of the key within witness set.
 //!     2. Positive index reference - reference to the transaction input in transaction:
 //!        only check whether the index exist within the transaction inputs.
-//!
+//! * Role signing key validation for role 0 where the signing keys should only be the certificates
+//! 
 //!  See:
 //! * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
 //! * <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
@@ -34,7 +35,7 @@ use super::{
     blake2b_128, blake2b_256, decode_utf8, decremented_index,
     rbac::{
         certs::{C509Cert, X509DerCert},
-        role_data::RoleData,
+        role_data::{LocalRefInt, RoleData},
     },
     utils::cip19::{compare_key_hash, extract_cip19_hash, extract_key_hash},
     Cip509, TxInputHash, TxWitness,
@@ -440,6 +441,33 @@ fn validate_payment_output_key_helper(
     validation_report.push("Failed to extract payment key hash from address".to_string());
     None
 }
+
+// ------------------------ Validate role signing key ------------------------
+
+/// Validate role singing key for role 0.
+/// Must reference certificate not the public key
+pub(crate) fn validate_role_singing_key(
+    role_data: &RoleData, validation_report: &mut Vec<String>,
+) -> bool {
+    const FUNCTION_NAME: &str = "Validate Role Signing Key";
+
+    // If signing key exist, it should not contain public key
+    if let Some(local_ref) = &role_data.role_signing_key {
+        if local_ref
+            .iter()
+            .any(|k| k.local_ref == LocalRefInt::PubKeys)
+        {
+            validation_report.push(format!(
+                "{FUNCTION_NAME}, Role signing key should reference certificate, not public key",
+            ));
+            return false;
+        }
+    }
+
+    true
+}
+
+// ------------------------ Tests ------------------------
 
 #[cfg(test)]
 mod tests {

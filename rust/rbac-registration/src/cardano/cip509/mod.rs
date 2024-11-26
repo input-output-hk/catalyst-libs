@@ -16,7 +16,8 @@ use minicbor::{
 use pallas::ledger::traverse::MultiEraTx;
 use strum_macros::FromRepr;
 use validation::{
-    validate_aux, validate_payment_key, validate_stake_public_key, validate_txn_inputs_hash,
+    validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
+    validate_txn_inputs_hash,
 };
 use x509_chunks::X509Chunks;
 
@@ -199,7 +200,8 @@ impl Cip509 {
     ///     2. Positive index reference - reference to the transaction input in
     ///        transaction: only check whether the index exist within the transaction
     ///        inputs.
-    ///
+    /// * Role signing key validation for role 0 where the signing keys should only be the certificates
+    /// 
     ///  See:
     /// * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
     /// * <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
@@ -218,6 +220,7 @@ impl Cip509 {
         let aux_validate = validate_aux(txn, validation_report).unwrap_or(false);
         let mut stake_key_validate = true;
         let mut payment_key_validate = true;
+        let mut signing_key = true;
         // Validate the role 0
         if let Some(role_set) = &self.x509_chunks.0.role_set {
             // Validate only role 0
@@ -229,10 +232,11 @@ impl Cip509 {
                     payment_key_validate =
                         validate_payment_key(txn, txn_idx, role, validation_report)
                             .unwrap_or(false);
+                    signing_key = validate_role_singing_key(role, validation_report);
                 }
             }
         }
-        tx_input_validate && aux_validate && stake_key_validate && payment_key_validate
+        tx_input_validate && aux_validate && stake_key_validate && payment_key_validate && signing_key
     }
 }
 
