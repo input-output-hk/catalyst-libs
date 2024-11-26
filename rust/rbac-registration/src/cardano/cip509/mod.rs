@@ -177,7 +177,8 @@ impl Cip509 {
     ///     2. Positive index reference - reference to the transaction input in
     ///        transaction: only check whether the index exist within the transaction
     ///        inputs.
-    /// * Role signing key validation for role 0 where the signing keys should only be the certificates
+    /// * Role signing key validation for role 0 where the signing keys should only be the
+    ///   certificates
     ///
     ///  See:
     /// * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>

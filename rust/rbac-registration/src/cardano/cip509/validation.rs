@@ -12,8 +12,9 @@
 //!        should match some of the key within witness set.
 //!     2. Positive index reference - reference to the transaction input in transaction:
 //!        only check whether the index exist within the transaction inputs.
-//! * Role signing key validation for role 0 where the signing keys should only be the certificates
-//! 
+//! * Role signing key validation for role 0 where the signing keys should only be the
+//!   certificates
+//!
 //!  See:
 //! * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
 //! * <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
@@ -449,7 +450,7 @@ fn validate_payment_output_key_helper(
 pub(crate) fn validate_role_singing_key(
     role_data: &RoleData, validation_report: &mut Vec<String>,
 ) -> bool {
-    const FUNCTION_NAME: &str = "Validate Role Signing Key";
+    let function_name = "Validate Role Signing Key";
 
     // If signing key exist, it should not contain public key
     if let Some(local_ref) = &role_data.role_signing_key {
@@ -458,7 +459,7 @@ pub(crate) fn validate_role_singing_key(
             .any(|k| k.local_ref == LocalRefInt::PubKeys)
         {
             validation_report.push(format!(
-                "{FUNCTION_NAME}, Role signing key should reference certificate, not public key",
+                "{function_name}, Role signing key should reference certificate, not public key",
             ));
             return false;
         }
