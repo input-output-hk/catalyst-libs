@@ -1,6 +1,7 @@
 //! Transaction Witness
 use std::fmt::{Display, Formatter};
 
+use anyhow::bail;
 use dashmap::DashMap;
 use pallas::{codec::utils::Bytes, ledger::traverse::MultiEraTx};
 
@@ -58,7 +59,7 @@ impl TxWitness {
                     }
                 },
                 _ => {
-                    return Err(anyhow::anyhow!("Unsupported transaction type"));
+                    bail!("Unsupported transaction type");
                 },
             };
         }

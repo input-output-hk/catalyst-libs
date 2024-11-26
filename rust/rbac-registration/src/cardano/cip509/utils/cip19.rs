@@ -1,5 +1,6 @@
 //! Utility functions for CIP-19 address.
 
+use anyhow::bail;
 use regex::Regex;
 
 use crate::cardano::transaction::witness::TxWitness;
@@ -44,7 +45,7 @@ pub(crate) fn compare_key_hash(
     pk_addrs: &[Vec<u8>], witness: &TxWitness, txn_idx: u16,
 ) -> anyhow::Result<()> {
     if pk_addrs.is_empty() {
-        return Err(anyhow::anyhow!("No public key addresses provided"));
+        bail!("No public key addresses provided");
     }
 
     pk_addrs.iter().try_for_each(|pk_addr| {
@@ -57,10 +58,10 @@ pub(crate) fn compare_key_hash(
 
         // Key hash not found in the transaction witness set
         if !witness.check_witness_in_tx(&pk_addr, txn_idx) {
-            return Err(anyhow::anyhow!(
+            bail!(
                 "Public key hash not found in transaction witness set given {:?}",
                 pk_addr
-            ));
+            );
         }
 
         Ok(())
