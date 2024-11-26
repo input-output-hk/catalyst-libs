@@ -1,7 +1,5 @@
-use cbork_cddl_parser::{self, cddl_test::Rule};
-
 mod common;
-use common::text_sequences::*;
+use common::{text_sequences::*, Rule};
 
 #[test]
 /// Test if the `S` rule passes properly.
