@@ -1,6 +1,7 @@
 //! Public key type for RBAC metadata
 
 use minicbor::{decode, Decode, Decoder};
+use pallas::codec::utils::Bytes;
 
 use super::tag::KeyTag;
 use crate::utils::decode_helper::{decode_bytes, decode_tag};
@@ -18,12 +19,19 @@ pub enum SimplePublicKeyType {
 }
 
 /// 32 bytes Ed25519 public key.
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, PartialEq, Clone, Default, Eq, Hash)]
 pub struct Ed25519PublicKey([u8; 32]);
 
 impl From<[u8; 32]> for Ed25519PublicKey {
     fn from(bytes: [u8; 32]) -> Self {
         Ed25519PublicKey(bytes)
+    }
+}
+
+impl Into<Bytes> for Ed25519PublicKey {
+    fn into(self) -> Bytes {
+        let vec: Vec<u8> = self.0.to_vec();
+        Bytes::from(vec)
     }
 }
 
@@ -48,11 +56,9 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                 }
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
-            _ => {
-                Err(decode::Error::message(
-                    "Invalid datatype for SimplePublicKeyType",
-                ))
-            },
+            _ => Err(decode::Error::message(
+                "Invalid datatype for SimplePublicKeyType",
+            )),
         }
     }
 }
