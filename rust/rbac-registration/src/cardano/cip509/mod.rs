@@ -13,7 +13,7 @@ use minicbor::{
     decode::{self},
     Decode, Decoder,
 };
-use pallas::ledger::traverse::MultiEraTx;
+use pallas::{crypto::hash::Hash, ledger::traverse::MultiEraTx};
 use strum_macros::FromRepr;
 use validation::{
     validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
@@ -39,7 +39,7 @@ pub struct Cip509 {
     /// Transaction inputs hash.
     pub txn_inputs_hash: TxInputHash, // bytes .size 16
     /// Optional previous transaction ID.
-    pub prv_tx_id: Option<TxHash>, // bytes .size 32
+    pub prv_tx_id: Option<Hash<32>>, // bytes .size 32
     /// x509 chunks.
     pub x509_chunks: X509Chunks, // chunk_type => [ + x509_chunk ]
     /// Validation signature.
@@ -66,30 +66,6 @@ impl TryFrom<Vec<u8>> for UuidV4 {
             Ok(UuidV4(array))
         } else {
             Err("Input Vec must be exactly 16 bytes")
-        }
-    }
-}
-
-/// Transaction hash representing in 32 bytes.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct TxHash([u8; 32]);
-
-impl From<[u8; 32]> for TxHash {
-    fn from(bytes: [u8; 32]) -> Self {
-        TxHash(bytes)
-    }
-}
-
-impl TryFrom<Vec<u8>> for TxHash {
-    type Error = &'static str;
-
-    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if vec.len() == 32 {
-            let mut array = [0u8; 32];
-            array.copy_from_slice(&vec);
-            Ok(TxHash(array))
-        } else {
-            Err("Input Vec must be exactly 32 bytes")
         }
     }
 }
@@ -158,11 +134,12 @@ impl Decode<'_, ()> for Cip509 {
                                 })?;
                     },
                     Cip509IntIdentifier::PreviousTxId => {
-                        cip509_metadatum.prv_tx_id = Some(
-                            TxHash::try_from(decode_bytes(d, "CIP509 previous tx ID")?).map_err(
-                                |_| decode::Error::message("Invalid data size of PreviousTxId"),
-                            )?,
-                        );
+                        let prv_tx_hash: [u8; 32] = decode_bytes(d, "CIP509 previous tx ID")?
+                            .try_into()
+                            .map_err(|_| {
+                                decode::Error::message("Invalid data size of PreviousTxId")
+                            })?;
+                        cip509_metadatum.prv_tx_id = Some(Hash::from(prv_tx_hash));
                     },
                     Cip509IntIdentifier::ValidationSignature => {
                         let validation_signature = decode_bytes(d, "CIP509 validation signature")?;
@@ -201,7 +178,7 @@ impl Cip509 {
     ///        transaction: only check whether the index exist within the transaction
     ///        inputs.
     /// * Role signing key validation for role 0 where the signing keys should only be the certificates
-    /// 
+    ///
     ///  See:
     /// * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
     /// * <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
@@ -236,7 +213,11 @@ impl Cip509 {
                 }
             }
         }
-        tx_input_validate && aux_validate && stake_key_validate && payment_key_validate && signing_key
+        tx_input_validate
+            && aux_validate
+            && stake_key_validate
+            && payment_key_validate
+            && signing_key
     }
 }
 
@@ -270,7 +251,7 @@ mod tests {
 
         assert_eq!(decoded_cip509.purpose, UuidV4(purpose));
         assert_eq!(decoded_cip509.txn_inputs_hash, TxInputHash(txn_inputs_hash));
-        assert_eq!(decoded_cip509.prv_tx_id, Some(TxHash(prv_tx_id)));
+        assert_eq!(decoded_cip509.prv_tx_id, Some(prv_tx_id.into()));
         assert_eq!(decoded_cip509.validation_signature, validation_signature);
     }
 }
