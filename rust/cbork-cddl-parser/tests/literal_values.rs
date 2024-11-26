@@ -2,10 +2,8 @@
 
 use std::ops::Deref;
 
-use cbork_cddl_parser::{self, cddl_test::Rule};
-
 mod common;
-use common::{byte_sequences::*, literal_values::*, text_sequences::*};
+use common::{byte_sequences::*, literal_values::*, text_sequences::*, Rule};
 
 #[test]
 /// Test if the `uint` rule passes properly.
