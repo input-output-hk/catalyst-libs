@@ -28,9 +28,9 @@ impl From<[u8; 32]> for Ed25519PublicKey {
     }
 }
 
-impl Into<Bytes> for Ed25519PublicKey {
-    fn into(self) -> Bytes {
-        let vec: Vec<u8> = self.0.to_vec();
+impl From<Ed25519PublicKey> for Bytes {
+    fn from(val: Ed25519PublicKey) -> Self {
+        let vec: Vec<u8> = val.0.to_vec();
         Bytes::from(vec)
     }
 }
@@ -56,9 +56,11 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                 }
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
-            _ => Err(decode::Error::message(
-                "Invalid datatype for SimplePublicKeyType",
-            )),
+            _ => {
+                Err(decode::Error::message(
+                    "Invalid datatype for SimplePublicKeyType",
+                ))
+            },
         }
     }
 }
