@@ -1,7 +1,5 @@
-use cbork_cddl_parser::{self, cddl_test::Rule};
-
 mod common;
-use common::comments::*;
+use common::{comments::*, Rule};
 
 #[test]
 /// Test if the `COMMENT` rule passes properly.
