@@ -494,15 +494,12 @@ fn chain_root_role_data(
             // Map of role number to point and role data
             role_data_map.insert(
                 role_data.role_number,
-                (
-                    point_tx_idx.clone(),
-                    RoleData {
-                        signing_key_ref: signing_key,
-                        encryption_ref: encryption_key,
-                        payment_key,
-                        role_extended_data: role_data.role_extended_data_keys.clone(),
-                    },
-                ),
+                (point_tx_idx.clone(), RoleData {
+                    signing_key_ref: signing_key,
+                    encryption_ref: encryption_key,
+                    payment_key,
+                    role_extended_data: role_data.role_extended_data_keys.clone(),
+                }),
             );
         }
     }
@@ -537,15 +534,12 @@ fn update_role_data(
             // Note that new role data will overwrite the old one
             inner.role_data.insert(
                 role_data.role_number,
-                (
-                    point_tx_idx.clone(),
-                    RoleData {
-                        signing_key_ref: signing_key,
-                        encryption_ref: encryption_key,
-                        payment_key,
-                        role_extended_data: role_data.role_extended_data_keys.clone(),
-                    },
-                ),
+                (point_tx_idx.clone(), RoleData {
+                    signing_key_ref: signing_key,
+                    encryption_ref: encryption_key,
+                    payment_key,
+                    role_extended_data: role_data.role_extended_data_keys.clone(),
+                }),
             );
         }
     }
