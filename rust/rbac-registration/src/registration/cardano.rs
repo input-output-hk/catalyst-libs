@@ -26,12 +26,44 @@ use crate::{
     utils::general::decremented_index,
 };
 
-/// Registration chain type.
-pub type RegistrationChain = Arc<RegistrationChainInner>;
+/// Registration chains.
+pub struct RegistrationChain {
+    inner: Arc<RegistrationChainInner>,
+}
+
+impl RegistrationChain {
+    /// Create a new instance of registration chain.
+    pub fn new(
+        &self, point: Point, tracking_payment_keys: Vec<Ed25519PublicKey>, tx_idx: usize,
+        txn: &MultiEraTx, cip509: Cip509,
+    ) -> anyhow::Result<Self> {
+        let inner = RegistrationChainInner::new(cip509, tracking_payment_keys, point, tx_idx, txn)?;
+
+        Ok(Self {
+            inner: Arc::new(inner),
+        })
+    }
+
+    /// Update the registration chain.
+    pub fn update(
+        &self, point: Point, tx_idx: usize, txn: &MultiEraTx, cip509: Cip509,
+    ) -> anyhow::Result<Self> {
+        let new_inner = self.inner.update(point, tx_idx, txn, cip509)?;
+
+        Ok(Self {
+            inner: Arc::new(new_inner),
+        })
+    }
+
+    /// Get the registration chain inner.
+    pub fn registration_chain(&self) -> &RegistrationChainInner {
+        self.inner.as_ref()
+    }
+}
 
 /// Inner structure of registration chain.
 #[derive(Clone)]
-pub struct RegistrationChainInner {
+struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Hash<32>,
     /// List of purpose for this registration chain
@@ -57,7 +89,6 @@ pub struct RegistrationChainInner {
 }
 
 /// Point (slot) and transaction index.
-#[allow(dead_code)]
 #[derive(Clone)]
 pub(crate) struct PointTxIdx((Point, usize));
 
@@ -69,9 +100,8 @@ impl PointTxIdx {
 }
 
 /// Payment history of the public key in tracking payment keys.
-#[allow(dead_code)]
 #[derive(Clone)]
-pub struct PaymentHistory {
+struct PaymentHistory {
     /// The point and transaction index.
     point_tx_idx: PointTxIdx,
     /// Transaction hash that this payment come from.
@@ -82,10 +112,31 @@ pub struct PaymentHistory {
     value: Value,
 }
 
+impl PaymentHistory {
+    /// Get the point and transaction index.
+    pub fn point_tx_idx(&self) -> &PointTxIdx {
+        &self.point_tx_idx
+    }
+
+    /// Get the transaction hash.
+    pub fn tx_hash(&self) -> Hash<32> {
+        self.tx_hash
+    }
+
+    /// Get the transaction output index.
+    pub fn output_index(&self) -> u16 {
+        self.output_index
+    }
+
+    /// Get the value of the payment.
+    pub fn value(&self) -> &Value {
+        &self.value
+    }
+}
+
 /// Role data
-#[allow(dead_code)]
 #[derive(Clone)]
-pub struct RoleData {
+struct RoleData {
     /// List of reference of signing keys to the data within registration.
     signing_key_ref: Vec<KeyLocalRef>,
     /// List of reference of encryption keys to the data within registration.
@@ -94,6 +145,28 @@ pub struct RoleData {
     payment_key: Ed25519PublicKey,
     /// Map of role extended data (10-99) to its data
     role_extended_data: HashMap<u8, Vec<u8>>,
+}
+
+impl RoleData {
+    /// Get the reference of signing keys.
+    pub fn signing_key_ref(&self) -> &[KeyLocalRef] {
+        &self.signing_key_ref
+    }
+
+    /// Get the reference of encryption keys.
+    pub fn encryption_ref(&self) -> &[KeyLocalRef] {
+        &self.encryption_ref
+    }
+
+    /// Get the payment key.
+    pub fn payment_key(&self) -> &Ed25519PublicKey {
+        &self.payment_key
+    }
+
+    /// Get the role extended data.
+    pub fn role_extended_data(&self) -> &HashMap<u8, Vec<u8>> {
+        &self.role_extended_data
+    }
 }
 
 impl RegistrationChainInner {
@@ -110,8 +183,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    #[allow(dead_code)]
-    pub fn new(
+    fn new(
         cip509: Cip509, tracking_payment_keys: Vec<Ed25519PublicKey>, point: Point, tx_idx: usize,
         txn: &MultiEraTx,
     ) -> anyhow::Result<Self> {
@@ -171,7 +243,6 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    #[allow(dead_code)]
     pub fn update(
         &self, point: Point, tx_idx: usize, txn: &MultiEraTx, cip509: Cip509,
     ) -> anyhow::Result<Self> {
@@ -227,10 +298,45 @@ impl RegistrationChainInner {
 
         Ok(new_inner)
     }
+
+    pub fn current_tx_id_hash(&self) -> Hash<32> {
+        self.current_tx_id_hash
+    }
+
+    pub fn purpose(&self) -> &[UuidV4] {
+        &self.purpose
+    }
+
+    pub fn x509_certs(&self) -> &HashMap<usize, (PointTxIdx, Vec<u8>)> {
+        &self.x509_certs
+    }
+
+    pub fn c509_certs(&self) -> &HashMap<usize, (PointTxIdx, C509)> {
+        &self.c509_certs
+    }
+
+    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
+        &self.simple_keys
+    }
+
+    pub fn revocations(&self) -> &[(PointTxIdx, CertKeyHash)] {
+        &self.revocations
+    }
+
+    pub fn role_data(&self) -> &HashMap<u8, (PointTxIdx, RoleData)> {
+        &self.role_data
+    }
+
+    pub fn tracking_payment_keys(&self) -> &Vec<Ed25519PublicKey> {
+        &self.tracking_payment_keys
+    }
+
+    pub fn payment_history(&self) -> &HashMap<Ed25519PublicKey, Vec<PaymentHistory>> {
+        &self.payment_history
+    }
 }
 
 /// Process x509 certificate for chain root.
-#[allow(dead_code)]
 fn chain_root_x509_certs(
     x509_certs: Option<Vec<X509DerCert>>, point_tx_idx: &PointTxIdx,
 ) -> HashMap<usize, (PointTxIdx, Vec<u8>)> {
@@ -247,7 +353,6 @@ fn chain_root_x509_certs(
 }
 
 /// Update x509 certificates in the registration chain.
-#[allow(dead_code)]
 fn update_x509_certs(
     new_inner: &mut RegistrationChainInner, x509_certs: Option<Vec<X509DerCert>>,
     point_tx_idx: &PointTxIdx,
@@ -273,7 +378,6 @@ fn update_x509_certs(
 }
 
 /// Process c509 certificates for chain root.
-#[allow(dead_code)]
 fn chain_root_c509_certs(
     c509_certs: Option<Vec<C509Cert>>, point_tx_idx: &PointTxIdx,
 ) -> HashMap<usize, (PointTxIdx, C509)> {
@@ -290,7 +394,6 @@ fn chain_root_c509_certs(
 }
 
 /// Update c509 certificates in the registration chain.
-#[allow(dead_code)]
 fn update_c509_certs(
     new_inner: &mut RegistrationChainInner, c509_certs: Option<Vec<C509Cert>>,
     point_tx_idx: &PointTxIdx,
@@ -321,7 +424,6 @@ fn update_c509_certs(
 }
 
 /// Process public keys for chain root.
-#[allow(dead_code)]
 fn chain_root_public_keys(
     pub_keys: Option<Vec<SimplePublicKeyType>>, point_tx_idx: &PointTxIdx,
 ) -> HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
@@ -338,7 +440,6 @@ fn chain_root_public_keys(
 }
 
 /// Update public keys in the registration chain.
-#[allow(dead_code)]
 fn update_public_keys(
     new_inner: &mut RegistrationChainInner, pub_keys: Option<Vec<SimplePublicKeyType>>,
     point_tx_idx: &PointTxIdx,
@@ -364,7 +465,6 @@ fn update_public_keys(
 }
 
 /// Process the revocation list.
-#[allow(dead_code)]
 fn revocations_list(
     revocation_list: Option<Vec<CertKeyHash>>, point_tx_idx: &PointTxIdx,
 ) -> Vec<(PointTxIdx, CertKeyHash)> {
@@ -378,7 +478,6 @@ fn revocations_list(
 }
 
 /// Process the role data for chain root.
-#[allow(dead_code)]
 fn chain_root_role_data(
     role_set: Option<Vec<cip509::rbac::role_data::RoleData>>, txn: &MultiEraTx,
     point_tx_idx: &PointTxIdx,
@@ -395,12 +494,15 @@ fn chain_root_role_data(
             // Map of role number to point and role data
             role_data_map.insert(
                 role_data.role_number,
-                (point_tx_idx.clone(), RoleData {
-                    signing_key_ref: signing_key,
-                    encryption_ref: encryption_key,
-                    payment_key,
-                    role_extended_data: role_data.role_extended_data_keys.clone(),
-                }),
+                (
+                    point_tx_idx.clone(),
+                    RoleData {
+                        signing_key_ref: signing_key,
+                        encryption_ref: encryption_key,
+                        payment_key,
+                        role_extended_data: role_data.role_extended_data_keys.clone(),
+                    },
+                ),
             );
         }
     }
@@ -408,7 +510,6 @@ fn chain_root_role_data(
 }
 
 /// Update the role data in the registration chain.
-#[allow(dead_code)]
 fn update_role_data(
     inner: &mut RegistrationChainInner, role_set: Option<Vec<cip509::rbac::role_data::RoleData>>,
     txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
@@ -436,12 +537,15 @@ fn update_role_data(
             // Note that new role data will overwrite the old one
             inner.role_data.insert(
                 role_data.role_number,
-                (point_tx_idx.clone(), RoleData {
-                    signing_key_ref: signing_key,
-                    encryption_ref: encryption_key,
-                    payment_key,
-                    role_extended_data: role_data.role_extended_data_keys.clone(),
-                }),
+                (
+                    point_tx_idx.clone(),
+                    RoleData {
+                        signing_key_ref: signing_key,
+                        encryption_ref: encryption_key,
+                        payment_key,
+                        role_extended_data: role_data.role_extended_data_keys.clone(),
+                    },
+                ),
             );
         }
     }
