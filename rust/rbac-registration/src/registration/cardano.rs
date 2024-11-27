@@ -28,11 +28,24 @@ use crate::{
 
 /// Registration chains.
 pub struct RegistrationChain {
+    /// Inner part of the registration chain.
     inner: Arc<RegistrationChainInner>,
 }
 
 impl RegistrationChain {
     /// Create a new instance of registration chain.
+    /// The first new value should be the chain root.
+    ///
+    /// # Arguments
+    /// - `cip509` - The CIP509.
+    /// - `tracking_payment_keys` - The list of payment keys to track.
+    /// - `point` - The point (slot) of the transaction.
+    /// - `tx_idx` - The transaction index.
+    /// - `txn` - The transaction.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if data is invalid
     pub fn new(
         &self, point: Point, tracking_payment_keys: Vec<Ed25519PublicKey>, tx_idx: usize,
         txn: &MultiEraTx, cip509: Cip509,
@@ -45,6 +58,16 @@ impl RegistrationChain {
     }
 
     /// Update the registration chain.
+    ///
+    /// # Arguments
+    /// - `point` - The point (slot) of the transaction.
+    /// - `tx_idx` - The transaction index.
+    /// - `txn` - The transaction.
+    /// - `cip509` - The CIP509.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if data is invalid
     pub fn update(
         &self, point: Point, tx_idx: usize, txn: &MultiEraTx, cip509: Cip509,
     ) -> anyhow::Result<Self> {
@@ -56,6 +79,7 @@ impl RegistrationChain {
     }
 
     /// Get the registration chain inner.
+    #[must_use]
     pub fn registration_chain(&self) -> &RegistrationChainInner {
         self.inner.as_ref()
     }
@@ -63,7 +87,7 @@ impl RegistrationChain {
 
 /// Inner structure of registration chain.
 #[derive(Clone)]
-struct RegistrationChainInner {
+pub struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Hash<32>,
     /// List of purpose for this registration chain
@@ -90,18 +114,30 @@ struct RegistrationChainInner {
 
 /// Point (slot) and transaction index.
 #[derive(Clone)]
-pub(crate) struct PointTxIdx((Point, usize));
+pub struct PointTxIdx((Point, usize));
 
 impl PointTxIdx {
     /// Create an instance of point and transaction index.
     pub(crate) fn new(point: Point, tx_idx: usize) -> Self {
         PointTxIdx((point, tx_idx))
     }
+
+    /// Get the point.
+    #[must_use]
+    pub fn point(&self) -> &Point {
+        &self.0 .0
+    }
+
+    /// Get the transaction index.
+    #[must_use]
+    pub fn tx_idx(&self) -> usize {
+        self.0 .1
+    }
 }
 
 /// Payment history of the public key in tracking payment keys.
 #[derive(Clone)]
-struct PaymentHistory {
+pub struct PaymentHistory {
     /// The point and transaction index.
     point_tx_idx: PointTxIdx,
     /// Transaction hash that this payment come from.
@@ -114,21 +150,25 @@ struct PaymentHistory {
 
 impl PaymentHistory {
     /// Get the point and transaction index.
+    #[must_use]
     pub fn point_tx_idx(&self) -> &PointTxIdx {
         &self.point_tx_idx
     }
 
     /// Get the transaction hash.
+    #[must_use]
     pub fn tx_hash(&self) -> Hash<32> {
         self.tx_hash
     }
 
     /// Get the transaction output index.
+    #[must_use]
     pub fn output_index(&self) -> u16 {
         self.output_index
     }
 
     /// Get the value of the payment.
+    #[must_use]
     pub fn value(&self) -> &Value {
         &self.value
     }
@@ -136,7 +176,7 @@ impl PaymentHistory {
 
 /// Role data
 #[derive(Clone)]
-struct RoleData {
+pub struct RoleData {
     /// List of reference of signing keys to the data within registration.
     signing_key_ref: Vec<KeyLocalRef>,
     /// List of reference of encryption keys to the data within registration.
@@ -149,21 +189,25 @@ struct RoleData {
 
 impl RoleData {
     /// Get the reference of signing keys.
+    #[must_use]
     pub fn signing_key_ref(&self) -> &[KeyLocalRef] {
         &self.signing_key_ref
     }
 
     /// Get the reference of encryption keys.
+    #[must_use]
     pub fn encryption_ref(&self) -> &[KeyLocalRef] {
         &self.encryption_ref
     }
 
     /// Get the payment key.
+    #[must_use]
     pub fn payment_key(&self) -> &Ed25519PublicKey {
         &self.payment_key
     }
 
     /// Get the role extended data.
+    #[must_use]
     pub fn role_extended_data(&self) -> &HashMap<u8, Vec<u8>> {
         &self.role_extended_data
     }
@@ -299,38 +343,56 @@ impl RegistrationChainInner {
         Ok(new_inner)
     }
 
+    /// Get the current transaction ID hash.
+    #[must_use]
     pub fn current_tx_id_hash(&self) -> Hash<32> {
         self.current_tx_id_hash
     }
 
+    /// Get a list of purpose for this registration chain.
+    #[must_use]
     pub fn purpose(&self) -> &[UuidV4] {
         &self.purpose
     }
 
+    /// Get the map of index in array to point, transaction index, and x509 certificate.
+    #[must_use]
     pub fn x509_certs(&self) -> &HashMap<usize, (PointTxIdx, Vec<u8>)> {
         &self.x509_certs
     }
 
+    /// Get the map of index in array to point, transaction index, and c509 certificate.
+    #[must_use]
     pub fn c509_certs(&self) -> &HashMap<usize, (PointTxIdx, C509)> {
         &self.c509_certs
     }
 
+    /// Get the map of index in array to point, transaction index, and public key.
+    #[must_use]
     pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
         &self.simple_keys
     }
 
+    /// Get a list of revocations.
+    #[must_use]
     pub fn revocations(&self) -> &[(PointTxIdx, CertKeyHash)] {
         &self.revocations
     }
 
+    /// Get the map of role number to point, transaction index, and role data.
+    #[must_use]
     pub fn role_data(&self) -> &HashMap<u8, (PointTxIdx, RoleData)> {
         &self.role_data
     }
 
+    /// Get the list of payment keys to track.
+    #[must_use]
     pub fn tracking_payment_keys(&self) -> &Vec<Ed25519PublicKey> {
         &self.tracking_payment_keys
     }
 
+    /// Get the map of payment key to its history.
+    #[must_use]
     pub fn payment_history(&self) -> &HashMap<Ed25519PublicKey, Vec<PaymentHistory>> {
         &self.payment_history
     }
