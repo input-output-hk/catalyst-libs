@@ -174,10 +174,8 @@ impl Network {
         let genesis = self.genesis_values();
 
         let byron_start_time = DateTime::<Utc>::from_timestamp(genesis.byron_known_time as i64, 0)?;
-        let byron_slot_length = genesis.byron_slot_length as i64;
-
-        let shelley_start_time = DateTime::<Utc>::from_timestamp(genesis.shelley_known_time as i64, 0)?;
-        let shelley_slot_length = genesis.shelley_slot_length as i64;
+        let shelley_start_time =
+            DateTime::<Utc>::from_timestamp(genesis.shelley_known_time as i64, 0)?;
 
         // determine if the given time is in Byron or Shelley era.
         if time < byron_start_time {
@@ -187,12 +185,12 @@ impl Network {
         if time < shelley_start_time {
             // Byron era
             let time_diff = time - byron_start_time;
-            let elapsed_slots = time_diff.num_seconds() / byron_slot_length;
+            let elapsed_slots = time_diff.num_seconds() / i64::from(genesis.byron_slot_length);
             Some(genesis.byron_known_slot + elapsed_slots as u64)
         } else {
             // Shelley era
             let time_diff = time - shelley_start_time;
-            let elapsed_slots = time_diff.num_seconds() / shelley_slot_length;
+            let elapsed_slots = time_diff.num_seconds() / i64::from(genesis.shelley_slot_length);
             Some(genesis.shelley_known_slot + elapsed_slots as u64)
         }
     }
