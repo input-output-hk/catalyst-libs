@@ -313,4 +313,84 @@ mod tests {
 
         assert_eq!(network.time_to_slot(time), Some(expected_slot));
     }
+
+    #[test]
+    fn test_slot_to_time_to_slot_consistency() {
+        let network = Network::Mainnet;
+
+        // a few arbitrary slots in different ranges.
+        let slots_to_test = vec![0, 10_000, 1_000_000, 50_000_000];
+
+        for slot in slots_to_test {
+            let time = network.slot_to_time(slot);
+            let calculated_slot = network.time_to_slot(time);
+
+            assert_eq!(calculated_slot, Some(slot), "Failed for slot: {slot}");
+        }
+    }
+
+    #[test]
+    #[allow(clippy::panic)]
+    fn test_time_to_slot_to_time_consistency() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        // Byron, Shelley, and Conway.
+        let times_to_test = vec![
+            Utc.timestamp_opt(i64::try_from(genesis.byron_known_time).unwrap() + 100, 0)
+                .unwrap(),
+            Utc.timestamp_opt(
+                i64::try_from(genesis.shelley_known_time).unwrap() + 1_000,
+                0,
+            )
+            .unwrap(),
+            Utc.timestamp_opt(
+                i64::try_from(genesis.shelley_known_time).unwrap() + 10_000_000,
+                0,
+            )
+            .unwrap(),
+        ];
+
+        for time in times_to_test {
+            if let Some(slot) = network.time_to_slot(time) {
+                let calculated_time = network.slot_to_time(slot);
+
+                assert_eq!(
+                    calculated_time.timestamp(),
+                    time.timestamp(),
+                    "Failed for time: {time}"
+                );
+            } else {
+                panic!("time_to_slot returned None for a valid time: {time}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_conway_era_time_to_slot_and_back() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        // a very late time, far in the Conway era.
+        let conway_time = Utc
+            .timestamp_opt(
+                i64::try_from(genesis.shelley_known_time).unwrap() + 20_000_000,
+                0,
+            )
+            .unwrap();
+
+        let slot = network.time_to_slot(conway_time);
+        assert!(
+            slot.is_some(),
+            "Failed to calculate slot for Conway era time"
+        );
+
+        let calculated_time = network.slot_to_time(slot.unwrap());
+
+        assert_eq!(
+            calculated_time.timestamp(),
+            conway_time.timestamp(),
+            "Inconsistency for Conway era time"
+        );
+    }
 }
