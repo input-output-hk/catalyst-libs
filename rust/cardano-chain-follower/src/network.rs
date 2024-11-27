@@ -170,9 +170,31 @@ impl Network {
     ///
     /// The Slot does not have to be a valid slot present in the blockchain.
     #[must_use]
-    pub fn time_to_slot(&self, _time: DateTime<Utc>) -> Option<u64> {
-        // TODO: Implement this, for now just return None.
-        None
+    pub fn time_to_slot(&self, time: DateTime<Utc>) -> Option<u64> {
+        let genesis = self.genesis_values();
+
+        let byron_start_time = DateTime::<Utc>::from_timestamp(genesis.byron_known_time as i64, 0)?;
+        let byron_slot_length = genesis.byron_slot_length as i64;
+
+        let shelley_start_time = DateTime::<Utc>::from_timestamp(genesis.shelley_known_time as i64, 0)?;
+        let shelley_slot_length = genesis.shelley_slot_length as i64;
+
+        // determine if the given time is in Byron or Shelley era.
+        if time < byron_start_time {
+            return None;
+        }
+
+        if time < shelley_start_time {
+            // Byron era
+            let time_diff = time - byron_start_time;
+            let elapsed_slots = time_diff.num_seconds() / byron_slot_length;
+            Some(genesis.byron_known_slot + elapsed_slots as u64)
+        } else {
+            // Shelley era
+            let time_diff = time - shelley_start_time;
+            let elapsed_slots = time_diff.num_seconds() / shelley_slot_length;
+            Some(genesis.shelley_known_slot + elapsed_slots as u64)
+        }
     }
 }
 
