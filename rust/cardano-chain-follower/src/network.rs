@@ -254,7 +254,6 @@ mod tests {
             .timestamp_opt(i64::try_from(genesis.byron_known_time).unwrap() - 1, 0)
             .unwrap();
 
-        // Expect None for time before the blockchain started
         assert_eq!(network.time_to_slot(before_blockchain), None);
     }
 
@@ -268,11 +267,10 @@ mod tests {
             .unwrap();
         let byron_slot_length = i64::from(genesis.byron_slot_length);
 
-        // A time in the middle of the Byron era
+        // a time in the middle of the Byron era.
         let time = byron_start_time + chrono::Duration::seconds(byron_slot_length * 100);
         let expected_slot = genesis.byron_known_slot + 100;
 
-        // Expect the correct slot for the given time
         assert_eq!(network.time_to_slot(time), Some(expected_slot));
     }
 
@@ -286,7 +284,7 @@ mod tests {
             .unwrap();
         let byron_slot_length = i64::from(genesis.byron_slot_length);
 
-        // A time just before Shelley era starts
+        // a time just before Shelley era starts.
         let time = shelley_start_time - chrono::Duration::seconds(1);
         let elapsed_slots = (time
             - Utc
@@ -296,7 +294,6 @@ mod tests {
             / byron_slot_length;
         let expected_slot = genesis.byron_known_slot + u64::try_from(elapsed_slots).unwrap();
 
-        // Expect the slot to be in the Byron era
         assert_eq!(network.time_to_slot(time), Some(expected_slot));
     }
 
@@ -310,11 +307,10 @@ mod tests {
             .unwrap();
         let shelley_slot_length = i64::from(genesis.shelley_slot_length);
 
-        // A time in the middle of the Shelley era
+        // a time in the middle of the Shelley era.
         let time = shelley_start_time + chrono::Duration::seconds(shelley_slot_length * 200);
         let expected_slot = genesis.shelley_known_slot + 200;
 
-        // Expect the correct slot for the given time
         assert_eq!(network.time_to_slot(time), Some(expected_slot));
     }
 }
