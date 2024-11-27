@@ -24,6 +24,7 @@ jobs:
         rust/vote-tx-v2
         rust/cbork
         rust/hermes-ipfs
+        rust/rbac-registration
         dart
         docs
         general
