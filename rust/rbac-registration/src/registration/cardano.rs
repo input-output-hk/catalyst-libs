@@ -177,10 +177,10 @@ impl PaymentHistory {
 /// Role data
 #[derive(Clone)]
 pub struct RoleData {
-    /// List of reference of signing keys to the data within registration.
-    signing_key_ref: Vec<KeyLocalRef>,
-    /// List of reference of encryption keys to the data within registration.
-    encryption_ref: Vec<KeyLocalRef>,
+    /// A signing keys to the data within registration.
+    signing_key_ref: Option<KeyLocalRef>,
+    /// An encryption keys to the data within registration.
+    encryption_ref: Option<KeyLocalRef>,
     /// A payment key where reward will be distributed to.
     payment_key: Ed25519PublicKey,
     /// Map of role extended data (10-99) to its data
@@ -190,13 +190,13 @@ pub struct RoleData {
 impl RoleData {
     /// Get the reference of signing keys.
     #[must_use]
-    pub fn signing_key_ref(&self) -> &[KeyLocalRef] {
+    pub fn signing_key_ref(&self) -> &Option<KeyLocalRef> {
         &self.signing_key_ref
     }
 
     /// Get the reference of encryption keys.
     #[must_use]
-    pub fn encryption_ref(&self) -> &[KeyLocalRef] {
+    pub fn encryption_ref(&self) -> &Option<KeyLocalRef> {
         &self.encryption_ref
     }
 
@@ -547,8 +547,8 @@ fn chain_root_role_data(
     let mut role_data_map = HashMap::new();
     if let Some(role_set_data) = role_set {
         for role_data in role_set_data {
-            let signing_key = role_data.role_signing_key.clone().unwrap_or_default();
-            let encryption_key = role_data.role_encryption_key.clone().unwrap_or_default();
+            let signing_key = role_data.role_signing_key.clone();
+            let encryption_key = role_data.role_encryption_key.clone();
 
             // Get the payment key
             let payment_key = get_payment_key_from_tx(txn, role_data.payment_key)?;
@@ -556,12 +556,15 @@ fn chain_root_role_data(
             // Map of role number to point and role data
             role_data_map.insert(
                 role_data.role_number,
-                (point_tx_idx.clone(), RoleData {
-                    signing_key_ref: signing_key,
-                    encryption_ref: encryption_key,
-                    payment_key,
-                    role_extended_data: role_data.role_extended_data_keys.clone(),
-                }),
+                (
+                    point_tx_idx.clone(),
+                    RoleData {
+                        signing_key_ref: signing_key,
+                        encryption_ref: encryption_key,
+                        payment_key,
+                        role_extended_data: role_data.role_extended_data_keys.clone(),
+                    },
+                ),
             );
         }
     }
@@ -576,32 +579,37 @@ fn update_role_data(
     if let Some(role_set_data) = role_set {
         for role_data in role_set_data {
             // If there is new role singing key, use it, else use the old one
-            let signing_key = role_data.role_signing_key.unwrap_or_else(|| {
-                match inner.role_data.get(&role_data.role_number) {
+            let signing_key = match role_data.role_signing_key {
+                Some(key) => Some(key),
+                None => match inner.role_data.get(&role_data.role_number) {
                     Some((_, role_data)) => role_data.signing_key_ref.clone(),
-                    None => Vec::new(),
-                }
-            });
+                    None => None,
+                },
+            };
 
             // If there is new role encryption key, use it, else use the old one
-            let encryption_key = role_data.role_encryption_key.unwrap_or_else(|| {
-                match inner.role_data.get(&role_data.role_number) {
+            let encryption_key = match role_data.role_encryption_key {
+                Some(key) => Some(key),
+                None => match inner.role_data.get(&role_data.role_number) {
                     Some((_, role_data)) => role_data.encryption_ref.clone(),
-                    None => Vec::new(),
-                }
-            });
+                    None => None,
+                },
+            };
             let payment_key = get_payment_key_from_tx(txn, role_data.payment_key)?;
 
             // Map of role number to point and role data
             // Note that new role data will overwrite the old one
             inner.role_data.insert(
                 role_data.role_number,
-                (point_tx_idx.clone(), RoleData {
-                    signing_key_ref: signing_key,
-                    encryption_ref: encryption_key,
-                    payment_key,
-                    role_extended_data: role_data.role_extended_data_keys.clone(),
-                }),
+                (
+                    point_tx_idx.clone(),
+                    RoleData {
+                        signing_key_ref: signing_key,
+                        encryption_ref: encryption_key,
+                        payment_key,
+                        role_extended_data: role_data.role_extended_data_keys.clone(),
+                    },
+                ),
             );
         }
     }
