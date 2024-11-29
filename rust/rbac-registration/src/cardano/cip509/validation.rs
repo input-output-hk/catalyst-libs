@@ -44,6 +44,12 @@ use super::{
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
+/// Following the ASN.1 <https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/asn1-tags.html>, 
+/// the tag is derive from
+/// | Class   (2 bit)    | P/C  (1 bit)   | Tag Number (5 bit) |
+/// |`CONTEXT_SPECIFIC`  | `PRIMITIVE`   `|      6`            |
+/// |`10`                | `0`           `|      00110`        |
+/// Result in 0x86 or 134 in decimal.
 pub(crate) const URI: u8 = 134;
 
 // ------------------------ Validate Txn Inputs Hash ------------------------
