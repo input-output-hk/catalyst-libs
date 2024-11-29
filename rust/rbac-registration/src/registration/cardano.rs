@@ -556,15 +556,12 @@ fn chain_root_role_data(
             // Map of role number to point and role data
             role_data_map.insert(
                 role_data.role_number,
-                (
-                    point_tx_idx.clone(),
-                    RoleData {
-                        signing_key_ref: signing_key,
-                        encryption_ref: encryption_key,
-                        payment_key,
-                        role_extended_data: role_data.role_extended_data_keys.clone(),
-                    },
-                ),
+                (point_tx_idx.clone(), RoleData {
+                    signing_key_ref: signing_key,
+                    encryption_ref: encryption_key,
+                    payment_key,
+                    role_extended_data: role_data.role_extended_data_keys.clone(),
+                }),
             );
         }
     }
@@ -581,18 +578,22 @@ fn update_role_data(
             // If there is new role singing key, use it, else use the old one
             let signing_key = match role_data.role_signing_key {
                 Some(key) => Some(key),
-                None => match inner.role_data.get(&role_data.role_number) {
-                    Some((_, role_data)) => role_data.signing_key_ref.clone(),
-                    None => None,
+                None => {
+                    match inner.role_data.get(&role_data.role_number) {
+                        Some((_, role_data)) => role_data.signing_key_ref.clone(),
+                        None => None,
+                    }
                 },
             };
 
             // If there is new role encryption key, use it, else use the old one
             let encryption_key = match role_data.role_encryption_key {
                 Some(key) => Some(key),
-                None => match inner.role_data.get(&role_data.role_number) {
-                    Some((_, role_data)) => role_data.encryption_ref.clone(),
-                    None => None,
+                None => {
+                    match inner.role_data.get(&role_data.role_number) {
+                        Some((_, role_data)) => role_data.encryption_ref.clone(),
+                        None => None,
+                    }
                 },
             };
             let payment_key = get_payment_key_from_tx(txn, role_data.payment_key)?;
@@ -601,15 +602,12 @@ fn update_role_data(
             // Note that new role data will overwrite the old one
             inner.role_data.insert(
                 role_data.role_number,
-                (
-                    point_tx_idx.clone(),
-                    RoleData {
-                        signing_key_ref: signing_key,
-                        encryption_ref: encryption_key,
-                        payment_key,
-                        role_extended_data: role_data.role_extended_data_keys.clone(),
-                    },
-                ),
+                (point_tx_idx.clone(), RoleData {
+                    signing_key_ref: signing_key,
+                    encryption_ref: encryption_key,
+                    payment_key,
+                    role_extended_data: role_data.role_extended_data_keys.clone(),
+                }),
             );
         }
     }
