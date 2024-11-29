@@ -113,7 +113,7 @@ mod tests {
         let txs_conway = conway_block.txs();
         let tx_witness_conway = TxWitness::new(&txs_conway).expect("Failed to create TxWitness");
         let vkey1_hash: [u8; 28] =
-            hex::decode("f8e2356e21af3563556c167c31bcc00f9fc061a8a852a16a42ffcc79")
+            hex::decode("bd95d582888acda57a20256bb03e4c4abb6bdf09a47d788605412c53")
                 .expect("Failed to decode vkey1_hash")
                 .try_into()
                 .expect("Invalid length of vkey1_hash");
