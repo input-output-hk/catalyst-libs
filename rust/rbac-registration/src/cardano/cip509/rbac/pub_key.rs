@@ -67,18 +67,19 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                             ed25519.copy_from_slice(&bytes);
                             Ok(Self::Ed25519(Ed25519PublicKey(ed25519)))
                         } else {
-                            Err(decode::Error::message("Invalid length for Ed25519 key"))
+                            Err(decode::Error::message(format!(
+                                "Invalid length for Ed25519 key, got {}",
+                                bytes.len()
+                            )))
                         }
                     },
                     _ => Err(decode::Error::message("Unknown tag for Self")),
                 }
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
-            _ => {
-                Err(decode::Error::message(
-                    "Invalid datatype for SimplePublicKeyType",
-                ))
-            },
+            _ => Err(decode::Error::message(
+                "Invalid datatype for SimplePublicKeyType",
+            )),
         }
     }
 }
