@@ -14,9 +14,9 @@ pub struct RoleData {
     /// Role number.
     pub role_number: u8,
     /// Optional role signing key.
-    pub role_signing_key: Option<Vec<KeyLocalRef>>,
+    pub role_signing_key: Option<KeyLocalRef>,
     /// Optional role encryption key.
-    pub role_encryption_key: Option<Vec<KeyLocalRef>>,
+    pub role_encryption_key: Option<KeyLocalRef>,
     /// Optional payment key.
     pub payment_key: Option<i16>,
     /// Optional role extended data keys.
@@ -56,20 +56,12 @@ impl Decode<'_, ()> for RoleData {
                         role_data.role_number = decode_helper(d, "RoleNumber in RoleData", ctx)?;
                     },
                     RoleDataInt::RoleSigningKey => {
-                        let arr_len = decode_array_len(d, "RoleSigningKey")?;
-                        let mut role_signing_key = Vec::new();
-                        for _ in 0..arr_len {
-                            role_signing_key.push(KeyLocalRef::decode(d, ctx)?);
-                        }
-                        role_data.role_signing_key = Some(role_signing_key);
+                        decode_array_len(d, "RoleSigningKey")?;
+                        role_data.role_signing_key = Some(KeyLocalRef::decode(d, ctx)?);
                     },
                     RoleDataInt::RoleEncryptionKey => {
-                        let arr_len = decode_array_len(d, "RoleEncryptionKey")?;
-                        let mut role_encryption_key = Vec::new();
-                        for _ in 0..arr_len {
-                            role_encryption_key.push(KeyLocalRef::decode(d, ctx)?);
-                        }
-                        role_data.role_encryption_key = Some(role_encryption_key);
+                        decode_array_len(d, "RoleEncryptionKey")?;
+                        role_data.role_encryption_key = Some(KeyLocalRef::decode(d, ctx)?);
                     },
                     RoleDataInt::PaymentKey => {
                         role_data.payment_key =

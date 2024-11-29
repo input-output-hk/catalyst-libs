@@ -44,6 +44,13 @@ use super::{
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
+/// Following the ASN.1
+/// <https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/asn1-tags.html>
+/// the tag is derive from
+/// | Class   (2 bit)    | P/C  (1 bit)   | Tag Number (5 bit) |
+/// |`CONTEXT_SPECIFIC`  | `PRIMITIVE`   `|      6`            |
+/// |`10`                | `0`           `|      00110`        |
+/// Result in 0x86 or 134 in decimal.
 pub(crate) const URI: u8 = 134;
 
 // ------------------------ Validate Txn Inputs Hash ------------------------
@@ -99,7 +106,7 @@ pub(crate) fn validate_txn_inputs_hash(
 /// Validate the stake public key in the certificate with witness set in transaction.
 #[allow(clippy::too_many_lines)]
 pub(crate) fn validate_stake_public_key(
-    cip509: &Cip509, txn: &MultiEraTx, txn_idx: usize, validation_report: &mut Vec<String>,
+    cip509: &Cip509, txn: &MultiEraTx, validation_report: &mut Vec<String>,
 ) -> Option<bool> {
     let function_name = "Validate Stake Public Key";
     let mut pk_addrs = Vec::new();
@@ -149,7 +156,7 @@ pub(crate) fn validate_stake_public_key(
                                                         Ok(addr) => addr,
                                                         Err(e) => {
                                                             validation_report.push(format!(
-                                                                    "{function_name}, Failed to decode UTF-8 string for context-specific primitive type with raw tag 134: {e}",
+                                                                "{function_name}, Failed to decode UTF-8 string for context-specific primitive type with raw tag 134: {e}",
                                                                 ),
                                                             );
                                                             return None;
@@ -249,6 +256,7 @@ pub(crate) fn validate_stake_public_key(
     }
 
     // Create TxWitness
+    // Note that TxWitness designs to work with multiple transactions
     let witnesses = match TxWitness::new(&[txn.clone()]) {
         Ok(witnesses) => witnesses,
         Err(e) => {
@@ -257,17 +265,11 @@ pub(crate) fn validate_stake_public_key(
         },
     };
 
-    let index = match u16::try_from(txn_idx) {
-        Ok(value) => value,
-        Err(e) => {
-            validation_report.push(format!(
-                "{function_name}, Failed to convert transaction index to usize: {e}"
-            ));
-            return None;
-        },
-    };
     Some(
-        compare_key_hash(&pk_addrs, &witnesses, index)
+        // Set transaction index to 0 because the list of transaction is manually constructed
+        // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
+        // the witness within this transaction.
+        compare_key_hash(&pk_addrs, &witnesses, 0)
             .map_err(|e| {
                 validation_report.push(format!(
                     "{function_name}, Failed to compare public keys with witnesses: {e}"
@@ -454,10 +456,7 @@ pub(crate) fn validate_role_singing_key(
 
     // If signing key exist, it should not contain public key
     if let Some(local_ref) = &role_data.role_signing_key {
-        if local_ref
-            .iter()
-            .any(|k| k.local_ref == LocalRefInt::PubKeys)
-        {
+        if local_ref.local_ref == LocalRefInt::PubKeys {
             validation_report.push(format!(
                 "{function_name}, Role signing key should reference certificate, not public key",
             ));
@@ -521,12 +520,11 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
+        // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(3)
+            .get(1)
             .expect("Failed to get transaction index");
         let aux_data = cip_509_aux_data(tx);
-
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
         assert!(validate_txn_inputs_hash(&cip509, tx, &mut validation_report).unwrap());
@@ -540,15 +538,11 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
+        // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(3)
+            .get(1)
             .expect("Failed to get transaction index");
 
-        // let aux_data = cip_509_aux_data(tx);
-
-        // let mut decoder = Decoder::new(aux_data.as_slice());
-        // let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
         validate_aux(tx, &mut validation_report);
         assert!(validate_aux(tx, &mut validation_report).unwrap());
     }
@@ -561,29 +555,29 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
+        // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(3)
+            .get(1)
             .expect("Failed to get transaction index");
 
         let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
-        assert!(validate_stake_public_key(&cip509, tx, 0, &mut validation_report).unwrap());
+        assert!(validate_stake_public_key(&cip509, tx, &mut validation_report).unwrap());
     }
 
     #[test]
-    fn test_validate_payment_key_success_positive_ref() {
+    fn test_validate_payment_key_success_negative_ref() {
         let mut validation_report = Vec::new();
         let conway_block_data = conway_1();
         let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
+        // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(3)
+            .get(1)
             .expect("Failed to get transaction index");
 
         let aux_data = cip_509_aux_data(tx);
@@ -601,7 +595,33 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_payment_key_success_negative_ref() {
+    fn test_role_0_signing_key() {
+        let mut validation_report = Vec::new();
+        let conway_block_data = conway_1();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions
+            .get(1)
+            .expect("Failed to get transaction index");
+
+        let aux_data = cip_509_aux_data(tx);
+
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+            for role in role_set {
+                if role.role_number == 0 {
+                    assert!(validate_role_singing_key(role, &mut validation_report,));
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_validate_payment_key_success_positive_ref() {
         let mut validation_report = Vec::new();
         let conway_block_data = conway_3();
         let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
@@ -621,10 +641,7 @@ mod tests {
         if let Some(role_set) = &cip509.x509_chunks.0.role_set {
             for role in role_set {
                 if role.role_number == 0 {
-                    println!(
-                        "{:?}",
-                        validate_payment_key(tx, 0, role, &mut validation_report,)
-                    );
+                    assert!(validate_payment_key(tx, 0, role, &mut validation_report,).unwrap());
                 }
             }
         }
@@ -638,15 +655,15 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
+        // First transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(3)
+            .first()
             .expect("Failed to get transaction index");
 
         let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
-        assert!(!validate_stake_public_key(&cip509, tx, 0, &mut validation_report).unwrap());
+        assert!(!validate_stake_public_key(&cip509, tx, &mut validation_report).unwrap());
     }
 }
