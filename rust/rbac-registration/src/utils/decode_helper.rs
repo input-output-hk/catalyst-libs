@@ -209,7 +209,6 @@ mod tests {
         let mut d = Decoder::new(&buf);
         let result = decode_any(&mut d, "test");
         // Should print out the error message with the location of the error
-        println!("{result:?}");
         assert!(result.is_err());
     }
 }

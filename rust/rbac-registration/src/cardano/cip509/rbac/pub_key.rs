@@ -77,9 +77,11 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                 }
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
-            _ => Err(decode::Error::message(
-                "Invalid datatype for SimplePublicKeyType",
-            )),
+            _ => {
+                Err(decode::Error::message(
+                    "Invalid datatype for SimplePublicKeyType",
+                ))
+            },
         }
     }
 }

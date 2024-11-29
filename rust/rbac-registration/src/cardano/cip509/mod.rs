@@ -205,8 +205,7 @@ impl Cip509 {
             for role in role_set {
                 if role.role_number == 0 {
                     stake_key_validate =
-                        validate_stake_public_key(self, txn, validation_report)
-                            .unwrap_or(false);
+                        validate_stake_public_key(self, txn, validation_report).unwrap_or(false);
                     payment_key_validate =
                         validate_payment_key(txn, txn_idx, role, validation_report)
                             .unwrap_or(false);

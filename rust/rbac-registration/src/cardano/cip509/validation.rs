@@ -44,7 +44,8 @@ use super::{
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
-/// Following the ASN.1 <https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/asn1-tags.html>, 
+/// Following the ASN.1
+/// <https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/asn1-tags.html>
 /// the tag is derive from
 /// | Class   (2 bit)    | P/C  (1 bit)   | Tag Number (5 bit) |
 /// |`CONTEXT_SPECIFIC`  | `PRIMITIVE`   `|      6`            |
@@ -164,7 +165,6 @@ pub(crate) fn validate_stake_public_key(
 
                                                     // Extract the CIP19 hash and push into
                                                     // array
-                                                    println!("{:?}", &addr);
                                                     if let Some(h) =
                                                         extract_cip19_hash(&addr, Some("stake"))
                                                     {
@@ -267,8 +267,8 @@ pub(crate) fn validate_stake_public_key(
 
     Some(
         // Set transaction index to 0 because the list of transaction is manually constructed
-        // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only the witness
-        // within this transaction.
+        // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
+        // the witness within this transaction.
         compare_key_hash(&pk_addrs, &witnesses, 0)
             .map_err(|e| {
                 validation_report.push(format!(
@@ -278,7 +278,6 @@ pub(crate) fn validate_stake_public_key(
             .is_ok(),
     )
 }
-// pk addrs [[224, 117, 190, 16, 236, 92, 87, 92, 175, 251, 104, 176, 140, 49, 71, 6, 102, 212, 254, 26, 238, 160, 124, 22, 214, 71, 57, 3]]
 
 // ------------------------ Validate Aux ------------------------
 

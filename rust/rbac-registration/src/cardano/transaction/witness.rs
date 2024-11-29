@@ -117,7 +117,6 @@ mod tests {
                 .expect("Failed to decode vkey1_hash")
                 .try_into()
                 .expect("Invalid length of vkey1_hash");
-        println!("{tx_witness_conway}");
         assert!(tx_witness_conway.get_witness_pk_addr(&vkey1_hash).is_some());
         assert!(tx_witness_conway.check_witness_in_tx(&vkey1_hash, 0));
     }
