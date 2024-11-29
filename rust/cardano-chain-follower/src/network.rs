@@ -170,9 +170,38 @@ impl Network {
     ///
     /// The Slot does not have to be a valid slot present in the blockchain.
     #[must_use]
-    pub fn time_to_slot(&self, _time: DateTime<Utc>) -> Option<u64> {
-        // TODO: Implement this, for now just return None.
-        None
+    pub fn time_to_slot(&self, time: DateTime<Utc>) -> Option<u64> {
+        let genesis = self.genesis_values();
+
+        let byron_start_time = i64::try_from(genesis.byron_known_time)
+            .map(|time| DateTime::<Utc>::from_timestamp(time, 0))
+            .ok()??;
+        let shelley_start_time = i64::try_from(genesis.shelley_known_time)
+            .map(|time| DateTime::<Utc>::from_timestamp(time, 0))
+            .ok()??;
+
+        // determine if the given time is in Byron or Shelley era.
+        if time < byron_start_time {
+            return None;
+        }
+
+        if time < shelley_start_time {
+            // Byron era
+            let time_diff = time - byron_start_time;
+            let elapsed_slots = time_diff.num_seconds() / i64::from(genesis.byron_slot_length);
+
+            u64::try_from(elapsed_slots)
+                .map(|elapsed_slots| Some(genesis.byron_known_slot + elapsed_slots))
+                .ok()?
+        } else {
+            // Shelley era
+            let time_diff = time - shelley_start_time;
+            let elapsed_slots = time_diff.num_seconds() / i64::from(genesis.shelley_slot_length);
+
+            u64::try_from(elapsed_slots)
+                .map(|elapsed_slots| Some(genesis.shelley_known_slot + elapsed_slots))
+                .ok()?
+        }
     }
 }
 
@@ -191,6 +220,7 @@ mod tests {
     use std::str::FromStr;
 
     use anyhow::Ok;
+    use chrono::{TimeZone, Utc};
 
     use super::*;
 
@@ -213,5 +243,154 @@ mod tests {
         assert_eq!(preview, Network::Preview);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_time_to_slot_before_blockchain() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        let before_blockchain = Utc
+            .timestamp_opt(i64::try_from(genesis.byron_known_time).unwrap() - 1, 0)
+            .unwrap();
+
+        assert_eq!(network.time_to_slot(before_blockchain), None);
+    }
+
+    #[test]
+    fn test_time_to_slot_byron_era() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        let byron_start_time = Utc
+            .timestamp_opt(i64::try_from(genesis.byron_known_time).unwrap(), 0)
+            .unwrap();
+        let byron_slot_length = i64::from(genesis.byron_slot_length);
+
+        // a time in the middle of the Byron era.
+        let time = byron_start_time + chrono::Duration::seconds(byron_slot_length * 100);
+        let expected_slot = genesis.byron_known_slot + 100;
+
+        assert_eq!(network.time_to_slot(time), Some(expected_slot));
+    }
+
+    #[test]
+    fn test_time_to_slot_transition_to_shelley() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        let shelley_start_time = Utc
+            .timestamp_opt(i64::try_from(genesis.shelley_known_time).unwrap(), 0)
+            .unwrap();
+        let byron_slot_length = i64::from(genesis.byron_slot_length);
+
+        // a time just before Shelley era starts.
+        let time = shelley_start_time - chrono::Duration::seconds(1);
+        let elapsed_slots = (time
+            - Utc
+                .timestamp_opt(i64::try_from(genesis.byron_known_time).unwrap(), 0)
+                .unwrap())
+        .num_seconds()
+            / byron_slot_length;
+        let expected_slot = genesis.byron_known_slot + u64::try_from(elapsed_slots).unwrap();
+
+        assert_eq!(network.time_to_slot(time), Some(expected_slot));
+    }
+
+    #[test]
+    fn test_time_to_slot_shelley_era() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        let shelley_start_time = Utc
+            .timestamp_opt(i64::try_from(genesis.shelley_known_time).unwrap(), 0)
+            .unwrap();
+        let shelley_slot_length = i64::from(genesis.shelley_slot_length);
+
+        // a time in the middle of the Shelley era.
+        let time = shelley_start_time + chrono::Duration::seconds(shelley_slot_length * 200);
+        let expected_slot = genesis.shelley_known_slot + 200;
+
+        assert_eq!(network.time_to_slot(time), Some(expected_slot));
+    }
+
+    #[test]
+    fn test_slot_to_time_to_slot_consistency() {
+        let network = Network::Mainnet;
+
+        // a few arbitrary slots in different ranges.
+        let slots_to_test = vec![0, 10_000, 1_000_000, 50_000_000];
+
+        for slot in slots_to_test {
+            let time = network.slot_to_time(slot);
+            let calculated_slot = network.time_to_slot(time);
+
+            assert_eq!(calculated_slot, Some(slot), "Failed for slot: {slot}");
+        }
+    }
+
+    #[test]
+    #[allow(clippy::panic)]
+    fn test_time_to_slot_to_time_consistency() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        // Byron, Shelley, and Conway.
+        let times_to_test = vec![
+            Utc.timestamp_opt(i64::try_from(genesis.byron_known_time).unwrap() + 100, 0)
+                .unwrap(),
+            Utc.timestamp_opt(
+                i64::try_from(genesis.shelley_known_time).unwrap() + 1_000,
+                0,
+            )
+            .unwrap(),
+            Utc.timestamp_opt(
+                i64::try_from(genesis.shelley_known_time).unwrap() + 10_000_000,
+                0,
+            )
+            .unwrap(),
+        ];
+
+        for time in times_to_test {
+            if let Some(slot) = network.time_to_slot(time) {
+                let calculated_time = network.slot_to_time(slot);
+
+                assert_eq!(
+                    calculated_time.timestamp(),
+                    time.timestamp(),
+                    "Failed for time: {time}"
+                );
+            } else {
+                panic!("time_to_slot returned None for a valid time: {time}");
+            }
+        }
+    }
+
+    #[test]
+    fn test_conway_era_time_to_slot_and_back() {
+        let network = Network::Mainnet;
+        let genesis = network.genesis_values();
+
+        // a very late time, far in the Conway era.
+        let conway_time = Utc
+            .timestamp_opt(
+                i64::try_from(genesis.shelley_known_time).unwrap() + 20_000_000,
+                0,
+            )
+            .unwrap();
+
+        let slot = network.time_to_slot(conway_time);
+        assert!(
+            slot.is_some(),
+            "Failed to calculate slot for Conway era time"
+        );
+
+        let calculated_time = network.slot_to_time(slot.unwrap());
+
+        assert_eq!(
+            calculated_time.timestamp(),
+            conway_time.timestamp(),
+            "Inconsistency for Conway era time"
+        );
     }
 }
