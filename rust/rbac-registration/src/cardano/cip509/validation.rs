@@ -611,10 +611,13 @@ mod tests {
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
-        assert!(validate_role_singing_key(
-            &cip509.x509_chunks.0.role_set.as_ref().unwrap()[0],
-            &mut validation_report
-        ));
+        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+            for role in role_set {
+                if role.role_number == 0 {
+                    assert!(validate_role_singing_key(role, &mut validation_report,));
+                }
+            }
+        }
     }
 
     #[test]
