@@ -11,7 +11,7 @@ use c509_certificate::c509::C509;
 use pallas::{
     crypto::hash::Hash,
     ledger::{
-        addresses::{Address, ShelleyPaymentPart},
+        addresses::{Address, ShelleyAddress, ShelleyPaymentPart},
         traverse::MultiEraTx,
     },
     network::miniprotocols::Point,
@@ -55,8 +55,8 @@ impl RegistrationChain {
     ///
     /// Returns an error if data is invalid
     pub fn new(
-        point: Point, tracking_payment_keys: Vec<ShelleyPaymentPart>, tx_idx: usize,
-        txn: &MultiEraTx, cip509: Cip509,
+        point: Point, tracking_payment_keys: Vec<ShelleyAddress>, tx_idx: usize, txn: &MultiEraTx,
+        cip509: Cip509,
     ) -> anyhow::Result<Self> {
         let inner = RegistrationChainInner::new(cip509, tracking_payment_keys, point, tx_idx, txn)?;
 
@@ -130,13 +130,13 @@ impl RegistrationChain {
 
     /// Get the list of payment keys to track.
     #[must_use]
-    pub fn tracking_payment_keys(&self) -> &Vec<ShelleyPaymentPart> {
+    pub fn tracking_payment_keys(&self) -> &Vec<ShelleyAddress> {
         &self.inner.tracking_payment_keys
     }
 
     /// Get the map of tracked payment keys to its history.
     #[must_use]
-    pub fn payment_history(&self) -> &HashMap<ShelleyPaymentPart, Vec<PaymentHistory>> {
+    pub fn payment_history(&self) -> &HashMap<ShelleyAddress, Vec<PaymentHistory>> {
         &self.inner.payment_history
     }
 }
@@ -163,9 +163,9 @@ struct RegistrationChainInner {
     /// Map of role number to point, transaction index, and role data.
     role_data: HashMap<u8, (PointTxIdx, RoleData)>,
     /// List of payment keys to track.
-    tracking_payment_keys: Arc<Vec<ShelleyPaymentPart>>,
+    tracking_payment_keys: Arc<Vec<ShelleyAddress>>,
     /// Map of payment key to its history.
-    payment_history: HashMap<ShelleyPaymentPart, Vec<PaymentHistory>>,
+    payment_history: HashMap<ShelleyAddress, Vec<PaymentHistory>>,
 }
 
 impl RegistrationChainInner {
@@ -183,8 +183,8 @@ impl RegistrationChainInner {
     ///
     /// Returns an error if data is invalid
     fn new(
-        cip509: Cip509, tracking_payment_keys: Vec<ShelleyPaymentPart>, point: Point,
-        tx_idx: usize, txn: &MultiEraTx,
+        cip509: Cip509, tracking_payment_keys: Vec<ShelleyAddress>, point: Point, tx_idx: usize,
+        txn: &MultiEraTx,
     ) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
         if cip509.prv_tx_id.is_some() {
@@ -563,7 +563,7 @@ fn get_payment_addr_from_tx(
 
 /// Update the payment history given the tracking payment keys.
 fn update_payment_history(
-    tracking_key: &ShelleyPaymentPart, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
+    tracking_key: &ShelleyAddress, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<Vec<PaymentHistory>> {
     let mut payment_history = Vec::new();
     if let MultiEraTx::Conway(tx) = txn {
@@ -574,7 +574,7 @@ fn update_payment_history(
                     let address =
                         Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
                     let shelley_payment = if let Address::Shelley(addr) = address {
-                        addr.payment().clone()
+                        addr.clone()
                     } else {
                         bail!("Unsupported address type in update payment history");
                     };
