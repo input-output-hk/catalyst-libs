@@ -55,7 +55,7 @@ impl RegistrationChain {
     ///
     /// Returns an error if data is invalid
     pub fn new(
-        point: Point, tracking_payment_keys: Vec<ShelleyAddress>, tx_idx: usize, txn: &MultiEraTx,
+        point: Point, tracking_payment_keys: &[ShelleyAddress], tx_idx: usize, txn: &MultiEraTx,
         cip509: Cip509,
     ) -> anyhow::Result<Self> {
         let inner = RegistrationChainInner::new(cip509, tracking_payment_keys, point, tx_idx, txn)?;
@@ -128,16 +128,10 @@ impl RegistrationChain {
         &self.inner.role_data
     }
 
-    /// Get the list of payment keys to track.
-    #[must_use]
-    pub fn tracking_payment_keys(&self) -> &Vec<ShelleyAddress> {
-        &self.inner.tracking_payment_keys
-    }
-
     /// Get the map of tracked payment keys to its history.
     #[must_use]
-    pub fn payment_history(&self) -> &HashMap<ShelleyAddress, Vec<PaymentHistory>> {
-        &self.inner.payment_history
+    pub fn tracking_payment_history(&self) -> &HashMap<ShelleyAddress, Vec<PaymentHistory>> {
+        &self.inner.tracking_payment_history
     }
 }
 
@@ -162,10 +156,8 @@ struct RegistrationChainInner {
     // Role
     /// Map of role number to point, transaction index, and role data.
     role_data: HashMap<u8, (PointTxIdx, RoleData)>,
-    /// List of payment keys to track.
-    tracking_payment_keys: Arc<Vec<ShelleyAddress>>,
-    /// Map of payment key to its history.
-    payment_history: HashMap<ShelleyAddress, Vec<PaymentHistory>>,
+    /// Map of tracked payment key to its history.
+    tracking_payment_history: HashMap<ShelleyAddress, Vec<PaymentHistory>>,
 }
 
 impl RegistrationChainInner {
@@ -183,7 +175,7 @@ impl RegistrationChainInner {
     ///
     /// Returns an error if data is invalid
     fn new(
-        cip509: Cip509, tracking_payment_keys: Vec<ShelleyAddress>, point: Point, tx_idx: usize,
+        cip509: Cip509, tracking_payment_keys: &[ShelleyAddress], point: Point, tx_idx: usize,
         txn: &MultiEraTx,
     ) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
@@ -211,12 +203,13 @@ impl RegistrationChainInner {
         let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
         let role_data_map = chain_root_role_data(registration.role_set, txn, &point_tx_idx)?;
 
-        let mut payment_history = HashMap::new();
-        for tracking_key in &tracking_payment_keys {
-            // Keep record of payment history, the payment key that we want to track
-            let histories = update_payment_history(tracking_key, txn, &point_tx_idx)?;
-            payment_history.insert(tracking_key.clone(), histories);
+        let mut tracking_payment_history = HashMap::new();
+        // Create a payment history for each tracking payment key
+        for tracking_key in tracking_payment_keys {
+            tracking_payment_history.insert(tracking_key.clone(), Vec::new());
         }
+        // Keep record of payment history, the payment key that we want to track
+        update_tracking_payment_history(&mut tracking_payment_history, txn, &point_tx_idx)?;
 
         Ok(Self {
             purpose,
@@ -226,8 +219,7 @@ impl RegistrationChainInner {
             simple_keys: public_key_map,
             revocations,
             role_data: role_data_map,
-            tracking_payment_keys: Arc::new(tracking_payment_keys),
-            payment_history,
+            tracking_payment_history,
         })
     }
 
@@ -284,16 +276,11 @@ impl RegistrationChainInner {
 
         update_role_data(&mut new_inner, registration.role_set, txn, &point_tx_idx)?;
 
-        for tracking_key in self.tracking_payment_keys.iter() {
-            let histories = update_payment_history(tracking_key, txn, &point_tx_idx)?;
-            // If tracking payment key doesn't exist, insert an empty vector,
-            // then add the histories to the history vector
-            new_inner
-                .payment_history
-                .entry(tracking_key.clone())
-                .or_default()
-                .extend(histories);
-        }
+        update_tracking_payment_history(
+            &mut new_inner.tracking_payment_history,
+            txn,
+            &point_tx_idx,
+        )?;
 
         Ok(new_inner)
     }
@@ -562,10 +549,10 @@ fn get_payment_addr_from_tx(
 }
 
 /// Update the payment history given the tracking payment keys.
-fn update_payment_history(
-    tracking_key: &ShelleyAddress, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<Vec<PaymentHistory>> {
-    let mut payment_history = Vec::new();
+fn update_tracking_payment_history(
+    tracking_payment_history: &mut HashMap<ShelleyAddress, Vec<PaymentHistory>>, txn: &MultiEraTx,
+    point_tx_idx: &PointTxIdx,
+) -> anyhow::Result<()> {
     if let MultiEraTx::Conway(tx) = txn {
         // Conway era -> Post alonzo tx output
         for (index, output) in tx.transaction_body.outputs.iter().enumerate() {
@@ -578,12 +565,14 @@ fn update_payment_history(
                     } else {
                         bail!("Unsupported address type in update payment history");
                     };
-                    if tracking_key == &shelley_payment {
+                    // If the payment key from the output exist in the payment history, add the
+                    // history
+                    if let Some(vec) = tracking_payment_history.get_mut(&shelley_payment) {
                         let output_index: u16 = index.try_into().map_err(|_| {
                             anyhow::anyhow!("Cannot convert usize to u16 in update payment history")
                         })?;
 
-                        payment_history.push(PaymentHistory::new(
+                        vec.push(PaymentHistory::new(
                             point_tx_idx.clone(),
                             txn.hash(),
                             output_index,
@@ -597,7 +586,7 @@ fn update_payment_history(
             }
         }
     }
-    Ok(payment_history)
+    Ok(())
 }
 
 #[cfg(test)]
@@ -662,7 +651,7 @@ mod test {
         let tracking_payment_keys = vec![];
 
         let registration_chain =
-            RegistrationChain::new(point_1.clone(), tracking_payment_keys, 3, tx_1, cip509_1);
+            RegistrationChain::new(point_1.clone(), &tracking_payment_keys, 3, tx_1, cip509_1);
         // Able to add chain root to the registration chain
         assert!(registration_chain.is_ok());
 
