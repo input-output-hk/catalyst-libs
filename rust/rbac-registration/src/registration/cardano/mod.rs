@@ -478,18 +478,22 @@ fn update_role_data(
             // If there is new role singing key, use it, else use the old one
             let signing_key = match role_data.role_signing_key {
                 Some(key) => Some(key),
-                None => match inner.role_data.get(&role_data.role_number) {
-                    Some((_, role_data)) => role_data.signing_key_ref().clone(),
-                    None => None,
+                None => {
+                    match inner.role_data.get(&role_data.role_number) {
+                        Some((_, role_data)) => role_data.signing_key_ref().clone(),
+                        None => None,
+                    }
                 },
             };
 
             // If there is new role encryption key, use it, else use the old one
             let encryption_key = match role_data.role_encryption_key {
                 Some(key) => Some(key),
-                None => match inner.role_data.get(&role_data.role_number) {
-                    Some((_, role_data)) => role_data.encryption_ref().clone(),
-                    None => None,
+                None => {
+                    match inner.role_data.get(&role_data.role_number) {
+                        Some((_, role_data)) => role_data.encryption_ref().clone(),
+                        None => None,
+                    }
                 },
             };
             let payment_key = get_payment_key_from_tx(txn, role_data.payment_key)?;
