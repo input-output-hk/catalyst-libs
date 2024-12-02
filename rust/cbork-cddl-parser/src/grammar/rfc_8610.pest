@@ -7,13 +7,13 @@
 
 cddl = ${
     SOI
-    ~ S ~ (rule ~ S)+
+    ~ S ~ (expr ~ S)+
     ~ EOI
 }
 
 // -----------------------------------------------------------------------------
 // Rules
-rule = ${
+expr = ${
     (typename ~ genericparm? ~ S ~ assignt ~ S ~ type)
     | (groupname ~ genericparm? ~ S ~ assigng ~ S ~ grpent)
 }

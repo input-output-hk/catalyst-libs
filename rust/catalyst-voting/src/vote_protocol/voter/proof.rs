@@ -107,7 +107,7 @@ pub fn verify_voter_proof(
     verify_unit_vector_proof(&proof.0, encrypted_vote.0, &public_key.0, &commitment.0)
 }
 
-#[allow(missing_docs, clippy::missing_docs_in_private_items)]
+#[cfg(test)]
 mod arbitrary_impl {
     use proptest::prelude::{any_with, Arbitrary, BoxedStrategy, Strategy};
 

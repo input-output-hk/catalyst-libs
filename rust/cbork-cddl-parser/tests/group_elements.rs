@@ -1,10 +1,8 @@
 // cspell: words OPTCOM MEMBERKEY bareword tstr GRPENT GRPCHOICE
 // cspell: words optcom memberkey grpent grpchoice
 
-use cbork_cddl_parser::{self, cddl_test::Rule};
-
 mod common;
-use common::{group_elements::*, identifiers::*};
+use common::{group_elements::*, identifiers::*, Rule};
 
 #[test]
 /// Test if the `occur` rule passes properly.
