@@ -12,7 +12,7 @@
 
 use pallas::codec::utils::Bytes;
 
-/// CIP-0019 Shelley Addresses (only support type 0 - 5)
+/// CIP-0019 Shelley Addresses (only support type 0 - 3)
 #[derive(PartialEq, Clone, Eq, Hash)]
 pub struct Cip19ShelleyAddrs([u8; 57]);
 
