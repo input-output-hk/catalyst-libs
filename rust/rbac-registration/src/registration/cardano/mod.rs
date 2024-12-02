@@ -1,5 +1,6 @@
 //! Chain of Cardano registration data
 
+pub mod cip19_shelley_addr;
 pub mod payment_history;
 pub mod point_tx_idx;
 pub mod role_data;
@@ -8,6 +9,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
+use cip19_shelley_addr::Cip19ShelleyAddrs;
 use pallas::{
     codec::utils::Bytes, crypto::hash::Hash, ledger::traverse::MultiEraTx,
     network::miniprotocols::Point,
@@ -42,7 +44,7 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `tracking_payment_keys` - The list of payment keys to track.
+    /// - `tracking_payment_keys` - The list of Shelley keys to track.
     /// - `point` - The point (slot) of the transaction.
     /// - `tx_idx` - The transaction index.
     /// - `txn` - The transaction.
@@ -51,7 +53,7 @@ impl RegistrationChain {
     ///
     /// Returns an error if data is invalid
     pub fn new(
-        &self, point: Point, tracking_payment_keys: Vec<Ed25519PublicKey>, tx_idx: usize,
+        point: Point, tracking_payment_keys: Vec<Cip19ShelleyAddrs>, tx_idx: usize,
         txn: &MultiEraTx, cip509: Cip509,
     ) -> anyhow::Result<Self> {
         let inner = RegistrationChainInner::new(cip509, tracking_payment_keys, point, tx_idx, txn)?;
@@ -124,15 +126,15 @@ impl RegistrationChain {
         &self.inner.role_data
     }
 
-    /// Get the list of payment keys to track.
+    /// Get the list of Shelley keys to track.
     #[must_use]
-    pub fn tracking_payment_keys(&self) -> &Vec<Ed25519PublicKey> {
+    pub fn tracking_payment_keys(&self) -> &Vec<Cip19ShelleyAddrs> {
         &self.inner.tracking_payment_keys
     }
 
-    /// Get the map of payment key to its history.
+    /// Get the map of tracked Shelley keys to its history.
     #[must_use]
-    pub fn payment_history(&self) -> &HashMap<Ed25519PublicKey, Vec<PaymentHistory>> {
+    pub fn payment_history(&self) -> &HashMap<Cip19ShelleyAddrs, Vec<PaymentHistory>> {
         &self.inner.payment_history
     }
 }
@@ -159,9 +161,9 @@ struct RegistrationChainInner {
     /// Map of role number to point, transaction index, and role data.
     role_data: HashMap<u8, (PointTxIdx, RoleData)>,
     /// List of payment keys to track.
-    tracking_payment_keys: Arc<Vec<Ed25519PublicKey>>,
+    tracking_payment_keys: Arc<Vec<Cip19ShelleyAddrs>>,
     /// Map of payment key to its history.
-    payment_history: HashMap<Ed25519PublicKey, Vec<PaymentHistory>>,
+    payment_history: HashMap<Cip19ShelleyAddrs, Vec<PaymentHistory>>,
 }
 
 impl RegistrationChainInner {
@@ -170,7 +172,7 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `tracking_payment_keys` - The list of payment keys to track.
+    /// - `tracking_payment_keys` - The list of Shelley keys to track.
     /// - `point` - The point (slot) of the transaction.
     /// - `tx_idx` - The transaction index.
     /// - `txn` - The transaction.
@@ -179,7 +181,7 @@ impl RegistrationChainInner {
     ///
     /// Returns an error if data is invalid
     fn new(
-        cip509: Cip509, tracking_payment_keys: Vec<Ed25519PublicKey>, point: Point, tx_idx: usize,
+        cip509: Cip509, tracking_payment_keys: Vec<Cip19ShelleyAddrs>, point: Point, tx_idx: usize,
         txn: &MultiEraTx,
     ) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
@@ -189,7 +191,7 @@ impl RegistrationChainInner {
 
         let mut validation_report = Vec::new();
         // Do the CIP509 validation, ensuring the basic validation pass.
-        if !cip509.validate(txn, tx_idx, &mut validation_report) {
+        if !cip509.validate(txn, &mut validation_report) {
             // Log out the error if any
             error!("CIP509 validation failed: {:?}", validation_report);
             bail!("CIP509 validation failed, {:?}", validation_report);
@@ -245,7 +247,7 @@ impl RegistrationChainInner {
 
         let mut validation_report = Vec::new();
         // Do the CIP509 validation, ensuring the basic validation pass.
-        if !cip509.validate(txn, tx_idx, &mut validation_report) {
+        if !cip509.validate(txn, &mut validation_report) {
             error!("CIP509 validation failed: {:?}", validation_report);
             bail!("CIP509 validation failed, {:?}", validation_report);
         }
@@ -448,7 +450,7 @@ fn chain_root_role_data(
             let encryption_key = role_data.role_encryption_key.clone();
 
             // Get the payment key
-            let payment_key = get_payment_key_from_tx(txn, role_data.payment_key)?;
+            let payment_key = get_shelley_addr_from_tx(txn, role_data.payment_key)?;
 
             // Map of role number to point and role data
             role_data_map.insert(
@@ -496,7 +498,7 @@ fn update_role_data(
                     }
                 },
             };
-            let payment_key = get_payment_key_from_tx(txn, role_data.payment_key)?;
+            let payment_key = get_shelley_addr_from_tx(txn, role_data.payment_key)?;
 
             // Map of role number to point and role data
             // Note that new role data will overwrite the old one
@@ -517,10 +519,10 @@ fn update_role_data(
     Ok(())
 }
 
-/// Helper function for retrieving the payment key from the transaction.
-fn get_payment_key_from_tx(
+/// Helper function for retrieving the Shelley address from the transaction.
+fn get_shelley_addr_from_tx(
     txn: &MultiEraTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Ed25519PublicKey> {
+) -> anyhow::Result<Cip19ShelleyAddrs> {
     // The index should exist since it pass the basic validation
     if let Some(key_ref) = payment_key_ref {
         if let MultiEraTx::Conway(tx) = txn {
@@ -533,11 +535,11 @@ fn get_payment_key_from_tx(
                         pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(
                             o,
                         ) => {
-                            let payment_key: Ed25519PublicKey =
+                            let shelley_addr: Cip19ShelleyAddrs =
                                 o.address.clone().try_into().map_err(|_| {
-                                    anyhow::anyhow!("Failed to convert Vec<u8> to Ed25519PublicKey in payment key reference")
+                                    anyhow::anyhow!("Failed to convert Vec<u8> to Cip19ShelleyAddrs in payment key reference")
                                 })?;
-                            return Ok(payment_key);
+                            return Ok(shelley_addr);
                         },
                         // Not support legacy form of transaction output
                         pallas::ledger::primitives::conway::PseudoTransactionOutput::Legacy(_) => {
@@ -552,12 +554,12 @@ fn get_payment_key_from_tx(
             bail!("Unsupported payment key reference to transaction input");
         }
     }
-    Ok(Ed25519PublicKey::default())
+    Ok(Cip19ShelleyAddrs::default())
 }
 
 /// Update the payment history given the tracking payment keys.
 fn update_payment_history(
-    tracking_key: &Ed25519PublicKey, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
+    tracking_key: &Cip19ShelleyAddrs, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<Vec<PaymentHistory>> {
     let mut payment_history = Vec::new();
     if let MultiEraTx::Conway(tx) = txn {
@@ -586,4 +588,99 @@ fn update_payment_history(
         }
     }
     Ok(payment_history)
+}
+
+#[cfg(test)]
+mod test {
+    use minicbor::{Decode, Decoder};
+    use pallas::{ledger::traverse::MultiEraTx, network::miniprotocols::Point};
+
+    use super::RegistrationChain;
+    use crate::cardano::{cip509::Cip509, transaction::raw_aux_data::RawAuxData};
+
+    fn cip_509_aux_data(tx: &MultiEraTx<'_>) -> Vec<u8> {
+        let raw_auxiliary_data = tx
+            .as_conway()
+            .unwrap()
+            .clone()
+            .auxiliary_data
+            .map(|aux| aux.raw_cbor());
+
+        let raw_cbor_data = match raw_auxiliary_data {
+            pallas::codec::utils::Nullable::Some(data) => Ok(data),
+            _ => Err("Auxiliary data not found"),
+        };
+
+        let auxiliary_data = RawAuxData::new(raw_cbor_data.expect("Failed to get raw cbor data"));
+        auxiliary_data
+            .get_metadata(509)
+            .expect("Failed to get metadata")
+            .to_vec()
+    }
+
+    fn conway_1() -> Vec<u8> {
+        hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
+            .expect("Failed to decode hex block.")
+    }
+
+    fn conway_4() -> Vec<u8> {
+        hex::decode(include_str!("../../test_data/cardano/conway_4.block"))
+            .expect("Failed to decode hex block.")
+    }
+
+    #[test]
+    fn test_new_and_update_registration() {
+        let conway_block_data_1 = conway_1();
+        let point_1 = Point::new(
+            77_429_134,
+            hex::decode("62483f96613b4c48acd28de482eb735522ac180df61766bdb476a7bf83e7bb98")
+                .unwrap(),
+        );
+        let multi_era_block_1 =
+            pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data_1)
+                .expect("Failed to decode MultiEraBlock");
+
+        let transactions_1 = multi_era_block_1.txs();
+        // Forth transaction of this test data contains the CIP509 auxiliary data
+        let tx_1 = transactions_1
+            .get(3)
+            .expect("Failed to get transaction index");
+
+        let aux_data_1 = cip_509_aux_data(tx_1);
+        let mut decoder = Decoder::new(aux_data_1.as_slice());
+        let cip509_1 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        let tracking_payment_keys = vec![];
+
+        let registration_chain =
+            RegistrationChain::new(point_1.clone(), tracking_payment_keys, 3, tx_1, cip509_1);
+        // Able to add chain root to the registration chain
+        assert!(registration_chain.is_ok());
+
+        let conway_block_data_4 = conway_4();
+        let point_4 = Point::new(
+            77_436_369,
+            hex::decode("b174fc697126f05046b847d47e60d66cbedaf25240027f9c07f27150889aac24")
+                .unwrap(),
+        );
+
+        let multi_era_block_4 =
+            pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data_4)
+                .expect("Failed to decode MultiEraBlock");
+
+        let transactions_4 = multi_era_block_4.txs();
+        // Second transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions_4
+            .get(1)
+            .expect("Failed to get transaction index");
+
+        let aux_data_4 = cip_509_aux_data(tx);
+        let mut decoder = Decoder::new(aux_data_4.as_slice());
+        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+
+        // Update the registration chain
+        assert!(registration_chain
+            .unwrap()
+            .update(point_4.clone(), 1, tx, cip509)
+            .is_ok());
+    }
 }
