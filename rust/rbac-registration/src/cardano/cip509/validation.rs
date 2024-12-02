@@ -334,7 +334,7 @@ fn validate_aux_helper(
 /// Negative ref is for transaction output.
 /// Positive ref is for transaction input.
 pub(crate) fn validate_payment_key(
-    txn: &MultiEraTx, txn_idx: usize, role_data: &RoleData, validation_report: &mut Vec<String>,
+    txn: &MultiEraTx, role_data: &RoleData, validation_report: &mut Vec<String>,
 ) -> Option<bool> {
     let function_name = "Validate Payment Key";
 
@@ -375,7 +375,6 @@ pub(crate) fn validate_payment_key(
                                 &o.address.to_vec(),
                                 validation_report,
                                 &witness,
-                                txn_idx,
                             );
                         },
                         pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(
@@ -385,7 +384,6 @@ pub(crate) fn validate_payment_key(
                                 &o.address.to_vec(),
                                 validation_report,
                                 &witness,
-                                txn_idx,
                             );
                         },
                     };
@@ -427,19 +425,15 @@ pub(crate) fn validate_payment_key(
 
 /// Helper function for validating payment output key.
 fn validate_payment_output_key_helper(
-    output_address: &[u8], validation_report: &mut Vec<String>, witness: &TxWitness, txn_idx: usize,
+    output_address: &[u8], validation_report: &mut Vec<String>, witness: &TxWitness,
 ) -> Option<bool> {
-    let idx = match u16::try_from(txn_idx) {
-        Ok(value) => value,
-        Err(e) => {
-            validation_report.push(format!("Transaction index conversion failed: {e}"));
-            return None;
-        },
-    };
     // Extract the key hash from the output address
     if let Some(key) = extract_key_hash(output_address) {
         // Compare the key hash and return the result
-        return Some(compare_key_hash(&[key], witness, idx).is_ok());
+        // Set transaction index to 0 because the list of transaction is manually constructed
+        // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
+        // the witness within this transaction.
+        return Some(compare_key_hash(&[key], witness, 0).is_ok());
     }
     validation_report.push("Failed to extract payment key hash from address".to_string());
     None
@@ -460,6 +454,7 @@ pub(crate) fn validate_role_singing_key(
             validation_report.push(format!(
                 "{function_name}, Role signing key should reference certificate, not public key",
             ));
+            println!("ja");
             return false;
         }
     }
@@ -522,7 +517,7 @@ mod tests {
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(1)
+            .get(3)
             .expect("Failed to get transaction index");
         let aux_data = cip_509_aux_data(tx);
         let mut decoder = Decoder::new(aux_data.as_slice());
@@ -540,7 +535,7 @@ mod tests {
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(1)
+            .get(3)
             .expect("Failed to get transaction index");
 
         validate_aux(tx, &mut validation_report);
@@ -557,7 +552,7 @@ mod tests {
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(1)
+            .get(3)
             .expect("Failed to get transaction index");
 
         let aux_data = cip_509_aux_data(tx);
@@ -577,7 +572,7 @@ mod tests {
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(1)
+            .get(3)
             .expect("Failed to get transaction index");
 
         let aux_data = cip_509_aux_data(tx);
@@ -588,7 +583,7 @@ mod tests {
         if let Some(role_set) = &cip509.x509_chunks.0.role_set {
             for role in role_set {
                 if role.role_number == 0 {
-                    assert!(validate_payment_key(tx, 0, role, &mut validation_report,).unwrap());
+                    assert!(validate_payment_key(tx, role, &mut validation_report,).unwrap());
                 }
             }
         }
@@ -604,7 +599,7 @@ mod tests {
         let transactions = multi_era_block.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
-            .get(1)
+            .get(3)
             .expect("Failed to get transaction index");
 
         let aux_data = cip_509_aux_data(tx);
@@ -641,7 +636,7 @@ mod tests {
         if let Some(role_set) = &cip509.x509_chunks.0.role_set {
             for role in role_set {
                 if role.role_number == 0 {
-                    assert!(validate_payment_key(tx, 0, role, &mut validation_report,).unwrap());
+                    assert!(validate_payment_key(tx, role, &mut validation_report,).unwrap());
                 }
             }
         }
