@@ -4,7 +4,7 @@ gen-vote-tx<choice-t, proof-t, prop-id-t, voter-data-t> = [
 ]
 
 tx-body<choice-t, proof-t, prop-id-t, voter-data-t> = [
-    vote-type
+    vote-type,
     event,
     votes<choice-t, proof-t, prop-id-t>,
     voter-data<voter-data-t>,
