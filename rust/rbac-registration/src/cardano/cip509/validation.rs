@@ -515,7 +515,7 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Second transaction of this test data contains the CIP509 auxiliary data
+        // Forth transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
             .get(3)
             .expect("Failed to get transaction index");
@@ -533,7 +533,7 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Second transaction of this test data contains the CIP509 auxiliary data
+        // Forth transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
             .get(3)
             .expect("Failed to get transaction index");
@@ -550,7 +550,7 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Second transaction of this test data contains the CIP509 auxiliary data
+        // Forth transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
             .get(3)
             .expect("Failed to get transaction index");
@@ -570,7 +570,7 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Second transaction of this test data contains the CIP509 auxiliary data
+        // Forth transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
             .get(3)
             .expect("Failed to get transaction index");
@@ -597,7 +597,7 @@ mod tests {
             .expect("Failed to decode MultiEraBlock");
 
         let transactions = multi_era_block.txs();
-        // Second transaction of this test data contains the CIP509 auxiliary data
+        // Forth transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions
             .get(3)
             .expect("Failed to get transaction index");
