@@ -1,19 +1,14 @@
 //! A Catalyst public vote transaction v2 object, structured following this
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/v2/#public-vote)
 
-mod choice;
-mod proof;
+mod vote;
 
 use std::ops::{Deref, DerefMut};
 
-pub use choice::Choice;
 use minicbor::{Decode, Encode};
-pub use proof::Proof;
+pub use vote::{Choice, Proof, PropId};
 
-use crate::{gen_tx::GeneralizedTx, uuid::Uuid, Cbor};
-
-/// A public voting proposal id struct.
-pub type PropId = Uuid;
+use crate::{gen_tx::GeneralizedTx, Cbor};
 
 /// A public vote tx struct.
 #[derive(Debug, Clone, PartialEq)]
