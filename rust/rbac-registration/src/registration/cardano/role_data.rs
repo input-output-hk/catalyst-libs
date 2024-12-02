@@ -2,7 +2,9 @@
 
 use std::collections::HashMap;
 
-use crate::cardano::cip509::rbac::{pub_key::Ed25519PublicKey, role_data::KeyLocalRef};
+use pallas::ledger::addresses::ShelleyPaymentPart;
+
+use crate::cardano::cip509::rbac::role_data::KeyLocalRef;
 
 /// Role data
 #[derive(Clone)]
@@ -12,7 +14,7 @@ pub struct RoleData {
     /// An encryption keys to the data within registration.
     encryption_ref: Option<KeyLocalRef>,
     /// A payment key where reward will be distributed to.
-    payment_key: Ed25519PublicKey,
+    payment_key: Option<ShelleyPaymentPart>,
     /// Map of role extended data (10-99) to its data
     role_extended_data: HashMap<u8, Vec<u8>>,
 }
@@ -21,7 +23,7 @@ impl RoleData {
     /// Create an instance of role data.
     pub(crate) fn new(
         signing_key_ref: Option<KeyLocalRef>, encryption_ref: Option<KeyLocalRef>,
-        payment_key: Ed25519PublicKey, role_extended_data: HashMap<u8, Vec<u8>>,
+        payment_key: Option<ShelleyPaymentPart>, role_extended_data: HashMap<u8, Vec<u8>>,
     ) -> Self {
         RoleData {
             signing_key_ref,
@@ -45,7 +47,7 @@ impl RoleData {
 
     /// Get the payment key.
     #[must_use]
-    pub fn payment_key(&self) -> &Ed25519PublicKey {
+    pub fn payment_key(&self) -> &Option<ShelleyPaymentPart> {
         &self.payment_key
     }
 
