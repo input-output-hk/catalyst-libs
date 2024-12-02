@@ -189,9 +189,7 @@ impl Cip509 {
     /// # Parameters
     /// * `txn` - Transaction data was attached to and to be validated/decoded against.
     /// * `validation_report` - Validation report to store the validation result.
-    pub fn validate(
-        &self, txn: &MultiEraTx, validation_report: &mut Vec<String>,
-    ) -> bool {
+    pub fn validate(&self, txn: &MultiEraTx, validation_report: &mut Vec<String>) -> bool {
         let tx_input_validate =
             validate_txn_inputs_hash(self, txn, validation_report).unwrap_or(false);
         let aux_validate = validate_aux(txn, validation_report).unwrap_or(false);
@@ -206,8 +204,7 @@ impl Cip509 {
                     stake_key_validate =
                         validate_stake_public_key(self, txn, validation_report).unwrap_or(false);
                     payment_key_validate =
-                        validate_payment_key(txn, role, validation_report)
-                            .unwrap_or(false);
+                        validate_payment_key(txn, role, validation_report).unwrap_or(false);
                     signing_key = validate_role_singing_key(role, validation_report);
                 }
             }
