@@ -1,6 +1,5 @@
 //! Chain of Cardano registration data
 
-pub mod cip19_shelley_addr;
 pub mod payment_history;
 pub mod point_tx_idx;
 pub mod role_data;
@@ -9,9 +8,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use cip19_shelley_addr::Cip19ShelleyAddrs;
 use pallas::{
-    codec::utils::Bytes, crypto::hash::Hash, ledger::traverse::MultiEraTx,
+    crypto::hash::Hash,
+    ledger::{
+        addresses::{Address, ShelleyPaymentPart},
+        traverse::MultiEraTx,
+    },
     network::miniprotocols::Point,
 };
 use payment_history::PaymentHistory;
@@ -44,7 +46,7 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `tracking_payment_keys` - The list of Shelley keys to track.
+    /// - `tracking_payment_keys` - The list of payment keys to track.
     /// - `point` - The point (slot) of the transaction.
     /// - `tx_idx` - The transaction index.
     /// - `txn` - The transaction.
@@ -53,7 +55,7 @@ impl RegistrationChain {
     ///
     /// Returns an error if data is invalid
     pub fn new(
-        point: Point, tracking_payment_keys: Vec<Cip19ShelleyAddrs>, tx_idx: usize,
+        point: Point, tracking_payment_keys: Vec<ShelleyPaymentPart>, tx_idx: usize,
         txn: &MultiEraTx, cip509: Cip509,
     ) -> anyhow::Result<Self> {
         let inner = RegistrationChainInner::new(cip509, tracking_payment_keys, point, tx_idx, txn)?;
@@ -126,15 +128,15 @@ impl RegistrationChain {
         &self.inner.role_data
     }
 
-    /// Get the list of Shelley keys to track.
+    /// Get the list of payment keys to track.
     #[must_use]
-    pub fn tracking_payment_keys(&self) -> &Vec<Cip19ShelleyAddrs> {
+    pub fn tracking_payment_keys(&self) -> &Vec<ShelleyPaymentPart> {
         &self.inner.tracking_payment_keys
     }
 
-    /// Get the map of tracked Shelley keys to its history.
+    /// Get the map of tracked payment keys to its history.
     #[must_use]
-    pub fn payment_history(&self) -> &HashMap<Cip19ShelleyAddrs, Vec<PaymentHistory>> {
+    pub fn payment_history(&self) -> &HashMap<ShelleyPaymentPart, Vec<PaymentHistory>> {
         &self.inner.payment_history
     }
 }
@@ -161,9 +163,9 @@ struct RegistrationChainInner {
     /// Map of role number to point, transaction index, and role data.
     role_data: HashMap<u8, (PointTxIdx, RoleData)>,
     /// List of payment keys to track.
-    tracking_payment_keys: Arc<Vec<Cip19ShelleyAddrs>>,
+    tracking_payment_keys: Arc<Vec<ShelleyPaymentPart>>,
     /// Map of payment key to its history.
-    payment_history: HashMap<Cip19ShelleyAddrs, Vec<PaymentHistory>>,
+    payment_history: HashMap<ShelleyPaymentPart, Vec<PaymentHistory>>,
 }
 
 impl RegistrationChainInner {
@@ -172,7 +174,7 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `tracking_payment_keys` - The list of Shelley keys to track.
+    /// - `tracking_payment_keys` - The list of payment keys to track.
     /// - `point` - The point (slot) of the transaction.
     /// - `tx_idx` - The transaction index.
     /// - `txn` - The transaction.
@@ -181,8 +183,8 @@ impl RegistrationChainInner {
     ///
     /// Returns an error if data is invalid
     fn new(
-        cip509: Cip509, tracking_payment_keys: Vec<Cip19ShelleyAddrs>, point: Point, tx_idx: usize,
-        txn: &MultiEraTx,
+        cip509: Cip509, tracking_payment_keys: Vec<ShelleyPaymentPart>, point: Point,
+        tx_idx: usize, txn: &MultiEraTx,
     ) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
         if cip509.prv_tx_id.is_some() {
@@ -450,7 +452,7 @@ fn chain_root_role_data(
             let encryption_key = role_data.role_encryption_key.clone();
 
             // Get the payment key
-            let payment_key = get_shelley_addr_from_tx(txn, role_data.payment_key)?;
+            let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
 
             // Map of role number to point and role data
             role_data_map.insert(
@@ -498,7 +500,7 @@ fn update_role_data(
                     }
                 },
             };
-            let payment_key = get_shelley_addr_from_tx(txn, role_data.payment_key)?;
+            let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
 
             // Map of role number to point and role data
             // Note that new role data will overwrite the old one
@@ -520,9 +522,9 @@ fn update_role_data(
 }
 
 /// Helper function for retrieving the Shelley address from the transaction.
-fn get_shelley_addr_from_tx(
+fn get_payment_addr_from_tx(
     txn: &MultiEraTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Cip19ShelleyAddrs> {
+) -> anyhow::Result<Option<ShelleyPaymentPart>> {
     // The index should exist since it pass the basic validation
     if let Some(key_ref) = payment_key_ref {
         if let MultiEraTx::Conway(tx) = txn {
@@ -535,11 +537,13 @@ fn get_shelley_addr_from_tx(
                         pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(
                             o,
                         ) => {
-                            let shelley_addr: Cip19ShelleyAddrs =
-                                o.address.clone().try_into().map_err(|_| {
-                                    anyhow::anyhow!("Failed to convert Vec<u8> to Cip19ShelleyAddrs in payment key reference")
-                                })?;
-                            return Ok(shelley_addr);
+                            let address =
+                                Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
+
+                            if let Address::Shelley(addr) = address {
+                                return Ok(Some(addr.payment().clone()));
+                            }
+                            bail!("Unsupported address type in payment key reference");
                         },
                         // Not support legacy form of transaction output
                         pallas::ledger::primitives::conway::PseudoTransactionOutput::Legacy(_) => {
@@ -554,12 +558,12 @@ fn get_shelley_addr_from_tx(
             bail!("Unsupported payment key reference to transaction input");
         }
     }
-    Ok(Cip19ShelleyAddrs::default())
+    Ok(None)
 }
 
 /// Update the payment history given the tracking payment keys.
 fn update_payment_history(
-    tracking_key: &Cip19ShelleyAddrs, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
+    tracking_key: &ShelleyPaymentPart, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<Vec<PaymentHistory>> {
     let mut payment_history = Vec::new();
     if let MultiEraTx::Conway(tx) = txn {
@@ -567,8 +571,14 @@ fn update_payment_history(
         for (index, output) in tx.transaction_body.outputs.iter().enumerate() {
             match output {
                 pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(o) => {
-                    let address_bytes: Bytes = tracking_key.clone().into();
-                    if address_bytes == o.address {
+                    let address =
+                        Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
+                    let shelley_payment = if let Address::Shelley(addr) = address {
+                        addr.payment().clone()
+                    } else {
+                        bail!("Unsupported address type in update payment history");
+                    };
+                    if tracking_key == &shelley_payment {
                         let output_index: u16 = index.try_into().map_err(|_| {
                             anyhow::anyhow!("Cannot convert usize to u16 in update payment history")
                         })?;
