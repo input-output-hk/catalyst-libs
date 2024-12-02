@@ -1,18 +1,22 @@
-gen-vote-tx<choice-t, proof-t, prop-id-t> = [
-    tx-body<choice-t, proof-t, prop-id-t>,
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
+gen-vote-tx<choice-t, proof-t, prop-id-t, voter-data-t> = [
+    tx-body<choice-t, proof-t, prop-id-t, voter-data-t>,
     signature
 ]
 
-tx-body<choice-t, proof-t, prop-id-t> = [
-    vote-type
+tx-body<choice-t, proof-t, prop-id-t, voter-data-t> = [
+    vote-type,
     event,
     votes<choice-t, proof-t, prop-id-t>,
-    voter-data,
+    voter-data<voter-data-t>,
 ]
 
 vote-type = UUID ; e.g. Public or Private vote
-event = { * event-key => any }
+event = { * event-key => event-value }
 event-key = int / text
+event-value = any
 
 votes<choice-t, proof-t, prop-id-t> = [+ vote<choice-t, proof-t, prop-id-t>]
 vote<choice-t, proof-t, prop-id-t>  = [
@@ -25,7 +29,7 @@ choice<choice-t> = #6.24(bytes .cbor choice-t) ; encoded-cbor
 proof<proof-t> = #6.24(bytes .cbor proof-t) ; encoded-cbor
 prop-id<prop-id-t> = #6.24(bytes .cbor prop-id-t) ; encoded-cbor
 
-voter-data = encoded-cbor
+voter-data<voter-data-t> = #6.24(bytes .cbor voter-data-t) ; encoded-cbor
 
 UUID = #6.37(bytes) ; UUID type
 signature = #6.98(cose.COSE_Sign) ; COSE signature
