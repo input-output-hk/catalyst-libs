@@ -1,3 +1,6 @@
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
 gen-vote-tx<choice-t, proof-t, prop-id-t, voter-data-t> = [
     tx-body<choice-t, proof-t, prop-id-t, voter-data-t>,
     signature

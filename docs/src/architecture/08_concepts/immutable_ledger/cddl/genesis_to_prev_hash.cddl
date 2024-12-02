@@ -1,3 +1,6 @@
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
 genesis-to-prev-hash = [
     chain-id: ULID,
     timestamp: #6.1(uint .ge 1722470400), ; Epoch-based date/time
