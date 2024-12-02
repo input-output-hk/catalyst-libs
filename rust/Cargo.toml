@@ -12,6 +12,7 @@ members = [
     "immutable-ledger",
     "vote-tx-v1",
     "vote-tx-v2",
+    "rbac-registration",
 ]
 
 [workspace.package]
