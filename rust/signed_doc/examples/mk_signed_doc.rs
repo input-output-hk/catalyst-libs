@@ -82,7 +82,9 @@ impl Cli {
             },
             Self::Verify { pk, doc, schema } => {
                 let pk = load_public_key_from_file(&pk)?;
+                let schema = load_schema_from_file(&schema)?;
                 let cose = load_cose_doc_from_file(&doc)?;
+                validate_cose_doc(&cose, &pk, &schema)?;
             },
         }
         Ok(())
@@ -126,12 +128,15 @@ fn brotli_compress_doc(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn build_empty_cose_doc(doc_bytes: Vec<u8>) -> coset::CoseSign {
-    let protected_header =
-        coset::HeaderBuilder::new().content_format(coset::iana::CoapContentFormat::Json);
+fn cose_doc_protected_header() -> coset::Header {
+    coset::HeaderBuilder::new()
+        .content_format(coset::iana::CoapContentFormat::Json)
+        .build()
+}
 
+fn build_empty_cose_doc(doc_bytes: Vec<u8>) -> coset::CoseSign {
     coset::CoseSignBuilder::new()
-        .protected(protected_header.build())
+        .protected(cose_doc_protected_header())
         .payload(doc_bytes)
         .build()
 }
@@ -149,14 +154,6 @@ fn store_cose_into_file(cose: coset::CoseSign, output: &PathBuf) -> anyhow::Resu
     let cose_bytes = cose.to_vec().map_err(|e| anyhow::anyhow!("{e}"))?;
     cose_file.write_all(&cose_bytes)?;
     Ok(())
-}
-
-fn load_json_doc_from_cose(cose: &coset::CoseSign) -> anyhow::Result<serde_json::Value> {
-    let Some(payload) = &cose.payload else {
-        anyhow::bail!("COSE document missing payload field with the JSON content in it");
-    };
-    let doc = serde_json::from_slice(payload)?;
-    Ok(doc)
 }
 
 fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::SigningKey> {
@@ -181,4 +178,39 @@ fn add_signature_to_cose_doc(
     let data_to_sign = cose.tbs_data(&[], &signature);
     signature.signature = sk.sign(&data_to_sign).to_vec();
     cose.signatures.push(signature);
+}
+
+fn validate_cose_doc(
+    cose: &coset::CoseSign, pk: &ed25519_dalek::VerifyingKey, schema: &jsonschema::JSONSchema,
+) -> anyhow::Result<()> {
+    let expected_header = cose_doc_protected_header();
+    anyhow::ensure!(
+        cose.protected.header.alg == expected_header.alg,
+        "Invalid COSE document protected header `algorithm` field"
+    );
+    anyhow::ensure!(
+        cose.protected.header.content_type == expected_header.content_type,
+        "Invalid COSE document protected header `content-type` field"
+    );
+
+    let Some(payload) = &cose.payload else {
+        anyhow::bail!("COSE document missing payload field with the JSON content in it");
+    };
+    let json_doc = serde_json::from_slice(payload)?;
+    validate_json_doc(&json_doc, schema)?;
+
+    for sign in &cose.signatures {
+        let data_to_sign = cose.tbs_data(&[], sign);
+        let signature_bytes = sign.signature.as_slice().try_into().map_err(|_| {
+            anyhow::anyhow!(
+                "Invalid signature bytes size: expected {}, provided {}.",
+                ed25519_dalek::Signature::BYTE_SIZE,
+                sign.signature.len()
+            )
+        })?;
+        let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+        pk.verify_strict(&data_to_sign, &signature)?;
+    }
+
+    Ok(())
 }
