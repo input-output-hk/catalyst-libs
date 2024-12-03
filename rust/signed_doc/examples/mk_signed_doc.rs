@@ -70,7 +70,7 @@ impl Cli {
                 let schema = load_schema_from_file(&schema)?;
                 let json_doc = load_json_doc_from_file(&doc)?;
                 validate_json_doc(&json_doc, &schema)?;
-                let compressed_doc = brotli_compress_doc(&json_doc)?;
+                let compressed_doc = brotli_compress_json_doc(&json_doc)?;
                 let empty_cose_sign = build_empty_cose_doc(compressed_doc);
                 store_cose_into_file(empty_cose_sign, &output)?;
             },
@@ -87,6 +87,7 @@ impl Cli {
                 validate_cose_doc(&cose, &pk, &schema)?;
             },
         }
+        println!("Done");
         Ok(())
     }
 }
@@ -120,12 +121,19 @@ fn validate_json_doc(
     Ok(())
 }
 
-fn brotli_compress_doc(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
+fn brotli_compress_json_doc(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
     let brotli_params = brotli::enc::BrotliEncoderParams::default();
     let doc_bytes = serde_json::to_vec(&doc)?;
     let mut buf = Vec::new();
     brotli::BrotliCompress(&mut doc_bytes.as_slice(), &mut buf, &brotli_params)?;
     Ok(buf)
+}
+
+fn brotli_decompress_json_doc(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json::Value> {
+    let mut buf = Vec::new();
+    brotli::BrotliDecompress(&mut doc_bytes, &mut buf)?;
+    let json_doc = serde_json::from_slice(&buf)?;
+    Ok(json_doc)
 }
 
 fn cose_doc_protected_header() -> coset::Header {
@@ -196,7 +204,7 @@ fn validate_cose_doc(
     let Some(payload) = &cose.payload else {
         anyhow::bail!("COSE document missing payload field with the JSON content in it");
     };
-    let json_doc = serde_json::from_slice(payload)?;
+    let json_doc = brotli_decompress_json_doc(payload.as_slice())?;
     validate_json_doc(&json_doc, schema)?;
 
     for sign in &cose.signatures {
