@@ -59,6 +59,9 @@ enum Cli {
     },
 }
 
+const CONTENT_ENCODING_KEY: &str = "content encoding";
+const CONTENT_ENCODING_VALUE: &str = "br";
+
 impl Cli {
     fn exec(self) -> anyhow::Result<()> {
         match self {
@@ -138,7 +141,12 @@ fn brotli_decompress_json_doc(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json
 
 fn cose_doc_protected_header() -> coset::Header {
     coset::HeaderBuilder::new()
+        .algorithm(coset::iana::Algorithm::EdDSA)
         .content_format(coset::iana::CoapContentFormat::Json)
+        .text_value(
+            CONTENT_ENCODING_KEY.to_string(),
+            CONTENT_ENCODING_VALUE.to_string().into(),
+        )
         .build()
 }
 
@@ -199,6 +207,13 @@ fn validate_cose_doc(
     anyhow::ensure!(
         cose.protected.header.content_type == expected_header.content_type,
         "Invalid COSE document protected header `content-type` field"
+    );
+    anyhow::ensure!(
+        cose.protected.header.rest.iter().any(|(key, value)| {
+            key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
+                && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
+        }),
+        "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field"
     );
 
     let Some(payload) = &cose.payload else {
