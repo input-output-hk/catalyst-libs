@@ -32,7 +32,6 @@ impl Cip509 {
     /// Nothing.  IF CIP509 Metadata is found it will be updated in `decoded_metadata`.
     pub(crate) fn decode_and_validate(
         decoded_metadata: &DecodedMetadata, txn: &MultiEraTx, raw_aux_data: &RawAuxData,
-        _txn_idx: usize,
     ) {
         // Get the CIP509 metadata if possible
         let Some(k509) = raw_aux_data.get_metadata(LABEL) else {
