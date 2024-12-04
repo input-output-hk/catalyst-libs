@@ -45,5 +45,25 @@ In that regard, each C-COSED [COSE] signature **must** include the following pro
   (this parameter identifies one piece of data
   that can be used as input to find the needed cryptographic key).
 
+## CLI
+
+Prepare non-signed document
+
+```shell
+cargo run -p signed_doc --example mk_signed_doc build signed_doc/doc.json  signed_doc/schema.json signed_doc/doc.cose signed_doc/meta.json
+```
+
+Sign document
+
+```shell
+cargo run -p signed_doc --example mk_signed_doc sign private.pem signed_doc/doc.cose kid_1
+```
+
+Verify document
+
+```shell
+cargo run -p signed_doc --example mk_signed_doc verify public.pem signed_doc/doc.cose signed_doc/schema.json
+```
+
 [COSE]: https://datatracker.ietf.org/doc/html/rfc9052
 [brotli]: https://datatracker.ietf.org/doc/html/rfc7932
