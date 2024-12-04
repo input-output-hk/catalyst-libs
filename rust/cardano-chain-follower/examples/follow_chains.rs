@@ -377,7 +377,8 @@ fn log_cip509_info(chain_update: &ChainUpdate, block_num: u64, network: Network,
         if let Metadata::DecodedMetadataValues::Cip509(cip509) = &decoded_metadata.value {
             info!(
                 chain = network.to_string(),
-                "CIP509 {tx_idx}: {:?}", cip509.validation
+                "CIP509 {tx_idx}: {:?}",
+                cip509.validation()
             );
         }
 

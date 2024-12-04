@@ -19,12 +19,24 @@ pub const LABEL: u64 = 509;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// CIP509 data.
-    pub cip509: RbacRegCip509,
+    cip509: RbacRegCip509,
     /// Validation value, not a part of CIP509, justs storing validity of the data.
-    pub validation: Cip509Validation,
+    validation: Cip509Validation,
 }
 
 impl Cip509 {
+    /// Get the CIP509 data.
+    #[must_use]
+    pub fn cip509(&self) -> &RbacRegCip509 {
+        &self.cip509
+    }
+
+    /// Get the CIP509 validation data.
+    #[must_use]
+    pub fn validation(&self) -> &Cip509Validation {
+        &self.validation
+    }
+
     /// Decode and validate CIP509 Metadata
     ///
     /// # Returns
