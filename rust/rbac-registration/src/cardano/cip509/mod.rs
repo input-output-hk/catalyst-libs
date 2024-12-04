@@ -46,6 +46,31 @@ pub struct Cip509 {
     pub validation_signature: Vec<u8>, // bytes size (1..64)
 }
 
+/// Validation value for CIP509 metadatum.
+#[allow(clippy::struct_excessive_bools, clippy::module_name_repetitions)]
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct Cip509Validation {
+    /// Boolean value for the validity of the transaction inputs hash.
+    pub valid_txn_inputs_hash: bool,
+    /// Boolean value for the validity of the auxiliary data.
+    pub valid_aux: bool,
+    /// Boolean value for the validity of the public key.
+    pub valid_public_key: bool,
+    /// Boolean value for the validity of the payment key.
+    pub valid_payment_key: bool,
+    /// Boolean value for the validity of the signing key.
+    pub signing_key: bool,
+    /// Additional data from the CIP509 validation..
+    pub additional_data: AdditionalData,
+}
+
+/// Additional data from the CIP509 validation.
+#[derive(Debug, PartialEq, Clone, Default)]
+pub struct AdditionalData {
+    /// Bytes of precomputed auxiliary data.
+    pub precomputed_aux: Vec<u8>,
+}
+
 /// `UUIDv4` representing in 16 bytes.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct UuidV4([u8; 16]);
@@ -189,10 +214,13 @@ impl Cip509 {
     /// # Parameters
     /// * `txn` - Transaction data was attached to and to be validated/decoded against.
     /// * `validation_report` - Validation report to store the validation result.
-    pub fn validate(&self, txn: &MultiEraTx, validation_report: &mut Vec<String>) -> bool {
+    pub fn validate(
+        &self, txn: &MultiEraTx, validation_report: &mut Vec<String>,
+    ) -> Cip509Validation {
         let tx_input_validate =
             validate_txn_inputs_hash(self, txn, validation_report).unwrap_or(false);
-        let aux_validate = validate_aux(txn, validation_report).unwrap_or(false);
+        let (aux_validate, precomputed_aux) =
+            validate_aux(txn, validation_report).unwrap_or_default();
         let mut stake_key_validate = true;
         let mut payment_key_validate = true;
         let mut signing_key = true;
@@ -209,10 +237,13 @@ impl Cip509 {
                 }
             }
         }
-        tx_input_validate
-            && aux_validate
-            && stake_key_validate
-            && payment_key_validate
-            && signing_key
+        Cip509Validation {
+            valid_txn_inputs_hash: tx_input_validate,
+            valid_aux: aux_validate,
+            valid_public_key: stake_key_validate,
+            valid_payment_key: payment_key_validate,
+            signing_key,
+            additional_data: AdditionalData { precomputed_aux },
+        }
     }
 }

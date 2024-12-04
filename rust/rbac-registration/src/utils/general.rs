@@ -25,3 +25,10 @@ pub(crate) fn decode_utf8(content: &[u8]) -> anyhow::Result<String> {
             )
         })
 }
+
+/// Zero out the last n bytes
+pub(crate) fn zero_out_last_n_bytes(vec: &mut [u8], n: usize) {
+    if let Some(slice) = vec.get_mut(vec.len().saturating_sub(n)..) {
+        slice.fill(0);
+    }
+}
