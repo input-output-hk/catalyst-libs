@@ -16,24 +16,12 @@ use super::{
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// CIP509 data.
-    cip509: RbacRegCip509,
+    pub cip509: RbacRegCip509,
     /// Validation value, not a part of CIP509, justs storing validity of the data.
-    validation: Cip509Validation,
+    pub validation: Cip509Validation,
 }
 
 impl Cip509 {
-    /// Get the CIP509 data.
-    #[must_use]
-    pub fn cip509(&self) -> &RbacRegCip509 {
-        &self.cip509
-    }
-
-    /// Get the CIP509 validation data.
-    #[must_use]
-    pub fn validation(&self) -> &Cip509Validation {
-        &self.validation
-    }
-
     /// Decode and validate CIP509 Metadata
     ///
     /// # Returns
