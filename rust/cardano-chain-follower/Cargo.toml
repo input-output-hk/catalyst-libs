@@ -21,7 +21,6 @@ mithril-client = { version = "0.8.18", default-features = false, features = [
     "num-integer-backend",
 ] }
 
-c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git" , tag = "v0.0.3" }
 rbac-registration = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git" , tag = "v0.0.7" }
 
 thiserror = "1.0.64"
@@ -54,9 +53,7 @@ mimalloc = { version = "0.1.43", optional = true }
 memx = "0.1.32"
 fmmap = { version = "0.3.3", features = ["sync", "tokio-async"] }
 minicbor = { version = "0.25.1", features = ["alloc", "derive", "half"] }
-brotli = "7.0.0"
 zstd = "0.13.2"
-x509-cert = "0.2.5"
 ed25519-dalek = "2.1.1"
 blake2b_simd = "1.0.2"
 num-traits = "0.2.19"
@@ -66,9 +63,6 @@ ureq = { version = "2.10.1", features = ["native-certs"] }
 http = "1.1.0"
 hickory-resolver = { version = "0.24.1", features = ["dns-over-rustls"] }
 moka = { version = "0.12.8", features = ["sync"] }
-der-parser = "9.0.0"
-regex = "1.11.0"
-bech32 = "0.11.0"
 
 [dev-dependencies]
 hex = "0.4.3"
