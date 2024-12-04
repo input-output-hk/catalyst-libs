@@ -5,6 +5,7 @@
 // cspell: words pkix
 
 pub mod rbac;
+pub mod types;
 pub(crate) mod utils;
 pub(crate) mod validation;
 pub mod x509_chunks;
@@ -15,6 +16,7 @@ use minicbor::{
 };
 use pallas::{crypto::hash::Hash, ledger::traverse::MultiEraTx};
 use strum_macros::FromRepr;
+use types::{tx_input_hash::TxInputHash, uuidv4::UuidV4};
 use validation::{
     validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
     validate_txn_inputs_hash,
@@ -69,54 +71,6 @@ pub struct Cip509Validation {
 pub struct AdditionalData {
     /// Bytes of precomputed auxiliary data.
     pub precomputed_aux: Vec<u8>,
-}
-
-/// `UUIDv4` representing in 16 bytes.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct UuidV4([u8; 16]);
-
-impl From<[u8; 16]> for UuidV4 {
-    fn from(bytes: [u8; 16]) -> Self {
-        UuidV4(bytes)
-    }
-}
-
-impl TryFrom<Vec<u8>> for UuidV4 {
-    type Error = &'static str;
-
-    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if vec.len() == 16 {
-            let mut array = [0u8; 16];
-            array.copy_from_slice(&vec);
-            Ok(UuidV4(array))
-        } else {
-            Err("Input Vec must be exactly 16 bytes")
-        }
-    }
-}
-
-/// Transaction input hash representing in 16 bytes.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct TxInputHash([u8; 16]);
-
-impl From<[u8; 16]> for TxInputHash {
-    fn from(bytes: [u8; 16]) -> Self {
-        TxInputHash(bytes)
-    }
-}
-
-impl TryFrom<Vec<u8>> for TxInputHash {
-    type Error = &'static str;
-
-    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if vec.len() == 16 {
-            let mut array = [0u8; 16];
-            array.copy_from_slice(&vec);
-            Ok(TxInputHash(array))
-        } else {
-            Err("Input Vec must be exactly 16 bytes")
-        }
-    }
 }
 
 /// Enum of CIP509 metadatum with its associated unsigned integer value.

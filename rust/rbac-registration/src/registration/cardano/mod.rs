@@ -26,10 +26,10 @@ use crate::{
         self,
         rbac::{
             certs::{C509Cert, X509DerCert},
-            pub_key::{Ed25519PublicKey, SimplePublicKeyType},
-            CertKeyHash,
+            pub_key::SimplePublicKeyType,
         },
-        Cip509, Cip509Validation, UuidV4,
+        types::{cert_key_hash::CertKeyHash, ed25519_pubkey::Ed25519PublicKey, uuidv4::UuidV4},
+        Cip509, Cip509Validation,
     },
     utils::general::decremented_index,
 };
