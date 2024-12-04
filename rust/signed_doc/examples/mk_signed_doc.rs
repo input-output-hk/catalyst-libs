@@ -61,9 +61,53 @@ enum Cli {
     },
 }
 
-const META_SCHEMA: &str = include_str!("./../meta.schema.json");
 const CONTENT_ENCODING_KEY: &str = "content encoding";
 const CONTENT_ENCODING_VALUE: &str = "br";
+const UUID_CBOR_TAG: u64 = 37;
+const ULID_CBOR_TAG: u64 = 32780;
+
+#[derive(Debug, serde::Deserialize)]
+struct Metadata {
+    r#type: uuid::Uuid,
+    id: ulid::Ulid,
+    ver: ulid::Ulid,
+    r#ref: Option<DocumentRef>,
+    template: Option<DocumentRef>,
+    reply: Option<DocumentRef>,
+    section: Option<String>,
+}
+
+#[derive(Debug, serde::Deserialize)]
+#[serde(untagged)]
+enum DocumentRef {
+    /// Reference to the latest document
+    Latest { id: ulid::Ulid },
+    /// Reference to the specific document version
+    WithVer { id: ulid::Ulid, ver: ulid::Ulid },
+}
+
+fn cbor_ulid(ulid: &ulid::Ulid) -> coset::cbor::Value {
+    coset::cbor::Value::Tag(
+        ULID_CBOR_TAG,
+        coset::cbor::Value::Bytes(ulid.to_bytes().to_vec()).into(),
+    )
+}
+
+fn cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
+    coset::cbor::Value::Tag(
+        UUID_CBOR_TAG,
+        coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
+    )
+}
+
+fn cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
+    match doc_ref {
+        DocumentRef::Latest { id } => cbor_ulid(id),
+        DocumentRef::WithVer { id, ver } => {
+            coset::cbor::Value::Array(vec![cbor_ulid(id), cbor_ulid(ver)])
+        },
+    }
+}
 
 impl Cli {
     fn exec(self) -> anyhow::Result<()> {
@@ -75,26 +119,24 @@ impl Cli {
                 meta,
             } => {
                 let doc_schema = load_schema_from_file(&schema)?;
-                let meta_schema = load_schema_from_str(META_SCHEMA)?;
                 let json_doc = load_json_from_file(&doc)?;
                 let json_meta = load_json_from_file(&meta)?;
                 validate_json(&json_doc, &doc_schema)?;
-                validate_json(&json_meta, &meta_schema)?;
                 let compressed_doc = brotli_compress_json(&json_doc)?;
-                let empty_cose_sign = build_empty_cose_doc(compressed_doc);
+                let empty_cose_sign = build_empty_cose_doc(compressed_doc, &json_meta);
                 store_cose_file(empty_cose_sign, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
                 let sk = load_secret_key_from_file(&sk)?;
                 let mut cose = load_cose_from_file(&doc)?;
-                add_signature_to_cose_doc(&mut cose, &sk, kid);
+                add_signature_to_cose(&mut cose, &sk, kid);
                 store_cose_file(cose, &doc)?;
             },
             Self::Verify { pk, doc, schema } => {
                 let pk = load_public_key_from_file(&pk)?;
                 let schema = load_schema_from_file(&schema)?;
                 let cose = load_cose_from_file(&doc)?;
-                validate_cose_doc(&cose, &pk, &schema)?;
+                validate_cose(&cose, &pk, &schema)?;
             },
         }
         println!("Done");
@@ -121,10 +163,11 @@ fn load_schema_from_str(schema_str: &str) -> anyhow::Result<jsonschema::JSONSche
     Ok(schema)
 }
 
-fn load_json_from_file(doc_path: &PathBuf) -> anyhow::Result<serde_json::Value> {
-    let doc_file = File::open(doc_path)?;
-    let doc_json = serde_json::from_reader(doc_file)?;
-    Ok(doc_json)
+fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>
+where T: for<'de> serde::Deserialize<'de> {
+    let file = File::open(path)?;
+    let json = serde_json::from_reader(file)?;
+    Ok(json)
 }
 
 fn validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> anyhow::Result<()> {
@@ -153,7 +196,7 @@ fn brotli_decompress_json(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json::Va
     Ok(json_doc)
 }
 
-fn cose_doc_protected_header() -> coset::Header {
+fn cose_protected_header() -> coset::Header {
     coset::HeaderBuilder::new()
         .algorithm(coset::iana::Algorithm::EdDSA)
         .content_format(coset::iana::CoapContentFormat::Json)
@@ -164,9 +207,46 @@ fn cose_doc_protected_header() -> coset::Header {
         .build()
 }
 
-fn build_empty_cose_doc(doc_bytes: Vec<u8>) -> coset::CoseSign {
+fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign {
+    let mut protected_header = cose_protected_header();
+
+    protected_header.rest.push((
+        coset::Label::Text("type".to_string()),
+        cbor_uuid(&meta.r#type),
+    ));
+    protected_header
+        .rest
+        .push((coset::Label::Text("id".to_string()), cbor_ulid(&meta.id)));
+    protected_header
+        .rest
+        .push((coset::Label::Text("ver".to_string()), cbor_ulid(&meta.ver)));
+    if let Some(r#ref) = &meta.r#ref {
+        protected_header.rest.push((
+            coset::Label::Text("ref".to_string()),
+            cbor_document_ref(r#ref),
+        ));
+    }
+    if let Some(template) = &meta.template {
+        protected_header.rest.push((
+            coset::Label::Text("template".to_string()),
+            cbor_document_ref(template),
+        ));
+    }
+    if let Some(reply) = &meta.reply {
+        protected_header.rest.push((
+            coset::Label::Text("reply".to_string()),
+            cbor_document_ref(reply),
+        ));
+    }
+    if let Some(section) = &meta.section {
+        protected_header.rest.push((
+            coset::Label::Text("section".to_string()),
+            coset::cbor::Value::Text(section.clone()),
+        ));
+    }
+
     coset::CoseSignBuilder::new()
-        .protected(cose_doc_protected_header())
+        .protected(protected_header)
         .payload(doc_bytes)
         .build()
 }
@@ -198,9 +278,7 @@ fn load_public_key_from_file(pk_path: &PathBuf) -> anyhow::Result<ed25519_dalek:
     Ok(pk)
 }
 
-fn add_signature_to_cose_doc(
-    cose: &mut coset::CoseSign, sk: &ed25519_dalek::SigningKey, kid: String,
-) {
+fn add_signature_to_cose(cose: &mut coset::CoseSign, sk: &ed25519_dalek::SigningKey, kid: String) {
     let protected_header = coset::HeaderBuilder::new().key_id(kid.into_bytes());
     let mut signature = coset::CoseSignatureBuilder::new()
         .protected(protected_header.build())
@@ -210,25 +288,10 @@ fn add_signature_to_cose_doc(
     cose.signatures.push(signature);
 }
 
-fn validate_cose_doc(
+fn validate_cose(
     cose: &coset::CoseSign, pk: &ed25519_dalek::VerifyingKey, schema: &jsonschema::JSONSchema,
 ) -> anyhow::Result<()> {
-    let expected_header = cose_doc_protected_header();
-    anyhow::ensure!(
-        cose.protected.header.alg == expected_header.alg,
-        "Invalid COSE document protected header `algorithm` field"
-    );
-    anyhow::ensure!(
-        cose.protected.header.content_type == expected_header.content_type,
-        "Invalid COSE document protected header `content-type` field"
-    );
-    anyhow::ensure!(
-        cose.protected.header.rest.iter().any(|(key, value)| {
-            key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
-                && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
-        }),
-        "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field"
-    );
+    validate_cose_protected_header(cose)?;
 
     let Some(payload) = &cose.payload else {
         anyhow::bail!("COSE document missing payload field with the JSON content in it");
@@ -248,6 +311,27 @@ fn validate_cose_doc(
         let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
         pk.verify_strict(&data_to_sign, &signature)?;
     }
+
+    Ok(())
+}
+
+fn validate_cose_protected_header(cose: &coset::CoseSign) -> anyhow::Result<()> {
+    let expected_header = cose_protected_header();
+    anyhow::ensure!(
+        cose.protected.header.alg == expected_header.alg,
+        "Invalid COSE document protected header `algorithm` field"
+    );
+    anyhow::ensure!(
+        cose.protected.header.content_type == expected_header.content_type,
+        "Invalid COSE document protected header `content-type` field"
+    );
+    anyhow::ensure!(
+        cose.protected.header.rest.iter().any(|(key, value)| {
+            key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
+                && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
+        }),
+        "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field"
+    );
 
     Ok(())
 }
