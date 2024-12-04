@@ -1,4 +1,4 @@
-//! Catalyst documents signing cli example
+//! Catalyst signed document cli example
 
 #![allow(
     missing_docs,
@@ -37,6 +37,8 @@ enum Cli {
         schema: PathBuf,
         /// Path to the output COSE file to store.
         output: PathBuf,
+        /// Document metadata, must be in JSON format
+        meta: PathBuf,
     },
     /// Adds a signature to already formed COSE document
     Sign {
@@ -59,6 +61,7 @@ enum Cli {
     },
 }
 
+const META_SCHEMA: &str = include_str!("./../meta.schema.json");
 const CONTENT_ENCODING_KEY: &str = "content encoding";
 const CONTENT_ENCODING_VALUE: &str = "br";
 
@@ -69,24 +72,28 @@ impl Cli {
                 doc,
                 schema,
                 output,
+                meta,
             } => {
-                let schema = load_schema_from_file(&schema)?;
-                let json_doc = load_json_doc_from_file(&doc)?;
-                validate_json_doc(&json_doc, &schema)?;
-                let compressed_doc = brotli_compress_json_doc(&json_doc)?;
+                let doc_schema = load_schema_from_file(&schema)?;
+                let meta_schema = load_schema_from_str(META_SCHEMA)?;
+                let json_doc = load_json_from_file(&doc)?;
+                let json_meta = load_json_from_file(&meta)?;
+                validate_json(&json_doc, &doc_schema)?;
+                validate_json(&json_meta, &meta_schema)?;
+                let compressed_doc = brotli_compress_json(&json_doc)?;
                 let empty_cose_sign = build_empty_cose_doc(compressed_doc);
-                store_cose_into_file(empty_cose_sign, &output)?;
+                store_cose_file(empty_cose_sign, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
                 let sk = load_secret_key_from_file(&sk)?;
-                let mut cose = load_cose_doc_from_file(&doc)?;
+                let mut cose = load_cose_from_file(&doc)?;
                 add_signature_to_cose_doc(&mut cose, &sk, kid);
-                store_cose_into_file(cose, &doc)?;
+                store_cose_file(cose, &doc)?;
             },
             Self::Verify { pk, doc, schema } => {
                 let pk = load_public_key_from_file(&pk)?;
                 let schema = load_schema_from_file(&schema)?;
-                let cose = load_cose_doc_from_file(&doc)?;
+                let cose = load_cose_from_file(&doc)?;
                 validate_cose_doc(&cose, &pk, &schema)?;
             },
         }
@@ -105,15 +112,22 @@ fn load_schema_from_file(schema_path: &PathBuf) -> anyhow::Result<jsonschema::JS
     Ok(schema)
 }
 
-fn load_json_doc_from_file(doc_path: &PathBuf) -> anyhow::Result<serde_json::Value> {
+fn load_schema_from_str(schema_str: &str) -> anyhow::Result<jsonschema::JSONSchema> {
+    let schema_json = serde_json::from_str(schema_str)?;
+    let schema = jsonschema::JSONSchema::options()
+        .with_draft(jsonschema::Draft::Draft7)
+        .compile(&schema_json)
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+    Ok(schema)
+}
+
+fn load_json_from_file(doc_path: &PathBuf) -> anyhow::Result<serde_json::Value> {
     let doc_file = File::open(doc_path)?;
     let doc_json = serde_json::from_reader(doc_file)?;
     Ok(doc_json)
 }
 
-fn validate_json_doc(
-    doc: &serde_json::Value, schema: &jsonschema::JSONSchema,
-) -> anyhow::Result<()> {
+fn validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> anyhow::Result<()> {
     schema.validate(doc).map_err(|err| {
         let mut validation_error = String::new();
         for e in err {
@@ -124,7 +138,7 @@ fn validate_json_doc(
     Ok(())
 }
 
-fn brotli_compress_json_doc(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
+fn brotli_compress_json(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
     let brotli_params = brotli::enc::BrotliEncoderParams::default();
     let doc_bytes = serde_json::to_vec(&doc)?;
     let mut buf = Vec::new();
@@ -132,7 +146,7 @@ fn brotli_compress_json_doc(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> 
     Ok(buf)
 }
 
-fn brotli_decompress_json_doc(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json::Value> {
+fn brotli_decompress_json(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json::Value> {
     let mut buf = Vec::new();
     brotli::BrotliDecompress(&mut doc_bytes, &mut buf)?;
     let json_doc = serde_json::from_slice(&buf)?;
@@ -157,7 +171,7 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>) -> coset::CoseSign {
         .build()
 }
 
-fn load_cose_doc_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSign> {
+fn load_cose_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSign> {
     let mut cose_file = File::open(cose_path)?;
     let mut cose_file_bytes = Vec::new();
     cose_file.read_to_end(&mut cose_file_bytes)?;
@@ -165,7 +179,7 @@ fn load_cose_doc_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSig
     Ok(cose)
 }
 
-fn store_cose_into_file(cose: coset::CoseSign, output: &PathBuf) -> anyhow::Result<()> {
+fn store_cose_file(cose: coset::CoseSign, output: &PathBuf) -> anyhow::Result<()> {
     let mut cose_file = File::create(output)?;
     let cose_bytes = cose.to_vec().map_err(|e| anyhow::anyhow!("{e}"))?;
     cose_file.write_all(&cose_bytes)?;
@@ -219,8 +233,8 @@ fn validate_cose_doc(
     let Some(payload) = &cose.payload else {
         anyhow::bail!("COSE document missing payload field with the JSON content in it");
     };
-    let json_doc = brotli_decompress_json_doc(payload.as_slice())?;
-    validate_json_doc(&json_doc, schema)?;
+    let json_doc = brotli_decompress_json(payload.as_slice())?;
+    validate_json(&json_doc, schema)?;
 
     for sign in &cose.signatures {
         let data_to_sign = cose.tbs_data(&[], sign);
