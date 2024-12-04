@@ -41,6 +41,7 @@ use super::{
     utils::cip19::{compare_key_hash, extract_cip19_hash, extract_key_hash},
     Cip509, TxInputHash, TxWitness,
 };
+use crate::utils::general::zero_out_last_n_bytes;
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
@@ -282,7 +283,10 @@ pub(crate) fn validate_stake_public_key(
 // ------------------------ Validate Aux ------------------------
 
 /// Validate the auxiliary data with the auxiliary data hash in the transaction body.
-pub(crate) fn validate_aux(txn: &MultiEraTx, validation_report: &mut Vec<String>) -> Option<bool> {
+/// Also return the pre-computed hash where the validation signature (99) set to
+pub(crate) fn validate_aux(
+    txn: &MultiEraTx, validation_report: &mut Vec<String>,
+) -> Option<(bool, Vec<u8>)> {
     let function_name = "Validate Aux";
 
     // CIP-0509 should only be in conway era
@@ -313,13 +317,19 @@ pub(crate) fn validate_aux(txn: &MultiEraTx, validation_report: &mut Vec<String>
 }
 
 /// Helper function for auxiliary data validation.
+/// Also compute The pre-computed hash.
 fn validate_aux_helper(
     original_aux: &[u8], aux_data_hash: &Bytes, validation_report: &mut Vec<String>,
-) -> Option<bool> {
+) -> Option<(bool, Vec<u8>)> {
+    let mut vec_aux = original_aux.to_vec();
+
+    // Pre-computed aux with the last 64 bytes set to zero
+    zero_out_last_n_bytes(&mut vec_aux, 64);
+
     // Compare the hash
     match blake2b_256(original_aux) {
         Ok(original_hash) => {
-            return Some(aux_data_hash.as_ref() == original_hash);
+            return Some((aux_data_hash.as_ref() == original_hash, vec_aux));
         },
         Err(e) => {
             validation_report.push(format!("Cannot hash auxiliary data {e}"));
@@ -539,7 +549,7 @@ mod tests {
             .expect("Failed to get transaction index");
 
         validate_aux(tx, &mut validation_report);
-        assert!(validate_aux(tx, &mut validation_report).unwrap());
+        assert!(validate_aux(tx, &mut validation_report).unwrap().0);
     }
 
     #[test]

@@ -29,7 +29,7 @@ use crate::{
             pub_key::{Ed25519PublicKey, SimplePublicKeyType},
             CertKeyHash,
         },
-        Cip509, UuidV4,
+        Cip509, Cip509Validation, UuidV4,
     },
     utils::general::decremented_index,
 };
@@ -184,8 +184,10 @@ impl RegistrationChainInner {
         }
 
         let mut validation_report = Vec::new();
+        let validation_data = cip509.validate(txn, &mut validation_report);
+
         // Do the CIP509 validation, ensuring the basic validation pass.
-        if !cip509.validate(txn, &mut validation_report) {
+        if !is_valid_cip509(&validation_data) {
             // Log out the error if any
             error!("CIP509 validation failed: {:?}", validation_report);
             bail!("CIP509 validation failed, {:?}", validation_report);
@@ -240,8 +242,10 @@ impl RegistrationChainInner {
         let mut new_inner = self.clone();
 
         let mut validation_report = Vec::new();
+        let validation_data = cip509.validate(txn, &mut validation_report);
+
         // Do the CIP509 validation, ensuring the basic validation pass.
-        if !cip509.validate(txn, &mut validation_report) {
+        if !is_valid_cip509(&validation_data) {
             error!("CIP509 validation failed: {:?}", validation_report);
             bail!("CIP509 validation failed, {:?}", validation_report);
         }
@@ -284,6 +288,15 @@ impl RegistrationChainInner {
 
         Ok(new_inner)
     }
+}
+
+/// Check if the CIP509 is valid.
+fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
+    validation_data.valid_aux
+        && validation_data.valid_txn_inputs_hash
+        && validation_data.valid_public_key
+        && validation_data.valid_payment_key
+        && validation_data.signing_key
 }
 
 /// Process x509 certificate for chain root.
