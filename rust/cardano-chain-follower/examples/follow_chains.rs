@@ -7,6 +7,7 @@
 
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
+use rbac_registration::cardano::cip509;
 
 /// Use Mimalloc for the global allocator.
 #[cfg(feature = "mimalloc")]
@@ -329,10 +330,7 @@ fn update_biggest_aux_data(
         None => 0,
     };
 
-    let raw_size_cip509 = match chain_update
-        .data
-        .txn_raw_metadata(tx_idx, Metadata::cip509::LABEL)
-    {
+    let raw_size_cip509 = match chain_update.data.txn_raw_metadata(tx_idx, cip509::LABEL) {
         Some(raw) => raw.len(),
         None => 0,
     };
@@ -368,10 +366,7 @@ fn log_bad_cip36_info(chain_update: &ChainUpdate, network: Network, tx_idx: usiz
 
 /// Helper function for logging CIP509 validation.
 fn log_cip509_info(chain_update: &ChainUpdate, block_num: u64, network: Network, tx_idx: usize) {
-    if let Some(decoded_metadata) = chain_update
-        .data
-        .txn_metadata(tx_idx, Metadata::cip509::LABEL)
-    {
+    if let Some(decoded_metadata) = chain_update.data.txn_metadata(tx_idx, cip509::LABEL) {
         info!("Block Number {}", block_num);
 
         if let Metadata::DecodedMetadataValues::Cip509(cip509) = &decoded_metadata.value {

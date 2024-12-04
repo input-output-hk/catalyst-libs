@@ -6,14 +6,11 @@ use std::sync::Arc;
 
 use minicbor::{Decode, Decoder};
 use pallas::ledger::traverse::MultiEraTx;
-use rbac_registration::cardano::cip509::{Cip509 as RbacRegCip509, Cip509Validation};
+use rbac_registration::cardano::cip509::{Cip509 as RbacRegCip509, Cip509Validation, LABEL};
 
 use super::{
     DecodedMetadata, DecodedMetadataItem, DecodedMetadataValues, RawAuxData, ValidationReport,
 };
-
-/// CIP509 label.
-pub const LABEL: u64 = 509;
 
 /// CIP509 metadatum.
 #[derive(Debug, PartialEq, Clone, Default)]
