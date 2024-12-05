@@ -42,15 +42,19 @@ protected_header = {
    1 => -8, ; "alg": EdDSA
    3 => 30, ; "content type": Json
    "content encoding" => "br", ; payload content encoding, brotli compression
-   "type" => #6.37(bytes), ; UUID
-   "id" => #6.32780(bytes), ; ULID
-   "ver" => #6.32780(bytes), ; ULID
-   ? "ref" => #6.32780(bytes) / [#6.32780(bytes), #6.32780(bytes)], ; either ULID or [ULID, ULID]
-   ? "template" => #6.32780(bytes) / [#6.32780(bytes), #6.32780(bytes)], ; either ULID or [ULID, ULID]
-   ? "reply" => #6.32780(bytes) / [#6.32780(bytes), #6.32780(bytes)], ; either ULID or [ULID, ULID]
+   "type" => UUID
+   "id" => ULID
+   "ver" => ULID
+   ? "ref" => reference_type
+   ? "template" => reference_type
+   ? "reply" => reference_type
    ? "section" => text,
    ? "collabs" => [+any],
 }
+
+UUID = #6.37(bytes)
+ULID = #6.32780(bytes)
+reference_type = ULID / [ULID, ULID] ; either ULID or [ULID, ULID]
 ```
 
 ### COSE payload
