@@ -1,11 +1,6 @@
 //! Catalyst signed document cli example
 
-#![allow(
-    missing_docs,
-    clippy::missing_docs_in_private_items,
-    dead_code,
-    unused_variables
-)]
+#![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
 use std::{
     fs::{read_to_string, File},
@@ -101,7 +96,7 @@ fn decode_cbor_ulid(val: &coset::cbor::Value) -> anyhow::Result<ulid::Ulid> {
         bytes
             .clone()
             .try_into()
-            .map_err(|e| anyhow::anyhow!("Invalid CBOR encoded ULID type, invalid bytes size"))?,
+            .map_err(|_| anyhow::anyhow!("Invalid CBOR encoded ULID type, invalid bytes size"))?,
     );
     Ok(ulid)
 }
@@ -121,7 +116,7 @@ fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
         bytes
             .clone()
             .try_into()
-            .map_err(|e| anyhow::anyhow!("Invalid CBOR encoded UUID type, invalid bytes size"))?,
+            .map_err(|_| anyhow::anyhow!("Invalid CBOR encoded UUID type, invalid bytes size"))?,
     );
     Ok(uuid)
 }
@@ -188,15 +183,6 @@ impl Cli {
 fn load_schema_from_file(schema_path: &PathBuf) -> anyhow::Result<jsonschema::JSONSchema> {
     let schema_file = File::open(schema_path)?;
     let schema_json = serde_json::from_reader(schema_file)?;
-    let schema = jsonschema::JSONSchema::options()
-        .with_draft(jsonschema::Draft::Draft7)
-        .compile(&schema_json)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-    Ok(schema)
-}
-
-fn load_schema_from_str(schema_str: &str) -> anyhow::Result<jsonschema::JSONSchema> {
-    let schema_json = serde_json::from_str(schema_str)?;
     let schema = jsonschema::JSONSchema::options()
         .with_draft(jsonschema::Draft::Draft7)
         .compile(&schema_json)
