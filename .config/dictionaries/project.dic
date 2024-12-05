@@ -39,6 +39,7 @@ chrono
 cids
 ciphertext
 ciphertexts
+Coap
 codegen
 codepoints
 coti
@@ -89,6 +90,7 @@ fstat
 fstatat
 futimens
 genhtml
+genpkey
 GETFL
 getres
 giantstep
@@ -169,6 +171,7 @@ openat
 opentelemetry
 outlen
 Outparam
+outpubkey
 parameterises
 permissioned
 permissionless

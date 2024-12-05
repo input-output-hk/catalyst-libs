@@ -1,3 +1,5 @@
+<!-- cspell: words collabs -->
+
 # Catalyst signed document
 
 Catalyst signed document is [COSE] based document structure,
@@ -22,7 +24,7 @@ which **must** be present (most of the fields originally defined by this
   (this parameter is used to indicate the content type of the payload data,
   in this particular case `JSON` format is used).
 * `content encoding` (CBOR type `text`): `br` CBOR type `text`
-  (this parameter is used to indicate the content encodings algorith of the payload data,
+  (this parameter is used to indicate the content encodings algorithm of the payload data,
   in this particular case [brotli] compression data format is used).
 * `type` (CBOR type `text`): CBOR encoded UUID `#6.37(bytes)`.
 * `id` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`.
@@ -45,7 +47,7 @@ Which stores an actual document data which should follow to some schema.
 ### Signature protected header
 
 As it mentioned earlier, Catalyst signed document utilizes `COSE Signed Data Object` format,
-which allows to provide mutlisignature functionality.
+which allows to provide mutli-signature functionality.
 In that regard,
 each Catalyst signed document [COSE] signature **must** include the following protected header field:
 
@@ -65,7 +67,8 @@ Prepare non-signed document,
 `meta.json` file should follow the [`meta.schema.json`](./meta.schema.json).
 
 ```shell
-cargo run -p signed_doc --example mk_signed_doc build signed_doc/doc.json  signed_doc/schema.json signed_doc/doc.cose signed_doc/meta.json
+cargo run -p signed_doc --example mk_signed_doc build
+signed_doc/doc.json  signed_doc/schema.json signed_doc/doc.cose signed_doc/meta.json
 ```
 
 Sign document
@@ -77,7 +80,8 @@ cargo run -p signed_doc --example mk_signed_doc sign private.pem signed_doc/doc.
 Verify document
 
 ```shell
-cargo run -p signed_doc --example mk_signed_doc verify public.pem signed_doc/doc.cose signed_doc/schema.json
+cargo run -p signed_doc --example mk_signed_doc verify
+public.pem signed_doc/doc.cose signed_doc/schema.json
 ```
 
 Catalyst signed document CBOR bytes example

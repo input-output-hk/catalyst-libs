@@ -33,7 +33,7 @@ enum Cli {
     Build {
         /// Path to the document in the json format
         doc: PathBuf,
-        /// Path to the json schema (Draft 7) to validate document agains it
+        /// Path to the json schema (Draft 7) to validate document against it
         schema: PathBuf,
         /// Path to the output COSE file to store.
         output: PathBuf,
