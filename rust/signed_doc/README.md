@@ -38,16 +38,19 @@ which **must** be present (most of the fields originally defined by this
 Precise CDDL definition
 
 ```cddl
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
 protected_header = {
    1 => -8, ; "alg": EdDSA
    3 => 30, ; "content type": Json
    "content encoding" => "br", ; payload content encoding, brotli compression
-   "type" => UUID
-   "id" => ULID
-   "ver" => ULID
-   ? "ref" => reference_type
-   ? "template" => reference_type
-   ? "reply" => reference_type
+   "type" => UUID,
+   "id" => ULID,
+   "ver" => ULID,
+   ? "ref" => reference_type,
+   ? "template" => reference_type,
+   ? "reply" => reference_type,
    ? "section" => text,
    ? "collabs" => [+any],
 }
@@ -77,6 +80,9 @@ each Catalyst signed document [COSE] signature **must** include the following pr
 Precise CDDL definition
 
 ```cddl
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
 signature_protected_header = {
     4 => bytes ; "kid"
 }
