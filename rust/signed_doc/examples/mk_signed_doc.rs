@@ -51,7 +51,7 @@ enum Cli {
         pk: PathBuf,
         /// Path to the fully formed (should has at least one signature) COSE document
         doc: PathBuf,
-        /// Path to the json schema (Draft 7) to validate document agains it
+        /// Path to the json schema (Draft 7) to validate document against it
         schema: PathBuf,
     },
 }

@@ -69,7 +69,7 @@ Which stores an actual document data which should follow to some schema.
 ### Signature protected header
 
 As it mentioned earlier, Catalyst signed document utilizes `COSE Signed Data Object` format,
-which allows to provide mutli-signature functionality.
+which allows to provide multi-signature functionality.
 In that regard,
 each Catalyst signed document [COSE] signature **must** include the following protected header field:
 
