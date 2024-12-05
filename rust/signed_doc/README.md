@@ -26,17 +26,32 @@ which **must** be present (most of the fields originally defined by this
 * `content encoding` (CBOR type `text`): `br` CBOR type `text`
   (this parameter is used to indicate the content encodings algorithm of the payload data,
   in this particular case [brotli] compression data format is used).
-* `type` (CBOR type `text`): CBOR encoded UUID `#6.37(bytes)`.
-* `id` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`.
-* `ver` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`.
-* `ref` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`
-  or array of ULIDs `[#6.32780(bytes), #6.32780(bytes)]`.
-* `template` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`
-  or array of ULIDs `[#6.32780(bytes), #6.32780(bytes)]`.
-* `reply` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`
-  or array of ULIDs `[#6.32780(bytes), #6.32780(bytes)]`.
-* `section` (CBOR type `text`): CBOR encoded string, type `text`.
-* `collabs` (CBOR type `text`): CBOR encoded array of any CBOR types `[+ any]`.
+* `type`: CBOR encoded UUID.
+* `id`: CBOR encoded ULID.
+* `ver`: CBOR encoded ULID `#6.32780(bytes)`.
+* `ref`: CBOR encoded ULID or two elements array of ULIDs (optional).
+* `template`: CBOR encoded ULID or two elements array of ULIDs (optional).
+* `reply`: CBOR encoded ULID or two elements array of ULIDs (optional).
+* `section`: CBOR encoded string (optional).
+* `collabs`: CBOR encoded array of any CBOR types (optional).
+
+Precise CDDL definition
+
+```cddl
+protected_header = {
+   1 => -8, ; "alg": EdDSA
+   3 => 30, ; "content type": Json
+   "content encoding" => "br", ; payload content encoding, brotli compression
+   "type" => #6.37(bytes), ; UUID
+   "id" => #6.32780(bytes), ; ULID
+   "ver" => #6.32780(bytes), ; ULID
+   ? "ref" => #6.32780(bytes) / [#6.32780(bytes), #6.32780(bytes)], ; either ULID or [ULID, ULID]
+   ? "template" => #6.32780(bytes) / [#6.32780(bytes), #6.32780(bytes)], ; either ULID or [ULID, ULID]
+   ? "reply" => #6.32780(bytes) / [#6.32780(bytes), #6.32780(bytes)], ; either ULID or [ULID, ULID]
+   ? "section" => text,
+   ? "collabs" => [+any],
+}
+```
 
 ### COSE payload
 
@@ -54,6 +69,14 @@ each Catalyst signed document [COSE] signature **must** include the following pr
 `protected`:
 
 * `kid`: CBOR encoded `bytes` type.
+
+Precise CDDL definition
+
+```cddl
+signature_protected_header = {
+    4 => bytes ; "kid"
+}
+```
 
 ## Example
 
