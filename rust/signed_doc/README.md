@@ -11,7 +11,9 @@ of different [COSE] header's fields.
 ### Protected header
 
 The [COSE] standard defines two types of headers: `protected` and `unprotected`.
-C-COSED specifies the following `protected` header fields, which **must** be present:
+Catalyst signed document specifies the following `protected` header fields,
+which **must** be present (most of the fields originally defined by this
+[spec](https://input-output-hk.github.io/catalyst-voices/architecture/08_concepts/signed_document_metadata/metadata/)):
 
 * `alg`: `EdDSA`
   (this parameter is used to indicate the algorithm used for the security processing,
@@ -19,15 +21,22 @@ C-COSED specifies the following `protected` header fields, which **must** be pre
 * `content type`: `application/json`
   (this parameter is used to indicate the content type of the payload data,
   in this particular case `JSON` format is used).
-* `content encoding`: `br`
+* `content encoding` (CBOR type `text`): `br` CBOR type `text`
   (this parameter is used to indicate the content encodings algorith of the payload data,
   in this particular case [brotli] compression data format is used).
-* `id`
-* `ver`
-* `ref`
-* ...
+* `type` (CBOR type `text`): CBOR encoded UUID `#6.37(bytes)`.
+* `id` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`.
+* `ver` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`.
+* `ref` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`
+  or array of ULIDs `[#6.32780(bytes), #6.32780(bytes)]`.
+* `template` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`
+  or array of ULIDs `[#6.32780(bytes), #6.32780(bytes)]`.
+* `reply` (CBOR type `text`): CBOR encoded ULID `#6.32780(bytes)`
+  or array of ULIDs `[#6.32780(bytes), #6.32780(bytes)]`.
+* `section` (CBOR type `text`): CBOR encoded string, type `text`.
+* `collabs` (CBOR type `text`): CBOR encoded array of any CBOR types `[+ any]`.
 
-### C-COSED payload
+### COSE payload
 
 The [COSE] signature payload, as mentioned earlier,
 the content type of the [COSE] signature payload is JSON, [brotli] compressed.
@@ -35,19 +44,25 @@ Which stores an actual document data which should follow to some schema.
 
 ### Signature protected header
 
-As it mentioned earlier, C-COSED utilizes `COSE Signed Data Object` format,
+As it mentioned earlier, Catalyst signed document utilizes `COSE Signed Data Object` format,
 which allows to provide mutlisignature functionality.
-In that regard, each C-COSED [COSE] signature **must** include the following protected header field:
+In that regard,
+each Catalyst signed document [COSE] signature **must** include the following protected header field:
 
 `protected`:
 
-* `kid`: a Blake2B hash of the signer's [x.509] certificate (ASN.1 DER encoded bytes) associated with its keys
-  (this parameter identifies one piece of data
-  that can be used as input to find the needed cryptographic key).
+* `kid`: any string, CBOR encoded `text` type.
 
-## CLI
+## Example
 
-Prepare non-signed document
+Generate a `ed25519` private and public keys
+
+```shell
+openssl genpkey -algorithm=ED25519 -out=private.pem -outpubkey=public.pem
+```
+
+Prepare non-signed document,
+`meta.json` file should follow the [`meta.schema.json`](./meta.schema.json).
 
 ```shell
 cargo run -p signed_doc --example mk_signed_doc build signed_doc/doc.json  signed_doc/schema.json signed_doc/doc.cose signed_doc/meta.json

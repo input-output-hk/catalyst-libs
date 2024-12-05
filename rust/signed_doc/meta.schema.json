@@ -1,0 +1,115 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Catalyst signed document metadata json schema",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "type": {
+            "type": "string",
+            "format": "uuid",
+            "examples": [
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
+            ]
+        },
+        "id": {
+            "type": "string",
+            "format": "ulid",
+            "examples": [
+                "01JE99R792FWCQFZPHJH1R87RB"
+            ]
+        },
+        "ver": {
+            "type": "string",
+            "format": "ulid",
+            "examples": [
+                "01JE99R792FWCQFZPHJH1R87RB"
+            ]
+        },
+        "ref": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "ulid"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "ulid"
+                        },
+                        "ver": {
+                            "type": "string",
+                            "format": "ulid"
+                        }
+                    }
+                }
+            ]
+        },
+        "template": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "ulid"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "ulid"
+                        },
+                        "ver": {
+                            "type": "string",
+                            "format": "ulid"
+                        }
+                    }
+                }
+            ]
+        },
+        "reply": {
+            "anyOf": [
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "ulid"
+                        }
+                    }
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "format": "ulid"
+                        },
+                        "ver": {
+                            "type": "string",
+                            "format": "ulid"
+                        }
+                    }
+                }
+            ]
+        },
+        "section": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "type",
+        "id",
+        "ver"
+    ]
+}
