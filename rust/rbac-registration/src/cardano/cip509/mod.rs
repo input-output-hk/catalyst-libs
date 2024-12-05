@@ -6,7 +6,7 @@
 
 pub mod rbac;
 pub mod types;
-pub(crate) mod utils;
+pub mod utils;
 pub(crate) mod validation;
 pub mod x509_chunks;
 
