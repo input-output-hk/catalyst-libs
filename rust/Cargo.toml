@@ -13,6 +13,7 @@ members = [
     "vote-tx-v1",
     "vote-tx-v2",
     "signed_doc",
+    "rbac-registration",
 ]
 
 [workspace.package]

@@ -25,6 +25,7 @@ jobs:
         rust/signed-doc
         rust/cbork
         rust/hermes-ipfs
+        rust/rbac-registration
         dart
         docs
         general
