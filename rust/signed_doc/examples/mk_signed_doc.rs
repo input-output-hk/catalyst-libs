@@ -86,26 +86,67 @@ enum DocumentRef {
     WithVer { id: ulid::Ulid, ver: ulid::Ulid },
 }
 
-fn cbor_ulid(ulid: &ulid::Ulid) -> coset::cbor::Value {
+fn encode_cbor_ulid(ulid: &ulid::Ulid) -> coset::cbor::Value {
     coset::cbor::Value::Tag(
         ULID_CBOR_TAG,
         coset::cbor::Value::Bytes(ulid.to_bytes().to_vec()).into(),
     )
 }
 
-fn cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
+fn decode_cbor_ulid(val: &coset::cbor::Value) -> anyhow::Result<ulid::Ulid> {
+    let Some((ULID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
+        anyhow::bail!("Invalid CBOR encoded ULID type");
+    };
+    let ulid = ulid::Ulid::from_bytes(
+        bytes
+            .clone()
+            .try_into()
+            .map_err(|e| anyhow::anyhow!("Invalid CBOR encoded ULID type, invalid bytes size"))?,
+    );
+    Ok(ulid)
+}
+
+fn encode_cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
     coset::cbor::Value::Tag(
         UUID_CBOR_TAG,
         coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
     )
 }
 
-fn cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
+fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
+    let Some((UUID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
+        anyhow::bail!("Invalid CBOR encoded UUID type");
+    };
+    let uuid = uuid::Uuid::from_bytes(
+        bytes
+            .clone()
+            .try_into()
+            .map_err(|e| anyhow::anyhow!("Invalid CBOR encoded UUID type, invalid bytes size"))?,
+    );
+    Ok(uuid)
+}
+
+fn encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
     match doc_ref {
-        DocumentRef::Latest { id } => cbor_ulid(id),
+        DocumentRef::Latest { id } => encode_cbor_ulid(id),
         DocumentRef::WithVer { id, ver } => {
-            coset::cbor::Value::Array(vec![cbor_ulid(id), cbor_ulid(ver)])
+            coset::cbor::Value::Array(vec![encode_cbor_ulid(id), encode_cbor_ulid(ver)])
         },
+    }
+}
+
+#[allow(clippy::indexing_slicing)]
+fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
+    if let Ok(id) = decode_cbor_ulid(val) {
+        Ok(DocumentRef::Latest { id })
+    } else {
+        let Some(array) = val.as_array() else {
+            anyhow::bail!("Invalid CBOR encoded document `ref` type");
+        };
+        anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
+        let id = decode_cbor_ulid(&array[0])?;
+        let ver = decode_cbor_ulid(&array[1])?;
+        Ok(DocumentRef::WithVer { id, ver })
     }
 }
 
@@ -212,30 +253,32 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign 
 
     protected_header.rest.push((
         coset::Label::Text("type".to_string()),
-        cbor_uuid(&meta.r#type),
+        encode_cbor_uuid(&meta.r#type),
     ));
-    protected_header
-        .rest
-        .push((coset::Label::Text("id".to_string()), cbor_ulid(&meta.id)));
-    protected_header
-        .rest
-        .push((coset::Label::Text("ver".to_string()), cbor_ulid(&meta.ver)));
+    protected_header.rest.push((
+        coset::Label::Text("id".to_string()),
+        encode_cbor_ulid(&meta.id),
+    ));
+    protected_header.rest.push((
+        coset::Label::Text("ver".to_string()),
+        encode_cbor_ulid(&meta.ver),
+    ));
     if let Some(r#ref) = &meta.r#ref {
         protected_header.rest.push((
             coset::Label::Text("ref".to_string()),
-            cbor_document_ref(r#ref),
+            encode_cbor_document_ref(r#ref),
         ));
     }
     if let Some(template) = &meta.template {
         protected_header.rest.push((
             coset::Label::Text("template".to_string()),
-            cbor_document_ref(template),
+            encode_cbor_document_ref(template),
         ));
     }
     if let Some(reply) = &meta.reply {
         protected_header.rest.push((
             coset::Label::Text("reply".to_string()),
-            cbor_document_ref(reply),
+            encode_cbor_document_ref(reply),
         ));
     }
     if let Some(section) = &meta.section {
@@ -294,12 +337,17 @@ fn validate_cose(
     validate_cose_protected_header(cose)?;
 
     let Some(payload) = &cose.payload else {
-        anyhow::bail!("COSE document missing payload field with the JSON content in it");
+        anyhow::bail!("COSE missing payload field with the JSON content in it");
     };
     let json_doc = brotli_decompress_json(payload.as_slice())?;
     validate_json(&json_doc, schema)?;
 
     for sign in &cose.signatures {
+        anyhow::ensure!(
+            !sign.protected.header.key_id.is_empty(),
+            "COSE missing signature protected header `kid` field "
+        );
+
         let data_to_sign = cose.tbs_data(&[], sign);
         let signature_bytes = sign.signature.as_slice().try_into().map_err(|_| {
             anyhow::anyhow!(
@@ -332,6 +380,90 @@ fn validate_cose_protected_header(cose: &coset::CoseSign) -> anyhow::Result<()> 
         }),
         "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field"
     );
+
+    let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("type".to_string()))
+    else {
+        anyhow::bail!("Invalid COSE protected header, missing `type` field");
+    };
+    decode_cbor_uuid(value)
+        .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `type` field, err: {e}"))?;
+
+    let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("id".to_string()))
+    else {
+        anyhow::bail!("Invalid COSE protected header, missing `id` field");
+    };
+    decode_cbor_ulid(value)
+        .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `id` field, err: {e}"))?;
+
+    let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("ver".to_string()))
+    else {
+        anyhow::bail!("Invalid COSE protected header, missing `ver` field");
+    };
+    decode_cbor_ulid(value)
+        .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `ver` field, err: {e}"))?;
+
+    if let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("ref".to_string()))
+    {
+        decode_cbor_document_ref(value)
+            .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `ref` field, err: {e}"))?;
+    }
+
+    if let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("template".to_string()))
+    {
+        decode_cbor_document_ref(value).map_err(|e| {
+            anyhow::anyhow!("Invalid COSE protected header `template` field, err: {e}")
+        })?;
+    }
+
+    if let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("reply".to_string()))
+    {
+        decode_cbor_document_ref(value).map_err(|e| {
+            anyhow::anyhow!("Invalid COSE protected header `reply` field, err: {e}")
+        })?;
+    }
+
+    if let Some((_, value)) = cose
+        .protected
+        .header
+        .rest
+        .iter()
+        .find(|(key, _)| key == &coset::Label::Text("section".to_string()))
+    {
+        anyhow::ensure!(
+            value.is_text(),
+            "Invalid COSE protected header, missing `section` field"
+        );
+    }
 
     Ok(())
 }
