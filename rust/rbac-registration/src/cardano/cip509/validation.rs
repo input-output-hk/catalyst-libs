@@ -95,7 +95,7 @@ pub(crate) fn validate_txn_inputs_hash(
                 return None;
             },
         };
-        Some(TxInputHash(inputs_hash) == cip509.txn_inputs_hash)
+        Some(TxInputHash::from(inputs_hash) == cip509.txn_inputs_hash)
     } else {
         validation_report.push(format!("{function_name}, Unsupported transaction era for"));
         None

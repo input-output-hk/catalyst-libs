@@ -8,10 +8,11 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
+use ed25519_dalek::VerifyingKey;
 use pallas::{
     crypto::hash::Hash,
     ledger::{
-        addresses::{Address, ShelleyAddress, ShelleyPaymentPart},
+        addresses::{Address, ShelleyAddress},
         traverse::MultiEraTx,
     },
     network::miniprotocols::Point,
@@ -20,16 +21,17 @@ use payment_history::PaymentHistory;
 use point_tx_idx::PointTxIdx;
 use role_data::RoleData;
 use tracing::error;
+use uuid::Uuid;
 
 use crate::{
     cardano::cip509::{
         self,
         rbac::{
             certs::{C509Cert, X509DerCert},
-            pub_key::{Ed25519PublicKey, SimplePublicKeyType},
-            CertKeyHash,
+            pub_key::SimplePublicKeyType,
         },
-        Cip509, Cip509Validation, UuidV4,
+        types::cert_key_hash::CertKeyHash,
+        Cip509, Cip509Validation,
     },
     utils::general::decremented_index,
 };
@@ -94,7 +96,7 @@ impl RegistrationChain {
 
     /// Get a list of purpose for this registration chain.
     #[must_use]
-    pub fn purpose(&self) -> &[UuidV4] {
+    pub fn purpose(&self) -> &[Uuid] {
         &self.inner.purpose
     }
 
@@ -112,7 +114,7 @@ impl RegistrationChain {
 
     /// Get the map of index in array to point, transaction index, and public key.
     #[must_use]
-    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
+    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, VerifyingKey)> {
         &self.inner.simple_keys
     }
 
@@ -141,7 +143,7 @@ struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Hash<32>,
     /// List of purpose for this registration chain
-    purpose: Vec<UuidV4>,
+    purpose: Vec<Uuid>,
 
     // RBAC
     /// Map of index in array to point, transaction index, and x509 certificate.
@@ -149,7 +151,7 @@ struct RegistrationChainInner {
     /// Map of index in array to point, transaction index, and c509 certificate.
     c509_certs: HashMap<usize, (PointTxIdx, C509)>,
     /// Map of index in array to point, transaction index, and public key.
-    simple_keys: HashMap<usize, (PointTxIdx, Ed25519PublicKey)>,
+    simple_keys: HashMap<usize, (PointTxIdx, VerifyingKey)>,
     /// List of point, transaction index, and certificate key hash.
     revocations: Vec<(PointTxIdx, CertKeyHash)>,
 
@@ -292,11 +294,11 @@ impl RegistrationChainInner {
 
 /// Check if the CIP509 is valid.
 fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
-    validation_data.valid_aux
-        && validation_data.valid_txn_inputs_hash
-        && validation_data.valid_public_key
-        && validation_data.valid_payment_key
-        && validation_data.signing_key
+    validation_data.is_valid_aux
+        && validation_data.is_valid_txn_inputs_hash
+        && validation_data.is_valid_stake_public_key
+        && validation_data.is_valid_payment_key
+        && validation_data.is_valid_signing_key
 }
 
 /// Process x509 certificate for chain root.
@@ -389,13 +391,13 @@ fn update_c509_certs(
 /// Process public keys for chain root.
 fn chain_root_public_keys(
     pub_keys: Option<Vec<SimplePublicKeyType>>, point_tx_idx: &PointTxIdx,
-) -> HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
+) -> HashMap<usize, (PointTxIdx, VerifyingKey)> {
     let mut map = HashMap::new();
     if let Some(key_list) = pub_keys {
         for (idx, key) in key_list.iter().enumerate() {
             // Chain root, expect only the public key not undefined or delete
             if let cip509::rbac::pub_key::SimplePublicKeyType::Ed25519(key) = key {
-                map.insert(idx, (point_tx_idx.clone(), key.clone()));
+                map.insert(idx, (point_tx_idx.clone(), *key));
             }
         }
     }
@@ -420,7 +422,7 @@ fn update_public_keys(
                 cip509::rbac::pub_key::SimplePublicKeyType::Ed25519(key) => {
                     new_inner
                         .simple_keys
-                        .insert(idx, (point_tx_idx.clone(), key.clone()));
+                        .insert(idx, (point_tx_idx.clone(), *key));
                 },
             }
         }
@@ -524,7 +526,7 @@ fn update_role_data(
 /// Helper function for retrieving the Shelley address from the transaction.
 fn get_payment_addr_from_tx(
     txn: &MultiEraTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Option<ShelleyPaymentPart>> {
+) -> anyhow::Result<Option<ShelleyAddress>> {
     // The index should exist since it pass the basic validation
     if let Some(key_ref) = payment_key_ref {
         if let MultiEraTx::Conway(tx) = txn {
@@ -541,7 +543,7 @@ fn get_payment_addr_from_tx(
                                 Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
 
                             if let Address::Shelley(addr) = address {
-                                return Ok(Some(addr.payment().clone()));
+                                return Ok(Some(addr.clone()));
                             }
                             bail!("Unsupported address type in payment key reference");
                         },

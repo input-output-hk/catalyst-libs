@@ -15,6 +15,7 @@ use pub_key::SimplePublicKeyType;
 use role_data::RoleData;
 use strum_macros::FromRepr;
 
+use super::types::cert_key_hash::CertKeyHash;
 use crate::utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
@@ -36,16 +37,6 @@ pub struct Cip509RbacMetadata {
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
     pub purpose_key_data: HashMap<u16, Vec<u8>>,
-}
-
-/// Certificate key hash use in revocation list.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct CertKeyHash([u8; 16]);
-
-impl From<[u8; 16]> for CertKeyHash {
-    fn from(bytes: [u8; 16]) -> Self {
-        CertKeyHash(bytes)
-    }
 }
 
 /// The first valid purpose key.
