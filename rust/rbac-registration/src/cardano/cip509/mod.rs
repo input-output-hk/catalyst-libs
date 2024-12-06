@@ -62,7 +62,7 @@ pub struct Cip509Validation {
     /// Boolean value for the validity of the payment key.
     pub valid_payment_key: bool,
     /// Boolean value for the validity of the signing key.
-    pub signing_key: bool,
+    pub valid_signing_key: bool,
     /// Additional data from the CIP509 validation..
     pub additional_data: AdditionalData,
 }
@@ -178,7 +178,7 @@ impl Cip509 {
             validate_aux(txn, validation_report).unwrap_or_default();
         let mut stake_key_validate = true;
         let mut payment_key_validate = true;
-        let mut signing_key = true;
+        let mut signing_key_validate = true;
         // Validate the role 0
         if let Some(role_set) = &self.x509_chunks.0.role_set {
             // Validate only role 0
@@ -188,7 +188,7 @@ impl Cip509 {
                         validate_stake_public_key(self, txn, validation_report).unwrap_or(false);
                     payment_key_validate =
                         validate_payment_key(txn, role, validation_report).unwrap_or(false);
-                    signing_key = validate_role_singing_key(role, validation_report);
+                    signing_key_validate = validate_role_singing_key(role, validation_report);
                 }
             }
         }
@@ -197,7 +197,7 @@ impl Cip509 {
             valid_aux: aux_validate,
             valid_public_key: stake_key_validate,
             valid_payment_key: payment_key_validate,
-            signing_key,
+            valid_signing_key: signing_key_validate,
             additional_data: AdditionalData { precomputed_aux },
         }
     }

@@ -298,7 +298,7 @@ fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
         && validation_data.valid_txn_inputs_hash
         && validation_data.valid_public_key
         && validation_data.valid_payment_key
-        && validation_data.signing_key
+        && validation_data.valid_signing_key
 }
 
 /// Process x509 certificate for chain root.
