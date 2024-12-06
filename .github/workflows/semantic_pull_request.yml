@@ -22,6 +22,7 @@ jobs:
         rust/immutable-ledger
         rust/vote-tx-v1
         rust/vote-tx-v2
+        rust/signed-doc
         rust/cbork
         rust/hermes-ipfs
         rust/rbac-registration

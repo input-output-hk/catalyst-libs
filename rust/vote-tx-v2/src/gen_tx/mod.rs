@@ -1,8 +1,6 @@
 //! A Catalyst generalized vote transaction object, structured following this
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/gen_vote_tx/)
 
-// cspell: words Coap
-
 mod builder;
 mod event_map;
 mod tx_body;
