@@ -100,11 +100,11 @@ impl Decode<'_, ()> for C509Cert {
 #[derive(Debug, PartialEq, Clone)]
 pub struct C509CertInMetadatumReference {
     /// Transaction output field.
-    txn_output_field: u8,
+    pub txn_output_field: u8,
     /// Transaction output index.
-    txn_output_index: u64,
+    pub txn_output_index: u64,
     /// Optional certificate reference.
-    cert_ref: Option<Vec<u64>>,
+    pub cert_ref: Option<Vec<u64>>,
 }
 
 impl Decode<'_, ()> for C509CertInMetadatumReference {
