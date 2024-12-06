@@ -54,15 +54,15 @@ pub struct Cip509 {
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509Validation {
     /// Boolean value for the validity of the transaction inputs hash.
-    pub valid_txn_inputs_hash: bool,
+    pub is_valid_txn_inputs_hash: bool,
     /// Boolean value for the validity of the auxiliary data.
-    pub valid_aux: bool,
+    pub is_valid_aux: bool,
     /// Boolean value for the validity of the public key.
-    pub valid_public_key: bool,
+    pub is_valid_public_key: bool,
     /// Boolean value for the validity of the payment key.
-    pub valid_payment_key: bool,
+    pub is_valid_payment_key: bool,
     /// Boolean value for the validity of the signing key.
-    pub valid_signing_key: bool,
+    pub is_valid_signing_key: bool,
     /// Additional data from the CIP509 validation..
     pub additional_data: AdditionalData,
 }
@@ -193,11 +193,11 @@ impl Cip509 {
             }
         }
         Cip509Validation {
-            valid_txn_inputs_hash: tx_input_validate,
-            valid_aux: aux_validate,
-            valid_public_key: stake_key_validate,
-            valid_payment_key: payment_key_validate,
-            valid_signing_key: signing_key_validate,
+            is_valid_txn_inputs_hash: tx_input_validate,
+            is_valid_aux: aux_validate,
+            is_valid_public_key: stake_key_validate,
+            is_valid_payment_key: payment_key_validate,
+            is_valid_signing_key: signing_key_validate,
             additional_data: AdditionalData { precomputed_aux },
         }
     }

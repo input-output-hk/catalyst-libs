@@ -294,11 +294,11 @@ impl RegistrationChainInner {
 
 /// Check if the CIP509 is valid.
 fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
-    validation_data.valid_aux
-        && validation_data.valid_txn_inputs_hash
-        && validation_data.valid_public_key
-        && validation_data.valid_payment_key
-        && validation_data.valid_signing_key
+    validation_data.is_valid_aux
+        && validation_data.is_valid_txn_inputs_hash
+        && validation_data.is_valid_public_key
+        && validation_data.is_valid_payment_key
+        && validation_data.is_valid_signing_key
 }
 
 /// Process x509 certificate for chain root.
