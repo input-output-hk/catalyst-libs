@@ -49,14 +49,12 @@ pub(crate) struct DecodedMetadata(DashMap<u64, Arc<DecodedMetadataItem>>);
 
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
-    fn new(
-        chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData, txn_idx: usize,
-    ) -> Self {
+    fn new(chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData) -> Self {
         let decoded_metadata = Self(DashMap::new());
 
         // Process each known type of metadata here, and record the decoded result.
         Cip36::decode_and_validate(&decoded_metadata, slot, txn, raw_aux_data, true, chain);
-        Cip509::decode_and_validate(&decoded_metadata, txn, raw_aux_data, txn_idx);
+        Cip509::decode_and_validate(&decoded_metadata, txn, raw_aux_data);
 
         // if !decoded_metadata.0.is_empty() {
         //    debug!("Decoded Metadata final: {decoded_metadata:?}");
@@ -108,7 +106,7 @@ impl DecodedTransaction {
         };
 
         let txn_raw_aux_data = RawAuxData::new(cbor_data);
-        let txn_metadata = DecodedMetadata::new(chain, slot, txn, &txn_raw_aux_data, txn_idx);
+        let txn_metadata = DecodedMetadata::new(chain, slot, txn, &txn_raw_aux_data);
 
         self.raw.insert(txn_idx, txn_raw_aux_data);
         self.decoded.insert(txn_idx, txn_metadata);
