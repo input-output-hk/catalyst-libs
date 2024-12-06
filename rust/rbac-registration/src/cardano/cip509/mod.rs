@@ -16,7 +16,8 @@ use minicbor::{
 };
 use pallas::{crypto::hash::Hash, ledger::traverse::MultiEraTx};
 use strum_macros::FromRepr;
-use types::{tx_input_hash::TxInputHash, uuidv4::UuidV4};
+use types::tx_input_hash::TxInputHash;
+use uuid::Uuid;
 use validation::{
     validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
     validate_txn_inputs_hash,
@@ -37,7 +38,7 @@ pub const LABEL: u64 = 509;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// `UUIDv4` Purpose .
-    pub purpose: UuidV4, // (bytes .size 16)
+    pub purpose: Uuid, // (bytes .size 16)
     /// Transaction inputs hash.
     pub txn_inputs_hash: TxInputHash, // bytes .size 16
     /// Optional previous transaction ID.
@@ -101,7 +102,7 @@ impl Decode<'_, ()> for Cip509 {
                 match key {
                     Cip509IntIdentifier::Purpose => {
                         cip509_metadatum.purpose =
-                            UuidV4::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(|_| {
+                            Uuid::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(|_| {
                                 decode::Error::message("Invalid data size of Purpose")
                             })?;
                     },

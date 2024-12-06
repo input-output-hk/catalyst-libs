@@ -1,12 +1,10 @@
 //! Public key type for RBAC metadata
 
+use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
 
 use super::tag::KeyTag;
-use crate::{
-    cardano::cip509::types::ed25519_pubkey::Ed25519PublicKey,
-    utils::decode_helper::{decode_bytes, decode_tag},
-};
+use crate::utils::decode_helper::{decode_bytes, decode_tag};
 
 /// Enum of possible public key type.
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -17,7 +15,7 @@ pub enum SimplePublicKeyType {
     /// Deleted indicates the key is deleted.
     Deleted,
     /// Ed25519 public key.
-    Ed25519(Ed25519PublicKey),
+    Ed25519(VerifyingKey),
 }
 
 impl Decode<'_, ()> for SimplePublicKeyType {
@@ -32,7 +30,10 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                         let mut ed25519 = [0u8; 32];
                         if bytes.len() == 32 {
                             ed25519.copy_from_slice(&bytes);
-                            Ok(Self::Ed25519(ed25519.into()))
+                            let pubkey = VerifyingKey::from_bytes(&ed25519).map_err(|e| {
+                                decode::Error::message(format!("Failed to convert Ed25519 public key in SimplePublicKeyType {e}"))
+                            })?;
+                            Ok(Self::Ed25519(pubkey))
                         } else {
                             Err(decode::Error::message(format!(
                                 "Invalid length for Ed25519 key, got {}",

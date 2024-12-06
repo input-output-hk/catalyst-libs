@@ -8,6 +8,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
+use ed25519_dalek::VerifyingKey;
 use pallas::{
     crypto::hash::Hash,
     ledger::{
@@ -20,6 +21,7 @@ use payment_history::PaymentHistory;
 use point_tx_idx::PointTxIdx;
 use role_data::RoleData;
 use tracing::error;
+use uuid::Uuid;
 
 use crate::{
     cardano::cip509::{
@@ -28,7 +30,7 @@ use crate::{
             certs::{C509Cert, X509DerCert},
             pub_key::SimplePublicKeyType,
         },
-        types::{cert_key_hash::CertKeyHash, ed25519_pubkey::Ed25519PublicKey, uuidv4::UuidV4},
+        types::cert_key_hash::CertKeyHash,
         Cip509, Cip509Validation,
     },
     utils::general::decremented_index,
@@ -94,7 +96,7 @@ impl RegistrationChain {
 
     /// Get a list of purpose for this registration chain.
     #[must_use]
-    pub fn purpose(&self) -> &[UuidV4] {
+    pub fn purpose(&self) -> &[Uuid] {
         &self.inner.purpose
     }
 
@@ -112,7 +114,7 @@ impl RegistrationChain {
 
     /// Get the map of index in array to point, transaction index, and public key.
     #[must_use]
-    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
+    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, VerifyingKey)> {
         &self.inner.simple_keys
     }
 
@@ -141,7 +143,7 @@ struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Hash<32>,
     /// List of purpose for this registration chain
-    purpose: Vec<UuidV4>,
+    purpose: Vec<Uuid>,
 
     // RBAC
     /// Map of index in array to point, transaction index, and x509 certificate.
@@ -149,7 +151,7 @@ struct RegistrationChainInner {
     /// Map of index in array to point, transaction index, and c509 certificate.
     c509_certs: HashMap<usize, (PointTxIdx, C509)>,
     /// Map of index in array to point, transaction index, and public key.
-    simple_keys: HashMap<usize, (PointTxIdx, Ed25519PublicKey)>,
+    simple_keys: HashMap<usize, (PointTxIdx, VerifyingKey)>,
     /// List of point, transaction index, and certificate key hash.
     revocations: Vec<(PointTxIdx, CertKeyHash)>,
 
@@ -389,13 +391,13 @@ fn update_c509_certs(
 /// Process public keys for chain root.
 fn chain_root_public_keys(
     pub_keys: Option<Vec<SimplePublicKeyType>>, point_tx_idx: &PointTxIdx,
-) -> HashMap<usize, (PointTxIdx, Ed25519PublicKey)> {
+) -> HashMap<usize, (PointTxIdx, VerifyingKey)> {
     let mut map = HashMap::new();
     if let Some(key_list) = pub_keys {
         for (idx, key) in key_list.iter().enumerate() {
             // Chain root, expect only the public key not undefined or delete
             if let cip509::rbac::pub_key::SimplePublicKeyType::Ed25519(key) = key {
-                map.insert(idx, (point_tx_idx.clone(), key.clone()));
+                map.insert(idx, (point_tx_idx.clone(), *key));
             }
         }
     }
@@ -420,7 +422,7 @@ fn update_public_keys(
                 cip509::rbac::pub_key::SimplePublicKeyType::Ed25519(key) => {
                     new_inner
                         .simple_keys
-                        .insert(idx, (point_tx_idx.clone(), key.clone()));
+                        .insert(idx, (point_tx_idx.clone(), *key));
                 },
             }
         }
