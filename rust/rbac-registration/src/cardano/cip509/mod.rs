@@ -57,8 +57,8 @@ pub struct Cip509Validation {
     pub is_valid_txn_inputs_hash: bool,
     /// Boolean value for the validity of the auxiliary data.
     pub is_valid_aux: bool,
-    /// Boolean value for the validity of the public key.
-    pub is_valid_public_key: bool,
+    /// Boolean value for the validity of the stake public key.
+    pub is_valid_stake_public_key: bool,
     /// Boolean value for the validity of the payment key.
     pub is_valid_payment_key: bool,
     /// Boolean value for the validity of the signing key.
@@ -172,32 +172,31 @@ impl Cip509 {
     pub fn validate(
         &self, txn: &MultiEraTx, validation_report: &mut Vec<String>,
     ) -> Cip509Validation {
-        let tx_input_validate =
+        let is_valid_txn_inputs_hash =
             validate_txn_inputs_hash(self, txn, validation_report).unwrap_or(false);
-        let (aux_validate, precomputed_aux) =
+        let (is_valid_aux, precomputed_aux) =
             validate_aux(txn, validation_report).unwrap_or_default();
-        let mut stake_key_validate = true;
-        let mut payment_key_validate = true;
-        let mut signing_key_validate = true;
-        // Validate the role 0
+        let mut is_valid_stake_public_key = true;
+        let mut is_valid_payment_key = true;
+        let mut is_valid_signing_key = true;
         if let Some(role_set) = &self.x509_chunks.0.role_set {
             // Validate only role 0
             for role in role_set {
                 if role.role_number == 0 {
-                    stake_key_validate =
+                    is_valid_stake_public_key =
                         validate_stake_public_key(self, txn, validation_report).unwrap_or(false);
-                    payment_key_validate =
+                    is_valid_payment_key =
                         validate_payment_key(txn, role, validation_report).unwrap_or(false);
-                    signing_key_validate = validate_role_singing_key(role, validation_report);
+                    is_valid_signing_key = validate_role_singing_key(role, validation_report);
                 }
             }
         }
         Cip509Validation {
-            is_valid_txn_inputs_hash: tx_input_validate,
-            is_valid_aux: aux_validate,
-            is_valid_public_key: stake_key_validate,
-            is_valid_payment_key: payment_key_validate,
-            is_valid_signing_key: signing_key_validate,
+            is_valid_txn_inputs_hash,
+            is_valid_aux,
+            is_valid_stake_public_key,
+            is_valid_payment_key,
+            is_valid_signing_key,
             additional_data: AdditionalData { precomputed_aux },
         }
     }
