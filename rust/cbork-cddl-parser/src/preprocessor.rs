@@ -11,24 +11,30 @@ use pest::{iterators::Pair, RuleType};
 use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
 
 /// Processes the AST.
-pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<Ast> {
+pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
     match ast {
         Ast::Rfc8610(ast) => {
-            process_root_and_filter(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr)
-                .map(Ast::Rfc8610)
+            let validated_and_filtered_ast =
+                validate_root_and_filter(ast, rfc_8610::Rule::cddl, rfc_8610::Rule::expr)?;
+            process_impl(validated_and_filtered_ast)?;
         },
         Ast::Rfc9165(ast) => {
-            process_root_and_filter(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr)
-                .map(Ast::Rfc9165)
+            let validated_and_filtered_ast =
+                validate_root_and_filter(ast, rfc_9165::Rule::cddl, rfc_9165::Rule::expr)?;
+            process_impl(validated_and_filtered_ast)?;
         },
         Ast::Cddl(ast) => {
-            process_root_and_filter(ast, cddl::Rule::cddl, cddl::Rule::expr).map(Ast::Cddl)
+            let validated_and_filtered_ast =
+                validate_root_and_filter(ast, cddl::Rule::cddl, cddl::Rule::expr)?;
+            process_impl(validated_and_filtered_ast)?;
         },
     }
+
+    Ok(())
 }
 
-/// Process the root rule of the AST and filter out all non `expected_rule` rules.
-fn process_root_and_filter<R: RuleType>(
+/// Validate the root rule of the AST and filter out all non `expected_rule` rules.
+fn validate_root_and_filter<R: RuleType>(
     ast: Vec<Pair<'_, R>>, root_rule: R, expected_rule: R,
 ) -> anyhow::Result<Vec<Pair<'_, R>>> {
     let mut ast_iter = ast.into_iter();
@@ -41,4 +47,10 @@ fn process_root_and_filter<R: RuleType>(
         .into_inner()
         .filter(|pair| pair.as_rule() == expected_rule)
         .collect())
+}
+
+/// Something
+#[allow(clippy::unnecessary_wraps)]
+fn process_impl<R: RuleType>(_ast: Vec<Pair<'_, R>>) -> anyhow::Result<()> {
+    Ok(())
 }
