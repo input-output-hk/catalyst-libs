@@ -12,7 +12,7 @@ use ed25519_dalek::VerifyingKey;
 use pallas::{
     crypto::hash::Hash,
     ledger::{
-        addresses::{Address, ShelleyAddress, ShelleyPaymentPart},
+        addresses::{Address, ShelleyAddress},
         traverse::MultiEraTx,
     },
     network::miniprotocols::Point,
@@ -526,7 +526,7 @@ fn update_role_data(
 /// Helper function for retrieving the Shelley address from the transaction.
 fn get_payment_addr_from_tx(
     txn: &MultiEraTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Option<ShelleyPaymentPart>> {
+) -> anyhow::Result<Option<ShelleyAddress>> {
     // The index should exist since it pass the basic validation
     if let Some(key_ref) = payment_key_ref {
         if let MultiEraTx::Conway(tx) = txn {
@@ -543,7 +543,7 @@ fn get_payment_addr_from_tx(
                                 Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
 
                             if let Address::Shelley(addr) = address {
-                                return Ok(Some(addr.payment().clone()));
+                                return Ok(Some(addr.clone()));
                             }
                             bail!("Unsupported address type in payment key reference");
                         },
