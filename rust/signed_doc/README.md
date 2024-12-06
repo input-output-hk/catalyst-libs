@@ -28,7 +28,7 @@ which **must** be present (most of the fields originally defined by this
   in this particular case [brotli] compression data format is used).
 * `type`: CBOR encoded UUID.
 * `id`: CBOR encoded ULID.
-* `ver`: CBOR encoded ULID `#6.32780(bytes)`.
+* `ver`: CBOR encoded ULID.
 * `ref`: CBOR encoded ULID or two elements array of ULIDs (optional).
 * `template`: CBOR encoded ULID or two elements array of ULIDs (optional).
 * `reply`: CBOR encoded ULID or two elements array of ULIDs (optional).
