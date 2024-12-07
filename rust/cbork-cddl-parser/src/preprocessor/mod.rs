@@ -17,22 +17,23 @@ pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
     match ast {
         Ast::Rfc8610(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
-            process_impl(&validated_and_filtered_ast)?;
+            process_expressions(validated_and_filtered_ast)?;
         },
         Ast::Rfc9165(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
-            process_impl(&validated_and_filtered_ast)?;
+            process_expressions(validated_and_filtered_ast)?;
         },
         Ast::Cddl(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
-            process_impl(&validated_and_filtered_ast)?;
+            process_expressions(validated_and_filtered_ast)?;
         },
     }
 
     Ok(())
 }
 
-/// Validate the root rule of the AST and filter out all non `expected_rule` rules.
+/// Validate the root rule to be `cddl` rule and filter out all non `expr`
+/// rules.
 fn validate_root_and_filter(ast: Vec<impl CddlRule>) -> anyhow::Result<Vec<impl CddlRule>> {
     let mut ast_iter = ast.into_iter();
     let ast_root = ast_iter.next().ok_or(anyhow!("Empty AST."))?;
@@ -43,9 +44,23 @@ fn validate_root_and_filter(ast: Vec<impl CddlRule>) -> anyhow::Result<Vec<impl 
     Ok(ast_root.inner().filter(CddlRule::is_expr).collect())
 }
 
-/// Something
-#[allow(clippy::unnecessary_wraps)]
-fn process_impl(ast: &Vec<impl CddlRule>) -> anyhow::Result<()> {
-    for _expr in ast {}
+/// Process `expr` rules
+fn process_expressions(ast: Vec<impl CddlRule>) -> anyhow::Result<()> {
+    let mut typenames = Vec::new();
+    for expr in ast {
+        println!("{}", expr.to_string());
+
+        let mut inner = expr.inner();
+        let typename_or_groupname_rule = inner
+            .next()
+            .ok_or(anyhow::anyhow!("Invalid `expr`, has empty inner rules"))?;
+        if typename_or_groupname_rule.is_typename() {
+            let typename = typename_or_groupname_rule.to_string();
+            typenames.push(typename);
+        } else if typename_or_groupname_rule.is_groupname() {
+        } else {
+            anyhow::bail!("Unexpected rule, must be a `typename` or `groupname`");
+        }
+    }
     Ok(())
 }

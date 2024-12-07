@@ -22,6 +22,12 @@ pub enum Extension {
 /// - If there is an issue with parsing the CDDL input.
 pub fn validate_cddl(input: &mut String, extension: &Extension) -> anyhow::Result<()> {
     let ast = parser::parse_cddl(input, extension)?;
-    let _ast = preprocessor::process_ast(ast)?;
+    preprocessor::process_ast(ast)?;
     Ok(())
+}
+
+#[test]
+fn it_works() {
+    let mut cddl = include_str!("./person.cddl").to_string();
+    validate_cddl(&mut cddl, &Extension::CDDL).unwrap();
 }
