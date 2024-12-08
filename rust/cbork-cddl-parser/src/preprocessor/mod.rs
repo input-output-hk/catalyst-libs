@@ -13,15 +13,16 @@
 mod cddl_rule;
 mod cddl_type;
 
+use std::collections::HashMap;
+
 use anyhow::{anyhow, ensure};
 use cddl_rule::CddlRule;
-use cddl_type::standart_prelude;
+use cddl_type::{CddlType, CddlTypeName};
 
 use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
 
 /// Processes the AST.
 pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
-    let _type_definitions = standart_prelude();
     match ast {
         Ast::Rfc8610(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
@@ -53,9 +54,12 @@ fn validate_root_and_filter(ast: Vec<impl CddlRule>) -> anyhow::Result<Vec<impl 
 }
 
 /// Process `expr` rules
-fn process_expressions(ast: Vec<impl CddlRule>) -> anyhow::Result<()> {
+fn process_expressions(ast: Vec<impl CddlRule>) -> anyhow::Result<HashMap<CddlTypeName, CddlType>> {
+    let state = HashMap::new();
+
     for expr in ast {
         println!("{}", expr.to_string());
+        println!("{expr:?}");
     }
-    Ok(())
+    Ok(state)
 }

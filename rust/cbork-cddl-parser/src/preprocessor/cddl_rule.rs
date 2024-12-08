@@ -1,12 +1,14 @@
 //! `CddlRule` trait definition and implementation
 
+use std::fmt::Debug;
+
 use pest::iterators::Pair;
 
 use super::{cddl, rfc_8610, rfc_9165};
 
 /// A trait to generalize the difinition of the different `pest::Pair<Rule>` definitions
 /// for each `rfc_8610::Rule`, `rfc_8610::Rule`, `cddl::Rule`
-pub(crate) trait CddlRule {
+pub(crate) trait CddlRule: Debug {
     /// Returns `true` if it is a `cddl` rule
     fn is_cddl(&self) -> bool;
     /// Returns `true` if it is a `expr` rule
