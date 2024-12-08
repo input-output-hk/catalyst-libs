@@ -4,16 +4,24 @@
 //! - Filters out all rules that are not `expr` rules.
 //! - (TODO) Resolve #include and #import directives, by just adding the imported rules
 //!   into the final expression list
+//! - Adds all stardart prelude cddl types <https://datatracker.ietf.org/doc/html/rfc8610#appendix-D/>
+//! - Find all unknown type defintions
+//! - Forms a validated list of type definitions ()
+
+#![allow(missing_docs, clippy::missing_docs_in_private_items, dead_code)]
 
 mod cddl_rule;
+mod cddl_type;
 
 use anyhow::{anyhow, ensure};
 use cddl_rule::CddlRule;
+use cddl_type::standart_prelude;
 
 use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
 
 /// Processes the AST.
 pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
+    let _type_definitions = standart_prelude();
     match ast {
         Ast::Rfc8610(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
@@ -46,21 +54,8 @@ fn validate_root_and_filter(ast: Vec<impl CddlRule>) -> anyhow::Result<Vec<impl 
 
 /// Process `expr` rules
 fn process_expressions(ast: Vec<impl CddlRule>) -> anyhow::Result<()> {
-    let mut typenames = Vec::new();
     for expr in ast {
         println!("{}", expr.to_string());
-
-        let mut inner = expr.inner();
-        let typename_or_groupname_rule = inner
-            .next()
-            .ok_or(anyhow::anyhow!("Invalid `expr`, has empty inner rules"))?;
-        if typename_or_groupname_rule.is_typename() {
-            let typename = typename_or_groupname_rule.to_string();
-            typenames.push(typename);
-        } else if typename_or_groupname_rule.is_groupname() {
-        } else {
-            anyhow::bail!("Unexpected rule, must be a `typename` or `groupname`");
-        }
     }
     Ok(())
 }

@@ -15,6 +15,8 @@ pub(crate) trait CddlRule {
     fn is_typename(&self) -> bool;
     /// Returns `true` if it is a `groupname` rule
     fn is_groupname(&self) -> bool;
+    /// Returns `true` if it is a `assignt` rule
+    fn is_assignt(&self) -> bool;
     /// Return `String` representation of the rule
     fn to_string(&self) -> String;
     /// Returns the inner rules, which forms the current rule
@@ -40,6 +42,10 @@ macro_rules! cddl_rule_impl {
 
             fn is_groupname(&self) -> bool {
                 self.as_rule() == $mod_name::Rule::groupname
+            }
+
+            fn is_assignt(&self) -> bool {
+                self.as_rule() == $mod_name::Rule::assignt
             }
 
             fn to_string(&self) -> String {
