@@ -93,22 +93,10 @@ pub(crate) fn blake2b_256(value: &[u8]) -> anyhow::Result<[u8; 32]> {
 }
 
 /// Convert the given value to `blake2b_128` array.
+#[allow(dead_code)] // Its OK if we don't use this general utility function.
 pub(crate) fn blake2b_128(value: &[u8]) -> anyhow::Result<[u8; 16]> {
     let h = Params::new().hash_length(16).hash(value);
     let b = h.as_bytes();
     b.try_into()
         .map_err(|_| anyhow::anyhow!("Invalid length of blake2b_128, expected 16 got {}", b.len()))
-}
-
-/// Decode the given UTF-8 content.
-pub(crate) fn decode_utf8(content: &[u8]) -> anyhow::Result<String> {
-    // Decode the UTF-8 string
-    std::str::from_utf8(content)
-        .map(std::string::ToString::to_string)
-        .map_err(|_| {
-            anyhow::anyhow!(
-                "Invalid UTF-8 string, expected valid UTF-8 string but got {:?}",
-                content
-            )
-        })
 }

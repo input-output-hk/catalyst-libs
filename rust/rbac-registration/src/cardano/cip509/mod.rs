@@ -5,7 +5,8 @@
 // cspell: words pkix
 
 pub mod rbac;
-pub(crate) mod utils;
+pub mod types;
+pub mod utils;
 pub(crate) mod validation;
 pub mod x509_chunks;
 
@@ -15,6 +16,8 @@ use minicbor::{
 };
 use pallas::{crypto::hash::Hash, ledger::traverse::MultiEraTx};
 use strum_macros::FromRepr;
+use types::tx_input_hash::TxInputHash;
+use uuid::Uuid;
 use validation::{
     validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
     validate_txn_inputs_hash,
@@ -35,7 +38,7 @@ pub const LABEL: u64 = 509;
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// `UUIDv4` Purpose .
-    pub purpose: UuidV4, // (bytes .size 16)
+    pub purpose: Uuid, // (bytes .size 16)
     /// Transaction inputs hash.
     pub txn_inputs_hash: TxInputHash, // bytes .size 16
     /// Optional previous transaction ID.
@@ -51,15 +54,15 @@ pub struct Cip509 {
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509Validation {
     /// Boolean value for the validity of the transaction inputs hash.
-    pub valid_txn_inputs_hash: bool,
+    pub is_valid_txn_inputs_hash: bool,
     /// Boolean value for the validity of the auxiliary data.
-    pub valid_aux: bool,
-    /// Boolean value for the validity of the public key.
-    pub valid_public_key: bool,
+    pub is_valid_aux: bool,
+    /// Boolean value for the validity of the stake public key.
+    pub is_valid_stake_public_key: bool,
     /// Boolean value for the validity of the payment key.
-    pub valid_payment_key: bool,
+    pub is_valid_payment_key: bool,
     /// Boolean value for the validity of the signing key.
-    pub signing_key: bool,
+    pub is_valid_signing_key: bool,
     /// Additional data from the CIP509 validation..
     pub additional_data: AdditionalData,
 }
@@ -69,54 +72,6 @@ pub struct Cip509Validation {
 pub struct AdditionalData {
     /// Bytes of precomputed auxiliary data.
     pub precomputed_aux: Vec<u8>,
-}
-
-/// `UUIDv4` representing in 16 bytes.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct UuidV4([u8; 16]);
-
-impl From<[u8; 16]> for UuidV4 {
-    fn from(bytes: [u8; 16]) -> Self {
-        UuidV4(bytes)
-    }
-}
-
-impl TryFrom<Vec<u8>> for UuidV4 {
-    type Error = &'static str;
-
-    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if vec.len() == 16 {
-            let mut array = [0u8; 16];
-            array.copy_from_slice(&vec);
-            Ok(UuidV4(array))
-        } else {
-            Err("Input Vec must be exactly 16 bytes")
-        }
-    }
-}
-
-/// Transaction input hash representing in 16 bytes.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct TxInputHash([u8; 16]);
-
-impl From<[u8; 16]> for TxInputHash {
-    fn from(bytes: [u8; 16]) -> Self {
-        TxInputHash(bytes)
-    }
-}
-
-impl TryFrom<Vec<u8>> for TxInputHash {
-    type Error = &'static str;
-
-    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if vec.len() == 16 {
-            let mut array = [0u8; 16];
-            array.copy_from_slice(&vec);
-            Ok(TxInputHash(array))
-        } else {
-            Err("Input Vec must be exactly 16 bytes")
-        }
-    }
 }
 
 /// Enum of CIP509 metadatum with its associated unsigned integer value.
@@ -147,7 +102,7 @@ impl Decode<'_, ()> for Cip509 {
                 match key {
                     Cip509IntIdentifier::Purpose => {
                         cip509_metadatum.purpose =
-                            UuidV4::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(|_| {
+                            Uuid::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(|_| {
                                 decode::Error::message("Invalid data size of Purpose")
                             })?;
                     },
@@ -217,32 +172,31 @@ impl Cip509 {
     pub fn validate(
         &self, txn: &MultiEraTx, validation_report: &mut Vec<String>,
     ) -> Cip509Validation {
-        let tx_input_validate =
+        let is_valid_txn_inputs_hash =
             validate_txn_inputs_hash(self, txn, validation_report).unwrap_or(false);
-        let (aux_validate, precomputed_aux) =
+        let (is_valid_aux, precomputed_aux) =
             validate_aux(txn, validation_report).unwrap_or_default();
-        let mut stake_key_validate = true;
-        let mut payment_key_validate = true;
-        let mut signing_key = true;
-        // Validate the role 0
+        let mut is_valid_stake_public_key = true;
+        let mut is_valid_payment_key = true;
+        let mut is_valid_signing_key = true;
         if let Some(role_set) = &self.x509_chunks.0.role_set {
             // Validate only role 0
             for role in role_set {
                 if role.role_number == 0 {
-                    stake_key_validate =
+                    is_valid_stake_public_key =
                         validate_stake_public_key(self, txn, validation_report).unwrap_or(false);
-                    payment_key_validate =
+                    is_valid_payment_key =
                         validate_payment_key(txn, role, validation_report).unwrap_or(false);
-                    signing_key = validate_role_singing_key(role, validation_report);
+                    is_valid_signing_key = validate_role_singing_key(role, validation_report);
                 }
             }
         }
         Cip509Validation {
-            valid_txn_inputs_hash: tx_input_validate,
-            valid_aux: aux_validate,
-            valid_public_key: stake_key_validate,
-            valid_payment_key: payment_key_validate,
-            signing_key,
+            is_valid_txn_inputs_hash,
+            is_valid_aux,
+            is_valid_stake_public_key,
+            is_valid_payment_key,
+            is_valid_signing_key,
             additional_data: AdditionalData { precomputed_aux },
         }
     }
