@@ -27,11 +27,11 @@ which **must** be present (most of the fields originally defined by this
   (this parameter is used to indicate the content encodings algorithm of the payload data,
   in this particular case [brotli] compression data format is used).
 * `type`: CBOR encoded UUID.
-* `id`: CBOR encoded ULID.
-* `ver`: CBOR encoded ULID.
-* `ref`: CBOR encoded ULID or two elements array of ULIDs (optional).
-* `template`: CBOR encoded ULID or two elements array of ULIDs (optional).
-* `reply`: CBOR encoded ULID or two elements array of ULIDs (optional).
+* `id`: CBOR encoded UUIDv7.
+* `ver`: CBOR encoded UUIDv7.
+* `ref`: CBOR encoded UUIDv7 or two elements array of UUIDv7 (optional).
+* `template`: CBOR encoded UUIDv7 or two elements array of UUIDv7 (optional).
+* `reply`: CBOR encoded UUIDv7 or two elements array of UUIDv7 (optional).
 * `section`: CBOR encoded string (optional).
 * `collabs`: CBOR encoded array of any CBOR types (optional).
 
@@ -46,8 +46,8 @@ protected_header = {
    3 => 30, ; "content type": Json
    "content encoding" => "br", ; payload content encoding, brotli compression
    "type" => UUID,
-   "id" => ULID,
-   "ver" => ULID,
+   "id" => UUIDv7,
+   "ver" => UUIDv7,
    ? "ref" => reference_type,
    ? "template" => reference_type,
    ? "reply" => reference_type,
@@ -56,8 +56,7 @@ protected_header = {
 }
 
 UUID = #6.37(bytes)
-ULID = #6.32780(bytes)
-reference_type = ULID / [ULID, ULID] ; either ULID or [ULID, ULID]
+reference_type = UUIDv7 / [UUIDv7, UUIDv7] ; either UUIDv7 or [UUIDv7, UUIDv7]
 ```
 
 ### COSE payload
