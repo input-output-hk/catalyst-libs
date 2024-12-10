@@ -1,0 +1,1 @@
+//! Catalyst documents signing crate

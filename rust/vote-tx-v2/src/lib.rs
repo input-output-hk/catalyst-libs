@@ -1,8 +1,6 @@
 //! A Catalyst vote transaction v2 objects, structured following this
 //! [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/)
 
-// cspell: words Coap
-
 use anyhow::anyhow;
 use minicbor::{Decode, Decoder, Encode, Encoder};
 
