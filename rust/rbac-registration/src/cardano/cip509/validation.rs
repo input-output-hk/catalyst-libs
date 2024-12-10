@@ -28,7 +28,7 @@ use pallas::{
         minicbor::{Encode, Encoder},
         utils::Bytes,
     },
-    ledger::traverse::MultiEraTx,
+    ledger::{addresses::Address, traverse::MultiEraTx},
 };
 use x509_cert::der::{oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME, Decode};
 
@@ -38,7 +38,10 @@ use super::{
         certs::{C509Cert, X509DerCert},
         role_data::{LocalRefInt, RoleData},
     },
-    utils::cip19::{compare_key_hash, extract_cip19_hash, extract_key_hash},
+    utils::{
+        cip19::{compare_key_hash, extract_key_hash},
+        parse_cip0134_uri,
+    },
     Cip509, TxInputHash, TxWitness,
 };
 use crate::utils::general::zero_out_last_n_bytes;
@@ -166,10 +169,11 @@ pub(crate) fn validate_stake_public_key(
 
                                                     // Extract the CIP19 hash and push into
                                                     // array
-                                                    if let Some(h) =
-                                                        extract_cip19_hash(&addr, Some("stake"))
+                                                    if let Ok(Address::Stake(a)) =
+                                                        parse_cip0134_uri(&addr)
                                                     {
-                                                        pk_addrs.push(h);
+                                                        pk_addrs
+                                                            .push(a.payload().as_hash().to_vec());
                                                     }
                                                 },
                                                 Err(e) => {
@@ -218,9 +222,9 @@ pub(crate) fn validate_stake_public_key(
                                                             if name.gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
                                                                 match name.gn_value() {
                                                                     GeneralNameValue::Text(s) => {
-                                                                            if let Some(h) = extract_cip19_hash(s, Some("stake")) {
-                                                                                pk_addrs.push(h);
-                                                                            }
+                                                                        if let Ok(Address::Stake(a)) = parse_cip0134_uri(s) {
+                                                                            pk_addrs.push(a.payload().as_hash().to_vec());
+                                                                        }
                                                                     },
                                                                     _ => {
                                                                         validation_report.push(
