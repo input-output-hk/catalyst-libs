@@ -40,7 +40,7 @@ use super::{
     },
     utils::{
         cip19::{compare_key_hash, extract_key_hash},
-        parse_cip0134_uri,
+        Cip0134Uri,
     },
     Cip509, TxInputHash, TxWitness,
 };
@@ -169,11 +169,12 @@ pub(crate) fn validate_stake_public_key(
 
                                                     // Extract the CIP19 hash and push into
                                                     // array
-                                                    if let Ok(Address::Stake(a)) =
-                                                        parse_cip0134_uri(&addr)
-                                                    {
-                                                        pk_addrs
-                                                            .push(a.payload().as_hash().to_vec());
+                                                    if let Ok(uri) = Cip0134Uri::parse(&addr) {
+                                                        if let Address::Stake(a) = uri.address() {
+                                                            pk_addrs.push(
+                                                                a.payload().as_hash().to_vec(),
+                                                            );
+                                                        }
                                                     }
                                                 },
                                                 Err(e) => {
@@ -222,8 +223,10 @@ pub(crate) fn validate_stake_public_key(
                                                             if name.gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
                                                                 match name.gn_value() {
                                                                     GeneralNameValue::Text(s) => {
-                                                                        if let Ok(Address::Stake(a)) = parse_cip0134_uri(s) {
-                                                                            pk_addrs.push(a.payload().as_hash().to_vec());
+                                                                        if let Ok(uri) = Cip0134Uri::parse(s) {
+                                                                            if let Address::Stake(a) = uri.address() {
+                                                                                pk_addrs.push(a.payload().as_hash().to_vec());
+                                                                            }
                                                                         }
                                                                     },
                                                                     _ => {

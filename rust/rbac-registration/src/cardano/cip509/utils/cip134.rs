@@ -1,30 +1,91 @@
 //! Utility functions for CIP-0134 address.
 
+// Ignore URIs that are used in tests and doc-examples.
+// cSpell:ignoreRegExp web\+cardano:.+
+
+use std::fmt::{Display, Formatter};
+
 use anyhow::{anyhow, Context, Result};
 use pallas::ledger::addresses::Address;
 
-/// Parses CIP-0134 URI and returns an address.
+/// An URI in the CIP-0134 format.
 ///
-/// # Errors
-/// - Invalid URI.
+/// See the [proposal] for more details.
 ///
-/// # Examples
-///
-/// ```
-/// use pallas::ledger::addresses::{Address, Network};
-/// use rbac_registration::cardano::cip509::utils::parse_cip0134_uri;
-///
-/// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
-/// let Address::Stake(address) = parse_cip0134_uri(uri).unwrap() else {
-///     panic!("Unexpected address type");
-/// };
-/// assert_eq!(address.network(), Network::Mainnet);
-/// ```
-pub fn parse_cip0134_uri(uri: &str) -> Result<Address> {
-    let bech32 = uri
-        .strip_prefix("web+cardano://addr/")
-        .ok_or_else(|| anyhow!("Missing schema part of URI"))?;
-    Address::from_bech32(bech32).context("Unable to parse bech32 part of URI")
+/// [proposal]: https://github.com/cardano-foundation/CIPs/pull/888
+#[derive(Debug)]
+pub struct Cip0134Uri {
+    /// A URI string.
+    uri: String,
+    /// An address parsed from the URI.
+    address: Address,
+}
+
+impl Cip0134Uri {
+    /// Creates a new `Cip0134Uri` instance by parsing the given URI.
+    ///
+    /// # Errors
+    /// - Invalid URI.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rbac_registration::cardano::cip509::utils::Cip0134Uri;
+    ///
+    /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
+    /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
+    /// ```
+    pub fn parse(uri: &str) -> Result<Self> {
+        let bech32 = uri
+            .strip_prefix("web+cardano://addr/")
+            .ok_or_else(|| anyhow!("Missing schema part of URI"))?;
+        let address = Address::from_bech32(bech32).context("Unable to parse bech32 part of URI")?;
+
+        Ok(Self {
+            uri: uri.to_owned(),
+            address,
+        })
+    }
+
+    /// Returns a URI string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use rbac_registration::cardano::cip509::utils::Cip0134Uri;
+    ///
+    /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
+    /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
+    /// assert_eq!(cip0134_uri.uri(), uri);
+    #[must_use]
+    pub fn uri(&self) -> &str {
+        &self.uri
+    }
+
+    /// Returns a URI string.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use pallas::ledger::addresses::{Address, Network};
+    /// use rbac_registration::cardano::cip509::utils::Cip0134Uri;
+    ///
+    /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
+    /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
+    /// let Address::Stake(address) = cip0134_uri.address() else {
+    ///     panic!("Unexpected address type");
+    /// };
+    /// assert_eq!(address.network(), Network::Mainnet);
+    #[must_use]
+    pub fn address(&self) -> &Address {
+        &self.address
+    }
+}
+
+impl Display for Cip0134Uri {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.uri())
+    }
 }
 
 #[cfg(test)]
@@ -35,15 +96,17 @@ mod tests {
 
     #[test]
     fn invalid_prefix() {
+        // cSpell:disable
         let test_uris = [
             "addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgse35a3x",
             "//addr/addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgse35a3x",
             "web+cardano:/addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgse35a3x",
             "somthing+unexpected://addr/addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3n0d3vllmyqwsx5wktcd8cc3sq835lu7drv2xwl2wywfgse35a3x",
         ];
+        // cSpell:enable
 
         for uri in test_uris {
-            let err = format!("{:?}", parse_cip0134_uri(uri).expect_err(&format!("{uri}")));
+            let err = format!("{:?}", Cip0134Uri::parse(uri).expect_err(uri));
             assert_eq!("Missing schema part of URI", err);
         }
     }
@@ -51,7 +114,7 @@ mod tests {
     #[test]
     fn invalid_bech32() {
         let uri = "web+cardano://addr/adr1qx2fxv2umyh";
-        let err = format!("{:?}", parse_cip0134_uri(uri).unwrap_err());
+        let err = format!("{:?}", Cip0134Uri::parse(uri).unwrap_err());
         assert!(err.starts_with("Unable to parse bech32 part of URI"));
     }
 
@@ -76,7 +139,8 @@ mod tests {
         ];
 
         for (uri, network, payload) in test_data {
-            let Address::Stake(address) = parse_cip0134_uri(uri).unwrap() else {
+            let cip0134_uri = Cip0134Uri::parse(uri).expect(uri);
+            let Address::Stake(address) = cip0134_uri.address() else {
                 panic!("Unexpected address type ({uri})");
             };
             assert_eq!(network, address.network());
@@ -102,10 +166,19 @@ mod tests {
         ];
 
         for (uri, network) in test_data {
-            let Address::Shelley(address) = parse_cip0134_uri(uri).unwrap() else {
+            let cip0134_uri = Cip0134Uri::parse(uri).expect(uri);
+            let Address::Shelley(address) = cip0134_uri.address() else {
                 panic!("Unexpected address type ({uri})");
             };
             assert_eq!(network, address.network());
         }
+    }
+
+    // The Display should return the original URI.
+    #[test]
+    fn display() {
+        let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
+        let cip0134_uri = Cip0134Uri::parse(uri).expect(uri);
+        assert_eq!(uri, cip0134_uri.to_string());
     }
 }
