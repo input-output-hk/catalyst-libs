@@ -26,15 +26,15 @@ pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<()> {
     match ast {
         Ast::Rfc8610(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
-            process_expressions(validated_and_filtered_ast)?;
+            process_expr_rules(validated_and_filtered_ast)?;
         },
         Ast::Rfc9165(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
-            process_expressions(validated_and_filtered_ast)?;
+            process_expr_rules(validated_and_filtered_ast)?;
         },
         Ast::Cddl(ast) => {
             let validated_and_filtered_ast = validate_root_and_filter(ast)?;
-            process_expressions(validated_and_filtered_ast)?;
+            process_expr_rules(validated_and_filtered_ast)?;
         },
     }
 
@@ -54,12 +54,44 @@ fn validate_root_and_filter(ast: Vec<impl CddlRule>) -> anyhow::Result<Vec<impl 
 }
 
 /// Process `expr` rules
-fn process_expressions(ast: Vec<impl CddlRule>) -> anyhow::Result<HashMap<CddlTypeName, CddlType>> {
+fn process_expr_rules(ast: Vec<impl CddlRule>) -> anyhow::Result<HashMap<CddlTypeName, CddlType>> {
     let state = HashMap::new();
 
     for expr in ast {
-        println!("{}", expr.to_string());
-        println!("{expr:?}");
+        // println!("{}", expr.to_string());
+        // println!("{expr:?}");
+
+        let mut rules = expr.inner();
+        let typename_or_groupname_rule = rules.next().ok_or(anyhow::anyhow!(
+            "Invalid `expr` rule, missing `typename` or `groupname` rule"
+        ))?;
+
+        if typename_or_groupname_rule.is_typename() {
+            let rule = rules.next().ok_or(anyhow::anyhow!(
+                "Invalid `expr` rule, missing `genericparm` or `assignt` rule"
+            ))?;
+            if rule.is_genericparm() {
+                rules.next().ok_or(anyhow::anyhow!(
+                    "Invalid `expr` rule, missing `assignt` rule"
+                ))?;
+            }
+
+            let type_rule = rules
+                .next()
+                .ok_or(anyhow::anyhow!("Invalid `expr` rule, missing `type` rule"))?;
+            process_type_rule(type_rule)?;
+        }
     }
     Ok(state)
+}
+
+/// Process `type` rule
+fn process_type_rule(type_rule: impl CddlRule) -> anyhow::Result<()> {
+    let mut rules = type_rule.inner();
+
+    let _type1_rule = rules
+        .next()
+        .ok_or(anyhow::anyhow!("Invalid `type` rule, missing `type1` rule"))?;
+
+    Ok(())
 }
