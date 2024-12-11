@@ -27,11 +27,11 @@ which **must** be present (most of the fields originally defined by this
   (this parameter is used to indicate the content encodings algorithm of the payload data,
   in this particular case [brotli] compression data format is used).
 * `type`: CBOR encoded UUID.
-* `id`: CBOR encoded UUIDv7.
-* `ver`: CBOR encoded UUIDv7.
-* `ref`: CBOR encoded UUIDv7 or two elements array of UUIDv7 (optional).
-* `template`: CBOR encoded UUIDv7 or two elements array of UUIDv7 (optional).
-* `reply`: CBOR encoded UUIDv7 or two elements array of UUIDv7 (optional).
+* `id`: CBOR encoded UUID.
+* `ver`: CBOR encoded UUID.
+* `ref`: CBOR encoded UUID or two elements array of UUID (optional).
+* `template`: CBOR encoded UUID or two elements array of UUID (optional).
+* `reply`: CBOR encoded UUID or two elements array of UUID (optional).
 * `section`: CBOR encoded string (optional).
 * `collabs`: CBOR encoded array of any CBOR types (optional).
 
@@ -46,8 +46,8 @@ protected_header = {
    3 => 30, ; "content type": Json
    "content encoding" => "br", ; payload content encoding, brotli compression
    "type" => UUID,
-   "id" => UUIDv7,
-   "ver" => UUIDv7,
+   "id" => UUID,
+   "ver" => UUID,
    ? "ref" => reference_type,
    ? "template" => reference_type,
    ? "reply" => reference_type,
@@ -56,7 +56,7 @@ protected_header = {
 }
 
 UUID = #6.37(bytes)
-reference_type = UUIDv7 / [UUIDv7, UUIDv7] ; either UUIDv7 or [UUIDv7, UUIDv7]
+reference_type = UUID / [UUID, UUID] ; either UUID or [UUID, UUID]
 ```
 
 ### COSE payload
