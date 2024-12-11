@@ -14,6 +14,7 @@ use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
+use signed_doc::{DocumentRef, Metadata};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -59,26 +60,6 @@ enum Cli {
 const CONTENT_ENCODING_KEY: &str = "content encoding";
 const CONTENT_ENCODING_VALUE: &str = "br";
 const UUID_CBOR_TAG: u64 = 37;
-
-#[derive(Debug, serde::Deserialize)]
-struct Metadata {
-    r#type: uuid::Uuid,
-    id: uuid::Uuid,
-    ver: uuid::Uuid,
-    r#ref: Option<DocumentRef>,
-    template: Option<DocumentRef>,
-    reply: Option<DocumentRef>,
-    section: Option<String>,
-}
-
-#[derive(Debug, serde::Deserialize)]
-#[serde(untagged)]
-enum DocumentRef {
-    /// Reference to the latest document
-    Latest { id: uuid::Uuid },
-    /// Reference to the specific document version
-    WithVer { id: uuid::Uuid, ver: uuid::Uuid },
-}
 
 fn encode_cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
     coset::cbor::Value::Tag(

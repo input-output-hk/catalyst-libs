@@ -260,6 +260,8 @@ upnp
 ureq
 userid
 utimensat
+uuidv4
+uuidv7
 UTXO
 vitss
 Vkey
