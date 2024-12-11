@@ -6,18 +6,12 @@
 //!   into the final expression list
 //! - Adds all stardart prelude cddl types <https://datatracker.ietf.org/doc/html/rfc8610#appendix-D/>
 //! - Find all unknown type defintions
-//! - Forms a validated list of type definitions ()
-
-#![allow(missing_docs, clippy::missing_docs_in_private_items, dead_code)]
+//! - Forms a validated list of type definitions
 
 mod cddl_rule;
-mod cddl_type;
-
-use std::collections::HashMap;
 
 use anyhow::{anyhow, ensure};
 use cddl_rule::CddlRule;
-use cddl_type::{CddlType, CddlTypeName};
 
 use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
 
@@ -54,9 +48,7 @@ fn validate_root_and_filter(ast: Vec<impl CddlRule>) -> anyhow::Result<Vec<impl 
 }
 
 /// Process `expr` rules
-fn process_expr_rules(ast: Vec<impl CddlRule>) -> anyhow::Result<HashMap<CddlTypeName, CddlType>> {
-    let state = HashMap::new();
-
+fn process_expr_rules(ast: Vec<impl CddlRule>) -> anyhow::Result<()> {
     for expr in ast {
         // println!("{}", expr.to_string());
         // println!("{expr:?}");
@@ -82,7 +74,7 @@ fn process_expr_rules(ast: Vec<impl CddlRule>) -> anyhow::Result<HashMap<CddlTyp
             process_type_rule(type_rule)?;
         }
     }
-    Ok(state)
+    Ok(())
 }
 
 /// Process `type` rule
