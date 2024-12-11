@@ -113,6 +113,8 @@ impl Network {
             PathBuf::from,
         );
 
+        debug!("Storage location {:?}", base_path);
+
         // Get the Executable name for the data path.
         // IF the ENV var is set, use it, otherwise try and get it from the exe itself.
         // Fallback to using a default exe name if all else fails.
