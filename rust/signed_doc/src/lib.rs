@@ -15,7 +15,7 @@ pub struct CatalystSignedDocument {
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 struct InnerCatalystSignedDocument {
     /// Document Metadata
-    _metadata: Metadata,
+    metadata: Metadata,
     /// Raw payload
     _raw_doc: Vec<u8>,
 }
@@ -64,14 +64,15 @@ pub enum DocumentRef {
 impl TryFrom<Vec<u8>> for CatalystSignedDocument {
     type Error = &'static str;
 
-    fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
+    #[allow(clippy::todo)]
+    fn try_from(_value: Vec<u8>) -> Result<Self, Self::Error> {
         todo!();
     }
 }
 
 impl CatalystSignedDocument {
     /// Invalid Doc Type UUID
-    const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
+    const _INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 
     // A bunch of getters to access the contents, or reason through the document, such as.
 
@@ -81,9 +82,15 @@ impl CatalystSignedDocument {
         !self.content_errors.is_empty()
     }
 
-    /// Return Document Type UUID.
+    /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> uuid::Uuid {
-        INVALID_UUID
-    } // Can compare it against INVALID_DOC_TYPE to see if its valid or not.
+        self.inner.metadata.r#type
+    }
+
+    /// Return Document ID `UUIDv7`.
+    #[must_use]
+    pub fn doc_id(&self) -> uuid::Uuid {
+        self.inner.metadata.id
+    }
 }
