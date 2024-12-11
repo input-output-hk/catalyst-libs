@@ -23,11 +23,19 @@ pub(crate) fn check_tests_rule(
 ) {
     for test in passes {
         let parse = CDDLTestParser::parse(rule_type, test.as_ref());
-        assert!(parse.is_ok());
+        assert!(
+            parse.is_ok(),
+            "rule_type: {rule_type:?}, test: {}",
+            test.as_ref()
+        );
     }
 
     for test in fails {
         let parse = CDDLTestParser::parse(rule_type, test.as_ref());
-        assert!(parse.is_err());
+        assert!(
+            parse.is_err(),
+            "rule_type: {rule_type:?}, test: {}",
+            test.as_ref()
+        );
     }
 }

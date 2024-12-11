@@ -17,6 +17,8 @@ pub(crate) trait CddlRule: Debug {
     fn is_typename(&self) -> bool;
     /// Returns `true` if it is a `groupname` rule
     fn is_groupname(&self) -> bool;
+    /// Returns `true` if it is a `genericparm` rule
+    fn is_genericparm(&self) -> bool;
     /// Returns `true` if it is a `assignt` rule
     fn is_assignt(&self) -> bool;
     /// Return `String` representation of the rule
@@ -44,6 +46,10 @@ macro_rules! cddl_rule_impl {
 
             fn is_groupname(&self) -> bool {
                 self.as_rule() == $mod_name::Rule::groupname
+            }
+
+            fn is_genericparm(&self) -> bool {
+                self.as_rule() == $mod_name::Rule::genericparm
             }
 
             fn is_assignt(&self) -> bool {
