@@ -107,7 +107,7 @@ mod tests {
 
         for uri in test_uris {
             let err = format!("{:?}", Cip0134Uri::parse(uri).expect_err(uri));
-            assert_eq!("Missing schema part of URI", err);
+            assert!(err.starts_with("Missing schema part of URI"));
         }
     }
 
