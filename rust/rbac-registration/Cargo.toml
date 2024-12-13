@@ -21,13 +21,11 @@ workspace = true
 hex = "0.4.3"
 anyhow = "1.0.89"
 strum_macros = "0.26.4"
-regex = "1.11.0"
 minicbor = { version = "0.25.1", features = ["alloc", "derive", "half"] }
 brotli = "7.0.0"
 zstd = "0.13.2"
 x509-cert = "0.2.5"
 der-parser = "9.0.0"
-bech32 = "0.11.0"
 dashmap = "6.1.0"
 blake2b_simd = "1.0.2"
 tracing = "0.1.40"
