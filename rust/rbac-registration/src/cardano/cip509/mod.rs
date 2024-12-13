@@ -27,7 +27,7 @@ use x509_chunks::X509Chunks;
 use super::transaction::witness::TxWitness;
 use crate::utils::{
     decode_helper::{decode_bytes, decode_helper, decode_map_len},
-    general::{decode_utf8, decremented_index},
+    general::decremented_index,
     hashing::{blake2b_128, blake2b_256},
 };
 

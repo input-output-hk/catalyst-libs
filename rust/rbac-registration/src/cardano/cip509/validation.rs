@@ -21,8 +21,6 @@
 //!
 //! Note: This CIP509 is still under development and is subject to change.
 
-use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
-use der_parser::der::parse_der_sequence;
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -30,21 +28,14 @@ use pallas::{
     },
     ledger::{addresses::Address, traverse::MultiEraTx},
 };
-use x509_cert::der::{oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME, Decode};
 
 use super::{
-    blake2b_128, blake2b_256, decode_utf8, decremented_index,
-    rbac::{
-        certs::{C509Cert, X509DerCert},
-        role_data::{LocalRefInt, RoleData},
-    },
-    utils::{
-        cip19::{compare_key_hash, extract_key_hash},
-        Cip0134Uri,
-    },
+    blake2b_128, blake2b_256, decremented_index,
+    rbac::role_data::{LocalRefInt, RoleData},
+    utils::cip19::{compare_key_hash, extract_key_hash},
     Cip509, TxInputHash, TxWitness,
 };
-use crate::utils::general::zero_out_last_n_bytes;
+use crate::{cardano::cip509::utils::Cip0134UriList, utils::general::zero_out_last_n_bytes};
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
@@ -108,160 +99,20 @@ pub(crate) fn validate_txn_inputs_hash(
 // ------------------------ Validate Stake Public Key ------------------------
 
 /// Validate the stake public key in the certificate with witness set in transaction.
-#[allow(clippy::too_many_lines)]
 pub(crate) fn validate_stake_public_key(
     cip509: &Cip509, txn: &MultiEraTx, validation_report: &mut Vec<String>,
 ) -> Option<bool> {
     let function_name = "Validate Stake Public Key";
-    let mut pk_addrs = Vec::new();
 
-    // CIP-0509 should only be in conway era
-    if let MultiEraTx::Conway(_) = txn {
-        // X509 certificate
-        if let Some(x509_certs) = &cip509.x509_chunks.0.x509_certs {
-            for x509_cert in x509_certs {
-                match x509_cert {
-                    X509DerCert::X509Cert(cert) => {
-                        // Attempt to decode the DER certificate
-                        let der_cert = match x509_cert::Certificate::from_der(cert) {
-                            Ok(cert) => cert,
-                            Err(e) => {
-                                validation_report.push(format!(
-                                    "{function_name}, Failed to decode x509 certificate DER: {e}"
-                                ));
-                                return None;
-                            },
-                        };
-
-                        // Find the Subject Alternative Name extension
-                        let san_ext =
-                            der_cert
-                                .tbs_certificate
-                                .extensions
-                                .as_ref()
-                                .and_then(|exts| {
-                                    exts.iter()
-                                        .find(|ext| ext.extn_id == ID_CE_SUBJECT_ALT_NAME)
-                                });
-
-                        // Subject Alternative Name extension if it exists
-                        if let Some(san_ext) = san_ext {
-                            match parse_der_sequence(san_ext.extn_value.as_bytes()) {
-                                Ok((_, parsed_seq)) => {
-                                    for data in parsed_seq.ref_iter() {
-                                        // Check for context-specific primitive type with tag
-                                        // number
-                                        // 6 (raw_tag 134)
-                                        if data.header.raw_tag() == Some(&[URI]) {
-                                            match data.content.as_slice() {
-                                                Ok(content) => {
-                                                    // Decode the UTF-8 string
-                                                    let addr: String = match decode_utf8(content) {
-                                                        Ok(addr) => addr,
-                                                        Err(e) => {
-                                                            validation_report.push(format!(
-                                                                "{function_name}, Failed to decode UTF-8 string for context-specific primitive type with raw tag 134: {e}",
-                                                                ),
-                                                            );
-                                                            return None;
-                                                        },
-                                                    };
-
-                                                    // Extract the CIP19 hash and push into
-                                                    // array
-                                                    if let Ok(uri) = Cip0134Uri::parse(&addr) {
-                                                        if let Address::Stake(a) = uri.address() {
-                                                            pk_addrs.push(
-                                                                a.payload().as_hash().to_vec(),
-                                                            );
-                                                        }
-                                                    }
-                                                },
-                                                Err(e) => {
-                                                    validation_report.push(
-                                                        format!("{function_name}, Failed to process content for context-specific primitive type with raw tag 134: {e}"));
-                                                    return None;
-                                                },
-                                            }
-                                        }
-                                    }
-                                },
-                                Err(e) => {
-                                    validation_report.push(
-                                        format!(
-                                            "{function_name}, Failed to parse DER sequence for Subject Alternative Name extension: {e}"
-                                        )
-                                    );
-                                    return None;
-                                },
-                            }
-                        }
-                    },
-                    _ => continue,
-                }
-            }
-        }
-        // C509 Certificate
-        if let Some(c509_certs) = &cip509.x509_chunks.0.c509_certs {
-            for c509_cert in c509_certs {
-                match c509_cert {
-                    C509Cert::C509CertInMetadatumReference(_) => {
-                        validation_report.push(format!(
-                            "{function_name}, C509 metadatum reference is currently not supported"
-                        ));
-                    },
-                    C509Cert::C509Certificate(c509) => {
-                        for exts in c509.tbs_cert().extensions().extensions() {
-                            if *exts.registered_oid().c509_oid().oid()
-                                == C509ExtensionType::SubjectAlternativeName.oid()
-                            {
-                                match exts.value() {
-                                            c509_certificate::extensions::extension::ExtensionValue::AlternativeName(alt_name) => {
-                                                match alt_name.general_name() {
-                                                    c509_certificate::extensions::alt_name::GeneralNamesOrText::GeneralNames(gn) => {
-                                                        for name in gn.general_names() {
-                                                            if name.gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
-                                                                match name.gn_value() {
-                                                                    GeneralNameValue::Text(s) => {
-                                                                        if let Ok(uri) = Cip0134Uri::parse(s) {
-                                                                            if let Address::Stake(a) = uri.address() {
-                                                                                pk_addrs.push(a.payload().as_hash().to_vec());
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    _ => {
-                                                                        validation_report.push(
-                                                                            format!("{function_name}, Failed to get the value of subject alternative name"),
-                                                                        );
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    },
-                                                    c509_certificate::extensions::alt_name::GeneralNamesOrText::Text(_) => {
-                                                        validation_report.push(
-                                                            format!("{function_name}, Failed to find C509 general names in subject alternative name"),
-                                                        );
-                                                    }
-                                                }
-                                            },
-                                            _ => {
-                                                validation_report.push(
-                                                    format!("{function_name}, Failed to get C509 subject alternative name")
-                                                );
-                                            }
-                                        }
-                            }
-                        }
-                    },
-                    _ => continue,
-                }
-            }
-        }
-    } else {
-        validation_report.push(format!("{function_name}, Unsupported transaction era"));
-        return None;
-    }
+    let addresses = match Cip0134UriList::new(cip509, txn) {
+        Ok(a) => a,
+        Err(e) => {
+            validation_report.push(format!(
+                "{function_name}, Failed to extract CIP-0134 URIs: {e:?}"
+            ));
+            return None;
+        },
+    };
 
     // Create TxWitness
     // Note that TxWitness designs to work with multiple transactions
@@ -272,6 +123,18 @@ pub(crate) fn validate_stake_public_key(
             return None;
         },
     };
+
+    // TODO: Update compare_key_hash to accept Cip0134UriList?
+    let pk_addrs: Vec<_> = addresses
+        .iter()
+        .filter_map(|a| {
+            if let Address::Stake(a) = a.address() {
+                Some(a.payload().as_hash().to_vec())
+            } else {
+                None
+            }
+        })
+        .collect();
 
     Some(
         // Set transaction index to 0 because the list of transaction is manually constructed
