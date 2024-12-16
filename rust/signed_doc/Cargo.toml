@@ -19,6 +19,7 @@ coset = "0.3.7"
 brotli = "7.0.0"
 ed25519-dalek = { version = "2.1.1", features = ["pem"] }
 uuid = { version = "1.10.0", features = ["v4", "v7", "serde"] }
+hex = "0.4.3"
 
 [dev-dependencies]
 clap = { version = "4.5.19",  features = ["derive", "env"] }
