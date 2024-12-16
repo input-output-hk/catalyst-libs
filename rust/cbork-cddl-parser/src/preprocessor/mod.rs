@@ -8,7 +8,7 @@
 //! - Find all unknown type defintions
 //! - Forms a validated state `ProcessorState` of type definitions
 
-#![allow(missing_docs, clippy::missing_docs_in_private_items, dead_code)]
+#![allow(dead_code)]
 
 mod cddl_rule;
 mod cddl_type;

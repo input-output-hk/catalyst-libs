@@ -1,6 +1,8 @@
 //! A cddl type defition in which all pest parsed AST will be transformed during the
 //! preprocessing step.
 
+#![allow(clippy::missing_docs_in_private_items)]
+
 pub(crate) type CddlTypeName = String;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
