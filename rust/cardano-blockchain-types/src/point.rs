@@ -10,6 +10,8 @@ use std::{
 
 use pallas::crypto::hash::Hash;
 
+use crate::{hashes::Blake2bHash, Slot};
+
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
 /// most recent block) or any other block. It has special kinds of `Point`,
@@ -78,8 +80,8 @@ impl Point {
     ///
     /// # Parameters
     ///
-    /// * `slot` - A `u64` value representing the slot number in the blockchain.
-    /// * `hash` - A `Vec<u8>` containing the hash of the block at the specified slot.
+    /// * `slot` - A `Slot` representing the slot number in the blockchain.
+    /// * `hash` - A `Blake2bHash` size 32, block hash at the specified slot.
     ///
     /// # Returns
     ///
@@ -95,8 +97,11 @@ impl Point {
     /// let point = Point::new(slot, hash);
     /// ```
     #[must_use]
-    pub fn new(slot: u64, hash: Vec<u8>) -> Self {
-        Self(pallas::network::miniprotocols::Point::Specific(slot, hash))
+    pub fn new(slot: Slot, hash: Blake2bHash<32>) -> Self {
+        Self(pallas::network::miniprotocols::Point::Specific(
+            slot.into(),
+            hash.into(),
+        ))
     }
 
     /// Creates a new `Point` instance representing a specific
@@ -106,7 +111,7 @@ impl Point {
     ///
     /// # Parameters
     ///
-    /// * `slot` - A `u64` value representing the slot number in the blockchain.
+    /// * `slot` - A `Slot` representing the slot number in the blockchain.
     ///
     /// # Returns
     ///
@@ -121,9 +126,9 @@ impl Point {
     /// let point = Point::fuzzy(slot);
     /// ```
     #[must_use]
-    pub fn fuzzy(slot: u64) -> Self {
+    pub fn fuzzy(slot: Slot) -> Self {
         Self(pallas::network::miniprotocols::Point::Specific(
-            slot,
+            slot.into(),
             Vec::new(),
         ))
     }
@@ -137,7 +142,9 @@ impl Point {
             Self::TIP
         } else {
             match self.0 {
-                pallas::network::miniprotocols::Point::Specific(slot, _) => Self::fuzzy(slot),
+                pallas::network::miniprotocols::Point::Specific(slot, _) => {
+                    Self::fuzzy(slot.into())
+                },
                 pallas::network::miniprotocols::Point::Origin => Self::ORIGIN,
             }
         }
@@ -500,8 +507,8 @@ mod tests {
 
     #[test]
     fn test_create_points() {
-        let point1 = Point::new(100u64, vec![]);
-        let fuzzy1 = Point::fuzzy(100u64);
+        let point1 = Point::new(100u64.into(), Blake2bHash::new(&[]));
+        let fuzzy1 = Point::fuzzy(100u64.into());
 
         assert!(point1 == fuzzy1);
     }
@@ -509,7 +516,7 @@ mod tests {
     #[test]
     fn test_cmp_hash_simple() {
         let origin1 = Point::ORIGIN;
-        let point1 = Point::new(100u64, vec![8; 32]);
+        let point1 = Point::new(100u64.into(), [8; 32].into());
 
         assert!(!origin1.cmp_hash(&Some(Hash::new([0; 32]))));
         assert!(origin1.cmp_hash(&None));
@@ -520,16 +527,16 @@ mod tests {
 
     #[test]
     fn test_get_hash_simple() {
-        let point1 = Point::new(100u64, vec![8; 32]);
+        let point1 = Point::new(100u64.into(), [8; 32].into());
 
         assert_eq!(point1.hash_or_default(), vec![8; 32]);
     }
 
     #[test]
     fn test_identical_compare() {
-        let point1 = Point::new(100u64, vec![8; 32]);
-        let point2 = Point::new(100u64, vec![8; 32]);
-        let point3 = Point::new(999u64, vec![8; 32]);
+        let point1 = Point::new(100u64.into(), [8; 32].into());
+        let point2 = Point::new(100u64.into(), [8; 32].into());
+        let point3 = Point::new(999u64.into(), [8; 32].into());
 
         assert!(point1.strict_eq(&point2));
         assert!(!point1.strict_eq(&point3));
@@ -541,9 +548,9 @@ mod tests {
         let origin2 = Point::ORIGIN;
         let tip1 = Point::TIP;
         let tip2 = Point::TIP;
-        let early_block = Point::new(100u64, vec![]);
-        let late_block1 = Point::new(5000u64, vec![]);
-        let late_block2 = Point::new(5000u64, vec![]);
+        let early_block = Point::new(100u64.into(), Blake2bHash::new(&[]));
+        let late_block1 = Point::new(5000u64.into(), Blake2bHash::new(&[]));
+        let late_block2 = Point::new(5000u64.into(), Blake2bHash::new(&[]));
 
         assert!(origin1 == origin2);
         assert!(origin1 < early_block);

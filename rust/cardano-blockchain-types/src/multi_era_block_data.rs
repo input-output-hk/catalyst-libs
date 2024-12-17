@@ -107,7 +107,7 @@ impl MultiEraBlock {
 
         let slot = decoded_block.slot();
 
-        let point = Point::new(slot, decoded_block.hash().to_vec());
+        let point = Point::new(slot.into(), decoded_block.hash().into());
 
         let byron_block = matches!(
             decoded_block,
@@ -444,12 +444,12 @@ pub(crate) mod tests {
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
-                pallas_block.slot().add(i as u64),
+                pallas_block.slot().add(i as u64).into(),
                 pallas_block
                     .header()
                     .previous_hash()
                     .expect("cannot get previous hash")
-                    .to_vec(),
+                    .into(),
             );
 
             let block =
@@ -468,7 +468,8 @@ pub(crate) mod tests {
             let pallas_block =
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
-            let previous_point = Point::new(pallas_block.slot() - 1, vec![0; 32]);
+            let previous_point =
+                Point::new((pallas_block.slot() - 1).into(), vec![0; 32].try_into()?);
 
             let block =
                 MultiEraBlock::new(Network::Preprod, test_block.raw.clone(), &previous_point, 1);
@@ -487,12 +488,12 @@ pub(crate) mod tests {
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
-                pallas_block.slot() - 1,
+                (pallas_block.slot() - 1).into(),
                 pallas_block
                     .header()
                     .previous_hash()
                     .expect("cannot get previous hash")
-                    .to_vec(),
+                    .into(),
             );
 
             let block =
@@ -512,12 +513,12 @@ pub(crate) mod tests {
                 let prev_point = pallas::ledger::traverse::MultiEraBlock::decode(block.as_slice())
                     .map(|block| {
                         Point::new(
-                            block.slot() - 1,
+                            (block.slot() - 1).into(),
                             block
                                 .header()
                                 .previous_hash()
                                 .expect("cannot get previous hash")
-                                .to_vec(),
+                                .into(),
                         )
                     })
                     .expect("cannot create point");
@@ -536,12 +537,12 @@ pub(crate) mod tests {
                 pallas::ledger::traverse::MultiEraBlock::decode(block.as_slice())
                     .map(|block| {
                         Point::new(
-                            block.slot(),
+                            block.slot().into(),
                             block
                                 .header()
                                 .previous_hash()
                                 .expect("cannot get previous hash")
-                                .to_vec(),
+                                .into(),
                         )
                     })
                     .expect("cannot create point")
