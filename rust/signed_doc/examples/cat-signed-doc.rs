@@ -21,8 +21,6 @@ enum Cli {
     Inspect {
         /// Path to the fully formed (should has at least one signature) COSE document
         cose_sign: PathBuf,
-        /// Path to the json schema (Draft 7) to validate document against it
-        doc_schema: PathBuf,
     },
 }
 
@@ -30,10 +28,7 @@ impl Cli {
     /// Execute Cli command
     fn exec(self) -> anyhow::Result<()> {
         match self {
-            Self::Inspect {
-                cose_sign,
-                doc_schema: _,
-            } => {
+            Self::Inspect { cose_sign } => {
                 //
                 let mut cose_file = File::open(cose_sign)?;
                 let mut cose_file_bytes = Vec::new();
@@ -48,6 +43,7 @@ impl Cli {
 
 fn main() {
     println!("Catalyst Signed Document");
+    println!("------------------------");
     if let Err(err) = Cli::parse().exec() {
         println!("{err}");
     }

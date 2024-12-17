@@ -84,7 +84,7 @@ fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
 fn encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
     match doc_ref {
         DocumentRef::Latest { id } => encode_cbor_uuid(id),
-        DocumentRef::WithVer { id, ver } => {
+        DocumentRef::WithVer(id, ver) => {
             coset::cbor::Value::Array(vec![encode_cbor_uuid(id), encode_cbor_uuid(ver)])
         },
     }
@@ -101,7 +101,7 @@ fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<Document
         anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
         let id = decode_cbor_uuid(&array[0])?;
         let ver = decode_cbor_uuid(&array[1])?;
-        Ok(DocumentRef::WithVer { id, ver })
+        Ok(DocumentRef::WithVer(id, ver))
     }
 }
 
@@ -133,6 +133,7 @@ impl Cli {
                 let schema = load_schema_from_file(&schema)?;
                 let cose = load_cose_from_file(&doc)?;
                 validate_cose(&cose, &pk, &schema)?;
+                println!("Document is valid.");
             },
         }
         println!("Done");
