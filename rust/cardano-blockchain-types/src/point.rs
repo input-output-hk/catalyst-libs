@@ -506,14 +506,6 @@ mod tests {
     use crate::point::*;
 
     #[test]
-    fn test_create_points() {
-        let point1 = Point::new(100u64.into(), Blake2bHash::new(&[]));
-        let fuzzy1 = Point::fuzzy(100u64.into());
-
-        assert!(point1 == fuzzy1);
-    }
-
-    #[test]
     fn test_cmp_hash_simple() {
         let origin1 = Point::ORIGIN;
         let point1 = Point::new(100u64.into(), [8; 32].into());
@@ -591,5 +583,13 @@ mod tests {
         assert!(late_block1 < tip1);
         assert!(late_block1 <= tip1);
         assert!(late_block1 != tip1);
+    }
+
+    #[test]
+    fn test_create_point_and_fuzzy_not_equal() {
+        let point1 = Point::new(100u64.into(), Blake2bHash::new(&[]));
+        let fuzzy1 = Point::fuzzy(100u64.into());
+
+        assert!(point1 != fuzzy1);
     }
 }
