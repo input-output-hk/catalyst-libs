@@ -41,15 +41,11 @@
                     }
                 },
                 {
-                    "type": "object",
-                    "properties": {
-                        "id": {
-                            "$ref": "#/definitions/uuidv7"
-                        },
-                        "ver": {
-                            "$ref": "#/definitions/uuidv7"
-                        }
-                    }
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/uuidv7"
+                    },
+                    "minItems": 2
                 }
             ]
         },

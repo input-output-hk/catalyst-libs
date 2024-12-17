@@ -30,12 +30,12 @@ pub struct CatalystSignedDocument {
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
-        writeln!(f, "JSON Payload {:#}", self.inner.payload)?;
+        writeln!(f, "JSON Payload {:#}\n", self.inner.payload)?;
         writeln!(f, "Signatures [")?;
         for signature in &self.inner.signatures {
-            writeln!(f, "  {:#}", hex::encode(signature.signature.as_slice()))?;
+            writeln!(f, "  0x{:#}", hex::encode(signature.signature.as_slice()))?;
         }
-        writeln!(f, "]")?;
+        writeln!(f, "]\n")?;
         writeln!(f, "Content Errors [")?;
         for error in &self.inner.content_errors {
             writeln!(f, "  {error:#}")?;
@@ -116,12 +116,8 @@ pub enum DocumentRef {
         id: uuid::Uuid,
     },
     /// Reference to the specific document version
-    WithVer {
-        /// Document ID UUID
-        id: uuid::Uuid,
-        /// Document Version UUID
-        ver: uuid::Uuid,
-    },
+    /// Document ID UUID, Document Ver UUID
+    WithVer(uuid::Uuid, uuid::Uuid),
 }
 
 // Do this instead of `new`  if we are converting a single parameter into a struct/type we
@@ -249,7 +245,7 @@ fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<Document
         anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
         let id = decode_cbor_uuid(&array[0])?;
         let ver = decode_cbor_uuid(&array[1])?;
-        Ok(DocumentRef::WithVer { id, ver })
+        Ok(DocumentRef::WithVer(id, ver))
     }
 }
 
