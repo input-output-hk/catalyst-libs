@@ -2,14 +2,12 @@
 
 use std::sync::Arc;
 
-use anyhow::{anyhow, Result};
 use c509_certificate::{
     extensions::{alt_name::GeneralNamesOrText, extension::ExtensionValue},
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
     C509ExtensionType,
 };
 use der_parser::der::parse_der_sequence;
-use pallas::ledger::traverse::MultiEraTx;
 use tracing::debug;
 use x509_cert::der::{oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME, Decode};
 
@@ -38,19 +36,13 @@ pub struct Cip0134UriList {
 
 impl Cip0134UriList {
     /// Creates a new `Cip0134UriList` instance from the given `Cip509`.
-    ///
-    /// # Errors
-    /// - Unsupported transaction era.
-    pub fn new(cip509: &Cip509, tx: &MultiEraTx) -> Result<Self> {
-        if !matches!(tx, MultiEraTx::Conway(_)) {
-            return Err(anyhow!("Unsupported transaction era ({})", tx.era()));
-        }
-
+    #[must_use]
+    pub fn new(cip509: &Cip509) -> Self {
         let metadata = &cip509.x509_chunks.0;
         let mut uris = process_x509_certificates(metadata);
         uris.extend(process_c509_certificates(metadata));
 
-        Ok(Self { uris: uris.into() })
+        Self { uris: uris.into() }
     }
 
     /// Returns an iterator over the contained Cip0134 URIs.
@@ -183,7 +175,7 @@ mod tests {
         codec::utils::Nullable,
         ledger::{
             addresses::{Address, Network},
-            traverse::MultiEraBlock,
+            traverse::{MultiEraBlock, MultiEraTx},
         },
     };
 
@@ -202,7 +194,7 @@ mod tests {
         let tx = &block.txs()[3];
         let cip509 = cip509(tx);
 
-        let list = Cip0134UriList::new(&cip509, tx).unwrap();
+        let list = Cip0134UriList::new(&cip509);
         assert_eq!(list.as_slice().len(), 1);
         // cSpell:disable
         assert_eq!(

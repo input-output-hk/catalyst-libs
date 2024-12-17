@@ -104,15 +104,11 @@ pub(crate) fn validate_stake_public_key(
 ) -> Option<bool> {
     let function_name = "Validate Stake Public Key";
 
-    let addresses = match Cip0134UriList::new(cip509, txn) {
-        Ok(a) => a,
-        Err(e) => {
-            validation_report.push(format!(
-                "{function_name}, Failed to extract CIP-0134 URIs: {e:?}"
-            ));
-            return None;
-        },
-    };
+    if !matches!(txn, MultiEraTx::Conway(_)) {
+        validation_report.push(format!("{function_name}, Unsupported transaction era"));
+        return None;
+    }
+    let addresses = Cip0134UriList::new(cip509);
 
     // Create TxWitness
     // Note that TxWitness designs to work with multiple transactions
