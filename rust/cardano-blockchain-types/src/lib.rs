@@ -2,6 +2,7 @@
 
 mod auxdata;
 pub mod conversion;
+mod fork;
 pub mod hashes;
 mod multi_era_block_data;
 mod network;

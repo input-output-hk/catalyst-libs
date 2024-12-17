@@ -18,6 +18,7 @@ use crate::{
     auxdata::{
         block::BlockAuxData, metadatum_label::MetadatumLabel, metadatum_value::MetadatumValue,
     },
+    fork::Fork,
     network::Network,
     point::Point,
     txn_index::TxnIndex,
@@ -80,7 +81,7 @@ pub struct MultiEraBlock {
     /// It starts at 1 for live blocks, and is only incremented if the live-chain tip is
     /// purged because of a detected fork based on data received from the peer node.
     /// It does NOT count the strict number of forks reported by the peer node.
-    fork: u64,
+    fork: Fork,
     /// The Immutable decoded data about the block itself.
     inner: Arc<MultiEraBlockInner>,
 }
@@ -92,7 +93,7 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     fn new_block(
-        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: u64,
+        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
             raw_data,
@@ -155,13 +156,13 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     pub fn new(
-        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: u64,
+        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         MultiEraBlock::new_block(chain, raw_data, previous, fork)
     }
 
     /// Remake the block on a new fork.
-    pub fn set_fork(&mut self, fork: u64) {
+    pub fn set_fork(&mut self, fork: Fork) {
         self.fork = fork;
     }
 
@@ -212,7 +213,7 @@ impl MultiEraBlock {
     /// `true` if the block is immutable, `false` otherwise.
     #[must_use]
     pub fn immutable(&self) -> bool {
-        self.fork == 0
+        self.fork == 0.into()
     }
 
     /// What fork is the block from.
@@ -226,7 +227,7 @@ impl MultiEraBlock {
     /// # Returns
     /// The fork the block was found on.
     #[must_use]
-    pub fn fork(&self) -> u64 {
+    pub fn fork(&self) -> Fork {
         self.fork
     }
 
@@ -288,7 +289,7 @@ impl Display for MultiEraBlock {
         let fork = if self.immutable() {
             "Immutable".to_string()
         } else {
-            format!("Fork: {fork}")
+            format!("Fork: {fork:?}")
         };
 
         let block_era = match block {
@@ -452,8 +453,12 @@ pub(crate) mod tests {
                     .into(),
             );
 
-            let block =
-                MultiEraBlock::new(Network::Preprod, test_block.raw.clone(), &previous_point, 1);
+            let block = MultiEraBlock::new(
+                Network::Preprod,
+                test_block.raw.clone(),
+                &previous_point,
+                1.into(),
+            );
 
             assert!(block.is_err());
         }
@@ -471,8 +476,12 @@ pub(crate) mod tests {
             let previous_point =
                 Point::new((pallas_block.slot() - 1).into(), vec![0; 32].try_into()?);
 
-            let block =
-                MultiEraBlock::new(Network::Preprod, test_block.raw.clone(), &previous_point, 1);
+            let block = MultiEraBlock::new(
+                Network::Preprod,
+                test_block.raw.clone(),
+                &previous_point,
+                1.into(),
+            );
 
             assert!(block.is_err());
         }
@@ -496,8 +505,12 @@ pub(crate) mod tests {
                     .into(),
             );
 
-            let block =
-                MultiEraBlock::new(Network::Preprod, test_block.raw.clone(), &previous_point, 1)?;
+            let block = MultiEraBlock::new(
+                Network::Preprod,
+                test_block.raw.clone(),
+                &previous_point,
+                1.into(),
+            )?;
 
             assert_eq!(block.decode().hash(), pallas_block.hash());
         }
@@ -523,7 +536,7 @@ pub(crate) mod tests {
                     })
                     .expect("cannot create point");
 
-                MultiEraBlock::new(Network::Preprod, block.clone(), &prev_point, 1)
+                MultiEraBlock::new(Network::Preprod, block.clone(), &prev_point, 1.into())
                     .expect("cannot create multi-era block")
             })
             .collect()
@@ -720,7 +733,7 @@ pub(crate) mod tests {
                 Network::Preprod,
                 test_block.raw.clone(),
                 &test_block.previous,
-                1,
+                1.into(),
             );
 
             assert!(block.is_ok());
