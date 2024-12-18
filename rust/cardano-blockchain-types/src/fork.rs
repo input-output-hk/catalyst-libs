@@ -27,9 +27,14 @@ impl Fork {
         Self(value)
     }
 
-    /// increment the fork count.
+    /// Increment the fork count.
     pub fn incr(&mut self) {
         self.0 += 1;
+    }
+
+    /// Decrement the fork count.
+    pub fn decr(&mut self) {
+        self.0 -= 1;
     }
 }
 
