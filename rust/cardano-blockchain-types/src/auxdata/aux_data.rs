@@ -96,6 +96,8 @@ impl TransactionAuxData {
     fn decode_alonzo_plus_map(d: &mut minicbor::Decoder) -> Result<Self, minicbor::decode::Error> {
         match d.tag() {
             Ok(tag) => {
+                // CBOR tag identifier 259 for auxiliary data in the Alonzo and beyond eras
+                // https://github.com/IntersectMBO/cardano-ledger/blob/78b32d585fd4a0340fb2b184959fb0d46f32c8d2/eras/conway/impl/cddl-files/conway.cddl#L526
                 if tag.as_u64() != 259 {
                     return Err(minicbor::decode::Error::message(format!(
                         "Invalid tag for Alonzo+ Aux Data. Expected 259, found {tag}."
