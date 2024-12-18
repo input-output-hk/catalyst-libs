@@ -52,6 +52,7 @@ check:
 build:
     FROM +builder-src
 
+    RUN --no-cache
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
@@ -64,7 +65,7 @@ build:
         --coverage="cat-libs.coverage.info" \
         --docs="true"
 
-    SAVE ARTIFACT target/$TARGETARCH/doc doc
+    SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
 
 # build-src-check: Check for any caching issues with the source we are building against.
