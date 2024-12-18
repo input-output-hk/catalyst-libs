@@ -1,9 +1,7 @@
 name: Allure Report Generation
 
 on:
-  pull_request:
-  push:
-    branches: [main]
+  workflow_call:
 
 permissions:
   contents: write

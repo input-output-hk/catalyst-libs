@@ -19,7 +19,9 @@ pub use auxdata::{
     metadatum_value::MetadatumValue,
     scripts::{Script, ScriptArray, ScriptType, TransactionScripts},
 };
+pub use fork::Fork;
 pub use multi_era_block_data::MultiEraBlock;
+pub use network::Network;
 pub use point::Point;
 pub use slot::Slot;
 pub use txn_index::TxnIndex;
