@@ -1,5 +1,8 @@
 //! `CddlRule` trait definition and implementation
 
+pub(crate) mod expr;
+pub(crate) mod types;
+
 use std::fmt::Debug;
 
 use concat_idents::concat_idents;
