@@ -26,6 +26,11 @@ impl Fork {
         let value: u64 = from_saturating(value);
         Self(value)
     }
+
+    /// increment the fork count.
+    pub fn incr(&mut self) {
+        self.0 += 1;
+    }
 }
 
 impl From<u64> for Fork {
