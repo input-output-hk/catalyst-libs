@@ -52,7 +52,6 @@ check:
 build:
     FROM +builder-src
 
-    RUN --no-cache
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
