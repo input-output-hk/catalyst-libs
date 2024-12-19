@@ -89,12 +89,12 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let hash = vec![0; 32];
-    /// let point = Point::new(slot, hash);
+    /// let hash = [0; 32];
+    /// let point = Point::new(slot.into(), hash.into());
     /// ```
     #[must_use]
     pub fn new(slot: Slot, hash: Blake2bHash<32>) -> Self {
@@ -119,11 +119,11 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let point = Point::fuzzy(slot);
+    /// let point = Point::fuzzy(slot.into());
     /// ```
     #[must_use]
     pub fn fuzzy(slot: Slot) -> Self {
@@ -157,11 +157,11 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let point = Point::fuzzy(slot);
+    /// let point = Point::fuzzy(slot.into());
     ///
     /// assert!(point.is_fuzzy());
     /// ```
@@ -184,11 +184,11 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let point = Point::fuzzy(slot);
+    /// let point = Point::fuzzy(slot.into());
     ///
     /// assert!(!point.is_origin());
     /// ```
@@ -206,10 +206,10 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let point = Point::fuzzy(0);
+    /// let point = Point::fuzzy(0.into());
     ///
     /// assert!(point.is_unknown());
     /// ```
@@ -227,10 +227,10 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let point = Point::fuzzy(0);
+    /// let point = Point::fuzzy(0.into());
     ///
     /// assert!(!point.is_tip());
     /// ```
@@ -254,13 +254,13 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::{Point, ORIGIN_POINT};
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let specific_point = Point::new(42, vec![0; 32]);
-    /// assert_eq!(specific_point.slot_or_default(), 42);
+    /// let specific_point = Point::new(42.into(), [0; 32].into());
+    /// assert_eq!(specific_point.slot_or_default(), 42.into());
     ///
-    /// let origin_point = ORIGIN_POINT;
+    /// let origin_point = Point::ORIGIN;
     /// assert_eq!(origin_point.slot_or_default(), 0.into()); // assuming 0 is the default
     /// ```
     #[must_use]
@@ -278,20 +278,23 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::{Point, ORIGIN_POINT};
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let specific_point = Point::new(42, vec![1, 2, 3]);
-    /// assert_eq!(specific_point.hash_or_default(), vec![1, 2, 3]);
+    /// let specific_point = Point::new(42.into(), [0; 32].into());
+    /// assert_eq!(specific_point.hash_or_default(), Some([0; 32].into()));
     ///
-    /// let origin_point = ORIGIN_POINT;
-    /// assert_eq!(origin_point.hash_or_default(), Vec::new());
+    /// let origin_point = Point::ORIGIN;
+    /// assert_eq!(origin_point.hash_or_default(), None);
     /// ```
     #[must_use]
-    pub fn hash_or_default(&self) -> Vec<u8> {
+    pub fn hash_or_default(&self) -> Option<Hash<32>> {
         match &self.0 {
-            pallas::network::miniprotocols::Point::Specific(_, hash) => hash.clone(),
-            pallas::network::miniprotocols::Point::Origin => Vec::new(),
+            pallas::network::miniprotocols::Point::Specific(_, hash) => {
+                Some(Hash::from(hash.as_slice()))
+            },
+            // Origin has empty hash, so set it to None
+            pallas::network::miniprotocols::Point::Origin => None,
         }
     }
 
@@ -308,15 +311,15 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let point1 = Point::new(42, vec![1, 2, 3]);
-    /// let point2 = Point::new(42, vec![1, 2, 3]);
+    /// let point1 = Point::new(42.into(), [0; 32].into());
+    /// let point2 = Point::new(42.into(), [0; 32].into());
     /// assert!(point1.strict_eq(&point2));
     ///
-    /// let point3 = Point::new(42, vec![1, 2, 3]);
-    /// let point4 = Point::new(43, vec![1, 2, 3]);
+    /// let point3 = Point::new(42.into(), [0; 32].into());
+    /// let point4 = Point::new(43.into(), [0; 32].into());
     /// assert!(!point3.strict_eq(&point4));
     /// ```
     #[must_use]
@@ -362,10 +365,10 @@ impl Display for Point {
 
         let slot = self.slot_or_default();
         let hash = self.hash_or_default();
-        if hash.is_empty() {
-            return write!(f, "Point @ Probe:{slot:?}");
+        match hash {
+            Some(hash) => write!(f, "Point @ {slot:?}:{}", hex::encode(hash)),
+            None => write!(f, "Point @ {slot:?}"),
         }
-        write!(f, "Point @ {slot:?}:{}", hex::encode(hash))
     }
 }
 
@@ -493,7 +496,7 @@ mod tests {
     fn test_get_hash_simple() {
         let point1 = Point::new(100u64.into(), [8; 32].into());
 
-        assert_eq!(point1.hash_or_default(), vec![8; 32]);
+        assert_eq!(point1.hash_or_default(), Some([8; 32].into()));
     }
 
     #[test]
