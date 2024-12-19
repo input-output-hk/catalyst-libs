@@ -21,6 +21,7 @@ mithril-client = { version = "0.10.4", default-features = false, features = [
 ] }
 
 rbac-registration = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.8" }
+cardano-blockchain-types = { git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "feat/cardano-blockchain-types" }
 
 thiserror = "1.0.64"
 tokio = { version = "1.40.0", features = [

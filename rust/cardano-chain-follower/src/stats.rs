@@ -2,13 +2,12 @@
 
 use std::sync::{Arc, LazyLock, RwLock};
 
+use cardano_blockchain_types::Network;
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use serde::Serialize;
 use strum::{EnumIter, IntoEnumIterator};
 use tracing::error;
-
-use crate::Network;
 
 // -------- GENERAL STATISTIC TRACKING
 
