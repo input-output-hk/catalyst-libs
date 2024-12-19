@@ -73,7 +73,7 @@ async fn get_latest_snapshots(
     Some((latest_snapshot.clone(), chronologically_previous.clone()))
 }
 
-/// Given a particular snapshot ID, find the Actual Snapshot for it.
+/// Given a particular snapshot ID, find the actual snapshot for it.
 async fn get_snapshot_by_id(
     client: &Client, network: Network, snapshot_id: &SnapshotId,
 ) -> Option<SnapshotListItem> {
@@ -205,11 +205,7 @@ async fn download_and_verify_snapshot_certificate(
 ///
 /// # Arguments
 ///
-/// * `network` - The network type for the client to connect to.
-/// * `aggregator_url` - A reference to the URL of an aggregator that can be used to
-///   create the client.
-/// * `genesis_vkey` - The genesis verification key, which is needed to authenticate with
-///   the server.
+/// * `cfg` - Mithril snapshot configuration.
 ///
 /// # Returns
 ///
@@ -238,6 +234,7 @@ pub(crate) const MITHRIL_IMMUTABLE_SUB_DIRECTORY: &str = "immutable";
 ///
 /// # Arguments
 ///
+/// * `chain` - The network chain to get the tip block from.
 /// * `path` - The path where the immutable chain is stored.
 ///
 /// # Returns
@@ -676,11 +673,8 @@ macro_rules! next_iteration {
 /// networks.
 /// # Arguments
 ///
-/// * `network` - The network type for the client to connect to.
-/// * `aggregator_url` - A reference to the URL of an aggregator that can be used to
-///   create the client.
-/// * `genesis_vkey` - The genesis verification key, which is needed to authenticate with
-///   the server.
+/// * `cfg` - The configuration for the Mithril snapshot.
+/// * `tx` - The message to be sent when Mithril Snapshot updates.
 ///
 /// # Returns
 ///

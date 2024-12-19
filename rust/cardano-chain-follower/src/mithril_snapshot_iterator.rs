@@ -23,9 +23,9 @@ const BACKWARD_SEARCH_SLOT_INTERVAL: u64 = 60;
 
 /// Synchronous Inner Iterator state
 struct MithrilSnapshotIteratorInner {
-    /// The chain being iterated
+    /// The blockchain network being iterated
     chain: Network,
-    /// Where we really want to start iterating from
+    /// Point we want to start iterating from
     start: Point,
     /// Previous iteration point.
     previous: Point,
