@@ -6,7 +6,7 @@ use std::{
     sync::Arc,
 };
 
-use coset::CborSerializable;
+use coset::{CborSerializable, TaggedCborSerializable};
 
 /// Catalyst Signed Document Content Encoding Key.
 const CONTENT_ENCODING_KEY: &str = "content encoding";
@@ -128,7 +128,9 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
     fn try_from(cose_bytes: Vec<u8>) -> Result<Self, Self::Error> {
-        let cose = coset::CoseSign::from_slice(&cose_bytes)
+        // Try reading as a tagged COSE SIGN, otherwise try reading as untagged.
+        let cose = coset::CoseSign::from_tagged_slice(&cose_bytes)
+            .or(coset::CoseSign::from_slice(&cose_bytes))
             .map_err(|e| anyhow::anyhow!("Invalid COSE Sign document: {e}"))?;
 
         let (metadata, content_errors) = metadata_from_cose_protected_header(&cose);
