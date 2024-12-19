@@ -93,7 +93,7 @@ impl Point {
     /// use cardano_chain_follower::Point;
     ///
     /// let slot = 42;
-    /// let hash = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    /// let hash = vec![0; 32];
     /// let point = Point::new(slot, hash);
     /// ```
     #[must_use]
@@ -244,55 +244,6 @@ impl Point {
         }
     }
 
-    /// Compares the hash stored in the `Point` with a known hash.
-    /// It returns `true` if the hashes match and `false` otherwise. If the
-    /// provided hash is `None`, the function checks if the `Point` has an
-    /// empty hash.
-    ///
-    /// # Parameters
-    ///
-    /// * `hash` - An `Option<Hash<32>>` containing the hash to compare against. If
-    ///   `Some`, the contained hash is compared with the `Point`'s hash. If `None`, the
-    ///   function checks if the `Point`'s hash is empty.
-    ///
-    /// # Returns
-    ///
-    /// A `bool` indicating whether the hashes match.
-    ///
-    /// # Examples
-    ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
-    ///
-    /// use pallas::crypto::hash::Hash;
-    ///
-    /// let point = Point::new(42, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    /// let hash = Some(Hash::new([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
-    /// assert!(point.cmp_hash(&hash));
-    ///
-    /// let empty_point = Point::fuzzy(42);
-    /// assert!(empty_point.cmp_hash(&None));
-    /// ```
-    #[must_use]
-    pub fn cmp_hash(&self, hash: &Option<Hash<32>>) -> bool {
-        match hash {
-            Some(cmp_hash) => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
-                        **hash == **cmp_hash
-                    },
-                    pallas::network::miniprotocols::Point::Origin => false,
-                }
-            },
-            None => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
-                    pallas::network::miniprotocols::Point::Origin => true,
-                }
-            },
-        }
-    }
-
     /// Retrieves the slot number from the `Point`. If the `Point`
     /// is the origin, it returns a default slot number.
     ///
@@ -306,15 +257,15 @@ impl Point {
     /// ```rs
     /// use cardano_chain_follower::{Point, ORIGIN_POINT};
     ///
-    /// let specific_point = Point::new(42, vec![1, 2, 3]);
+    /// let specific_point = Point::new(42, vec![0; 32]);
     /// assert_eq!(specific_point.slot_or_default(), 42);
     ///
     /// let origin_point = ORIGIN_POINT;
-    /// assert_eq!(origin_point.slot_or_default(), 0); // assuming 0 is the default
+    /// assert_eq!(origin_point.slot_or_default(), 0.into()); // assuming 0 is the default
     /// ```
     #[must_use]
-    pub fn slot_or_default(&self) -> u64 {
-        self.0.slot_or_default()
+    pub fn slot_or_default(&self) -> Slot {
+        self.0.slot_or_default().into()
     }
 
     /// Retrieves the hash from the `Point`. If the `Point` is
@@ -374,6 +325,31 @@ impl Point {
     }
 }
 
+impl PartialEq<Option<Hash<32>>> for Point {
+    /// Compares the hash stored in the `Point` with a known hash.
+    /// It returns `true` if the hashes match and `false` otherwise. If the
+    /// provided hash is `None`, the function checks if the `Point` has an
+    /// empty hash.
+    fn eq(&self, other: &Option<Hash<32>>) -> bool {
+        match other {
+            Some(cmp_hash) => {
+                match self.0 {
+                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
+                        **hash == **cmp_hash
+                    },
+                    pallas::network::miniprotocols::Point::Origin => false,
+                }
+            },
+            None => {
+                match self.0 {
+                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
+                    pallas::network::miniprotocols::Point::Origin => true,
+                }
+            },
+        }
+    }
+}
+
 impl Display for Point {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::result::Result<(), std::fmt::Error> {
         if *self == Self::ORIGIN {
@@ -387,9 +363,9 @@ impl Display for Point {
         let slot = self.slot_or_default();
         let hash = self.hash_or_default();
         if hash.is_empty() {
-            return write!(f, "Point @ Probe:{slot}");
+            return write!(f, "Point @ Probe:{slot:?}");
         }
-        write!(f, "Point @ {slot}:{}", hex::encode(hash))
+        write!(f, "Point @ {slot:?}:{}", hex::encode(hash))
     }
 }
 
@@ -422,10 +398,6 @@ impl Ord for Point {
 }
 
 impl PartialEq<u64> for Point {
-    /// Allows to compare a `SnapshotID` against `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
     fn eq(&self, other: &u64) -> bool {
         self.0.slot_or_default() == *other
     }
@@ -510,11 +482,11 @@ mod tests {
         let origin1 = Point::ORIGIN;
         let point1 = Point::new(100u64.into(), [8; 32].into());
 
-        assert!(!origin1.cmp_hash(&Some(Hash::new([0; 32]))));
-        assert!(origin1.cmp_hash(&None));
+        assert!(origin1 != Some(Hash::new([0; 32])));
+        assert!(origin1 == None::<Hash<32>>);
 
-        assert!(point1.cmp_hash(&Some(Hash::new([8; 32]))));
-        assert!(!point1.cmp_hash(&None));
+        assert!(point1 == Some(Hash::new([8; 32])));
+        assert!(point1 != None::<Hash<32>>);
     }
 
     #[test]

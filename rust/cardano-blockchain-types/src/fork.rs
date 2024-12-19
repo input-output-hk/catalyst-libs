@@ -29,12 +29,12 @@ impl Fork {
 
     /// Increment the fork count.
     pub fn incr(&mut self) {
-        self.0 += 1;
+        self.0 = self.0.saturating_add(1);
     }
 
     /// Decrement the fork count.
     pub fn decr(&mut self) {
-        self.0 -= 1;
+        self.0 = self.0.saturating_sub(1);
     }
 }
 

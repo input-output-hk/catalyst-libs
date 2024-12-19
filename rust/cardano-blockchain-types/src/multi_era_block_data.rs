@@ -127,7 +127,7 @@ impl MultiEraBlock {
             // Special case, when the previous block is actually UNKNOWN, we can't check it.
             if !previous.is_unknown()
                     // Otherwise, we make sure the hash chain is intact
-                    && !previous.cmp_hash(&decoded_block.header().previous_hash())
+                    && previous != &decoded_block.header().previous_hash()
             {
                 debug!("{}, {:?}", previous, decoded_block.header().previous_hash());
 
