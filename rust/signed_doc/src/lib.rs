@@ -175,44 +175,43 @@ impl CatalystSignedDocument {
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> uuid::Uuid {
-        self.inner.metadata.r#type
+        self.inner.metadata.doc_type()
     }
 
     /// Return Document ID `UUIDv7`.
     #[must_use]
     pub fn doc_id(&self) -> uuid::Uuid {
-        self.inner.metadata.id
+        self.inner.metadata.doc_id()
     }
 
     /// Return Document Version `UUIDv7`.
     #[must_use]
     pub fn doc_ver(&self) -> uuid::Uuid {
-        self.inner.metadata.ver
+        self.inner.metadata.doc_ver()
     }
 
     /// Return Last Document Reference `Option<DocumentRef>`.
     #[must_use]
     pub fn doc_ref(&self) -> Option<DocumentRef> {
-        self.inner.metadata.r#ref
+        self.inner.metadata.doc_ref()
     }
 
     /// Return Document Template `Option<DocumentRef>`.
     #[must_use]
     pub fn doc_template(&self) -> Option<DocumentRef> {
-        self.inner.metadata.template
+        self.inner.metadata.doc_template()
     }
 
     /// Return Document Reply `Option<DocumentRef>`.
     #[must_use]
     pub fn doc_reply(&self) -> Option<DocumentRef> {
-        self.inner.metadata.reply
+        self.inner.metadata.doc_reply()
     }
 }
 
 /// Generate the COSE protected header used by Catalyst Signed Document.
 fn cose_protected_header() -> coset::Header {
     coset::HeaderBuilder::new()
-        .algorithm(coset::iana::Algorithm::EdDSA)
         .content_format(coset::iana::CoapContentFormat::Json)
         .text_value(
             CONTENT_ENCODING_KEY.to_string(),
@@ -266,10 +265,6 @@ fn cose_protected_header_find(cose: &coset::CoseSign, rest_key: &str) -> Option<
 fn metadata_from_cose_protected_header(cose: &coset::CoseSign) -> (Metadata, ContentErrors) {
     let expected_header = cose_protected_header();
     let mut errors = Vec::new();
-
-    if cose.protected.header.alg != expected_header.alg {
-        errors.push("Invalid COSE document protected header `algorithm` field".to_string());
-    }
 
     if cose.protected.header.content_type != expected_header.content_type {
         errors.push("Invalid COSE document protected header `content-type` field".to_string());

@@ -186,7 +186,6 @@ fn brotli_decompress_json(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json::Va
 
 fn cose_protected_header() -> coset::Header {
     coset::HeaderBuilder::new()
-        .algorithm(coset::iana::Algorithm::EdDSA)
         .content_format(coset::iana::CoapContentFormat::Json)
         .text_value(
             CONTENT_ENCODING_KEY.to_string(),
@@ -269,7 +268,9 @@ fn load_public_key_from_file(pk_path: &PathBuf) -> anyhow::Result<ed25519_dalek:
 }
 
 fn add_signature_to_cose(cose: &mut coset::CoseSign, sk: &ed25519_dalek::SigningKey, kid: String) {
-    let protected_header = coset::HeaderBuilder::new().key_id(kid.into_bytes());
+    let protected_header = coset::HeaderBuilder::new()
+        .key_id(kid.into_bytes())
+        .algorithm(coset::iana::Algorithm::EdDSA);
     let mut signature = coset::CoseSignatureBuilder::new()
         .protected(protected_header.build())
         .build();
