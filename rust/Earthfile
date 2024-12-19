@@ -56,7 +56,7 @@ build:
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
         --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting --libs=vote-tx-v1 --libs=vote-tx-v2" \
+        --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
         --args4="--bins=cbork/cbork --libs=rbac-registration --libs=signed_doc" \
         --args5="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \
