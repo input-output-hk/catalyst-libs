@@ -40,7 +40,7 @@ impl ChainUpdate {
         &self.data
     }
 
-    /// Gets the chain update's block data.
+    /// Is the chain update immutable?
     #[must_use]
     pub fn immutable(&self) -> bool {
         self.data.immutable()

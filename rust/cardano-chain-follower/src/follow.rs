@@ -23,9 +23,9 @@ pub struct ChainFollower {
     chain: Network,
     /// Where we end following.
     end: Point,
-    /// Block we processed most recently.
+    /// Point we processed most recently.
     previous: Point,
-    /// Where we are currently in the following process.
+    /// Point we are currently in the following process.
     current: Point,
     /// What fork were we last on
     fork: Fork,
@@ -134,7 +134,7 @@ impl ChainFollower {
         None
     }
 
-    /// If we can, get the next update from the mithril snapshot.
+    /// If we can, get the next update from the live chain.
     async fn next_from_live_chain(&mut self) -> Option<ChainUpdate> {
         let mut next_block: Option<MultiEraBlock> = None;
         let mut update_type = chain_update::Kind::Block;
@@ -208,7 +208,7 @@ impl ChainFollower {
         None
     }
 
-    /// Update the current Point, and return `false` if this fails.
+    /// Update the current Point, return `false` if this fails.
     fn update_current(&mut self, update: &Option<ChainUpdate>) -> bool {
         if let Some(update) = update {
             let decoded = update.block_data().decode();
@@ -323,7 +323,7 @@ impl ChainFollower {
     ///
     /// # Arguments
     ///
-    /// * `chain` - The blockchain to post the transaction on.
+    /// * `chain` - The blockchain network to post the transaction on.
     /// * `txn` - The transaction to be posted.
     ///
     /// # Returns

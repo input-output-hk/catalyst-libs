@@ -40,7 +40,7 @@ use crate::{
 const MAX_NODE_CONNECT_TIME_SECS: u64 = 2;
 
 /// The maximum number of times we wait for a nodeChainUpdate to connect.
-/// Currently set to never give up.
+/// Currently set to maximum of 5 retries.
 const MAX_NODE_CONNECT_RETRIES: u64 = 5;
 
 /// Try and connect to a node, in a robust and quick way.
@@ -120,7 +120,7 @@ async fn resync_live_tip(client: &mut PeerClient, chain: Network) -> Result<Poin
     Ok(sync_to_point)
 }
 
-/// Fetch a single block from the Peer, and Decode it.
+/// Fetch a single block from the Peer, and decode it.
 async fn fetch_block_from_peer(
     peer: &mut PeerClient, chain: Network, point: Point, previous_point: Point, fork: Fork,
 ) -> anyhow::Result<MultiEraBlock> {

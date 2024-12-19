@@ -21,7 +21,7 @@ pub enum Error {
     /// Chainsync protocol error.
     #[error("Chainsync error: {0:?}")]
     Chainsync(chainsync::ClientError),
-    /// Backfill Synch error.
+    /// Backfill Sync error.
     #[error("Backfill Sync error: {0}")]
     BackfillSync(String),
     /// Live Sync error.
@@ -48,7 +48,7 @@ pub enum Error {
     /// Mithril snapshot traversal error.
     #[error("Failed to traverse block(s) from Mithril snapshot")]
     MithrilSnapshotTraverse(pallas::ledger::traverse::Error),
-    /// Failed to parse
+    /// Failed to parse network error.
     #[error("Failed to parse network")]
     ParseNetwork,
     /// Mithril Snapshot path is not a directory

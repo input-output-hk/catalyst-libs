@@ -21,7 +21,7 @@ use crate::{
 /// Type we use to manage the Sync Task handle map.
 type LiveChainBlockList = SkipMap<Point, MultiEraBlock>;
 
-/// Because we have multi-entry relationships in the live-chain protect it with a
+/// Because we have multi-entry relationships in the live-chain, it need to protect it with a
 /// `read/write lock`. The underlying `SkipMap` is still capable of multiple simultaneous
 /// reads from multiple threads which is the most common access.
 #[derive(Clone)]
@@ -50,7 +50,8 @@ fn update_peer_tip(chain: Network, tip: Point) {
     PEER_TIP.insert(chain, tip);
 }
 
-/// Set the last TIP received from the peer.
+/// Get the last TIP received from the peer.
+/// If the peer tip doesn't exist, get the UNKNOWN point.
 pub(crate) fn get_peer_tip(chain: Network) -> Point {
     (*PEER_TIP.get_or_insert(chain, Point::UNKNOWN).value()).clone()
 }
@@ -117,7 +118,7 @@ impl ProtectedLiveChainBlockList {
         Ok(check_first_live_block.point())
     }
 
-    /// Get the point of the first known block in the Live Chain.
+    /// Get the point of the last known block in the Live Chain.
     fn get_last_live_point(live_chain: &LiveChainBlockList) -> Point {
         let Some(check_last_live_entry) = live_chain.back() else {
             // Its not an error if we can't get a latest block because the chain is empty,
@@ -151,7 +152,7 @@ impl ProtectedLiveChainBlockList {
             )));
         }
 
-        // Get the current Oldest block in the live chain.
+        // Get the current oldest block in the live chain.
         let check_first_live_point = Self::get_first_live_point(&live_chain)?;
 
         let last_backfill_block = blocks
@@ -160,7 +161,7 @@ impl ProtectedLiveChainBlockList {
             .clone();
         let last_backfill_point = last_backfill_block.point();
 
-        // Make sure the backfill will properly connect the partial Live chain to the Mithril
+        // Make sure the backfill will properly connect the partial live chain to the Mithril
         // chain.
         if !last_backfill_point.strict_eq(&check_first_live_point) {
             return Err(Error::LiveSync(format!(
@@ -179,8 +180,8 @@ impl ProtectedLiveChainBlockList {
         Ok(())
     }
 
-    /// Check if the given point is strictly in the live-chain.  This means the slot and
-    /// Hash MUST be present.
+    /// Check if the given point is strictly in the live-chain. This means the slot and
+    /// block hash MUST be present.
     fn strict_block_lookup(live_chain: &LiveChainBlockList, point: &Point) -> bool {
         if let Some(found_block) = live_chain.get(point) {
             return found_block.value().point().strict_eq(point);
@@ -451,7 +452,7 @@ pub(crate) fn get_live_block(
     live_chain.get_block(point, advance, strict)
 }
 
-/// Get the fill tp point for a chain.
+/// Get the fill to point for a chain.
 ///
 /// Returns the Point of the block we are filling up-to, and it's fork count.
 ///
@@ -493,7 +494,7 @@ pub(crate) fn live_chain_length(chain: Network) -> usize {
     live_chain.len()
 }
 
-/// On an immutable update, purge the live-chain up to the new immutable tip.
+/// On an immutable update, purge the live chain up to the new immutable tip.
 /// Will error if the point is not in the Live chain.
 pub(crate) fn purge_live_chain(chain: Network, point: &Point) -> Result<()> {
     let live_chain = get_live_chain(chain);

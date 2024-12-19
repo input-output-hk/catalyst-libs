@@ -29,6 +29,7 @@ use crate::{
 
 /// Type we use to manage the Sync Task handle map.
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
+
 /// Handle to the mithril sync thread. One for each Network ONLY.
 static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
     let map = DashMap::new();
@@ -294,7 +295,7 @@ impl MithrilSnapshotConfig {
         snapshot_path
     }
 
-    /// Check if the Mithril Snapshot Path is valid an usable.
+    /// Check if the Mithril Snapshot Path is valid and usable.
     async fn validate_path(&self) -> Result<()> {
         let path = self.path.clone();
         debug!(
