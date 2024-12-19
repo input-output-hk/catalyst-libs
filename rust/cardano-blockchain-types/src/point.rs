@@ -223,7 +223,7 @@ impl Point {
         }
     }
 
-    /// Check if a Point is actually unknown.
+    /// Check if a Point is the tip.
     ///
     /// # Examples
     ///
@@ -232,7 +232,7 @@ impl Point {
     ///
     /// let point = Point::fuzzy(0);
     ///
-    /// assert!(point.is_unknown());
+    /// assert!(!point.is_tip());
     /// ```
     #[must_use]
     pub fn is_tip(&self) -> bool {
