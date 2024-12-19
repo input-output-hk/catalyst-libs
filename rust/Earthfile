@@ -20,7 +20,6 @@ COPY_SRC:
 # builder : Set up our target toolchains, and copy our files.
 builder:
     DO rust-ci+SETUP
-    RUN --no-cache echo "Dropping cache"
 
 # sync-cfg: Synchronize local config with CI version.
 # Must be run by the developer manually.
