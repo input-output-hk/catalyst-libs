@@ -8,6 +8,10 @@ use std::{
 
 use coset::{CborSerializable, TaggedCborSerializable};
 
+mod metadata;
+
+pub use metadata::{DocumentRef, Metadata};
+
 /// Catalyst Signed Document Content Encoding Key.
 const CONTENT_ENCODING_KEY: &str = "content encoding";
 /// Catalyst Signed Document Content Encoding Value.
@@ -59,67 +63,6 @@ struct InnerCatalystSignedDocument {
     content_errors: Vec<String>,
 }
 
-/// Document Metadata.
-#[derive(Debug, serde::Deserialize)]
-pub struct Metadata {
-    /// Document Type `UUIDv7`.
-    pub r#type: uuid::Uuid,
-    /// Document ID `UUIDv7`.
-    pub id: uuid::Uuid,
-    /// Document Version `UUIDv7`.
-    pub ver: uuid::Uuid,
-    /// Reference to the latest document.
-    pub r#ref: Option<DocumentRef>,
-    /// Reference to the document template.
-    pub template: Option<DocumentRef>,
-    /// Reference to the document reply.
-    pub reply: Option<DocumentRef>,
-    /// Reference to the document section.
-    pub section: Option<String>,
-}
-
-impl Display for Metadata {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        writeln!(f, "Metadata {{")?;
-        writeln!(f, "  doc_type: {},", self.r#type)?;
-        writeln!(f, "  doc_id: {},", self.id)?;
-        writeln!(f, "  doc_ver: {},", self.ver)?;
-        writeln!(f, "  doc_ref: {:?},", self.r#ref)?;
-        writeln!(f, "  doc_template: {:?},", self.template)?;
-        writeln!(f, "  doc_reply: {:?},", self.reply)?;
-        writeln!(f, "  doc_section: {:?}", self.section)?;
-        writeln!(f, "}}")
-    }
-}
-
-impl Default for Metadata {
-    fn default() -> Self {
-        Self {
-            r#type: CatalystSignedDocument::INVALID_UUID,
-            id: CatalystSignedDocument::INVALID_UUID,
-            ver: CatalystSignedDocument::INVALID_UUID,
-            r#ref: None,
-            template: None,
-            reply: None,
-            section: None,
-        }
-    }
-}
-
-/// Reference to a Document.
-#[derive(Copy, Clone, Debug, serde::Deserialize)]
-#[serde(untagged)]
-pub enum DocumentRef {
-    /// Reference to the latest document
-    Latest {
-        /// Document ID UUID
-        id: uuid::Uuid,
-    },
-    /// Reference to the specific document version
-    /// Document ID UUID, Document Ver UUID
-    WithVer(uuid::Uuid, uuid::Uuid),
-}
-
 // Do this instead of `new`  if we are converting a single parameter into a struct/type we
 // should use either `From` or `TryFrom` and reserve `new` for cases where we need
 // multiple parameters to actually create the type.  This is much more elegant to use this
@@ -161,9 +104,6 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
 }
 
 impl CatalystSignedDocument {
-    /// Invalid Doc Type UUID
-    const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
-
     // A bunch of getters to access the contents, or reason through the document, such as.
 
     /// Are there any validation errors (as opposed to structural errors.
@@ -206,6 +146,12 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn doc_reply(&self) -> Option<DocumentRef> {
         self.inner.metadata.doc_reply()
+    }
+
+    /// Return Document Reply `Option<DocumentRef>`.
+    #[must_use]
+    pub fn doc_section(&self) -> Option<String> {
+        self.inner.metadata.doc_section()
     }
 }
 

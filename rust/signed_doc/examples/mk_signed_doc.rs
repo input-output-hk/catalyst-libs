@@ -199,35 +199,35 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign 
 
     protected_header.rest.push((
         coset::Label::Text("type".to_string()),
-        encode_cbor_uuid(&meta.r#type),
+        encode_cbor_uuid(&meta.doc_type()),
     ));
     protected_header.rest.push((
         coset::Label::Text("id".to_string()),
-        encode_cbor_uuid(&meta.id),
+        encode_cbor_uuid(&meta.doc_id()),
     ));
     protected_header.rest.push((
         coset::Label::Text("ver".to_string()),
-        encode_cbor_uuid(&meta.ver),
+        encode_cbor_uuid(&meta.doc_ver()),
     ));
-    if let Some(r#ref) = &meta.r#ref {
+    if let Some(r#ref) = &meta.doc_ref() {
         protected_header.rest.push((
             coset::Label::Text("ref".to_string()),
             encode_cbor_document_ref(r#ref),
         ));
     }
-    if let Some(template) = &meta.template {
+    if let Some(template) = &meta.doc_template() {
         protected_header.rest.push((
             coset::Label::Text("template".to_string()),
             encode_cbor_document_ref(template),
         ));
     }
-    if let Some(reply) = &meta.reply {
+    if let Some(reply) = &meta.doc_reply() {
         protected_header.rest.push((
             coset::Label::Text("reply".to_string()),
             encode_cbor_document_ref(reply),
         ));
     }
-    if let Some(section) = &meta.section {
+    if let Some(section) = &meta.doc_section() {
         protected_header.rest.push((
             coset::Label::Text("section".to_string()),
             coset::cbor::Value::Text(section.clone()),
