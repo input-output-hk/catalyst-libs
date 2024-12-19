@@ -453,7 +453,7 @@ impl Default for Point {
 }
 
 /// Compare Points, because Pallas does not impl `Ord` for Point.
-pub(crate) fn cmp_point(
+fn cmp_point(
     a: &pallas::network::miniprotocols::Point, b: &pallas::network::miniprotocols::Point,
 ) -> Ordering {
     match a {
