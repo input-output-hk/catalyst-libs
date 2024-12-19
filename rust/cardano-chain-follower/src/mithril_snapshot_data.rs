@@ -1,9 +1,10 @@
 //! Data about the current Mithril Snapshot
 use std::{default, sync::LazyLock};
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 
-use crate::{network::Network, snapshot_id::SnapshotId};
+use crate::snapshot_id::SnapshotId;
 
 /// Current Mithril Snapshot Data for a network.
 #[derive(Debug, Clone)]

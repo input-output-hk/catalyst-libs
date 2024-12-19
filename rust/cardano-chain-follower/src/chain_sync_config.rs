@@ -6,6 +6,7 @@
 
 use std::sync::LazyLock;
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use strum::IntoEnumIterator;
 use tokio::{sync::Mutex, task::JoinHandle};
@@ -15,7 +16,6 @@ use crate::{
     chain_sync::chain_sync,
     error::{Error, Result},
     mithril_snapshot_config::MithrilSnapshotConfig,
-    network::Network,
     stats,
 };
 

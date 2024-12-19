@@ -1,11 +1,12 @@
 //! Internal Mithril snapshot functions.
 
+use cardano_blockchain_types::{MultiEraBlock, Network, Point};
 use logcall::logcall;
 use tracing_log::log;
 
 use crate::{
     mithril_snapshot_data::latest_mithril_snapshot_id,
-    mithril_snapshot_iterator::MithrilSnapshotIterator, network::Network, MultiEraBlock, Point,
+    mithril_snapshot_iterator::MithrilSnapshotIterator,
 };
 
 // Any single program using this crate can have EXACTLY THREE Mithril snapshots.

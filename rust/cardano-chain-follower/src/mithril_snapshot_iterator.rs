@@ -6,6 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use cardano_blockchain_types::{MultiEraBlock, Network, Point};
 use logcall::logcall;
 use tokio::task;
 use tracing::{debug, error};
@@ -14,9 +15,6 @@ use tracing_log::log;
 use crate::{
     error::{Error, Result},
     mithril_query::{make_mithril_iterator, ImmutableBlockIterator},
-    network::Network,
-    point::ORIGIN_POINT,
-    MultiEraBlock, Point,
 };
 
 /// Search backwards by 60 slots (seconds) looking for a previous block.
@@ -60,11 +58,11 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
 
     // We stepped back to the origin, so just return Origin
     if step_back_search == 0 {
-        return ORIGIN_POINT;
+        return Point::ORIGIN;
     }
 
     // Create a fuzzy search probe by making the hash zero length.
-    Point::fuzzy(step_back_search)
+    Point::fuzzy(step_back_search.into())
 }
 
 impl MithrilSnapshotIterator {
@@ -90,7 +88,7 @@ impl MithrilSnapshotIterator {
                         return None;
                     };
 
-                    let point = Point::new(block.slot(), block.hash().to_vec());
+                    let point = Point::new(block.slot().into(), block.hash().into());
                     previous = this;
                     this = Some(point.clone());
 
@@ -166,7 +164,7 @@ impl MithrilSnapshotIterator {
         }
 
         let previous = if from.is_origin() {
-            ORIGIN_POINT
+            Point::ORIGIN
         } else {
             let Some(previous) = previous_point else {
                 return Err(Error::Internal);
@@ -212,7 +210,7 @@ impl Iterator for MithrilSnapshotIteratorInner {
             if let Ok(block) = maybe_block {
                 if !self.previous.is_unknown() {
                     // We can safely fully decode this block.
-                    match MultiEraBlock::new(self.chain, block, &self.previous, 0) {
+                    match MultiEraBlock::new(self.chain, block, &self.previous, 0.into()) {
                         Ok(block_data) => {
                             // Update the previous point
                             // debug!("Pre Previous update 1 : {:?}", self.previous);
@@ -241,8 +239,10 @@ impl Iterator for MithrilSnapshotIteratorInner {
                     pallas::ledger::traverse::MultiEraBlock::decode(&block)
                 {
                     // debug!("Pre Previous update 2 : {:?}", self.previous);
-                    self.previous =
-                        Point::new(raw_decoded_block.slot(), raw_decoded_block.hash().to_vec());
+                    self.previous = Point::new(
+                        raw_decoded_block.slot().into(),
+                        raw_decoded_block.hash().into(),
+                    );
                     // debug!("Post Previous update 2 : {:?}", self.previous);
                     continue;
                 }

@@ -6,6 +6,7 @@
 use std::time::Duration;
 
 use anyhow::Context;
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
 use pallas::{
     ledger::traverse::MultiEraHeader,
     network::{
@@ -32,8 +33,7 @@ use crate::{
     error::{Error, Result},
     mithril_snapshot_config::MithrilUpdateMessage,
     mithril_snapshot_data::latest_mithril_snapshot_id,
-    point::{TIP_POINT, UNKNOWN_POINT},
-    stats, ChainSyncConfig, MultiEraBlock, Network, Point, ORIGIN_POINT,
+    stats, ChainSyncConfig,
 };
 
 /// The maximum number of seconds we wait for a node to connect.
@@ -88,7 +88,7 @@ async fn retry_connect(
 
 /// Purge the live chain, and intersect with TIP.
 async fn purge_and_intersect_tip(client: &mut PeerClient, chain: Network) -> Result<Point> {
-    if let Err(error) = purge_live_chain(chain, &TIP_POINT) {
+    if let Err(error) = purge_live_chain(chain, &Point::TIP) {
         // Shouldn't happen.
         error!("failed to purge live chain: {error}");
     }
@@ -122,7 +122,7 @@ async fn resync_live_tip(client: &mut PeerClient, chain: Network) -> Result<Poin
 
 /// Fetch a single block from the Peer, and Decode it.
 async fn fetch_block_from_peer(
-    peer: &mut PeerClient, chain: Network, point: Point, previous_point: Point, fork_count: u64,
+    peer: &mut PeerClient, chain: Network, point: Point, previous_point: Point, fork: Fork,
 ) -> anyhow::Result<MultiEraBlock> {
     let block_data = peer
         .blockfetch()
@@ -130,8 +130,8 @@ async fn fetch_block_from_peer(
         .await
         .with_context(|| "Fetching block data")?;
 
-    debug!("{chain}, {previous_point}, {fork_count}");
-    let live_block_data = MultiEraBlock::new(chain, block_data, &previous_point, fork_count)?;
+    debug!("{chain}, {previous_point}, {fork:?}");
+    let live_block_data = MultiEraBlock::new(chain, block_data, &previous_point, fork)?;
 
     Ok(live_block_data)
 }
@@ -141,7 +141,7 @@ async fn fetch_block_from_peer(
 /// Fetch the rollback block, and try and insert it into the live-chain.
 /// If its a real rollback, it will purge the chain ahead of the block automatically.
 async fn process_rollback_actual(
-    peer: &mut PeerClient, chain: Network, point: Point, tip: &Tip, fork_count: &mut u64,
+    peer: &mut PeerClient, chain: Network, point: Point, tip: &Tip, fork: &mut Fork,
 ) -> anyhow::Result<Point> {
     debug!("RollBackward: {:?} {:?}", point, tip);
 
@@ -149,8 +149,8 @@ async fn process_rollback_actual(
     // rest of live chain tip. And increments the fork count.
     if let Some(mut block) = get_live_block(chain, &point, 0, true) {
         // Even though we are re-adding the known block, increase the fork count.
-        block.set_fork(*fork_count);
-        live_chain_add_block_to_tip(chain, block, fork_count, tip.0.clone().into())?;
+        block.set_fork(*fork);
+        live_chain_add_block_to_tip(chain, block, fork, tip.0.clone().into())?;
         return Ok(point);
     }
 
@@ -165,7 +165,7 @@ async fn process_rollback_actual(
     let previous_point = if let Some(previous_block) = previous_block {
         let previous = previous_block.previous();
         debug!("Previous block: {:?}", previous);
-        if previous == ORIGIN_POINT {
+        if previous == Point::ORIGIN {
             latest_mithril_snapshot_id(chain).tip()
         } else {
             previous
@@ -175,9 +175,8 @@ async fn process_rollback_actual(
         latest_mithril_snapshot_id(chain).tip()
     };
     debug!("Previous point: {:?}", previous_point);
-    let block =
-        fetch_block_from_peer(peer, chain, point.clone(), previous_point, *fork_count).await?;
-    live_chain_add_block_to_tip(chain, block, fork_count, tip.0.clone().into())?;
+    let block = fetch_block_from_peer(peer, chain, point.clone(), previous_point, *fork).await?;
+    live_chain_add_block_to_tip(chain, block, fork, tip.0.clone().into())?;
 
     // Next block we receive is a rollback.
     Ok(point)
@@ -186,7 +185,7 @@ async fn process_rollback_actual(
 /// Process a rollback detected from the peer.
 async fn process_rollback(
     peer: &mut PeerClient, chain: Network, point: Point, tip: &Tip, previous_point: &Point,
-    fork_count: &mut u64,
+    fork: &mut Fork,
 ) -> anyhow::Result<Point> {
     let rollback_slot = point.slot_or_default();
     let head_slot = previous_point.slot_or_default();
@@ -199,7 +198,7 @@ async fn process_rollback(
     };
 
     // We actually do the work here...
-    let response = process_rollback_actual(peer, chain, point, tip, fork_count).await?;
+    let response = process_rollback_actual(peer, chain, point, tip, fork).await?;
 
     // We never really know how many blocks are rolled back when advised by the peer, but we
     // can work out how many slots. This function wraps the real work, so we can properly
@@ -212,7 +211,7 @@ async fn process_rollback(
 /// Process a rollback detected from the peer.
 async fn process_next_block(
     peer: &mut PeerClient, chain: Network, header: HeaderContent, tip: &Tip,
-    previous_point: &Point, fork_count: &mut u64,
+    previous_point: &Point, fork: &mut Fork,
 ) -> anyhow::Result<Point> {
     // Decode the Header of the block so we know what to fetch.
     let decoded_header = MultiEraHeader::decode(
@@ -222,7 +221,7 @@ async fn process_next_block(
     )
     .with_context(|| "Decoding Block Header")?;
 
-    let block_point = Point::new(decoded_header.slot(), decoded_header.hash().to_vec());
+    let block_point = Point::new(decoded_header.slot().into(), decoded_header.hash().into());
 
     debug!("RollForward: {block_point:?} {tip:?}");
 
@@ -231,7 +230,7 @@ async fn process_next_block(
         chain,
         block_point.clone(),
         previous_point.clone(),
-        *fork_count,
+        *fork,
     )
     .await?;
 
@@ -239,12 +238,12 @@ async fn process_next_block(
 
     // We can't store this block because we don't know the previous one so the chain
     // would break, so just use it for previous.
-    if *previous_point == UNKNOWN_POINT {
+    if *previous_point == Point::UNKNOWN {
         // Nothing else we can do with the first block when we don't know the previous
         // one.  Just return it's point.
         debug!("Not storing the block, because we did not know the previous point.");
     } else {
-        live_chain_add_block_to_tip(chain, block, fork_count, tip.0.clone().into())?;
+        live_chain_add_block_to_tip(chain, block, fork, tip.0.clone().into())?;
     }
 
     Ok(block_point)
@@ -255,10 +254,10 @@ async fn process_next_block(
 ///
 /// We take ownership of the client because of that.
 async fn follow_chain(
-    peer: &mut PeerClient, chain: Network, fork_count: &mut u64,
+    peer: &mut PeerClient, chain: Network, fork: &mut Fork,
 ) -> anyhow::Result<()> {
     let mut update_sender = get_chain_update_tx_queue(chain).await;
-    let mut previous_point = UNKNOWN_POINT;
+    let mut previous_point = Point::UNKNOWN;
 
     loop {
         // debug!("Waiting for data from Cardano Peer Node:");
@@ -286,8 +285,7 @@ async fn follow_chain(
                 // subtracting current block height and the tip block height.
                 // IF the TIP is <= the current block height THEN we are at tip.
                 previous_point =
-                    process_next_block(peer, chain, header, &tip, &previous_point, fork_count)
-                        .await?;
+                    process_next_block(peer, chain, header, &tip, &previous_point, fork).await?;
 
                 // This update is just for followers to know to look again at their live chains for
                 // new data.
@@ -295,7 +293,7 @@ async fn follow_chain(
             },
             chainsync::NextResponse::RollBackward(point, tip) => {
                 previous_point =
-                    process_rollback(peer, chain, point.into(), &tip, &previous_point, fork_count)
+                    process_rollback(peer, chain, point.into(), &tip, &previous_point, fork)
                         .await?;
                 // This update is just for followers to know to look again at their live chains for
                 // new data.
@@ -367,8 +365,8 @@ async fn live_sync_backfill(
 
     while let Some(block_data) = peer.blockfetch().recv_while_streaming().await? {
         // Backfilled blocks get placed in the oldest fork currently on the live-chain.
-        let block =
-            MultiEraBlock::new(cfg.chain, block_data, &previous_point, 1).with_context(|| {
+        let block = MultiEraBlock::new(cfg.chain, block_data, &previous_point, 1.into())
+            .with_context(|| {
                 format!(
                     "Failed to decode block data. previous: {previous_point:?}, range: {range_msg}"
                 )
@@ -533,7 +531,7 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
     // Live Fill data starts at fork 1.
     // Immutable data from a mithril snapshot is fork 0.
     // Live backfill is always Fork 1.
-    let mut fork_count: u64 = 2;
+    let mut fork: Fork = Fork::from_saturating(2);
 
     loop {
         // We never have a connection if we end up around the loop, so make a new one.
@@ -551,7 +549,7 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
         }
 
         // Note: This can ONLY return with an error, otherwise it will sync indefinitely.
-        if let Err(error) = follow_chain(&mut peer, cfg.chain, &mut fork_count).await {
+        if let Err(error) = follow_chain(&mut peer, cfg.chain, &mut fork).await {
             error!(
                 "Cardano Client {} failed to follow chain: {}: Reconnecting.",
                 cfg.relay_address, error
@@ -560,7 +558,7 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
         }
 
         // If this returns, we are on a new fork (or assume we are)
-        fork_count += 1;
+        fork.incr();
     }
 }
 

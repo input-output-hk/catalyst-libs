@@ -2,10 +2,9 @@
 
 use std::{io, path::PathBuf};
 
+use cardano_blockchain_types::Network;
 use pallas::network::miniprotocols::chainsync;
 use thiserror::Error;
-
-use crate::network::Network;
 
 /// Crate error type.
 #[derive(Debug, Error)]

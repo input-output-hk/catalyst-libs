@@ -6,6 +6,7 @@ use std::{
     time::Duration,
 };
 
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
 use crossbeam_skiplist::SkipMap;
 use rayon::prelude::*;
 use strum::IntoEnumIterator;
@@ -14,8 +15,7 @@ use tracing::{debug, error};
 use crate::{
     error::{Error, Result},
     mithril_snapshot_data::latest_mithril_snapshot_id,
-    point::UNKNOWN_POINT,
-    stats, MultiEraBlock, Network, Point, TIP_POINT,
+    stats,
 };
 
 /// Type we use to manage the Sync Task handle map.
@@ -40,7 +40,7 @@ static LIVE_CHAINS: LazyLock<SkipMap<Network, ProtectedLiveChainBlockList>> = La
 static PEER_TIP: LazyLock<SkipMap<Network, Point>> = LazyLock::new(|| {
     let map = SkipMap::new();
     for network in Network::iter() {
-        map.insert(network, UNKNOWN_POINT);
+        map.insert(network, Point::UNKNOWN);
     }
     map
 });
@@ -52,7 +52,7 @@ fn update_peer_tip(chain: Network, tip: Point) {
 
 /// Set the last TIP received from the peer.
 pub(crate) fn get_peer_tip(chain: Network) -> Point {
-    (*PEER_TIP.get_or_insert(chain, UNKNOWN_POINT).value()).clone()
+    (*PEER_TIP.get_or_insert(chain, Point::UNKNOWN).value()).clone()
 }
 
 /// Number of seconds to wait if we detect a `SyncReady` race condition.
@@ -122,7 +122,7 @@ impl ProtectedLiveChainBlockList {
         let Some(check_last_live_entry) = live_chain.back() else {
             // Its not an error if we can't get a latest block because the chain is empty,
             // so report that we don't know...
-            return UNKNOWN_POINT;
+            return Point::UNKNOWN;
         };
         let check_last_live_block = check_last_live_entry.value();
         check_last_live_block.point()
@@ -192,7 +192,7 @@ impl ProtectedLiveChainBlockList {
     /// would be lost due to rollback. Will REFUSE to add a block which does NOT have
     /// a proper "previous" point defined.
     fn add_block_to_tip(
-        &self, chain: Network, block: MultiEraBlock, fork_count: &mut u64, tip: Point,
+        &self, chain: Network, block: MultiEraBlock, fork: &mut Fork, tip: Point,
     ) -> Result<()> {
         let live_chain = self.0.write().map_err(|_| Error::Internal)?;
 
@@ -202,11 +202,11 @@ impl ProtectedLiveChainBlockList {
         let last_live_point = Self::get_last_live_point(&live_chain);
         if !previous_point.strict_eq(&last_live_point) {
             // Detected a rollback, so increase the fork count.
-            *fork_count += 1;
+            fork.incr();
             let mut rollback_size: u64 = 0;
 
             // We are NOT contiguous, so check if we can become contiguous with a rollback.
-            debug!("Detected non-contiguous block, rolling back. Fork: {fork_count}");
+            debug!("Detected non-contiguous block, rolling back. Fork: {fork:?}");
 
             // First check if the previous is >= the earliest block in the live chain.
             // This is because when we start syncing we could rollback earlier than our
@@ -265,7 +265,7 @@ impl ProtectedLiveChainBlockList {
         // Ensures we are properly connected to the Mithril Chain.
         // But don't check this if we are about to purge the entire chain.
         // We do this before we bother locking the chain for update.
-        if *point != TIP_POINT {
+        if *point != Point::TIP {
             let latest_mithril_tip = latest_mithril_snapshot_id(chain).tip();
             if !point.strict_eq(&latest_mithril_tip) {
                 return Err(Error::LiveSync(format!(
@@ -278,7 +278,7 @@ impl ProtectedLiveChainBlockList {
 
         // Special Case.
         // If the Purge Point == TIP_POINT, then we purge the entire chain.
-        if *point == TIP_POINT {
+        if *point == Point::TIP {
             live_chain.clear();
         } else {
             // If the block we want to purge upto must be in the chain.
@@ -345,7 +345,7 @@ impl ProtectedLiveChainBlockList {
 
         // Loop until we exhaust probe slots, OR we would step past genesis.
         while slot_age < reference_slot {
-            let ref_point = Point::fuzzy(reference_slot - slot_age);
+            let ref_point = Point::fuzzy((reference_slot - slot_age).into());
             let Some(entry) = chain.lower_bound(Bound::Included(&ref_point)) else {
                 break;
             };
@@ -363,7 +363,7 @@ impl ProtectedLiveChainBlockList {
     /// Given a known point on the live chain, and a fork count, find the best block we
     /// have.
     fn find_best_fork_block(
-        &self, point: &Point, previous_point: &Point, fork: u64,
+        &self, point: &Point, previous_point: &Point, fork: Fork,
     ) -> Option<(MultiEraBlock, u64)> {
         let mut rollback_depth: u64 = 0;
         let Ok(chain) = self.0.read() else {
@@ -371,7 +371,7 @@ impl ProtectedLiveChainBlockList {
         };
 
         // Get the block <= the current slot.
-        let ref_point = Point::fuzzy(point.slot_or_default());
+        let ref_point = Point::fuzzy(point.slot_or_default().into());
         let mut entry = chain.upper_bound(Bound::Included(&ref_point))?;
 
         let mut this_block = entry.value().clone();
@@ -400,7 +400,7 @@ impl ProtectedLiveChainBlockList {
         let live_chain = self.0.read().map_err(|_| Error::Internal).ok()?;
 
         let head_point = Self::get_last_live_point(&live_chain);
-        if head_point == UNKNOWN_POINT {
+        if head_point == Point::UNKNOWN {
             return None;
         }
 
@@ -457,7 +457,7 @@ pub(crate) fn get_live_block(
 ///
 /// Note: It MAY change between calling this function and actually backfilling.
 /// This is expected and normal behavior.
-pub(crate) async fn get_fill_to_point(chain: Network) -> (Point, u64) {
+pub(crate) async fn get_fill_to_point(chain: Network) -> (Point, Fork) {
     let live_chain = get_live_chain(chain);
 
     loop {
@@ -474,10 +474,10 @@ pub(crate) async fn get_fill_to_point(chain: Network) -> (Point, u64) {
 /// `rollback_count` should be set to 1 on the very first connection, after that,
 /// it is maintained by this function, and MUST not be modified elsewhere.
 pub(crate) fn live_chain_add_block_to_tip(
-    chain: Network, block: MultiEraBlock, fork_count: &mut u64, tip: Point,
+    chain: Network, block: MultiEraBlock, fork: &mut Fork, tip: Point,
 ) -> Result<()> {
     let live_chain = get_live_chain(chain);
-    live_chain.add_block_to_tip(chain, block, fork_count, tip)
+    live_chain.add_block_to_tip(chain, block, fork, tip)
 }
 
 /// Backfill the live chain with the block set provided.
@@ -509,7 +509,7 @@ pub(crate) fn get_intersect_points(chain: Network) -> Vec<pallas::network::minip
 
 /// Find best block from a fork relative to a point.
 pub(crate) fn find_best_fork_block(
-    chain: Network, point: &Point, previous_point: &Point, fork: u64,
+    chain: Network, point: &Point, previous_point: &Point, fork: Fork,
 ) -> Option<(MultiEraBlock, u64)> {
     let live_chain = get_live_chain(chain);
     live_chain.find_best_fork_block(point, previous_point, fork)

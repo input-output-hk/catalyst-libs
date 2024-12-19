@@ -2,9 +2,8 @@
 
 use std::fmt::Display;
 
+use cardano_blockchain_types::MultiEraBlock;
 use strum::Display;
-
-use crate::multi_era_block_data::MultiEraBlock;
 
 /// Enum of chain updates received by the follower.
 #[derive(Debug, Clone, Display, PartialEq)]

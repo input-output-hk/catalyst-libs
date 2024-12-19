@@ -7,6 +7,7 @@ use std::{
     sync::Arc,
 };
 
+use cardano_blockchain_types::{MultiEraBlock, Network};
 use chrono::{TimeDelta, Utc};
 use dashmap::DashSet;
 use humantime::format_duration;
@@ -27,10 +28,8 @@ use crate::{
     mithril_snapshot_data::update_latest_mithril_snapshot,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
     mithril_turbo_downloader::MithrilTurboDownloader,
-    network::Network,
     snapshot_id::SnapshotId,
     stats::{self, mithril_sync_failure, mithril_validation_state},
-    MultiEraBlock,
 };
 
 /// The minimum duration between checks for a new Mithril Snapshot. (Must be same as

@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::bail;
+use cardano_blockchain_types::{Network, Point};
 use dashmap::DashMap;
 use futures::future::join_all;
 use strum::IntoEnumIterator;
@@ -22,11 +23,8 @@ use crate::{
     error::{Error, Result},
     mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
     mithril_snapshot_sync::background_mithril_update,
-    network::Network,
-    point::ORIGIN_POINT,
     snapshot_id::SnapshotId,
     turbo_downloader::DlConfig,
-    Point,
 };
 
 /// Type we use to manage the Sync Task handle map.
@@ -200,7 +198,7 @@ impl MithrilSnapshotConfig {
                     };
 
                     // If None, its not a snapshot path, so continue.
-                    if let Some(this_snapshot) = SnapshotId::new(&entry.path(), ORIGIN_POINT) {
+                    if let Some(this_snapshot) = SnapshotId::new(&entry.path(), Point::ORIGIN) {
                         // Don't do anything with the latest snapshot.
                         // Comparison does NOT use `tip` so we construct a temporary ID without it.
                         if this_snapshot != latest_snapshot {
