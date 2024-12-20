@@ -282,10 +282,13 @@ impl Point {
     /// # Examples
     ///
     /// ```
-    /// use cardano_blockchain_types::{Point, hashes::Blake2bHash};
+    /// use cardano_blockchain_types::{hashes::Blake2bHash, Point};
     ///
     /// let specific_point = Point::new(42.into(), [0; 32].into());
-    /// assert_eq!(specific_point.hash_or_default(), Some(Blake2bHash::new(&[0; 32])));
+    /// assert_eq!(
+    ///     specific_point.hash_or_default(),
+    ///     Some(Blake2bHash::new(&[0; 32]))
+    /// );
     ///
     /// let origin_point = Point::ORIGIN;
     /// assert_eq!(origin_point.hash_or_default(), None);
