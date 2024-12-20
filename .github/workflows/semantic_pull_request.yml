@@ -26,6 +26,7 @@ jobs:
         rust/cbork
         rust/hermes-ipfs
         rust/rbac-registration
+        rust/cardano-blockchain-types
         dart
         docs
         general

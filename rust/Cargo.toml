@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "c509-certificate",
+    "cardano-blockchain-types",
     "cardano-chain-follower",
     "hermes-ipfs",
     "cbork",
