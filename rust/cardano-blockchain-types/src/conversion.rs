@@ -2,7 +2,7 @@
 
 use anyhow::bail;
 
-/// Convert an `<T>` to `<R>`. (saturate if out of range.)
+/// Convert an `<T>` to `<R>` (saturate if out of range).
 /// Note can convert any int to float, or f32 to f64 as well.
 /// can not convert from float to int, or f64 to f32.
 pub(crate) fn from_saturating<

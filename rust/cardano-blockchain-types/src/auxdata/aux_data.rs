@@ -9,7 +9,7 @@ use super::{
     scripts::{MutableTransactionScriptsMap, ScriptArray, ScriptType, TransactionScripts},
 };
 
-/// Auxiliary Data (Metadata) for a single Transaction in a block
+/// Auxiliary Data (Metadata) for a single transaction in a block
 #[derive(Clone, Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub struct TransactionAuxData {
@@ -58,7 +58,7 @@ impl TransactionAuxData {
         self.metadata.get(label)
     }
 
-    /// Decode a Shelley-MA Auxiliary Data Array
+    /// Decode a Shelley-MA auxiliary data array
     fn decode_shelley_ma_array(d: &mut minicbor::Decoder) -> Result<Self, minicbor::decode::Error> {
         match d.array() {
             Ok(Some(entries)) => {

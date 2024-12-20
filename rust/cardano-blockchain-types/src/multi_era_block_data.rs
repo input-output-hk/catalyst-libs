@@ -168,6 +168,7 @@ impl MultiEraBlock {
     /// Decodes the data into a multi-era block.
     ///
     /// # Returns
+    ///
     /// The decoded block data, which can easily be processed by a consumer.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
@@ -178,6 +179,7 @@ impl MultiEraBlock {
     /// Decodes the data into a multi-era block.
     ///
     /// # Returns
+    ///
     /// The raw byte data of the block.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
@@ -188,6 +190,7 @@ impl MultiEraBlock {
     /// Returns the block point of this block.
     ///
     /// # Returns
+    ///
     /// The block point of this block.
     #[must_use]
     pub fn point(&self) -> Point {
@@ -197,6 +200,7 @@ impl MultiEraBlock {
     /// Returns the block point of the previous block.
     ///
     /// # Returns
+    ///
     /// The previous blocks `Point`
     #[must_use]
     pub fn previous(&self) -> Point {
@@ -209,6 +213,7 @@ impl MultiEraBlock {
     /// (Immutable Database) of the Node.
     ///
     /// # Returns
+    ///
     /// `true` if the block is immutable, `false` otherwise.
     #[must_use]
     pub fn is_immutable(&self) -> bool {
@@ -224,6 +229,7 @@ impl MultiEraBlock {
     /// - 2+ - for each subsequent rollback detected while reading live blocks.
     ///
     /// # Returns
+    ///
     /// The fork the block was found on.
     #[must_use]
     pub fn fork(&self) -> Fork {
@@ -233,6 +239,7 @@ impl MultiEraBlock {
     /// What blockchain network was the block from
     ///
     /// # Returns
+    ///
     /// - The network that this block originated on.
     #[must_use]
     pub fn network(&self) -> Network {
@@ -242,10 +249,12 @@ impl MultiEraBlock {
     /// Get The Metadata fora a transaction and known label from the block
     ///
     /// # Parameters
+    ///
     /// - `txn_idx` - Index of the Transaction in the Block
     /// - `label` - The label of the transaction
     ///
     /// # Returns
+    ///
     /// - Metadata for the given label in the transaction.
     /// - Or None if the label requested isn't present.
     #[must_use]
@@ -261,7 +270,7 @@ impl MultiEraBlock {
         self.inner.witness_map.as_ref()
     }
 
-    /// If the Witness exists for a given transaction then return its public key.
+    /// If the witness exists for a given transaction then return its public key.
     #[must_use]
     pub fn witness_for_tx(&self, vkey_hash: &VKeyHash, tx_num: TxnIndex) -> Option<VerifyingKey> {
         if let Some(witnesses) = self.witness_map() {

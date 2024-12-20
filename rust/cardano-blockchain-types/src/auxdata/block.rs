@@ -9,7 +9,7 @@ use pallas::ledger::traverse::MultiEraBlock;
 use super::aux_data::TransactionAuxData;
 use crate::txn_index::TxnIndex;
 
-/// Auxiliary Data for every transaction within a block.
+/// Auxiliary data for every transaction within a block.
 #[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub struct BlockAuxData(Arc<dashmap::ReadOnlyView<TxnIndex, TransactionAuxData>>);

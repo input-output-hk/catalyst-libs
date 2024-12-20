@@ -9,11 +9,11 @@
 use crate::conversion::from_saturating;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd)]
-/// Counter that is incremented every time there is a roll-back in live-chain
+/// Counter that is incremented every time there is a roll-back in live-chain.
 pub struct Fork(u64);
 
 impl Fork {
-    /// Convert an `<T>` to Fork. (saturate if out of range.)
+    /// Convert an `<T>` to `Fork` (saturate if out of range).
     pub fn from_saturating<
         T: Copy
             + TryInto<u64>

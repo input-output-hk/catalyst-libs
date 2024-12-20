@@ -8,16 +8,19 @@ use pallas_crypto::hash::Hash;
 
 /// Number of bytes in a blake2b 224 hash.
 pub const BLAKE_2B224_SIZE: usize = 224 / 8;
-/// `Blake2B` 224bit Hash
+
+/// `Blake2B` 224bit Hash.
 pub type Blake2b224Hash = Blake2bHash<BLAKE_2B224_SIZE>;
 
 /// Number of bytes in a blake2b 256 hash.
 pub const BLAKE_2B256_SIZE: usize = 256 / 8;
+
 /// `Blake2B` 256bit Hash
 pub type Blake2b256Hash = Blake2bHash<BLAKE_2B256_SIZE>;
 
 /// Number of bytes in a blake2b 128 hash.
 pub const BLAKE_2B128_SIZE: usize = 128 / 8;
+
 /// `Blake2B` 128bit Hash
 pub type Blake2b128Hash = Blake2bHash<BLAKE_2B128_SIZE>;
 

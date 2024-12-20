@@ -18,7 +18,7 @@ use crate::{
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
 /// most recent block) or any other block. It has special kinds of `Point`,
-/// available as constants: `TIP_POINT`, and `ORIGIN_POINT`.
+/// available as constants: `TIP`, and `ORIGIN`.
 ///
 /// # Attributes
 ///
@@ -35,7 +35,7 @@ impl Point {
     ///
     /// # Usage
     ///
-    /// `ORIGIN_POINT` can be used in scenarios where the starting point of the
+    /// `ORIGIN` can be used in scenarios where the starting point of the
     /// blockchain is required. It signifies the genesis block or the initial state
     /// of the blockchain.
     ///
@@ -50,7 +50,7 @@ impl Point {
     ///
     /// # Usage
     ///
-    /// `TIP_POINT` can be used in scenarios where the most up-to-date point in the
+    /// `TIP` can be used in scenarios where the most up-to-date point in the
     /// blockchain is required. It signifies that the exact point is not important
     /// as long as it is the latest available point in the chain.
     ///
@@ -66,7 +66,7 @@ impl Point {
     ///
     /// # Usage
     ///
-    /// `UNKNOWN_POINT` can be used in scenarios where the previous point in the
+    /// `UNKNOWN` can be used in scenarios where the previous point in the
     /// blockchain is not known and should not be assumed to be the origin. It serves
     /// as a marker for an indeterminate or unspecified point.
     ///
@@ -84,7 +84,7 @@ impl Point {
     /// # Parameters
     ///
     /// * `slot` - A `Slot` representing the slot number in the blockchain.
-    /// * `hash` - A `Blake2b256Hash` , block hash at the specified slot.
+    /// * `hash` - A `Blake2b256Hash`, block hash at the specified slot.
     ///
     /// # Returns
     ///
@@ -138,7 +138,7 @@ impl Point {
 
     /// Creates a new Fuzzy `Point` from a concrete point.
     ///
-    /// Will not alter either TIP or ORIGIN points.
+    /// Will not alter either `TIP` or `ORIGIN` points.
     #[must_use]
     pub fn as_fuzzy(&self) -> Self {
         if *self == Self::TIP {
@@ -153,7 +153,7 @@ impl Point {
         }
     }
 
-    /// Check if a Point is Fuzzy.
+    /// Check if a `Point` is Fuzzy.
     ///
     /// Even though we don't know the hash for TIP or Origin, neither of these points
     /// are considered to be fuzzy.
@@ -180,7 +180,7 @@ impl Point {
         }
     }
 
-    /// Check if a Point is the origin.
+    /// Check if a `Point` is the origin.
     ///
     /// Origin is the synthetic Origin point, and ALSO any point thats at slot zero with a
     /// hash.
@@ -205,7 +205,7 @@ impl Point {
         }
     }
 
-    /// Check if a Point is actually unknown.
+    /// Check if a `Point` is actually unknown.
     ///
     /// # Examples
     ///
@@ -483,7 +483,7 @@ impl Default for Point {
     }
 }
 
-/// Compare Points, because Pallas does not impl `Ord` for Point.
+/// Compare Points, because Pallas does not impl `Ord` for `Point`.
 fn cmp_point(
     a: &pallas::network::miniprotocols::Point, b: &pallas::network::miniprotocols::Point,
 ) -> Ordering {
