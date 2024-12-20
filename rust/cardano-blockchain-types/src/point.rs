@@ -363,22 +363,7 @@ impl PartialEq<Option<Hash<32>>> for Point {
     /// provided hash is `None`, the function checks if the `Point` has an
     /// empty hash.
     fn eq(&self, other: &Option<Hash<32>>) -> bool {
-        match other {
-            Some(cmp_hash) => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
-                        **hash == **cmp_hash
-                    },
-                    pallas::network::miniprotocols::Point::Origin => false,
-                }
-            },
-            None => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
-                    pallas::network::miniprotocols::Point::Origin => true,
-                }
-            },
-        }
+        *self == other.map(Blake2b256Hash::from)
     }
 }
 
