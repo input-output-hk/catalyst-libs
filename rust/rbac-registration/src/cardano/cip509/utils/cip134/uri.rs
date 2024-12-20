@@ -1,4 +1,4 @@
-//! Utility functions for CIP-0134 address.
+//! An URI in the CIP-0134 format.
 
 // Ignore URIs that are used in tests and doc-examples.
 // cSpell:ignoreRegExp web\+cardano:.+
@@ -13,7 +13,8 @@ use pallas::ledger::addresses::Address;
 /// See the [proposal] for more details.
 ///
 /// [proposal]: https://github.com/cardano-foundation/CIPs/pull/888
-#[derive(Debug)]
+#[derive(Debug, Eq, PartialEq)]
+#[allow(clippy::module_name_repetitions)]
 pub struct Cip0134Uri {
     /// A URI string.
     uri: String,

@@ -198,7 +198,7 @@ impl RegistrationChainInner {
         // Add purpose to the list
         let purpose = vec![cip509.purpose];
 
-        let registration = cip509.x509_chunks.0;
+        let registration = cip509.metadata;
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         let x509_cert_map = chain_root_x509_certs(registration.x509_certs, &point_tx_idx);
@@ -269,7 +269,7 @@ impl RegistrationChainInner {
             new_inner.purpose.push(purpose);
         }
 
-        let registration = cip509.x509_chunks.0;
+        let registration = cip509.metadata;
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         update_x509_certs(&mut new_inner, registration.x509_certs, &point_tx_idx);

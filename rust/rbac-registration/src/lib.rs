@@ -2,4 +2,5 @@
 
 pub mod cardano;
 pub mod registration;
-pub(crate) mod utils;
+
+mod utils;

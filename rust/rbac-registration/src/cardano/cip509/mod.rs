@@ -25,16 +25,21 @@ use validation::{
 use x509_chunks::X509Chunks;
 
 use super::transaction::witness::TxWitness;
-use crate::utils::{
-    decode_helper::{decode_bytes, decode_helper, decode_map_len},
-    general::{decode_utf8, decremented_index},
-    hashing::{blake2b_128, blake2b_256},
+use crate::{
+    cardano::cip509::rbac::Cip509RbacMetadata,
+    utils::{
+        decode_helper::{decode_bytes, decode_helper, decode_map_len},
+        general::{decode_utf8, decremented_index},
+        hashing::{blake2b_128, blake2b_256},
+    },
 };
 
 /// CIP509 label.
 pub const LABEL: u64 = 509;
 
 /// CIP509.
+///
+/// See `x509-envelope.cddl` for the details how this structure is encoded.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// `UUIDv4` Purpose .
@@ -43,9 +48,13 @@ pub struct Cip509 {
     pub txn_inputs_hash: TxInputHash, // bytes .size 16
     /// Optional previous transaction ID.
     pub prv_tx_id: Option<Hash<32>>, // bytes .size 32
-    /// x509 chunks.
-    pub x509_chunks: X509Chunks, // chunk_type => [ + x509_chunk ]
+    /// Metadata.
+    ///
+    /// This field encoded in chunks (`chunk_type => [ + x509_chunk ]`). See
+    /// [`X509Chunks`] for more details.
+    pub metadata: Cip509RbacMetadata,
     /// Validation signature.
+    // TODO: FIXME: This probably should be a separate type and not just Vec.
     pub validation_signature: Vec<u8>, // bytes size (1..64)
 }
 
@@ -134,7 +143,7 @@ impl Decode<'_, ()> for Cip509 {
             } else {
                 // Handle the x509 chunks 10 11 12
                 let x509_chunks = X509Chunks::decode(d, ctx)?;
-                cip509_metadatum.x509_chunks = x509_chunks;
+                cip509_metadatum.metadata = x509_chunks.into();
             }
         }
         Ok(cip509_metadatum)
@@ -179,7 +188,7 @@ impl Cip509 {
         let mut is_valid_stake_public_key = true;
         let mut is_valid_payment_key = true;
         let mut is_valid_signing_key = true;
-        if let Some(role_set) = &self.x509_chunks.0.role_set {
+        if let Some(role_set) = &self.metadata.role_set {
             // Validate only role 0
             for role in role_set {
                 if role.role_number == 0 {
