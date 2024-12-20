@@ -10,7 +10,10 @@ use std::{
 
 use pallas::crypto::hash::Hash;
 
-use crate::{hashes::Blake2bHash, Slot};
+use crate::{
+    hashes::{Blake2b256Hash, Blake2bHash},
+    Slot,
+};
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
@@ -81,7 +84,7 @@ impl Point {
     /// # Parameters
     ///
     /// * `slot` - A `Slot` representing the slot number in the blockchain.
-    /// * `hash` - A `Blake2bHash` size 32, block hash at the specified slot.
+    /// * `hash` - A `Blake2b256Hash` , block hash at the specified slot.
     ///
     /// # Returns
     ///
@@ -97,7 +100,7 @@ impl Point {
     /// let point = Point::new(slot.into(), hash.into());
     /// ```
     #[must_use]
-    pub fn new(slot: Slot, hash: Blake2bHash<32>) -> Self {
+    pub fn new(slot: Slot, hash: Blake2b256Hash) -> Self {
         Self(pallas::network::miniprotocols::Point::Specific(
             slot.into(),
             hash.into(),
@@ -269,29 +272,29 @@ impl Point {
     }
 
     /// Retrieves the hash from the `Point`. If the `Point` is
-    /// the origin, it returns a default hash value, which is an empty `Vec<u8>`.
+    /// the origin, it returns `None`.
     ///
     /// # Returns
     ///
-    /// A `Vec<u8>` representing the hash. If the `Point` is the `Origin`, it
-    /// returns an empty vector.
+    /// A `Blake2b256Hash` representing the hash. If the `Point` is the `Origin`, it
+    /// returns `None`.
     ///
     /// # Examples
     ///
     /// ```
-    /// use cardano_blockchain_types::Point;
+    /// use cardano_blockchain_types::{Point, hashes::Blake2bHash};
     ///
     /// let specific_point = Point::new(42.into(), [0; 32].into());
-    /// assert_eq!(specific_point.hash_or_default(), Some([0; 32].into()));
+    /// assert_eq!(specific_point.hash_or_default(), Some(Blake2bHash::new(&[0; 32])));
     ///
     /// let origin_point = Point::ORIGIN;
     /// assert_eq!(origin_point.hash_or_default(), None);
     /// ```
     #[must_use]
-    pub fn hash_or_default(&self) -> Option<Hash<32>> {
+    pub fn hash_or_default(&self) -> Option<Blake2b256Hash> {
         match &self.0 {
             pallas::network::miniprotocols::Point::Specific(_, hash) => {
-                Some(Hash::from(hash.as_slice()))
+                Some(Blake2bHash::new(hash))
             },
             // Origin has empty hash, so set it to None
             pallas::network::miniprotocols::Point::Origin => None,
@@ -328,8 +331,34 @@ impl Point {
     }
 }
 
+impl PartialEq<Option<Blake2b256Hash>> for Point {
+    /// Compares the hash stored in the `Point` with a `Blake2b256Hash`.
+    /// It returns `true` if the hashes match and `false` otherwise. If the
+    /// provided hash is `None`, the function checks if the `Point` has an
+    /// empty hash.
+    fn eq(&self, other: &Option<Blake2b256Hash>) -> bool {
+        match other {
+            Some(cmp_hash) => {
+                match self.0 {
+                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
+                        // Compare vec to vec
+                        *hash == <Blake2b256Hash as Into<Vec<u8>>>::into(*cmp_hash)
+                    },
+                    pallas::network::miniprotocols::Point::Origin => false,
+                }
+            },
+            None => {
+                match self.0 {
+                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
+                    pallas::network::miniprotocols::Point::Origin => true,
+                }
+            },
+        }
+    }
+}
+
 impl PartialEq<Option<Hash<32>>> for Point {
-    /// Compares the hash stored in the `Point` with a known hash.
+    /// Compares the hash stored in the `Point` with a Pallas `Hash`.
     /// It returns `true` if the hashes match and `false` otherwise. If the
     /// provided hash is `None`, the function checks if the `Point` has an
     /// empty hash.
@@ -366,7 +395,13 @@ impl Display for Point {
         let slot = self.slot_or_default();
         let hash = self.hash_or_default();
         match hash {
-            Some(hash) => write!(f, "Point @ {slot:?}:{}", hex::encode(hash)),
+            Some(hash) => {
+                write!(
+                    f,
+                    "Point @ {slot:?}:{}",
+                    hex::encode(<Blake2b256Hash as Into<Vec<u8>>>::into(hash))
+                )
+            },
             None => write!(f, "Point @ {slot:?}"),
         }
     }
@@ -407,20 +442,16 @@ impl PartialEq<u64> for Point {
 }
 
 impl PartialOrd<u64> for Point {
-    /// Allows to compare a `Point` against a `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
+    /// Allows to compare a `Point` against a `u64`
     fn partial_cmp(&self, other: &u64) -> Option<Ordering> {
         self.0.slot_or_default().partial_cmp(other)
     }
 }
 
 impl PartialEq<Option<Point>> for Point {
-    /// Allows to compare a `SnapshotID` against `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
+    /// Allows for direct comparison between a `Point` and an `Option<Point>`,
+    /// returning `true` only if the `Option` contains a `Point` that is equal to the
+    /// `self` instance.
     fn eq(&self, other: &Option<Point>) -> bool {
         if let Some(other) = other {
             *self == *other
@@ -431,11 +462,8 @@ impl PartialEq<Option<Point>> for Point {
 }
 
 impl PartialOrd<Option<Point>> for Point {
-    /// Allows to compare a `Point` against a `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
-    /// Any point is greater than None.
+    /// Allows comparing a `Point` with an `Option<Point>`, where a `Point` is always
+    /// considered greater than `None`.
     fn partial_cmp(&self, other: &Option<Point>) -> Option<Ordering> {
         if let Some(other) = other {
             self.partial_cmp(other)
@@ -476,8 +504,6 @@ fn cmp_point(
 
 #[cfg(test)]
 mod tests {
-    use pallas::crypto::hash::Hash;
-
     use crate::point::*;
 
     #[test]
@@ -485,10 +511,9 @@ mod tests {
         let origin1 = Point::ORIGIN;
         let point1 = Point::new(100u64.into(), [8; 32].into());
 
-        assert!(origin1 != Some(Hash::new([0; 32])));
-        assert!(origin1 == None::<Hash<32>>);
-
-        assert!(point1 == Some(Hash::new([8; 32])));
+        assert!(origin1 != Some(Blake2bHash::<32>::new(&[0; 32])));
+        assert!(origin1 == None::<Blake2b256Hash>);
+        assert!(point1 == Some(Hash::<32>::new([8; 32])));
         assert!(point1 != None::<Hash<32>>);
     }
 

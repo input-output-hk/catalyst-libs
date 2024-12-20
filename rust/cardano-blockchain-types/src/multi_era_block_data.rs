@@ -45,9 +45,8 @@ struct SelfReferencedMultiEraBlock {
 /// Multi-era block - inner.
 #[derive(Debug)]
 struct MultiEraBlockInner {
-    /// What blockchain was the block produced on.
-    //#[allow(dead_code)]
-    pub chain: Network,
+    /// What blockchain network was the block produced on.
+    network: Network,
     /// The Point on the blockchain this block can be found.
     point: Point,
     /// The previous point on the blockchain before this block.
@@ -93,7 +92,7 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     fn new_block(
-        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
+        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
             raw_data,
@@ -140,7 +139,7 @@ impl MultiEraBlock {
         Ok(Self {
             fork,
             inner: Arc::new(MultiEraBlockInner {
-                chain,
+                network,
                 point,
                 previous: previous.clone(),
                 data: self_ref_block,
@@ -156,9 +155,9 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     pub fn new(
-        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
+        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
-        MultiEraBlock::new_block(chain, raw_data, previous, fork)
+        MultiEraBlock::new_block(network, raw_data, previous, fork)
     }
 
     /// Remake the block on a new fork.
@@ -212,7 +211,7 @@ impl MultiEraBlock {
     /// # Returns
     /// `true` if the block is immutable, `false` otherwise.
     #[must_use]
-    pub fn immutable(&self) -> bool {
+    pub fn is_immutable(&self) -> bool {
         self.fork == 0.into()
     }
 
@@ -231,13 +230,13 @@ impl MultiEraBlock {
         self.fork
     }
 
-    /// What chain was the block from
+    /// What blockchain network was the block from
     ///
     /// # Returns
-    /// - The chain that this block originated on.
+    /// - The network that this block originated on.
     #[must_use]
-    pub fn chain(&self) -> Network {
-        self.inner.chain
+    pub fn network(&self) -> Network {
+        self.inner.network
     }
 
     /// Get The Metadata fora a transaction and known label from the block
@@ -286,7 +285,7 @@ impl Display for MultiEraBlock {
         let txns = block.tx_count();
         let aux_data = block.has_aux_data();
 
-        let fork = if self.immutable() {
+        let fork = if self.is_immutable() {
             "Immutable".to_string()
         } else {
             format!("Fork: {fork:?}")
@@ -461,6 +460,10 @@ pub(crate) mod tests {
             );
 
             assert!(block.is_err());
+            assert!(block
+                .unwrap_err()
+                .to_string()
+                .contains("Previous slot is not less than current slot"));
         }
 
         Ok(())

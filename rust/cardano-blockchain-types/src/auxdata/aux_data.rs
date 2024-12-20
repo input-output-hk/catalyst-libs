@@ -158,9 +158,9 @@ impl TransactionAuxData {
 
             let script_array = ScriptArray::decode(d, &mut ctx)?;
             if scripts.insert(script_type, script_array).is_some() {
-                return Err(minicbor::decode::Error::message(
+                return Err(minicbor::decode::Error::message(format!(
                     "Multiple Alonzo+ Script entries of type {script_type} found. Invalid.",
-                ));
+                )));
             }
         }
 
