@@ -16,18 +16,25 @@ use role_data::RoleData;
 use strum_macros::FromRepr;
 
 use super::types::cert_key_hash::CertKeyHash;
-use crate::utils::decode_helper::{
-    decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
+use crate::{
+    cardano::cip509::utils::Cip0134UriSet,
+    utils::decode_helper::{
+        decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
+    },
 };
 
 /// Cip509 RBAC metadata.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509RbacMetadata {
+    // TODO: FIXME: Discuss if we need `Option<Vec>`.
     /// Optional list of x509 certificates.
+    // TODO: FIXME: Parse X509DerCert?..
     pub x509_certs: Option<Vec<X509DerCert>>,
     /// Optional list of c509 certificates.
     /// The value can be either the c509 certificate or c509 metadatum reference.
     pub c509_certs: Option<Vec<C509Cert>>,
+    // TODO: FIXME:
+    pub fixme: Cip0134UriSet,
     /// Optional list of Public keys.
     pub pub_keys: Option<Vec<SimplePublicKeyType>>,
     /// Optional list of revocation list.
@@ -60,50 +67,11 @@ pub enum Cip509RbacMetadataInt {
     RoleSet = 100,
 }
 
-impl Cip509RbacMetadata {
-    /// Create a new instance of `Cip509RbacMetadata`.
-    pub(crate) fn new() -> Self {
-        Self {
-            x509_certs: None,
-            c509_certs: None,
-            pub_keys: None,
-            revocation_list: None,
-            role_set: None,
-            purpose_key_data: HashMap::new(),
-        }
-    }
-
-    /// Set the x509 certificates.
-    fn set_x509_certs(&mut self, x509_certs: Vec<X509DerCert>) {
-        self.x509_certs = Some(x509_certs);
-    }
-
-    /// Set the c509 certificates.
-    fn set_c509_certs(&mut self, c509_certs: Vec<C509Cert>) {
-        self.c509_certs = Some(c509_certs);
-    }
-
-    /// Set the public keys.
-    fn set_pub_keys(&mut self, pub_keys: Vec<SimplePublicKeyType>) {
-        self.pub_keys = Some(pub_keys);
-    }
-
-    /// Set the revocation list.
-    fn set_revocation_list(&mut self, revocation_list: Vec<CertKeyHash>) {
-        self.revocation_list = Some(revocation_list);
-    }
-
-    /// Set the role data set.
-    fn set_role_set(&mut self, role_set: Vec<RoleData>) {
-        self.role_set = Some(role_set);
-    }
-}
-
 impl Decode<'_, ()> for Cip509RbacMetadata {
     fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "Cip509RbacMetadata")?;
 
-        let mut x509_rbac_metadata = Cip509RbacMetadata::new();
+        let mut x509_rbac_metadata = Cip509RbacMetadata::default();
 
         for _ in 0..map_len {
             let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", ctx)?;
@@ -111,23 +79,23 @@ impl Decode<'_, ()> for Cip509RbacMetadata {
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
                         let x509_certs = decode_array_rbac(d, "x509 certificate")?;
-                        x509_rbac_metadata.set_x509_certs(x509_certs);
+                        x509_rbac_metadata.x509_certs = Some(x509_certs);
                     },
                     Cip509RbacMetadataInt::C509Certs => {
                         let c509_certs = decode_array_rbac(d, "c509 certificate")?;
-                        x509_rbac_metadata.set_c509_certs(c509_certs);
+                        x509_rbac_metadata.c509_certs = Some(c509_certs);
                     },
                     Cip509RbacMetadataInt::PubKeys => {
                         let pub_keys = decode_array_rbac(d, "public keys")?;
-                        x509_rbac_metadata.set_pub_keys(pub_keys);
+                        x509_rbac_metadata.pub_keys = Some(pub_keys);
                     },
                     Cip509RbacMetadataInt::RevocationList => {
                         let revocation_list = decode_revocation_list(d)?;
-                        x509_rbac_metadata.set_revocation_list(revocation_list);
+                        x509_rbac_metadata.revocation_list = Some(revocation_list);
                     },
                     Cip509RbacMetadataInt::RoleSet => {
                         let role_set = decode_array_rbac(d, "role set")?;
-                        x509_rbac_metadata.set_role_set(role_set);
+                        x509_rbac_metadata.role_set = Some(role_set);
                     },
                 }
             } else {
@@ -139,6 +107,9 @@ impl Decode<'_, ()> for Cip509RbacMetadata {
                     .insert(key, decode_any(d, "purpose key")?);
             }
         }
+
+        // TODO: FIXME:
+        x509_rbac_metadata.fixme = Cip0134UriSet::new();
         Ok(x509_rbac_metadata)
     }
 }

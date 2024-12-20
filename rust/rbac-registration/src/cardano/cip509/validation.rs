@@ -21,6 +21,9 @@
 //!
 //! Note: This CIP509 is still under development and is subject to change.
 
+// TODO: FIXME:
+#![allow(unused_imports)]
+
 use c509_certificate::{general_names::general_name::GeneralNameValue, C509ExtensionType};
 use der_parser::der::parse_der_sequence;
 use pallas::{
@@ -110,158 +113,17 @@ pub(crate) fn validate_txn_inputs_hash(
 /// Validate the stake public key in the certificate with witness set in transaction.
 #[allow(clippy::too_many_lines)]
 pub(crate) fn validate_stake_public_key(
-    cip509: &Cip509, txn: &MultiEraTx, validation_report: &mut Vec<String>,
+    _cip509: &Cip509, txn: &MultiEraTx, validation_report: &mut Vec<String>,
 ) -> Option<bool> {
     let function_name = "Validate Stake Public Key";
-    let mut pk_addrs = Vec::new();
 
-    // CIP-0509 should only be in conway era
-    if let MultiEraTx::Conway(_) = txn {
-        // X509 certificate
-        if let Some(x509_certs) = &cip509.x509_chunks.0.x509_certs {
-            for x509_cert in x509_certs {
-                match x509_cert {
-                    X509DerCert::X509Cert(cert) => {
-                        // Attempt to decode the DER certificate
-                        let der_cert = match x509_cert::Certificate::from_der(cert) {
-                            Ok(cert) => cert,
-                            Err(e) => {
-                                validation_report.push(format!(
-                                    "{function_name}, Failed to decode x509 certificate DER: {e}"
-                                ));
-                                return None;
-                            },
-                        };
-
-                        // Find the Subject Alternative Name extension
-                        let san_ext =
-                            der_cert
-                                .tbs_certificate
-                                .extensions
-                                .as_ref()
-                                .and_then(|exts| {
-                                    exts.iter()
-                                        .find(|ext| ext.extn_id == ID_CE_SUBJECT_ALT_NAME)
-                                });
-
-                        // Subject Alternative Name extension if it exists
-                        if let Some(san_ext) = san_ext {
-                            match parse_der_sequence(san_ext.extn_value.as_bytes()) {
-                                Ok((_, parsed_seq)) => {
-                                    for data in parsed_seq.ref_iter() {
-                                        // Check for context-specific primitive type with tag
-                                        // number
-                                        // 6 (raw_tag 134)
-                                        if data.header.raw_tag() == Some(&[URI]) {
-                                            match data.content.as_slice() {
-                                                Ok(content) => {
-                                                    // Decode the UTF-8 string
-                                                    let addr: String = match decode_utf8(content) {
-                                                        Ok(addr) => addr,
-                                                        Err(e) => {
-                                                            validation_report.push(format!(
-                                                                "{function_name}, Failed to decode UTF-8 string for context-specific primitive type with raw tag 134: {e}",
-                                                                ),
-                                                            );
-                                                            return None;
-                                                        },
-                                                    };
-
-                                                    // Extract the CIP19 hash and push into
-                                                    // array
-                                                    if let Ok(uri) = Cip0134Uri::parse(&addr) {
-                                                        if let Address::Stake(a) = uri.address() {
-                                                            pk_addrs.push(
-                                                                a.payload().as_hash().to_vec(),
-                                                            );
-                                                        }
-                                                    }
-                                                },
-                                                Err(e) => {
-                                                    validation_report.push(
-                                                        format!("{function_name}, Failed to process content for context-specific primitive type with raw tag 134: {e}"));
-                                                    return None;
-                                                },
-                                            }
-                                        }
-                                    }
-                                },
-                                Err(e) => {
-                                    validation_report.push(
-                                        format!(
-                                            "{function_name}, Failed to parse DER sequence for Subject Alternative Name extension: {e}"
-                                        )
-                                    );
-                                    return None;
-                                },
-                            }
-                        }
-                    },
-                    _ => continue,
-                }
-            }
-        }
-        // C509 Certificate
-        if let Some(c509_certs) = &cip509.x509_chunks.0.c509_certs {
-            for c509_cert in c509_certs {
-                match c509_cert {
-                    C509Cert::C509CertInMetadatumReference(_) => {
-                        validation_report.push(format!(
-                            "{function_name}, C509 metadatum reference is currently not supported"
-                        ));
-                    },
-                    C509Cert::C509Certificate(c509) => {
-                        for exts in c509.tbs_cert().extensions().extensions() {
-                            if *exts.registered_oid().c509_oid().oid()
-                                == C509ExtensionType::SubjectAlternativeName.oid()
-                            {
-                                match exts.value() {
-                                            c509_certificate::extensions::extension::ExtensionValue::AlternativeName(alt_name) => {
-                                                match alt_name.general_name() {
-                                                    c509_certificate::extensions::alt_name::GeneralNamesOrText::GeneralNames(gn) => {
-                                                        for name in gn.general_names() {
-                                                            if name.gn_type() == &c509_certificate::general_names::general_name::GeneralNameTypeRegistry::UniformResourceIdentifier {
-                                                                match name.gn_value() {
-                                                                    GeneralNameValue::Text(s) => {
-                                                                        if let Ok(uri) = Cip0134Uri::parse(s) {
-                                                                            if let Address::Stake(a) = uri.address() {
-                                                                                pk_addrs.push(a.payload().as_hash().to_vec());
-                                                                            }
-                                                                        }
-                                                                    },
-                                                                    _ => {
-                                                                        validation_report.push(
-                                                                            format!("{function_name}, Failed to get the value of subject alternative name"),
-                                                                        );
-                                                                    }
-                                                                }
-                                                            }
-                                                        }
-                                                    },
-                                                    c509_certificate::extensions::alt_name::GeneralNamesOrText::Text(_) => {
-                                                        validation_report.push(
-                                                            format!("{function_name}, Failed to find C509 general names in subject alternative name"),
-                                                        );
-                                                    }
-                                                }
-                                            },
-                                            _ => {
-                                                validation_report.push(
-                                                    format!("{function_name}, Failed to get C509 subject alternative name")
-                                                );
-                                            }
-                                        }
-                            }
-                        }
-                    },
-                    _ => continue,
-                }
-            }
-        }
-    } else {
+    if !matches!(txn, MultiEraTx::Conway(_)) {
         validation_report.push(format!("{function_name}, Unsupported transaction era"));
         return None;
     }
+
+    // TODO: FIXME: Replace pk_addrs.
+    let pk_addrs = Vec::new();
 
     // Create TxWitness
     // Note that TxWitness designs to work with multiple transactions
@@ -597,7 +459,7 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
 
-        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+        if let Some(role_set) = &cip509.metadata.role_set {
             for role in role_set {
                 if role.role_number == 0 {
                     assert!(validate_payment_key(tx, role, &mut validation_report,).unwrap());
@@ -623,7 +485,7 @@ mod tests {
 
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
-        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+        if let Some(role_set) = &cip509.metadata.role_set {
             for role in role_set {
                 if role.role_number == 0 {
                     assert!(validate_role_singing_key(role, &mut validation_report,));
@@ -650,7 +512,7 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
 
-        if let Some(role_set) = &cip509.x509_chunks.0.role_set {
+        if let Some(role_set) = &cip509.metadata.role_set {
             for role in role_set {
                 if role.role_number == 0 {
                     assert!(validate_payment_key(tx, role, &mut validation_report,).unwrap());
