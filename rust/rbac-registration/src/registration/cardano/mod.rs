@@ -198,7 +198,7 @@ impl RegistrationChainInner {
         // Add purpose to the list
         let purpose = vec![cip509.purpose];
 
-        let registration = cip509.x509_chunks.0;
+        let registration = cip509.metadata;
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         let x509_cert_map = chain_root_x509_certs(registration.x509_certs, &point_tx_idx);
@@ -269,7 +269,7 @@ impl RegistrationChainInner {
             new_inner.purpose.push(purpose);
         }
 
-        let registration = cip509.x509_chunks.0;
+        let registration = cip509.metadata;
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         update_x509_certs(&mut new_inner, registration.x509_certs, &point_tx_idx);
@@ -303,15 +303,13 @@ fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
 
 /// Process x509 certificate for chain root.
 fn chain_root_x509_certs(
-    x509_certs: Option<Vec<X509DerCert>>, point_tx_idx: &PointTxIdx,
+    x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxIdx,
 ) -> HashMap<usize, (PointTxIdx, Vec<u8>)> {
     let mut map = HashMap::new();
-    if let Some(cert_list) = x509_certs {
-        for (idx, cert) in cert_list.iter().enumerate() {
-            // Chain root, expect only the certificate not undefined or delete
-            if let cip509::rbac::certs::X509DerCert::X509Cert(cert) = cert {
-                map.insert(idx, (point_tx_idx.clone(), cert.clone()));
-            }
+    for (idx, cert) in x509_certs.into_iter().enumerate() {
+        // Chain root, expect only the certificate not undefined or delete
+        if let X509DerCert::X509Cert(cert) = cert {
+            map.insert(idx, (point_tx_idx.clone(), cert));
         }
     }
     map
@@ -319,40 +317,35 @@ fn chain_root_x509_certs(
 
 /// Update x509 certificates in the registration chain.
 fn update_x509_certs(
-    new_inner: &mut RegistrationChainInner, x509_certs: Option<Vec<X509DerCert>>,
-    point_tx_idx: &PointTxIdx,
+    new_inner: &mut RegistrationChainInner, x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxIdx,
 ) {
-    if let Some(cert_list) = x509_certs {
-        for (idx, cert) in cert_list.iter().enumerate() {
-            match cert {
-                // Unchanged to that index, so continue
-                cip509::rbac::certs::X509DerCert::Undefined => continue,
-                // Delete the certificate
-                cip509::rbac::certs::X509DerCert::Deleted => {
-                    new_inner.x509_certs.remove(&idx);
-                },
-                // Add the new certificate
-                cip509::rbac::certs::X509DerCert::X509Cert(cert) => {
-                    new_inner
-                        .x509_certs
-                        .insert(idx, (point_tx_idx.clone(), cert.clone()));
-                },
-            }
+    for (idx, cert) in x509_certs.into_iter().enumerate() {
+        match cert {
+            // Unchanged to that index, so continue
+            X509DerCert::Undefined => continue,
+            // Delete the certificate
+            X509DerCert::Deleted => {
+                new_inner.x509_certs.remove(&idx);
+            },
+            // Add the new certificate
+            X509DerCert::X509Cert(cert) => {
+                new_inner
+                    .x509_certs
+                    .insert(idx, (point_tx_idx.clone(), cert));
+            },
         }
     }
 }
 
 /// Process c509 certificates for chain root.
 fn chain_root_c509_certs(
-    c509_certs: Option<Vec<C509Cert>>, point_tx_idx: &PointTxIdx,
+    c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxIdx,
 ) -> HashMap<usize, (PointTxIdx, C509)> {
     let mut map = HashMap::new();
-    if let Some(cert_list) = c509_certs {
-        for (idx, cert) in cert_list.iter().enumerate() {
-            if let cip509::rbac::certs::C509Cert::C509Certificate(cert) = cert {
-                // Chain root, expect only the certificate not undefined or delete
-                map.insert(idx, (point_tx_idx.clone(), *cert.clone()));
-            }
+    for (idx, cert) in c509_certs.into_iter().enumerate() {
+        if let C509Cert::C509Certificate(cert) = cert {
+            // Chain root, expect only the certificate not undefined or delete
+            map.insert(idx, (point_tx_idx.clone(), *cert));
         }
     }
     map
@@ -360,29 +353,26 @@ fn chain_root_c509_certs(
 
 /// Update c509 certificates in the registration chain.
 fn update_c509_certs(
-    new_inner: &mut RegistrationChainInner, c509_certs: Option<Vec<C509Cert>>,
-    point_tx_idx: &PointTxIdx,
+    new_inner: &mut RegistrationChainInner, c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<()> {
-    if let Some(cert_list) = c509_certs {
-        for (idx, cert) in cert_list.iter().enumerate() {
-            match cert {
-                // Unchanged to that index, so continue
-                cip509::rbac::certs::C509Cert::Undefined => continue,
-                // Delete the certificate
-                cip509::rbac::certs::C509Cert::Deleted => {
-                    new_inner.c509_certs.remove(&idx);
-                },
-                // Certificate reference
-                cip509::rbac::certs::C509Cert::C509CertInMetadatumReference(_) => {
-                    bail!("Unsupported c509 certificate in metadatum reference")
-                },
-                // Add the new certificate
-                cip509::rbac::certs::C509Cert::C509Certificate(c509) => {
-                    new_inner
-                        .c509_certs
-                        .insert(idx, (point_tx_idx.clone(), *c509.clone()));
-                },
-            }
+    for (idx, cert) in c509_certs.into_iter().enumerate() {
+        match cert {
+            // Unchanged to that index, so continue
+            C509Cert::Undefined => continue,
+            // Delete the certificate
+            C509Cert::Deleted => {
+                new_inner.c509_certs.remove(&idx);
+            },
+            // Certificate reference
+            C509Cert::C509CertInMetadatumReference(_) => {
+                bail!("Unsupported c509 certificate in metadatum reference")
+            },
+            // Add the new certificate
+            C509Cert::C509Certificate(c509) => {
+                new_inner
+                    .c509_certs
+                    .insert(idx, (point_tx_idx.clone(), *c509));
+            },
         }
     }
     Ok(())
@@ -390,15 +380,13 @@ fn update_c509_certs(
 
 /// Process public keys for chain root.
 fn chain_root_public_keys(
-    pub_keys: Option<Vec<SimplePublicKeyType>>, point_tx_idx: &PointTxIdx,
+    pub_keys: Vec<SimplePublicKeyType>, point_tx_idx: &PointTxIdx,
 ) -> HashMap<usize, (PointTxIdx, VerifyingKey)> {
     let mut map = HashMap::new();
-    if let Some(key_list) = pub_keys {
-        for (idx, key) in key_list.iter().enumerate() {
-            // Chain root, expect only the public key not undefined or delete
-            if let cip509::rbac::pub_key::SimplePublicKeyType::Ed25519(key) = key {
-                map.insert(idx, (point_tx_idx.clone(), *key));
-            }
+    for (idx, key) in pub_keys.into_iter().enumerate() {
+        // Chain root, expect only the public key not undefined or delete
+        if let SimplePublicKeyType::Ed25519(key) = key {
+            map.insert(idx, (point_tx_idx.clone(), key));
         }
     }
     map
@@ -406,119 +394,110 @@ fn chain_root_public_keys(
 
 /// Update public keys in the registration chain.
 fn update_public_keys(
-    new_inner: &mut RegistrationChainInner, pub_keys: Option<Vec<SimplePublicKeyType>>,
+    new_inner: &mut RegistrationChainInner, pub_keys: Vec<SimplePublicKeyType>,
     point_tx_idx: &PointTxIdx,
 ) {
-    if let Some(key_list) = pub_keys {
-        for (idx, cert) in key_list.iter().enumerate() {
-            match cert {
-                // Unchanged to that index, so continue
-                cip509::rbac::pub_key::SimplePublicKeyType::Undefined => continue,
-                // Delete the public key
-                cip509::rbac::pub_key::SimplePublicKeyType::Deleted => {
-                    new_inner.simple_keys.remove(&idx);
-                },
-                // Add the new public key
-                cip509::rbac::pub_key::SimplePublicKeyType::Ed25519(key) => {
-                    new_inner
-                        .simple_keys
-                        .insert(idx, (point_tx_idx.clone(), *key));
-                },
-            }
+    for (idx, cert) in pub_keys.into_iter().enumerate() {
+        match cert {
+            // Unchanged to that index, so continue
+            SimplePublicKeyType::Undefined => continue,
+            // Delete the public key
+            SimplePublicKeyType::Deleted => {
+                new_inner.simple_keys.remove(&idx);
+            },
+            // Add the new public key
+            SimplePublicKeyType::Ed25519(key) => {
+                new_inner
+                    .simple_keys
+                    .insert(idx, (point_tx_idx.clone(), key));
+            },
         }
     }
 }
 
 /// Process the revocation list.
 fn revocations_list(
-    revocation_list: Option<Vec<CertKeyHash>>, point_tx_idx: &PointTxIdx,
+    revocation_list: Vec<CertKeyHash>, point_tx_idx: &PointTxIdx,
 ) -> Vec<(PointTxIdx, CertKeyHash)> {
     let mut revocations = Vec::new();
-    if let Some(revocations_data) = revocation_list {
-        for item in revocations_data {
-            revocations.push((point_tx_idx.clone(), item.clone()));
-        }
+    for item in revocation_list {
+        revocations.push((point_tx_idx.clone(), item.clone()));
     }
     revocations
 }
 
 /// Process the role data for chain root.
 fn chain_root_role_data(
-    role_set: Option<Vec<cip509::rbac::role_data::RoleData>>, txn: &MultiEraTx,
-    point_tx_idx: &PointTxIdx,
+    role_set: Vec<cip509::rbac::role_data::RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<HashMap<u8, (PointTxIdx, RoleData)>> {
     let mut role_data_map = HashMap::new();
-    if let Some(role_set_data) = role_set {
-        for role_data in role_set_data {
-            let signing_key = role_data.role_signing_key.clone();
-            let encryption_key = role_data.role_encryption_key.clone();
+    for role_data in role_set {
+        let signing_key = role_data.role_signing_key.clone();
+        let encryption_key = role_data.role_encryption_key.clone();
 
-            // Get the payment key
-            let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
+        // Get the payment key
+        let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
 
-            // Map of role number to point and role data
-            role_data_map.insert(
-                role_data.role_number,
-                (
-                    point_tx_idx.clone(),
-                    RoleData::new(
-                        signing_key,
-                        encryption_key,
-                        payment_key,
-                        role_data.role_extended_data_keys.clone(),
-                    ),
+        // Map of role number to point and role data
+        role_data_map.insert(
+            role_data.role_number,
+            (
+                point_tx_idx.clone(),
+                RoleData::new(
+                    signing_key,
+                    encryption_key,
+                    payment_key,
+                    role_data.role_extended_data_keys.clone(),
                 ),
-            );
-        }
+            ),
+        );
     }
     Ok(role_data_map)
 }
 
 /// Update the role data in the registration chain.
 fn update_role_data(
-    inner: &mut RegistrationChainInner, role_set: Option<Vec<cip509::rbac::role_data::RoleData>>,
+    inner: &mut RegistrationChainInner, role_set: Vec<cip509::rbac::role_data::RoleData>,
     txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<()> {
-    if let Some(role_set_data) = role_set {
-        for role_data in role_set_data {
-            // If there is new role singing key, use it, else use the old one
-            let signing_key = match role_data.role_signing_key {
-                Some(key) => Some(key),
-                None => {
-                    match inner.role_data.get(&role_data.role_number) {
-                        Some((_, role_data)) => role_data.signing_key_ref().clone(),
-                        None => None,
-                    }
-                },
-            };
+    for role_data in role_set {
+        // If there is new role singing key, use it, else use the old one
+        let signing_key = match role_data.role_signing_key {
+            Some(key) => Some(key),
+            None => {
+                match inner.role_data.get(&role_data.role_number) {
+                    Some((_, role_data)) => role_data.signing_key_ref().clone(),
+                    None => None,
+                }
+            },
+        };
 
-            // If there is new role encryption key, use it, else use the old one
-            let encryption_key = match role_data.role_encryption_key {
-                Some(key) => Some(key),
-                None => {
-                    match inner.role_data.get(&role_data.role_number) {
-                        Some((_, role_data)) => role_data.encryption_ref().clone(),
-                        None => None,
-                    }
-                },
-            };
-            let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
+        // If there is new role encryption key, use it, else use the old one
+        let encryption_key = match role_data.role_encryption_key {
+            Some(key) => Some(key),
+            None => {
+                match inner.role_data.get(&role_data.role_number) {
+                    Some((_, role_data)) => role_data.encryption_ref().clone(),
+                    None => None,
+                }
+            },
+        };
+        let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
 
-            // Map of role number to point and role data
-            // Note that new role data will overwrite the old one
-            inner.role_data.insert(
-                role_data.role_number,
-                (
-                    point_tx_idx.clone(),
-                    RoleData::new(
-                        signing_key,
-                        encryption_key,
-                        payment_key,
-                        role_data.role_extended_data_keys.clone(),
-                    ),
+        // Map of role number to point and role data
+        // Note that new role data will overwrite the old one
+        inner.role_data.insert(
+            role_data.role_number,
+            (
+                point_tx_idx.clone(),
+                RoleData::new(
+                    signing_key,
+                    encryption_key,
+                    payment_key,
+                    role_data.role_extended_data_keys.clone(),
                 ),
-            );
-        }
+            ),
+        );
     }
     Ok(())
 }
