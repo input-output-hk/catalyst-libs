@@ -10,10 +10,7 @@ use std::{
 
 use pallas::crypto::hash::Hash;
 
-use crate::{
-    hashes::{Blake2b256Hash, Blake2bHash},
-    Slot,
-};
+use crate::{hashes::Blake2b256Hash, Slot};
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
@@ -282,12 +279,12 @@ impl Point {
     /// # Examples
     ///
     /// ```
-    /// use cardano_blockchain_types::{hashes::Blake2bHash, Point};
+    /// use cardano_blockchain_types::{hashes::Blake2b256Hash, Point};
     ///
     /// let specific_point = Point::new(42.into(), [0; 32].into());
     /// assert_eq!(
     ///     specific_point.hash_or_default(),
-    ///     Some(Blake2bHash::new(&[0; 32]))
+    ///     Some::<Blake2b256Hash>([0; 32].into())
     /// );
     ///
     /// let origin_point = Point::ORIGIN;
@@ -297,7 +294,7 @@ impl Point {
     pub fn hash_or_default(&self) -> Option<Blake2b256Hash> {
         match &self.0 {
             pallas::network::miniprotocols::Point::Specific(_, hash) => {
-                Some(Blake2bHash::new(hash))
+                Blake2b256Hash::try_from(hash.clone()).ok()
             },
             // Origin has empty hash, so set it to None
             pallas::network::miniprotocols::Point::Origin => None,
@@ -507,16 +504,16 @@ fn cmp_point(
 
 #[cfg(test)]
 mod tests {
-    use crate::point::*;
+    use crate::{hashes::Blake2bHash, point::*};
 
     #[test]
     fn test_cmp_hash_simple() {
         let origin1 = Point::ORIGIN;
         let point1 = Point::new(100u64.into(), [8; 32].into());
 
-        assert!(origin1 != Some(Blake2bHash::<32>::new(&[0; 32])));
+        assert!(origin1 != Some::<Blake2b256Hash>([0; 32].into()));
         assert!(origin1 == None::<Blake2b256Hash>);
-        assert!(point1 == Some(Hash::<32>::new([8; 32])));
+        assert!(point1 == Some::<Blake2b256Hash>([8; 32].into()));
         assert!(point1 != None::<Hash<32>>);
     }
 
