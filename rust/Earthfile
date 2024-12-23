@@ -52,6 +52,7 @@ check:
 build:
     FROM +builder-src
     RUN --no-cache echo "Cache Disabled"
+    WAIT
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
@@ -63,7 +64,7 @@ build:
         --junit="cat-libs.junit-report.xml" \
         --coverage="cat-libs.coverage.info" \
         --docs="true"
-
+    END
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
     SAVE ARTIFACT ~/build/target build
