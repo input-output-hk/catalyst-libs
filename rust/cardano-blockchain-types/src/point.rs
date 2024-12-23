@@ -10,12 +10,12 @@ use std::{
 
 use pallas::crypto::hash::Hash;
 
-use crate::{hashes::Blake2bHash, Slot};
+use crate::{hashes::Blake2b256Hash, Slot};
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
 /// most recent block) or any other block. It has special kinds of `Point`,
-/// available as constants: `TIP_POINT`, and `ORIGIN_POINT`.
+/// available as constants: `TIP`, and `ORIGIN`.
 ///
 /// # Attributes
 ///
@@ -32,7 +32,7 @@ impl Point {
     ///
     /// # Usage
     ///
-    /// `ORIGIN_POINT` can be used in scenarios where the starting point of the
+    /// `ORIGIN` can be used in scenarios where the starting point of the
     /// blockchain is required. It signifies the genesis block or the initial state
     /// of the blockchain.
     ///
@@ -47,7 +47,7 @@ impl Point {
     ///
     /// # Usage
     ///
-    /// `TIP_POINT` can be used in scenarios where the most up-to-date point in the
+    /// `TIP` can be used in scenarios where the most up-to-date point in the
     /// blockchain is required. It signifies that the exact point is not important
     /// as long as it is the latest available point in the chain.
     ///
@@ -63,7 +63,7 @@ impl Point {
     ///
     /// # Usage
     ///
-    /// `UNKNOWN_POINT` can be used in scenarios where the previous point in the
+    /// `UNKNOWN` can be used in scenarios where the previous point in the
     /// blockchain is not known and should not be assumed to be the origin. It serves
     /// as a marker for an indeterminate or unspecified point.
     ///
@@ -81,7 +81,7 @@ impl Point {
     /// # Parameters
     ///
     /// * `slot` - A `Slot` representing the slot number in the blockchain.
-    /// * `hash` - A `Blake2bHash` size 32, block hash at the specified slot.
+    /// * `hash` - A `Blake2b256Hash`, block hash at the specified slot.
     ///
     /// # Returns
     ///
@@ -89,15 +89,15 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let hash = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-    /// let point = Point::new(slot, hash);
+    /// let hash = [0; 32];
+    /// let point = Point::new(slot.into(), hash.into());
     /// ```
     #[must_use]
-    pub fn new(slot: Slot, hash: Blake2bHash<32>) -> Self {
+    pub fn new(slot: Slot, hash: Blake2b256Hash) -> Self {
         Self(pallas::network::miniprotocols::Point::Specific(
             slot.into(),
             hash.into(),
@@ -119,11 +119,11 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let point = Point::fuzzy(slot);
+    /// let point = Point::fuzzy(slot.into());
     /// ```
     #[must_use]
     pub fn fuzzy(slot: Slot) -> Self {
@@ -135,7 +135,7 @@ impl Point {
 
     /// Creates a new Fuzzy `Point` from a concrete point.
     ///
-    /// Will not alter either TIP or ORIGIN points.
+    /// Will not alter either `TIP` or `ORIGIN` points.
     #[must_use]
     pub fn as_fuzzy(&self) -> Self {
         if *self == Self::TIP {
@@ -150,18 +150,18 @@ impl Point {
         }
     }
 
-    /// Check if a Point is Fuzzy.
+    /// Check if a `Point` is Fuzzy.
     ///
     /// Even though we don't know the hash for TIP or Origin, neither of these points
     /// are considered to be fuzzy.
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let point = Point::fuzzy(slot);
+    /// let point = Point::fuzzy(slot.into());
     ///
     /// assert!(point.is_fuzzy());
     /// ```
@@ -177,18 +177,18 @@ impl Point {
         }
     }
 
-    /// Check if a Point is the origin.
+    /// Check if a `Point` is the origin.
     ///
     /// Origin is the synthetic Origin point, and ALSO any point thats at slot zero with a
     /// hash.
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
     /// let slot = 42;
-    /// let point = Point::fuzzy(slot);
+    /// let point = Point::fuzzy(slot.into());
     ///
     /// assert!(!point.is_origin());
     /// ```
@@ -202,14 +202,14 @@ impl Point {
         }
     }
 
-    /// Check if a Point is actually unknown.
+    /// Check if a `Point` is actually unknown.
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let point = Point::fuzzy(0);
+    /// let point = Point::fuzzy(0.into());
     ///
     /// assert!(point.is_unknown());
     /// ```
@@ -223,16 +223,16 @@ impl Point {
         }
     }
 
-    /// Check if a Point is actually unknown.
+    /// Check if a Point is the tip.
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let point = Point::fuzzy(0);
+    /// let point = Point::fuzzy(0.into());
     ///
-    /// assert!(point.is_unknown());
+    /// assert!(!point.is_tip());
     /// ```
     #[must_use]
     pub fn is_tip(&self) -> bool {
@@ -241,55 +241,6 @@ impl Point {
                 slot == u64::MAX && hash.is_empty()
             },
             pallas::network::miniprotocols::Point::Origin => false,
-        }
-    }
-
-    /// Compares the hash stored in the `Point` with a known hash.
-    /// It returns `true` if the hashes match and `false` otherwise. If the
-    /// provided hash is `None`, the function checks if the `Point` has an
-    /// empty hash.
-    ///
-    /// # Parameters
-    ///
-    /// * `hash` - An `Option<Hash<32>>` containing the hash to compare against. If
-    ///   `Some`, the contained hash is compared with the `Point`'s hash. If `None`, the
-    ///   function checks if the `Point`'s hash is empty.
-    ///
-    /// # Returns
-    ///
-    /// A `bool` indicating whether the hashes match.
-    ///
-    /// # Examples
-    ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
-    ///
-    /// use pallas::crypto::hash::Hash;
-    ///
-    /// let point = Point::new(42, vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
-    /// let hash = Some(Hash::new([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]));
-    /// assert!(point.cmp_hash(&hash));
-    ///
-    /// let empty_point = Point::fuzzy(42);
-    /// assert!(empty_point.cmp_hash(&None));
-    /// ```
-    #[must_use]
-    pub fn cmp_hash(&self, hash: &Option<Hash<32>>) -> bool {
-        match hash {
-            Some(cmp_hash) => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
-                        **hash == **cmp_hash
-                    },
-                    pallas::network::miniprotocols::Point::Origin => false,
-                }
-            },
-            None => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
-                    pallas::network::miniprotocols::Point::Origin => true,
-                }
-            },
         }
     }
 
@@ -303,44 +254,50 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::{Point, ORIGIN_POINT};
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let specific_point = Point::new(42, vec![1, 2, 3]);
-    /// assert_eq!(specific_point.slot_or_default(), 42);
+    /// let specific_point = Point::new(42.into(), [0; 32].into());
+    /// assert_eq!(specific_point.slot_or_default(), 42.into());
     ///
-    /// let origin_point = ORIGIN_POINT;
-    /// assert_eq!(origin_point.slot_or_default(), 0); // assuming 0 is the default
+    /// let origin_point = Point::ORIGIN;
+    /// assert_eq!(origin_point.slot_or_default(), 0.into()); // assuming 0 is the default
     /// ```
     #[must_use]
-    pub fn slot_or_default(&self) -> u64 {
-        self.0.slot_or_default()
+    pub fn slot_or_default(&self) -> Slot {
+        self.0.slot_or_default().into()
     }
 
     /// Retrieves the hash from the `Point`. If the `Point` is
-    /// the origin, it returns a default hash value, which is an empty `Vec<u8>`.
+    /// the origin, it returns `None`.
     ///
     /// # Returns
     ///
-    /// A `Vec<u8>` representing the hash. If the `Point` is the `Origin`, it
-    /// returns an empty vector.
+    /// A `Blake2b256Hash` representing the hash. If the `Point` is the `Origin`, it
+    /// returns `None`.
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::{Point, ORIGIN_POINT};
+    /// ```
+    /// use cardano_blockchain_types::{hashes::Blake2b256Hash, Point};
     ///
-    /// let specific_point = Point::new(42, vec![1, 2, 3]);
-    /// assert_eq!(specific_point.hash_or_default(), vec![1, 2, 3]);
+    /// let specific_point = Point::new(42.into(), [0; 32].into());
+    /// assert_eq!(
+    ///     specific_point.hash_or_default(),
+    ///     Some::<Blake2b256Hash>([0; 32].into())
+    /// );
     ///
-    /// let origin_point = ORIGIN_POINT;
-    /// assert_eq!(origin_point.hash_or_default(), Vec::new());
+    /// let origin_point = Point::ORIGIN;
+    /// assert_eq!(origin_point.hash_or_default(), None);
     /// ```
     #[must_use]
-    pub fn hash_or_default(&self) -> Vec<u8> {
+    pub fn hash_or_default(&self) -> Option<Blake2b256Hash> {
         match &self.0 {
-            pallas::network::miniprotocols::Point::Specific(_, hash) => hash.clone(),
-            pallas::network::miniprotocols::Point::Origin => Vec::new(),
+            pallas::network::miniprotocols::Point::Specific(_, hash) => {
+                Blake2b256Hash::try_from(hash.clone()).ok()
+            },
+            // Origin has empty hash, so set it to None
+            pallas::network::miniprotocols::Point::Origin => None,
         }
     }
 
@@ -357,20 +314,56 @@ impl Point {
     ///
     /// # Examples
     ///
-    /// ```rs
-    /// use cardano_chain_follower::Point;
+    /// ```
+    /// use cardano_blockchain_types::Point;
     ///
-    /// let point1 = Point::new(42, vec![1, 2, 3]);
-    /// let point2 = Point::new(42, vec![1, 2, 3]);
+    /// let point1 = Point::new(42.into(), [0; 32].into());
+    /// let point2 = Point::new(42.into(), [0; 32].into());
     /// assert!(point1.strict_eq(&point2));
     ///
-    /// let point3 = Point::new(42, vec![1, 2, 3]);
-    /// let point4 = Point::new(43, vec![1, 2, 3]);
+    /// let point3 = Point::new(42.into(), [0; 32].into());
+    /// let point4 = Point::new(43.into(), [0; 32].into());
     /// assert!(!point3.strict_eq(&point4));
     /// ```
     #[must_use]
     pub fn strict_eq(&self, b: &Self) -> bool {
         self.0 == b.0
+    }
+}
+
+impl PartialEq<Option<Blake2b256Hash>> for Point {
+    /// Compares the hash stored in the `Point` with a `Blake2b256Hash`.
+    /// It returns `true` if the hashes match and `false` otherwise. If the
+    /// provided hash is `None`, the function checks if the `Point` has an
+    /// empty hash.
+    fn eq(&self, other: &Option<Blake2b256Hash>) -> bool {
+        match other {
+            Some(cmp_hash) => {
+                match self.0 {
+                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => {
+                        // Compare vec to vec
+                        *hash == <Blake2b256Hash as Into<Vec<u8>>>::into(*cmp_hash)
+                    },
+                    pallas::network::miniprotocols::Point::Origin => false,
+                }
+            },
+            None => {
+                match self.0 {
+                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
+                    pallas::network::miniprotocols::Point::Origin => true,
+                }
+            },
+        }
+    }
+}
+
+impl PartialEq<Option<Hash<32>>> for Point {
+    /// Compares the hash stored in the `Point` with a Pallas `Hash`.
+    /// It returns `true` if the hashes match and `false` otherwise. If the
+    /// provided hash is `None`, the function checks if the `Point` has an
+    /// empty hash.
+    fn eq(&self, other: &Option<Hash<32>>) -> bool {
+        *self == other.map(Blake2b256Hash::from)
     }
 }
 
@@ -386,10 +379,16 @@ impl Display for Point {
 
         let slot = self.slot_or_default();
         let hash = self.hash_or_default();
-        if hash.is_empty() {
-            return write!(f, "Point @ Probe:{slot}");
+        match hash {
+            Some(hash) => {
+                write!(
+                    f,
+                    "Point @ {slot:?}:{}",
+                    hex::encode(<Blake2b256Hash as Into<Vec<u8>>>::into(hash))
+                )
+            },
+            None => write!(f, "Point @ {slot:?}"),
         }
-        write!(f, "Point @ {slot}:{}", hex::encode(hash))
     }
 }
 
@@ -422,30 +421,22 @@ impl Ord for Point {
 }
 
 impl PartialEq<u64> for Point {
-    /// Allows to compare a `SnapshotID` against `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
     fn eq(&self, other: &u64) -> bool {
         self.0.slot_or_default() == *other
     }
 }
 
 impl PartialOrd<u64> for Point {
-    /// Allows to compare a `Point` against a `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
+    /// Allows to compare a `Point` against a `u64`
     fn partial_cmp(&self, other: &u64) -> Option<Ordering> {
         self.0.slot_or_default().partial_cmp(other)
     }
 }
 
 impl PartialEq<Option<Point>> for Point {
-    /// Allows to compare a `SnapshotID` against `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
+    /// Allows for direct comparison between a `Point` and an `Option<Point>`,
+    /// returning `true` only if the `Option` contains a `Point` that is equal to the
+    /// `self` instance.
     fn eq(&self, other: &Option<Point>) -> bool {
         if let Some(other) = other {
             *self == *other
@@ -456,11 +447,8 @@ impl PartialEq<Option<Point>> for Point {
 }
 
 impl PartialOrd<Option<Point>> for Point {
-    /// Allows to compare a `Point` against a `u64` (Just the Immutable File Number).
-    ///
-    /// Equality ONLY checks the Immutable File Number, not the path.
-    /// This is because the Filename is already the Immutable File Number.
-    /// Any point is greater than None.
+    /// Allows comparing a `Point` with an `Option<Point>`, where a `Point` is always
+    /// considered greater than `None`.
     fn partial_cmp(&self, other: &Option<Point>) -> Option<Ordering> {
         if let Some(other) = other {
             self.partial_cmp(other)
@@ -477,8 +465,8 @@ impl Default for Point {
     }
 }
 
-/// Compare Points, because Pallas does not impl `Ord` for Point.
-pub(crate) fn cmp_point(
+/// Compare Points, because Pallas does not impl `Ord` for `Point`.
+fn cmp_point(
     a: &pallas::network::miniprotocols::Point, b: &pallas::network::miniprotocols::Point,
 ) -> Ordering {
     match a {
@@ -501,27 +489,24 @@ pub(crate) fn cmp_point(
 
 #[cfg(test)]
 mod tests {
-    use pallas::crypto::hash::Hash;
-
-    use crate::point::*;
+    use crate::{hashes::Blake2bHash, point::*};
 
     #[test]
     fn test_cmp_hash_simple() {
         let origin1 = Point::ORIGIN;
         let point1 = Point::new(100u64.into(), [8; 32].into());
 
-        assert!(!origin1.cmp_hash(&Some(Hash::new([0; 32]))));
-        assert!(origin1.cmp_hash(&None));
-
-        assert!(point1.cmp_hash(&Some(Hash::new([8; 32]))));
-        assert!(!point1.cmp_hash(&None));
+        assert!(origin1 != Some::<Blake2b256Hash>([0; 32].into()));
+        assert!(origin1 == None::<Blake2b256Hash>);
+        assert!(point1 == Some::<Blake2b256Hash>([8; 32].into()));
+        assert!(point1 != None::<Hash<32>>);
     }
 
     #[test]
     fn test_get_hash_simple() {
         let point1 = Point::new(100u64.into(), [8; 32].into());
 
-        assert_eq!(point1.hash_or_default(), vec![8; 32]);
+        assert_eq!(point1.hash_or_default(), Some([8; 32].into()));
     }
 
     #[test]

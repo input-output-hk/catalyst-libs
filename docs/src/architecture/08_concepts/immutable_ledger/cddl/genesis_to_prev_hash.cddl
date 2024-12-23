@@ -2,15 +2,14 @@
 ; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
 
 genesis-to-prev-hash = [
-    chain-id: ULID,
+    chain-id: UUID, ; UUID v7
     timestamp: #6.1(uint .ge 1722470400), ; Epoch-based date/time
-    ledger-type: UUID,
-    purpose-id: ULID / UUID,
+    ledger-type: UUID, ; UUID v4
+    purpose-id: UUID, ; UUID v7
     validator,
 ]
 
 UUID = #6.37(bytes) ; UUID type
-ULID = #6.32780(bytes) ; ULID type
 
 validator = (kid / [2* kid])
 kid = hash-bytes ; hash of the x509/c509 certificate

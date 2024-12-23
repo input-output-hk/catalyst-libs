@@ -8,16 +8,19 @@ use pallas_crypto::hash::Hash;
 
 /// Number of bytes in a blake2b 224 hash.
 pub const BLAKE_2B224_SIZE: usize = 224 / 8;
-/// `Blake2B` 224bit Hash
+
+/// `Blake2B` 224bit Hash.
 pub type Blake2b224Hash = Blake2bHash<BLAKE_2B224_SIZE>;
 
 /// Number of bytes in a blake2b 256 hash.
 pub const BLAKE_2B256_SIZE: usize = 256 / 8;
+
 /// `Blake2B` 256bit Hash
 pub type Blake2b256Hash = Blake2bHash<BLAKE_2B256_SIZE>;
 
 /// Number of bytes in a blake2b 128 hash.
 pub const BLAKE_2B128_SIZE: usize = 128 / 8;
+
 /// `Blake2B` 128bit Hash
 pub type Blake2b128Hash = Blake2bHash<BLAKE_2B128_SIZE>;
 
@@ -68,6 +71,7 @@ impl<const BYTES: usize> From<Blake2bHash<BYTES>> for Vec<u8> {
     }
 }
 
+/// Convert hash in a form of byte array into the `Blake2bHash` type.
 impl<const BYTES: usize> TryFrom<&[u8]> for Blake2bHash<BYTES> {
     type Error = anyhow::Error;
 
@@ -133,12 +137,8 @@ impl<'a, C, const BYTES: usize> minicbor::Decode<'a, C> for Blake2bHash<BYTES> {
         d: &mut minicbor::Decoder<'a>, _ctx: &mut C,
     ) -> Result<Self, minicbor::decode::Error> {
         let bytes = d.bytes()?;
-        if bytes.len() == BYTES {
-            let mut hash = [0; BYTES];
-            hash.copy_from_slice(bytes);
-            Ok(hash.into())
-        } else {
-            Err(minicbor::decode::Error::message("Invalid hash size"))
-        }
+        bytes.try_into().map_err(|_| {
+            minicbor::decode::Error::message("Invalid hash size for Blake2bHash cbor decode")
+        })
     }
 }

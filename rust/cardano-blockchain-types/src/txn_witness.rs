@@ -24,7 +24,8 @@ impl TxnWitness {
     ///
     /// # Errors
     ///
-    /// Only if the witness map does not contain a valid ED25519 public key
+    /// If the witness map does not contain a valid ED25519 public key,
+    /// or unsupported transaction era.
     pub fn new(txs: &[MultiEraTx]) -> anyhow::Result<Self> {
         /// Update the temporary map with the witnesses.
         fn update_map(
@@ -67,7 +68,7 @@ impl TxnWitness {
                     }
                 },
                 _ => {
-                    return Err(anyhow::anyhow!("Unsupported transaction type"));
+                    return Err(anyhow::anyhow!("Unsupported transaction Era"));
                 },
             };
         }

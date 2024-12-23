@@ -14,7 +14,7 @@ use crate::conversion::from_saturating;
 pub struct Metadata(Arc<MetadataInner>);
 
 #[derive(Clone, Debug)]
-/// Transaction Metadata - Inner
+/// Transaction Metadata - inner
 /// See: <https://github.com/IntersectMBO/cardano-ledger/blob/78b32d585fd4a0340fb2b184959fb0d46f32c8d2/eras/conway/impl/cddl-files/conway.cddl#L519>
 pub struct MetadataInner {
     /// Sequence the metadatum labels appear in the metadata.
@@ -88,8 +88,8 @@ impl Decode<'_, ()> for Metadata {
             sequence.push(label);
             let _unused = metadata.insert(label, value);
 
-            // Look for End Sentinel IF its an indefinite MAP
-            //   (which we know because entries is u64::MAX).
+            // Look for end sentinel IF its an indefinite MAP
+            // (which we know because entries is u64::MAX).
             if entries == u64::MAX {
                 match d.datatype() {
                     Ok(minicbor::data::Type::Break) => {

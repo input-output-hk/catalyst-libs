@@ -45,9 +45,8 @@ struct SelfReferencedMultiEraBlock {
 /// Multi-era block - inner.
 #[derive(Debug)]
 struct MultiEraBlockInner {
-    /// What blockchain was the block produced on.
-    //#[allow(dead_code)]
-    pub chain: Network,
+    /// What blockchain network was the block produced on.
+    network: Network,
     /// The Point on the blockchain this block can be found.
     point: Point,
     /// The previous point on the blockchain before this block.
@@ -93,7 +92,7 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     fn new_block(
-        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
+        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
             raw_data,
@@ -127,7 +126,7 @@ impl MultiEraBlock {
             // Special case, when the previous block is actually UNKNOWN, we can't check it.
             if !previous.is_unknown()
                     // Otherwise, we make sure the hash chain is intact
-                    && !previous.cmp_hash(&decoded_block.header().previous_hash())
+                    && previous != &decoded_block.header().previous_hash()
             {
                 debug!("{}, {:?}", previous, decoded_block.header().previous_hash());
 
@@ -140,7 +139,7 @@ impl MultiEraBlock {
         Ok(Self {
             fork,
             inner: Arc::new(MultiEraBlockInner {
-                chain,
+                network,
                 point,
                 previous: previous.clone(),
                 data: self_ref_block,
@@ -156,9 +155,9 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     pub fn new(
-        chain: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
+        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
-        MultiEraBlock::new_block(chain, raw_data, previous, fork)
+        MultiEraBlock::new_block(network, raw_data, previous, fork)
     }
 
     /// Remake the block on a new fork.
@@ -169,6 +168,7 @@ impl MultiEraBlock {
     /// Decodes the data into a multi-era block.
     ///
     /// # Returns
+    ///
     /// The decoded block data, which can easily be processed by a consumer.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
@@ -179,6 +179,7 @@ impl MultiEraBlock {
     /// Decodes the data into a multi-era block.
     ///
     /// # Returns
+    ///
     /// The raw byte data of the block.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
@@ -189,6 +190,7 @@ impl MultiEraBlock {
     /// Returns the block point of this block.
     ///
     /// # Returns
+    ///
     /// The block point of this block.
     #[must_use]
     pub fn point(&self) -> Point {
@@ -198,6 +200,7 @@ impl MultiEraBlock {
     /// Returns the block point of the previous block.
     ///
     /// # Returns
+    ///
     /// The previous blocks `Point`
     #[must_use]
     pub fn previous(&self) -> Point {
@@ -210,9 +213,10 @@ impl MultiEraBlock {
     /// (Immutable Database) of the Node.
     ///
     /// # Returns
+    ///
     /// `true` if the block is immutable, `false` otherwise.
     #[must_use]
-    pub fn immutable(&self) -> bool {
+    pub fn is_immutable(&self) -> bool {
         self.fork == 0.into()
     }
 
@@ -225,28 +229,32 @@ impl MultiEraBlock {
     /// - 2+ - for each subsequent rollback detected while reading live blocks.
     ///
     /// # Returns
+    ///
     /// The fork the block was found on.
     #[must_use]
     pub fn fork(&self) -> Fork {
         self.fork
     }
 
-    /// What chain was the block from
+    /// What blockchain network was the block from
     ///
     /// # Returns
-    /// - The chain that this block originated on.
+    ///
+    /// - The network that this block originated on.
     #[must_use]
-    pub fn chain(&self) -> Network {
-        self.inner.chain
+    pub fn network(&self) -> Network {
+        self.inner.network
     }
 
     /// Get The Metadata fora a transaction and known label from the block
     ///
     /// # Parameters
+    ///
     /// - `txn_idx` - Index of the Transaction in the Block
     /// - `label` - The label of the transaction
     ///
     /// # Returns
+    ///
     /// - Metadata for the given label in the transaction.
     /// - Or None if the label requested isn't present.
     #[must_use]
@@ -262,7 +270,7 @@ impl MultiEraBlock {
         self.inner.witness_map.as_ref()
     }
 
-    /// If the Witness exists for a given transaction then return its public key.
+    /// If the witness exists for a given transaction then return its public key.
     #[must_use]
     pub fn witness_for_tx(&self, vkey_hash: &VKeyHash, tx_num: TxnIndex) -> Option<VerifyingKey> {
         if let Some(witnesses) = self.witness_map() {
@@ -286,7 +294,7 @@ impl Display for MultiEraBlock {
         let txns = block.tx_count();
         let aux_data = block.has_aux_data();
 
-        let fork = if self.immutable() {
+        let fork = if self.is_immutable() {
             "Immutable".to_string()
         } else {
             format!("Fork: {fork:?}")
@@ -461,6 +469,10 @@ pub(crate) mod tests {
             );
 
             assert!(block.is_err());
+            assert!(block
+                .unwrap_err()
+                .to_string()
+                .contains("Previous slot is not less than current slot"));
         }
 
         Ok(())
