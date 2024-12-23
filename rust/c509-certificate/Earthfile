@@ -13,8 +13,8 @@ IMPORT ../.. AS repo
 #   - Create a publish target which can publish the library to NPM for both Web and NodeJS.
 #   - Create a simple example web app and nodejs app which uses the library, and can be used to 
 #       test it after publishing.
-c509-wasm-build:
-    FROM rust-local+base-build
+build-wasm:
+    FROM rust-local+build
 
     COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
     COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.
