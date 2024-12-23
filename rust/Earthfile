@@ -33,7 +33,6 @@ builder-src:
 
     # Don't build the src in the home directory itself, because it contains stuff.
     WORKDIR $HOME/build
-    RUN --no-cache echo "Cache Disabled"
     RUN rm -rf *
 
     # Cached copy of the source we build.
