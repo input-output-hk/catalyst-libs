@@ -13,18 +13,18 @@ IMPORT ../.. AS repo
 #   - Create a publish target which can publish the library to NPM for both Web and NodeJS.
 #   - Create a simple example web app and nodejs app which uses the library, and can be used to 
 #       test it after publishing.
-# build-wasm:
-#     FROM rust-local+build
+build-wasm:
+    FROM rust-local+build
 
-#     COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
-#     COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.
+    COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
+    COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.
 
-#     # We should be able to use the library in all these places, so build it for them all.
-#     FOR target IN web nodejs bundler
-#         RUN wasm-pack build c509-certificate --release --target "$target" --out-dir "pkg/$target"
-#     END    
+    # We should be able to use the library in all these places, so build it for them all.
+    FOR target IN web nodejs bundler
+        RUN wasm-pack build c509-certificate --release --target "$target" --out-dir "pkg/$target"
+    END    
 
-#     SAVE ARTIFACT ./c509-certificate/pkg /pkg
+    SAVE ARTIFACT ./c509-certificate/pkg /pkg
 
 # js-wasm-package-locally : Generate the wasm package and save it locally
 js-wasm-package-locally:
