@@ -17,7 +17,7 @@ pub struct Mithril {
     /// Number of Mithril Snapshots that have downloaded successfully.
     pub updates: u64,
     /// The Immutable TIP Slot# - Origin = No downloaded snapshot
-    pub tip: u64,
+    pub tip: Slot,
     /// Time we started downloading the current snapshot. 1/1/1970-00:00:00 UTC = Never
     /// downloaded.
     pub dl_start: DateTime<Utc>,
@@ -110,11 +110,11 @@ pub struct Follower {
     /// Synthetic follower connection ID
     pub id: u64,
     /// Starting slot for this follower (0 = Start at Genesis Block for the chain).
-    pub start: u64,
+    pub start: Slot,
     /// Current slot for this follower.
-    pub current: u64,
+    pub current: Slot,
     /// Target slot for this follower (MAX U64 == Follow Tip Forever).
-    pub end: u64,
+    pub end: Slot,
     /// Current Sync Time.
     pub sync_start: DateTime<Utc>,
     /// When this follower reached TIP or its destination slot.
@@ -238,13 +238,14 @@ impl Statistics {
     }
 
     /// Get the current tips of the immutable chain and live chain.
-    pub(crate) fn tips(chain: Network) -> (u64, u64) {
+    pub(crate) fn tips(chain: Network) -> (Slot, Slot) {
+        let zero_slot = Slot::from_saturating(0);
         let Some(stats) = lookup_stats(chain) else {
-            return (0, 0);
+            return (zero_slot, zero_slot);
         };
 
         let Ok(chain_stats) = stats.read() else {
-            return (0, 0);
+            return (zero_slot, zero_slot);
         };
 
         (chain_stats.mithril.tip, chain_stats.live.head_slot)
@@ -333,7 +334,7 @@ pub(crate) fn new_live_block(
 
 /// Track the end of the current mithril update
 pub(crate) fn new_mithril_update(
-    chain: Network, mithril_tip: u64, total_live_blocks: u64, tip_slot: u64,
+    chain: Network, mithril_tip: Slot, total_live_blocks: u64, tip_slot: Slot,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -790,12 +791,12 @@ mod tests {
     #[test]
     fn test_new_live_block() {
         let network = Network::Preprod;
-        new_live_block(network, 100, 50, 200);
+        new_live_block(network, 100, 50.into(), 200.into());
         let stats = lookup_stats(network).unwrap();
         let stats = stats.read().unwrap();
         assert_eq!(stats.live.blocks, 100);
-        assert_eq!(stats.live.head_slot, 50);
-        assert_eq!(stats.live.tip, 200);
+        assert_eq!(stats.live.head_slot, 50.into());
+        assert_eq!(stats.live.tip, 200.into());
     }
 
     #[test]
