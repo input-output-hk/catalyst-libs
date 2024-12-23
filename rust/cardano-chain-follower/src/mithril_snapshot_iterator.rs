@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use cardano_blockchain_types::{MultiEraBlock, Network, Point};
+use cardano_blockchain_types::{MultiEraBlock, Network, Point, Slot};
 use logcall::logcall;
 use tokio::task;
 use tracing::{debug, error};
@@ -54,10 +54,10 @@ pub(crate) struct MithrilSnapshotIterator {
 pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
     // Now that we have the tip, step back about 4 block intervals from tip, and do a fuzzy
     // iteration to find the exact two blocks at the end of the immutable chain.
-    let step_back_search = point.slot_or_default().saturating_sub(distance);
+    let step_back_search = Slot::from_saturating(point.slot_or_default().into() - distance);
 
     // We stepped back to the origin, so just return Origin
-    if step_back_search == 0 {
+    if step_back_search == 0.into() {
         return Point::ORIGIN;
     }
 

@@ -33,7 +33,7 @@ impl MithrilSnapshot {
     /// Checks if the snapshot contains a given point.
     ///
     /// # Arguments
-    /// 
+    ///
     /// * `point`: The point to be checked for existence within the specified Mithril
     ///   snapshot.
     ///

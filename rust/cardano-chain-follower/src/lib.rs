@@ -19,7 +19,6 @@ mod snapshot_id;
 mod stats;
 pub mod turbo_downloader;
 mod utils;
-mod witness;
 
 pub use chain_sync_config::ChainSyncConfig;
 pub use chain_update::{ChainUpdate, Kind};

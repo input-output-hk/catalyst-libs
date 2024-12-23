@@ -21,9 +21,9 @@ use crate::{
 /// Type we use to manage the Sync Task handle map.
 type LiveChainBlockList = SkipMap<Point, MultiEraBlock>;
 
-/// Because we have multi-entry relationships in the live-chain, it need to protect it with a
-/// `read/write lock`. The underlying `SkipMap` is still capable of multiple simultaneous
-/// reads from multiple threads which is the most common access.
+/// Because we have multi-entry relationships in the live-chain, it need to protect it
+/// with a `read/write lock`. The underlying `SkipMap` is still capable of multiple
+/// simultaneous reads from multiple threads which is the most common access.
 #[derive(Clone)]
 struct ProtectedLiveChainBlockList(Arc<RwLock<LiveChainBlockList>>);
 

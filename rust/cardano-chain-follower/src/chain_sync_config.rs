@@ -22,7 +22,7 @@ use crate::{
 /// Default Follower block buffer size.
 const DEFAULT_CHAIN_UPDATE_BUFFER_SIZE: usize = 32;
 
-/// How many window (in slot) back from TIP is considered Immutable in the 
+/// How many window (in slot) back from TIP is considered Immutable in the
 /// absence of a mithril snapshot.
 const DEFAULT_IMMUTABLE_SLOT_WINDOW: u64 = 12 * 60 * 60;
 

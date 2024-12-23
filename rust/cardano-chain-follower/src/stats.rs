@@ -2,7 +2,7 @@
 
 use std::sync::{Arc, LazyLock, RwLock};
 
-use cardano_blockchain_types::Network;
+use cardano_blockchain_types::{Network, Slot};
 use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use serde::Serialize;
@@ -142,9 +142,9 @@ pub struct Live {
     /// Current Number of Live Blocks
     pub blocks: u64,
     /// The current head of the live chain slot#
-    pub head_slot: u64,
+    pub head_slot: Slot,
     /// The current live tip slot# as reported by the peer.
-    pub tip: u64,
+    pub tip: Slot,
     /// Number of times we connected/re-connected to the Node.
     pub reconnects: u64,
     /// Last reconnect time,
@@ -312,7 +312,7 @@ pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
 
 /// Count the validly deserialized blocks
 pub(crate) fn new_live_block(
-    chain: Network, total_live_blocks: u64, head_slot: u64, tip_slot: u64,
+    chain: Network, total_live_blocks: u64, head_slot: Slot, tip_slot: Slot,
 ) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {

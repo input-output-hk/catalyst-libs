@@ -189,8 +189,8 @@ async fn process_rollback(
 ) -> anyhow::Result<Point> {
     let rollback_slot = point.slot_or_default();
     let head_slot = previous_point.slot_or_default();
-    debug!("Head slot: {}", head_slot);
-    debug!("Rollback slot: {}", rollback_slot);
+    debug!("Head slot: {head_slot:?}");
+    debug!("Rollback slot: {rollback_slot:?}");
     let slot_rollback_size = if head_slot > rollback_slot {
         head_slot - rollback_slot
     } else {
@@ -444,7 +444,7 @@ async fn live_sync_backfill_and_purge(
     stats::new_mithril_update(
         cfg.chain,
         update.tip.slot_or_default(),
-        live_chain_length(cfg.chain) as u64,
+        live_chain_length(cfg.chain),
         live_chain_head.slot_or_default(),
     );
 
