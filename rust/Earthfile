@@ -51,6 +51,7 @@ check:
 # build : Build crates.
 build:
     FROM +builder-src
+    RUN ls -la ~/build/target/release
     RUN rm -rf ~/build/target/release
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
