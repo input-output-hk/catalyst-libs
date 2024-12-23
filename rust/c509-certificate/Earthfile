@@ -6,16 +6,15 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust::v3.2.23 AS rust-ci
 IMPORT .. AS rust-local
 IMPORT ../.. AS repo
 
-# build-wasm: Build wasm binaries for browser integration.
+# c509-wasm-build: Build wasm binaries for browser integration.
 # TODO:
 #   - Create a `test` target which Executes tests for browsers (chrome/firefox) and also nodejs 
 #       with the built wasm from this target.
 #   - Create a publish target which can publish the library to NPM for both Web and NodeJS.
 #   - Create a simple example web app and nodejs app which uses the library, and can be used to 
 #       test it after publishing.
-build-wasm:
-    FROM rust-local+build
-    RUN --no-cache echo "Cache Disabled"
+c509-wasm-build:
+    FROM rust-local+base-build
 
     COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
     COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.

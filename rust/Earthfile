@@ -36,7 +36,6 @@ builder-src:
     RUN --no-cache echo "Cache Disabled"
     RUN rm -rf *
 
-
     # Cached copy of the source we build.
     DO +COPY_SRC
 
@@ -50,8 +49,8 @@ check:
 
     DO rust-ci+EXECUTE --cmd="/scripts/std_checks.py"
 
-# build : Build crates.
-build:
+# base-build : Build crates.
+base-build:
     FROM +builder-src
 
     DO rust-ci+EXECUTE \
@@ -67,6 +66,11 @@ build:
         --docs="true"
 
     SAVE ARTIFACT target/doc doc
+
+build: 
+    BUILD +base-build
+    BUILD ./cbork/+cbork-build
+    BUILD ./c509-certificate/+c509-wasm-build
 
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:
