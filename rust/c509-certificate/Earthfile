@@ -15,6 +15,7 @@ IMPORT ../.. AS repo
 #       test it after publishing.
 build-wasm:
     FROM rust-local+build
+    RUN --no-cache echo "Cache Disabled"
 
     COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
     COPY repo+repo-docs/repo/LICENSE-MIT c509-certificate/.
