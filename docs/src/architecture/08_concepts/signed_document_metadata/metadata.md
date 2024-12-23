@@ -124,7 +124,7 @@ Creating `id` this way ensures there are no collisions, and they can be independ
 
 *Note: All documents are signed, the first creation of an `id` assigns that `id` to the creator and any assigned collaborators.
 A Signed Document that is not signed by the creator, or an assigned collaborator, is invalid.
-There is no reasonable way a `id` can collide accidentally.
+There is no reasonable way an `id` can collide accidentally.
 Therefore, detection of invalid `id`s published by unauthorized publishers, could result in anti-spam
 or system integrity mitigations being triggered.
 This could result in all actions in the system being blocked by the offending publisher,
