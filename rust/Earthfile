@@ -67,6 +67,9 @@ build:
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
 
+    RUN ls -la ~/build/target/release
+    RUN ls -la /tmp/earthly/
+
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:
     FROM +builder
