@@ -7,7 +7,7 @@ IMPORT .. AS rust-local
 
 # Run build using the most efficient host tooling
 # CI Automated Entry point.
-build:
-    FROM rust-local+build
+cbork-build:
+    FROM rust-local+base-build
 
     SAVE ARTIFACT target/release/cbork cbork
