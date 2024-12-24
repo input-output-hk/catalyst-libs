@@ -6,7 +6,7 @@ use std::{
     time::Duration,
 };
 
-use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point, Slot};
 use crossbeam_skiplist::SkipMap;
 use rayon::prelude::*;
 use strum::IntoEnumIterator;
@@ -340,7 +340,7 @@ impl ProtectedLiveChainBlockList {
         }
 
         // Now find points based on an every increasing Slot age.
-        let mut slot_age: u64 = 40;
+        let mut slot_age: Slot = 40.into();
         let reference_slot = entry.value().point().slot_or_default();
         let mut previous_point = entry.value().point();
 

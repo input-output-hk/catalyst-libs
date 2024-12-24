@@ -2,6 +2,7 @@
 
 use std::{fmt::Debug, sync::Arc};
 
+use cardano_blockchain_types::Network;
 use cip36::Cip36;
 use cip509::Cip509;
 use dashmap::DashMap;
@@ -9,7 +10,7 @@ use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
 use raw_aux_data::RawAuxData;
 use tracing::error;
 
-use crate::{utils::usize_from_saturating, Network};
+use crate::utils::usize_from_saturating;
 
 pub mod cip36;
 pub mod cip509;

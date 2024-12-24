@@ -444,7 +444,7 @@ async fn live_sync_backfill_and_purge(
     stats::new_mithril_update(
         cfg.chain,
         update.tip.slot_or_default(),
-        live_chain_length(cfg.chain),
+        live_chain_length(cfg.chain) as u64,
         live_chain_head.slot_or_default(),
     );
 
