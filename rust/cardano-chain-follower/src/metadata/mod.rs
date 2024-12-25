@@ -2,19 +2,14 @@
 
 use std::{fmt::Debug, sync::Arc};
 
-use cardano_blockchain_types::Network;
+use cardano_blockchain_types::{Network, TransactionAuxData};
 use cip36::Cip36;
 use cip509::Cip509;
 use dashmap::DashMap;
-use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
-use raw_aux_data::RawAuxData;
-use tracing::error;
-
-use crate::utils::usize_from_saturating;
+use pallas::ledger::traverse::MultiEraTx;
 
 pub mod cip36;
 pub mod cip509;
-mod raw_aux_data;
 
 /// List of all validation errors (as strings) Metadata is considered Valid if this list
 /// is empty.
@@ -50,7 +45,7 @@ pub(crate) struct DecodedMetadata(DashMap<u64, Arc<DecodedMetadataItem>>);
 
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
-    fn new(chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &RawAuxData) -> Self {
+    fn new(chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &TransactionAuxData) -> Self {
         let decoded_metadata = Self(DashMap::new());
 
         // Process each known type of metadata here, and record the decoded result.
@@ -80,102 +75,5 @@ impl Debug for DecodedMetadata {
             f.write_fmt(format_args!("{k:?}:{v:?} "))?;
         }
         f.write_str("}")
-    }
-}
-
-/// Decoded Metadata for a all transactions in a block.
-/// The Key for both entries is the Transaction offset in the block.
-#[derive(Debug)]
-pub struct DecodedTransaction {
-    /// The Raw Auxiliary Data for each transaction in the block.
-    raw: DashMap<usize, RawAuxData>,
-    /// The Decoded Metadata for each transaction in the block.
-    decoded: DashMap<usize, DecodedMetadata>,
-}
-
-impl DecodedTransaction {
-    /// Insert another transaction worth of data into the Decoded Aux Data
-    fn insert(
-        &mut self, chain: Network, slot: u64, txn_idx: u32, cbor_data: &[u8],
-        transactions: &[MultiEraTx],
-    ) {
-        let txn_idx = usize_from_saturating(txn_idx);
-
-        let Some(txn) = transactions.get(txn_idx) else {
-            error!("No transaction at index {txn_idx} trying to decode metadata.");
-            return;
-        };
-
-        let txn_raw_aux_data = RawAuxData::new(cbor_data);
-        let txn_metadata = DecodedMetadata::new(chain, slot, txn, &txn_raw_aux_data);
-
-        self.raw.insert(txn_idx, txn_raw_aux_data);
-        self.decoded.insert(txn_idx, txn_metadata);
-    }
-
-    /// Create a new `DecodedTransaction`.
-    pub(crate) fn new(chain: Network, block: &MultiEraBlock) -> Self {
-        let mut decoded_aux_data = DecodedTransaction {
-            raw: DashMap::new(),
-            decoded: DashMap::new(),
-        };
-
-        if block.has_aux_data() {
-            let transactions = block.txs();
-            let slot = block.slot();
-
-            if let Some(_metadata) = block.as_byron() {
-                // Nothing to do here.
-            } else if let Some(alonzo_block) = block.as_alonzo() {
-                for (txn_idx, metadata) in alonzo_block.auxiliary_data_set.iter() {
-                    decoded_aux_data.insert(
-                        chain,
-                        slot,
-                        *txn_idx,
-                        metadata.raw_cbor(),
-                        &transactions,
-                    );
-                }
-            } else if let Some(babbage_block) = block.as_babbage() {
-                for (txn_idx, metadata) in babbage_block.auxiliary_data_set.iter() {
-                    decoded_aux_data.insert(
-                        chain,
-                        slot,
-                        *txn_idx,
-                        metadata.raw_cbor(),
-                        &transactions,
-                    );
-                }
-            } else if let Some(conway_block) = block.as_conway() {
-                for (txn_idx, metadata) in conway_block.auxiliary_data_set.iter() {
-                    decoded_aux_data.insert(
-                        chain,
-                        slot,
-                        *txn_idx,
-                        metadata.raw_cbor(),
-                        &transactions,
-                    );
-                }
-            } else {
-                error!("Undecodable metadata, unknown Era");
-            };
-        }
-        decoded_aux_data
-    }
-
-    /// Get metadata for a given label in a transaction if it exists.    
-    #[must_use]
-    pub fn get_metadata(&self, txn_idx: usize, label: u64) -> Option<Arc<DecodedMetadataItem>> {
-        let txn_metadata = self.decoded.get(&txn_idx)?;
-        let txn_metadata = txn_metadata.value();
-        txn_metadata.get(label)
-    }
-
-    /// Get raw metadata for a given label in a transaction if it exists.
-    #[must_use]
-    pub fn get_raw_metadata(&self, txn_idx: usize, label: u64) -> Option<Arc<Vec<u8>>> {
-        let txn_metadata = self.raw.get(&txn_idx)?;
-        let txn_metadata = txn_metadata.value();
-        txn_metadata.get_metadata(label)
     }
 }
