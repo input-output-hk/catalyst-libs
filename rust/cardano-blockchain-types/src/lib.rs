@@ -10,6 +10,8 @@ mod point;
 mod slot;
 mod txn_index;
 mod txn_witness;
+mod cip36;
+pub mod utils;
 
 pub use auxdata::{
     aux_data::TransactionAuxData,
@@ -18,6 +20,10 @@ pub use auxdata::{
     metadatum_label::MetadatumLabel,
     metadatum_value::MetadatumValue,
     scripts::{Script, ScriptArray, ScriptType, TransactionScripts},
+};
+pub use cip36::{
+    key_registration::Cip36KeyRegistration, registration_witness::Cip36RegistrationWitness, Cip36,
+    Cip36Validation,
 };
 pub use fork::Fork;
 pub use multi_era_block_data::MultiEraBlock;
