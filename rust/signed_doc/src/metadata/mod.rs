@@ -181,7 +181,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         }
 
         if let Some(cbor_doc_ref) = cose_protected_header_find(protected, "ref") {
-            match decode_cbor_document_ref(&cbor_doc_ref) {
+            match DocumentRef::try_from(&cbor_doc_ref) {
                 Ok(doc_ref) => {
                     metadata.r#ref = Some(doc_ref);
                 },
@@ -194,7 +194,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         }
 
         if let Some(cbor_doc_template) = cose_protected_header_find(protected, "template") {
-            match decode_cbor_document_ref(&cbor_doc_template) {
+            match DocumentRef::try_from(&cbor_doc_template) {
                 Ok(doc_template) => {
                     metadata.template = Some(doc_template);
                 },
@@ -207,7 +207,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         }
 
         if let Some(cbor_doc_reply) = cose_protected_header_find(protected, "reply") {
-            match decode_cbor_document_ref(&cbor_doc_reply) {
+            match DocumentRef::try_from(&cbor_doc_reply) {
                 Ok(doc_reply) => {
                     metadata.reply = Some(doc_reply);
                 },
@@ -246,20 +246,4 @@ fn cose_protected_header_find(
         .iter()
         .find(|(key, _)| key == &coset::Label::Text(rest_key.to_string()))
         .map(|(_, value)| value.clone())
-}
-
-/// Decode `CBOR` encoded `DocumentRef`.
-#[allow(clippy::indexing_slicing)]
-fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
-    if let Ok(id) = UuidV7::try_from(val) {
-        Ok(DocumentRef::Latest { id })
-    } else {
-        let Some(array) = val.as_array() else {
-            anyhow::bail!("Invalid CBOR encoded document `ref` type");
-        };
-        anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
-        let id = UuidV7::try_from(&array[0])?;
-        let ver = UuidV7::try_from(&array[1])?;
-        Ok(DocumentRef::WithVer(id, ver))
-    }
 }

@@ -24,7 +24,7 @@ impl UuidV7 {
     /// Check if this is a valid `UUIDv7`.
     #[must_use]
     pub fn is_valid(&self) -> bool {
-        self.uuid != INVALID_UUID || self.uuid.get_version_num() == Self::UUID_VERSION_NUMBER
+        self.uuid != INVALID_UUID && self.uuid.get_version_num() == Self::UUID_VERSION_NUMBER
     }
 
     /// Returns the `uuid::Uuid` type.
