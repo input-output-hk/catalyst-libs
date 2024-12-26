@@ -10,42 +10,39 @@ pub use uuid_type::{UuidV4, UuidV7};
 /// Document Metadata.
 #[derive(Debug, serde::Deserialize)]
 pub struct Metadata {
-    /// Document Type `UUIDv7`.
-    pub(crate) r#type: uuid::Uuid,
+    /// Document Type `UUIDv4`.
+    r#type: UuidV4,
     /// Document ID `UUIDv7`.
-    pub(crate) id: uuid::Uuid,
+    id: UuidV7,
     /// Document Version `UUIDv7`.
-    pub(crate) ver: uuid::Uuid,
+    ver: UuidV7,
     /// Reference to the latest document.
-    pub(crate) r#ref: Option<DocumentRef>,
+    r#ref: Option<DocumentRef>,
     /// Reference to the document template.
-    pub(crate) template: Option<DocumentRef>,
+    template: Option<DocumentRef>,
     /// Reference to the document reply.
-    pub(crate) reply: Option<DocumentRef>,
+    reply: Option<DocumentRef>,
     /// Reference to the document section.
-    pub(crate) section: Option<String>,
+    section: Option<String>,
 }
 
 impl Metadata {
-    /// Invalid Doc Type UUID
-    const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
-
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> uuid::Uuid {
-        self.r#type
+        self.r#type.uuid()
     }
 
     /// Return Document ID `UUIDv7`.
     #[must_use]
     pub fn doc_id(&self) -> uuid::Uuid {
-        self.id
+        self.id.uuid()
     }
 
     /// Return Document Version `UUIDv7`.
     #[must_use]
     pub fn doc_ver(&self) -> uuid::Uuid {
-        self.ver
+        self.ver.uuid()
     }
 
     /// Return Last Document Reference `Option<DocumentRef>`.
@@ -89,9 +86,9 @@ impl Display for Metadata {
 impl Default for Metadata {
     fn default() -> Self {
         Self {
-            r#type: Self::INVALID_UUID,
-            id: Self::INVALID_UUID,
-            ver: Self::INVALID_UUID,
+            r#type: UuidV4::invalid(),
+            id: UuidV7::invalid(),
+            ver: UuidV7::invalid(),
             r#ref: None,
             template: None,
             reply: None,

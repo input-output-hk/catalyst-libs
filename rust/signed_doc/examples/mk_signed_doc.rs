@@ -14,7 +14,7 @@ use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
-use signed_doc::{DocumentRef, Metadata};
+use signed_doc::{DocumentRef, Metadata, UuidV7};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -83,24 +83,27 @@ fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
 
 fn encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
     match doc_ref {
-        DocumentRef::Latest { id } => encode_cbor_uuid(id),
+        DocumentRef::Latest { id } => encode_cbor_uuid(&id.uuid()),
         DocumentRef::WithVer(id, ver) => {
-            coset::cbor::Value::Array(vec![encode_cbor_uuid(id), encode_cbor_uuid(ver)])
+            coset::cbor::Value::Array(vec![
+                encode_cbor_uuid(&id.uuid()),
+                encode_cbor_uuid(&ver.uuid()),
+            ])
         },
     }
 }
 
 #[allow(clippy::indexing_slicing)]
 fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
-    if let Ok(id) = decode_cbor_uuid(val) {
+    if let Ok(id) = UuidV7::try_from(val) {
         Ok(DocumentRef::Latest { id })
     } else {
         let Some(array) = val.as_array() else {
             anyhow::bail!("Invalid CBOR encoded document `ref` type");
         };
         anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
-        let id = decode_cbor_uuid(&array[0])?;
-        let ver = decode_cbor_uuid(&array[1])?;
+        let id = UuidV7::try_from(&array[0])?;
+        let ver = UuidV7::try_from(&array[1])?;
         Ok(DocumentRef::WithVer(id, ver))
     }
 }
