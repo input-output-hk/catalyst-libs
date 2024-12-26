@@ -10,17 +10,12 @@ use coset::{CborSerializable, TaggedCborSerializable};
 
 mod metadata;
 
-pub use metadata::{DocumentRef, Metadata};
+pub use metadata::{DocumentRef, Metadata, UuidV7};
 
 /// Catalyst Signed Document Content Encoding Key.
 const CONTENT_ENCODING_KEY: &str = "content encoding";
 /// Catalyst Signed Document Content Encoding Value.
 const CONTENT_ENCODING_VALUE: &str = "br";
-/// CBOR tag for UUID content.
-const UUID_CBOR_TAG: u64 = 37;
-
-/// Collection of Content Errors.
-pub struct ContentErrors(Vec<String>);
 
 /// Keep all the contents private.
 /// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
@@ -75,8 +70,26 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
         let cose = coset::CoseSign::from_tagged_slice(&cose_bytes)
             .or(coset::CoseSign::from_slice(&cose_bytes))
             .map_err(|e| anyhow::anyhow!("Invalid COSE Sign document: {e}"))?;
+        let mut content_errors = Vec::new();
+        let expected_header = cose_protected_header();
 
-        let (metadata, content_errors) = metadata_from_cose_protected_header(&cose);
+        if cose.protected.header.content_type != expected_header.content_type {
+            content_errors
+                .push("Invalid COSE document protected header `content-type` field".to_string());
+        }
+
+        if !cose.protected.header.rest.iter().any(|(key, value)| {
+            key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
+                && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
+        }) {
+            content_errors.push(
+                "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field".to_string(),
+            );
+        }
+        let metadata = Metadata::from(&cose.protected);
+        if metadata.has_error() {
+            content_errors.extend_from_slice(metadata.content_errors());
+        }
         let payload = match &cose.payload {
             Some(payload) => {
                 let mut buf = Vec::new();
@@ -95,7 +108,7 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
             payload,
             signatures,
             cose_sign: cose,
-            content_errors: content_errors.0,
+            content_errors,
         };
         Ok(CatalystSignedDocument {
             inner: Arc::new(inner),
@@ -106,7 +119,7 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
 impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
 
-    /// Are there any validation errors (as opposed to structural errors.
+    /// Are there any validation errors (as opposed to structural errors).
     #[must_use]
     pub fn has_error(&self) -> bool {
         !self.inner.content_errors.is_empty()
@@ -166,190 +179,14 @@ fn cose_protected_header() -> coset::Header {
         .build()
 }
 
-/// Decode `CBOR` encoded `UUID`.
-fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
-    let Some((UUID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
-        anyhow::bail!("Invalid CBOR encoded UUID type");
-    };
-    let uuid = uuid::Uuid::from_bytes(
-        bytes
-            .clone()
-            .try_into()
-            .map_err(|_| anyhow::anyhow!("Invalid CBOR encoded UUID type, invalid bytes size"))?,
-    );
-    Ok(uuid)
-}
-
-/// Decode `CBOR` encoded `DocumentRef`.
-#[allow(clippy::indexing_slicing)]
-fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
-    if let Ok(id) = decode_cbor_uuid(val) {
-        Ok(DocumentRef::Latest { id })
-    } else {
-        let Some(array) = val.as_array() else {
-            anyhow::bail!("Invalid CBOR encoded document `ref` type");
-        };
-        anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
-        let id = decode_cbor_uuid(&array[0])?;
-        let ver = decode_cbor_uuid(&array[1])?;
-        Ok(DocumentRef::WithVer(id, ver))
-    }
-}
-
 /// Find a value for a given key in the protected header.
-fn cose_protected_header_find(cose: &coset::CoseSign, rest_key: &str) -> Option<ciborium::Value> {
+fn cose_protected_header_find(
+    cose: &coset::CoseSign, rest_key: &str,
+) -> Option<coset::cbor::Value> {
     cose.protected
         .header
         .rest
         .iter()
         .find(|(key, _)| key == &coset::Label::Text(rest_key.to_string()))
         .map(|(_, value)| value.clone())
-}
-
-/// Extract `Metadata` from `coset::CoseSign`.
-#[allow(clippy::too_many_lines)]
-fn metadata_from_cose_protected_header(cose: &coset::CoseSign) -> (Metadata, ContentErrors) {
-    let expected_header = cose_protected_header();
-    let mut errors = Vec::new();
-
-    if cose.protected.header.content_type != expected_header.content_type {
-        errors.push("Invalid COSE document protected header `content-type` field".to_string());
-    }
-
-    if !cose.protected.header.rest.iter().any(|(key, value)| {
-        key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
-            && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
-    }) {
-        errors.push(
-            "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field".to_string(),
-        );
-    }
-    let mut metadata = Metadata::default();
-
-    match cose_protected_header_find(cose, "type") {
-        Some(doc_type) => {
-            match decode_cbor_uuid(&doc_type) {
-                Ok(doc_type_uuid) => {
-                    if doc_type_uuid.get_version_num() == 4 {
-                        metadata.r#type = doc_type_uuid;
-                    } else {
-                        errors.push(format!(
-                            "Document type is not a valid UUIDv4: {doc_type_uuid}"
-                        ));
-                    }
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `type` field, err: {e}"
-                    ));
-                },
-            }
-        },
-        None => errors.push("Invalid COSE protected header, missing `type` field".to_string()),
-    };
-
-    match cose_protected_header_find(cose, "id") {
-        Some(doc_id) => {
-            match decode_cbor_uuid(&doc_id) {
-                Ok(doc_id_uuid) => {
-                    if doc_id_uuid.get_version_num() == 7 {
-                        metadata.id = doc_id_uuid;
-                    } else {
-                        errors.push(format!("Document ID is not a valid UUIDv7: {doc_id_uuid}"));
-                    }
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `id` field, err: {e}"
-                    ));
-                },
-            }
-        },
-        None => errors.push("Invalid COSE protected header, missing `id` field".to_string()),
-    };
-
-    match cose_protected_header_find(cose, "ver") {
-        Some(doc_ver) => {
-            match decode_cbor_uuid(&doc_ver) {
-                Ok(doc_ver_uuid) => {
-                    let mut is_valid = true;
-                    if doc_ver_uuid.get_version_num() != 7 {
-                        errors.push(format!(
-                            "Document Version is not a valid UUIDv7: {doc_ver_uuid}"
-                        ));
-                        is_valid = false;
-                    }
-                    if doc_ver_uuid < metadata.id {
-                        errors.push(format!(
-                            "Document Version {doc_ver_uuid} cannot be smaller than Document ID {0}", metadata.id
-                        ));
-                        is_valid = false;
-                    }
-                    if is_valid {
-                        metadata.ver = doc_ver_uuid;
-                    }
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `ver` field, err: {e}"
-                    ));
-                },
-            }
-        },
-        None => errors.push("Invalid COSE protected header, missing `ver` field".to_string()),
-    }
-
-    if let Some(cbor_doc_ref) = cose_protected_header_find(cose, "ref") {
-        match decode_cbor_document_ref(&cbor_doc_ref) {
-            Ok(doc_ref) => {
-                metadata.r#ref = Some(doc_ref);
-            },
-            Err(e) => {
-                errors.push(format!(
-                    "Invalid COSE protected header `ref` field, err: {e}"
-                ));
-            },
-        }
-    }
-
-    if let Some(cbor_doc_template) = cose_protected_header_find(cose, "template") {
-        match decode_cbor_document_ref(&cbor_doc_template) {
-            Ok(doc_template) => {
-                metadata.template = Some(doc_template);
-            },
-            Err(e) => {
-                errors.push(format!(
-                    "Invalid COSE protected header `template` field, err: {e}"
-                ));
-            },
-        }
-    }
-
-    if let Some(cbor_doc_reply) = cose_protected_header_find(cose, "reply") {
-        match decode_cbor_document_ref(&cbor_doc_reply) {
-            Ok(doc_reply) => {
-                metadata.reply = Some(doc_reply);
-            },
-            Err(e) => {
-                errors.push(format!(
-                    "Invalid COSE protected header `reply` field, err: {e}"
-                ));
-            },
-        }
-    }
-
-    if let Some(cbor_doc_section) = cose_protected_header_find(cose, "section") {
-        match cbor_doc_section.into_text() {
-            Ok(doc_section) => {
-                metadata.section = Some(doc_section);
-            },
-            Err(e) => {
-                errors.push(format!(
-                    "Invalid COSE protected header `section` field, err: {e:?}"
-                ));
-            },
-        }
-    }
-
-    (metadata, ContentErrors(errors))
 }
