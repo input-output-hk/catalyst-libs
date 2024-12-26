@@ -12,7 +12,7 @@ use pallas::ledger::traverse::MultiEraTx;
 use super::{DecodedMetadata, DecodedMetadataItem, DecodedMetadataValues, ValidationReport};
 
 /// CIP 36 Registration Data.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Cip36 {
     pub cip36: Cip36Registration,
     pub validation: Cip36Validation,
@@ -43,8 +43,8 @@ impl Cip36 {
     /// Nothing.  IF CIP36 Metadata is found it will be updated in `decoded_metadata`.
     #[allow(clippy::too_many_lines)]
     pub(crate) fn decode_and_validate(
-        decoded_metadata: &DecodedMetadata, slot: u64, txn: &MultiEraTx,
-        raw_aux_data: &TransactionAuxData, catalyst_strict: bool, network: Network,
+        decoded_metadata: &DecodedMetadata, slot: u64, _txn: &MultiEraTx,
+        raw_aux_data: &TransactionAuxData, is_catalyst_strict: bool, network: Network,
     ) {
         let Some(k61284) = raw_aux_data.metadata(MetadatumLabel::CIP036_REGISTRATION) else {
             return;
@@ -58,7 +58,17 @@ impl Cip36 {
         let mut registration_witness = Decoder::new(k61285.as_ref());
 
         let key_registration = match Cip36KeyRegistration::decode(&mut key_registration, &mut ()) {
-            Ok(metadata) => metadata,
+            Ok(mut metadata) => {
+                // FIXME: Don't like it here
+                let nonce = if is_catalyst_strict && metadata.raw_nonce > slot {
+                    slot
+                } else {
+                    metadata.raw_nonce
+                };
+
+                metadata.nonce = nonce;
+                metadata
+            },
             Err(e) => {
                 Cip36::default().decoding_failed(
                     &format!("Failed to decode CIP36 Key Registration metadata: {e}"),
@@ -84,13 +94,14 @@ impl Cip36 {
                 },
             };
 
+
         let cip36 = Cip36Registration {
             key_registration,
             registration_witness,
-            is_catalyst_strict: catalyst_strict,
+            is_catalyst_strict: is_catalyst_strict,
         };
 
-        let validation = cip36.validate(network, &k61284, &mut validation_report);
+        let validation = cip36.validate(network, k61284, &mut validation_report);
 
         // Create a Cip509 struct and insert it into decoded_metadata
         decoded_metadata.0.insert(
