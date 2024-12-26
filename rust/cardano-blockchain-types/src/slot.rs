@@ -1,10 +1,11 @@
 //! Block Slot
 
 use std::{cmp::Ordering, ops::{MulAssign, Sub}};
+use serde::Serialize;
 
 use crate::conversion::from_saturating;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default, Serialize)]
 
 /// Slot on the blockchain, typically one slot equals one second.  However chain
 /// parameters can alter how long a slot is.
