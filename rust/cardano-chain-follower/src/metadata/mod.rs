@@ -2,7 +2,7 @@
 
 use std::{fmt::Debug, sync::Arc};
 
-use cardano_blockchain_types::{Network, TransactionAuxData};
+use cardano_blockchain_types::{MetadatumLabel, Network, TransactionAuxData};
 use cip36::Cip36;
 use cip509::Cip509;
 use dashmap::DashMap;
@@ -41,7 +41,7 @@ pub struct DecodedMetadataItem {
 /// For example, CIP15/36 uses labels 61284 & 61285,
 /// 61284 is the primary label, so decoded metadata
 /// will be under that label.
-pub(crate) struct DecodedMetadata(DashMap<u64, Arc<DecodedMetadataItem>>);
+pub(crate) struct DecodedMetadata(DashMap<MetadatumLabel, Arc<DecodedMetadataItem>>);
 
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
