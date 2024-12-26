@@ -13,7 +13,7 @@ use validation::{validate_payment_address_network, validate_signature, validate_
 use crate::{MetadatumValue, Network};
 
 /// CIP-36 Catalyst registration
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Cip36 {
     /// Key registration - 61284
     pub key_registration: Cip36KeyRegistration,
@@ -24,7 +24,7 @@ pub struct Cip36 {
 }
 
 /// CIP36 Validation Report
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Cip36Validation {
     /// Is the signature valid? (signature in 61285)
     pub is_valid_signature: bool,
@@ -65,7 +65,7 @@ impl Cip36 {
         self.key_registration.raw_nonce
     }
 
-    pub fn signature(&self) -> ed25519_dalek::Signature {
+    pub fn signature(&self) -> Option<ed25519_dalek::Signature> {
         self.registration_witness.signature.clone()
     }
     pub fn is_strict_catalyst(&self) -> bool {

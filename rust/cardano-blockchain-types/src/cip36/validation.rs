@@ -1,5 +1,5 @@
-use crate::{MetadatumValue, Network};
 use super::Cip36;
+use crate::{MetadatumValue, Network};
 
 /// Project Catalyst Purpose
 pub const PROJECT_CATALYST_PURPOSE: u64 = 0;
@@ -22,13 +22,18 @@ pub(crate) fn validate_signature(
         .update(metadata.as_ref())
         .finalize();
 
-    match cip36
-        .stake_pk()
-        .verify_strict(hash.as_bytes(), &cip36.signature())
-    {
+    let sig = match cip36.signature() {
+        Some(sig) => sig,
+        None => {
+            validation_report.push(format!("Validate CIP36 Signature, signature is invalid"));
+            return false;
+        },
+    };
+
+    match cip36.stake_pk().verify_strict(hash.as_bytes(), &sig) {
         Ok(_) => true,
         Err(_) => {
-            validation_report.push(format!("Validate CIP36 Signature, signature is invalid"));
+            validation_report.push(format!("Validate CIP36 Signature, cannot verify signature"));
             false
         },
     }

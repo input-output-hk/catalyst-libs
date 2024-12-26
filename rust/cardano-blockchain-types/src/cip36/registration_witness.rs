@@ -14,10 +14,10 @@ use crate::utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 ///     1 : $stake_witness
 /// }
 /// ```
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Cip36RegistrationWitness {
     /// Signature of the registration data.
-    pub signature: ed25519_dalek::Signature,
+    pub signature: Option<ed25519_dalek::Signature>,
 }
 
 impl Decode<'_, ()> for Cip36RegistrationWitness {
@@ -41,9 +41,7 @@ impl Decode<'_, ()> for Cip36RegistrationWitness {
         }
 
         let sig_bytes = decode_bytes(d, "CIP36 Registration Witness signature")?;
-        let signature = ed25519_dalek::Signature::from_slice(&sig_bytes).map_err(|e| {
-            decode::Error::message(format!("Invalid CIP36 Registration Witness Signature, {e}"))
-        })?;
+        let signature = ed25519_dalek::Signature::from_slice(&sig_bytes).ok();
 
         Ok(Cip36RegistrationWitness { signature })
     }
