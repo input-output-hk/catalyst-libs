@@ -1,6 +1,10 @@
 //! Block Slot
 
-use std::{cmp::Ordering, ops::{MulAssign, Sub}};
+use std::{
+    cmp::Ordering,
+    ops::{MulAssign, Sub},
+};
+
 use serde::Serialize;
 
 use crate::conversion::from_saturating;
