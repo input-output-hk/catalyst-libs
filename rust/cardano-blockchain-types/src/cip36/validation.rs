@@ -1,5 +1,4 @@
-use std::sync::Arc;
-use crate::Network;
+use crate::{MetadatumValue, Network};
 use super::Cip36;
 
 /// Project Catalyst Purpose
@@ -14,13 +13,13 @@ pub const SIGNDATA_PREAMBLE: [u8; 4] = [0xA1, 0x19, 0xEF, 0x64];
 /// Validate the signature against the public key.
 #[allow(clippy::too_many_lines)]
 pub(crate) fn validate_signature(
-    cip36: &Cip36, metadata: &Arc<Vec<u8>>, validation_report: &mut Vec<String>,
+    cip36: &Cip36, metadata: &MetadatumValue, validation_report: &mut Vec<String>,
 ) -> bool {
     let hash = blake2b_simd::Params::new()
         .hash_length(32)
         .to_state()
         .update(&SIGNDATA_PREAMBLE)
-        .update(metadata)
+        .update(metadata.as_ref())
         .finalize();
 
     match cip36

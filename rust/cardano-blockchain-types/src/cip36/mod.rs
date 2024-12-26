@@ -3,7 +3,6 @@
 pub mod key_registration;
 pub mod registration_witness;
 mod validation;
-use std::sync::Arc;
 
 use ed25519_dalek::VerifyingKey;
 use key_registration::{Cip36KeyRegistration, VotingPubKey};
@@ -11,7 +10,7 @@ use pallas::ledger::addresses::ShelleyAddress;
 use registration_witness::Cip36RegistrationWitness;
 use validation::{validate_payment_address_network, validate_signature, validate_voting_keys};
 
-use crate::Network;
+use crate::{MetadatumValue, Network};
 
 /// CIP-36 Catalyst registration
 pub struct Cip36 {
@@ -72,7 +71,7 @@ impl Cip36 {
     }
 
     pub fn validate(
-        &self, network: Network, metadata: &Arc<Vec<u8>>, validation_report: &mut Vec<String>,
+        &self, network: Network, metadata: &MetadatumValue, validation_report: &mut Vec<String>,
     ) -> Cip36Validation {
         let is_valid_signature = validate_signature(self, metadata, validation_report);
         let is_valid_payment_address_network =
