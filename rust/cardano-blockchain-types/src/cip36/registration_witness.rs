@@ -1,7 +1,7 @@
 //! CIP36 registration witness 61285
 //!
-//! https://cips.cardano.org/cip/CIP-36
-//! https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl
+//! <https://cips.cardano.org/cip/CIP-36>
+//! <https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl>
 
 use minicbor::{decode, Decode, Decoder};
 
@@ -14,6 +14,7 @@ use crate::utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 ///     1 : $stake_witness
 /// }
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Default)]
 pub struct Cip36RegistrationWitness {
     /// Signature of the registration data.

@@ -1,6 +1,7 @@
 //! Catalyst Enhanced `MultiEraBlock` Structures
 
 mod auxdata;
+mod cip36;
 pub mod conversion;
 mod fork;
 pub mod hashes;
@@ -10,7 +11,6 @@ mod point;
 mod slot;
 mod txn_index;
 mod txn_witness;
-mod cip36;
 pub mod utils;
 
 pub use auxdata::{

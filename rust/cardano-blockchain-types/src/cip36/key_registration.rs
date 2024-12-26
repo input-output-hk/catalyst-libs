@@ -2,8 +2,10 @@
 //!
 //! Catalyst registration data
 //!
-//! https://cips.cardano.org/cip/CIP-36
-//! https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl
+//! <https://cips.cardano.org/cip/CIP-36>
+//! <https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl>
+
+use std::collections::HashSet;
 
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
@@ -24,6 +26,7 @@ use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper,
 ///     ? 5 : $voting_purpose .default 0
 //   }
 /// ```
+#[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Default)]
 pub struct Cip36KeyRegistration {
     /// Is this CIP36 or CIP15 format.
@@ -91,7 +94,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if !found_keys.insert(key) {
+                        if !found_keys.insert(key as u16) {
                             return Err(decode::Error::message(
                                 "Duplicate key in CIP36 Key Registration voting key",
                             ));
@@ -101,7 +104,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         cip36_key_registration.voting_pks = voting_keys;
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if !found_keys.insert(key) {
+                        if !found_keys.insert(key as u16) {
                             return Err(decode::Error::message(
                                 "Duplicate key in CIP36 Key Registration stake public key",
                             ));
@@ -110,7 +113,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         cip36_key_registration.stake_pk = stake_pk;
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if !found_keys.insert(key) {
+                        if !found_keys.insert(key as u16) {
                             return Err(decode::Error::message(
                                 "Duplicate key in CIP36 Key Registration payment address",
                             ));
@@ -120,7 +123,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         cip36_key_registration.is_payable = !shelley_addr.payment().is_script();
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        if !found_keys.insert(key) {
+                        if !found_keys.insert(key as u16) {
                             return Err(decode::Error::message(
                                 "Duplicate key in CIP36 Key Registration nonce",
                             ));
@@ -129,7 +132,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         cip36_key_registration.raw_nonce = raw_nonce;
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
-                        if !found_keys.insert(key) {
+                        if !found_keys.insert(key as u16) {
                             return Err(decode::Error::message(
                                 "Duplicate key in CIP36 Key Registration purpose",
                             ));
@@ -148,8 +151,8 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
 ///
 /// # Returns
 ///
-/// A tuple containing a boolean value, true if it is CIP36 format, false if it is CIP15 format
-/// and a vector of voting public keys.
+/// A tuple containing a boolean value, true if it is CIP36 format, false if it is CIP15
+/// format and a vector of voting public keys.
 fn decode_voting_key(d: &mut Decoder) -> Result<(bool, Vec<VotingPubKey>), decode::Error> {
     let mut voting_keys = Vec::new();
     let mut is_cip36 = false;
@@ -162,7 +165,7 @@ fn decode_voting_key(d: &mut Decoder) -> Result<(bool, Vec<VotingPubKey>), decod
         // ```
         minicbor::data::Type::Bytes => {
             let pub_key = decode_bytes(d, "CIP36 Key Registration voting key, single voting key")?;
-            let vk = voting_pk_vec_to_verifying_key(pub_key).map_err(|e| {
+            let vk = voting_pk_vec_to_verifying_key(&pub_key).map_err(|e| {
                 decode::Error::message(format!(
                     "CIP36 Key Registration voting key, singe voting key, {e}"
                 ))
@@ -203,7 +206,7 @@ fn decode_voting_key(d: &mut Decoder) -> Result<(bool, Vec<VotingPubKey>), decod
                     &mut (),
                 )?;
 
-                let vk = voting_pk_vec_to_verifying_key(pub_key).map_err(|e| {
+                let vk = voting_pk_vec_to_verifying_key(&pub_key).map_err(|e| {
                     decode::Error::message(format!(
                         "CIP36 Key Registration voting key, multiple voting keys, {e}"
                     ))
@@ -216,19 +219,18 @@ fn decode_voting_key(d: &mut Decoder) -> Result<(bool, Vec<VotingPubKey>), decod
             }
         },
         _ => {
-            return Err(decode::Error::message(format!(
-                "Invalid datatype for CIP36 Key Registration voting key"
-            )))
+            return Err(decode::Error::message(
+                "Invalid datatype for CIP36 Key Registration voting key",
+            ))
         },
     }
     Ok((is_cip36, voting_keys))
 }
 
-/// Helper function for converting `Vec<u8>` to `VerifyingKey`.
-fn voting_pk_vec_to_verifying_key(pub_key: Vec<u8>) -> anyhow::Result<VerifyingKey> {
+/// Helper function for converting `&[u8]` to `VerifyingKey`.
+fn voting_pk_vec_to_verifying_key(pub_key: &[u8]) -> anyhow::Result<VerifyingKey> {
     VerifyingKey::from_bytes(
         pub_key
-            .as_slice()
             .try_into()
             .map_err(|_| anyhow::anyhow!("Invalid verifying key length"))?,
     )
@@ -248,7 +250,7 @@ fn voting_pk_vec_to_verifying_key(pub_key: Vec<u8>) -> anyhow::Result<VerifyingK
 /// The stake public key as a `VerifyingKey`.
 fn decode_stake_pk(d: &mut Decoder) -> Result<VerifyingKey, decode::Error> {
     let pub_key = decode_bytes(d, "CIP36 Key Registration stake public key")?;
-    voting_pk_vec_to_verifying_key(pub_key).map_err(|e| {
+    voting_pk_vec_to_verifying_key(&pub_key).map_err(|e| {
         decode::Error::message(format!("CIP36 Key Registration stake public key, {e}"))
     })
 }

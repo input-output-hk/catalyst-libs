@@ -3,12 +3,14 @@
 use minicbor::{data::Tag, decode, Decoder};
 
 /// Generic helper function for decoding different types.
+///
+/// # Errors
+///
+/// Error if the decoding fails.
 pub fn decode_helper<'a, T, C>(
     d: &mut Decoder<'a>, from: &str, context: &mut C,
 ) -> Result<T, decode::Error>
-where
-    T: minicbor::Decode<'a, C>,
-{
+where T: minicbor::Decode<'a, C> {
     T::decode(d, context).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode {:?} in {from}: {e}",
@@ -18,6 +20,10 @@ where
 }
 
 /// Helper function for decoding bytes.
+///
+/// # Errors
+///
+/// Error if the decoding fails.
 pub fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
     d.bytes().map(<[u8]>::to_vec).map_err(|e| {
         decode::Error::message(format!(
@@ -28,6 +34,10 @@ pub fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Erro
 }
 
 /// Helper function for decoding array.
+///
+/// # Errors
+///
+/// Error if the decoding fails.
 pub fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
     d.array()
         .map_err(|e| {
@@ -42,6 +52,10 @@ pub fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Erro
 }
 
 /// Helper function for decoding map.
+///
+/// # Errors
+///
+/// Error if the decoding fails.
 pub fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
     d.map()
         .map_err(|e| decode::Error::message(format!("Failed to decode map in {from}: {e}")))?
@@ -51,12 +65,20 @@ pub fn decode_map_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error>
 }
 
 /// Helper function for decoding tag.
+///
+/// # Errors
+///
+/// Error if the decoding fails.
 pub fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
     d.tag()
         .map_err(|e| decode::Error::message(format!("Failed to decode tag in {from}: {e}")))
 }
 
 /// Decode any in CDDL, only support basic datatype
+///
+/// # Errors
+///
+/// Error if the decoding fails.
 pub fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
     match d.datatype()? {
         minicbor::data::Type::String => {
@@ -114,12 +136,16 @@ pub fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error>
             }
         },
         minicbor::data::Type::Bytes => Ok(decode_bytes(d, &format!("{from} Any"))?),
-        minicbor::data::Type::Array => Ok(decode_array_len(d, &format!("{from} Any"))?
-            .to_be_bytes()
-            .to_vec()),
-        _ => Err(decode::Error::message(format!(
-            "{from} Any, Data type not supported"
-        ))),
+        minicbor::data::Type::Array => {
+            Ok(decode_array_len(d, &format!("{from} Any"))?
+                .to_be_bytes()
+                .to_vec())
+        },
+        _ => {
+            Err(decode::Error::message(format!(
+                "{from} Any, Data type not supported"
+            )))
+        },
     }
 }
 

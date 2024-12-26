@@ -1,3 +1,5 @@
+//! Validation function for CIP-36
+
 use super::Cip36;
 use crate::{MetadatumValue, Network};
 
@@ -22,20 +24,16 @@ pub(crate) fn validate_signature(
         .update(metadata.as_ref())
         .finalize();
 
-    let sig = match cip36.signature() {
-        Some(sig) => sig,
-        None => {
-            validation_report.push(format!("Validate CIP36 Signature, signature is invalid"));
-            return false;
-        },
+    let Some(sig) = cip36.signature() else {
+        validation_report.push("Validate CIP36 Signature, signature is invalid".to_string());
+        return false;
     };
 
-    match cip36.stake_pk().verify_strict(hash.as_bytes(), &sig) {
-        Ok(_) => true,
-        Err(_) => {
-            validation_report.push(format!("Validate CIP36 Signature, cannot verify signature"));
-            false
-        },
+    if let Ok(()) = cip36.stake_pk().verify_strict(hash.as_bytes(), &sig) {
+        true
+    } else {
+        validation_report.push("Validate CIP36 Signature, cannot verify signature".to_string());
+        false
     }
 }
 
@@ -57,7 +55,7 @@ pub(crate) fn validate_payment_address_network(
 
         Some(valid)
     } else {
-        return None;
+        None
     }
 }
 
