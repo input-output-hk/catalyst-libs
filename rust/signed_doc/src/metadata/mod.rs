@@ -2,8 +2,10 @@
 use std::fmt::{Display, Formatter};
 
 mod document_ref;
+mod uuid_type;
 
 pub use document_ref::DocumentRef;
+pub use uuid_type::{UuidV4, UuidV7};
 
 /// Document Metadata.
 #[derive(Debug, serde::Deserialize)]
