@@ -82,30 +82,58 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
 
         let mut cip36_key_registration = Cip36KeyRegistration::default();
 
+        // Record of founded keys. Check for duplicate keys in the map
+        let mut found_keys: HashSet<u16> = HashSet::new();
+
         for _ in 0..map_len {
             let key: u16 = decode_helper(d, "key in CIP36 Key Registration", ctx)?;
 
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
+                        if !found_keys.insert(key) {
+                            return Err(decode::Error::message(
+                                "Duplicate key in CIP36 Key Registration voting key",
+                            ));
+                        }
                         let (is_cip36, voting_keys) = decode_voting_key(d)?;
                         cip36_key_registration.is_cip36 = Some(is_cip36);
                         cip36_key_registration.voting_pks = voting_keys;
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
+                        if !found_keys.insert(key) {
+                            return Err(decode::Error::message(
+                                "Duplicate key in CIP36 Key Registration stake public key",
+                            ));
+                        }
                         let stake_pk = decode_stake_pk(d)?;
                         cip36_key_registration.stake_pk = stake_pk;
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
+                        if !found_keys.insert(key) {
+                            return Err(decode::Error::message(
+                                "Duplicate key in CIP36 Key Registration payment address",
+                            ));
+                        }
                         let shelley_addr = decode_payment_addr(d)?;
                         cip36_key_registration.payment_addr = Some(shelley_addr.clone());
                         cip36_key_registration.is_payable = !shelley_addr.payment().is_script();
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
+                        if !found_keys.insert(key) {
+                            return Err(decode::Error::message(
+                                "Duplicate key in CIP36 Key Registration nonce",
+                            ));
+                        }
                         let raw_nonce = decode_nonce(d)?;
                         cip36_key_registration.raw_nonce = raw_nonce;
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
+                        if !found_keys.insert(key) {
+                            return Err(decode::Error::message(
+                                "Duplicate key in CIP36 Key Registration purpose",
+                            ));
+                        }
                         let purpose = decode_purpose(d)?;
                         cip36_key_registration.purpose = purpose;
                     },
