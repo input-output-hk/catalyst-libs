@@ -59,7 +59,7 @@ impl DecodedMetadata {
     }
 
     /// Get the decoded metadata item at the given slot, or None if it doesn't exist.
-    pub fn get(&self, primary_label: u64) -> Option<Arc<DecodedMetadataItem>> {
+    pub fn get(&self, primary_label: MetadatumLabel) -> Option<Arc<DecodedMetadataItem>> {
         let entry = self.0.get(&primary_label)?;
         let value = entry.value();
         Some(value.clone())
