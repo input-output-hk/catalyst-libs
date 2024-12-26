@@ -194,7 +194,7 @@ async fn process_rollback(
     let slot_rollback_size = if head_slot > rollback_slot {
         head_slot - rollback_slot
     } else {
-        0
+        0.into()
     };
 
     // We actually do the work here...
@@ -203,7 +203,7 @@ async fn process_rollback(
     // We never really know how many blocks are rolled back when advised by the peer, but we
     // can work out how many slots. This function wraps the real work, so we can properly
     // record the stats when the rollback is complete. Even if it errors.
-    stats::rollback(chain, stats::RollbackType::Peer, slot_rollback_size);
+    stats::rollback(chain, stats::RollbackType::Peer, slot_rollback_size.into());
 
     Ok(response)
 }
