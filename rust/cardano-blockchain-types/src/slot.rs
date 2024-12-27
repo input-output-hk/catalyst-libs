@@ -45,7 +45,7 @@ impl From<Slot> for u64 {
 
 impl MulAssign<u64> for Slot {
     fn mul_assign(&mut self, rhs: u64) {
-        self.0 *= rhs;
+        self.0 = self.0.saturating_mul(rhs);
     }
 }
 
