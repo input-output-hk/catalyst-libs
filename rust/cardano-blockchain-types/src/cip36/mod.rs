@@ -16,11 +16,11 @@ use crate::{MetadatumValue, Network};
 #[derive(Clone, Default)]
 pub struct Cip36 {
     /// Key registration - 61284
-    pub key_registration: Cip36KeyRegistration,
+    key_registration: Cip36KeyRegistration,
     /// Registration witness - 61285
-    pub registration_witness: Cip36RegistrationWitness,
+    registration_witness: Cip36RegistrationWitness,
     /// Is this a Catalyst strict registration?
-    pub is_catalyst_strict: bool,
+    is_catalyst_strict: bool,
 }
 
 /// Validation value for CIP-36.

@@ -43,7 +43,6 @@ pub struct Cip36KeyRegistration {
     pub payment_addr: Option<ShelleyAddress>,
     /// Nonce (nonce that has been slot corrected).
     /// Field 4 in the CIP-36 61284 Spec.
-    // FIXME: set this nonce
     pub nonce: u64,
     /// Registration Purpose (Always 0 for Catalyst).
     /// Field 5 in the CIP-36 61284 Spec.
