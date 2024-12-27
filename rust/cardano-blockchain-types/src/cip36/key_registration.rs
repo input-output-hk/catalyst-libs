@@ -305,3 +305,64 @@ fn decode_nonce(d: &mut Decoder) -> Result<u64, decode::Error> {
 fn decode_purpose(d: &mut Decoder) -> Result<u64, decode::Error> {
     decode_helper(d, "CIP36 Key Registration purpose", &mut ())
 }
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    #[test]
+    fn test_decode_payment_address() {
+        let hex_data = hex::decode(
+            // 0x004777561e7d9ec112ec307572faec1aff61ff0cfed68df4cd5c847f1872b617657881e30ad17c46e4010c9cb3ebb2440653a34d32219c83e9
+            "5839004777561E7D9EC112EC307572FAEC1AFF61FF0CFED68DF4CD5C847F1872B617657881E30AD17C46E4010C9CB3EBB2440653A34D32219C83E9"
+        ).expect("cannot decode hex");
+        let mut decoder = Decoder::new(&hex_data);
+        let address = decode_payment_addr(&mut decoder);
+        assert_eq!(address.unwrap().to_vec().len(), 57);
+    }
+
+    #[test]
+    fn test_decode_stake_pk() {
+        let hex_data = hex::decode(
+            // 0xe3cd2404c84de65f96918f18d5b445bcb933a7cda18eeded7945dd191e432369
+            "5820E3CD2404C84DE65F96918F18D5B445BCB933A7CDA18EEDED7945DD191E432369",
+        )
+        .expect("cannot decode hex");
+        let mut decoder = Decoder::new(&hex_data);
+        let stake_pk = decode_stake_pk(&mut decoder);
+        assert!(stake_pk.is_ok());
+    }
+
+    #[test]
+    // cip-36 version
+    fn test_decode_voting_key_cip36() {
+        let hex_data = hex::decode(
+            // [["0x0036ef3e1f0d3f5989e2d155ea54bdb2a72c4c456ccb959af4c94868f473f5a0", 1]]
+            "818258200036EF3E1F0D3F5989E2D155EA54BDB2A72C4C456CCB959AF4C94868F473F5A001",
+        )
+        .expect("cannot decode hex");
+        let mut decoder = Decoder::new(&hex_data);
+
+        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder).expect("Failed to decode");
+
+        assert!(is_cip36);
+        assert_eq!(voting_pk.len(), 1);
+    }
+
+    #[test]
+    // cip-15 version
+    fn test_decode_voting_key_2() {
+        let hex_data = hex::decode(
+            // 0x0036ef3e1f0d3f5989e2d155ea54bdb2a72c4c456ccb959af4c94868f473f5a0
+            "58200036EF3E1F0D3F5989E2D155EA54BDB2A72C4C456CCB959AF4C94868F473F5A0",
+        )
+        .expect("cannot decode hex");
+        let mut decoder = Decoder::new(&hex_data);
+
+        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder).expect("Failed to decode");
+
+        assert!(!is_cip36);
+        assert_eq!(voting_pk.len(), 1);
+    }
+}
