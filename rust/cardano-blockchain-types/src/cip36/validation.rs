@@ -92,9 +92,10 @@ mod tests {
     use super::validate_purpose;
     use crate::{
         cip36::{
-            key_registration::VotingPubKey, validate_payment_address_network, validate_voting_keys,
+            key_registration::Cip36KeyRegistration, registration_witness::Cip36RegistrationWitness,
+            validate_payment_address_network, validate_voting_keys, voting_pk::VotingPubKey,
         },
-        Cip36, Cip36KeyRegistration, Cip36RegistrationWitness, Network,
+        Cip36, Network,
     };
 
     fn create_empty_cip36(strict: bool) -> Cip36 {

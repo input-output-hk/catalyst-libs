@@ -12,6 +12,7 @@ use minicbor::{decode, Decode, Decoder};
 use pallas::ledger::addresses::{Address, ShelleyAddress};
 use strum::FromRepr;
 
+use super::voting_pk::VotingPubKey;
 use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 
 /// CIP-36 key registration - 61284
@@ -51,15 +52,6 @@ pub struct Cip36KeyRegistration {
     pub raw_nonce: u64,
     /// Is payment address payable? (not a script)
     pub is_payable: bool,
-}
-
-/// Voting public key containing the public key and weight.
-#[derive(Clone, Debug)]
-pub struct VotingPubKey {
-    /// Voting public key.
-    pub voting_pk: VerifyingKey,
-    /// Voting key associated weight.
-    pub weight: u32,
 }
 
 /// Enum of CIP36 registration (61284) with its associated unsigned integer key.

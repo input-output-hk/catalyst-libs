@@ -3,12 +3,14 @@
 pub mod key_registration;
 pub mod registration_witness;
 mod validation;
+pub mod voting_pk;
 
 use ed25519_dalek::VerifyingKey;
-use key_registration::{Cip36KeyRegistration, VotingPubKey};
+use key_registration::Cip36KeyRegistration;
 use pallas::ledger::addresses::ShelleyAddress;
 use registration_witness::Cip36RegistrationWitness;
 use validation::{validate_payment_address_network, validate_signature, validate_voting_keys};
+use voting_pk::VotingPubKey;
 
 use crate::{MetadatumValue, Network};
 
@@ -105,6 +107,7 @@ impl Cip36 {
     ///   registration when `is_strict_catalyst` is true.
     ///
     /// # Parameters
+    ///
     /// * `network` - The blockchain network.
     /// * `metadata` - The metadata value to be validated.
     /// * `validation_report` - Validation report to store the validation result.
