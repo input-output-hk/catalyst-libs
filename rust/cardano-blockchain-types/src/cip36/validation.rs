@@ -82,3 +82,133 @@ pub(crate) fn validate_purpose(cip36: &Cip36, validation_report: &mut Vec<String
     }
     true
 }
+
+#[cfg(test)]
+mod tests {
+
+    use ed25519_dalek::VerifyingKey;
+    use pallas::ledger::addresses::Address;
+
+    use super::validate_purpose;
+    use crate::{
+        cip36::{
+            key_registration::VotingPubKey, validate_payment_address_network, validate_voting_keys,
+        },
+        Cip36, Cip36KeyRegistration, Cip36RegistrationWitness, Network,
+    };
+
+    fn create_empty_cip36(strict: bool) -> Cip36 {
+        Cip36 {
+            key_registration: Cip36KeyRegistration::default(),
+            registration_witness: Cip36RegistrationWitness::default(),
+            is_catalyst_strict: strict,
+        }
+    }
+
+    #[test]
+    fn test_validate_payment_address_network() {
+        let mut cip36 = create_empty_cip36(true);
+        // cSpell:disable
+        let addr = Address::from_bech32("addr_test1qprhw4s70k0vzyhvxp6h97hvrtlkrlcvlmtgmaxdtjz87xrjkctk27ypuv9dzlzxusqse89naweygpjn5dxnygvus05sdq9h07").expect("Failed to create address");
+        // cSpell:enable
+        let Address::Shelley(shelley_addr) = addr else {
+            panic!("Invalid address type")
+        };
+        cip36.key_registration.payment_addr = Some(shelley_addr);
+        let mut report = Vec::new();
+
+        let valid = validate_payment_address_network(&cip36, Network::Preprod, &mut report);
+
+        assert_eq!(report.len(), 0);
+        assert_eq!(valid, Some(true));
+    }
+
+    #[test]
+    fn test_validate_invalid_payment_address_network() {
+        let mut cip36 = create_empty_cip36(true);
+        // cSpell:disable
+        let addr = Address::from_bech32("addr_test1qprhw4s70k0vzyhvxp6h97hvrtlkrlcvlmtgmaxdtjz87xrjkctk27ypuv9dzlzxusqse89naweygpjn5dxnygvus05sdq9h07").expect("Failed to create address");
+        // cSpell:enable
+        let Address::Shelley(shelley_addr) = addr else {
+            panic!("Invalid address type")
+        };
+        cip36.key_registration.payment_addr = Some(shelley_addr);
+        let mut report = Vec::new();
+
+        let valid = validate_payment_address_network(&cip36, Network::Mainnet, &mut report);
+
+        assert_eq!(report.len(), 1);
+        assert!(report
+            .first()
+            .expect("Failed to get the first index")
+            .contains("does not match the network used"));
+        assert_eq!(valid, Some(false));
+    }
+
+    #[test]
+    fn test_validate_voting_keys() {
+        let mut cip36 = create_empty_cip36(true);
+        cip36.key_registration.voting_pks.push(VotingPubKey {
+            voting_pk: VerifyingKey::default(),
+            weight: 1,
+        });
+        let mut report = Vec::new();
+
+        let valid = validate_voting_keys(&cip36, &mut report);
+
+        assert_eq!(report.len(), 0);
+        assert!(valid);
+    }
+
+    #[test]
+    fn test_validate_invalid_voting_keys() {
+        let mut cip36 = create_empty_cip36(true);
+        cip36.key_registration.voting_pks.push(VotingPubKey {
+            voting_pk: VerifyingKey::default(),
+            weight: 1,
+        });
+        cip36.key_registration.voting_pks.push(VotingPubKey {
+            voting_pk: VerifyingKey::default(),
+            weight: 1,
+        });
+        let mut report = Vec::new();
+
+        let valid = validate_voting_keys(&cip36, &mut report);
+
+        assert_eq!(report.len(), 1);
+        assert!(report
+            .first()
+            .expect("Failed to get the first index")
+            .contains("Catalyst supports only a single voting key"));
+        assert!(!valid);
+    }
+
+    #[test]
+    fn test_validate_purpose() {
+        let cip36 = create_empty_cip36(true);
+        let mut report = Vec::new();
+
+        let valid = validate_purpose(&cip36, &mut report);
+
+        assert_eq!(report.len(), 0);
+        assert_eq!(cip36.purpose(), 0);
+        assert!(valid);
+    }
+
+    #[test]
+    fn test_validate_invalid_purpose() {
+        let mut cip36 = create_empty_cip36(true);
+        cip36.key_registration.purpose = 1;
+        let mut report = Vec::new();
+
+        let valid = validate_purpose(&cip36, &mut report);
+
+        assert_eq!(report.len(), 1);
+        assert!(report
+            .first()
+            .expect("Failed to get the first index")
+            .contains("unknown purpose"));
+        assert_eq!(cip36.purpose(), 1);
+        assert!(!valid);
+    }
+}
