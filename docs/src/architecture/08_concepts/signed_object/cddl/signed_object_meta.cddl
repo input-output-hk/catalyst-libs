@@ -1,0 +1,17 @@
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
+signed_object_fields = { 
+  "type" => UUID, ; UUID v4
+  "id" => UUID, ; UUID v7
+  "ver" => UUID, ; UUID v7
+
+  1 => -8, ; "alg": EdDSA
+  3 => tstr / int, ; "content type"
+  ? "content encoding" => tstr / int, ; payload content encoding
+
+  * metadata-key => metadata-value
+}
+metadata-key = int / text
+metadata-value = any
+UUID = #6.37(bytes)

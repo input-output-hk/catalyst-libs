@@ -19,9 +19,22 @@ This document defines a generalized view of the "Catalyst" voting transaction.
 
 ## Motivation
 
-Project "Catalyst" requires a structure to keep people vote's data in the secure way, anonymous and verifiable way.
+Project "Catalyst" requires a structure to keep people vote's data in the secure and verifiable way.
 
 ## Specification
+
+Generalized vote transaction is a [signed object],
+so its fully follows the structure of the [signed object] specification.
+
+* [`content type`](./../signed_object/index.md#content-type): `application/cbor`
+  ```CDDL
+  3 => 50
+  ```
+* [`content encoding`](./../signed_object/index.md#content-encoding-optional): is missing
+
+### Content format
+
+The generalized vote transaction [content format](./../signed_object/index.md#signed-object-content)
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
 ??? note "vote transaction definition: `gen_vote_tx.cddl`"
@@ -30,8 +43,6 @@ Project "Catalyst" requires a structure to keep people vote's data in the secure
     {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
-
-`event` - a set of different identifiers which is uniquely define a particular voting event.
 
 Vote:
 
@@ -43,32 +54,6 @@ Vote:
   so it could be placed `null`.
 
 `voter-data` - an any additional voter's specific data.
-
-### Transaction signing
-
-[COSE] is used to define a transaction's signature structure.
-[COSE] is a flexible security protocol that supports various types of security messages.
-However, only `COSE Signed Data Object` or `COSE_Sign` type is used.
-
-The following header must be included in the [COSE] signature.
-
-`protected`:
-
-* `content type`: `application/cbor`
-  (this parameter is used to indicate the content type of the data in the payload or ciphertext fields).
-
-Any other headers as `alg`, `kid` etc. could be specified of any kind and not defined by this spec.
-
-#### Signature payload
-
-As mentioned earlier, the content type of the [COSE] signature payload is `application/cbor`.
-In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
-
-<!-- markdownlint-disable code-block-style -->
-```CDDL
-{{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx_cose_payload.cddl') }}
-```
-<!-- markdownlint-enable code-block-style -->
 
 ## Rationale
 
@@ -82,6 +67,7 @@ In particular it must be a [CBOR] encoded [BLAKE2b-256] hash bytes:
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
+[signed object]: ./../signed_object/index.md
 [BLAKE2b-256]: https://www.blake2.net/blake2.pdf
 [COSE]: https://datatracker.ietf.org/doc/rfc9052/
 [CBOR]: https://datatracker.ietf.org/doc/rfc8949/
