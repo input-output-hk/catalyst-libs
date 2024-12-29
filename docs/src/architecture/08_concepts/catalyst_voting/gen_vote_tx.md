@@ -26,7 +26,8 @@ Project "Catalyst" requires a structure to keep people vote's data in the secure
 Generalized vote transaction is a [signed object],
 so its fully follows the structure of the [signed object] specification.
 
-* [`content type`](./../signed_object/index.md#content-type): `application/cbor`
+* [`content type`](./../signed_object/index.md#content-type): `application/cbor`.
+  [Signed object content](./../signed_object/index.md#signed-object-content) must be a [CBOR] encoded.
   ```CDDL
   3 => 50
   ```

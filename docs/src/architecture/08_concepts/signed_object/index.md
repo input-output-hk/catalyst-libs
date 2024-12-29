@@ -4,7 +4,7 @@ Category: Catalyst
 Status: Proposed
 Authors:
     - Steven Johnson <steven.johnson@iohk.io>
-    -  Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
+    - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
 Implementors:
     - Catalyst Fund 14
 Discussions: []
@@ -12,6 +12,19 @@ Created: 2024-12-27
 License: CC-BY-4.0
 ---
 
+* [Abstract](#abstract)
+* [Motivation: why is this CIP necessary?](#motivation-why-is-this-cip-necessary)
+* [Specification](#specification)
+  * [Signed Object fields](#signed-object-fields)
+    * [`type`](#type)
+    * [`id`](#id)
+    * [`ver`](#ver)
+    * [`alg`](#alg)
+    * [`content type`](#content-type)
+    * [`content encoding` (optional)](#content-encoding-optional)
+  * [Signed Object content](#signed-object-content)
+  * [COSE signature protected header](#cose-signature-protected-header)
+* [Copyright](#copyright)
 
 ## Abstract
 
