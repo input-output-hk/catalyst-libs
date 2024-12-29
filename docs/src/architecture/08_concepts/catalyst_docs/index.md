@@ -12,6 +12,31 @@ Created: 2024-12-29
 License: CC-BY-4.0
 ---
 
+* [Abstract](#abstract)
+* [Motivation: why is this CIP necessary?](#motivation-why-is-this-cip-necessary)
+* [Specification](#specification)
+  * [Document Type Definitions](#document-type-definitions)
+    * [Document Templates](#document-templates)
+    * [Document Content Templates](#document-content-templates)
+  * [Document Metadata](#document-metadata)
+    * [Document Reference : `ref` (optional)](#document-reference--ref-optional)
+    * [Template Reference : `template` (optional)](#template-reference--template-optional)
+    * [Document Reference : `reply` (optional)](#document-reference--reply-optional)
+    * [Document Reference : `section` (optional)](#document-reference--section-optional)
+    * [Authorized Collaborators : `collabs` (optional)](#authorized-collaborators--collabs-optional)
+  * [Document Type Specifications](#document-type-specifications)
+    * [Proposal Template](#proposal-template)
+    * [Comment Template](#comment-template)
+    * [Proposal Document](#proposal-document)
+    * [Comment Document](#comment-document)
+* [Reference Implementation](#reference-implementation)
+* [Rationale: how does this CIP achieve its goals?](#rationale-how-does-this-cip-achieve-its-goals)
+* [Path to Active](#path-to-active)
+  * [Acceptance Criteria](#acceptance-criteria)
+  * [Implementation Plan](#implementation-plan)
+* [Copyright](#copyright)
+
+
 ## Abstract
 
 Project Catalyst both produces and consumes documents of data (proposals, reviews, comments).
@@ -76,6 +101,7 @@ Document Contents are signed documents, and are typically produced in accordance
 Documents will contain metadata which allows the document to be categorized, versioned and linked.
 This data does not properly belong inside the document,
 but is critical to ensure the document is properly referenced and indexable.
+It is defined and specified as [signed object protected header fields](./../signed_object/index.md#signed-object-fields).
 
 ```CDDL
 ? "ref" => reference_type,
