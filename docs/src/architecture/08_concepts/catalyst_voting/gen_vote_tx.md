@@ -28,9 +28,11 @@ so its fully follows the structure of the [signed object] specification.
 
 * [`content type`](./../signed_object/index.md#content-type): `application/cbor`.
   [Signed object content](./../signed_object/index.md#signed-object-content) must be a [CBOR] encoded.
+
   ```CDDL
   3 => 50
   ```
+
 * [`content encoding`](./../signed_object/index.md#content-encoding-optional): is missing
 
 ### Content format
@@ -69,6 +71,4 @@ Vote:
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
 [signed object]: ./../signed_object/index.md
-[BLAKE2b-256]: https://www.blake2.net/blake2.pdf
-[COSE]: https://datatracker.ietf.org/doc/rfc9052/
 [CBOR]: https://datatracker.ietf.org/doc/rfc8949/

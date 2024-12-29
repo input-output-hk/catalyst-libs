@@ -102,7 +102,7 @@ There can, and probably will, exist multiple versions of the same document.
 The `ver` is a [UUID] V7.
 
 The initial `ver` assigned the first time a signed object is published will be identical to the [`id`](#id).
-Subsequent versions will retain the same [`id`](#document-id--id) and will create a new `ver`,
+Subsequent versions will retain the same [`id`](#id) and will create a new `ver`,
 following best practice for creating a new [UUID] v7.
 
 #### `alg`
@@ -110,9 +110,11 @@ following best practice for creating a new [UUID] v7.
 This is an original [COSE] header field,
 which indicates the cryptography algorithm used for the security processing.
 
+<!-- markdownlint-disable max-one-sentence-per-line -->
 !!! warning ""
 
     It must be equal to `EdDSA` value
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 Only `ed25119` considered at this moment as the only option to be supported for signed objects.
 
@@ -127,7 +129,8 @@ This field is used to indicate the content encodings algorithm of the [content](
 
 ### Signed Object content
 
-The signed object content data is encoded (and could be additionaly compressed, read [`content encoding`](#content-encoding-optional)) as [COSE] `payload`.
+The signed object content data is encoded (and could be additionaly compressed,
+read [`content encoding`](#content-encoding-optional)) as [COSE] `payload`.
 
 ### [COSE] signature protected header
 
@@ -136,7 +139,8 @@ which allows to provide multi-signature functionality.
 In that regard,
 each Catalyst signed object [COSE] signature **must** include the following `protected` header field:
 
-```cddl
+<!-- markdownlint-disable code-block-style -->
+```CDDL
 ; All encoders/decoders of this specification must follow deterministic cbor encoding rules
 ; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
 
@@ -144,15 +148,13 @@ signature_protected_header = {
     4 => bytes ; "kid"
 }
 ```
+<!-- markdownlint-enable code-block-style -->
 
 * `kid`: A unique identifier of the signer.
-
 
 ## Copyright
 
 This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 [COSE]: https://datatracker.ietf.org/doc/html/rfc9052
-[Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
-[CBOR]: https://datatracker.ietf.org/doc/html/rfc8610
 [UUID]: https://www.rfc-editor.org/rfc/rfc9562.html

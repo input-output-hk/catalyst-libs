@@ -36,7 +36,6 @@ License: CC-BY-4.0
   * [Implementation Plan](#implementation-plan)
 * [Copyright](#copyright)
 
-
 ## Abstract
 
 Project Catalyst both produces and consumes documents of data (proposals, reviews, comments).
@@ -59,10 +58,14 @@ so its fully follows the structure of the [signed object] specification.
 
 * [`content type`](./../signed_object/index.md#content-type): `application/json`.
   [Signed object content](./../signed_object/index.md#signed-object-content) must be in [Json] format.
+
   ```CDDL
   3 => 30
   ```
-* [`content encoding`](./../signed_object/index.md#content-encoding-optional): `"br"`. [Signed object content](./../signed_object/index.md#signed-object-content) must be [Brotli] compressed.
+
+* [`content encoding`](./../signed_object/index.md#content-encoding-optional): `"br"`.
+  [Signed object content](./../signed_object/index.md#signed-object-content) must be [Brotli] compressed.
+
   ```CDDL
   "content encoding" => "br"
   ```
@@ -114,20 +117,20 @@ It is defined and specified as [signed object protected header fields](./../sign
 #### Document Reference : `ref` (optional)
 
 This is a reference to another document.
-The purpose of the `ref` will vary depending on the document [`type`](#document-type--type).
+The purpose of the `ref` will vary depending on the document [`type`](./../signed_object/index.md#type).
 
 The `ref` can be either a single [UUID] or a [CBOR] Array of Two [UUID].
 
-If the `ref` is a single [UUID], it is a reference to the document of that [`id`](#document-id--id).
+If the `ref` is a single [UUID], it is a reference to the document of that [`id`](./../signed_object/index.md#id).
 If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
 
-* `<id>` = the [UUID] of the referenced documents [`id`](#document-id--id)
-* `<ver>` = the [UUID] of the referenced documents [`ver`](#document-version--ver).
+* `<id>` = the [UUID] of the referenced documents [`id`](./../signed_object/index.md#id)
+* `<ver>` = the [UUID] of the referenced documents [`ver`](./../signed_object/index.md#ver).
 
 #### Template Reference : `template` (optional)
 
 If the document was formed from a template, this is a reference to that template document.
-The format is the same as the [CBOR] Array form of [`ref`](#document-reference--ref).
+The format is the same as the [CBOR] Array form of [`ref`](#document-reference--ref-optional).
 
 It is invalid not to reference the template that formed a document.
 If this is missing from such documents, the document will itself be considered invalid.
@@ -137,7 +140,7 @@ Template references must explicitly reference both the Template Document ID, and
 #### Document Reference : `reply` (optional)
 
 This is a reply to another document.
-The format is the same as the [CBOR] Array form of [`ref`](#document-reference--ref).
+The format is the same as the [CBOR] Array form of [`ref`](#document-reference--ref-optional).
 
 `reply` is always referencing a document of the same type, and that document must `ref` reference the same document `id`.
 However, depending on the document type, it may reference a different `ver` of that `id`.
@@ -191,16 +194,17 @@ They are defined when a specific document is submitted for consideration.
 #### Comment Document
 
 This is a document which provides a comment against a particular proposal.
-Because comments are informed by a particular proposals version, they *MUST* contain a [`ref`](#document-reference--ref)
+Because comments are informed by a particular proposals version, they *MUST* contain a [`ref`](#document-reference--ref-optional)
 
-They may *OPTIONALLY* also contain a [`reply`](#document-reference--reply) metadata field, which is a reference to another comment,
+They may *OPTIONALLY* also contain a [`reply`](#document-reference--reply-optional) metadata field,
+which is a reference to another comment,
 where the comment is in reply to the referenced comment.
 
-Comments may only [`reply`](#document-reference--reply) to a single other comment document.
-The referenced `comment` must be for the same proposal [`id`](#document-id--id),
-but can be for a different proposal [`ver`](#document-version--ver).
+Comments may only [`reply`](#document-reference--reply-optional) to a single other comment document.
+The referenced `comment` must be for the same proposal [`id`](./../signed_object/index.md#id),
+but can be for a different proposal [`ver`](./../signed_object/index.md#ver).
 
-Comments may *OPTIONALLY* also contain a [`subsection`](#document-reference--section) field,
+Comments may *OPTIONALLY* also contain a [`section`](#document-reference--section-optional) field,
 when the comment only applies to a specific section to the document being commented upon,
 and not the entire document.
 
