@@ -7,8 +7,8 @@ signed_object_fields = {
   "ver" => UUID, ; UUID v7
 
   1 => -8, ; "alg": EdDSA
-  3 => tstr / int, ; "content type"
-  ? "content encoding" => tstr / int, ; payload content encoding
+  3 => text / int, ; "content type"
+  ? "content encoding" => text / int, ; payload content encoding
 
   * metadata-key => metadata-value
 }

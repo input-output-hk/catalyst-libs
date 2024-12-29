@@ -121,7 +121,7 @@ Only `ed25119` considered at this moment as the only option to be supported for 
 #### `content type`
 
 This is an original [COSE] header field,
-which indicates the `content type` of the [content](#signed-object-content) ([COSE] `pyaload`) data.
+which indicates the `content type` of the [content](#signed-object-content) ([COSE] `payload`) data.
 
 #### `content encoding` (optional)
 
@@ -129,7 +129,7 @@ This field is used to indicate the content encodings algorithm of the [content](
 
 ### Signed Object content
 
-The signed object content data is encoded (and could be additionaly compressed,
+The signed object content data is encoded (and could be additionally compressed,
 read [`content encoding`](#content-encoding-optional)) as [COSE] `payload`.
 
 ### [COSE] signature protected header
