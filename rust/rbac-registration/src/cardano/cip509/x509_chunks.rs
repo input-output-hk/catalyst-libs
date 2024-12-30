@@ -21,15 +21,20 @@ pub enum CompressionAlgorithm {
     Zstd = 12,
 }
 
-/// x509 chunks.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct X509Chunks(pub Cip509RbacMetadata);
+/// A helper for decoding [`Cip509RbacMetadata`].
+///
+/// Due to encoding restrictions the [`Cip509`](crate::cardano::cip509::Cip509) metadata
+/// is encoded in chunks:
+/// ```text
+/// chunk_type => [ + x509_chunk ]
+/// ```
+/// This helper is used to decode them into the actual structure.
+#[derive(Debug, PartialEq, Clone)]
+pub struct X509Chunks(Cip509RbacMetadata);
 
-#[allow(dead_code)]
-impl X509Chunks {
-    /// Create new instance of `X509Chunks`.
-    fn new(chunk_data: Cip509RbacMetadata) -> Self {
-        Self(chunk_data)
+impl From<X509Chunks> for Cip509RbacMetadata {
+    fn from(value: X509Chunks) -> Self {
+        value.0
     }
 }
 
