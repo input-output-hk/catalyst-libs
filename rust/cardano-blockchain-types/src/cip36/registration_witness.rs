@@ -15,7 +15,7 @@ use crate::utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 /// }
 /// ```
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Cip36RegistrationWitness {
     /// Signature of the registration data.
     pub signature: Option<ed25519_dalek::Signature>,

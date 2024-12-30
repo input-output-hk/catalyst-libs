@@ -15,7 +15,7 @@ use voting_pk::VotingPubKey;
 use crate::{MetadatumValue, Network};
 
 /// CIP-36 Catalyst registration
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Cip36 {
     /// Key registration - 61284
     key_registration: Cip36KeyRegistration,
@@ -27,7 +27,7 @@ pub struct Cip36 {
 
 /// Validation value for CIP-36.
 #[allow(clippy::struct_excessive_bools, clippy::module_name_repetitions)]
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Cip36Validation {
     /// Is the signature valid? (signature in 61285)
     pub is_valid_signature: bool,

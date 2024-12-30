@@ -28,7 +28,7 @@ use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper,
 //   }
 /// ```
 #[allow(clippy::module_name_repetitions)]
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct Cip36KeyRegistration {
     /// Is this CIP36 or CIP15 format.
     #[allow(clippy::struct_field_names)]
