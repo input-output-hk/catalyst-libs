@@ -22,6 +22,7 @@ use point_tx_idx::PointTxIdx;
 use role_data::RoleData;
 use tracing::error;
 use uuid::Uuid;
+use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::{
     cardano::cip509::{
@@ -102,7 +103,7 @@ impl RegistrationChain {
 
     /// Get the map of index in array to point, transaction index, and x509 certificate.
     #[must_use]
-    pub fn x509_certs(&self) -> &HashMap<usize, (PointTxIdx, Vec<u8>)> {
+    pub fn x509_certs(&self) -> &HashMap<usize, (PointTxIdx, X509Certificate)> {
         &self.inner.x509_certs
     }
 
@@ -147,7 +148,7 @@ struct RegistrationChainInner {
 
     // RBAC
     /// Map of index in array to point, transaction index, and x509 certificate.
-    x509_certs: HashMap<usize, (PointTxIdx, Vec<u8>)>,
+    x509_certs: HashMap<usize, (PointTxIdx, X509Certificate)>,
     /// Map of index in array to point, transaction index, and c509 certificate.
     c509_certs: HashMap<usize, (PointTxIdx, C509)>,
     /// Map of index in array to point, transaction index, and public key.
@@ -304,15 +305,18 @@ fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
 /// Process x509 certificate for chain root.
 fn chain_root_x509_certs(
     x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxIdx,
-) -> HashMap<usize, (PointTxIdx, Vec<u8>)> {
-    let mut map = HashMap::new();
-    for (idx, cert) in x509_certs.into_iter().enumerate() {
-        // Chain root, expect only the certificate not undefined or delete
-        if let X509DerCert::X509Cert(cert) = cert {
-            map.insert(idx, (point_tx_idx.clone(), cert));
-        }
-    }
-    map
+) -> HashMap<usize, (PointTxIdx, X509Certificate)> {
+    x509_certs
+        .into_iter()
+        .enumerate()
+        .filter_map(|(index, cert)| {
+            if let X509DerCert::X509Cert(cert) = cert {
+                Some((index, (point_tx_idx.clone(), *cert)))
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 /// Update x509 certificates in the registration chain.
@@ -331,7 +335,7 @@ fn update_x509_certs(
             X509DerCert::X509Cert(cert) => {
                 new_inner
                     .x509_certs
-                    .insert(idx, (point_tx_idx.clone(), cert));
+                    .insert(idx, (point_tx_idx.clone(), *cert));
             },
         }
     }
