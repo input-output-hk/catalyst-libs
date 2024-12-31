@@ -313,8 +313,8 @@ impl ChainFollower {
 
         let tips = Statistics::tips(chain);
 
-        let mithril_tip = Point::fuzzy(tips.0.into());
-        let live_tip = Point::fuzzy(tips.1.into());
+        let mithril_tip = Point::fuzzy(tips.0);
+        let live_tip = Point::fuzzy(tips.1);
 
         (mithril_tip, live_tip)
     }

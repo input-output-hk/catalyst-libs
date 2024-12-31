@@ -292,6 +292,7 @@ impl Statistics {
 }
 
 /// Count the invalidly deserialized blocks
+#[allow(dead_code)]
 pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {

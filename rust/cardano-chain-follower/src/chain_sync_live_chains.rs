@@ -346,7 +346,7 @@ impl ProtectedLiveChainBlockList {
 
         // Loop until we exhaust probe slots, OR we would step past genesis.
         while slot_age < reference_slot {
-            let ref_point = Point::fuzzy((reference_slot - slot_age).into());
+            let ref_point = Point::fuzzy(reference_slot - slot_age);
             let Some(entry) = chain.lower_bound(Bound::Included(&ref_point)) else {
                 break;
             };
@@ -372,7 +372,7 @@ impl ProtectedLiveChainBlockList {
         };
 
         // Get the block <= the current slot.
-        let ref_point = Point::fuzzy(point.slot_or_default().into());
+        let ref_point = Point::fuzzy(point.slot_or_default());
         let mut entry = chain.upper_bound(Bound::Included(&ref_point))?;
 
         let mut this_block = entry.value().clone();

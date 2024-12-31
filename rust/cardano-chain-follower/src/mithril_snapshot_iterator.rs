@@ -62,7 +62,7 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
     }
 
     // Create a fuzzy search probe by making the hash zero length.
-    Point::fuzzy(step_back_search.into())
+    Point::fuzzy(step_back_search)
 }
 
 impl MithrilSnapshotIterator {
