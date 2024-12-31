@@ -120,7 +120,7 @@ async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Bo
     cfg.mithril_cfg = cfg.mithril_cfg.with_dl_config(dl_config);
 
     info!(
-        chain = cfg.chain.to_string(),
+        network = cfg.network.to_string(),
         mithril_sync_dl_workers = mithril_dl_workers,
         mithril_sync_dl_chunk_size = mithril_dl_chunk_size,
         mithril_sync_dl_queue_ahead = mithril_dl_queue_ahead,
@@ -143,7 +143,7 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 /// Try and follow a chain continuously, from Genesis until Tip.
 #[allow(clippy::too_many_lines)]
 async fn follow_for(network: Network, matches: ArgMatches) {
-    info!(chain = network.to_string(), "Following");
+    info!(network = network.to_string(), "Following");
     let mut follower = ChainFollower::new(network, Point::ORIGIN, Point::TIP).await;
 
     let is_all_tip_blocks = matches.get_flag("all-tip-blocks");
@@ -181,13 +181,13 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
         // When we transition between important points, show the last block as well.
         if ((current_era != this_era)
-            || (chain_update.immutable() != is_last_immutable)
+            || (chain_update.is_immutable() != is_last_immutable)
             || (last_fork != chain_update.data.fork()))
             && !is_last_update_shown
         {
             if let Some(last_update) = last_update.clone() {
                 info!(
-                    chain = network.to_string(),
+                    network = network.to_string(),
                     "Chain Update {}:{}",
                     updates - 1,
                     last_update
@@ -197,24 +197,24 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
         // If these become true, we will show all blocks from the follower.
         is_follow_all = is_follow_all
-            || (!chain_update.immutable() && is_all_live_blocks)
+            || (!chain_update.is_immutable() && is_all_live_blocks)
             || ((chain_update.data.fork() > 1.into()) && is_all_tip_blocks);
 
         // Don't know if this update will show or not, so say it didn't.
         is_last_update_shown = false;
 
         if (current_era != this_era)
-            || (chain_update.immutable() != is_last_immutable)
+            || (chain_update.is_immutable() != is_last_immutable)
             || is_reached_tip
             || is_follow_all
             || (updates % RUNNING_UPDATE_INTERVAL == 0)
             || (last_fork != chain_update.data.fork())
         {
             current_era = this_era;
-            is_last_immutable = chain_update.immutable();
+            is_last_immutable = chain_update.is_immutable();
             last_fork = chain_update.data.fork();
             info!(
-                chain = network.to_string(),
+                network = network.to_string(),
                 "Chain Update {updates}:{}", chain_update
             );
             // We already showed the last update, no need to show it again.
@@ -234,7 +234,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
                 "This Can't Happen".to_string()
             };
             error!(
-                chain = network.to_string(),
+                network = network.to_string(),
                 "Chain is broken: {chain_update} Does not follow: {display_last_update}",
             );
             break;
@@ -247,9 +247,11 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         };
 
         // Inspect the transactions in the block.
-        for (tx_idx, tx) in block.txs().iter().enumerate() {
+        for (txn_idx, tx) in block.txs().iter().enumerate() {
+            let txn_idx = TxnIndex::from_saturating(txn_idx);
+
             // Get the auxiliary data for the transaction.
-            let tx_aux_data = match block_aux_data.get(TxnIndex::from_saturating(tx_idx)) {
+            let tx_aux_data = match block_aux_data.get(txn_idx) {
                 Some(aux_data) => aux_data,
                 None => continue,
             };
@@ -259,7 +261,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
             if let Some(aux_data) = update_biggest_aux_data(
                 &chain_update,
-                TxnIndex::from_saturating(tx_idx),
+                txn_idx,
                 is_largest_metadata,
                 biggest_aux_data,
             ) {
@@ -268,29 +270,29 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
             // If flag `is_log_bad_cip36` is set, log the bad CIP36.
             if is_log_bad_cip36 {
-                log_bad_cip36_info(&decoded_metadata, network, tx_idx, block.number());
+                log_bad_cip36_info(&decoded_metadata, network, txn_idx, block.number());
             }
 
             // If flag `is_log_cip509` is set, log the CIP509 validation.
             if is_log_cip509 {
-                log_cip509_info(&decoded_metadata, network, tx_idx, block.number());
+                log_cip509_info(&decoded_metadata, network, txn_idx, block.number());
             }
         }
 
         if is_log_raw_aux {
             if let Some(x) = block.as_alonzo() {
                 info!(
-                    chain = network.to_string(),
+                    network = network.to_string(),
                     "Raw Aux Data: {:02x?}", x.auxiliary_data_set
                 );
             } else if let Some(x) = block.as_babbage() {
                 info!(
-                    chain = network.to_string(),
+                    network = network.to_string(),
                     "Raw Aux Data: {:02x?}", x.auxiliary_data_set
                 );
             } else if let Some(x) = block.as_conway() {
                 info!(
-                    chain = network.to_string(),
+                    network = network.to_string(),
                     "Raw Aux Data: {:02x?}", x.auxiliary_data_set
                 );
             }
@@ -325,25 +327,28 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
     if !is_last_update_shown {
         if let Some(last_update) = last_update.clone() {
-            info!(chain = network.to_string(), "Last Update: {}", last_update);
+            info!(
+                network = network.to_string(),
+                "Last Update: {}", last_update
+            );
         }
     }
 
     let stats = Statistics::new(network);
     info!("Json Metrics:  {}", stats.as_json(true));
 
-    info!(chain = network.to_string(), "Following Completed.");
+    info!(network = network.to_string(), "Following Completed.");
 }
 
 // FIXME: Why do we need this? Should it be finding the largest aux data?
 /// Helper function for updating the biggest aux data.
 /// Comparing between CIP36 and CIP509.
 fn update_biggest_aux_data(
-    chain_update: &ChainUpdate, tx_idx: TxnIndex, largest_metadata: bool, biggest_aux_data: usize,
+    chain_update: &ChainUpdate, txn_idx: TxnIndex, largest_metadata: bool, biggest_aux_data: usize,
 ) -> Option<usize> {
     let raw_size_cip36 = match chain_update
         .data
-        .txn_metadata(tx_idx, MetadatumLabel::CIP036_REGISTRATION)
+        .txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION)
     {
         Some(raw) => raw.as_ref().len(),
         None => 0,
@@ -351,7 +356,7 @@ fn update_biggest_aux_data(
 
     let raw_size_cip509 = match chain_update
         .data
-        .txn_metadata(tx_idx, MetadatumLabel::CIP509_RBAC)
+        .txn_metadata(txn_idx, MetadatumLabel::CIP509_RBAC)
     {
         Some(raw) => raw.as_ref().len(),
         None => 0,
@@ -369,14 +374,14 @@ fn update_biggest_aux_data(
 
 /// Helper function for logging bad CIP36.
 fn log_bad_cip36_info(
-    decoded_metadata: &DecodedMetadata, network: Network, tx_idx: usize, block: u64,
+    decoded_metadata: &DecodedMetadata, network: Network, txn_idx: TxnIndex, block: u64,
 ) {
     if let Some(m) = decoded_metadata.get(MetadatumLabel::CIP036_REGISTRATION) {
         if let Metadata::DecodedMetadataValues::Cip36(cip36) = &m.value {
             if !cip36.validation.is_valid_signature && !m.report.is_empty() {
                 info!(
-                    chain = network.to_string(),
-                    block, "CIP36 {tx_idx}: {:?}", &cip36
+                    network = network.to_string(),
+                    block, "CIP36 {txn_idx:?}: {:?}", &cip36
                 );
             }
         }
@@ -385,21 +390,21 @@ fn log_bad_cip36_info(
 
 /// Helper function for logging CIP509 validation.
 fn log_cip509_info(
-    decoded_metadata: &DecodedMetadata, network: Network, tx_idx: usize, block: u64,
+    decoded_metadata: &DecodedMetadata, network: Network, txn_idx: TxnIndex, block: u64,
 ) {
     if let Some(m) = decoded_metadata.get(MetadatumLabel::CIP509_RBAC) {
         if let Metadata::DecodedMetadataValues::Cip509(cip509) = &m.value {
             info!(
-                chain = network.to_string(),
-                block, "CIP509 {tx_idx}: {:?}", &cip509
+                network = network.to_string(),
+                block, "CIP509 {txn_idx:?}: {:?}", &cip509
             );
         }
 
         // If report is not empty, log it, log it as a warning.
         if !m.report.is_empty() {
             warn!(
-                chain = network.to_string(),
-                block, "CIP509 {tx_idx}: {:?}", decoded_metadata
+                network = network.to_string(),
+                block, "CIP509 {txn_idx:?}: {:?}", decoded_metadata
             );
         }
     }

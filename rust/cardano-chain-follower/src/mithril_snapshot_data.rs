@@ -39,24 +39,24 @@ static CURRENT_MITHRIL_SNAPSHOT: LazyLock<DashMap<Network, SnapshotData>> =
     LazyLock::new(DashMap::new);
 
 /// Get the current latest snapshot data we have recorded.
-pub(crate) fn latest_mithril_snapshot_data(chain: Network) -> SnapshotData {
+pub(crate) fn latest_mithril_snapshot_data(network: Network) -> SnapshotData {
     // There should ALWAYS be a snapshot for the chain if this is called.
-    match CURRENT_MITHRIL_SNAPSHOT.get(&chain) {
+    match CURRENT_MITHRIL_SNAPSHOT.get(&network) {
         Some(snapshot_data) => snapshot_data.value().clone(),
         None => SnapshotData::default(),
     }
 }
 
 /// Get the latest Mithril Snapshot for a network.
-pub(crate) fn latest_mithril_snapshot_id(chain: Network) -> SnapshotId {
-    // There should ALWAYS be a snapshot for the chain if this is called.
-    latest_mithril_snapshot_data(chain).id
+pub(crate) fn latest_mithril_snapshot_id(network: Network) -> SnapshotId {
+    // There should ALWAYS be a snapshot for the network if this is called.
+    latest_mithril_snapshot_data(network).id
 }
 
 /// Update the latest snapshot data.
-pub(crate) fn update_latest_mithril_snapshot(chain: Network, snapshot_id: SnapshotId) {
+pub(crate) fn update_latest_mithril_snapshot(network: Network, snapshot_id: SnapshotId) {
     let snapshot_data = SnapshotData::new(snapshot_id);
 
     // Save the current snapshot
-    CURRENT_MITHRIL_SNAPSHOT.insert(chain, snapshot_data);
+    CURRENT_MITHRIL_SNAPSHOT.insert(network, snapshot_data);
 }

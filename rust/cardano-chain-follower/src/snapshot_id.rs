@@ -57,8 +57,8 @@ impl SnapshotId {
 
     /// Try and create a new `SnapshotID` from a given path.
     /// Includes properly getting the immutable TIP.
-    pub(crate) async fn try_new(chain: Network, path: &Path) -> Option<Self> {
-        let Ok(tip) = get_mithril_tip(chain, path).await else {
+    pub(crate) async fn try_new(network: Network, path: &Path) -> Option<Self> {
+        let Ok(tip) = get_mithril_tip(network, path).await else {
             return None;
         };
 

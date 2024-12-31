@@ -199,8 +199,8 @@ static STATS_MAP: LazyLock<StatsMap> = LazyLock::new(|| {
 });
 
 /// Get the stats for a particular chain.
-fn lookup_stats(chain: Network) -> Option<Arc<RwLock<Statistics>>> {
-    let Some(chain_entry) = STATS_MAP.get(&chain) else {
+fn lookup_stats(network: Network) -> Option<Arc<RwLock<Statistics>>> {
+    let Some(chain_entry) = STATS_MAP.get(&network) else {
         error!("Stats MUST BE exhaustively pre-allocated.");
         return None;
     };
@@ -213,8 +213,8 @@ fn lookup_stats(chain: Network) -> Option<Arc<RwLock<Statistics>>> {
 impl Statistics {
     /// Get a new statistics struct for a given blockchain network.
     #[must_use]
-    pub fn new(chain: Network) -> Self {
-        let Some(stats) = lookup_stats(chain) else {
+    pub fn new(network: Network) -> Self {
+        let Some(stats) = lookup_stats(network) else {
             return Statistics::default();
         };
 
@@ -224,9 +224,9 @@ impl Statistics {
 
         let mut this_stats = chain_stats.clone();
         // Set the current rollback stats.
-        this_stats.live.rollbacks.live = rollbacks(chain, RollbackType::LiveChain);
-        this_stats.live.rollbacks.peer = rollbacks(chain, RollbackType::Peer);
-        this_stats.live.rollbacks.follower = rollbacks(chain, RollbackType::Follower);
+        this_stats.live.rollbacks.live = rollbacks(network, RollbackType::LiveChain);
+        this_stats.live.rollbacks.peer = rollbacks(network, RollbackType::Peer);
+        this_stats.live.rollbacks.follower = rollbacks(network, RollbackType::Follower);
 
         this_stats
     }
@@ -238,9 +238,9 @@ impl Statistics {
     }
 
     /// Get the current tips of the immutable chain and live chain.
-    pub(crate) fn tips(chain: Network) -> (Slot, Slot) {
+    pub(crate) fn tips(network: Network) -> (Slot, Slot) {
         let zero_slot = Slot::from_saturating(0);
-        let Some(stats) = lookup_stats(chain) else {
+        let Some(stats) = lookup_stats(network) else {
             return (zero_slot, zero_slot);
         };
 
@@ -253,8 +253,8 @@ impl Statistics {
 
     /// Reset amd return cumulative counters contained in the statistics.
     #[must_use]
-    pub fn reset(chain: Network) -> Self {
-        let Some(stats) = lookup_stats(chain) else {
+    pub fn reset(network: Network) -> Self {
+        let Some(stats) = lookup_stats(network) else {
             return Statistics::default();
         };
 
@@ -266,9 +266,9 @@ impl Statistics {
 
         let mut this_stats = chain_stats.clone();
         // Reset the current rollback stats.
-        this_stats.live.rollbacks.live = rollbacks_reset(chain, RollbackType::LiveChain);
-        this_stats.live.rollbacks.peer = rollbacks_reset(chain, RollbackType::Peer);
-        this_stats.live.rollbacks.follower = rollbacks_reset(chain, RollbackType::Follower);
+        this_stats.live.rollbacks.live = rollbacks_reset(network, RollbackType::LiveChain);
+        this_stats.live.rollbacks.peer = rollbacks_reset(network, RollbackType::Peer);
+        this_stats.live.rollbacks.follower = rollbacks_reset(network, RollbackType::Follower);
 
         this_stats
     }
@@ -293,9 +293,9 @@ impl Statistics {
 
 /// Count the invalidly deserialized blocks
 #[allow(dead_code)]
-pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
+pub(crate) fn stats_invalid_block(network: Network, immutable: bool) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -314,10 +314,10 @@ pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
 
 /// Count the validly deserialized blocks
 pub(crate) fn new_live_block(
-    chain: Network, total_live_blocks: u64, head_slot: Slot, tip_slot: Slot,
+    network: Network, total_live_blocks: u64, head_slot: Slot, tip_slot: Slot,
 ) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -335,10 +335,10 @@ pub(crate) fn new_live_block(
 
 /// Track the end of the current mithril update
 pub(crate) fn new_mithril_update(
-    chain: Network, mithril_tip: Slot, total_live_blocks: u64, tip_slot: Slot,
+    network: Network, mithril_tip: Slot, total_live_blocks: u64, tip_slot: Slot,
 ) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -355,9 +355,9 @@ pub(crate) fn new_mithril_update(
 }
 
 /// When did we start the backfill.
-pub(crate) fn backfill_started(chain: Network) {
+pub(crate) fn backfill_started(network: Network) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -378,9 +378,9 @@ pub(crate) fn backfill_started(chain: Network) {
 }
 
 /// When did we start the backfill.
-pub(crate) fn backfill_ended(chain: Network, backfill_size: u64) {
+pub(crate) fn backfill_ended(network: Network, backfill_size: u64) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -395,9 +395,9 @@ pub(crate) fn backfill_ended(chain: Network, backfill_size: u64) {
 }
 
 /// Track statistics about connections to the cardano peer node.
-pub(crate) fn peer_connected(chain: Network, active: bool, peer_address: &str) {
+pub(crate) fn peer_connected(network: Network, active: bool, peer_address: &str) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -420,9 +420,9 @@ pub(crate) fn peer_connected(chain: Network, active: bool, peer_address: &str) {
 }
 
 /// Record when we started syncing
-pub(crate) fn sync_started(chain: Network) {
+pub(crate) fn sync_started(network: Network) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -437,9 +437,9 @@ pub(crate) fn sync_started(chain: Network) {
 
 /// Record when we first reached tip. This can safely be called multiple times.
 /// Except for overhead, only the first call will actually record the time.
-pub(crate) fn tip_reached(chain: Network) {
+pub(crate) fn tip_reached(network: Network) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -455,9 +455,9 @@ pub(crate) fn tip_reached(chain: Network) {
 }
 
 /// Record that a Mithril snapshot Download has started.
-pub(crate) fn mithril_dl_started(chain: Network) {
+pub(crate) fn mithril_dl_started(network: Network) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -472,9 +472,9 @@ pub(crate) fn mithril_dl_started(chain: Network) {
 
 /// Record when DL finished, if it fails, set size to None, otherwise the size of the
 /// downloaded file.
-pub(crate) fn mithril_dl_finished(chain: Network, dl_size: Option<u64>) {
+pub(crate) fn mithril_dl_finished(network: Network, dl_size: Option<u64>) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -497,9 +497,9 @@ pub(crate) fn mithril_dl_finished(chain: Network, dl_size: Option<u64>) {
 }
 
 /// Record that extracting the mithril snapshot archive has started.
-pub(crate) fn mithril_extract_started(chain: Network) {
+pub(crate) fn mithril_extract_started(network: Network) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -515,11 +515,11 @@ pub(crate) fn mithril_extract_started(chain: Network) {
 /// Record when DL finished, if it fails, set size to None, otherwise the size of the
 /// downloaded file.
 pub(crate) fn mithril_extract_finished(
-    chain: Network, extract_size: Option<u64>, deduplicated_size: u64, deduplicated_files: u64,
+    network: Network, extract_size: Option<u64>, deduplicated_size: u64, deduplicated_files: u64,
     changed_files: u64, new_files: u64,
 ) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -553,9 +553,9 @@ pub(crate) enum MithrilValidationState {
 }
 
 /// Record when Mithril Cert validation starts, ends or fails).
-pub(crate) fn mithril_validation_state(chain: Network, mithril_state: MithrilValidationState) {
+pub(crate) fn mithril_validation_state(network: Network, mithril_state: MithrilValidationState) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -588,9 +588,9 @@ pub(crate) enum MithrilSyncFailures {
 }
 
 /// Record when Mithril Cert validation starts, ends or fails).
-pub(crate) fn mithril_sync_failure(chain: Network, failure: MithrilSyncFailures) {
+pub(crate) fn mithril_sync_failure(network: Network, failure: MithrilSyncFailures) {
     // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
+    let Some(stats) = lookup_stats(network) else {
         return;
     };
 
@@ -650,9 +650,9 @@ static ROLLBACKS_MAP: LazyLock<RollbackMap> = LazyLock::new(|| {
 
 /// Get the actual rollback map for a chain.
 fn lookup_rollback_map(
-    chain: Network, rollback: RollbackType,
+    network: Network, rollback: RollbackType,
 ) -> Option<Arc<RwLock<RollbackRecords>>> {
-    let Some(chain_rollback_map) = ROLLBACKS_MAP.get(&chain) else {
+    let Some(chain_rollback_map) = ROLLBACKS_MAP.get(&network) else {
         error!("Rollback stats SHOULD BE exhaustively pre-allocated.");
         return None;
     };
@@ -668,8 +668,8 @@ fn lookup_rollback_map(
 }
 
 /// Extract the current rollback stats as a vec.
-fn rollbacks(chain: Network, rollback: RollbackType) -> Vec<Rollback> {
-    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
+fn rollbacks(network: Network, rollback: RollbackType) -> Vec<Rollback> {
+    let Some(rollback_map) = lookup_rollback_map(network, rollback) else {
         return Vec::new();
     };
 
@@ -689,8 +689,8 @@ fn rollbacks(chain: Network, rollback: RollbackType) -> Vec<Rollback> {
 }
 
 /// Reset ALL the rollback stats for a given blockchain.
-fn rollbacks_reset(chain: Network, rollback: RollbackType) -> Vec<Rollback> {
-    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
+fn rollbacks_reset(network: Network, rollback: RollbackType) -> Vec<Rollback> {
+    let Some(rollback_map) = lookup_rollback_map(network, rollback) else {
         return Vec::new();
     };
 
@@ -705,8 +705,8 @@ fn rollbacks_reset(chain: Network, rollback: RollbackType) -> Vec<Rollback> {
 }
 
 /// Count a rollback
-pub(crate) fn rollback(chain: Network, rollback: RollbackType, depth: u64) {
-    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
+pub(crate) fn rollback(network: Network, rollback: RollbackType, depth: u64) {
+    let Some(rollback_map) = lookup_rollback_map(network, rollback) else {
         return;
     };
 

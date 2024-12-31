@@ -20,7 +20,7 @@ use crate::{
 /// The Chain Follower
 pub struct ChainFollower {
     /// The Blockchain network we are following.
-    chain: Network,
+    network: Network,
     /// Where we end following.
     end: Point,
     /// Point we processed most recently.
@@ -44,7 +44,7 @@ impl ChainFollower {
     ///
     /// # Arguments
     ///
-    /// * `chain` - The blockchain network to follow.
+    /// * `network` - The blockchain network to follow.
     /// * `start` - The point or tip to start following from (inclusive).
     /// * `end` - The point or tip to stop following from (inclusive).
     ///
@@ -67,16 +67,16 @@ impl ChainFollower {
     ///
     /// To ONLY follow from TIP, set BOTH start and end to TIP.
     #[must_use]
-    pub async fn new(chain: Network, start: Point, end: Point) -> Self {
-        let rx = get_chain_update_rx_queue(chain).await;
+    pub async fn new(network: Network, start: Point, end: Point) -> Self {
+        let rx = get_chain_update_rx_queue(network).await;
 
         ChainFollower {
-            chain,
+            network,
             end,
             previous: Point::UNKNOWN,
             current: start,
             fork: 1.into(), // This is correct, because Mithril is Fork 0.
-            snapshot: MithrilSnapshot::new(chain),
+            snapshot: MithrilSnapshot::new(network),
             mithril_follower: None,
             mithril_tip: None,
             sync_updates: rx,
@@ -85,7 +85,7 @@ impl ChainFollower {
 
     /// If we can, get the next update from the mithril snapshot.
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
-        let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
+        let current_mithril_tip = latest_mithril_snapshot_id(self.network).tip();
 
         if current_mithril_tip > self.current {
             if self.mithril_follower.is_none() {
@@ -115,7 +115,7 @@ impl ChainFollower {
         };
 
         if roll_forward_condition {
-            let snapshot = MithrilSnapshot::new(self.chain);
+            let snapshot = MithrilSnapshot::new(self.network);
             if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
                 // The Mithril Tip has moved forwards.
                 self.mithril_tip = Some(current_mithril_tip);
@@ -143,7 +143,7 @@ impl ChainFollower {
         // Special Case: point = TIP_POINT.  Just return the latest block in the live chain.
         if self.current == Point::TIP {
             next_block = {
-                let block = get_live_block(self.chain, &self.current, -1, false)?;
+                let block = get_live_block(self.network, &self.current, -1, false)?;
                 Some(block)
             };
         }
@@ -152,7 +152,7 @@ impl ChainFollower {
         if next_block.is_none() {
             // If we don't know the previous block, get the block requested.
             let advance = i64::from(!self.previous.is_unknown());
-            next_block = get_live_block(self.chain, &self.current, advance, true);
+            next_block = get_live_block(self.network, &self.current, advance, true);
         }
 
         // If we can't get the next consecutive block, then
@@ -163,7 +163,7 @@ impl ChainFollower {
             // IF this is an update still, and not us having caught up, then it WILL be a rollback.
             update_type = chain_update::Kind::Rollback;
             next_block = if let Some((block, depth)) =
-                find_best_fork_block(self.chain, &self.current, &self.previous, self.fork)
+                find_best_fork_block(self.network, &self.current, &self.previous, self.fork)
             {
                 debug!("Found fork block: {block}");
                 // IF the block is the same as our current previous, there has been no chain
@@ -176,12 +176,12 @@ impl ChainFollower {
                 }
             } else {
                 debug!("No block to find, rewinding to latest mithril tip.");
-                let latest_mithril_point = latest_mithril_snapshot_id(self.chain).tip();
-                if let Some(block) = MithrilSnapshot::new(self.chain)
+                let latest_mithril_point = latest_mithril_snapshot_id(self.network).tip();
+                if let Some(block) = MithrilSnapshot::new(self.network)
                     .read_block_at(&latest_mithril_point)
                     .await
                 {
-                    rollback_depth = live_chain_length(self.chain) as u64;
+                    rollback_depth = live_chain_length(self.network) as u64;
                     Some(block)
                 } else {
                     return None;
@@ -192,7 +192,7 @@ impl ChainFollower {
         if let Some(next_block) = next_block {
             // Update rollback stats for the follower if one is reported.
             if update_type == chain_update::Kind::Rollback {
-                rollback(self.chain, stats::RollbackType::Follower, rollback_depth);
+                rollback(self.network, stats::RollbackType::Follower, rollback_depth);
             }
             // debug!("Pre Previous update 4 : {:?}", self.previous);
             self.previous = self.current.clone();
@@ -200,7 +200,7 @@ impl ChainFollower {
             self.current = next_block.point().clone();
             self.fork = next_block.fork();
 
-            let tip = point_at_tip(self.chain, &self.current).await;
+            let tip = point_at_tip(self.network, &self.current).await;
             let update = ChainUpdate::new(update_type, tip, next_block);
             return Some(update);
         }
@@ -283,7 +283,7 @@ impl ChainFollower {
         }
 
         // Can't follow if SYNC is not ready.
-        block_until_sync_ready(self.chain).await;
+        block_until_sync_ready(self.network).await;
 
         // Get next block from the iteration.
         self.unprotected_next().await
@@ -296,22 +296,22 @@ impl ChainFollower {
     ///
     /// This is a convenience function which just used `ChainFollower` to fetch a single
     /// block.
-    pub async fn get_block(chain: Network, point: Point) -> Option<ChainUpdate> {
+    pub async fn get_block(network: Network, point: Point) -> Option<ChainUpdate> {
         // Get the block from the chain.
         // This function suppose to run only once, so the end point
         // can be set to `TIP_POINT`
-        let mut follower = Self::new(chain, point, Point::TIP).await;
+        let mut follower = Self::new(network, point, Point::TIP).await;
         follower.next().await
     }
 
     /// Get the current Immutable and live tips.
     ///
     /// Note, this will block until the chain is synced, ready to be followed.
-    pub async fn get_tips(chain: Network) -> (Point, Point) {
+    pub async fn get_tips(network: Network) -> (Point, Point) {
         // Can't follow if SYNC is not ready.
-        block_until_sync_ready(chain).await;
+        block_until_sync_ready(network).await;
 
-        let tips = Statistics::tips(chain);
+        let tips = Statistics::tips(network);
 
         let mithril_tip = Point::fuzzy(tips.0);
         let live_tip = Point::fuzzy(tips.1);
@@ -323,16 +323,16 @@ impl ChainFollower {
     ///
     /// # Arguments
     ///
-    /// * `chain` - The blockchain network to post the transaction on.
+    /// * `network` - The blockchain network to post the transaction on.
     /// * `txn` - The transaction to be posted.
     ///
     /// # Returns
     ///
     /// `TxId` - The ID of the transaction that was queued.
     #[allow(clippy::unused_async)]
-    pub async fn post_txn(chain: Network, txn: TxBody) -> TxId {
+    pub async fn post_txn(network: Network, txn: TxBody) -> TxId {
         #[allow(clippy::no_effect_underscore_binding)]
-        let _unused = chain;
+        let _unused = network;
         #[allow(clippy::no_effect_underscore_binding)]
         let _unused = txn;
 
@@ -345,9 +345,9 @@ impl ChainFollower {
     /// After which, it should be on the blockchain, and its the applications job to track
     /// if a transaction made it on-chain or not.
     #[allow(clippy::unused_async)]
-    pub async fn txn_sent(chain: Network, id: TxId) -> bool {
+    pub async fn txn_sent(network: Network, id: TxId) -> bool {
         #[allow(clippy::no_effect_underscore_binding)]
-        let _unused = chain;
+        let _unused = network;
         #[allow(clippy::no_effect_underscore_binding)]
         let _unused = id;
 
@@ -390,13 +390,13 @@ mod tests {
     #[tokio::test]
     // FIXME - This test should fail
     async fn test_chain_follower_new() {
-        let chain = Network::Mainnet;
+        let network = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
         let end = Point::fuzzy(999u64.into());
 
-        let follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
+        let follower = ChainFollower::new(network, start.clone(), end.clone()).await;
 
-        assert_eq!(follower.chain, chain);
+        assert_eq!(follower.network, network);
         assert_eq!(follower.end, end);
         assert_eq!(follower.previous, Point::UNKNOWN);
         assert_eq!(follower.current, start);
@@ -408,11 +408,11 @@ mod tests {
     #[tokio::test]
     // FIXME - This test should fail
     async fn test_chain_follower_update_current_none() {
-        let chain = Network::Mainnet;
+        let network = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
         let end = Point::fuzzy(999u64.into());
 
-        let mut follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
+        let mut follower = ChainFollower::new(network, start.clone(), end.clone()).await;
 
         let result = follower.update_current(&None);
 
@@ -422,11 +422,11 @@ mod tests {
     #[tokio::test]
     // FIXME - This test should fail
     async fn test_chain_follower_update_current() {
-        let chain = Network::Mainnet;
+        let network = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
         let end = Point::fuzzy(999u64.into());
 
-        let mut follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
+        let mut follower = ChainFollower::new(network, start.clone(), end.clone()).await;
 
         let block_data = mock_block();
         let update = ChainUpdate::new(chain_update::Kind::Block, false, block_data);
