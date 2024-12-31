@@ -10,7 +10,7 @@ use c509_certificate::{
 };
 use der_parser::der::parse_der_sequence;
 use tracing::debug;
-use x509_cert::der::{oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME, Decode};
+use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
 
 use crate::{
     cardano::cip509::{
@@ -81,8 +81,6 @@ fn extract_x509_uris(certificates: &[X509DerCert]) -> Result<UrisMap> {
         let X509DerCert::X509Cert(cert) = cert else {
             continue;
         };
-        let cert = x509_cert::Certificate::from_der(cert)
-            .with_context(|| "Failed to decode X509 certificate from DER")?;
         // Find the "subject alternative name" extension.
         let Some(extension) = cert
             .tbs_certificate

@@ -18,7 +18,7 @@ pub enum X509DerCert {
     /// Deleted indicates the key is deleted.
     Deleted,
     /// X.509 certificate.
-    X509Cert(Vec<u8>),
+    X509Cert(Box<Certificate>),
 }
 
 impl Decode<'_, ()> for X509DerCert {
@@ -34,9 +34,10 @@ impl Decode<'_, ()> for X509DerCert {
             minicbor::data::Type::Undefined => Ok(Self::Undefined),
             minicbor::data::Type::Bytes => {
                 let data = decode_bytes(d, "X509DerCert")?;
-                Certificate::from_der(&data)
-                    .map_err(|_| decode::Error::message("Invalid x509 certificate"))?;
-                Ok(Self::X509Cert(data.clone()))
+                let certificate = Certificate::from_der(&data).map_err(|e| {
+                    decode::Error::message(format!("Invalid x509 certificate: {e:?}"))
+                })?;
+                Ok(Self::X509Cert(Box::new(certificate)))
             },
             _ => Err(decode::Error::message("Invalid datatype for X509DerCert")),
         }
