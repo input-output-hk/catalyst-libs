@@ -49,8 +49,7 @@ pub(crate) fn validate_payment_address_network(
         };
         if !valid {
             validation_report.push(format!(
-                "Validate CIP36 payment address network, network Tag of payment address {:?} does not match the network used",
-                network_tag
+                "Validate CIP36 payment address network, network Tag of payment address {network_tag:?} does not match the network used",
             ));
         }
 
