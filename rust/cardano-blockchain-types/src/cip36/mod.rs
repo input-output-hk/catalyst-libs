@@ -49,8 +49,8 @@ impl Cip36 {
 
     /// Get the voting public keys from the registration.
     #[must_use]
-    pub fn voting_pks(&self) -> Vec<VotingPubKey> {
-        self.key_registration.voting_pks.clone()
+    pub fn voting_pks(&self) -> &Vec<VotingPubKey> {
+        &self.key_registration.voting_pks
     }
 
     /// Get the stake public key from the registration.
@@ -61,8 +61,8 @@ impl Cip36 {
 
     /// Get the payment address from the registration.
     #[must_use]
-    pub fn payment_address(&self) -> Option<ShelleyAddress> {
-        self.key_registration.payment_addr.clone()
+    pub fn payment_address(&self) -> Option<&ShelleyAddress> {
+        self.key_registration.payment_addr.as_ref()
     }
 
     /// Get the nonce from the registration.
