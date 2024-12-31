@@ -41,11 +41,15 @@ pub struct DecodedMetadataItem {
 /// For example, CIP15/36 uses labels 61284 & 61285,
 /// 61284 is the primary label, so decoded metadata
 /// will be under that label.
-pub(crate) struct DecodedMetadata(DashMap<MetadatumLabel, Arc<DecodedMetadataItem>>);
+#[allow(clippy::module_name_repetitions)]
+pub struct DecodedMetadata(DashMap<MetadatumLabel, Arc<DecodedMetadataItem>>);
 
 impl DecodedMetadata {
     /// Create new decoded metadata for a transaction.
-    fn new(chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &TransactionAuxData) -> Self {
+    #[must_use]
+    pub fn new(
+        chain: Network, slot: u64, txn: &MultiEraTx, raw_aux_data: &TransactionAuxData,
+    ) -> Self {
         let decoded_metadata = Self(DashMap::new());
 
         // Process each known type of metadata here, and record the decoded result.
@@ -59,6 +63,7 @@ impl DecodedMetadata {
     }
 
     /// Get the decoded metadata item at the given slot, or None if it doesn't exist.
+    #[must_use]
     pub fn get(&self, primary_label: MetadatumLabel) -> Option<Arc<DecodedMetadataItem>> {
         let entry = self.0.get(&primary_label)?;
         let value = entry.value();
