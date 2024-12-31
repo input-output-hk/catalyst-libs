@@ -96,11 +96,8 @@ impl Cip36 {
                 },
             };
 
-        let cip36 = Cip36Registration {
-            key_registration,
-            registration_witness,
-            is_catalyst_strict,
-        };
+        let cip36 =
+            Cip36Registration::new(key_registration, registration_witness, is_catalyst_strict);
 
         let validation = cip36.validate(network, k61284, &mut validation_report);
 
