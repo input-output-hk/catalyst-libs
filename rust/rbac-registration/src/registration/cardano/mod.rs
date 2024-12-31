@@ -6,7 +6,7 @@ pub mod role_data;
 
 use std::{collections::HashMap, sync::Arc};
 
-use anyhow::bail;
+use anyhow::{bail, Result};
 use c509_certificate::c509::C509;
 use ed25519_dalek::VerifyingKey;
 use pallas::{
@@ -20,7 +20,6 @@ use pallas::{
 use payment_history::PaymentHistory;
 use point_tx_idx::PointTxIdx;
 use role_data::RoleData;
-use tracing::error;
 use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
 
@@ -32,7 +31,7 @@ use crate::{
             pub_key::SimplePublicKeyType,
         },
         types::cert_key_hash::CertKeyHash,
-        Cip509, Cip509Validation,
+        Cip509,
     },
     utils::general::decremented_index,
 };
@@ -60,7 +59,7 @@ impl RegistrationChain {
     pub fn new(
         point: Point, tracking_payment_keys: &[ShelleyAddress], tx_idx: usize, txn: &MultiEraTx,
         cip509: Cip509,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         let inner = RegistrationChainInner::new(cip509, tracking_payment_keys, point, tx_idx, txn)?;
 
         Ok(Self {
@@ -81,7 +80,7 @@ impl RegistrationChain {
     /// Returns an error if data is invalid
     pub fn update(
         &self, point: Point, tx_idx: usize, txn: &MultiEraTx, cip509: Cip509,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         let new_inner = self.inner.update(point, tx_idx, txn, cip509)?;
 
         Ok(Self {
@@ -180,21 +179,13 @@ impl RegistrationChainInner {
     fn new(
         cip509: Cip509, tracking_payment_keys: &[ShelleyAddress], point: Point, tx_idx: usize,
         txn: &MultiEraTx,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         // Should be chain root, return immediately if not
         if cip509.prv_tx_id.is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
 
-        let mut validation_report = Vec::new();
-        let validation_data = cip509.validate(txn, &mut validation_report);
-
-        // Do the CIP509 validation, ensuring the basic validation pass.
-        if !is_valid_cip509(&validation_data) {
-            // Log out the error if any
-            error!("CIP509 validation failed: {:?}", validation_report);
-            bail!("CIP509 validation failed, {:?}", validation_report);
-        }
+        let (cip509, _additional_data) = cip509.validate(txn)?;
 
         // Add purpose to the list
         let purpose = vec![cip509.purpose];
@@ -241,17 +232,10 @@ impl RegistrationChainInner {
     /// Returns an error if data is invalid
     fn update(
         &self, point: Point, tx_idx: usize, txn: &MultiEraTx, cip509: Cip509,
-    ) -> anyhow::Result<Self> {
+    ) -> Result<Self> {
         let mut new_inner = self.clone();
 
-        let mut validation_report = Vec::new();
-        let validation_data = cip509.validate(txn, &mut validation_report);
-
-        // Do the CIP509 validation, ensuring the basic validation pass.
-        if !is_valid_cip509(&validation_data) {
-            error!("CIP509 validation failed: {:?}", validation_report);
-            bail!("CIP509 validation failed, {:?}", validation_report);
-        }
+        let (cip509, _additional_data) = cip509.validate(txn)?;
 
         // Check and update the current transaction ID hash
         if let Some(prv_tx_id) = cip509.prv_tx_id {
@@ -291,15 +275,6 @@ impl RegistrationChainInner {
 
         Ok(new_inner)
     }
-}
-
-/// Check if the CIP509 is valid.
-fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
-    validation_data.is_valid_aux
-        && validation_data.is_valid_txn_inputs_hash
-        && validation_data.is_valid_stake_public_key
-        && validation_data.is_valid_payment_key
-        && validation_data.is_valid_signing_key
 }
 
 /// Process x509 certificate for chain root.
@@ -358,7 +333,7 @@ fn chain_root_c509_certs(
 /// Update c509 certificates in the registration chain.
 fn update_c509_certs(
     new_inner: &mut RegistrationChainInner, c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     for (idx, cert) in c509_certs.into_iter().enumerate() {
         match cert {
             // Unchanged to that index, so continue
@@ -433,7 +408,7 @@ fn revocations_list(
 /// Process the role data for chain root.
 fn chain_root_role_data(
     role_set: Vec<cip509::rbac::role_data::RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<HashMap<u8, (PointTxIdx, RoleData)>> {
+) -> Result<HashMap<u8, (PointTxIdx, RoleData)>> {
     let mut role_data_map = HashMap::new();
     for role_data in role_set {
         let signing_key = role_data.role_signing_key.clone();
@@ -463,7 +438,7 @@ fn chain_root_role_data(
 fn update_role_data(
     inner: &mut RegistrationChainInner, role_set: Vec<cip509::rbac::role_data::RoleData>,
     txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     for role_data in role_set {
         // If there is new role singing key, use it, else use the old one
         let signing_key = match role_data.role_signing_key {
@@ -509,7 +484,7 @@ fn update_role_data(
 /// Helper function for retrieving the Shelley address from the transaction.
 fn get_payment_addr_from_tx(
     txn: &MultiEraTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Option<ShelleyAddress>> {
+) -> Result<Option<ShelleyAddress>> {
     // The index should exist since it pass the basic validation
     if let Some(key_ref) = payment_key_ref {
         if let MultiEraTx::Conway(tx) = txn {
@@ -550,7 +525,7 @@ fn get_payment_addr_from_tx(
 fn update_tracking_payment_history(
     tracking_payment_history: &mut HashMap<ShelleyAddress, Vec<PaymentHistory>>, txn: &MultiEraTx,
     point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<()> {
+) -> Result<()> {
     if let MultiEraTx::Conway(tx) = txn {
         // Conway era -> Post alonzo tx output
         for (index, output) in tx.transaction_body.outputs.iter().enumerate() {

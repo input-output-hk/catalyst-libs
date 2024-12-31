@@ -10,12 +10,14 @@ pub mod utils;
 pub(crate) mod validation;
 pub mod x509_chunks;
 
+use anyhow::anyhow;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
 };
 use pallas::{crypto::hash::Hash, ledger::traverse::MultiEraTx};
 use strum_macros::FromRepr;
+use tracing::error;
 use types::tx_input_hash::TxInputHash;
 use uuid::Uuid;
 use validation::{
@@ -62,24 +64,6 @@ pub struct Cip509 {
     pub metadata: Cip509RbacMetadata,
     /// Validation signature.
     pub validation_signature: ValidationSignature,
-}
-
-/// Validation value for CIP509 metadatum.
-#[allow(clippy::struct_excessive_bools, clippy::module_name_repetitions)]
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct Cip509Validation {
-    /// Boolean value for the validity of the transaction inputs hash.
-    pub is_valid_txn_inputs_hash: bool,
-    /// Boolean value for the validity of the auxiliary data.
-    pub is_valid_aux: bool,
-    /// Boolean value for the validity of the stake public key.
-    pub is_valid_stake_public_key: bool,
-    /// Boolean value for the validity of the payment key.
-    pub is_valid_payment_key: bool,
-    /// Boolean value for the validity of the signing key.
-    pub is_valid_signing_key: bool,
-    /// Additional data from the CIP509 validation..
-    pub additional_data: AdditionalData,
 }
 
 /// Additional data from the CIP509 validation.
@@ -177,7 +161,8 @@ impl Decode<'_, ()> for Cip509 {
 }
 
 impl Cip509 {
-    /// Basic validation for CIP509
+    /// Performs the basic validation of CIP509.
+    ///
     /// The validation include the following:
     /// * Hashing the transaction inputs within the transaction should match the
     ///   txn-inputs-hash
@@ -201,16 +186,17 @@ impl Cip509 {
     ///
     /// Note: This CIP509 is still under development and is subject to change.
     ///
-    /// # Parameters
-    /// * `txn` - Transaction data was attached to and to be validated/decoded against.
-    /// * `validation_report` - Validation report to store the validation result.
-    pub fn validate(
-        &self, txn: &MultiEraTx, validation_report: &mut Vec<String>,
-    ) -> Cip509Validation {
+    /// # Errors
+    ///
+    /// An error is returned if any of the validation steps is failed. The error contains
+    /// the description of all failed steps.
+    pub fn validate(self, txn: &MultiEraTx) -> anyhow::Result<(Self, AdditionalData)> {
+        let mut validation_report = Vec::new();
+
         let is_valid_txn_inputs_hash =
-            validate_txn_inputs_hash(self, txn, validation_report).unwrap_or(false);
+            validate_txn_inputs_hash(&self, txn, &mut validation_report).unwrap_or(false);
         let (is_valid_aux, precomputed_aux) =
-            validate_aux(txn, validation_report).unwrap_or_default();
+            validate_aux(txn, &mut validation_report).unwrap_or_default();
         let mut is_valid_stake_public_key = true;
         let mut is_valid_payment_key = true;
         let mut is_valid_signing_key = true;
@@ -218,19 +204,24 @@ impl Cip509 {
         for role in &self.metadata.role_set {
             if role.role_number == 0 {
                 is_valid_stake_public_key =
-                    validate_stake_public_key(self, txn, validation_report).unwrap_or(false);
+                    validate_stake_public_key(&self, txn, &mut validation_report).unwrap_or(false);
                 is_valid_payment_key =
-                    validate_payment_key(txn, role, validation_report).unwrap_or(false);
-                is_valid_signing_key = validate_role_singing_key(role, validation_report);
+                    validate_payment_key(txn, role, &mut validation_report).unwrap_or(false);
+                is_valid_signing_key = validate_role_singing_key(role, &mut validation_report);
             }
         }
-        Cip509Validation {
-            is_valid_txn_inputs_hash,
-            is_valid_aux,
-            is_valid_stake_public_key,
-            is_valid_payment_key,
-            is_valid_signing_key,
-            additional_data: AdditionalData { precomputed_aux },
+
+        if is_valid_aux
+            && is_valid_txn_inputs_hash
+            && is_valid_stake_public_key
+            && is_valid_payment_key
+            && is_valid_signing_key
+        {
+            Ok((self, AdditionalData { precomputed_aux }))
+        } else {
+            let error = format!("CIP509 validation failed: {validation_report:?}");
+            error!(error);
+            Err(anyhow!(error))
         }
     }
 }
