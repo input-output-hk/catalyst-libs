@@ -272,7 +272,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
             }
 
             // If flag `is_log_cip509` is set, log the CIP509 validation.
-            if !is_log_cip509 {
+            if is_log_cip509 {
                 log_cip509_info(&decoded_metadata, network, tx_idx, block.number());
             }
         }
