@@ -7,6 +7,7 @@
 
 use std::collections::HashSet;
 
+use anyhow::Context;
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
 use pallas::ledger::addresses::{Address, ShelleyAddress};
@@ -31,7 +32,6 @@ use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper,
 #[derive(Clone, Default, Debug)]
 pub struct Cip36KeyRegistration {
     /// Is this CIP36 or CIP15 format.
-    #[allow(clippy::struct_field_names)]
     pub is_cip36: Option<bool>,
     /// Voting public keys (called Delegations in the CIP-36 Spec).
     /// Field 1 in the CIP-36 61284 Spec.
@@ -220,12 +220,8 @@ fn decode_voting_key(d: &mut Decoder) -> Result<(bool, Vec<VotingPubKey>), decod
 
 /// Helper function for converting `&[u8]` to `VerifyingKey`.
 fn voting_pk_vec_to_verifying_key(pub_key: &[u8]) -> anyhow::Result<VerifyingKey> {
-    VerifyingKey::from_bytes(
-        pub_key
-            .try_into()
-            .map_err(|_| anyhow::anyhow!("Invalid verifying key length"))?,
-    )
-    .map_err(|_| anyhow::anyhow!("Failed to convert to VerifyingKey"))
+    let bytes = pub_key.try_into().context("Invalid verifying key length")?;
+    VerifyingKey::from_bytes(bytes).context("Failed to convert to VerifyingKey")
 }
 
 /// Helper function for decoding the stake public key.
