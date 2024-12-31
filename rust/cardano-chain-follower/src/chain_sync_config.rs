@@ -6,6 +6,7 @@
 
 use std::sync::LazyLock;
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use strum::IntoEnumIterator;
 use tokio::{sync::Mutex, task::JoinHandle};
@@ -15,19 +16,19 @@ use crate::{
     chain_sync::chain_sync,
     error::{Error, Result},
     mithril_snapshot_config::MithrilSnapshotConfig,
-    network::Network,
     stats,
 };
 
 /// Default Follower block buffer size.
 const DEFAULT_CHAIN_UPDATE_BUFFER_SIZE: usize = 32;
 
-/// How many slots back from TIP is considered Immutable in the absence of a mithril
-/// snapshot.
+/// How many window (in slot) back from TIP is considered Immutable in the
+/// absence of a mithril snapshot.
 const DEFAULT_IMMUTABLE_SLOT_WINDOW: u64 = 12 * 60 * 60;
 
 /// Type we use to manage the Sync Task handle map.
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
+
 /// Handle to the mithril sync thread. One for each Network ONLY.
 static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
     let map = DashMap::new();
@@ -41,7 +42,7 @@ static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
 #[derive(Clone, Debug)]
 pub struct ChainSyncConfig {
     /// Chain Network
-    pub chain: Network,
+    pub network: Network,
     /// Relay Node Address
     pub(crate) relay_address: String,
     /// Block buffer size option.
@@ -58,17 +59,17 @@ impl ChainSyncConfig {
     /// Each network has a different set of defaults, so no single "default" can apply.
     /// This function is preferred to the `default()` standard function.
     #[must_use]
-    pub fn default_for(chain: Network) -> Self {
+    pub fn default_for(network: Network) -> Self {
         Self {
-            chain,
-            relay_address: chain.default_relay(),
+            network,
+            relay_address: network.default_relay(),
             chain_update_buffer_size: DEFAULT_CHAIN_UPDATE_BUFFER_SIZE,
             immutable_slot_window: DEFAULT_IMMUTABLE_SLOT_WINDOW,
-            mithril_cfg: MithrilSnapshotConfig::default_for(chain),
+            mithril_cfg: MithrilSnapshotConfig::default_for(network),
         }
     }
 
-    /// Sets the relay to use for Chain Sync.
+    /// Sets the relay address to use for Chain Sync.
     ///
     /// # Arguments
     ///
@@ -101,12 +102,11 @@ impl ChainSyncConfig {
         self
     }
 
-    /// Sets the the Mithril snapshot Config the `ChainSync` will use.
+    /// Sets the Mithril snapshot Config the `ChainSync` will use.
     ///
     /// # Arguments
     ///
-    /// * `path`: Mithril snapshot path.
-    /// * `update`: Auto-update this path with the latest mithril snapshot as it changes.
+    /// * `cfg`: Mithril snapshot configuration.
     #[must_use]
     pub fn mithril_cfg(mut self, cfg: MithrilSnapshotConfig) -> Self {
         self.mithril_cfg = cfg;
@@ -117,10 +117,6 @@ impl ChainSyncConfig {
     ///
     /// Must be done BEFORE the chain can be followed.
     ///
-    /// # Arguments
-    ///
-    /// * `chain`: The chain to follow.
-    ///
     /// # Returns
     ///
     /// `Result<()>`: On success.
@@ -130,16 +126,19 @@ impl ChainSyncConfig {
     /// `Error`: On error.
     pub async fn run(self) -> Result<()> {
         debug!(
-            chain = self.chain.to_string(),
+            network = self.network.to_string(),
             "Chain Synchronization Starting"
         );
 
-        stats::sync_started(self.chain);
+        stats::sync_started(self.network);
 
         // Start the Chain Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
+        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.network) {
             None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
+                error!(
+                    "Join Map improperly initialized: Missing {}!!",
+                    self.network
+                );
                 return Err(Error::Internal); // Should not get here.
             },
             Some(entry) => entry,
@@ -147,8 +146,8 @@ impl ChainSyncConfig {
         let mut locked_handle = lock_entry.value().lock().await;
 
         if (*locked_handle).is_some() {
-            debug!("Chain Sync Already Running for {}", self.chain);
-            return Err(Error::ChainSyncAlreadyRunning(self.chain));
+            debug!("Chain Sync Already Running for {}", self.network);
+            return Err(Error::ChainSyncAlreadyRunning(self.network));
         }
 
         // Start the Mithril Snapshot Follower
@@ -158,7 +157,7 @@ impl ChainSyncConfig {
         *locked_handle = Some(tokio::spawn(chain_sync(self.clone(), rx)));
 
         // sync_map.insert(chain, handle);
-        debug!("Chain Sync for {} : Started", self.chain);
+        debug!("Chain Sync for {} : Started", self.network);
 
         Ok(())
     }

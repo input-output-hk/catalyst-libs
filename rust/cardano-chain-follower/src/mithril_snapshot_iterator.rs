@@ -6,6 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
+use cardano_blockchain_types::{MultiEraBlock, Network, Point};
 use logcall::logcall;
 use tokio::task;
 use tracing::{debug, error};
@@ -14,9 +15,6 @@ use tracing_log::log;
 use crate::{
     error::{Error, Result},
     mithril_query::{make_mithril_iterator, ImmutableBlockIterator},
-    network::Network,
-    point::ORIGIN_POINT,
-    MultiEraBlock, Point,
 };
 
 /// Search backwards by 60 slots (seconds) looking for a previous block.
@@ -25,9 +23,9 @@ const BACKWARD_SEARCH_SLOT_INTERVAL: u64 = 60;
 
 /// Synchronous Inner Iterator state
 struct MithrilSnapshotIteratorInner {
-    /// The chain being iterated
-    chain: Network,
-    /// Where we really want to start iterating from
+    /// The blockchain network being iterated
+    network: Network,
+    /// Point we want to start iterating from
     start: Point,
     /// Previous iteration point.
     previous: Point,
@@ -39,8 +37,8 @@ impl Debug for MithrilSnapshotIteratorInner {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "MithrilSnapshotIteratorInner {{ chain: {:?}, start: {:?}, previous: {:?} }}",
-            self.chain, self.start, self.previous
+            "MithrilSnapshotIteratorInner {{ network: {:?}, start: {:?}, previous: {:?} }}",
+            self.network, self.start, self.previous
         )
     }
 }
@@ -56,11 +54,11 @@ pub(crate) struct MithrilSnapshotIterator {
 pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
     // Now that we have the tip, step back about 4 block intervals from tip, and do a fuzzy
     // iteration to find the exact two blocks at the end of the immutable chain.
-    let step_back_search = point.slot_or_default().saturating_sub(distance);
+    let step_back_search = point.slot_or_default() - distance.into();
 
     // We stepped back to the origin, so just return Origin
-    if step_back_search == 0 {
-        return ORIGIN_POINT;
+    if step_back_search == 0.into() {
+        return Point::ORIGIN;
     }
 
     // Create a fuzzy search probe by making the hash zero length.
@@ -70,7 +68,7 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
 impl MithrilSnapshotIterator {
     /// Try and probe to establish the iterator from the desired point.
     async fn try_fuzzy_iterator(
-        chain: Network, path: &Path, from: &Point, search_interval: u64,
+        network: Network, path: &Path, from: &Point, search_interval: u64,
     ) -> Option<MithrilSnapshotIterator> {
         let point = probe_point(from, search_interval);
         let Ok(mut iterator) = make_mithril_iterator(path, &point).await else {
@@ -90,7 +88,7 @@ impl MithrilSnapshotIterator {
                         return None;
                     };
 
-                    let point = Point::new(block.slot(), block.hash().to_vec());
+                    let point = Point::new(block.slot().into(), block.hash().into());
                     previous = this;
                     this = Some(point.clone());
 
@@ -122,7 +120,7 @@ impl MithrilSnapshotIterator {
 
         Some(MithrilSnapshotIterator {
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
-                chain,
+                network,
                 start: this,
                 previous: previous?,
                 inner: iterator,
@@ -134,11 +132,13 @@ impl MithrilSnapshotIterator {
     /// We use this when we don't know the previous point, and need to find it.
     #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
-    async fn fuzzy_iterator(chain: Network, path: &Path, from: &Point) -> MithrilSnapshotIterator {
+    async fn fuzzy_iterator(
+        network: Network, path: &Path, from: &Point,
+    ) -> MithrilSnapshotIterator {
         let mut backwards_search = BACKWARD_SEARCH_SLOT_INTERVAL;
         loop {
             if let Some(iterator) =
-                Self::try_fuzzy_iterator(chain, path, from, backwards_search).await
+                Self::try_fuzzy_iterator(network, path, from, backwards_search).await
             {
                 return iterator;
             }
@@ -151,7 +151,7 @@ impl MithrilSnapshotIterator {
     ///
     /// # Arguments
     ///
-    /// `chain`: The blockchain network to iterate.
+    /// `network`: The blockchain network to iterate.
     /// `from`: The point to start iterating from.  If the `Point` does not contain a
     /// hash, the iteration start is fuzzy. `previous`: The previous point we are
     /// iterating, if known.    If the previous is NOT known, then the first block
@@ -159,14 +159,14 @@ impl MithrilSnapshotIterator {
     #[allow(clippy::indexing_slicing)]
     #[logcall(ok = "debug", err = "error")]
     pub(crate) async fn new(
-        chain: Network, path: &Path, from: &Point, previous_point: Option<Point>,
+        network: Network, path: &Path, from: &Point, previous_point: Option<Point>,
     ) -> Result<Self> {
         if from.is_fuzzy() || (!from.is_origin() && previous_point.is_none()) {
-            return Ok(Self::fuzzy_iterator(chain, path, from).await);
+            return Ok(Self::fuzzy_iterator(network, path, from).await);
         }
 
         let previous = if from.is_origin() {
-            ORIGIN_POINT
+            Point::ORIGIN
         } else {
             let Some(previous) = previous_point else {
                 return Err(Error::Internal);
@@ -180,7 +180,7 @@ impl MithrilSnapshotIterator {
 
         Ok(MithrilSnapshotIterator {
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
-                chain,
+                network,
                 start: from.clone(),
                 previous,
                 inner: iterator,
@@ -212,7 +212,7 @@ impl Iterator for MithrilSnapshotIteratorInner {
             if let Ok(block) = maybe_block {
                 if !self.previous.is_unknown() {
                     // We can safely fully decode this block.
-                    match MultiEraBlock::new(self.chain, block, &self.previous, 0) {
+                    match MultiEraBlock::new(self.network, block, &self.previous, 0.into()) {
                         Ok(block_data) => {
                             // Update the previous point
                             // debug!("Pre Previous update 1 : {:?}", self.previous);
@@ -241,8 +241,10 @@ impl Iterator for MithrilSnapshotIteratorInner {
                     pallas::ledger::traverse::MultiEraBlock::decode(&block)
                 {
                     // debug!("Pre Previous update 2 : {:?}", self.previous);
-                    self.previous =
-                        Point::new(raw_decoded_block.slot(), raw_decoded_block.hash().to_vec());
+                    self.previous = Point::new(
+                        raw_decoded_block.slot().into(),
+                        raw_decoded_block.hash().into(),
+                    );
                     // debug!("Post Previous update 2 : {:?}", self.previous);
                     continue;
                 }

@@ -1,7 +1,5 @@
 //! Simple general purpose utility functions.
 
-use blake2b_simd::{self, Params};
-
 /// Convert T to an i16. (saturate if out of range.)
 #[allow(dead_code)] // Its OK if we don't use this general utility function.
 pub(crate) fn i16_from_saturating<T: TryInto<i16>>(value: T) -> i16 {
@@ -72,31 +70,4 @@ pub(crate) fn u64_from_saturating<
             Err(_) => u64::MAX,
         }
     }
-}
-
-/// Convert the given value to `blake2b_244` array.
-#[allow(dead_code)] // Its OK if we don't use this general utility function.
-pub(crate) fn blake2b_244(value: &[u8]) -> anyhow::Result<[u8; 28]> {
-    let h = Params::new().hash_length(28).hash(value);
-    let b = h.as_bytes();
-    b.try_into()
-        .map_err(|_| anyhow::anyhow!("Invalid length of blake2b_244, expected 28 got {}", b.len()))
-}
-
-/// Convert the given value to `blake2b_256` array.
-#[allow(dead_code)] // Its OK if we don't use this general utility function.
-pub(crate) fn blake2b_256(value: &[u8]) -> anyhow::Result<[u8; 32]> {
-    let h = Params::new().hash_length(32).hash(value);
-    let b = h.as_bytes();
-    b.try_into()
-        .map_err(|_| anyhow::anyhow!("Invalid length of blake2b_256, expected 32 got {}", b.len()))
-}
-
-/// Convert the given value to `blake2b_128` array.
-#[allow(dead_code)] // Its OK if we don't use this general utility function.
-pub(crate) fn blake2b_128(value: &[u8]) -> anyhow::Result<[u8; 16]> {
-    let h = Params::new().hash_length(16).hash(value);
-    let b = h.as_bytes();
-    b.try_into()
-        .map_err(|_| anyhow::anyhow!("Invalid length of blake2b_128, expected 16 got {}", b.len()))
 }

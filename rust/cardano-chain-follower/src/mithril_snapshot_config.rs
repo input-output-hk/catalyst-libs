@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::bail;
+use cardano_blockchain_types::{Network, Point};
 use dashmap::DashMap;
 use futures::future::join_all;
 use strum::IntoEnumIterator;
@@ -22,15 +23,13 @@ use crate::{
     error::{Error, Result},
     mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
     mithril_snapshot_sync::background_mithril_update,
-    network::Network,
-    point::ORIGIN_POINT,
     snapshot_id::SnapshotId,
     turbo_downloader::DlConfig,
-    Point,
 };
 
 /// Type we use to manage the Sync Task handle map.
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
+
 /// Handle to the mithril sync thread. One for each Network ONLY.
 static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
     let map = DashMap::new();
@@ -56,7 +55,7 @@ pub(crate) struct MithrilUpdateMessage {
 #[derive(Clone, Debug)]
 pub struct MithrilSnapshotConfig {
     /// What Blockchain network are we configured for.
-    pub chain: Network,
+    pub network: Network,
     /// Path to the Mithril snapshot the follower should use.
     /// Note: this is a base directory.  The Actual data will be stored under here.
     /// archive downloads -> `<mithril_snapshot_path>/dl`
@@ -77,12 +76,12 @@ impl MithrilSnapshotConfig {
     /// Each network has a different set of defaults, so no single "default" can apply.
     /// This function is preferred to the `default()` standard function.
     #[must_use]
-    pub fn default_for(chain: Network) -> Self {
+    pub fn default_for(network: Network) -> Self {
         Self {
-            chain,
-            path: chain.default_mithril_path(),
-            aggregator_url: chain.default_mithril_aggregator(),
-            genesis_key: chain.default_mithril_genesis_key(),
+            network,
+            path: network.default_mithril_path(),
+            aggregator_url: network.default_mithril_aggregator(),
+            genesis_key: network.default_mithril_genesis_key(),
             dl_config: None,
         }
     }
@@ -127,7 +126,7 @@ impl MithrilSnapshotConfig {
         }
 
         if latest_immutable_file > 0 {
-            return SnapshotId::try_new(self.chain, &latest_path).await;
+            return SnapshotId::try_new(self.network, &latest_path).await;
         }
 
         None
@@ -137,7 +136,7 @@ impl MithrilSnapshotConfig {
     /// And then remove any left over files in download or the tmp path, or old snapshots.
     pub(crate) async fn activate(&self, snapshot_number: u64) -> io::Result<PathBuf> {
         let new_path = self.mithril_path(snapshot_number);
-        let latest_id = latest_mithril_snapshot_id(self.chain);
+        let latest_id = latest_mithril_snapshot_id(self.network);
 
         debug!(
             "Activating snapshot: {} {} {:?}",
@@ -191,7 +190,7 @@ impl MithrilSnapshotConfig {
             },
             Ok(mut entries) => {
                 // Get latest mithril snapshot path and number.
-                let latest_snapshot = latest_mithril_snapshot_id(self.chain);
+                let latest_snapshot = latest_mithril_snapshot_id(self.network);
 
                 loop {
                     // Get the next entry, stop on any error, or no entries left.
@@ -200,7 +199,7 @@ impl MithrilSnapshotConfig {
                     };
 
                     // If None, its not a snapshot path, so continue.
-                    if let Some(this_snapshot) = SnapshotId::new(&entry.path(), ORIGIN_POINT) {
+                    if let Some(this_snapshot) = SnapshotId::new(&entry.path(), Point::ORIGIN) {
                         // Don't do anything with the latest snapshot.
                         // Comparison does NOT use `tip` so we construct a temporary ID without it.
                         if this_snapshot != latest_snapshot {
@@ -296,7 +295,7 @@ impl MithrilSnapshotConfig {
         snapshot_path
     }
 
-    /// Check if the Mithril Snapshot Path is valid an usable.
+    /// Check if the Mithril Snapshot Path is valid and usable.
     async fn validate_path(&self) -> Result<()> {
         let path = self.path.clone();
         debug!(
@@ -333,7 +332,7 @@ impl MithrilSnapshotConfig {
         // hex.
         let vkey = remove_whitespace(&self.genesis_key);
         if !is_hex(&vkey) {
-            return Err(Error::MithrilGenesisVKeyNotHex(self.chain));
+            return Err(Error::MithrilGenesisVKeyNotHex(self.network));
         }
 
         Ok(())
@@ -350,22 +349,22 @@ impl MithrilSnapshotConfig {
         // We do this by trying to use it to get a list of snapshots.
         let client = mithril_client::ClientBuilder::aggregator(&url, &key)
             .build()
-            .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(self.network, url.clone(), e))?;
 
         let snapshots = client
             .snapshot()
             .list()
             .await
-            .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
+            .map_err(|e| Error::MithrilClient(self.network, url.clone(), e))?;
 
         // Check we have a snapshot, and its for our network.
         match snapshots.first().and_then(|s| s.beacon.network.as_ref()) {
             Some(network) => {
                 let _aggregator_network = Network::from_str(network.as_str()).map_err(|_err| {
-                    Error::MithrilClientNetworkMismatch(self.chain, network.clone())
+                    Error::MithrilClientNetworkMismatch(self.network, network.clone())
                 })?;
             },
-            None => return Err(Error::MithrilClientNoSnapshots(self.chain, url)),
+            None => return Err(Error::MithrilClientNoSnapshots(self.network, url)),
         }
 
         Ok(())
@@ -386,14 +385,17 @@ impl MithrilSnapshotConfig {
     /// Run a Mithril Follower for the given network and configuration.
     pub(crate) async fn run(&self) -> Result<mpsc::Receiver<MithrilUpdateMessage>> {
         debug!(
-            chain = self.chain.to_string(),
+            network = self.network.to_string(),
             "Mithril Auto-update : Starting"
         );
 
         // Start the Mithril Sync - IFF its not already running.
-        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.chain) {
+        let lock_entry = match SYNC_JOIN_HANDLE_MAP.get(&self.network) {
             None => {
-                error!("Join Map improperly initialized: Missing {}!!", self.chain);
+                error!(
+                    "Join Map improperly initialized: Missing {}!!",
+                    self.network
+                );
                 return Err(Error::Internal); // Should not get here.
             },
             Some(entry) => entry,
@@ -401,8 +403,8 @@ impl MithrilSnapshotConfig {
         let mut locked_handle = lock_entry.value().lock().await;
 
         if (*locked_handle).is_some() {
-            debug!("Mithril Already Running for {}", self.chain);
-            return Err(Error::MithrilSnapshotSyncAlreadyRunning(self.chain));
+            debug!("Mithril Already Running for {}", self.network);
+            return Err(Error::MithrilSnapshotSyncAlreadyRunning(self.network));
         }
 
         self.validate().await?;
@@ -418,7 +420,7 @@ impl MithrilSnapshotConfig {
 
         // sync_map.insert(chain, handle);
         debug!(
-            chain = self.chain.to_string(),
+            network = self.network.to_string(),
             "Mithril Auto-update : Started"
         );
 
@@ -493,7 +495,7 @@ mod tests {
         let network = Network::Preprod;
         let config = MithrilSnapshotConfig::default_for(network);
 
-        assert_eq!(config.chain, network);
+        assert_eq!(config.network, network);
         assert_eq!(config.path, network.default_mithril_path());
         assert_eq!(config.aggregator_url, network.default_mithril_aggregator());
         assert_eq!(config.genesis_key, network.default_mithril_genesis_key());
@@ -502,7 +504,7 @@ mod tests {
     #[tokio::test]
     async fn test_validate_genesis_vkey() {
         let config = MithrilSnapshotConfig {
-            chain: Network::Preprod,
+            network: Network::Preprod,
             path: PathBuf::new(),
             aggregator_url: String::new(),
             genesis_key: "1234abcd".to_string(),
@@ -512,7 +514,7 @@ mod tests {
         assert!(config.validate_genesis_vkey().is_ok());
 
         let invalid_config = MithrilSnapshotConfig {
-            chain: Network::Preprod,
+            network: Network::Preprod,
             path: PathBuf::new(),
             aggregator_url: String::new(),
             genesis_key: "1234abcz".to_string(),
