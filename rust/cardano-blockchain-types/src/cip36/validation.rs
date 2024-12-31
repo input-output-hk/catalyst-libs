@@ -42,14 +42,15 @@ pub(crate) fn validate_payment_address_network(
     cip36: &Cip36, network: Network, validation_report: &mut Vec<String>,
 ) -> Option<bool> {
     if let Some(address) = cip36.payment_address() {
-        let network_tag = address.typeid();
+        let network_tag = address.network();
         let valid = match network {
-            Network::Mainnet => network_tag == 1,
-            Network::Preprod | Network::Preview => network_tag == 0,
+            Network::Mainnet => network_tag.value() == 1,
+            Network::Preprod | Network::Preview => network_tag.value() == 0,
         };
         if !valid {
             validation_report.push(format!(
-                "Validate CIP36 payment address network, network Tag {network_tag} does not match the network used"
+                "Validate CIP36 payment address network, network Tag of payment address {:?} does not match the network used",
+                network_tag
             ));
         }
 
