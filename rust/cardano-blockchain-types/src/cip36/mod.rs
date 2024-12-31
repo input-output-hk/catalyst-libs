@@ -40,6 +40,19 @@ pub struct Cip36Validation {
 }
 
 impl Cip36 {
+    /// Create an instance of CIP-36.
+    #[must_use]
+    pub fn new(
+        key_registration: Cip36KeyRegistration, registration_witness: Cip36RegistrationWitness,
+        is_catalyst_strict: bool,
+    ) -> Self {
+        Self {
+            key_registration,
+            registration_witness,
+            is_catalyst_strict,
+        }
+    }
+
     /// Get the `is_cip36` flag from the registration.
     /// True if it is CIP-36 format, false if CIP-15 format.
     #[must_use]
