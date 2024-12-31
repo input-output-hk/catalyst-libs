@@ -134,7 +134,19 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                 }
             }
         }
-        Ok(cip36_key_registration)
+
+        // Check if all the required keys are present.
+        if found_keys.contains(&(Cip36KeyRegistrationKeys::VotingKey as u16))
+            && found_keys.contains(&(Cip36KeyRegistrationKeys::StakePk as u16))
+            && found_keys.contains(&(Cip36KeyRegistrationKeys::PaymentAddr as u16))
+            && found_keys.contains(&(Cip36KeyRegistrationKeys::Nonce as u16))
+        {
+            Ok(cip36_key_registration)
+        } else {
+            Err(decode::Error::message(
+                "Missing required key in CIP36 Key Registration",
+            ))
+        }
     }
 }
 
