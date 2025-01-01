@@ -13,7 +13,7 @@ use pallas::ledger::addresses::Address;
 /// See the [proposal] for more details.
 ///
 /// [proposal]: https://github.com/cardano-foundation/CIPs/pull/888
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 #[allow(clippy::module_name_repetitions)]
 pub struct Cip0134Uri {
     /// A URI string.

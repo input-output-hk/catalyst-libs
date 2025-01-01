@@ -14,7 +14,10 @@ use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
 
 use crate::{
     cardano::cip509::{
-        rbac::certs::{C509Cert, X509DerCert},
+        rbac::{
+            certs::{C509Cert, X509DerCert},
+            Cip509RbacMetadata,
+        },
         utils::Cip0134Uri,
         validation::URI,
     },
@@ -33,7 +36,7 @@ type UrisMap = HashMap<usize, Box<[Cip0134Uri]>>;
 pub struct Cip0134UriSet(Arc<Cip0134UriSetInner>);
 
 /// Internal `Cip0134UriSet` data.
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Debug, Clone, Eq, PartialEq)]
 struct Cip0134UriSetInner {
     /// URIs from x509 certificates.
     x_uris: UrisMap,
@@ -70,6 +73,74 @@ impl Cip0134UriSet {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.x_uris().is_empty() && self.c_uris().is_empty()
+    }
+
+    /// Return the updated URIs set.
+    ///
+    /// The resulting set includes all the data from both the original and a new one. In
+    /// the following example for brevity we only consider ony type of uris:
+    /// ```text
+    /// // Original data:
+    /// 0: [uri_1]
+    /// 1: [uri_2, uri_3]
+    ///
+    /// // New data:
+    /// 0: undefined
+    /// 1: deleted
+    /// 2: [uri_4]
+    ///
+    /// // Resulting data:
+    /// 0: [uri_1]
+    /// 2: [uri_4]
+    /// ```
+    #[must_use]
+    pub fn update(self, metadata: &Cip509RbacMetadata) -> Self {
+        if self == metadata.certificate_uris {
+            // Nothing to update.
+            return self;
+        }
+
+        let Cip0134UriSetInner {
+            mut x_uris,
+            mut c_uris,
+        } = Arc::unwrap_or_clone(self.0);
+
+        for (index, cert) in metadata.x509_certs.iter().enumerate() {
+            match cert {
+                X509DerCert::Undefined => {
+                    // The certificate wasn't changed - there is nothing to do.
+                },
+                X509DerCert::Deleted => {
+                    x_uris.remove(&index);
+                },
+                X509DerCert::X509Cert(_) => {
+                    if let Some(uris) = metadata.certificate_uris.x_uris().get(&index) {
+                        x_uris.insert(index, uris.clone());
+                    }
+                },
+            }
+        }
+
+        for (index, cert) in metadata.c509_certs.iter().enumerate() {
+            match cert {
+                C509Cert::Undefined => {
+                    // The certificate wasn't changed - there is nothing to do.
+                },
+                C509Cert::Deleted => {
+                    c_uris.remove(&index);
+                },
+                C509Cert::C509CertInMetadatumReference(_) => {
+                    debug!("Ignoring unsupported metadatum reference");
+                },
+                C509Cert::C509Certificate(_) => {
+                    if let Some(uris) = metadata.certificate_uris.c_uris().get(&index) {
+                        c_uris.insert(index, uris.clone());
+                    }
+                },
+            }
+        }
+
+        Self(Arc::new(Cip0134UriSetInner { x_uris, c_uris }))
     }
 }
 

@@ -32,6 +32,7 @@ use crate::{
             pub_key::SimplePublicKeyType,
         },
         types::cert_key_hash::CertKeyHash,
+        utils::Cip0134UriSet,
         Cip509, Cip509Validation,
     },
     utils::general::decremented_index,
@@ -151,6 +152,8 @@ struct RegistrationChainInner {
     x509_certs: HashMap<usize, (PointTxIdx, X509Certificate)>,
     /// Map of index in array to point, transaction index, and c509 certificate.
     c509_certs: HashMap<usize, (PointTxIdx, C509)>,
+    /// A set of URIs contained in both x509 and c509 certificates.
+    certificate_uris: Cip0134UriSet,
     /// Map of index in array to point, transaction index, and public key.
     simple_keys: HashMap<usize, (PointTxIdx, VerifyingKey)>,
     /// List of point, transaction index, and certificate key hash.
@@ -202,6 +205,7 @@ impl RegistrationChainInner {
         let registration = cip509.metadata;
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
+        let certificate_uris = registration.certificate_uris;
         let x509_cert_map = chain_root_x509_certs(registration.x509_certs, &point_tx_idx);
         let c509_cert_map = chain_root_c509_certs(registration.c509_certs, &point_tx_idx);
         let public_key_map = chain_root_public_keys(registration.pub_keys, &point_tx_idx);
@@ -221,6 +225,7 @@ impl RegistrationChainInner {
             current_tx_id_hash: txn.hash(),
             x509_certs: x509_cert_map,
             c509_certs: c509_cert_map,
+            certificate_uris,
             simple_keys: public_key_map,
             revocations,
             role_data: role_data_map,
@@ -272,7 +277,7 @@ impl RegistrationChainInner {
 
         let registration = cip509.metadata;
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
-
+        new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
         update_x509_certs(&mut new_inner, registration.x509_certs, &point_tx_idx);
         update_c509_certs(&mut new_inner, registration.c509_certs, &point_tx_idx)?;
         update_public_keys(&mut new_inner, registration.pub_keys, &point_tx_idx);
