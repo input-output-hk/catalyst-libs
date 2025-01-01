@@ -79,8 +79,14 @@ fn process_type2_rule(type2_rule: impl CddlRule) -> anyhow::Result<CddlType> {
             tag_content.into(),
         )))
     } else if rule.is_m_type_7() {
-        // TODO: remove it after processing `m_type_7` rule
-        Ok(CddlType::Choice(vec![]))
+        let mut rules = rule.inner();
+
+        let uint_rule = rules
+            .next()
+            .ok_or(anyhow!("Invalid `m_type_7` rule, must have `uint` rule"))?;
+        let val = process_uint_rule(&uint_rule)?;
+
+        Ok(CddlType::CborType(CborType::MajorType7(val)))
     } else if rule.is_any() {
         Ok(CddlType::CborType(CborType::Any))
     } else {
