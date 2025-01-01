@@ -2,6 +2,7 @@
 
 pub(crate) mod expr;
 pub(crate) mod types;
+pub(crate) mod uint;
 
 use std::fmt::Debug;
 
