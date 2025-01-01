@@ -1,6 +1,8 @@
 //! Process `type`, `type1`, `type2` rules
 
-use super::CddlRule;
+use anyhow::anyhow;
+
+use super::{uint::process_uint_rule, CddlRule};
 use crate::preprocessor::{CborType, CddlType};
 
 /// Process `type` rule
@@ -14,7 +16,7 @@ pub(crate) fn process_type_rule(type_rule: impl CddlRule) -> anyhow::Result<Cddl
     if cddl_types.len() > 1 {
         Ok(CddlType::Choice(cddl_types))
     } else {
-        cddl_types.into_iter().next().ok_or(anyhow::anyhow!(
+        cddl_types.into_iter().next().ok_or(anyhow!(
             "Invalid `type` rule, missing at least one `type1` rule"
         ))
     }
@@ -24,21 +26,22 @@ pub(crate) fn process_type_rule(type_rule: impl CddlRule) -> anyhow::Result<Cddl
 pub(crate) fn process_type1_rule(type1_rule: impl CddlRule) -> anyhow::Result<CddlType> {
     let mut rules = type1_rule.inner();
 
-    let type2_rule = rules.next().ok_or(anyhow::anyhow!(
-        "Invalid `type1` rule, missing first `type2` rule"
-    ))?;
+    let type2_rule = rules
+        .next()
+        .ok_or(anyhow!("Invalid `type1` rule, missing first `type2` rule"))?;
     // TODO: process the rest of the rules
 
     process_type2_rule(type2_rule)
 }
 
 /// Process `type2` rule
-pub(crate) fn process_type2_rule(type2_rule: impl CddlRule) -> anyhow::Result<CddlType> {
+#[allow(clippy::similar_names)]
+fn process_type2_rule(type2_rule: impl CddlRule) -> anyhow::Result<CddlType> {
     let mut rules = type2_rule.inner();
 
-    let rule = rules.next().ok_or(anyhow::anyhow!(
-        "Invalid `type2` rule, must have at one inner rule"
-    ))?;
+    let rule = rules
+        .next()
+        .ok_or(anyhow!("Invalid `type2` rule, must have at one inner rule"))?;
 
     if rule.is_value() {
         // TODO: remove it after processing `value` rule
@@ -59,8 +62,22 @@ pub(crate) fn process_type2_rule(type2_rule: impl CddlRule) -> anyhow::Result<Cd
     } else if rule.is_m_type_5() {
         Ok(CddlType::CborType(CborType::MajorType5))
     } else if rule.is_m_type_6() {
-        // TODO: remove it after processing `m_type_6` rule
-        Ok(CddlType::Choice(vec![]))
+        let mut rules = rule.inner();
+        let uint_rule = rules
+            .next()
+            .ok_or(anyhow!("Invalid `m_type_6` rule, must have `uint` rule"))?;
+
+        let tag_number = process_uint_rule(&uint_rule)?;
+
+        let type_rule = rules
+            .next()
+            .ok_or(anyhow!("Invalid `m_type_6` rule, must have `type` rule"))?;
+        let tag_content = process_type_rule(type_rule)?;
+
+        Ok(CddlType::CborType(CborType::MajorType6(
+            tag_number,
+            tag_content.into(),
+        )))
     } else if rule.is_m_type_7() {
         // TODO: remove it after processing `m_type_7` rule
         Ok(CddlType::Choice(vec![]))
