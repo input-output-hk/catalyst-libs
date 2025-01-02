@@ -255,29 +255,18 @@ fn decode_voting_key(
                                 .ok()?;
                         // This fixed array should be a length of 2 (voting key, weight).
                         if len != 2 {
-                            err_report.push(format!(
-                        "Invalid length for CIP36 Key Registration voting key delegations, expected 2, got {len}"
-                    ));
+                            err_report.push(format!("Invalid length for CIP36 Key Registration voting key delegations, expected 2, got {len}"));
                             return None;
                         }
                         // The first entry.
-                        let pub_key = decode_bytes(
-                    d,
-                    "CIP36 Key Registration voting key, delegation array first entry (voting public key)",
-                ).map_err(|e| {
-                    err_report.push(format!("{e}"));
-                }).ok()?;
+                        let pub_key = decode_bytes(d, "CIP36 Key Registration voting key, delegation array first entry (voting public key)").map_err(|e| {
+                            err_report.push(format!("{e}"));
+                        }).ok()?;
 
                         // The second entry.
-                        let weight: u32 = decode_helper(
-                    d,
-                    "CIP36 Key Registration voting key, delegation array second entry (weight)",
-                    &mut (),
-                )
-                .map_err(|e| {
-                    err_report.push(format!("{e}"));
-                })
-                .ok()?;
+                        let weight: u32 = decode_helper(d, "CIP36 Key Registration voting key, delegation array second entry (weight)", &mut (),).map_err(|e| { 
+                            err_report.push(format!("{e}"));
+                        }).ok()?;
 
                         let vk = match voting_pk_vec_to_verifying_key(&pub_key) {
                             Ok(vk) => Some(vk),
