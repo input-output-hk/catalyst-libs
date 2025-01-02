@@ -1,7 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:rust/bump-compiler-to-1.83 AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:rust/bump-compiler-to-1.83 AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.2.26 AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.2.26 AS cspell-ci
 
 
 FROM debian:stable-slim
