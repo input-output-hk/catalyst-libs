@@ -31,4 +31,3 @@ js-wasm-package-locally:
     FROM +skip-build-wasm
 
     SAVE ARTIFACT /pkg AS LOCAL ./pkg
-`
