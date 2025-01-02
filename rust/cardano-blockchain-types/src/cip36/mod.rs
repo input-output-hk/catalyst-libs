@@ -5,14 +5,16 @@ pub mod registration_witness;
 mod validation;
 pub mod voting_pk;
 
+use anyhow::bail;
 use ed25519_dalek::VerifyingKey;
 use key_registration::Cip36KeyRegistration;
+use minicbor::{Decode, Decoder};
 use pallas::ledger::addresses::ShelleyAddress;
 use registration_witness::Cip36RegistrationWitness;
 use validation::{validate_payment_address_network, validate_signature, validate_voting_keys};
 use voting_pk::VotingPubKey;
 
-use crate::{MetadatumValue, Network};
+use crate::{MetadatumLabel, MetadatumValue, Network, Slot, TransactionAuxData};
 
 /// CIP-36 Catalyst registration
 #[derive(Clone, Default, Debug)]
@@ -41,16 +43,62 @@ pub struct Cip36Validation {
 
 impl Cip36 {
     /// Create an instance of CIP-36.
-    #[must_use]
+    /// The CIP-36 registration contains the key registration (61284)
+    /// and registration witness (61285) metadata.
+    ///
+    /// # Parameters
+    ///
+    /// * `aux_data` - The transaction auxiliary data.
+    /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
+    /// * `slot` - The slot number of the auxiliary data.
+    ///
+    /// # Errors
+    ///
+    /// If the CIP-36 key registration or registration witness metadata is not found.
+    /// or if the CIP-36 key registration or registration witness metadata cannot be
+    /// decoded.
     pub fn new(
-        key_registration: Cip36KeyRegistration, registration_witness: Cip36RegistrationWitness,
-        is_catalyst_strict: bool,
-    ) -> Self {
-        Self {
+        aux_data: &TransactionAuxData, is_catalyst_strict: bool, slot: Slot,
+    ) -> anyhow::Result<Self> {
+        let Some(k61284) = aux_data.metadata(MetadatumLabel::CIP036_REGISTRATION) else {
+            bail!("CIP-36 key registration metadata not found")
+        };
+        let Some(k61285) = aux_data.metadata(MetadatumLabel::CIP036_WITNESS) else {
+            bail!("CIP-36 registration witness metadata not found")
+        };
+
+        let mut key_registration = Decoder::new(k61284.as_ref());
+        let mut registration_witness = Decoder::new(k61285.as_ref());
+
+        let key_registration = match Cip36KeyRegistration::decode(&mut key_registration, &mut ()) {
+            Ok(mut metadata) => {
+                let nonce = if is_catalyst_strict && metadata.raw_nonce > slot.into() {
+                    slot
+                } else {
+                    metadata.raw_nonce.into()
+                };
+
+                metadata.nonce = nonce.into();
+                metadata
+            },
+            Err(e) => {
+                bail!("Failed to construct CIP-36 key registration, {e}")
+            },
+        };
+
+        let registration_witness =
+            match Cip36RegistrationWitness::decode(&mut registration_witness, &mut ()) {
+                Ok(metadata) => metadata,
+                Err(e) => {
+                    bail!("Failed to construct CIP-36 registration witness {e}")
+                },
+            };
+
+        Ok(Self {
             key_registration,
             registration_witness,
             is_catalyst_strict,
-        }
+        })
     }
 
     /// Get the `is_cip36` flag from the registration.
