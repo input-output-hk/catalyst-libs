@@ -1,7 +1,7 @@
 // cspell: words aname groupsocket typesocket groupsocket
 
 mod common;
-use common::{identifiers::*, Rule};
+use common::parser::{check_tests_rule, identifiers::*, Rule};
 
 /// Check if the name components pass properly.
 #[test]
@@ -15,7 +15,7 @@ fn check_name_start_characters() {
         .map(String::from)
         .collect::<Vec<_>>();
 
-    common::check_tests_rule(Rule::NAME_START, &passes, &fails);
+    check_tests_rule(Rule::NAME_START, &passes, &fails);
 }
 
 /// Check if the name components pass properly.
@@ -32,11 +32,11 @@ fn check_name_end_characters() {
         .map(String::from)
         .collect::<Vec<_>>();
 
-    common::check_tests_rule(Rule::NAME_END, &passes, &fails);
+    check_tests_rule(Rule::NAME_END, &passes, &fails);
 }
 
 /// Test if the `id` rule passes properly.
 #[test]
 fn check_id() {
-    common::check_tests_rule(Rule::id_TEST, ID_PASSES, ID_FAILS);
+    check_tests_rule(Rule::id_TEST, ID_PASSES, ID_FAILS);
 }
