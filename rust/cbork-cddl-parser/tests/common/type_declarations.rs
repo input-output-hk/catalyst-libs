@@ -81,6 +81,7 @@ pub(crate) const TYPE2_FAILS: &[&str] = &[
     "#6.11",
     "#6.11(#3.1)",
     "#6.11 (tstr)",
+    "#6(tstr)",
     "#6.11(( foo: uint ))",
     "&",
     "& foo <bar>",
