@@ -1,7 +1,7 @@
 //! A parser for CDDL, utilized for parsing in accordance with RFC 8610.
 
 mod parser;
-mod preprocessor;
+mod processor;
 
 /// Represents different grammar extensions for handling CDDL specifications.
 pub enum Extension {
@@ -22,7 +22,7 @@ pub enum Extension {
 /// - If there is an issue with parsing the CDDL input.
 pub fn validate_cddl(input: &mut String, extension: &Extension) -> anyhow::Result<()> {
     let ast = parser::parse_cddl(input, extension)?;
-    preprocessor::process_ast(ast)?;
+    processor::process_ast(ast)?;
     Ok(())
 }
 

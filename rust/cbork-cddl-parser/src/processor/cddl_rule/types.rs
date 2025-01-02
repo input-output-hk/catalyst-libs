@@ -3,7 +3,7 @@
 use anyhow::anyhow;
 
 use super::{uint::process_uint_rule, CddlRule};
-use crate::preprocessor::{CborType, CddlType};
+use crate::processor::{CborType, CddlType};
 
 /// Process `type` rule
 pub(crate) fn process_type_rule(type_rule: impl CddlRule) -> anyhow::Result<CddlType> {

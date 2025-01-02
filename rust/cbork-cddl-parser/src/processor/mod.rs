@@ -1,4 +1,4 @@
-//! A CDDL AST preprocessor.
+//! A CDDL AST processor.
 //!
 //! - Validates the root rule of the AST to be a `cddl` rule.
 //! - Filters out all rules that are not `expr` rules.
