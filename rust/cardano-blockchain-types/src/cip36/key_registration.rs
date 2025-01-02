@@ -5,8 +5,6 @@
 //! <https://cips.cardano.org/cip/CIP-36>
 //! <https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl>
 
-use std::collections::HashSet;
-
 use anyhow::Context;
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
@@ -77,76 +75,109 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
         let mut cip36_key_registration = Cip36KeyRegistration::default();
 
         // Record of founded keys. Check for duplicate keys in the map
-        let mut found_keys: HashSet<u16> = HashSet::new();
+        let mut found_keys: Vec<Cip36KeyRegistrationKeys> = Vec::new();
 
-        for _ in 0..map_len {
+        // Record of errors found during decoding
+        let mut err_report = Vec::new();
+
+        for index in 0..map_len {
             let key: u16 = decode_helper(d, "key in CIP36 Key Registration", ctx)?;
 
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if !found_keys.insert(key as u16) {
-                            return Err(decode::Error::message(
-                                "Duplicate key in CIP36 Key Registration voting key",
-                            ));
+                        if found_keys.contains(&key) {
+                            err_report.push(format!(
+                                "Duplicate key in CIP36 Key Registration voting key at item {} in map", index + 1),
+                            );
+                            continue;
                         }
-                        let (is_cip36, voting_keys) = decode_voting_key(d)?;
-                        cip36_key_registration.is_cip36 = Some(is_cip36);
-                        cip36_key_registration.voting_pks = voting_keys;
+                        if let Some((is_cip36, voting_keys)) = decode_voting_key(d, &mut err_report)
+                        {
+                            cip36_key_registration.is_cip36 = is_cip36;
+                            cip36_key_registration.voting_pks = voting_keys;
+                        }
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if !found_keys.insert(key as u16) {
-                            return Err(decode::Error::message(
-                                "Duplicate key in CIP36 Key Registration stake public key",
-                            ));
+                        if found_keys.contains(&key) {
+                            err_report.push(format!(
+                                "Duplicate key in CIP36 Key Registration stake public key at item {} in map", index + 1),
+                            );
+                            continue;
                         }
-                        let stake_pk = decode_stake_pk(d)?;
-                        cip36_key_registration.stake_pk = stake_pk;
+                        if let Some(stake_pk) = decode_stake_pk(d, &mut err_report) {
+                            cip36_key_registration.stake_pk = stake_pk;
+                        }
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if !found_keys.insert(key as u16) {
-                            return Err(decode::Error::message(
-                                "Duplicate key in CIP36 Key Registration payment address",
-                            ));
+                        if found_keys.contains(&key) {
+                            err_report.push(format!(
+                                "Duplicate key in CIP36 Key Registration payment address at item {} in map", index + 1),
+                            );
+                            continue;
                         }
-                        let shelley_addr = decode_payment_addr(d)?;
-                        cip36_key_registration.payment_addr = Some(shelley_addr.clone());
-                        cip36_key_registration.is_payable = !shelley_addr.payment().is_script();
+                        if let Some(shelley_addr) = decode_payment_addr(d, &mut err_report) {
+                            cip36_key_registration.payment_addr = Some(shelley_addr.clone());
+                            cip36_key_registration.is_payable = !shelley_addr.payment().is_script();
+                        }
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        if !found_keys.insert(key as u16) {
-                            return Err(decode::Error::message(
-                                "Duplicate key in CIP36 Key Registration nonce",
+                        if found_keys.contains(&key) {
+                            err_report.push(format!(
+                                "Duplicate key in CIP36 Key Registration nonce at item {} in map",
+                                index + 1
                             ));
+                            continue;
                         }
-                        let raw_nonce = decode_nonce(d)?;
-                        cip36_key_registration.raw_nonce = raw_nonce;
+                        if let Some(nonce) = decode_nonce(d, &mut err_report) {
+                            cip36_key_registration.nonce = nonce;
+                        }
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
-                        if !found_keys.insert(key as u16) {
-                            return Err(decode::Error::message(
-                                "Duplicate key in CIP36 Key Registration purpose",
+                        if found_keys.contains(&key) {
+                            err_report.push(format!(
+                                "Duplicate key in CIP36 Key Registration purpose at item {} in map",
+                                index + 1
                             ));
+                            continue;
                         }
-                        let purpose = decode_purpose(d)?;
-                        cip36_key_registration.purpose = purpose;
+                        if let Some(purpose) = decode_purpose(d, &mut err_report) {
+                            cip36_key_registration.purpose = purpose;
+                        }
                     },
                 }
+
+                // Update the founded keys.
+                found_keys.push(key);
             }
         }
 
-        // Check if all the required keys are present.
-        if found_keys.contains(&(Cip36KeyRegistrationKeys::VotingKey as u16))
-            && found_keys.contains(&(Cip36KeyRegistrationKeys::StakePk as u16))
-            && found_keys.contains(&(Cip36KeyRegistrationKeys::PaymentAddr as u16))
-            && found_keys.contains(&(Cip36KeyRegistrationKeys::Nonce as u16))
-        {
-            Ok(cip36_key_registration)
-        } else {
-            Err(decode::Error::message(
-                "Missing required key in CIP36 Key Registration",
-            ))
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::VotingKey) {
+            err_report
+                .push("Missing required key in CIP36 Key Registration: Voting Key".to_string());
         }
+
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::StakePk) {
+            err_report.push(
+                "Missing required key in CIP36 Key Registration: Stake Public Key".to_string(),
+            );
+        }
+
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::PaymentAddr) {
+            err_report.push(
+                "Missing required key in CIP36 Key Registration: Payment Address".to_string(),
+            );
+        }
+
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::Nonce) {
+            err_report.push("Missing required key in CIP36 Key Registration: Nonce".to_string());
+        }
+
+        if !err_report.is_empty() {
+            return Err(decode::Error::message(format!("{err_report:?}")));
+        }
+
+        Ok(cip36_key_registration)
     }
 }
 
@@ -154,80 +185,129 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
 ///
 /// # Returns
 ///
-/// A tuple containing a boolean value, true if it is CIP36 format, false if it is CIP15
-/// format and a vector of voting public keys.
-fn decode_voting_key(d: &mut Decoder) -> Result<(bool, Vec<VotingPubKey>), decode::Error> {
+/// - A tuple containing
+///     - A boolean value, true if it is CIP36 format, false if it is CIP15, None if not
+///       either CIP36 or CIP15.
+///     - A vector of `VotingPubKey`, if the `voting_pk` vector cannot be converted to
+///       verifying key, assign `voting_pk` to None.
+/// - Return None if there is an error with decoding.
+fn decode_voting_key(
+    d: &mut Decoder, err_report: &mut Vec<String>,
+) -> Option<(Option<bool>, Vec<VotingPubKey>)> {
     let mut voting_keys = Vec::new();
-    let mut is_cip36 = false;
+    let mut is_cip36 = None;
 
-    match d.datatype()? {
-        // CIP15 type registration (single voting key).
-        // ```cddl
-        //      legacy_key_registration = $cip36_vote_pub_key
-        //      $cip36_vote_pub_key /= bytes .size 32
-        // ```
-        minicbor::data::Type::Bytes => {
-            let pub_key = decode_bytes(d, "CIP36 Key Registration voting key, single voting key")?;
-            let vk = voting_pk_vec_to_verifying_key(&pub_key).map_err(|e| {
-                decode::Error::message(format!(
-                    "CIP36 Key Registration voting key, singe voting key, {e}"
-                ))
-            })?;
-            // Since there is 1 voting key, all the weight goes to this key = 1.
-            voting_keys.push(VotingPubKey {
-                voting_pk: vk,
-                weight: 1,
-            });
-        },
-        // CIP36 type registration (multiple voting keys).
-        // ```cddl
-        //      [+delegation]
-        //      delegation = [$cip36_vote_pub_key, $weight]
-        //      $cip36_vote_pub_key /= bytes .size 32
-        // ```
-        minicbor::data::Type::Array => {
-            is_cip36 = true;
-            let len =
-                decode_array_len(d, "CIP36 Key Registration voting key, multiple voting keys")?;
-            for _ in 0..len {
-                let len = decode_array_len(d, "CIP36 Key Registration voting key, delegations")?;
-                // This fixed array should be a length of 2 (voting key, weight).
-                if len != 2 {
-                    return Err(decode::Error::message(format!(
+    match d.datatype() {
+        Ok(dt) => {
+            match dt {
+                // CIP15 type registration (single voting key).
+                // ```cddl
+                //      legacy_key_registration = $cip36_vote_pub_key
+                //      $cip36_vote_pub_key /= bytes .size 32
+                // ```
+                minicbor::data::Type::Bytes => {
+                    is_cip36 = Some(false);
+                    let pub_key =
+                        decode_bytes(d, "CIP36 Key Registration voting key, single voting key")
+                            .map_err(|e| {
+                                err_report.push(format!("{e}"));
+                            })
+                            .ok()?;
+                    let vk = match voting_pk_vec_to_verifying_key(&pub_key) {
+                        Ok(vk) => Some(vk),
+                        Err(e) => {
+                            err_report.push(format!(
+                                "CIP36 Key Registration voting key, single voting key, {e}"
+                            ));
+                            None
+                        },
+                    };
+
+                    // Since there is 1 voting key, all the weight goes to this key = 1.
+                    voting_keys.push(VotingPubKey {
+                        voting_pk: vk,
+                        weight: 1,
+                    });
+                },
+                // CIP36 type registration (multiple voting keys).
+                // ```cddl
+                //      [+delegation]
+                //      delegation = [$cip36_vote_pub_key, $weight]
+                //      $cip36_vote_pub_key /= bytes .size 32
+                // ```
+                minicbor::data::Type::Array => {
+                    is_cip36 = Some(true);
+                    let len = decode_array_len(
+                        d,
+                        "CIP36 Key Registration voting key, multiple voting keys",
+                    )
+                    .map_err(|e| {
+                        err_report.push(format!("{e}"));
+                    })
+                    .ok()?;
+
+                    for _ in 0..len {
+                        let len =
+                            decode_array_len(d, "CIP36 Key Registration voting key, delegations")
+                                .map_err(|e| {
+                                    err_report.push(format!("{e}"));
+                                })
+                                .ok()?;
+                        // This fixed array should be a length of 2 (voting key, weight).
+                        if len != 2 {
+                            err_report.push(format!(
                         "Invalid length for CIP36 Key Registration voting key delegations, expected 2, got {len}"
-                    )));
-                }
-                // The first entry.
-                let pub_key = decode_bytes(
+                    ));
+                            return None;
+                        }
+                        // The first entry.
+                        let pub_key = decode_bytes(
                     d,
                     "CIP36 Key Registration voting key, delegation array first entry (voting public key)",
-                )?;
-                // The second entry.
-                let weight: u32 = decode_helper(
+                ).map_err(|e| {
+                    err_report.push(format!("{e}"));
+                }).ok()?;
+
+                        // The second entry.
+                        let weight: u32 = decode_helper(
                     d,
                     "CIP36 Key Registration voting key, delegation array second entry (weight)",
                     &mut (),
-                )?;
+                )
+                .map_err(|e| {
+                    err_report.push(format!("{e}"));
+                })
+                .ok()?;
 
-                let vk = voting_pk_vec_to_verifying_key(&pub_key).map_err(|e| {
-                    decode::Error::message(format!(
-                        "CIP36 Key Registration voting key, multiple voting keys, {e}"
-                    ))
-                })?;
+                        let vk = match voting_pk_vec_to_verifying_key(&pub_key) {
+                            Ok(vk) => Some(vk),
+                            Err(e) => {
+                                err_report.push(format!(
+                                    "CIP36 Key Registration voting key, multiple voting keys, {e}"
+                                ));
+                                // Don't early return, continue with the next key.
+                                None
+                            },
+                        };
 
-                voting_keys.push(VotingPubKey {
-                    voting_pk: vk,
-                    weight,
-                });
+                        voting_keys.push(VotingPubKey {
+                            voting_pk: vk,
+                            weight,
+                        });
+                    }
+                },
+
+                _ => {
+                    err_report.push("Invalid datatype for CIP36 Key Registration voting key, should be either Array or Bytes".to_string());
+                },
             }
         },
-        _ => {
-            return Err(decode::Error::message(
-                "Invalid datatype for CIP36 Key Registration voting key",
-            ))
+        Err(e) => {
+            err_report.push(format!("Decoding voting key, invalid data type: {e}"));
+            return None;
         },
     }
-    Ok((is_cip36, voting_keys))
+    Some((is_cip36, voting_keys))
 }
 
 /// Helper function for converting `&[u8]` to `VerifyingKey`.
@@ -247,11 +327,22 @@ fn voting_pk_vec_to_verifying_key(pub_key: &[u8]) -> anyhow::Result<VerifyingKey
 /// # Returns
 ///
 /// The stake public key as a `VerifyingKey`.
-fn decode_stake_pk(d: &mut Decoder) -> Result<VerifyingKey, decode::Error> {
-    let pub_key = decode_bytes(d, "CIP36 Key Registration stake public key")?;
-    voting_pk_vec_to_verifying_key(&pub_key).map_err(|e| {
-        decode::Error::message(format!("CIP36 Key Registration stake public key, {e}"))
-    })
+/// None if cannot converted `Vec<u8>` to `VerifyingKey` or decoding error.
+fn decode_stake_pk(d: &mut Decoder, err_report: &mut Vec<String>) -> Option<VerifyingKey> {
+    let pub_key = decode_bytes(d, "CIP36 Key Registration stake public key")
+        .map_err(|e| {
+            err_report.push(format!("{e}"));
+        })
+        .ok()?;
+    match voting_pk_vec_to_verifying_key(&pub_key) {
+        Ok(vk) => Some(vk),
+        Err(e) => {
+            err_report.push(format!(
+                "CIP36 Key Registration voting key, multiple voting keys, {e}"
+            ));
+            None
+        },
+    }
 }
 
 /// Helper function for decoding the payment address.
@@ -264,17 +355,24 @@ fn decode_stake_pk(d: &mut Decoder) -> Result<VerifyingKey, decode::Error> {
 /// # Returns
 ///
 /// The payment address as a `ShelleyAddress`.
-fn decode_payment_addr(d: &mut Decoder) -> Result<ShelleyAddress, decode::Error> {
-    let raw_addr = decode_bytes(d, "CIP36 Key Registration payment address")?;
-    let address = Address::from_bytes(&raw_addr).map_err(|e| {
-        decode::Error::message(format!("CIP36 Key Registration payment address, {e}"))
-    })?;
+/// None if cannot converted `Vec<u8>` to `ShelleyAddress` or decoding error.
+fn decode_payment_addr(d: &mut Decoder, err_report: &mut Vec<String>) -> Option<ShelleyAddress> {
+    let raw_addr = decode_bytes(d, "CIP36 Key Registration payment address")
+        .map_err(|e| {
+            err_report.push(format!("{e}"));
+        })
+        .ok()?;
+    let address = Address::from_bytes(&raw_addr)
+        .map_err(|e| err_report.push(format!("CIP36 Key Registration payment address, {e}")))
+        .ok()?;
+
     if let Address::Shelley(addr) = address {
-        Ok(addr.clone())
+        Some(addr.clone())
     } else {
-        Err(decode::Error::message(format!(
+        err_report.push(format!(
             "Invalid CIP36 Key Registration payment address, expected Shelley address, got {address}"
-        )))
+        ));
+        None
     }
 }
 
@@ -288,8 +386,13 @@ fn decode_payment_addr(d: &mut Decoder) -> Result<ShelleyAddress, decode::Error>
 /// # Returns
 ///
 /// Raw nonce.
-fn decode_nonce(d: &mut Decoder) -> Result<u64, decode::Error> {
+/// None if decoding error.
+fn decode_nonce(d: &mut Decoder, err_report: &mut Vec<String>) -> Option<u64> {
     decode_helper(d, "CIP36 Key Registration nonce", &mut ())
+        .map_err(|e| {
+            err_report.push(format!("{e}"));
+        })
+        .ok()
 }
 
 /// Helper function for decoding the purpose.
@@ -302,8 +405,12 @@ fn decode_nonce(d: &mut Decoder) -> Result<u64, decode::Error> {
 /// # Returns
 ///
 /// The purpose.
-fn decode_purpose(d: &mut Decoder) -> Result<u64, decode::Error> {
+fn decode_purpose(d: &mut Decoder, err_report: &mut Vec<String>) -> Option<u64> {
     decode_helper(d, "CIP36 Key Registration purpose", &mut ())
+        .map_err(|e| {
+            err_report.push(format!("{e}"));
+        })
+        .ok()
 }
 
 #[cfg(test)]
@@ -318,7 +425,9 @@ mod tests {
             "5839004777561E7D9EC112EC307572FAEC1AFF61FF0CFED68DF4CD5C847F1872B617657881E30AD17C46E4010C9CB3EBB2440653A34D32219C83E9"
         ).expect("cannot decode hex");
         let mut decoder = Decoder::new(&hex_data);
-        let address = decode_payment_addr(&mut decoder);
+        let mut err_report = Vec::new();
+        let address = decode_payment_addr(&mut decoder, &mut err_report);
+        assert!(err_report.is_empty());
         assert_eq!(address.unwrap().to_vec().len(), 57);
     }
 
@@ -330,8 +439,10 @@ mod tests {
         )
         .expect("cannot decode hex");
         let mut decoder = Decoder::new(&hex_data);
-        let stake_pk = decode_stake_pk(&mut decoder);
-        assert!(stake_pk.is_ok());
+        let mut err_report = Vec::new();
+        let stake_pk = decode_stake_pk(&mut decoder, &mut err_report);
+        assert!(err_report.is_empty());
+        assert!(stake_pk.is_some());
     }
 
     #[test]
@@ -343,10 +454,10 @@ mod tests {
         )
         .expect("cannot decode hex");
         let mut decoder = Decoder::new(&hex_data);
-
-        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder).expect("Failed to decode");
-
-        assert!(is_cip36);
+        let mut err_report = Vec::new();
+        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder, &mut err_report).unwrap();
+        assert!(err_report.is_empty());
+        assert!(is_cip36.unwrap());
         assert_eq!(voting_pk.len(), 1);
     }
 
@@ -359,10 +470,10 @@ mod tests {
         )
         .expect("cannot decode hex");
         let mut decoder = Decoder::new(&hex_data);
-
-        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder).expect("Failed to decode");
-
-        assert!(!is_cip36);
+        let mut err_report = Vec::new();
+        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder, &mut err_report).unwrap();
+        assert!(err_report.is_empty());
+        assert!(!is_cip36.unwrap());
         assert_eq!(voting_pk.len(), 1);
     }
 }
