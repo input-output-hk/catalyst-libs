@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.2.23 AS cddl-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:rust/bump-compiler-to-1.83 AS cddl-ci
 
 check-cddl:
     FROM cddl-ci+cddl-base

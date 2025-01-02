@@ -30,10 +30,10 @@ impl TxnWitness {
         /// Update the temporary map with the witnesses.
         fn update_map(
             map: &WitnessMap,
-            vkey_witness_set: &Option<Vec<pallas::ledger::primitives::conway::VKeyWitness>>,
+            vkey_witness_set: Option<&Vec<pallas::ledger::primitives::conway::VKeyWitness>>,
             i: usize,
         ) -> anyhow::Result<()> {
-            if let Some(vkey_witness_set) = vkey_witness_set.clone() {
+            if let Some(vkey_witness_set) = vkey_witness_set {
                 for vkey_witness in vkey_witness_set {
                     let vkey = vkey_from_bytes(&vkey_witness.vkey)?;
                     let vkey_hash = VKeyHash::new(vkey.as_ref());
@@ -55,16 +55,16 @@ impl TxnWitness {
             match tx {
                 MultiEraTx::AlonzoCompatible(tx, _) => {
                     let witness_set = &tx.transaction_witness_set;
-                    update_map(&map, &witness_set.vkeywitness, i)?;
+                    update_map(&map, witness_set.vkeywitness.as_ref(), i)?;
                 },
                 MultiEraTx::Babbage(tx) => {
                     let witness_set = &tx.transaction_witness_set;
-                    update_map(&map, &witness_set.vkeywitness, i)?;
+                    update_map(&map, witness_set.vkeywitness.as_ref(), i)?;
                 },
                 MultiEraTx::Conway(tx) => {
                     let witness_set = &tx.transaction_witness_set;
                     if let Some(non_empty_set) = witness_set.vkeywitness.clone() {
-                        update_map(&map, &Some(non_empty_set.to_vec()), i)?;
+                        update_map(&map, Some(non_empty_set.to_vec()).as_ref(), i)?;
                     }
                 },
                 _ => {

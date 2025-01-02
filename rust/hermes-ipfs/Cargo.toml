@@ -11,17 +11,17 @@ repository.workspace = true
 workspace = true
 
 [dependencies]
-anyhow = "1.0.89"
+anyhow = "1.0.95"
 derive_more = {version = "1.0.0", features = ["from","into","display"] }
 ipld-core = { version = "0.4.1", features = ["serde"]}
-rust-ipfs = "0.12.1"
-tokio = "1.40.0"
+rust-ipfs = "0.14.1"
+tokio = "1.42.0"
 
 [dev-dependencies]
 # Dependencies used by examples
-clap = { version = "4.5.19", features = ["derive"] }
+clap = { version = "4.5.23", features = ["derive"] }
 dirs = "5.0.1"
 lipsum = "0.9.1"
 rand = "0.8.5"
-rustyline-async = "0.4.3"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
+rustyline-async = "0.4.5"
+tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
