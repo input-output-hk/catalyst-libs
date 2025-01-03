@@ -185,7 +185,7 @@ impl RegistrationChainInner {
         txn: &MultiEraTx,
     ) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
-        if cip509.prv_tx_id.is_some() {
+        if cip509.previous_transaction().is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
 
@@ -200,9 +200,9 @@ impl RegistrationChainInner {
         }
 
         // Add purpose to the list
-        let purpose = vec![cip509.purpose];
+        let purpose = vec![cip509.purpose()];
 
-        let registration = cip509.metadata;
+        let registration = cip509.metadata().clone();
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         let certificate_uris = registration.certificate_uris;
@@ -259,23 +259,23 @@ impl RegistrationChainInner {
         }
 
         // Check and update the current transaction ID hash
-        if let Some(prv_tx_id) = cip509.prv_tx_id {
+        if let Some(prv_tx_id) = cip509.previous_transaction() {
             // Previous transaction ID in the CIP509 should equal to the current transaction ID
             // or else it is not a part of the chain
-            if prv_tx_id == self.current_tx_id_hash {
-                new_inner.current_tx_id_hash = prv_tx_id;
+            if prv_tx_id == &self.current_tx_id_hash {
+                new_inner.current_tx_id_hash = *prv_tx_id;
             } else {
                 bail!("Invalid previous transaction ID, not a part of this registration chain");
             }
         }
 
         // Add purpose to the chain, if not already exist
-        let purpose = cip509.purpose;
+        let purpose = cip509.purpose();
         if !self.purpose.contains(&purpose) {
             new_inner.purpose.push(purpose);
         }
 
-        let registration = cip509.metadata;
+        let registration = cip509.metadata().clone();
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
         new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
         update_x509_certs(&mut new_inner, registration.x509_certs, &point_tx_idx);

@@ -49,19 +49,19 @@ pub struct Cip509 {
     /// A registration purpose (`UUIDv4`).
     ///
     /// The purpose is defined by the consuming dApp.
-    pub purpose: Uuid,
+    purpose: Uuid,
     /// Transaction inputs hash.
-    pub txn_inputs_hash: TxInputHash,
+    txn_inputs_hash: TxInputHash,
     /// An optional hash of the previous transaction.
     ///
     /// The hash must always be present except for the first registration transaction.
-    pub prv_tx_id: Option<Blake2b256Hash>,
+    prv_tx_id: Option<Blake2b256Hash>,
     /// Metadata.
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
-    pub metadata: Cip509RbacMetadata,
+    metadata: Cip509RbacMetadata,
     /// Validation signature.
-    pub validation_signature: ValidationSignature,
+    validation_signature: ValidationSignature,
 }
 
 /// Validation value for CIP509 metadatum.
@@ -238,5 +238,23 @@ impl Cip509 {
             is_valid_signing_key,
             additional_data: AdditionalData { precomputed_aux },
         }
+    }
+
+    /// Returns a registration purpose.
+    #[must_use]
+    pub fn purpose(&self) -> Uuid {
+        self.purpose
+    }
+
+    /// Returns an identifier of the previous transaction.
+    #[must_use]
+    pub fn previous_transaction(&self) -> Option<&Blake2b256Hash> {
+        self.prv_tx_id.as_ref()
+    }
+
+    /// Returns CIP509 metadata.
+    #[must_use]
+    pub fn metadata(&self) -> &Cip509RbacMetadata {
+        &self.metadata
     }
 }
