@@ -13,8 +13,7 @@ workspace = true
 [dependencies]
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"serde = { version = "1.0.210", features = ["derive"] }
-serde_json = "1.0"
+serde_json = "1.0.134"
 # TODO: Bump this to the latest version and fix the code
 jsonschema = "0.18.3"
 coset = "0.3.8"
