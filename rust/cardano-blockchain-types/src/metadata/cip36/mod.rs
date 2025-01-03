@@ -14,7 +14,7 @@ use registration_witness::Cip36RegistrationWitness;
 use validation::{validate_payment_address_network, validate_signature, validate_voting_keys};
 use voting_pk::VotingPubKey;
 
-use crate::{MetadatumLabel, MetadatumValue, Network, Slot, TransactionAuxData};
+use crate::{MetadatumLabel, MetadatumValue, MultiEraBlock, Network, TxnIndex};
 
 /// CIP-36 Catalyst registration
 #[derive(Clone, Default, Debug)]
@@ -48,9 +48,9 @@ impl Cip36 {
     ///
     /// # Parameters
     ///
-    /// * `aux_data` - The transaction auxiliary data.
+    /// * `block` - The block containing the auxiliary data.
+    /// * `txn_idx` - The transaction index that contain the auxiliary data.
     /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
-    /// * `slot` - The slot number of the auxiliary data.
     ///
     /// # Errors
     ///
@@ -58,27 +58,30 @@ impl Cip36 {
     /// or if the CIP-36 key registration or registration witness metadata cannot be
     /// decoded.
     pub fn new(
-        aux_data: &TransactionAuxData, is_catalyst_strict: bool, slot: Slot, network: Network,
+        block: &MultiEraBlock, txn_idx: TxnIndex, is_catalyst_strict: bool,
     ) -> anyhow::Result<Self> {
-        let Some(k61284) = aux_data.metadata(MetadatumLabel::CIP036_REGISTRATION) else {
+        let Some(k61284) = block.txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION) else {
             bail!("CIP-36 key registration metadata not found")
         };
-        let Some(k61285) = aux_data.metadata(MetadatumLabel::CIP036_WITNESS) else {
+        let Some(k61285) = block.txn_metadata(txn_idx, MetadatumLabel::CIP036_WITNESS) else {
             bail!("CIP-36 registration witness metadata not found")
         };
+
+        let slot = block.decode().slot();
+        let network = block.network();
 
         let mut key_registration = Decoder::new(k61284.as_ref());
         let mut registration_witness = Decoder::new(k61285.as_ref());
 
         let key_registration = match Cip36KeyRegistration::decode(&mut key_registration, &mut ()) {
             Ok(mut metadata) => {
-                let nonce = if is_catalyst_strict && metadata.raw_nonce > slot.into() {
+                let nonce = if is_catalyst_strict && metadata.raw_nonce > slot {
                     slot
                 } else {
-                    metadata.raw_nonce.into()
+                    metadata.raw_nonce
                 };
 
-                metadata.nonce = nonce.into();
+                metadata.nonce = nonce;
                 metadata
             },
             Err(e) => {
