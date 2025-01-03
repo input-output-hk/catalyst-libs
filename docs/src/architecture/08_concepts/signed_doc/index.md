@@ -145,16 +145,18 @@ each Catalyst signed object [COSE] signature **must** include the following `pro
 ; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
 
 signature_protected_header = {
-    4 => bytes ; "kid"
+    4 => bytes ; "kid", UTF-8 encoded URI string
 }
 ```
 <!-- markdownlint-enable code-block-style -->
 
-* `kid`: A unique identifier of the signer.
+* `kid`: A unique identifier of the signer. A [UTF-8] encoded [URI] string.
 
 ## Copyright
 
 This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
+[UTF-8]: https://datatracker.ietf.org/doc/html/rfc3629
+[URI]: https://datatracker.ietf.org/doc/html/rfc3986
 [COSE]: https://datatracker.ietf.org/doc/html/rfc9052
 [UUID]: https://www.rfc-editor.org/rfc/rfc9562.html
