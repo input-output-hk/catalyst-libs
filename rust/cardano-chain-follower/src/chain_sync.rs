@@ -192,11 +192,7 @@ async fn process_rollback(
     let head_slot = previous_point.slot_or_default();
     debug!("Head slot: {}", head_slot);
     debug!("Rollback slot: {}", rollback_slot);
-    let slot_rollback_size = if head_slot > rollback_slot {
-        head_slot - rollback_slot
-    } else {
-        0
-    };
+    let slot_rollback_size = head_slot.saturating_sub(rollback_slot);
 
     // We actually do the work here...
     let response = process_rollback_actual(peer, chain, point, tip, fork_count).await?;
@@ -291,7 +287,7 @@ async fn follow_chain(
 
                 // This update is just for followers to know to look again at their live chains for
                 // new data.
-                notify_follower(chain, &update_sender, &chain_update::Kind::Block);
+                notify_follower(chain, update_sender.as_ref(), &chain_update::Kind::Block);
             },
             chainsync::NextResponse::RollBackward(point, tip) => {
                 previous_point =
@@ -299,7 +295,7 @@ async fn follow_chain(
                         .await?;
                 // This update is just for followers to know to look again at their live chains for
                 // new data.
-                notify_follower(chain, &update_sender, &chain_update::Kind::Rollback);
+                notify_follower(chain, update_sender.as_ref(), &chain_update::Kind::Rollback);
             },
             chainsync::NextResponse::Await => {
                 // debug!("Peer Node says: Await");
@@ -487,7 +483,7 @@ async fn live_sync_backfill_and_purge(
 
         notify_follower(
             cfg.chain,
-            &update_sender,
+            update_sender.as_ref(),
             &chain_update::Kind::ImmutableBlockRollForward,
         );
     }

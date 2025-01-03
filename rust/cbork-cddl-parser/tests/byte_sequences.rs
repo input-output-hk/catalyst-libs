@@ -1,3 +1,4 @@
+//! Byte Sequence tests
 // cspell: words hexpair rstuvw abcdefghijklmnopqrstuvwyz rstuvw Xhhb Bhcm
 
 mod common;

@@ -113,7 +113,7 @@ impl Encode<()> for C509oid {
 impl Decode<'_, ()> for C509oid {
     /// Decode an OID
     /// Decode the OID as unwrapped OID (~oid) - as bytes string without tag.
-
+    ///
     /// # Returns
     ///
     /// A C509oid instance.

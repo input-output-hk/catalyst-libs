@@ -200,9 +200,7 @@ fn validate_aux_helper(
 
     // Compare the hash
     match blake2b_256(original_aux) {
-        Ok(original_hash) => {
-            return Some((aux_data_hash.as_ref() == original_hash, vec_aux));
-        },
+        Ok(original_hash) => Some((aux_data_hash.as_ref() == original_hash, vec_aux)),
         Err(e) => {
             validation_report.push(format!("Cannot hash auxiliary data {e}"));
             None
