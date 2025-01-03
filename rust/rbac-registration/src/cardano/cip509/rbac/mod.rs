@@ -16,24 +16,43 @@ use role_data::RoleData;
 use strum_macros::FromRepr;
 
 use super::types::cert_key_hash::CertKeyHash;
-use crate::utils::decode_helper::{
-    decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
+use crate::{
+    cardano::cip509::utils::Cip0134UriSet,
+    utils::decode_helper::{
+        decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
+    },
 };
 
 /// Cip509 RBAC metadata.
-#[derive(Debug, PartialEq, Clone, Default)]
+///
+/// See [this document] for more details.
+///
+/// [this document]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX
+#[derive(Debug, PartialEq, Clone)]
 pub struct Cip509RbacMetadata {
-    /// Optional list of x509 certificates.
-    pub x509_certs: Option<Vec<X509DerCert>>,
-    /// Optional list of c509 certificates.
-    /// The value can be either the c509 certificate or c509 metadatum reference.
-    pub c509_certs: Option<Vec<C509Cert>>,
-    /// Optional list of Public keys.
-    pub pub_keys: Option<Vec<SimplePublicKeyType>>,
-    /// Optional list of revocation list.
-    pub revocation_list: Option<Vec<CertKeyHash>>,
-    /// Optional list of role data.
-    pub role_set: Option<Vec<RoleData>>,
+    /// A potentially empty list of x509 certificates.
+    pub x509_certs: Vec<X509DerCert>,
+    /// A potentially empty list of c509 certificates.
+    pub c509_certs: Vec<C509Cert>,
+    /// A set of URIs contained in both x509 and c509 certificates.
+    ///
+    /// URIs from different certificate types are stored separately and certificate
+    /// indexes are preserved too.
+    ///
+    /// This field isn't present in the encoded format and is populated by processing both
+    /// `x509_certs` and `c509_certs` fields.
+    pub certificate_uris: Cip0134UriSet,
+    /// A list of public keys that can be used instead of storing full certificates.
+    ///
+    /// Check [this section] to understand the how certificates and the public keys list
+    /// are related.
+    ///
+    /// [this section]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX#storing-certificates-and-public-key
+    pub pub_keys: Vec<SimplePublicKeyType>,
+    /// A potentially empty list of revoked certificates.
+    pub revocation_list: Vec<CertKeyHash>,
+    /// A potentially empty list of role data.
+    pub role_set: Vec<RoleData>,
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
     pub purpose_key_data: HashMap<u16, Vec<u8>>,
@@ -60,86 +79,59 @@ pub enum Cip509RbacMetadataInt {
     RoleSet = 100,
 }
 
-impl Cip509RbacMetadata {
-    /// Create a new instance of `Cip509RbacMetadata`.
-    pub(crate) fn new() -> Self {
-        Self {
-            x509_certs: None,
-            c509_certs: None,
-            pub_keys: None,
-            revocation_list: None,
-            role_set: None,
-            purpose_key_data: HashMap::new(),
-        }
-    }
-
-    /// Set the x509 certificates.
-    fn set_x509_certs(&mut self, x509_certs: Vec<X509DerCert>) {
-        self.x509_certs = Some(x509_certs);
-    }
-
-    /// Set the c509 certificates.
-    fn set_c509_certs(&mut self, c509_certs: Vec<C509Cert>) {
-        self.c509_certs = Some(c509_certs);
-    }
-
-    /// Set the public keys.
-    fn set_pub_keys(&mut self, pub_keys: Vec<SimplePublicKeyType>) {
-        self.pub_keys = Some(pub_keys);
-    }
-
-    /// Set the revocation list.
-    fn set_revocation_list(&mut self, revocation_list: Vec<CertKeyHash>) {
-        self.revocation_list = Some(revocation_list);
-    }
-
-    /// Set the role data set.
-    fn set_role_set(&mut self, role_set: Vec<RoleData>) {
-        self.role_set = Some(role_set);
-    }
-}
-
 impl Decode<'_, ()> for Cip509RbacMetadata {
     fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "Cip509RbacMetadata")?;
 
-        let mut x509_rbac_metadata = Cip509RbacMetadata::new();
+        let mut x509_certs = Vec::new();
+        let mut c509_certs = Vec::new();
+        let mut pub_keys = Vec::new();
+        let mut revocation_list = Vec::new();
+        let mut role_set = Vec::new();
+        let mut purpose_key_data = HashMap::new();
 
         for _ in 0..map_len {
             let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", ctx)?;
             if let Some(key) = Cip509RbacMetadataInt::from_repr(key) {
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
-                        let x509_certs = decode_array_rbac(d, "x509 certificate")?;
-                        x509_rbac_metadata.set_x509_certs(x509_certs);
+                        x509_certs = decode_array_rbac(d, "x509 certificate")?;
                     },
                     Cip509RbacMetadataInt::C509Certs => {
-                        let c509_certs = decode_array_rbac(d, "c509 certificate")?;
-                        x509_rbac_metadata.set_c509_certs(c509_certs);
+                        c509_certs = decode_array_rbac(d, "c509 certificate")?;
                     },
                     Cip509RbacMetadataInt::PubKeys => {
-                        let pub_keys = decode_array_rbac(d, "public keys")?;
-                        x509_rbac_metadata.set_pub_keys(pub_keys);
+                        pub_keys = decode_array_rbac(d, "public keys")?;
                     },
                     Cip509RbacMetadataInt::RevocationList => {
-                        let revocation_list = decode_revocation_list(d)?;
-                        x509_rbac_metadata.set_revocation_list(revocation_list);
+                        revocation_list = decode_revocation_list(d)?;
                     },
                     Cip509RbacMetadataInt::RoleSet => {
-                        let role_set = decode_array_rbac(d, "role set")?;
-                        x509_rbac_metadata.set_role_set(role_set);
+                        role_set = decode_array_rbac(d, "role set")?;
                     },
                 }
             } else {
                 if !(FIRST_PURPOSE_KEY..=LAST_PURPOSE_KEY).contains(&key) {
                     return Err(decode::Error::message(format!("Invalid purpose key set, should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}")));
                 }
-                x509_rbac_metadata
-                    .purpose_key_data
-                    .insert(key, decode_any(d, "purpose key")?);
+
+                purpose_key_data.insert(key, decode_any(d, "purpose key")?);
             }
         }
-        Ok(x509_rbac_metadata)
+
+        let certificate_uris = Cip0134UriSet::new(&x509_certs, &c509_certs).map_err(|e| {
+            decode::Error::message(format!("Unable to parse URIs from certificates: {e:?}"))
+        })?;
+
+        Ok(Self {
+            x509_certs,
+            c509_certs,
+            certificate_uris,
+            pub_keys,
+            revocation_list,
+            role_set,
+            purpose_key_data,
+        })
     }
 }
 

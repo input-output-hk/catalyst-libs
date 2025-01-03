@@ -1,6 +1,10 @@
 //! Transaction input hash type
 
-/// Transaction input hash representing in 16 bytes.
+/// A 16-byte hash of the transaction inputs field.
+///
+/// This type is described [here].
+///
+/// [here]: https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md#key-1-txn-inputs-hash
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct TxInputHash([u8; 16]);
 
