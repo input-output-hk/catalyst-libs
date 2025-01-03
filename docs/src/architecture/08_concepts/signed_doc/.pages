@@ -1,3 +1,4 @@
 title: Catalyst Signed Document
 nav:
-- Catalyst Signed Document Specification: index.md
+- Specification: spec.md
+- Metadata Fields List: meta.md
