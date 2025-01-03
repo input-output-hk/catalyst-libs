@@ -15,7 +15,7 @@ License: CC-BY-4.0
 * [Abstract](#abstract)
 * [Motivation: why is this CIP necessary?](#motivation-why-is-this-cip-necessary)
 * [Specification](#specification)
-  * [Catalyst Signed Document fields](#catalyst-signed-document-fields)
+  * [Catalyst Signed Document metadata fields](#catalyst-signed-document-metadata-fields)
     * [`type`](#type)
     * [`id`](#id)
     * [`ver`](#ver)
@@ -32,7 +32,7 @@ Project Catalyst both produces and consumes a lot of different data objects,
 in different places of the system.
 To ensure the data object is authoritative, it must be signed.
 Id addition to the data object content and the signature, metadata is also included
-to describe different kind of signed object properties.
+to describe different kind of Catalyst Signed Document properties.
 
 ## Motivation: why is this CIP necessary?
 
@@ -41,20 +41,20 @@ data object, and the purpose of it.
 
 ## Specification
 
-Catalyst signed object is [COSE] based structure, particularly `COSE Signed Data Object` [COSE] type.
+Catalyst Signed Document is [COSE] based structure, particularly `COSE Signed Data Object` [COSE] type.
 It fully inherits an original [COSE] design and specifies the details of different [COSE] header's fields.
 
-### Catalyst Signed Document fields
+### Catalyst Signed Document metadata fields
 
 To uniquely specify a Catalyst Signed Document type, version etc., as it was mentioned before,
-a list of different fields is specified.
+a list of different metadata fields is specified.
 Also as you can see from the specification,
 it is allowed to add any number of additional metadata fields, which could be specified for each `type` of document.
 
 All these fields will be encoded as the [COSE] `protected` header
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "Catalyst Signed Document fields: `signed_doc_meta.cddl`"
+??? note "Catalyst Signed Document metadata fields: `signed_doc_meta.cddl`"
 
     ```CDDL
     {{ include_file('src/architecture/08_concepts/signed_doc/cddl/signed_doc_meta.cddl', indent=4) }}
@@ -63,31 +63,31 @@ All these fields will be encoded as the [COSE] `protected` header
 
 #### `type`
 
-Each signed object will have a type identifier called `type`.
+Each Catalyst Signed Document will have a type identifier called `type`.
 
 The `type` is a [UUID] V4.
 
 #### `id`
 
-Every signed object will have a unique ID.
-All signed object with the same `id` are considered versions of the same signed object
+Every Catalyst Signed Document will have a unique ID.
+All Catalyst Signed Document with the same `id` are considered versions of the same Catalyst Signed Document
 (read about [`ver`](#ver)).
 However, `id` uniqueness is only guaranteed on first use.
 
-If the same `id` is used, by unauthorized publishers, the signed object is invalid.
+If the same `id` is used, by unauthorized publishers, the Catalyst Signed Document is invalid.
 
 The `id` is a [UUID] V7.
 
-The first time a signed object is created, it will be assigned by the creator a new `id` which must
+The first time a Catalyst Signed Document is created, it will be assigned by the creator a new `id` which must
 be well constructed.
 
-* The time must be the time the signed object was first created.
+* The time must be the time the Catalyst Signed Document was first created.
 * The random value must be truly random.
 
 Creating `id` this way ensures there are no collisions, and they can be independently created without central co-ordination.
 
-*Note: All signed objects are signed, the first creation of an `id` assigns that `id` to the creator and any assigned collaborators.
-A Signed Object that is not signed by the creator, or an assigned collaborator, is invalid.
+*Note: All Catalyst Signed Documents are signed, the first creation of an `id` assigns that `id` to the creator and any assigned collaborators.
+A Catalyst Signed Document that is not signed by the creator, or an assigned collaborator, is invalid.
 There is no reasonable way an `id` can collide accidentally.
 Therefore, detection of invalid `id`s published by unauthorized publishers, could result in anti-spam
 or system integrity mitigations being triggered.
@@ -96,12 +96,12 @@ including all otherwise legitimate publications by the same author being marked 
 
 #### `ver`
 
-Every signed object in the system will be versioned.
+Every Catalyst Signed Document in the system will be versioned.
 There can, and probably will, exist multiple versions of the same document.
 
 The `ver` is a [UUID] V7.
 
-The initial `ver` assigned the first time a signed object is published will be identical to the [`id`](#id).
+The initial `ver` assigned the first time a Catalyst Signed Document is published will be identical to the [`id`](#id).
 Subsequent versions will retain the same [`id`](#id) and will create a new `ver`,
 following best practice for creating a new [UUID] v7.
 
@@ -118,26 +118,30 @@ which indicates the cryptography algorithm used for the security processing.
 
 Only `ed25119` considered at this moment as the only option to be supported for signed objects.
 
-#### `content type`
+#### [`content type`]
 
 This is an original [COSE] header field,
-which indicates the `content type` of the [content](#signed-object-content) ([COSE] `payload`) data.
+which indicates the [`content type`] of the [content](#catalyst-signed-document-content) ([COSE] `payload`) data.
 
-#### `content encoding` (optional)
+#### [`content encoding`] (optional)
 
-This field is used to indicate the content encodings algorithm of the [content](#signed-object-content) data.
+This field is used to indicate the [`content encoding`] algorithm of the [content](#catalyst-signed-document-content) data.
+
+Supported encodings:
+
+* `br` - [Brotli] compressed data.
 
 ### Catalyst Signed Document content
 
-The signed object content data is encoded (and could be additionally compressed,
+The Catalyst Signed Document content data is encoded (and could be additionally compressed,
 read [`content encoding`](#content-encoding-optional)) as [COSE] `payload`.
 
 ### [COSE] signature protected header
 
-As it mentioned earlier, Catalyst signed document utilizes `COSE Signed Data Object` format,
+As it mentioned earlier, Catalyst Signed Document utilizes `COSE Signed Data Object` format,
 which allows to provide multi-signature functionality.
 In that regard,
-each Catalyst signed object [COSE] signature **must** include the following `protected` header field:
+each Catalyst Signed Document [COSE] signature **must** include the following `protected` header field:
 
 <!-- markdownlint-disable code-block-style -->
 ```CDDL
@@ -156,6 +160,10 @@ signature_protected_header = {
 
 This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
+
+[`content type`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
+[`content encoding`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding
+[Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [UTF-8]: https://datatracker.ietf.org/doc/html/rfc3629
 [URI]: https://datatracker.ietf.org/doc/html/rfc3986
 [COSE]: https://datatracker.ietf.org/doc/html/rfc9052

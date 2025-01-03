@@ -63,13 +63,6 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/index.md#content-encoding-optional): `"br"`.
-  [Catalyst Signed Document content](./../signed_doc/index.md#signed-object-content) must be [Brotli] compressed.
-
-  ```CDDL
-  "content encoding" => "br"
-  ```
-
 ### Document Type Definitions
 
 #### Document Templates
