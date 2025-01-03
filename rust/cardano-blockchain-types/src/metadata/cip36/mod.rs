@@ -151,7 +151,7 @@ impl Cip36 {
 
     /// Get the purpose from the registration.
     #[must_use]
-    pub fn purpose(&self) -> Option<u64> {
+    pub fn purpose(&self) -> u64 {
         self.key_registration.purpose
     }
 

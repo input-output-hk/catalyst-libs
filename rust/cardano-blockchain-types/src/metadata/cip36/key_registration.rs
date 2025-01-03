@@ -49,8 +49,8 @@ pub(crate) struct Cip36KeyRegistration {
     pub nonce: Option<u64>,
     /// Registration Purpose (Always 0 for Catalyst).
     /// Field 5 in the CIP-36 61284 Spec.
-    /// None if it is not set.
-    pub purpose: Option<u64>,
+    /// Default to 0.
+    pub purpose: u64,
     /// Raw nonce (nonce that has not had slot correction applied).
     /// None if it is not set.
     pub raw_nonce: Option<u64>,
@@ -81,6 +81,9 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
 
         let mut cip36_key_registration = Cip36KeyRegistration::default();
 
+        // Record of founded keys. Check for duplicate keys in the map
+        let mut found_keys: Vec<Cip36KeyRegistrationKeys> = Vec::new();
+
         // Record of errors found during decoding
         let mut err_report = Vec::new();
 
@@ -90,11 +93,11 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if !cip36_key_registration.voting_pks.is_empty() {
+                        if found_keys.contains(&key) {
                             err_report.push(format!(
                                 "Duplicate key in CIP36 Key Registration voting key at item {} in map", index + 1),
                             );
-                            continue;    
+                            continue;
                         }
                         if let Some((is_cip36, voting_keys)) = decode_voting_key(d, &mut err_report)
                         {
@@ -103,7 +106,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if cip36_key_registration.stake_pk.is_some() {
+                        if found_keys.contains(&key) {
                             err_report.push(format!(
                                 "Duplicate key in CIP36 Key Registration stake public key at item {} in map", index + 1),
                             );
@@ -114,7 +117,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if cip36_key_registration.payment_addr.is_some() {
+                        if found_keys.contains(&key) {
                             err_report.push(format!(
                                 "Duplicate key in CIP36 Key Registration payment address at item {} in map", index + 1),
                             );
@@ -122,14 +125,16 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                         if let Some(shelley_addr) = decode_payment_addr(d, &mut err_report) {
                             cip36_key_registration.payment_addr = Some(shelley_addr.clone());
-                            cip36_key_registration.is_payable = Some(!shelley_addr.payment().is_script());
+                            cip36_key_registration.is_payable =
+                                Some(!shelley_addr.payment().is_script());
                         }
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        if cip36_key_registration.raw_nonce.is_some() {
+                        if found_keys.contains(&key) {
                             err_report.push(format!(
-                                "Duplicate key in CIP36 Key Registration nonce at item {} in map", index + 1),
-                            );
+                                "Duplicate key in CIP36 Key Registration nonce at item {} in map",
+                                index + 1
+                            ));
                             continue;
                         }
                         if let Some(nonce) = decode_nonce(d, &mut err_report) {
@@ -137,33 +142,41 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
-                        if cip36_key_registration.purpose.is_some() {
+                        if found_keys.contains(&key) {
                             err_report.push(format!(
-                                "Duplicate key in CIP36 Key Registration purpose at item {} in map", index + 1),
-                            );
+                                "Duplicate key in CIP36 Key Registration purpose at item {} in map",
+                                index + 1
+                            ));
                             continue;
                         }
                         if let Some(purpose) = decode_purpose(d, &mut err_report) {
-                            cip36_key_registration.purpose = Some(purpose);
+                            cip36_key_registration.purpose = purpose;
                         }
                     },
                 }
+                // Update the founded keys.
+                found_keys.push(key);
             }
         }
 
-        if cip36_key_registration.voting_pks.is_empty() {
-            err_report.push("Missing required key in CIP36 Key Registration: Voting Key".to_string());
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::VotingKey) {
+            err_report
+                .push("Missing required key in CIP36 Key Registration: Voting Key".to_string());
         }
 
-        if cip36_key_registration.stake_pk.is_none() {
-            err_report.push("Missing required key in CIP36 Key Registration: Stake Public Key".to_string());
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::StakePk) {
+            err_report.push(
+                "Missing required key in CIP36 Key Registration: Stake Public Key".to_string(),
+            );
         }
 
-        if cip36_key_registration.payment_addr.is_none() {
-            err_report.push("Missing required key in CIP36 Key Registration: Payment Address".to_string());
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::PaymentAddr) {
+            err_report.push(
+                "Missing required key in CIP36 Key Registration: Payment Address".to_string(),
+            );
         }
 
-        if cip36_key_registration.raw_nonce.is_none() {
+        if !found_keys.contains(&Cip36KeyRegistrationKeys::Nonce) {
             err_report.push("Missing required key in CIP36 Key Registration: Nonce".to_string());
         }
 
@@ -461,6 +474,6 @@ mod tests {
         let mut err_report = Vec::new();
         let nonce = decode_nonce(&mut decoder, &mut err_report);
         assert!(err_report.is_empty());
-        assert_eq!(nonce.unwrap(), 21562833);
+        assert_eq!(nonce.unwrap(), 21_562_833);
     }
 }

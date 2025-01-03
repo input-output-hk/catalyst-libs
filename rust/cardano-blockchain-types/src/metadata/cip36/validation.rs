@@ -32,14 +32,13 @@ pub(crate) fn validate_signature(
     if let Some(stake_pk) = cip36.stake_pk() {
         if let Ok(()) = stake_pk.verify_strict(hash.as_bytes(), &sig) {
             return true;
-        } else {
-            validation_report.push("Validate CIP36 Signature, cannot verify signature".to_string());
-            return false;
         }
-    } else {
-        validation_report.push("Validate CIP36 Signature, stake public key is missing".to_string());
+        validation_report.push("Validate CIP36 Signature, cannot verify signature".to_string());
         return false;
     }
+
+    validation_report.push("Validate CIP36 Signature, stake public key is missing".to_string());
+    false
 }
 
 /// Validate the payment address network against the given network.
@@ -78,19 +77,14 @@ pub(crate) fn validate_voting_keys(cip36: &Cip36, validation_report: &mut Vec<St
 
 /// Validate the purpose.
 pub(crate) fn validate_purpose(cip36: &Cip36, validation_report: &mut Vec<String>) -> bool {
-    if let Some(purpose) = cip36.purpose() {
-        if cip36.is_strict_catalyst() && purpose != PROJECT_CATALYST_PURPOSE {
-            validation_report.push(format!(
-                "Validate CIP-36 Purpose, registration contains unknown purpose: {purpose}"
-            ));
-            return false;
-        }
-        true
-    } else {
-        validation_report
-            .push("Validate CIP-36 Purpose, registration purpose is missing".to_string());
-        false
+    if cip36.is_strict_catalyst() && cip36.purpose() != PROJECT_CATALYST_PURPOSE {
+        validation_report.push(format!(
+            "Validate CIP-36 Purpose, registration contains unknown purpose: {}",
+            cip36.purpose()
+        ));
+        return false;
     }
+    true
 }
 
 #[cfg(test)]
@@ -196,21 +190,20 @@ mod tests {
 
     #[test]
     fn test_validate_purpose() {
-        let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.purpose = Some(0);
+        let cip36 = create_empty_cip36(true);
         let mut report = Vec::new();
 
         let valid = validate_purpose(&cip36, &mut report);
 
         assert_eq!(report.len(), 0);
-        assert_eq!(cip36.purpose(), Some(0));
+        assert_eq!(cip36.purpose(), 0);
         assert!(valid);
     }
 
     #[test]
     fn test_validate_invalid_purpose() {
         let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.purpose = Some(1);
+        cip36.key_registration.purpose = 1;
         let mut report = Vec::new();
 
         let valid = validate_purpose(&cip36, &mut report);
@@ -220,7 +213,7 @@ mod tests {
             .first()
             .expect("Failed to get the first index")
             .contains("unknown purpose"));
-        assert_eq!(cip36.purpose(), Some(1));
+        assert_eq!(cip36.purpose(), 1);
         assert!(!valid);
     }
 }
