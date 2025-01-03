@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.25 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.27 AS rust-ci
 
 COPY_SRC:
     FUNCTION
@@ -12,7 +12,7 @@ COPY_SRC:
         cardano-blockchain-types \
         cardano-chain-follower \
         catalyst-voting vote-tx-v1 vote-tx-v2 \
-        cbork cbork-abnf-parser cbork-cddl-parser \
+        cbork cbork-abnf-parser cbork-cddl-parser cbork-utils \
         hermes-ipfs \
         signed_doc \
         rbac-registration \
@@ -55,7 +55,7 @@ build:
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
         --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
-        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
+        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=cbork-utils" \
         --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
         --args4="--bins=cbork/cbork --libs=rbac-registration --libs=signed_doc" \
         --args5="--cov_report=$HOME/build/coverage-report.info" \
