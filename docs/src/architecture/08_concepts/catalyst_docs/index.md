@@ -53,18 +53,18 @@ is just the metadata that structure will carry for different kinds of documents.
 
 ## Specification
 
-Catalyst signed document is a [signed object],
-so its fully follows the structure of the [signed object] specification.
+Catalyst signed document is a [Catalyst Signed Document],
+so its fully follows the structure of the [Catalyst Signed Document] specification.
 
-* [`content type`](./../signed_object/index.md#content-type): `application/json`.
-  [Signed object content](./../signed_object/index.md#signed-object-content) must be in [Json] format.
+* [`content type`](./../signed_doc/index.md#content-type): `application/json`.
+  [Catalyst Signed Document content](./../signed_doc/index.md#signed-object-content) must be in [Json] format.
 
   ```CDDL
   3 => 30
   ```
 
-* [`content encoding`](./../signed_object/index.md#content-encoding-optional): `"br"`.
-  [Signed object content](./../signed_object/index.md#signed-object-content) must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/index.md#content-encoding-optional): `"br"`.
+  [Catalyst Signed Document content](./../signed_doc/index.md#signed-object-content) must be [Brotli] compressed.
 
   ```CDDL
   "content encoding" => "br"
@@ -104,7 +104,7 @@ Document Contents are signed documents, and are typically produced in accordance
 Documents will contain metadata which allows the document to be categorized, versioned and linked.
 This data does not properly belong inside the document,
 but is critical to ensure the document is properly referenced and indexable.
-It is defined and specified as [signed object protected header fields](./../signed_object/index.md#signed-object-fields).
+It is defined and specified as [Catalyst Signed Document protected header fields](./../signed_doc/index.md#signed-object-fields).
 
 ```CDDL
 ? "ref" => reference_type,
@@ -117,15 +117,15 @@ It is defined and specified as [signed object protected header fields](./../sign
 #### Document Reference : `ref` (optional)
 
 This is a reference to another document.
-The purpose of the `ref` will vary depending on the document [`type`](./../signed_object/index.md#type).
+The purpose of the `ref` will vary depending on the document [`type`](./../signed_doc/index.md#type).
 
 The `ref` can be either a single [UUID] or a [CBOR] Array of Two [UUID].
 
-If the `ref` is a single [UUID], it is a reference to the document of that [`id`](./../signed_object/index.md#id).
+If the `ref` is a single [UUID], it is a reference to the document of that [`id`](./../signed_doc/index.md#id).
 If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
 
-* `<id>` = the [UUID] of the referenced documents [`id`](./../signed_object/index.md#id)
-* `<ver>` = the [UUID] of the referenced documents [`ver`](./../signed_object/index.md#ver).
+* `<id>` = the [UUID] of the referenced documents [`id`](./../signed_doc/index.md#id)
+* `<ver>` = the [UUID] of the referenced documents [`ver`](./../signed_doc/index.md#ver).
 
 #### Template Reference : `template` (optional)
 
@@ -201,8 +201,8 @@ which is a reference to another comment,
 where the comment is in reply to the referenced comment.
 
 Comments may only [`reply`](#document-reference--reply-optional) to a single other comment document.
-The referenced `comment` must be for the same proposal [`id`](./../signed_object/index.md#id),
-but can be for a different proposal [`ver`](./../signed_object/index.md#ver).
+The referenced `comment` must be for the same proposal [`id`](./../signed_doc/index.md#id),
+but can be for a different proposal [`ver`](./../signed_doc/index.md#ver).
 
 Comments may *OPTIONALLY* also contain a [`section`](#document-reference--section-optional) field,
 when the comment only applies to a specific section to the document being commented upon,
@@ -235,7 +235,7 @@ Fund 14 project catalyst will deploy this scheme for Key derivation.>
 
 This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
-[signed object]: ./../signed_object/index.md
+[Catalyst Signed Document]: ./../signed_doc/index.md
 [JSON Schema]: https://json-schema.org/draft-07
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [JSON]: https://datatracker.ietf.org/doc/html/rfc7159

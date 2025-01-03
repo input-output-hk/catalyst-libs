@@ -1,5 +1,5 @@
 ---
-Title: Catalyst Signed Object
+Title: Catalyst Signed Document
 Category: Catalyst
 Status: Proposed
 Authors:
@@ -15,14 +15,14 @@ License: CC-BY-4.0
 * [Abstract](#abstract)
 * [Motivation: why is this CIP necessary?](#motivation-why-is-this-cip-necessary)
 * [Specification](#specification)
-  * [Signed Object fields](#signed-object-fields)
+  * [Catalyst Signed Document fields](#catalyst-signed-document-fields)
     * [`type`](#type)
     * [`id`](#id)
     * [`ver`](#ver)
     * [`alg`](#alg)
     * [`content type`](#content-type)
     * [`content encoding` (optional)](#content-encoding-optional)
-  * [Signed Object content](#signed-object-content)
+  * [Catalyst Signed Document content](#catalyst-signed-document-content)
   * [COSE signature protected header](#cose-signature-protected-header)
 * [Copyright](#copyright)
 
@@ -44,20 +44,20 @@ data object, and the purpose of it.
 Catalyst signed object is [COSE] based structure, particularly `COSE Signed Data Object` [COSE] type.
 It fully inherits an original [COSE] design and specifies the details of different [COSE] header's fields.
 
-### Signed Object fields
+### Catalyst Signed Document fields
 
-To uniquely specify a signed object type, version etc., as it was mentioned before,
+To uniquely specify a Catalyst Signed Document type, version etc., as it was mentioned before,
 a list of different fields is specified.
 Also as you can see from the specification,
-it is allowed to add any number of additional metadata fields, which could be specified for each `type` of signed object.
+it is allowed to add any number of additional metadata fields, which could be specified for each `type` of document.
 
 All these fields will be encoded as the [COSE] `protected` header
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "Catalyst signed object fields: `signed_object_meta.cddl`"
+??? note "Catalyst Signed Document fields: `signed_doc_meta.cddl`"
 
     ```CDDL
-    {{ include_file('src/architecture/08_concepts/signed_object/cddl/signed_object_meta.cddl', indent=4) }}
+    {{ include_file('src/architecture/08_concepts/signed_doc/cddl/signed_doc_meta.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
@@ -127,7 +127,7 @@ which indicates the `content type` of the [content](#signed-object-content) ([CO
 
 This field is used to indicate the content encodings algorithm of the [content](#signed-object-content) data.
 
-### Signed Object content
+### Catalyst Signed Document content
 
 The signed object content data is encoded (and could be additionally compressed,
 read [`content encoding`](#content-encoding-optional)) as [COSE] `payload`.
