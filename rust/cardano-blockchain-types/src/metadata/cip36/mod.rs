@@ -75,8 +75,8 @@ impl Cip36 {
 
         let key_registration = match Cip36KeyRegistration::decode(&mut key_registration, &mut ()) {
             Ok(mut metadata) => {
-                let nonce = if is_catalyst_strict && metadata.raw_nonce > slot {
-                    slot
+                let nonce = if is_catalyst_strict && metadata.raw_nonce > Some(slot) {
+                    Some(slot)
                 } else {
                     metadata.raw_nonce
                 };
@@ -133,8 +133,8 @@ impl Cip36 {
 
     /// Get the stake public key from the registration.
     #[must_use]
-    pub fn stake_pk(&self) -> VerifyingKey {
-        self.key_registration.stake_pk
+    pub fn stake_pk(&self) -> Option<&VerifyingKey> {
+        self.key_registration.stake_pk.as_ref()
     }
 
     /// Get the payment address from the registration.
@@ -145,25 +145,25 @@ impl Cip36 {
 
     /// Get the nonce from the registration.
     #[must_use]
-    pub fn nonce(&self) -> u64 {
+    pub fn nonce(&self) -> Option<u64> {
         self.key_registration.nonce
     }
 
     /// Get the purpose from the registration.
     #[must_use]
-    pub fn purpose(&self) -> u64 {
+    pub fn purpose(&self) -> Option<u64> {
         self.key_registration.purpose
     }
 
     /// Get the raw nonce from the registration.
     #[must_use]
-    pub fn raw_nonce(&self) -> u64 {
+    pub fn raw_nonce(&self) -> Option<u64> {
         self.key_registration.raw_nonce
     }
 
     /// Is the payment address in the registration payable?
     #[must_use]
-    pub fn is_payable(&self) -> bool {
+    pub fn is_payable(&self) -> Option<bool> {
         self.key_registration.is_payable
     }
 
