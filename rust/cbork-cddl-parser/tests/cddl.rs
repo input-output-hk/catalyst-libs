@@ -1,3 +1,4 @@
+//! CDDL Parser Tests
 use std::{ffi::OsStr, fs, io::Result};
 
 use cbork_cddl_parser::{validate_cddl, Extension};
