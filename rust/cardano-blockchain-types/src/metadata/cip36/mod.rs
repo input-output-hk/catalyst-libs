@@ -30,7 +30,7 @@ pub struct Cip36 {
 /// Validation value for CIP-36.
 #[allow(clippy::struct_excessive_bools, clippy::module_name_repetitions)]
 #[derive(Clone, Default, Debug)]
-pub struct Cip36Validation {
+pub(crate) struct Cip36Validation {
     /// Is the signature valid? (signature in 61285)
     pub is_valid_signature: bool,
     /// Is the payment address on the correct network?
@@ -58,7 +58,7 @@ impl Cip36 {
     /// or if the CIP-36 key registration or registration witness metadata cannot be
     /// decoded.
     pub fn new(
-        aux_data: &TransactionAuxData, is_catalyst_strict: bool, slot: Slot,
+        aux_data: &TransactionAuxData, is_catalyst_strict: bool, slot: Slot, network: Network,
     ) -> anyhow::Result<Self> {
         let Some(k61284) = aux_data.metadata(MetadatumLabel::CIP036_REGISTRATION) else {
             bail!("CIP-36 key registration metadata not found")
@@ -94,11 +94,25 @@ impl Cip36 {
                 },
             };
 
-        Ok(Self {
+        let cip36 = Self {
             key_registration,
             registration_witness,
             is_catalyst_strict,
-        })
+        };
+
+        let mut validation_report = Vec::new();
+        // If the code reach here, then the CIP36 decoding is successful.
+        let validation = cip36.validate(network, k61284, &mut validation_report);
+
+        if validation.is_valid_signature
+            && validation.is_valid_payment_address_network
+            && validation.is_valid_voting_keys
+            && validation.is_valid_purpose
+        {
+            Ok(cip36)
+        } else {
+            bail!("CIP-36 validation failed: {validation:?}, Reports: {validation_report:?}")
+        }
     }
 
     /// Get the `is_cip36` flag from the registration.
@@ -144,6 +158,12 @@ impl Cip36 {
         self.key_registration.raw_nonce
     }
 
+    /// Is the payment address in the registration payable?
+    #[must_use]
+    pub fn is_payable(&self) -> bool {
+        self.key_registration.is_payable
+    }
+
     /// Get the signature from the registration witness.
     #[must_use]
     pub fn signature(&self) -> Option<ed25519_dalek::Signature> {
@@ -172,7 +192,7 @@ impl Cip36 {
     /// * `network` - The blockchain network.
     /// * `metadata` - The metadata value to be validated.
     /// * `validation_report` - Validation report to store the validation result.
-    pub fn validate(
+    fn validate(
         &self, network: Network, metadata: &MetadatumValue, validation_report: &mut Vec<String>,
     ) -> Cip36Validation {
         let is_valid_signature = validate_signature(self, metadata, validation_report);

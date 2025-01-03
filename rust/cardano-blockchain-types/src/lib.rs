@@ -21,10 +21,7 @@ pub use auxdata::{
     scripts::{Script, ScriptArray, ScriptType, TransactionScripts},
 };
 pub use fork::Fork;
-pub use metadata::cip36::{
-    key_registration::Cip36KeyRegistration, registration_witness::Cip36RegistrationWitness,
-    voting_pk::VotingPubKey, Cip36, Cip36Validation,
-};
+pub use metadata::cip36::{voting_pk::VotingPubKey, Cip36};
 pub use multi_era_block_data::MultiEraBlock;
 pub use network::Network;
 pub use point::Point;

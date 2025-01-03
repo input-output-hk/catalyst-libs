@@ -15,7 +15,7 @@ use minicbor::{decode, Decode, Decoder};
 /// ```
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Default, Debug)]
-pub struct Cip36RegistrationWitness {
+pub(crate) struct Cip36RegistrationWitness {
     /// Signature of the registration data.
     pub signature: Option<ed25519_dalek::Signature>,
 }

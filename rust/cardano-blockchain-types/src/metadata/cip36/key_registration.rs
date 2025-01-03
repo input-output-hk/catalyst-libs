@@ -28,7 +28,7 @@ use super::voting_pk::VotingPubKey;
 /// ```
 #[allow(clippy::module_name_repetitions)]
 #[derive(Clone, Default, Debug)]
-pub struct Cip36KeyRegistration {
+pub(crate) struct Cip36KeyRegistration {
     /// Is this CIP36 or CIP15 format.
     pub is_cip36: Option<bool>,
     /// Voting public keys (called Delegations in the CIP-36 Spec).
@@ -55,7 +55,7 @@ pub struct Cip36KeyRegistration {
 /// Enum of CIP36 registration (61284) with its associated unsigned integer key.
 #[derive(FromRepr, Debug, PartialEq)]
 #[repr(u16)]
-pub enum Cip36KeyRegistrationKeys {
+enum Cip36KeyRegistrationKeys {
     /// Voting key.
     VotingKey = 1,
     /// Stake public key.
@@ -224,10 +224,7 @@ fn decode_voting_key(
                     };
 
                     // Since there is 1 voting key, all the weight goes to this key = 1.
-                    voting_keys.push(VotingPubKey {
-                        voting_pk: vk,
-                        weight: 1,
-                    });
+                    voting_keys.push(VotingPubKey::new(vk, 1));
                 },
                 // CIP36 type registration (multiple voting keys).
                 // ```cddl
@@ -279,10 +276,7 @@ fn decode_voting_key(
                             },
                         };
 
-                        voting_keys.push(VotingPubKey {
-                            voting_pk: vk,
-                            weight,
-                        });
+                        voting_keys.push(VotingPubKey::new(vk, weight));
                     }
                 },
 

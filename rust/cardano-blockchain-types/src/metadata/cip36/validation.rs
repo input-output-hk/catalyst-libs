@@ -149,10 +149,10 @@ mod tests {
     #[test]
     fn test_validate_voting_keys() {
         let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.voting_pks.push(VotingPubKey {
-            voting_pk: Some(VerifyingKey::default()),
-            weight: 1,
-        });
+        cip36
+            .key_registration
+            .voting_pks
+            .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
         let mut report = Vec::new();
 
         let valid = validate_voting_keys(&cip36, &mut report);
@@ -164,14 +164,14 @@ mod tests {
     #[test]
     fn test_validate_invalid_voting_keys() {
         let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.voting_pks.push(VotingPubKey {
-            voting_pk: Some(VerifyingKey::default()),
-            weight: 1,
-        });
-        cip36.key_registration.voting_pks.push(VotingPubKey {
-            voting_pk: Some(VerifyingKey::default()),
-            weight: 1,
-        });
+        cip36
+            .key_registration
+            .voting_pks
+            .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
+        cip36
+            .key_registration
+            .voting_pks
+            .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
         let mut report = Vec::new();
 
         let valid = validate_voting_keys(&cip36, &mut report);
