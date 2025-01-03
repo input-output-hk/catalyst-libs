@@ -57,6 +57,7 @@ impl Cip0134Uri {
     /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
     /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
     /// assert_eq!(cip0134_uri.uri(), uri);
+    /// ```
     #[must_use]
     pub fn uri(&self) -> &str {
         &self.uri
@@ -76,6 +77,7 @@ impl Cip0134Uri {
     ///     panic!("Unexpected address type");
     /// };
     /// assert_eq!(address.network(), Network::Mainnet);
+    /// ```
     #[must_use]
     pub fn address(&self) -> &Address {
         &self.address

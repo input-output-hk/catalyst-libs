@@ -4,7 +4,6 @@
 
 use anyhow::{bail, Ok};
 use blake2b_simd::{self, Params};
-use ulid::Ulid;
 use uuid::Uuid;
 
 /// Genesis block MUST have 0 value height.
@@ -70,11 +69,8 @@ const TIMESTAMP_CBOR_TAG: u64 = 1;
 /// CBOR tag for UUID
 const UUID_CBOR_TAG: u64 = 37;
 
-/// CBOR tag for UUID
-const ULID_CBOR_TAG: u64 = 32780;
-
-/// CBOR tags for BLAKE2 and BLAKE3 hash functions
-/// `https://github.com/input-output-hk/catalyst-voices/blob/main/docs/src/catalyst-standards/cbor_tags/blake.md`
+// CBOR tags for BLAKE2 and BLAKE3 hash functions
+// `https://github.com/input-output-hk/catalyst-voices/blob/main/docs/src/catalyst-standards/cbor_tags/blake.md`
 
 /// CBOR tag for UUID
 const BLAKE3_CBOR_TAG: u64 = 32781;
@@ -292,7 +288,7 @@ impl Block {
 #[derive(Debug, Clone, PartialEq)]
 pub struct BlockHeader {
     /// Unique identifier of the chain.
-    pub chain_id: Ulid,
+    pub chain_id: Uuid,
     /// Block height.
     pub height: i64,
     /// Block epoch-based date/time.
@@ -305,7 +301,7 @@ pub struct BlockHeader {
     pub ledger_type: Uuid,
     /// unique identifier of the purpose, each Ledger instance will have a strict time
     /// boundaries, so each of them will run for different purposes.
-    pub purpose_id: Ulid,
+    pub purpose_id: Uuid,
     /// Identifier or identifiers of the entity who was produced and processed a block.
     pub validator: Vec<Kid>,
     /// Add arbitrary metadata to the block.
@@ -317,8 +313,8 @@ impl BlockHeader {
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        chain_id: Ulid, height: i64, block_time_stamp: i64,
-        previous_block_hash: (HashFunction, Vec<u8>), ledger_type: Uuid, purpose_id: Ulid,
+        chain_id: Uuid, height: i64, block_time_stamp: i64,
+        previous_block_hash: (HashFunction, Vec<u8>), ledger_type: Uuid, purpose_id: Uuid,
         validator: Vec<Kid>, metadata: Vec<u8>,
     ) -> Self {
         Self {
@@ -347,8 +343,8 @@ impl BlockHeader {
         encoder.array(BLOCK_HEADER_SIZE)?;
 
         // Chain id
-        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
-        encoder.bytes(&self.chain_id.to_bytes())?;
+        encoder.tag(minicbor::data::Tag::new(UUID_CBOR_TAG))?;
+        encoder.bytes(self.chain_id.as_bytes())?;
 
         // Block height
         encoder.int(self.height.into())?;
@@ -372,8 +368,8 @@ impl BlockHeader {
         encoder.bytes(self.ledger_type.as_bytes())?;
 
         // Purpose id
-        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
-        encoder.bytes(&self.purpose_id.to_bytes())?;
+        encoder.tag(minicbor::data::Tag::new(UUID_CBOR_TAG))?;
+        encoder.bytes(self.purpose_id.as_bytes())?;
 
         // Validators
         encoder.array(self.validator.len().try_into()?)?;
@@ -405,7 +401,7 @@ impl BlockHeader {
 
         // Raw chain_id
         cbor_decoder.tag()?;
-        let chain_id = Ulid::from_bytes(
+        let chain_id = Uuid::from_bytes(
             cbor_decoder
                 .bytes()
                 .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for chain id : {e}")))?
@@ -443,7 +439,7 @@ impl BlockHeader {
 
         // Raw purpose id
         cbor_decoder.tag()?;
-        let purpose_id = Ulid::from_bytes(
+        let purpose_id = Uuid::from_bytes(
             cbor_decoder
                 .bytes()
                 .map_err(|e| anyhow::anyhow!(format!("Invalid cbor for purpose id : {e}")))?
@@ -489,7 +485,7 @@ impl BlockHeader {
 /// Genesis block previous identifier type i.e hash of itself
 pub struct GenesisPreviousHash {
     /// Unique identifier of the chain.
-    pub chain_id: Ulid,
+    pub chain_id: Uuid,
     /// Block epoch-based date/time.
     pub block_time_stamp: i64,
     /// unique identifier of the ledger type.
@@ -498,7 +494,7 @@ pub struct GenesisPreviousHash {
     pub ledger_type: Uuid,
     /// unique identifier of the purpose, each Ledger instance will have a strict time
     /// boundaries, so each of them will run for different purposes.
-    pub purpose_id: Ulid,
+    pub purpose_id: Uuid,
     /// Identifier or identifiers of the entity who was produced and processed a block.
     pub validator: Vec<Kid>,
 }
@@ -507,7 +503,7 @@ impl GenesisPreviousHash {
     /// Create previous block id
     #[must_use]
     pub fn new(
-        chain_id: Ulid, block_time_stamp: i64, ledger_type: Uuid, purpose_id: Ulid,
+        chain_id: Uuid, block_time_stamp: i64, ledger_type: Uuid, purpose_id: Uuid,
         validator: Vec<Kid>,
     ) -> Self {
         Self {
@@ -532,8 +528,8 @@ impl GenesisPreviousHash {
         encoder.array(GENESIS_TO_PREV_HASH_SIZE)?;
 
         // Chain id
-        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
-        encoder.bytes(&self.chain_id.to_bytes())?;
+        encoder.tag(minicbor::data::Tag::new(UUID_CBOR_TAG))?;
+        encoder.bytes(self.chain_id.as_bytes())?;
 
         // Block timestamp
         encoder.tag(minicbor::data::Tag::new(TIMESTAMP_CBOR_TAG))?;
@@ -549,8 +545,8 @@ impl GenesisPreviousHash {
         encoder.bytes(self.ledger_type.as_bytes())?;
 
         // Purpose id
-        encoder.tag(minicbor::data::Tag::new(ULID_CBOR_TAG))?;
-        encoder.bytes(&self.purpose_id.to_bytes())?;
+        encoder.tag(minicbor::data::Tag::new(UUID_CBOR_TAG))?;
+        encoder.bytes(self.purpose_id.as_bytes())?;
 
         // Validators
         encoder.array(self.validator.len().try_into()?)?;
@@ -586,7 +582,6 @@ mod tests {
 
     use ed25519_dalek::{Signature, Signer, SigningKey, SECRET_KEY_LENGTH};
     use test_strategy::proptest;
-    use ulid::Ulid;
     use uuid::Uuid;
 
     use super::{BlockHeader, Kid};
@@ -609,12 +604,12 @@ mod tests {
             .unwrap();
 
         let block_hdr = BlockHeader::new(
-            Ulid::new(),
+            Uuid::now_v7(),
             block_height,
             block_timestamp,
             (Blake2b, prev_block_hash),
             Uuid::new_v4(),
-            Ulid::new(),
+            Uuid::now_v7(),
             vec![Kid(kid_a), Kid(kid_b)],
             metadata,
         );
@@ -660,12 +655,12 @@ mod tests {
             .unwrap();
 
         let block_hdr = BlockHeader::new(
-            Ulid::new(),
+            Uuid::now_v7(),
             block_height,
             block_timestamp,
             (Blake2b, prev_block_hash),
             Uuid::new_v4(),
-            Ulid::new(),
+            Uuid::now_v7(),
             vec![Kid(kid_a), Kid(kid_b)],
             metadata,
         );
@@ -751,9 +746,9 @@ mod tests {
             .try_into()
             .unwrap();
 
-        let chain_id = Ulid::new();
+        let chain_id = Uuid::now_v7();
         let ledger_type = Uuid::new_v4();
-        let purpose_id = Ulid::new();
+        let purpose_id = Uuid::now_v7();
 
         let block_hdr = BlockHeader::new(
             chain_id,
@@ -824,9 +819,9 @@ mod tests {
             073, 197, 105, 123, 050, 105, 025, 112, 059, 172, 003, 028, 174, 127, 096,
         ];
 
-        let chain_id = Ulid::new();
+        let chain_id = Uuid::now_v7();
         let ledger_type = Uuid::new_v4();
-        let purpose_id = Ulid::new();
+        let purpose_id = Uuid::now_v7();
         let block_time_stamp = 1_728_474_515;
 
         let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")

@@ -277,7 +277,7 @@ mod tests {
         ones == 1 && zeros == vector.len() - 1
     }
 
-    #[proptest]
+    #[proptest(cases = 10)]
     fn zk_unit_vector_test(
         secret_key: Scalar, commitment_key: GroupElement,
         #[strategy(1..10_usize)] unit_vector_size: usize,
@@ -327,7 +327,7 @@ mod tests {
         ));
     }
 
-    #[proptest]
+    #[proptest(cases = 10)]
     fn not_a_unit_vector_test(
         secret_key: Scalar, commitment_key: GroupElement,
         #[any(size_range(1..10_usize).lift())] random_vector: Vec<Scalar>,

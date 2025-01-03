@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.25 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.27 AS rust-ci
 
 COPY_SRC:
     FUNCTION
@@ -9,9 +9,10 @@ COPY_SRC:
         Cargo.toml clippy.toml deny.toml rustfmt.toml \
         .cargo .config \
         c509-certificate \
+        cardano-blockchain-types \
         cardano-chain-follower \
         catalyst-voting vote-tx-v1 vote-tx-v2 \
-        cbork cbork-abnf-parser cbork-cddl-parser \
+        cbork cbork-abnf-parser cbork-cddl-parser cbork-utils \
         hermes-ipfs \
         signed_doc \
         rbac-registration \
@@ -53,9 +54,9 @@ build:
 
     DO rust-ci+EXECUTE \
         --cmd="/scripts/std_build.py" \
-        --args1="--libs=c509-certificate --libs=cardano-chain-follower --libs=hermes-ipfs" \
-        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser" \
-        --args3="--libs=catalyst-voting --libs=vote-tx-v1 --libs=vote-tx-v2" \
+        --args1="--libs=c509-certificate --libs=cardano-blockchain-types --libs=cardano-chain-follower --libs=hermes-ipfs" \
+        --args2="--libs=cbork-cddl-parser --libs=cbork-abnf-parser --libs=cbork-utils" \
+        --args3="--libs=catalyst-voting --libs=immutable-ledger --libs=vote-tx-v1 --libs=vote-tx-v2" \
         --args4="--bins=cbork/cbork --libs=rbac-registration --libs=signed_doc" \
         --args5="--cov_report=$HOME/build/coverage-report.info" \
         --output="release/[^\./]+" \
@@ -63,7 +64,7 @@ build:
         --coverage="cat-libs.coverage.info" \
         --docs="true"
 
-    SAVE ARTIFACT target/$TARGETARCH/doc doc
+    SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
 
 # build-src-check: Check for any caching issues with the source we are building against.

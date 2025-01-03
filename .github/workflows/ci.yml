@@ -17,7 +17,7 @@ jobs:
     with:
       forge_version: 0.2.0
 
-  test_reporting:
-    if: always()
-    needs: ci
-    uses: ./.github/workflows/generate-allure-report.yml
+  #test_reporting:
+  #  if: always()
+  #  needs: ci
+  #  uses: ./.github/workflows/generate-allure-report.yml
