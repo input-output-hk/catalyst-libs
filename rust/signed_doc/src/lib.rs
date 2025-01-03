@@ -13,7 +13,7 @@ mod metadata;
 pub use metadata::{DocumentRef, Metadata, UuidV7};
 
 /// Catalyst Signed Document Content Encoding Key.
-const CONTENT_ENCODING_KEY: &str = "content encoding";
+const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
 /// Catalyst Signed Document Content Encoding Value.
 const CONTENT_ENCODING_VALUE: &str = "br";
 
