@@ -6,8 +6,6 @@ global: {
 			"^build(-.*)?$",
 			"^package(-.*)?$",
 			"^test(-.*)?$",
-			"^release(-.*)?$",
-			"^publish(-.*)?$",
 		]
 		registries: [
 			ci.providers.aws.ecr.registry,
@@ -44,8 +42,9 @@ global: {
 				path:     "GITHUB_TOKEN"
 			},
 		]
-		tagging: {
-			strategy: "commit"
-		}
+	}
+	repo: {
+		defaultBranch: "main"
+		name:          "input-output-hk/catalyst-libs"
 	}
 }
