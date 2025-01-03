@@ -11,7 +11,6 @@ mod point;
 mod slot;
 mod txn_index;
 mod txn_witness;
-pub mod utils;
 
 pub use auxdata::{
     aux_data::TransactionAuxData,

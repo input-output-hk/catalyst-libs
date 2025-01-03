@@ -3,9 +3,8 @@
 //! <https://cips.cardano.org/cip/CIP-36>
 //! <https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl>
 
+use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{decode, Decode, Decoder};
-
-use crate::utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 
 /// CIP-36 registration witness - 61285
 ///

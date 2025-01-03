@@ -6,13 +6,13 @@
 //! <https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl>
 
 use anyhow::Context;
+use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
 use pallas::ledger::addresses::{Address, ShelleyAddress};
 use strum::FromRepr;
 
 use super::voting_pk::VotingPubKey;
-use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 
 /// CIP-36 key registration - 61284
 ///
