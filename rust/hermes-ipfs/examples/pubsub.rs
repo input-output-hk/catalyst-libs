@@ -57,13 +57,14 @@ async fn start_bootstrapped_nodes() -> anyhow::Result<(HermesIpfs, HermesIpfs)> 
 /// Main function
 async fn main() -> anyhow::Result<()> {
     let topic = String::from("ipfs-chat");
+    let option_topic = Option::Some(topic.clone());
 
     // Initialize the repo and start a daemon
     let (hermes_a, hermes_b) = start_bootstrapped_nodes().await?;
     let (mut rl, mut stdout) = Readline::new(format!("{} > ", "Write message to publish"))?;
 
-    let mut event_stream = hermes_a.pubsub_events(&topic).await?;
-    let mut event_stream_b = hermes_b.pubsub_events(&topic).await?;
+    let mut event_stream = hermes_a.pubsub_events(option_topic.clone()).await?;
+    let mut event_stream_b = hermes_b.pubsub_events(option_topic).await?;
 
     let stream = hermes_a.pubsub_subscribe(topic.to_string()).await?;
     let stream_b = hermes_b.pubsub_subscribe(topic.to_string()).await?;
@@ -88,14 +89,14 @@ async fn main() -> anyhow::Result<()> {
             }
             Some(event) = event_stream.next() => {
                 match event {
-                    PubsubEvent::Subscribe { peer_id } => writeln!(stdout, "{peer_id} subscribed")?,
-                    PubsubEvent::Unsubscribe { peer_id } => writeln!(stdout, "{peer_id} unsubscribed")?,
+                    PubsubEvent::Subscribe { peer_id, topic } => writeln!(stdout, "{peer_id} subscribed to {topic:?}")?,
+                    PubsubEvent::Unsubscribe { peer_id, topic } => writeln!(stdout, "{peer_id} unsubscribed from {topic:?}")?,
                 }
             }
             Some(event) = event_stream_b.next() => {
                 match event {
-                    PubsubEvent::Subscribe { peer_id } => writeln!(stdout, "{peer_id} subscribed")?,
-                    PubsubEvent::Unsubscribe { peer_id } => writeln!(stdout, "{peer_id} unsubscribed")?,
+                    PubsubEvent::Subscribe { peer_id , topic} => writeln!(stdout, "{peer_id} subscribed to {topic:?}")?,
+                    PubsubEvent::Unsubscribe { peer_id, topic } => writeln!(stdout, "{peer_id} unsubscribed from {topic:?}")?,
                 }
             }
             line = rl.readline().fuse() => match line {

@@ -38,7 +38,7 @@ impl SyncReady {
 
 /// Sand a chain update to any subscribers that are listening.
 pub(crate) fn notify_follower(
-    chain: Network, update_sender: &Option<broadcast::Sender<chain_update::Kind>>,
+    chain: Network, update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
     kind: &chain_update::Kind,
 ) {
     if let Some(update_sender) = update_sender {

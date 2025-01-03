@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust::v3.2.23 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust::v3.2.27 AS rust-ci
 
 
 IMPORT .. AS rust-local
@@ -13,7 +13,7 @@ IMPORT ../.. AS repo
 #   - Create a publish target which can publish the library to NPM for both Web and NodeJS.
 #   - Create a simple example web app and nodejs app which uses the library, and can be used to 
 #       test it after publishing.
-build-wasm:
+skip-build-wasm:  # for now skip building wasm.
     FROM rust-local+build
 
     COPY repo+repo-docs/repo/LICENSE-APACHE c509-certificate/.
@@ -28,6 +28,6 @@ build-wasm:
 
 # js-wasm-package-locally : Generate the wasm package and save it locally
 js-wasm-package-locally:
-    FROM +build-wasm
+    FROM +skip-build-wasm
 
     SAVE ARTIFACT /pkg AS LOCAL ./pkg
