@@ -5,7 +5,9 @@ vote-tx-v2-public<voter-data-t> = gen-vote-tx<choice-data, proof-data, proposal,
 
 choice-data = uint
 proof-data = undefined
-proposal = UUID
+proposal = UUID ; UUID v7
+
+UUID = #6.37(bytes) ; UUID type
 
 ;# include gen_vote_tx
 

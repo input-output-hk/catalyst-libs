@@ -1,0 +1,11 @@
+additional_fields = {
+  ? "ref" => reference_type,
+  ? "template" => reference_type,
+  ? "reply" => reference_type,
+  ? "section" => text,
+  ? "collabs" => [+any],
+}
+
+reference_type = UUID / [UUID, UUID]
+
+UUID = #6.37(bytes)
