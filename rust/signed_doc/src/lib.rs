@@ -9,8 +9,10 @@ use std::{
 use coset::{CborSerializable, TaggedCborSerializable};
 
 mod metadata;
+mod signature;
 
 pub use metadata::{DocumentRef, Metadata, UuidV7};
+pub use signature::Kid;
 
 /// Catalyst Signed Document Content Encoding Key.
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -30,9 +32,14 @@ impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
         writeln!(f, "JSON Payload {:#}\n", self.inner.payload)?;
-        writeln!(f, "Signatures [")?;
+        writeln!(f, "Signature Information [")?;
         for signature in &self.inner.signatures {
-            writeln!(f, "  0x{:#}", hex::encode(signature.signature.as_slice()))?;
+            writeln!(
+                f,
+                "  {} 0x{:#}",
+                String::from_utf8_lossy(&signature.protected.header.key_id),
+                hex::encode(signature.signature.as_slice())
+            )?;
         }
         writeln!(f, "]\n")?;
         writeln!(f, "Content Errors [")?;
@@ -52,7 +59,7 @@ struct InnerCatalystSignedDocument {
     payload: serde_json::Value,
     /// Signatures
     signatures: Vec<coset::CoseSignature>,
-    /// Raw COSE Sign bytes
+    /// Raw COSE Sign data
     cose_sign: coset::CoseSign,
     /// Content Errors found when parsing the Document
     content_errors: Vec<String>,

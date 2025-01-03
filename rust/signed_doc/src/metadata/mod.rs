@@ -84,6 +84,7 @@ impl Metadata {
         &self.content_errors
     }
 }
+
 impl Display for Metadata {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "Metadata {{")?;

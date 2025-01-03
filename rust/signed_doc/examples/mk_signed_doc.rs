@@ -6,6 +6,7 @@ use std::{
     fs::{read_to_string, File},
     io::{Read, Write},
     path::PathBuf,
+    str::FromStr,
 };
 
 use clap::Parser;
@@ -14,7 +15,7 @@ use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
-use signed_doc::{DocumentRef, Metadata, UuidV7};
+use signed_doc::{DocumentRef, Kid, Metadata, UuidV7};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -132,9 +133,13 @@ impl Cli {
                 store_cose_file(cose, &doc)?;
             },
             Self::Verify { pk, doc, schema } => {
-                let pk = load_public_key_from_file(&pk)?;
-                let schema = load_schema_from_file(&schema)?;
-                let cose = load_cose_from_file(&doc)?;
+                let pk = load_public_key_from_file(&pk)
+                    .map_err(|e| anyhow::anyhow!("Failed to load public key from file: {e}"))?;
+                let schema = load_schema_from_file(&schema).map_err(|e| {
+                    anyhow::anyhow!("Failed to load document schema from file: {e}")
+                })?;
+                let cose = load_cose_from_file(&doc)
+                    .map_err(|e| anyhow::anyhow!("Failed to load COSE SIGN from file: {e}"))?;
                 validate_cose(&cose, &pk, &schema)?;
                 println!("Document is valid.");
             },
@@ -294,11 +299,15 @@ fn validate_cose(
     validate_json(&json_doc, schema)?;
 
     for sign in &cose.signatures {
+        let key_id = sign.protected.header.key_id.clone();
         anyhow::ensure!(
-            !sign.protected.header.key_id.is_empty(),
+            !key_id.is_empty(),
             "COSE missing signature protected header `kid` field "
         );
 
+        let kid_str = String::from_utf8_lossy(&key_id);
+        let kid = Kid::from_str(&kid_str)?;
+        println!("Signature Key ID: {kid}");
         let data_to_sign = cose.tbs_data(&[], sign);
         let signature_bytes = sign.signature.as_slice().try_into().map_err(|_| {
             anyhow::anyhow!(
@@ -307,6 +316,11 @@ fn validate_cose(
                 sign.signature.len()
             )
         })?;
+        println!(
+            "Verifying Key Len({}): 0x{}",
+            pk.as_bytes().len(),
+            hex::encode(pk.as_bytes())
+        );
         let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
         pk.verify_strict(&data_to_sign, &signature)?;
     }
