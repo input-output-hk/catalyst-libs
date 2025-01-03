@@ -10,11 +10,12 @@ pub mod utils;
 pub(crate) mod validation;
 pub mod x509_chunks;
 
+use cardano_blockchain_types::hashes::Blake2b256Hash;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
 };
-use pallas::{crypto::hash::Hash, ledger::traverse::MultiEraTx};
+use pallas::ledger::traverse::MultiEraTx;
 use strum_macros::FromRepr;
 use types::tx_input_hash::TxInputHash;
 use uuid::Uuid;
@@ -54,8 +55,7 @@ pub struct Cip509 {
     /// An optional hash of the previous transaction.
     ///
     /// The hash must always be present except for the first registration transaction.
-    // TODO: Use the `Blake2b256Hash` type from the `cardano-blockchain-types` crate.
-    pub prv_tx_id: Option<Hash<32>>,
+    pub prv_tx_id: Option<Blake2b256Hash>,
     /// Metadata.
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
@@ -141,7 +141,7 @@ impl Decode<'_, ()> for Cip509 {
                             .map_err(|_| {
                             decode::Error::message("Invalid data size of PreviousTxId")
                         })?;
-                        prv_tx_id = Some(Hash::from(hash));
+                        prv_tx_id = Some(hash.into());
                     },
                     Cip509IntIdentifier::ValidationSignature => {
                         let signature = decode_bytes(d, "CIP509 validation signature")?;

@@ -8,9 +8,9 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
+use cardano_blockchain_types::hashes::Blake2b256Hash;
 use ed25519_dalek::VerifyingKey;
 use pallas::{
-    crypto::hash::Hash,
     ledger::{
         addresses::{Address, ShelleyAddress},
         traverse::MultiEraTx,
@@ -92,7 +92,7 @@ impl RegistrationChain {
 
     /// Get the current transaction ID hash.
     #[must_use]
-    pub fn current_tx_id_hash(&self) -> Hash<32> {
+    pub fn current_tx_id_hash(&self) -> Blake2b256Hash {
         self.inner.current_tx_id_hash
     }
 
@@ -143,7 +143,7 @@ impl RegistrationChain {
 #[derive(Clone)]
 struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
-    current_tx_id_hash: Hash<32>,
+    current_tx_id_hash: Blake2b256Hash,
     /// List of purpose for this registration chain
     purpose: Vec<Uuid>,
 
@@ -222,7 +222,7 @@ impl RegistrationChainInner {
 
         Ok(Self {
             purpose,
-            current_tx_id_hash: txn.hash(),
+            current_tx_id_hash: txn.hash().into(),
             x509_certs: x509_cert_map,
             c509_certs: c509_cert_map,
             certificate_uris,
