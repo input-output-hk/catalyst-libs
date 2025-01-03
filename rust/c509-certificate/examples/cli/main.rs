@@ -85,7 +85,7 @@ impl Cli {
                     None => None,
                 };
 
-                generate(&json_file, output, sk.as_ref(), &key_type)
+                generate(&json_file, output, sk.as_ref(), key_type)
             },
             Cli::Verify { file, public_key } => verify(&file, public_key),
             Cli::Decode { file, output } => decode(&file, output),
@@ -143,7 +143,7 @@ const SELF_SIGNED_INT: u8 = 2;
 /// A function to generate C509 certificate.
 fn generate(
     file: &PathBuf, output: Option<PathBuf>, private_key: Option<&PrivateKey>,
-    key_type: &Option<String>,
+    key_type: Option<String>,
 ) -> anyhow::Result<()> {
     let data = fs::read_to_string(file)?;
     let c509_json: C509Json = serde_json::from_str(&data)?;
@@ -247,10 +247,15 @@ fn parse_public_key(public_key: &str) -> anyhow::Result<PublicKey> {
 }
 
 /// Get the key type. Currently support only Ed25519.
-fn get_key_type(key_type: &Option<String>) -> anyhow::Result<(Oid<'static>, Option<String>)> {
-    match key_type.as_deref() {
-        Some("ed25519") | None => Ok(ED25519),
-        Some(_) => Err(anyhow::anyhow!("Currently only support Ed25519")),
+fn get_key_type(key_type: Option<String>) -> anyhow::Result<(Oid<'static>, Option<String>)> {
+    match key_type {
+        None => Err(anyhow::anyhow!("Currently only support Ed25519")),
+        Some(key_type) => {
+            match key_type.as_str() {
+                "ed25519" => Ok(ED25519),
+                _ => Err(anyhow::anyhow!("Currently only support Ed25519")),
+            }
+        },
     }
 }
 

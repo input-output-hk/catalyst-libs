@@ -1,3 +1,4 @@
+//! Text Sequence Tests
 mod common;
 use common::{text_sequences::*, Rule};
 

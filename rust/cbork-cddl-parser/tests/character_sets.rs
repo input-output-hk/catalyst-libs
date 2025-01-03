@@ -1,3 +1,4 @@
+//! Character Set Tests
 // cspell: words PCHAR pchar BCHAR bchar SESC sesc SCHAR schar fffd fffe
 
 mod common;
