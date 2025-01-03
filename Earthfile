@@ -1,7 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:fix/rust-docs-not-nightly AS mdlint-ci
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:fix/rust-docs-not-nightly AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:v3.2.27 AS mdlint-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:v3.2.27 AS cspell-ci
 
 
 FROM debian:stable-slim
