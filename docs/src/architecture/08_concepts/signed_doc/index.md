@@ -118,14 +118,16 @@ which indicates the cryptography algorithm used for the security processing.
 
 Only `ed25119` considered at this moment as the only option to be supported for signed objects.
 
-#### [`content type`]
+#### [`content type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)
 
 This is an original [COSE] header field,
-which indicates the [`content type`] of the [content](#catalyst-signed-document-content) ([COSE] `payload`) data.
+which indicates the [`content type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)
+of the [content](#catalyst-signed-document-content) ([COSE] `payload`) data.
 
-#### [`content encoding`] (optional)
+#### [`content encoding`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding) (optional)
 
-This field is used to indicate the [`content encoding`] algorithm of the [content](#catalyst-signed-document-content) data.
+This field is used to indicate the [`content encoding`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding)
+algorithm of the [content](#catalyst-signed-document-content) data.
 
 Supported encodings:
 
@@ -161,8 +163,6 @@ signature_protected_header = {
 This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
 
 
-[`content type`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type
-[`content encoding`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [UTF-8]: https://datatracker.ietf.org/doc/html/rfc3629
 [URI]: https://datatracker.ietf.org/doc/html/rfc3986
