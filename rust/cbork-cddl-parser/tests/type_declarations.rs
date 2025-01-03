@@ -1,3 +1,4 @@
+//! Type Declaration Tests
 // cspell: words CTLOP aname groupsocket typesocket RANGEOP tstr ctlop
 // cspell: words rangeop RANGEOP
 
