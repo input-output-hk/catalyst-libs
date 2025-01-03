@@ -48,8 +48,10 @@ It fully inherits an original [COSE] design and specifies the details of differe
 
 To uniquely specify a Catalyst Signed Document type, version etc., as it was mentioned before,
 a list of different metadata fields is specified.
+
 Also as you can see from the specification,
 it is allowed to add any number of additional metadata fields, which could be specified for each `type` of document.
+A full list of considered additional metadata fields defined [here](./meta.md).
 
 All these fields will be encoded as the [COSE] `protected` header
 

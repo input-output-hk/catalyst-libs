@@ -10,6 +10,8 @@ signed_doc_meta = {
   3 => text / int, ; "content type"
   ? "Content-Encoding" / "content-encoding" => "br", ; payload content encoding
 
+  ~meta.additional_fields,
+
   * metadata-key => metadata-value
 }
 
@@ -17,3 +19,5 @@ metadata-key = int / text
 metadata-value = any
 
 UUID = #6.37(bytes)
+
+;# include additional_meta as meta
