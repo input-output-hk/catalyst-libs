@@ -44,19 +44,19 @@ impl TryFrom<&MultiEraBlock<'_>> for BlockAuxData {
                 for (txn_idx, metadata) in alonzo_block.auxiliary_data_set.iter() {
                     let mut d = minicbor::Decoder::new(metadata.raw_cbor());
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
-                    aux_data.insert(TxnIndex::from_saturating(*txn_idx), txn_aux_data);
+                    aux_data.insert((*txn_idx).into(), txn_aux_data);
                 }
             } else if let Some(babbage_block) = block.as_babbage() {
                 for (txn_idx, metadata) in babbage_block.auxiliary_data_set.iter() {
                     let mut d = minicbor::Decoder::new(metadata.raw_cbor());
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
-                    aux_data.insert(TxnIndex::from_saturating(*txn_idx), txn_aux_data);
+                    aux_data.insert((*txn_idx).into(), txn_aux_data);
                 }
             } else if let Some(conway_block) = block.as_conway() {
                 for (txn_idx, metadata) in conway_block.auxiliary_data_set.iter() {
                     let mut d = minicbor::Decoder::new(metadata.raw_cbor());
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
-                    aux_data.insert(TxnIndex::from_saturating(*txn_idx), txn_aux_data);
+                    aux_data.insert((*txn_idx).into(), txn_aux_data);
                 }
             } else {
                 bail!("Undecodable metadata, unknown Era");
