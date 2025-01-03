@@ -37,7 +37,7 @@ impl TxnWitness {
                 for vkey_witness in vkey_witness_set {
                     let vkey = vkey_from_bytes(&vkey_witness.vkey)?;
                     let vkey_hash = VKeyHash::new(vkey.as_ref());
-                    let tx_num = TxnIndex::from_saturating(i);
+                    let tx_num = i.into();
                     if let Some(entry) = map.get(&vkey_hash) {
                         entry.1.insert(tx_num);
                     } else {
@@ -125,7 +125,7 @@ mod tests {
                 .expect("Failed to decode vkey1_hash");
         println!("{tx_witness_alonzo}");
         assert!(tx_witness_alonzo.get_witness_vkey(&vkey1_hash).is_some());
-        assert!(tx_witness_alonzo.check_witness_in_tx(&vkey1_hash, TxnIndex::from_saturating(0)));
+        assert!(tx_witness_alonzo.check_witness_in_tx(&vkey1_hash, 0.into()));
 
         let babbage = babbage_block();
         let babbage_block = pallas::ledger::traverse::MultiEraBlock::decode(&babbage)
@@ -139,6 +139,6 @@ mod tests {
 
         println!("{tx_witness_babbage}");
         assert!(tx_witness_babbage.get_witness_vkey(&vkey2_hash).is_some());
-        assert!(tx_witness_babbage.check_witness_in_tx(&vkey2_hash, TxnIndex::from_saturating(0)));
+        assert!(tx_witness_babbage.check_witness_in_tx(&vkey2_hash, 0.into()));
     }
 }

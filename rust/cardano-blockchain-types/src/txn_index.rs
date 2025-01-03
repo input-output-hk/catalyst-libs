@@ -6,22 +6,6 @@ use crate::conversion::from_saturating;
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct TxnIndex(u16);
 
-impl TxnIndex {
-    /// Convert an `<T>` to transaction index (saturate if out of range).
-    pub(crate) fn from_saturating<
-        T: Copy
-            + TryInto<u16>
-            + std::ops::Sub<Output = T>
-            + std::cmp::PartialOrd<T>
-            + num_traits::identities::Zero,
-    >(
-        value: T,
-    ) -> Self {
-        let value: u16 = from_saturating(value);
-        Self(value)
-    }
-}
-
 impl<
         T: Copy
             + TryInto<u16>
@@ -31,7 +15,7 @@ impl<
     > From<T> for TxnIndex
 {
     fn from(value: T) -> Self {
-        TxnIndex::from_saturating(value)
+        Self(from_saturating(value))
     }
 }
 

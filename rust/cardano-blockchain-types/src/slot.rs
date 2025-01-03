@@ -89,9 +89,10 @@ mod tests {
 
     #[test]
     fn test_from_bigint_to_slot_positive() {
-        let big_int = BigInt::from(12345u64); // positive BigInt
+        const N: u64 = 12345;
+        let big_int = BigInt::from(N); // positive BigInt
         let slot: Slot = big_int.into();
-        assert_eq!(slot.0, 12345);
+        assert_eq!(slot.0, N);
     }
 
     #[test]
@@ -110,21 +111,23 @@ mod tests {
 
     #[test]
     fn test_from_slot_to_bigint_positive() {
-        let slot = Slot(12345); // positive Slot
+        const N: u64 = 12345;
+        let slot = Slot(N);
         let big_int: BigInt = slot.into(); // should convert back to BigInt
-        assert_eq!(big_int, BigInt::from(12345u64));
+        assert_eq!(big_int, BigInt::from(N));
     }
 
     #[test]
     fn test_from_slot_to_bigint_zero() {
-        let slot = Slot(0); // Slot(0)
+        const N: u64 = 0;
+        let slot = Slot(N);
         let big_int: BigInt = slot.into(); // should convert to BigInt::from(0)
-        assert_eq!(big_int, BigInt::from(0u64));
+        assert_eq!(big_int, BigInt::from(N));
     }
 
     #[test]
     fn test_from_slot_to_bigint_large_value() {
-        let slot = Slot(u64::MAX); // Slot(u64::MAX)
+        let slot = Slot(u64::MAX);
         let big_int: BigInt = slot.into(); // should convert to BigInt::from(u64::MAX)
         assert_eq!(big_int, BigInt::from(u64::MAX));
     }
