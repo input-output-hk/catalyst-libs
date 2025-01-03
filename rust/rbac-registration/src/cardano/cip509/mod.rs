@@ -108,8 +108,8 @@ impl Decode<'_, ()> for Cip509 {
     fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP509")?;
 
-        let mut purpose = Uuid::default();
-        let mut txn_inputs_hash = TxInputHash::default();
+        let mut purpose = None;
+        let mut txn_inputs_hash = None;
         let mut prv_tx_id = None;
         let mut metadata = None;
         let mut validation_signature = Vec::new();
@@ -122,15 +122,18 @@ impl Decode<'_, ()> for Cip509 {
                 let _: u8 = decode_helper(d, "CIP509", ctx)?;
                 match key {
                     Cip509IntIdentifier::Purpose => {
-                        purpose = Uuid::try_from(decode_bytes(d, "CIP509 purpose")?)
-                            .map_err(|_| decode::Error::message("Invalid data size of Purpose"))?;
+                        purpose =
+                            Some(Uuid::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(
+                                |_| decode::Error::message("Invalid data size of Purpose"),
+                            )?);
                     },
                     Cip509IntIdentifier::TxInputsHash => {
-                        txn_inputs_hash =
+                        txn_inputs_hash = Some(
                             TxInputHash::try_from(decode_bytes(d, "CIP509 txn inputs hash")?)
                                 .map_err(|_| {
                                     decode::Error::message("Invalid data size of TxInputsHash")
-                                })?;
+                                })?,
+                        );
                     },
                     Cip509IntIdentifier::PreviousTxId => {
                         let hash: [u8; 32] = decode_bytes(d, "CIP509 previous tx ID")?
@@ -160,6 +163,9 @@ impl Decode<'_, ()> for Cip509 {
             }
         }
 
+        let purpose = purpose.ok_or_else(|| decode::Error::message("Missing purpose in CIP509"))?;
+        let txn_inputs_hash = txn_inputs_hash
+            .ok_or_else(|| decode::Error::message("Missing txn_inputs_hash in CIP509"))?;
         let metadata =
             metadata.ok_or_else(|| decode::Error::message("Missing metadata in CIP509"))?;
         let validation_signature = validation_signature
