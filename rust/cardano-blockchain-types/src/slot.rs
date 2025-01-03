@@ -5,6 +5,7 @@ use std::{
     ops::{MulAssign, Sub},
 };
 
+use num_bigint::{BigInt, Sign};
 use serde::Serialize;
 
 use crate::conversion::from_saturating;
@@ -60,5 +61,71 @@ impl Sub for Slot {
 
     fn sub(self, rhs: Slot) -> Self::Output {
         Slot(self.0.saturating_sub(rhs.0))
+    }
+}
+
+impl From<BigInt> for Slot {
+    fn from(value: BigInt) -> Self {
+        if value.sign() == Sign::Minus {
+            Slot(0)
+        } else {
+            let v: u64 = value.try_into().unwrap_or(u64::MAX);
+            Slot::from_saturating(v)
+        }
+    }
+}
+
+impl From<Slot> for BigInt {
+    fn from(val: Slot) -> Self {
+        BigInt::from(val.0)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use num_bigint::BigInt;
+
+    use super::*;
+
+    #[test]
+    fn test_from_bigint_to_slot_positive() {
+        let big_int = BigInt::from(12345u64); // positive BigInt
+        let slot: Slot = big_int.into();
+        assert_eq!(slot.0, 12345);
+    }
+
+    #[test]
+    fn test_from_bigint_to_slot_negative() {
+        let big_int = BigInt::from(-12345); // negative BigInt
+        let slot: Slot = big_int.into();
+        assert_eq!(slot.0, 0);
+    }
+
+    #[test]
+    fn test_from_bigint_to_slot_large_value() {
+        let big_int = BigInt::from(u128::MAX); // large BigInt that exceeds u64
+        let slot: Slot = big_int.into(); // should saturate to u64::MAX
+        assert_eq!(slot.0, u64::MAX);
+    }
+
+    #[test]
+    fn test_from_slot_to_bigint_positive() {
+        let slot = Slot(12345); // positive Slot
+        let big_int: BigInt = slot.into(); // should convert back to BigInt
+        assert_eq!(big_int, BigInt::from(12345u64));
+    }
+
+    #[test]
+    fn test_from_slot_to_bigint_zero() {
+        let slot = Slot(0); // Slot(0)
+        let big_int: BigInt = slot.into(); // should convert to BigInt::from(0)
+        assert_eq!(big_int, BigInt::from(0u64));
+    }
+
+    #[test]
+    fn test_from_slot_to_bigint_large_value() {
+        let slot = Slot(u64::MAX); // Slot(u64::MAX)
+        let big_int: BigInt = slot.into(); // should convert to BigInt::from(u64::MAX)
+        assert_eq!(big_int, BigInt::from(u64::MAX));
     }
 }

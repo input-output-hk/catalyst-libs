@@ -35,3 +35,4 @@ minicbor = { version = "0.25.1", features = ["alloc"] }
 num-traits = "0.2.19"
 ed25519-dalek = "2.1.1"
 serde = "1.0.210"
+num-bigint = "0.4.6"
