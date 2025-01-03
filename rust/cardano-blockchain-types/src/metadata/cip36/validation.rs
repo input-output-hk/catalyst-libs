@@ -91,7 +91,7 @@ mod tests {
 
     use super::validate_purpose;
     use crate::{
-        cip36::{
+        metadata::cip36::{
             key_registration::Cip36KeyRegistration, registration_witness::Cip36RegistrationWitness,
             validate_payment_address_network, validate_voting_keys, voting_pk::VotingPubKey,
         },
