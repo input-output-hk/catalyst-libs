@@ -91,6 +91,15 @@ impl Display for Kid {
     }
 }
 
+impl TryFrom<&[u8]> for Kid {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let kid_str = String::from_utf8_lossy(value);
+        Kid::from_str(&kid_str)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;

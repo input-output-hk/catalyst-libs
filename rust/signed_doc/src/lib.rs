@@ -14,11 +14,6 @@ mod signature;
 pub use metadata::{DocumentRef, Metadata, UuidV7};
 pub use signature::Kid;
 
-/// Catalyst Signed Document Content Encoding Key.
-const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
-/// Catalyst Signed Document Content Encoding Value.
-const CONTENT_ENCODING_VALUE: &str = "br";
-
 /// Keep all the contents private.
 /// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
 /// manage the Arc anywhere else. These are likely to be large, best to have the Arc be
@@ -77,37 +72,23 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
         let cose = coset::CoseSign::from_tagged_slice(&cose_bytes)
             .or(coset::CoseSign::from_slice(&cose_bytes))
             .map_err(|e| anyhow::anyhow!("Invalid COSE Sign document: {e}"))?;
+
         let mut content_errors = Vec::new();
-        let expected_header = cose_protected_header();
 
-        if cose.protected.header.content_type != expected_header.content_type {
-            content_errors
-                .push("Invalid COSE document protected header `content-type` field".to_string());
-        }
-
-        if !cose.protected.header.rest.iter().any(|(key, value)| {
-            key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
-                && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
-        }) {
-            content_errors.push(
-                "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field".to_string(),
-            );
-        }
         let metadata = Metadata::from(&cose.protected);
+
         if metadata.has_error() {
             content_errors.extend_from_slice(metadata.content_errors());
         }
-        let payload = match &cose.payload {
-            Some(payload) => {
-                let mut buf = Vec::new();
-                let mut bytes = payload.as_slice();
-                brotli::BrotliDecompress(&mut bytes, &mut buf)?;
-                serde_json::from_slice(&buf)?
-            },
-            None => {
-                println!("COSE missing payload field with the JSON content in it");
-                serde_json::Value::Object(serde_json::Map::new())
-            },
+
+        let payload = if let Some(payload) = &cose.payload {
+            let mut buf = Vec::new();
+            let mut bytes = payload.as_slice();
+            brotli::BrotliDecompress(&mut bytes, &mut buf)?;
+            serde_json::from_slice(&buf)?
+        } else {
+            println!("COSE missing payload field with the JSON content in it");
+            serde_json::Value::Object(serde_json::Map::new())
         };
         let signatures = cose.signatures.clone();
         let inner = InnerCatalystSignedDocument {
@@ -173,27 +154,5 @@ impl CatalystSignedDocument {
     pub fn doc_section(&self) -> Option<String> {
         self.inner.metadata.doc_section()
     }
-}
 
-/// Generate the COSE protected header used by Catalyst Signed Document.
-fn cose_protected_header() -> coset::Header {
-    coset::HeaderBuilder::new()
-        .content_format(coset::iana::CoapContentFormat::Json)
-        .text_value(
-            CONTENT_ENCODING_KEY.to_string(),
-            CONTENT_ENCODING_VALUE.to_string().into(),
-        )
-        .build()
-}
-
-/// Find a value for a given key in the protected header.
-fn cose_protected_header_find(
-    cose: &coset::CoseSign, rest_key: &str,
-) -> Option<coset::cbor::Value> {
-    cose.protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text(rest_key.to_string()))
-        .map(|(_, value)| value.clone())
 }

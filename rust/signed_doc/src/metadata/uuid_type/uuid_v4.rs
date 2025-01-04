@@ -4,8 +4,8 @@ use std::fmt::{Display, Formatter};
 use super::{decode_cbor_uuid, INVALID_UUID};
 
 /// Type representing a `UUIDv4`.
-#[derive(Copy, Clone, Debug, serde::Deserialize)]
-#[serde(transparent)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Deserialize)]
+#[serde(from = "uuid::Uuid")]
 pub struct UuidV4 {
     /// UUID
     uuid: uuid::Uuid,
