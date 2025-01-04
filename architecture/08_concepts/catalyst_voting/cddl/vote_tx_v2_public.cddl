@@ -1,0 +1,11 @@
+; All encoders/decoders of this specification must follow deterministic cbor encoding rules
+; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
+
+vote-tx-v2-public<voter-data-t> = gen-vote-tx<choice-data, proof-data, proposal, voter-data-t>
+
+choice-data = uint
+proof-data = undefined
+proposal = UUID
+
+;# include gen_vote_tx
+

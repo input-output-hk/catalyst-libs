@@ -1,0 +1,122 @@
+[
+  {
+    "runId": 12604951442,
+    "runUniqueId": "12604951442_1735945063489",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 256,
+        "unknown": 0,
+        "total": 256
+      },
+      "time": {
+        "minDuration": 3,
+        "maxDuration": 42293,
+        "sumDuration": 96231
+      }
+    }
+  },
+  {
+    "runId": 12604883521,
+    "runUniqueId": "12604883521_1735944579255",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 256,
+        "unknown": 0,
+        "total": 256
+      },
+      "time": {
+        "minDuration": 3,
+        "maxDuration": 39608,
+        "sumDuration": 99210
+      }
+    }
+  },
+  {
+    "runId": 12580534490,
+    "runUniqueId": "12580534490_1735813563110",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 230,
+        "unknown": 0,
+        "total": 230
+      },
+      "time": {
+        "minDuration": 6,
+        "maxDuration": 127340,
+        "sumDuration": 519832
+      }
+    }
+  },
+  {
+    "runId": 12579989693,
+    "runUniqueId": "12579989693_1735810821172",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 230,
+        "unknown": 0,
+        "total": 230
+      },
+      "time": {
+        "minDuration": 11,
+        "maxDuration": 109632,
+        "sumDuration": 487369
+      }
+    }
+  },
+  {
+    "runId": 12557943809,
+    "runUniqueId": "12557943809_1735639599051",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 230,
+        "unknown": 0,
+        "total": 230
+      },
+      "time": {
+        "minDuration": 6,
+        "maxDuration": 129933,
+        "sumDuration": 523294
+      }
+    }
+  },
+  {
+    "runId": 12545820644,
+    "runUniqueId": "12545820644_1735559862070",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 230,
+        "unknown": 0,
+        "total": 230
+      },
+      "time": {
+        "minDuration": 10,
+        "maxDuration": 127338,
+        "sumDuration": 511230
+      }
+    }
+  }
+]
