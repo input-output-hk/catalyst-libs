@@ -29,12 +29,16 @@ pub(crate) fn validate_signature(
         return false;
     };
 
-    if let Ok(()) = cip36.stake_pk().verify_strict(hash.as_bytes(), &sig) {
-        true
-    } else {
+    if let Some(stake_pk) = cip36.stake_pk() {
+        if let Ok(()) = stake_pk.verify_strict(hash.as_bytes(), &sig) {
+            return true;
+        }
         validation_report.push("Validate CIP36 Signature, cannot verify signature".to_string());
-        false
+        return false;
     }
+
+    validation_report.push("Validate CIP36 Signature, stake public key is missing".to_string());
+    false
 }
 
 /// Validate the payment address network against the given network.
@@ -91,7 +95,7 @@ mod tests {
 
     use super::validate_purpose;
     use crate::{
-        cip36::{
+        metadata::cip36::{
             key_registration::Cip36KeyRegistration, registration_witness::Cip36RegistrationWitness,
             validate_payment_address_network, validate_voting_keys, voting_pk::VotingPubKey,
         },
@@ -149,10 +153,10 @@ mod tests {
     #[test]
     fn test_validate_voting_keys() {
         let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.voting_pks.push(VotingPubKey {
-            voting_pk: VerifyingKey::default(),
-            weight: 1,
-        });
+        cip36
+            .key_registration
+            .voting_pks
+            .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
         let mut report = Vec::new();
 
         let valid = validate_voting_keys(&cip36, &mut report);
@@ -164,14 +168,14 @@ mod tests {
     #[test]
     fn test_validate_invalid_voting_keys() {
         let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.voting_pks.push(VotingPubKey {
-            voting_pk: VerifyingKey::default(),
-            weight: 1,
-        });
-        cip36.key_registration.voting_pks.push(VotingPubKey {
-            voting_pk: VerifyingKey::default(),
-            weight: 1,
-        });
+        cip36
+            .key_registration
+            .voting_pks
+            .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
+        cip36
+            .key_registration
+            .voting_pks
+            .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
         let mut report = Vec::new();
 
         let valid = validate_voting_keys(&cip36, &mut report);
