@@ -26,6 +26,16 @@ They are defined when a specific document is submitted for consideration.
 Catalysyt Proposal document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
+#### Metadata Fields
+
+A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+
+* [`type`](./../signed_doc/spec.md#type): `7808d2ba-d511-40af-84e8-c0d1625fdfdc` [UUID] value.
+
+  ```CDDL
+  "type" => 37(h'7808d2bad51140af84e8c0d1625fdfdc')
+  ```
+
 * [`content type`](./../signed_doc/spec.md#content-type): `application/json`.
   [Catalyst Signed Document content] must be in [JSON] format.
 
@@ -33,12 +43,11 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): `"br"`.
-  [Catalyst Signed Document content] must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): [Catalyst Signed Document content] must be [Brotli] compressed.
 
-#### Metadata Fields
-
-A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+  ```CDDL
+  "content-type" => "br"
+  ```
 
 * [`ref`](./../signed_doc/meta.md#ref-document-reference) (optional).
 * [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` value, [proposal template type](#proposal-template).
@@ -60,6 +69,16 @@ This document provides the template structure which a Proposal must be formatted
 Catalysyt Proposal Template document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
+#### Metadata Fields
+
+A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+
+* [`type`](./../signed_doc/spec.md#type): `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` [UUID] value.
+
+  ```CDDL
+  "type" => 37(h'0ce8ab3892584fbca62e7faa6e58318f')
+  ```
+
 * [`content type`](./../signed_doc/spec.md#content-type): `application/json`.
   [Catalyst Signed Document content] must be in [JSON] format.
 
@@ -67,12 +86,11 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): `"br"`.
-  [Catalyst Signed Document content] must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): [Catalyst Signed Document content] must be [Brotli] compressed.
 
-#### Metadata Fields
-
-A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+  ```CDDL
+  "content-type" => "br"
+  ```
 
 * [`ref`](./../signed_doc/meta.md#ref-document-reference) (optional)
 * [`reply`](./../signed_doc/meta.md#reply-reply-reference) (optional)
@@ -87,3 +105,4 @@ This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses
 [Catalyst Signed Document content]: ./../signed_doc/spec.md#signed-object-content
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [JSON]: https://datatracker.ietf.org/doc/html/rfc7159
+[UUID]: https://www.rfc-editor.org/rfc/rfc9562.html

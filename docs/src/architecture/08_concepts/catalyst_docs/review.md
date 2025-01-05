@@ -22,6 +22,16 @@ TODO
 Catalysyt Review document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
+#### Metadata Fields
+
+A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+
+* [`type`](./../signed_doc/spec.md#type): `e4caf5f0-098b-45fd-94f3-0702a4573db5` [UUID] value.
+
+  ```CDDL
+  "type" => 37(h'e4caf5f0098b45fd94f30702a4573db5')
+  ```
+
 * [`content type`](./../signed_doc/spec.md#content-type): `application/json`.
   [Catalyst Signed Document content] must be in [JSON] format.
 
@@ -29,12 +39,11 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): `"br"`.
-  [Catalyst Signed Document content] must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): [Catalyst Signed Document content] must be [Brotli] compressed.
 
-#### Metadata Fields
-
-A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+  ```CDDL
+  "content-type" => "br"
+  ```
 
 * [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `ebe5d0bf-5d86-4577-af4d-008fddbe2edc` value, [review template type](#review-template).
 
@@ -51,6 +60,16 @@ TODO
 Catalysyt Review Template document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
+#### Metadata Fields
+
+A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+
+* [`type`](./../signed_doc/spec.md#type): `ebe5d0bf-5d86-4577-af4d-008fddbe2edc` [UUID] value.
+
+  ```CDDL
+  "type" => 37(h'ebe5d0bf5d864577af4d008fddbe2edc')
+  ```
+
 * [`content type`](./../signed_doc/spec.md#content-type): `application/json`.
   [Catalyst Signed Document content] must be in [JSON] format.
 
@@ -58,12 +77,11 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): `"br"`.
-  [Catalyst Signed Document content] must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): [Catalyst Signed Document content] must be [Brotli] compressed.
 
-#### Metadata Fields
-
-A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
+  ```CDDL
+  "content-type" => "br"
+  ```
 
 * [`ref`](./../signed_doc/meta.md#ref-document-reference) (optional)
 * [`reply`](./../signed_doc/meta.md#reply-reply-reference) (optional)
@@ -78,3 +96,4 @@ This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses
 [Catalyst Signed Document content]: ./../signed_doc/spec.md#signed-object-content
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [JSON]: https://datatracker.ietf.org/doc/html/rfc7159
+[UUID]: https://www.rfc-editor.org/rfc/rfc9562.html

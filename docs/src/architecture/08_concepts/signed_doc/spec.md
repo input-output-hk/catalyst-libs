@@ -70,7 +70,7 @@ Each Catalyst Signed Document will have a type identifier called `type`.
 
 The `type` is a [UUID] V4.
 
-[A full list of Catalyst supported document types]
+[A full list of Catalyst supported document types](./types.md)
 
 #### `id`
 
