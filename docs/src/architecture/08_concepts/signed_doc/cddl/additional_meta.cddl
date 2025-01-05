@@ -1,11 +1,15 @@
 additional_fields = {
-  ? "ref" => reference_type,
-  ? "template" => reference_type,
-  ? "reply" => reference_type,
+  ? "ref" => ref_type,
+  ? "rev-hash" => ref_hash_type,
+  ? "template" => ref_type,
+  ? "reply" => ref_type,
   ? "section" => text,
   ? "collabs" => [+any],
 }
 
-reference_type = UUID / [UUID, UUID]
+ref_type = UUID / [UUID, UUID]
+ref_hash_type = [ref_type, hash-bytes]
 
 UUID = #6.37(bytes)
+
+;# include hash

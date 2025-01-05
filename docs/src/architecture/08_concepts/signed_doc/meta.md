@@ -7,6 +7,13 @@
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
+* [`ref` Document Reference](#ref-document-reference)
+* [`ref-hash` Secured Document Reference](#ref-hash-secured-document-reference)
+* [`template` Template Reference](#template-template-reference)
+* [`reply` Reply Reference](#reply-reply-reference)
+* [`section` Section Reference](#section-section-reference)
+* [`collabs` Authorized Collaborators](#collabs-authorized-collaborators)
+
 ## `ref` Document Reference
 
 This is a reference to another document.
@@ -17,8 +24,17 @@ The `ref` can be either a single [UUID] or a [CBOR] Array of Two [UUID].
 If the `ref` is a single [UUID], it is a reference to the document of that [`id`](./spec.md#id).
 If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
 
-* `<id>` = the [UUID] of the referenced documents [`id`](./spec.md#id)
-* `<ver>` = the [UUID] of the referenced documents [`ver`](./spec.md#ver).
+* `<id>` - the [UUID] of the referenced documents [`id`](./spec.md#id).
+* `<ver>` - the [UUID] of the referenced documents [`ver`](./spec.md#ver).
+
+## `ref-hash` Secured Document Reference
+
+This is a cryptographically secured reference to another document.
+
+It consists of two fields:
+
+* [`ref`](#ref-document-reference) - simple reference to the document.
+* [`hash`] - hash of the referenced document [CBOR] bytes.
 
 ## `template` Template Reference
 
@@ -63,3 +79,4 @@ It does NOT mean that the listed collaborators have agreed to collaborate, only 
 gives them permission to.*
 
 This list can impact actions that can be performed by the `Proposal Action Document`.
+
