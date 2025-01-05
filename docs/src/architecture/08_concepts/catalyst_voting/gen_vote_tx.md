@@ -15,29 +15,13 @@ Created: 2024-09-04
 
 ## Abstract
 
-This document defines a generalized view of the "Catalyst" voting transaction.
+This document defines a generalized voting transaction [CDDL] structure.
 
 ## Motivation
 
 Project "Catalyst" requires a structure to keep people vote's data in the secure and verifiable way.
 
 ## Specification
-
-Generalized vote transaction is a [Catalyst Signed Document],
-so its fully follows the structure of the [Catalyst Signed Document] specification.
-
-* [`content type`](./../signed_doc/spec.md#content-type): `application/cbor`.
-  [Catalyst Signed Document content](./../signed_doc/spec.md#signed-object-content) must be a [CBOR] encoded.
-
-  ```CDDL
-  3 => 50
-  ```
-
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): is missing
-
-### Content format
-
-The generalized vote transaction [content format](./../signed_doc/spec.md#signed-object-content)
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
 ??? note "vote transaction definition: `gen_vote_tx.cddl`"
@@ -70,5 +54,4 @@ Vote:
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
-[Catalyst Signed Document]: ./../signed_doc/spec.md
-[CBOR]: https://datatracker.ietf.org/doc/rfc8949/
+[CDDL]: https://datatracker.ietf.org/doc/html/rfc8610
