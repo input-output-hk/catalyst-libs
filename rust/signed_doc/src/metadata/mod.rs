@@ -1,29 +1,48 @@
 //! Catalyst Signed Document Metadata.
 use std::fmt::{Display, Formatter};
 
+mod content_encoding;
+mod content_type;
+mod document_id;
 mod document_ref;
+mod document_type;
+mod document_version;
 mod uuid_type;
 
+pub use content_encoding::ContentEncoding;
+pub use content_type::ContentType;
+pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
+pub use document_type::DocumentType;
+pub use document_version::DocumentVersion;
 pub use uuid_type::{UuidV4, UuidV7};
+
+/// Catalyst Signed Document Content Encoding Key.
+const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
 
 /// Document Metadata.
 #[derive(Debug, serde::Deserialize)]
 pub struct Metadata {
     /// Document Type `UUIDv4`.
-    r#type: UuidV4,
+    #[serde(rename = "type")]
+    doc_type: DocumentType,
     /// Document ID `UUIDv7`.
-    id: UuidV7,
+    id: DocumentId,
     /// Document Version `UUIDv7`.
-    ver: UuidV7,
+    ver: DocumentVersion,
     /// Reference to the latest document.
-    r#ref: Option<DocumentRef>,
+    #[serde(rename = "ref")]
+    doc_ref: Option<DocumentRef>,
     /// Reference to the document template.
     template: Option<DocumentRef>,
     /// Reference to the document reply.
     reply: Option<DocumentRef>,
     /// Reference to the document section.
     section: Option<String>,
+    /// Document Payload Content Type.
+    content_type: Option<ContentType>,
+    /// Document Payload Content Encoding.
+    content_encoding: Option<ContentEncoding>,
     /// Metadata Content Errors
     #[serde(skip)]
     content_errors: Vec<String>,
@@ -33,7 +52,7 @@ impl Metadata {
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> uuid::Uuid {
-        self.r#type.uuid()
+        self.doc_type.uuid()
     }
 
     /// Return Document ID `UUIDv7`.
@@ -51,7 +70,7 @@ impl Metadata {
     /// Return Last Document Reference `Option<DocumentRef>`.
     #[must_use]
     pub fn doc_ref(&self) -> Option<DocumentRef> {
-        self.r#ref
+        self.doc_ref
     }
 
     /// Return Document Template `Option<DocumentRef>`.
@@ -84,16 +103,19 @@ impl Metadata {
         &self.content_errors
     }
 }
+
 impl Display for Metadata {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "Metadata {{")?;
-        writeln!(f, "  doc_type: {},", self.r#type)?;
+        writeln!(f, "  doc_type: {},", self.doc_type)?;
         writeln!(f, "  doc_id: {},", self.id)?;
         writeln!(f, "  doc_ver: {},", self.ver)?;
-        writeln!(f, "  doc_ref: {:?},", self.r#ref)?;
+        writeln!(f, "  doc_ref: {:?},", self.doc_ref)?;
         writeln!(f, "  doc_template: {:?},", self.template)?;
         writeln!(f, "  doc_reply: {:?},", self.reply)?;
         writeln!(f, "  doc_section: {:?}", self.section)?;
+        writeln!(f, "  content_type: {:?}", self.content_type)?;
+        writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
         writeln!(f, "}}")
     }
 }
@@ -101,13 +123,15 @@ impl Display for Metadata {
 impl Default for Metadata {
     fn default() -> Self {
         Self {
-            r#type: UuidV4::invalid(),
-            id: UuidV7::invalid(),
-            ver: UuidV7::invalid(),
-            r#ref: None,
+            doc_type: DocumentType::invalid(),
+            id: DocumentId::invalid(),
+            ver: DocumentVersion::invalid(),
+            doc_ref: None,
             template: None,
             reply: None,
             section: None,
+            content_type: None,
+            content_encoding: None,
             content_errors: Vec::new(),
         }
     }
@@ -130,11 +154,50 @@ impl From<&coset::ProtectedHeader> for Metadata {
         let mut metadata = Metadata::default();
         let mut errors = Vec::new();
 
+        match protected.header.content_type.as_ref() {
+            Some(iana_content_type) => {
+                match ContentType::try_from(iana_content_type) {
+                    Ok(content_type) => metadata.content_type = Some(content_type),
+                    Err(e) => {
+                        errors.push(format!("Invalid Document Content-Type: {e}"));
+                    },
+                }
+            },
+            None => {
+                errors.push(
+                    "COSE document protected header `content-type` field is missing".to_string(),
+                );
+            },
+        }
+        match protected.header.rest.iter().find(|(key, _)| {
+            if let coset::Label::Text(label) = key {
+                label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)
+            } else {
+                false
+            }
+        }) {
+            Some((_key, value)) => {
+                match ContentEncoding::try_from(value) {
+                    Ok(encoding) => {
+                        metadata.content_encoding = Some(encoding);
+                    },
+                    Err(e) => {
+                        errors.push(format!("Invalid Document Content Encoding: {e}"));
+                    },
+                }
+            },
+            _ => {
+                errors.push(
+                    "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' label"
+                        .to_string(),
+                );
+            },
+        }
         match cose_protected_header_find(protected, "type") {
             Some(doc_type) => {
                 match UuidV4::try_from(&doc_type) {
                     Ok(doc_type_uuid) => {
-                        metadata.r#type = doc_type_uuid;
+                        metadata.doc_type = doc_type_uuid.into();
                     },
                     Err(e) => {
                         errors.push(format!("Document `type` is invalid: {e}"));
@@ -148,7 +211,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
             Some(doc_id) => {
                 match UuidV7::try_from(&doc_id) {
                     Ok(doc_id_uuid) => {
-                        metadata.id = doc_id_uuid;
+                        metadata.id = doc_id_uuid.into();
                     },
                     Err(e) => {
                         errors.push(format!("Document `id` is invalid: {e}"));
@@ -162,12 +225,12 @@ impl From<&coset::ProtectedHeader> for Metadata {
             Some(doc_ver) => {
                 match UuidV7::try_from(&doc_ver) {
                     Ok(doc_ver_uuid) => {
-                        if doc_ver_uuid < metadata.id {
+                        if doc_ver_uuid.uuid() < metadata.id.uuid() {
                             errors.push(format!(
                             "Document Version {doc_ver_uuid} cannot be smaller than Document ID {}", metadata.id
                         ));
                         } else {
-                            metadata.ver = doc_ver_uuid;
+                            metadata.ver = doc_ver_uuid.into();
                         }
                     },
                     Err(e) => {
@@ -183,7 +246,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         if let Some(cbor_doc_ref) = cose_protected_header_find(protected, "ref") {
             match DocumentRef::try_from(&cbor_doc_ref) {
                 Ok(doc_ref) => {
-                    metadata.r#ref = Some(doc_ref);
+                    metadata.doc_ref = Some(doc_ref);
                 },
                 Err(e) => {
                     errors.push(format!(

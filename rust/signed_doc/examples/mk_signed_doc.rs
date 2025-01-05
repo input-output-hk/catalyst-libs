@@ -14,7 +14,7 @@ use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
-use signed_doc::{DocumentRef, Metadata, UuidV7};
+use signed_doc::{DocumentRef, Kid, Metadata, UuidV7};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -57,7 +57,7 @@ enum Cli {
     },
 }
 
-const CONTENT_ENCODING_KEY: &str = "content encoding";
+const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
 const CONTENT_ENCODING_VALUE: &str = "br";
 const UUID_CBOR_TAG: u64 = 37;
 
@@ -119,7 +119,8 @@ impl Cli {
             } => {
                 let doc_schema = load_schema_from_file(&schema)?;
                 let json_doc = load_json_from_file(&doc)?;
-                let json_meta = load_json_from_file(&meta)?;
+                let json_meta = load_json_from_file(&meta)
+                    .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
                 validate_json(&json_doc, &doc_schema)?;
                 let compressed_doc = brotli_compress_json(&json_doc)?;
                 let empty_cose_sign = build_empty_cose_doc(compressed_doc, &json_meta);
@@ -132,9 +133,13 @@ impl Cli {
                 store_cose_file(cose, &doc)?;
             },
             Self::Verify { pk, doc, schema } => {
-                let pk = load_public_key_from_file(&pk)?;
-                let schema = load_schema_from_file(&schema)?;
-                let cose = load_cose_from_file(&doc)?;
+                let pk = load_public_key_from_file(&pk)
+                    .map_err(|e| anyhow::anyhow!("Failed to load public key from file: {e}"))?;
+                let schema = load_schema_from_file(&schema).map_err(|e| {
+                    anyhow::anyhow!("Failed to load document schema from file: {e}")
+                })?;
+                let cose = load_cose_from_file(&doc)
+                    .map_err(|e| anyhow::anyhow!("Failed to load COSE SIGN from file: {e}"))?;
                 validate_cose(&cose, &pk, &schema)?;
                 println!("Document is valid.");
             },
@@ -294,11 +299,14 @@ fn validate_cose(
     validate_json(&json_doc, schema)?;
 
     for sign in &cose.signatures {
+        let key_id = &sign.protected.header.key_id;
         anyhow::ensure!(
-            !sign.protected.header.key_id.is_empty(),
+            !key_id.is_empty(),
             "COSE missing signature protected header `kid` field "
         );
 
+        let kid = Kid::try_from(key_id.as_ref())?;
+        println!("Signature Key ID: {kid}");
         let data_to_sign = cose.tbs_data(&[], sign);
         let signature_bytes = sign.signature.as_slice().try_into().map_err(|_| {
             anyhow::anyhow!(
@@ -307,6 +315,11 @@ fn validate_cose(
                 sign.signature.len()
             )
         })?;
+        println!(
+            "Verifying Key Len({}): 0x{}",
+            pk.as_bytes().len(),
+            hex::encode(pk.as_bytes())
+        );
         let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
         pk.verify_strict(&data_to_sign, &signature)?;
     }
@@ -324,12 +337,13 @@ fn validate_cose_protected_header(cose: &coset::CoseSign) -> anyhow::Result<()> 
         cose.protected.header.content_type == expected_header.content_type,
         "Invalid COSE document protected header `content-type` field"
     );
+    println!("HEADER REST: \n{:?}", cose.protected.header.rest);
     anyhow::ensure!(
         cose.protected.header.rest.iter().any(|(key, value)| {
             key == &coset::Label::Text(CONTENT_ENCODING_KEY.to_string())
                 && value == &coset::cbor::Value::Text(CONTENT_ENCODING_VALUE.to_string())
         }),
-        "Invalid COSE document protected header {CONTENT_ENCODING_KEY} field"
+        "Invalid COSE document protected header"
     );
 
     let Some((_, value)) = cose
