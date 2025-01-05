@@ -12,7 +12,7 @@ mod metadata;
 mod signature;
 
 pub use metadata::{DocumentRef, Metadata, UuidV7};
-pub use signature::Kid;
+pub use signature::KidURI;
 
 /// Keep all the contents private.
 /// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
@@ -154,5 +154,4 @@ impl CatalystSignedDocument {
     pub fn doc_section(&self) -> Option<String> {
         self.inner.metadata.doc_section()
     }
-
 }

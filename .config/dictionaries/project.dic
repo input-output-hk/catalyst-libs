@@ -49,6 +49,7 @@ coverallsapp
 cpus
 crontabs
 crontagged
+csprng
 cstring
 dalek
 dashmap
@@ -208,6 +209,8 @@ reqwest
 retriggering
 ristretto
 rlib
+rngs
+rsplit
 rulelist
 RULENAME
 runable
