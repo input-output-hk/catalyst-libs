@@ -16,6 +16,23 @@ pub use metadata::{DocumentRef, Metadata, UuidV7};
 use payload::Content;
 pub use signature::KidURI;
 
+/// Inner type that holds the Catalyst Signed Document with parsing errors.
+#[derive(Default)]
+struct InnerCatalystSignedDocument {
+    /// Document Metadata
+    metadata: Metadata,
+    /// Document Payload JSON Content
+    payload: Content,
+    /// Signatures
+    signatures: Vec<coset::CoseSignature>,
+    /// Raw COSE Sign data
+    cose_sign: coset::CoseSign,
+    /// Raw COSE Sign bytes
+    cose_bytes: Vec<u8>,
+    /// Content Errors found when parsing the Document
+    content_errors: Vec<String>,
+}
+
 /// Keep all the contents private.
 /// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
 /// manage the Arc anywhere else. These are likely to be large, best to have the Arc be
@@ -28,7 +45,7 @@ pub struct CatalystSignedDocument {
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
-        writeln!(f, "JSON Payload {:#}\n", self.inner.payload)?;
+        writeln!(f, "{:#?}\n", self.inner.payload)?;
         writeln!(f, "Signature Information [")?;
         for signature in &self.inner.signatures {
             writeln!(
@@ -45,21 +62,6 @@ impl Display for CatalystSignedDocument {
         }
         writeln!(f, "]")
     }
-}
-
-#[derive(Default)]
-/// Inner type that holds the Catalyst Signed Document with parsing errors.
-struct InnerCatalystSignedDocument {
-    /// Document Metadata
-    metadata: Metadata,
-    /// JSON Payload
-    payload: serde_json::Value,
-    /// Signatures
-    signatures: Vec<coset::CoseSignature>,
-    /// Raw COSE Sign data
-    cose_sign: coset::CoseSign,
-    /// Content Errors found when parsing the Document
-    content_errors: Vec<String>,
 }
 
 impl TryFrom<Vec<u8>> for CatalystSignedDocument {
@@ -91,9 +93,10 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
         let signatures = cose.signatures.clone();
         let inner = InnerCatalystSignedDocument {
             metadata,
-            payload,
+            payload: payload.into(),
             signatures,
             cose_sign: cose,
+            cose_bytes,
             content_errors,
         };
         Ok(CatalystSignedDocument {
@@ -151,5 +154,11 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn doc_section(&self) -> Option<String> {
         self.inner.metadata.doc_section()
+    }
+
+    /// Return Raw COSE SIGN bytes.
+    #[must_use]
+    pub fn cose_sign_bytes(&self) -> &[u8] {
+        self.inner.cose_bytes.as_ref()
     }
 }
