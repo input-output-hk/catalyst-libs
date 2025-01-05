@@ -260,10 +260,11 @@ unlinkat
 upnp
 ureq
 userid
+userinfo
 utimensat
+UTXO
 uuidv4
 uuidv7
-UTXO
 vitss
 Vkey
 vkeywitness
