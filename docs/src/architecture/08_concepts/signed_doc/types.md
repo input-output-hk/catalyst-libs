@@ -1,3 +1,4 @@
+# Document Types Table
 
 | [UUID]                               | [CBOR]                                    | Type Description             | Payload Type                      | Specification Link                                                         |
 | ------------------------------------ | ----------------------------------------- | ---------------------------- | --------------------------------- | -------------------------------------------------------------------------- |
@@ -16,7 +17,6 @@
 | 5e60e623-ad02-4a1b-a1ac-406db978ee48 | `37(h'5e60e623ad024a1ba1ac406db978ee48')` | Proposal Action Document     | *TBD*                             | *TBD*                                                                      |
 | 8de5586c-e998-4b95-8742-7be3c8592803 | `37(h'8DE5586CE9984B9587427BE3C8592803')` | Public Vote Tx V2            | [Brotli] Compressed [CBOR]        | [Public Vote Tx V2 Spec](./../catalyst_voting/v2.md#public-vote)           |
 | e78ee18d-f380-44c1-a852-80aa6ecb07fe | `37(h'E78EE18DF38044C1A85280AA6ECB07FE')` | Private Vote Tx V2           | [Brotli] Compressed [CBOR]        | [Private Vote Tx V2 Spec](./../catalyst_voting/v2.md#private-vote)         |
-
 
 [JSON Schema]: https://json-schema.org/draft-07
 [JSON]: https://datatracker.ietf.org/doc/html/rfc7159

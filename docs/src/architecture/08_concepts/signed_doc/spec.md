@@ -91,7 +91,8 @@ be well constructed.
 
 Creating `id` this way ensures there are no collisions, and they can be independently created without central co-ordination.
 
-*Note: All Catalyst Signed Documents are signed, the first creation of an `id` assigns that `id` to the creator and any assigned collaborators.
+*Note: All Catalyst Signed Documents are signed,
+the first creation of an `id` assigns that `id` to the creator and any assigned collaborators.
 A Catalyst Signed Document that is not signed by the creator, or an assigned collaborator, is invalid.
 There is no reasonable way an `id` can collide accidentally.
 Therefore, detection of invalid `id`s published by unauthorized publishers, could result in anti-spam
@@ -161,12 +162,12 @@ signature_protected_header = {
 ```
 <!-- markdownlint-enable code-block-style -->
 
-* `kid`: A unique identifier of the signer. A [UTF-8] encoded [URI] string.
+* `kid`: A unique identifier of the signer.
+  A [UTF-8] encoded [URI] string.
 
 ## Copyright
 
 This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
-
 
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [UTF-8]: https://datatracker.ietf.org/doc/html/rfc3629

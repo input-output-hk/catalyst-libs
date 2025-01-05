@@ -1,3 +1,4 @@
+# Metadata Fields List
 
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
 ??? note "Additional Metadata fields: `additional_meta.cddl`"
@@ -79,4 +80,3 @@ It does NOT mean that the listed collaborators have agreed to collaborate, only 
 gives them permission to.*
 
 This list can impact actions that can be performed by the `Proposal Action Document`.
-

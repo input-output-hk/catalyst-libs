@@ -1,5 +1,5 @@
 title: Catalyst Signed Document
 nav:
-- Specification: spec.md
-- Metadata Fields List: meta.md
-- Document Types: types.md
+  - Specification: spec.md
+  - Metadata Fields: meta.md
+  - Document Types: types.md

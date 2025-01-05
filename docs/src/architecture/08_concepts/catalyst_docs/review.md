@@ -39,13 +39,15 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): [Catalyst Signed Document content] must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional):
+  [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
   "content-type" => "br"
   ```
 
-* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `ebe5d0bf-5d86-4577-af4d-008fddbe2edc` value, [review template type](#review-template).
+* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `ebe5d0bf-5d86-4577-af4d-008fddbe2edc` value,
+  [review template type](#review-template).
 
   ```CDDL
   "template" => 37(h'ebe5d0bf5d864577af4d008fddbe2edc')
@@ -77,7 +79,8 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   3 => 30
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional): [Catalyst Signed Document content] must be [Brotli] compressed.
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional):
+  [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
   "content-type" => "br"
