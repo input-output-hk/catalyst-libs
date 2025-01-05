@@ -1,5 +1,5 @@
 ---
-Title: Catalyst Proposal Document
+Title: Catalyst Comment Document
 Category: Catalyst
 Status: Proposed
 Authors:
@@ -13,17 +13,13 @@ License: CC-BY-4.0
 
 ## Abstract
 
-## Proposal Document
+## Comment Document
 
-This is a document, formatted against the referenced proposal template, which defines a proposal which may be submitted
-for consideration under one or more brand campaign categories.
-
-The brand, campaign and category are not part of the document because the document can exist outside this boundary.
-They are defined when a specific document is submitted for consideration.
+This is a document which provides a comment against a particular [Proposal Document].
 
 ### Specification
 
-Catalysyt Proposal document is a [Catalyst Signed Document],
+Catalysyt Comment document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 * [`content type`](./../signed_doc/spec.md#content-type): `application/json`.
@@ -40,24 +36,33 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
 
 A list of used [Catalyst Signed Document protected header fields](./../signed_doc/spec.md#signed-object-fields).
 
-* [`ref`](./../signed_doc/meta.md#ref-document-reference) (optional).
-* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` value, [proposal template type](#proposal-template).
+* [`ref`](./../signed_doc/meta.md#ref-document-reference). Refence to a related [Proposal Document].
+* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0b8424d4-ebfd-46e3-9577-1775a69d290c` value, [commemt template type](#comment-template).
 
   ```CDDL
-  "template" => 37(h'0ce8ab3892584fbca62e7faa6e58318f')
+  "template" => 37(h'0b8424d4ebfd46e395771775a69d290c')
   ```
 
 * [`reply`](./../signed_doc/meta.md#reply-reply-reference) (optional).
+  A reference to another comment,
+  where the comment is in reply to the referenced comment.
+  Comments may only reply to a single other comment document.
+  The referenced `comment` must be for the same proposal [`id`](./../signed_doc/spec.md#id),
+  but can be for a different proposal [`ver`](./../signed_doc/spec.md#ver).
+
 * [`section`](./../signed_doc/meta.md#section-section-reference) (optional).
+  Used when the comment only applies to a specific section to the document being commented upon,
+  and not the entire document.
+
 * [`collabs`](./../signed_doc/meta.md#collabs-authorized-collaborators) (optional).
 
-## Proposal Template
+## Comment Template
 
-This document provides the template structure which a Proposal must be formatted to, and validated against.
+This document pr provides the template structure which a Comment must be formatted to, and validated against.
 
 ### Specification
 
-Catalysyt Proposal Template document is a [Catalyst Signed Document],
+Catalysyt Comment Template document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 * [`content type`](./../signed_doc/spec.md#content-type): `application/json`.
@@ -85,5 +90,6 @@ This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses
 
 [Catalyst Signed Document]: ./../signed_doc/spec.md
 [Catalyst Signed Document content]: ./../signed_doc/spec.md#signed-object-content
+[Proposal Document]: ./proposal.md
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [JSON]: https://datatracker.ietf.org/doc/html/rfc7159
