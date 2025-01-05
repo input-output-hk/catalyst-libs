@@ -19,7 +19,7 @@ TODO
 
 ### Specification
 
-Catalysyt Review document is a [Catalyst Signed Document],
+Catalyst Review document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 #### Metadata Fields
@@ -57,7 +57,7 @@ TODO
 
 ### Specification
 
-Catalysyt Review Template document is a [Catalyst Signed Document],
+Catalyst Review Template document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 #### Metadata Fields

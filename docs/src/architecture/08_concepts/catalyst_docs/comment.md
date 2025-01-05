@@ -19,7 +19,7 @@ This is a document which provides a comment against a particular [Proposal Docum
 
 ### Specification
 
-Catalysyt Comment document is a [Catalyst Signed Document],
+Catalyst Comment document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 #### Metadata Fields
@@ -45,8 +45,8 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   "content-type" => "br"
   ```
 
-* [`ref`](./../signed_doc/meta.md#ref-document-reference). Refence to a related [Proposal Document].
-* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0b8424d4-ebfd-46e3-9577-1775a69d290c` value, [commemt template type](#comment-template).
+* [`ref`](./../signed_doc/meta.md#ref-document-reference). Reference to a related [Proposal Document].
+* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0b8424d4-ebfd-46e3-9577-1775a69d290c` value, [comment template type](#comment-template).
 
   ```CDDL
   "template" => 37(h'0b8424d4ebfd46e395771775a69d290c')
@@ -71,7 +71,7 @@ This document pr provides the template structure which a Comment must be formatt
 
 ### Specification
 
-Catalysyt Comment Template document is a [Catalyst Signed Document],
+Catalyst Comment Template document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 #### Metadata Fields

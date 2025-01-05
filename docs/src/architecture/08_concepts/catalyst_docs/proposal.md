@@ -23,7 +23,7 @@ They are defined when a specific document is submitted for consideration.
 
 ### Specification
 
-Catalysyt Proposal document is a [Catalyst Signed Document],
+Catalyst Proposal document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 #### Metadata Fields
@@ -66,7 +66,7 @@ This document provides the template structure which a Proposal must be formatted
 
 ### Specification
 
-Catalysyt Proposal Template document is a [Catalyst Signed Document],
+Catalyst Proposal Template document is a [Catalyst Signed Document],
 so its fully follows the structure of the [Catalyst Signed Document] specification.
 
 #### Metadata Fields
