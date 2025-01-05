@@ -6,16 +6,14 @@ global: {
 			"^build(-.*)?$",
 			"^package(-.*)?$",
 			"^test(-.*)?$",
-			"^release(-.*)?$",
-			"^publish(-.*)?$",
 		]
 		registries: [
-			ci.providers.aws.registry,
+			ci.providers.aws.ecr.registry,
 		]
 		providers: {
 			aws: {
 				region:   "eu-central-1"
-				registry: "332405224602.dkr.ecr.eu-central-1.amazonaws.com"
+				ecr: registry: "332405224602.dkr.ecr.eu-central-1.amazonaws.com"
 				role:     "arn:aws:iam::332405224602:role/ci"
 			}
 
@@ -44,8 +42,9 @@ global: {
 				path:     "GITHUB_TOKEN"
 			},
 		]
-		tagging: {
-			strategy: "commit"
-		}
+	}
+	repo: {
+		defaultBranch: "main"
+		name:          "input-output-hk/catalyst-libs"
 	}
 }
