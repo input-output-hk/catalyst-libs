@@ -138,12 +138,12 @@ The first implementation will be Catalyst Voices.
   * A Signing key registered on the Cardano Main network.
   * Role 0 - Rotation 0.
   In this example, it is exactly the same as the `<key>`.
-* `kid.catalyst-rbac://preprod@cardano/ed25519/<key>/7/3`
+* `kid.catalyst-rbac://preprod@cardano/<key>/7/3`
   * A Signing key registered on the Cardano pre-production network.
   * Role 7 - Rotation 3.
   The Key for Role 7, and its third published rotation
   (i.e., the fourth key published, the first is the initial key, plus 3 rotations following it).
-* `kid.catalyst-rbac://preprod@cardano/ed25519/<key>/2/0#encrypt`
+* `kid.catalyst-rbac://preprod@cardano/<key>/2/0#encrypt`
   * A Public Encryption key registered on the Cardano pre-production network.
   * Role 2 - Rotation 0.
   The initially published Public Encryption Key for Role 2.
@@ -151,7 +151,7 @@ The first implementation will be Catalyst Voices.
   * A Signing key registered on the Midnight Blockchain Main network
   * Role 0 - Rotation 1.
   In this example, it is NOT the same as the `<key>`, as it identifies the first rotation after `<key>`.
-* `kid.catalyst-rbac://midnight/encrypt/<key>/2/1#encrypt`
+* `kid.catalyst-rbac://midnight/<key>/2/1#encrypt`
   * A public encryption key registered on the Midnight Blockchain Main network.
   * Role 2 - Rotation 1.
 
