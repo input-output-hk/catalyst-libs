@@ -9,9 +9,11 @@ use std::{
 use coset::{CborSerializable, TaggedCborSerializable};
 
 mod metadata;
+mod payload;
 mod signature;
 
 pub use metadata::{DocumentRef, Metadata, UuidV7};
+use payload::Content;
 pub use signature::KidURI;
 
 /// Keep all the contents private.
@@ -60,10 +62,6 @@ struct InnerCatalystSignedDocument {
     content_errors: Vec<String>,
 }
 
-// Do this instead of `new`  if we are converting a single parameter into a struct/type we
-// should use either `From` or `TryFrom` and reserve `new` for cases where we need
-// multiple parameters to actually create the type.  This is much more elegant to use this
-// way, in code.
 impl TryFrom<Vec<u8>> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
