@@ -51,7 +51,8 @@ a list of different metadata fields is specified.
 
 Also as you can see from the specification,
 it is allowed to add any number of additional metadata fields, which could be specified for each `type` of document.
-A full list of considered additional metadata fields defined [here](./meta.md).
+
+[A full list of considered additional metadata fields](./meta.md).
 
 All these fields will be encoded as the [COSE] `protected` header
 
@@ -68,6 +69,8 @@ All these fields will be encoded as the [COSE] `protected` header
 Each Catalyst Signed Document will have a type identifier called `type`.
 
 The `type` is a [UUID] V4.
+
+[A full list of Catalyst supported document types]
 
 #### `id`
 
