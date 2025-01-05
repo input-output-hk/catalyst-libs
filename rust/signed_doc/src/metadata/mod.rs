@@ -21,6 +21,8 @@ pub use uuid_type::{UuidV4, UuidV7};
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
 
 /// Document Metadata.
+///
+/// These values are extracted from the COSE Sign protected header.
 #[derive(Debug, serde::Deserialize)]
 pub struct Metadata {
     /// Document Type `UUIDv4`.
@@ -102,18 +104,24 @@ impl Metadata {
     pub fn content_errors(&self) -> &Vec<String> {
         &self.content_errors
     }
+
+    /// Return
+    #[must_use]
+    pub fn content_type(&self) -> &Option<ContentType> {
+        &self.content_type
+    }
 }
 
 impl Display for Metadata {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "Metadata {{")?;
-        writeln!(f, "  doc_type: {},", self.doc_type)?;
-        writeln!(f, "  doc_id: {},", self.id)?;
-        writeln!(f, "  doc_ver: {},", self.ver)?;
-        writeln!(f, "  doc_ref: {:?},", self.doc_ref)?;
-        writeln!(f, "  doc_template: {:?},", self.template)?;
-        writeln!(f, "  doc_reply: {:?},", self.reply)?;
-        writeln!(f, "  doc_section: {:?}", self.section)?;
+        writeln!(f, "  type: {},", self.doc_type)?;
+        writeln!(f, "  id: {},", self.id)?;
+        writeln!(f, "  ver: {},", self.ver)?;
+        writeln!(f, "  ref: {:?},", self.doc_ref)?;
+        writeln!(f, "  template: {:?},", self.template)?;
+        writeln!(f, "  reply: {:?},", self.reply)?;
+        writeln!(f, "  section: {:?}", self.section)?;
         writeln!(f, "  content_type: {:?}", self.content_type)?;
         writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
         writeln!(f, "}}")
