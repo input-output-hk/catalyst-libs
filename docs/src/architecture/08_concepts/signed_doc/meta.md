@@ -10,7 +10,7 @@
 
 * [Metadata Fields List](#metadata-fields-list)
   * [`ref` Document Reference](#ref-document-reference)
-  * [`ref_hash` Secured Document Reference](#ref-hash-secured-document-reference)
+  * [`ref_hash` Secured Document Reference](#ref_hash-secured-document-reference)
   * [`template` Template Reference](#template-template-reference)
   * [`reply` Reply Reference](#reply-reply-reference)
   * [`section` Section Reference](#section-section-reference)
@@ -88,16 +88,20 @@ This list can impact actions that can be performed by the `Proposal Action Docum
 
 ## `brand_id`
 
-Unique identifier [UUID] v4, which represents a "brand" who is running the voting, e.g. Catalyst, Midnight.
+Unique identifier [UUID] v4, which represents a "brand" who is running the voting,
+e.g. Catalyst, Midnight.
 
 ## `campaign_id`
 
-Unique identifier [UUID] v4, which defines a "campaign" of voting, e.g. "treasury campaign".
+Unique identifier [UUID] v4, which defines a "campaign" of voting,
+e.g. "treasury campaign".
 
 ## `election_id`
 
-Unique identifier [UUID] v4, which defines an election, e.g. "Catalyst Fund 1", "Catalyst Fund 2".
+Unique identifier [UUID] v4, which defines an election,
+e.g. "Catalyst Fund 1", "Catalyst Fund 2".
 
 ## `category_id`
 
-Unique identifier [UUID] v4 which defines a voting category as a collection of proposals, e.g. "Development & Infrastructure", "Products & Integrations".
+Unique identifier [UUID] v4 which defines a voting category as a collection of proposals,
+e.g. "Development & Infrastructure", "Products & Integrations".
