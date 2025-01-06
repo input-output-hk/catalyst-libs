@@ -48,6 +48,11 @@ enum Kind {
         /// Explanation of the failed or problematic validation
         explanation: String,
     },
+    /// Duplicate data was detected.
+    DuplicateData {
+        /// The detected duplicate value.
+        value: String,
+    },
     /// An uncategorized problem was encountered. Use only for rare problems, otherwise
     /// make a new problem kind.
     Other {
@@ -332,6 +337,33 @@ impl ProblemReport {
         self.add_entry(
             Kind::FunctionalValidation {
                 explanation: explanation.to_owned(),
+            },
+            context,
+        );
+    }
+
+    /// Reports that duplicate data was detected in the problem report.
+    ///
+    /// This method adds an entry to the problem report indicating that duplicate data
+    /// is found, along with the value of the duplicate data and any additional context.
+    ///
+    /// # Arguments
+    ///
+    /// * `value`: A string slice representing the value of the duplicate data.
+    /// * `context`: A string slice providing additional context or information about
+    ///     where and why this duplicate data was detected.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use catalyst_types::problem_report::ProblemReport;
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
+    /// report.duplicate_data("RBAC Purpose key at item 6 in map", "0");
+    /// ```
+    pub fn duplicate_data(&self, value: &str, context: &str) {
+        self.add_entry(
+            Kind::DuplicateData {
+                value: value.to_owned(),
             },
             context,
         );
