@@ -90,16 +90,15 @@ mod tests {
 
     #[test]
     fn test_valid_uuid() {
-        // Generate a UUIDv7 (this assumes you have access to a valid UUIDv7 library)
         let valid_uuid = UuidV7::from(
-            Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap(), // Example UUIDv7
+            Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap(),
         );
         assert!(valid_uuid.is_valid(), "Valid UUID should be valid");
     }
 
     #[test]
     fn test_invalid_version_uuid() {
-        let invalid_version_uuid = UuidV7::from(Uuid::from_u128(0)); // Zero UUID is not valid.
+        let invalid_version_uuid = UuidV7::from(Uuid::from_u128(0));
         assert!(
             !invalid_version_uuid.is_valid(),
             "Zero UUID should not be valid"
@@ -130,7 +129,7 @@ mod tests {
 
     #[test]
     fn test_try_from_cbor_invalid_uuid() {
-        let cbor_value = Value::Bytes(vec![0; 16]); // Zeroed-out UUID bytes
+        let cbor_value = Value::Bytes(vec![0; 16]);
         let result = UuidV7::try_from(&cbor_value);
 
         assert!(
