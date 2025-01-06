@@ -360,7 +360,7 @@ impl ProblemReport {
     /// # Example
     ///
     /// ```rust
-    /// use catalyst_types::problem_report::ProblemReport;
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.duplicate_field(
     ///     "key 0",
