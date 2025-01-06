@@ -1,10 +1,10 @@
 //! `UUID` types.
 
-mod v4;
-mod v7;
+mod uuid_v4;
+mod uuid_v7;
 
-pub use v4::UuidV4;
-pub use v7::UuidV7;
+pub use uuid_v4::UuidV4;
+pub use uuid_v7::UuidV7;
 
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
