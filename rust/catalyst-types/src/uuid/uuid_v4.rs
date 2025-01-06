@@ -41,7 +41,7 @@ impl Display for UuidV4 {
 }
 
 impl TryFrom<&coset::cbor::Value> for UuidV4 {
-    type Error = anyhow::Error;
+    type Error = super::CborUuidError;
 
     fn try_from(cbor_value: &coset::cbor::Value) -> Result<Self, Self::Error> {
         match decode_cbor_uuid(cbor_value) {
@@ -49,12 +49,13 @@ impl TryFrom<&coset::cbor::Value> for UuidV4 {
                 if uuid.get_version_num() == Self::UUID_VERSION_NUMBER {
                     Ok(Self { uuid })
                 } else {
-                    anyhow::bail!("UUID {uuid} is not `v{}`", Self::UUID_VERSION_NUMBER);
+                    Err(super::CborUuidError::InvalidVersion {
+                        uuid,
+                        expected_version: Self::UUID_VERSION_NUMBER,
+                    })
                 }
             },
-            Err(e) => {
-                anyhow::bail!("Invalid UUID. Error: {e}");
-            },
+            Err(e) => Err(e),
         }
     }
 }

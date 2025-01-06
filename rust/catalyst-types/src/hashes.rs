@@ -2,9 +2,9 @@
 
 use std::{fmt, str::FromStr};
 
-use anyhow::bail;
 use blake2b_simd::Params;
 use pallas_crypto::hash::Hash;
+use thiserror::Error;
 
 /// Number of bytes in a blake2b 224 hash.
 pub const BLAKE_2B224_SIZE: usize = 224 / 8;
@@ -23,6 +23,20 @@ pub const BLAKE_2B128_SIZE: usize = 128 / 8;
 
 /// `Blake2B` 128bit Hash
 pub type Blake2b128Hash = Blake2bHash<BLAKE_2B128_SIZE>;
+
+/// Errors that can occur when converting to a `Blake2bHash`.
+#[derive(Debug, Error)]
+pub enum Blake2bHashError {
+    /// Indicates that the input byte slice has invalid length of bytes to create a valid
+    /// hash.
+    #[error("Invalid length: expected {expected} bytes, got {actual}")]
+    InvalidLength {
+        /// The expected number of bytes (must be 32 or 28).
+        expected: usize,
+        /// The actual number of bytes in the provided input.
+        actual: usize,
+    },
+}
 
 /// data that is a blake2b [`struct@Hash`] of `BYTES` long.
 ///
@@ -73,11 +87,14 @@ impl<const BYTES: usize> From<Blake2bHash<BYTES>> for Vec<u8> {
 
 /// Convert hash in a form of byte array into the `Blake2bHash` type.
 impl<const BYTES: usize> TryFrom<&[u8]> for Blake2bHash<BYTES> {
-    type Error = anyhow::Error;
+    type Error = Blake2bHashError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         if value.len() < BYTES {
-            bail!("Invalid input length");
+            return Err(Blake2bHashError::InvalidLength {
+                expected: BYTES,
+                actual: value.len(),
+            });
         }
 
         let mut hash = [0; BYTES];
@@ -88,7 +105,7 @@ impl<const BYTES: usize> TryFrom<&[u8]> for Blake2bHash<BYTES> {
 }
 
 impl<const BYTES: usize> TryFrom<&Vec<u8>> for Blake2bHash<BYTES> {
-    type Error = anyhow::Error;
+    type Error = Blake2bHashError;
 
     fn try_from(value: &Vec<u8>) -> Result<Self, Self::Error> {
         value.as_slice().try_into()
@@ -96,7 +113,7 @@ impl<const BYTES: usize> TryFrom<&Vec<u8>> for Blake2bHash<BYTES> {
 }
 
 impl<const BYTES: usize> TryFrom<Vec<u8>> for Blake2bHash<BYTES> {
-    type Error = anyhow::Error;
+    type Error = Blake2bHashError;
 
     fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
         value.as_slice().try_into()

@@ -1,6 +1,26 @@
 //! Conversion functions
 
-use anyhow::bail;
+use thiserror::Error;
+
+/// Errors that can occur when converting bytes to an Ed25519 verifying key.
+#[derive(Debug, Error)]
+pub enum VKeyFromBytesError {
+    /// Indicates the provided byte slice has an invalid length.
+    #[error("Invalid byte length: expected {expected} bytes, got {actual}")]
+    InvalidLength {
+        /// The expected number of bytes (must be 32).
+        expected: usize,
+        /// The actual number of bytes in the provided input.
+        actual: usize,
+    },
+    /// Indicates that the bytes could not be parsed into an Ed25519 public key.
+    #[error("Failed to parse Ed25519 public key: {source}")]
+    ParseError {
+        /// The underlying error from `ed25519_dalek`.
+        #[from]
+        source: ed25519_dalek::SignatureError,
+    },
+}
 
 /// Convert an `<T>` to `<R>` (saturate if out of range).
 /// Note can convert any int to float, or f32 to f64 as well.
@@ -35,13 +55,12 @@ pub fn from_saturating<
 /// # Errors
 ///
 /// Fails if the bytes are not a valid ED25519 Public Key
-pub fn vkey_from_bytes(bytes: &[u8]) -> anyhow::Result<ed25519_dalek::VerifyingKey> {
+pub fn vkey_from_bytes(bytes: &[u8]) -> Result<ed25519_dalek::VerifyingKey, VKeyFromBytesError> {
     if bytes.len() != ed25519_dalek::PUBLIC_KEY_LENGTH {
-        bail!(
-            "Failed to convert bytes to ED25519 public key. Expected {} bytes, got {}",
-            ed25519_dalek::PUBLIC_KEY_LENGTH,
-            bytes.len()
-        );
+        return Err(VKeyFromBytesError::InvalidLength {
+            expected: ed25519_dalek::PUBLIC_KEY_LENGTH,
+            actual: bytes.len(),
+        });
     }
 
     let mut ed25519 = [0u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
@@ -49,7 +68,7 @@ pub fn vkey_from_bytes(bytes: &[u8]) -> anyhow::Result<ed25519_dalek::VerifyingK
 
     let pubkey = match ed25519_dalek::VerifyingKey::from_bytes(&ed25519) {
         Ok(key) => key,
-        Err(err) => bail!("Failed to convert Ed25519 public key in SimplePublicKeyType {err}"),
+        Err(err) => return Err(VKeyFromBytesError::ParseError { source: err }),
     };
     Ok(pubkey)
 }
