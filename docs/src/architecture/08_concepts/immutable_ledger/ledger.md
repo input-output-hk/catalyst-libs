@@ -72,6 +72,47 @@ Which is well suited where it comes to process some temporary event e.g. voting.
 
 ### Block structure
 
+Immutable ledger block is a [Catalyst Signed Document],
+so its fully follows the structure of the [Catalyst Signed Document] specification.
+
+### Metadata Fields
+
+* [`id`](./../signed_doc/spec.md#id).
+  Used as a unique identifier of the chain.
+  So all blocks from the same chain must have the same
+  [`id`](./../signed_doc/spec.md#id) field value.
+* [`ver`](./../signed_doc/spec.md#ver).
+  Used as a unique identifier of the block itself.
+  Also the block's creation `timestamp` value is determined from the
+  [`ver`](./../signed_doc/spec.md#ver) field.
+* [`content type`](./../signed_doc/spec.md#content-type): `application/cbor`.
+  [Catalyst Signed Document content] must be a [CBOR] encoded.
+
+  ```CDDL
+  3 => 50
+  ```
+
+* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional):
+  [Catalyst Signed Document content] must be [Brotli] compressed.
+
+  ```CDDL
+  "content-type" => "br"
+  ```
+
+* [`type`](./../signed_doc/spec.md#type): `d9e7e6ce-2401-4d7d-9492-f4f7c64241c3` [UUID] value.
+
+  ```CDDL
+  "type" => 37(h'D9E7E6CE24014D7D9492F4F7C64241C3')
+  ```
+
+* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference).
+  Previous block reference.
+  A [`ref`](./../signed_doc/meta.md#ref-document-reference) part **must** be a pair of
+  [`id`](./../signed_doc/spec.md#id) and
+  [`ver`](./../signed_doc/spec.md#ver).
+
+### Content format
+
 <!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
 ??? note "Block CDDL definition: `block.cddl`"
 
@@ -82,12 +123,9 @@ Which is well suited where it comes to process some temporary event e.g. voting.
 
 Header:
 
-* `chain-id` - unique identifier of the chain.
 * `height` - block's height.
   Also is used to identify the block type: *genesis*, *regular*, *final*
   (in more details described in [validation section](#block-validation-rules)).
-* `timestamp` - block's timestamp.
-* `prev-block-id` - previous block hash.
 * `ledger-type` - unique identifier of the ledger type.
   In general, this is the way to strictly bound and specify `block-data` of the ledger for the specific `ledger-type`.
   But such rules will be a part of the specific ledger type definition,
@@ -97,62 +135,41 @@ Header:
   each Ledger instance will have a strict time boundaries,
   so each of them will run for different purposes.
   This is the way to distinguish them.
-* `validator` - identifier or identifiers of the entity who was produced and processed a block.
-* `metadata` - fully optional field, to add some arbitrary metadata to the block.
+* `extra-header-data` - fully optional field, to add some arbitrary data to the block header.
 
 Block:
 
 * `block-header` - block header described above,
 * `block-data` - an array of some CBOR encoded data
-* `validator-signature` - a signature or signatures of the validator's.
 
 ### Block validation rules
 
-* `chain-id` **MUST** be the same as for the previous block (except for genesis).
+* [`id`](./../signed_doc/spec.md#id)
+  **MUST** be the same as for the previous block (except for genesis).
 * `height` **MUST** be incremented by `1` from the previous block height value (except for genesis and final block).
   *Genesis* block **MUST** have `0` value.
   *Final* block **MUST** hash be incremented by `1` from the previous block height and changed the sign to negative.
   E.g. previous block height is `9` and the *Final* block height is `-10`.
 * *Final* block is the last one for the specific chain and any other block could not be referenced to the *Final* one.
 
-* `timestamp` **MUST** be greater or equals than the `timestamp` of the previous block (except for genesis).
-* `prev-block-id` **MUST** be a hash of the previous block bytes (except for genesis).
-
+* [`ver`](./../signed_doc/spec.md#ver)
+  timestamp value **MUST** be greater or equals than the corresponding `timestamp`
+  of the previous block (except for genesis).
+* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference)
+  **MUST** be a reference to the previous block (except for genesis).
 * `ledger-type` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
 * `purpose-id` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
-* `validator` **MUST** be the same as for the previous block if present (except for genesis).
-  **MANDATORY** field for *Genesis* and *Final* blocks.
-* `prev-block-id`'s CBOR tag value and `bstr` size **MUST** be the same as for the previous block (except for genesis).
+* [`kid`](./../signed_doc/spec.md#cose-signature-protected-header) field
+  **MUST** be the same as for the previous block (except for genesis).
+* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference)'s
+  `hash-bytes` CBOR tag value and `bytes` size
+  **MUST** be the same as for the previous block (except for genesis).
   Means that the hash function type and hash size itself must be the same.
-* `prev-block-id` and `validator-signature` **MUST** use the same hash function, defined with the
-  `hash-bytes`.
-
-* `prev-block-id` for the *Genesis* block **MUST** be a hash of the `genesis-to-prev-hash` bytes.
-
+* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference)
+  field for the *Genesis* block **MUST** be omitted.
 * `block-data` **MUST** be a [deterministically][CBOR-deterministically-encoded] encoded CBOR.
-
-<!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "Genesis to previous block hash CDDL definition: `genesis-to-prev-hash.cddl`"
-
-    ```CDDL
-    {{ include_file('src/architecture/08_concepts/immutable_ledger/cddl/genesis_to_prev_hash.cddl',indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
-
-#### Signature rules
-
-`validator-signature`
-**MUST** be a signature of the hashed `block-header` bytes and the `block-data` bytes
-(with the order the same as defined for `block`).
-Signed by the validator's keys defined in the corresponding certificates referenced by the `validator`.
-Signature algorithm is defined by the certificate.
-The format and size of this field **MUST** be totally the same as `validator` field:
-
-* if `validator` is only one id => `validator-signature` contains only 1 signature;
-* if `validator` is array => `validator-signature` contains an array with the same length;
-* order of signatures from the `validator-signature`'s array corresponds to the validators order of `validator`'s array.
 
 ## Rationale
 
@@ -166,4 +183,5 @@ The format and size of this field **MUST** be totally the same as `validator` fi
 
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
+[Catalyst Signed Document]: ./../signed_doc/spec.md
 [CBOR-deterministically-encoded]: https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c

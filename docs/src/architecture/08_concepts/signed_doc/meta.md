@@ -105,3 +105,6 @@ e.g. "Catalyst Fund 1", "Catalyst Fund 2".
 
 Unique identifier [UUID] v4 which defines a voting category as a collection of proposals,
 e.g. "Development & Infrastructure", "Products & Integrations".
+
+[UUID]: https://www.rfc-editor.org/rfc/rfc9562.html
+[CBOR]: https://datatracker.ietf.org/doc/rfc8949/
