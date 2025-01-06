@@ -40,7 +40,9 @@ pub struct KidURI {
     role: RoleIndex,
     /// Role Key Rotation count
     rotation: KeyRotation,
-    /// Is this an Encryption Key
+    /// Indicates whether this key is an encryption key.
+    /// - `true`: The key is used for encryption.
+    /// - `false`: The key is used for signing (signature key).
     encryption: bool,
 }
 
