@@ -1,5 +1,5 @@
 //! Integration test for `catalyst-type`
-//! 
+//!
 //! This is mainly to demonstrate sample usage of the types.
 
 use catalyst_types;
