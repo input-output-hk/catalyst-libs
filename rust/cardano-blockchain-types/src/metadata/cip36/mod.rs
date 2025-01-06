@@ -11,7 +11,7 @@ use key_registration::Cip36KeyRegistration;
 use minicbor::{Decode, Decoder};
 use pallas::ledger::addresses::ShelleyAddress;
 use registration_witness::Cip36RegistrationWitness;
-use validation::{validate_cip36, Cip36Validation};
+use validation::validate_cip36;
 use voting_pk::VotingPubKey;
 
 use crate::{MetadatumLabel, MultiEraBlock, TxnIndex};
@@ -25,9 +25,6 @@ pub struct Cip36 {
     registration_witness: Cip36RegistrationWitness,
     /// Is this a Catalyst strict registration?
     is_catalyst_strict: bool,
-    /// CIP36 validation.
-    #[allow(dead_code)]
-    validation: Cip36Validation,
 }
 
 impl Cip36 {
@@ -101,14 +98,13 @@ impl Cip36 {
             key_registration,
             registration_witness,
             is_catalyst_strict,
-            validation,
         };
 
         if validation_report.is_empty() {
             Ok(cip36)
         } else {
             // If there are validation errors, the CIP36 is invalid
-            bail!("CIP-36 validation failed: {cip36:?}, Reports: {validation_report:?}")
+            bail!("CIP-36 validation failed: {cip36:?}, Validation: {validation:?}, Reports: {validation_report:?}")
         }
     }
 
@@ -171,11 +167,5 @@ impl Cip36 {
     #[must_use]
     pub fn is_strict_catalyst(&self) -> bool {
         self.is_catalyst_strict
-    }
-
-    /// Get the CIP-36 validation.
-    #[must_use]
-    pub fn validation(&self) -> &Cip36Validation {
-        &self.validation
     }
 }
