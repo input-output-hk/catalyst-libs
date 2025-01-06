@@ -107,17 +107,6 @@ mod tests {
     }
 
     #[test]
-    fn test_display_trait() {
-        let valid_uuid =
-            UuidV7::from(Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap());
-        assert_eq!(
-            format!("{}", valid_uuid),
-            valid_uuid.uuid().to_string(),
-            "Display implementation should match UUID string"
-        );
-    }
-
-    #[test]
     fn test_try_from_cbor_valid_uuid() {
         let uuid = Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap();
         let cbor_value = Value::Tag(

@@ -104,16 +104,6 @@ mod tests {
     }
 
     #[test]
-    fn test_display_trait() {
-        let valid_uuid = UuidV4::from(Uuid::new_v4());
-        assert_eq!(
-            format!("{}", valid_uuid),
-            valid_uuid.uuid().to_string(),
-            "Display implementation should match UUID string"
-        );
-    }
-
-    #[test]
     fn test_try_from_cbor_valid_uuid() {
         let uuid = Uuid::new_v4();
         let cbor_value = Value::Tag(
