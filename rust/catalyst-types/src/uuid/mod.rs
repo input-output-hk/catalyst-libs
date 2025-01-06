@@ -12,6 +12,9 @@ pub use uuid_v7::UuidV7 as V7;
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 
+/// CBOR tag for UUID content.
+pub const UUID_CBOR_TAG: u64 = 37;
+
 /// Errors that can occur when decoding CBOR-encoded UUIDs.
 #[derive(Debug, Error)]
 pub enum CborUuidError {
@@ -30,9 +33,6 @@ pub enum CborUuidError {
         expected_version: usize,
     },
 }
-
-/// CBOR tag for UUID content.
-pub const UUID_CBOR_TAG: u64 = 37;
 
 /// Decode `CBOR` encoded `UUID`.
 pub(crate) fn decode_cbor_uuid(val: &coset::cbor::Value) -> Result<uuid::Uuid, CborUuidError> {

@@ -2,10 +2,8 @@
 
 // cspell: words userinfo rngs Fftx csprng
 
-mod authority;
 mod errors;
 mod key_rotation;
-mod role0_pk;
 mod role_index;
 
 use std::{

@@ -68,3 +68,85 @@ impl From<uuid::Uuid> for UuidV7 {
         Self { uuid }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use coset::cbor::Value;
+    use uuid::Uuid;
+
+    use super::*;
+    use crate::uuid::UUID_CBOR_TAG;
+
+    #[test]
+    fn test_invalid_uuid() {
+        let invalid_uuid = UuidV7::invalid();
+        assert!(!invalid_uuid.is_valid(), "Invalid UUID should not be valid");
+        assert_eq!(
+            invalid_uuid.uuid(),
+            INVALID_UUID,
+            "Invalid UUID should match INVALID_UUID"
+        );
+    }
+
+    #[test]
+    fn test_valid_uuid() {
+        // Generate a UUIDv7 (this assumes you have access to a valid UUIDv7 library)
+        let valid_uuid = UuidV7::from(
+            Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap(), // Example UUIDv7
+        );
+        assert!(valid_uuid.is_valid(), "Valid UUID should be valid");
+    }
+
+    #[test]
+    fn test_invalid_version_uuid() {
+        let invalid_version_uuid = UuidV7::from(Uuid::from_u128(0)); // Zero UUID is not valid.
+        assert!(
+            !invalid_version_uuid.is_valid(),
+            "Zero UUID should not be valid"
+        );
+    }
+
+    #[test]
+    fn test_display_trait() {
+        let valid_uuid =
+            UuidV7::from(Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap());
+        assert_eq!(
+            format!("{}", valid_uuid),
+            valid_uuid.uuid().to_string(),
+            "Display implementation should match UUID string"
+        );
+    }
+
+    #[test]
+    fn test_try_from_cbor_valid_uuid() {
+        let uuid = Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap();
+        let cbor_value = Value::Tag(
+            UUID_CBOR_TAG,
+            Box::new(Value::Bytes(uuid.as_bytes().to_vec())),
+        );
+        let result = UuidV7::try_from(&cbor_value);
+
+        assert!(
+            result.is_ok(),
+            "Should successfully parse valid UUID from CBOR"
+        );
+        let uuid_v7 = result.unwrap();
+        assert!(uuid_v7.is_valid(), "Parsed UUIDv7 should be valid");
+        assert_eq!(
+            uuid_v7.uuid(),
+            uuid,
+            "Parsed UUID should match original UUID"
+        );
+    }
+
+    #[test]
+    fn test_try_from_cbor_invalid_uuid() {
+        let cbor_value = Value::Bytes(vec![0; 16]); // Zeroed-out UUID bytes
+        let result = UuidV7::try_from(&cbor_value);
+
+        assert!(
+            result.is_err(),
+            "Should fail to parse invalid UUID from CBOR"
+        );
+    }
+}

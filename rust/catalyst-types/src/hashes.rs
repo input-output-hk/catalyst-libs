@@ -36,6 +36,13 @@ pub enum Blake2bHashError {
         /// The actual number of bytes in the provided input.
         actual: usize,
     },
+    /// The input string is not a valid hex-encoded string.
+    #[error("Invalid hex string: {source}")]
+    InvalidHex {
+        /// The underlying error from `hex`.
+        #[from]
+        source: hex::FromHexError,
+    },
 }
 
 /// data that is a blake2b [`struct@Hash`] of `BYTES` long.
@@ -133,10 +140,10 @@ impl<const BYTES: usize> fmt::Display for Blake2bHash<BYTES> {
 }
 
 impl<const BYTES: usize> FromStr for Blake2bHash<BYTES> {
-    type Err = hex::FromHexError;
+    type Err = Blake2bHashError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let hash: Hash<BYTES> = s.parse()?;
+        let hash: Hash<BYTES> = s.parse().map_err(Blake2bHashError::from)?;
         Ok(hash.into())
     }
 }

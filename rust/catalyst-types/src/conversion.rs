@@ -66,9 +66,6 @@ pub fn vkey_from_bytes(bytes: &[u8]) -> Result<ed25519_dalek::VerifyingKey, VKey
     let mut ed25519 = [0u8; ed25519_dalek::PUBLIC_KEY_LENGTH];
     ed25519.copy_from_slice(bytes); // Can't panic because we already validated its size.
 
-    let pubkey = match ed25519_dalek::VerifyingKey::from_bytes(&ed25519) {
-        Ok(key) => key,
-        Err(err) => return Err(VKeyFromBytesError::ParseError { source: err }),
-    };
-    Ok(pubkey)
+    ed25519_dalek::VerifyingKey::from_bytes(&ed25519)
+        .map_err(|source| VKeyFromBytesError::ParseError { source })
 }

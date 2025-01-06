@@ -31,4 +31,5 @@ base64-url = "3.0.0"
 uuid = { version = "1.11.0", features = ["v4", "v7", "serde"] }
 
 [dev-dependencies]
+ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 rand = "0.8.5"
