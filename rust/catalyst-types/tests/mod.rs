@@ -12,6 +12,8 @@ fn test_type_usage() {
     type D = catalyst_types::uuid::V4;
     type E = catalyst_types::uuid::V7;
 
+    type F = catalyst_types::kid_uri::KidURI;
+
     let bytes: [u8; 32] = [0; 32];
     let _ = catalyst_types::hashes::Blake2bHash::from(bytes);
 }
