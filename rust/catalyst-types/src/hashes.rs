@@ -188,7 +188,7 @@ mod tests {
         let data = b"Cardano";
         let hash = Blake2b224Hash::new(data);
 
-        let as_vec: Vec<u8> = hash.clone().into();
+        let as_vec: Vec<u8> = hash.into();
         let from_vec = Blake2b224Hash::try_from(&as_vec).unwrap();
         assert_eq!(hash, from_vec);
 
