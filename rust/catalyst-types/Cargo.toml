@@ -16,4 +16,5 @@ workspace = true
 name = "catalyst_types"
 
 [dependencies]
-anyhow = "1.0.89"
+orx-concurrent-vec = "3.1.0"
+serde = { version = "1.0.217", features = ["derive"] }
