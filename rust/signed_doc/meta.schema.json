@@ -97,6 +97,19 @@
         },
         "section": {
             "type": "string"
+        },
+        "content-type": {
+            "type": "string",
+            "examples": [
+                "json",
+                "cbor"
+            ]
+        },
+        "content-encoding": {
+            "type": "string",
+            "examples": [
+                "br"
+            ]
         }
     },
     "required": [

@@ -9,7 +9,7 @@ use std::{
 };
 
 use clap::Parser;
-use coset::CborSerializable;
+use coset::{iana::CoapContentFormat, CborSerializable};
 use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
@@ -121,6 +121,7 @@ impl Cli {
                 let json_doc = load_json_from_file(&doc)?;
                 let json_meta = load_json_from_file(&meta)
                     .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
+                println!("{json_meta}");
                 validate_json(&json_doc, &doc_schema)?;
                 let compressed_doc = brotli_compress_json(&json_doc)?;
                 let empty_cose_sign = build_empty_cose_doc(compressed_doc, &json_meta);
@@ -194,7 +195,7 @@ fn brotli_decompress_json(mut doc_bytes: &[u8]) -> anyhow::Result<serde_json::Va
 
 fn cose_protected_header() -> coset::Header {
     coset::HeaderBuilder::new()
-        .content_format(coset::iana::CoapContentFormat::Json)
+        .content_format(CoapContentFormat::Json)
         .text_value(
             CONTENT_ENCODING_KEY.to_string(),
             CONTENT_ENCODING_VALUE.to_string().into(),
@@ -203,7 +204,19 @@ fn cose_protected_header() -> coset::Header {
 }
 
 fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign {
-    let mut protected_header = cose_protected_header();
+    let mut builder = coset::HeaderBuilder::new();
+
+    if let Some(content_type) = meta.content_type() {
+        builder = builder.content_format(CoapContentFormat::from(content_type));
+    }
+
+    if let Some(content_encoding) = meta.content_encoding() {
+        builder = builder.text_value(
+            CONTENT_ENCODING_KEY.to_string(),
+            format!("{content_encoding}").into(),
+        );
+    }
+    let mut protected_header = builder.build();
 
     protected_header.rest.push((
         coset::Label::Text("type".to_string()),

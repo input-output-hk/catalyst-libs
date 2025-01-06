@@ -42,8 +42,10 @@ pub struct Metadata {
     /// Reference to the document section.
     section: Option<String>,
     /// Document Payload Content Type.
+    #[serde(default, rename = "content-type")]
     content_type: Option<ContentType>,
     /// Document Payload Content Encoding.
+    #[serde(default, rename = "content-encoding")]
     content_encoding: Option<ContentEncoding>,
     /// Metadata Content Errors
     #[serde(skip)]
@@ -105,10 +107,16 @@ impl Metadata {
         &self.content_errors
     }
 
-    /// Return
+    /// Returns the Document Content Type, if any.
     #[must_use]
-    pub fn content_type(&self) -> &Option<ContentType> {
-        &self.content_type
+    pub fn content_type(&self) -> Option<ContentType> {
+        self.content_type
+    }
+
+    /// Returns the Document Content Encoding, if any.
+    #[must_use]
+    pub fn content_encoding(&self) -> Option<ContentEncoding> {
+        self.content_encoding
     }
 }
 
@@ -194,11 +202,10 @@ impl From<&coset::ProtectedHeader> for Metadata {
                     },
                 }
             },
-            _ => {
-                errors.push(
-                    "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' label"
-                        .to_string(),
-                );
+            None => {
+                errors.push(format!(
+                    "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' is missing"
+                ));
             },
         }
         match cose_protected_header_find(protected, "type") {
