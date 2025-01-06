@@ -198,7 +198,7 @@ mod tests {
 
     #[test]
     fn test_blake2b_hash_invalid_length() {
-        let invalid_data = vec![0u8; 10]; // Shorter than required length
+        let invalid_data = vec![0u8; 10];
         let result = Blake2b224Hash::try_from(&invalid_data);
         assert!(result.is_err());
 
