@@ -16,12 +16,12 @@ impl UuidV4 {
     const UUID_VERSION_NUMBER: usize = 4;
 
     /// Generates a zeroed out `UUIDv4` that can never be valid.
-    pub fn invalid() -> Self {
+    #[must_use] pub fn invalid() -> Self {
         Self { uuid: INVALID_UUID }
     }
 
     /// Check if this is a valid `UUIDv4`.
-    pub fn is_valid(&self) -> bool {
+    #[must_use] pub fn is_valid(&self) -> bool {
         self.uuid != INVALID_UUID && self.uuid.get_version_num() == Self::UUID_VERSION_NUMBER
     }
 
