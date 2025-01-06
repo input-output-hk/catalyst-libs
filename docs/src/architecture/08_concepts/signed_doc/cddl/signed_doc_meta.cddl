@@ -8,12 +8,14 @@ signed_doc_meta = {
 
   1 => -8, ; "alg": EdDSA
   3 => text / int, ; "content type"
-  ? "Content-Encoding" / "content-encoding" => "br", ; payload content encoding
+  ? content-encoding-key => "br", ; payload content encoding
 
   ~meta.additional_fields,
 
   * metadata-key => metadata-value
 }
+
+content-encoding-key = "Content-Encoding" / "content-encoding"
 
 metadata-key = int / text
 metadata-value = any

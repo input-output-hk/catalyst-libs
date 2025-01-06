@@ -10,5 +10,5 @@ check-cddl:
     COPY ./additional_meta.cddl ./hash.cddl ./signed_doc_meta.cddl .
 
     RUN cddlc -2 hash.cddl
-    # RUN cddlc -2 additional_meta.cddl
-    # RUN cddlc -2 signed_doc_meta.cddl
+    RUN cddlc -2 additional_meta.cddl
+    RUN cddlc -2 signed_doc_meta.cddl
