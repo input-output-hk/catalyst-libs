@@ -3,3 +3,4 @@
 pub mod conversion;
 pub mod hashes;
 pub mod problem_report;
+pub mod uuid;
