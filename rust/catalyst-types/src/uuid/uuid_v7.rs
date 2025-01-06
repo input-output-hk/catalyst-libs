@@ -90,9 +90,8 @@ mod tests {
 
     #[test]
     fn test_valid_uuid() {
-        let valid_uuid = UuidV7::from(
-            Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap(),
-        );
+        let valid_uuid =
+            UuidV7::from(Uuid::try_parse("017f22e3-79b0-7cc7-98cf-e0bbf8a1c5f1").unwrap());
         assert!(valid_uuid.is_valid(), "Valid UUID should be valid");
     }
 
