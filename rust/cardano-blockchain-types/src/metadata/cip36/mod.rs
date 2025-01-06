@@ -6,6 +6,7 @@ mod validation;
 pub mod voting_pk;
 
 use anyhow::bail;
+use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::VerifyingKey;
 use key_registration::Cip36KeyRegistration;
 use minicbor::{Decode, Decoder};
@@ -83,7 +84,7 @@ impl Cip36 {
                 },
             };
 
-        let mut validation_report = Vec::new();
+        let validation_report = ProblemReport::new("CIP-36 Registration Validation");
         // If the code reach here, then the CIP36 decoding is successful.
         let validation = validate_cip36(
             &key_registration,
@@ -91,7 +92,7 @@ impl Cip36 {
             is_catalyst_strict,
             network,
             k61284,
-            &mut validation_report,
+            &validation_report,
         );
 
         let cip36 = Self {
@@ -100,12 +101,15 @@ impl Cip36 {
             is_catalyst_strict,
         };
 
-        if validation_report.is_empty() {
-            Ok(cip36)
-        } else {
-            // If there are validation errors, the CIP36 is invalid
-            bail!("CIP-36 validation failed: {cip36:?}, Validation: {validation:?}, Reports: {validation_report:?}")
+        if !validation_report.problematic() {
+            return Ok(cip36);
         }
+        // If there are validation errors, the CIP36 is invalid
+        bail!(
+            "CIP-36 validation failed: {cip36:?}, Validation: {validation:?}, Reports: {:?}",
+            serde_json::to_string(&validation_report)
+                .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
+        )
     }
 
     /// Get the `is_cip36` flag from the registration.

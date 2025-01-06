@@ -1,5 +1,7 @@
 //! Validation function for CIP-36
 
+use catalyst_types::problem_report::ProblemReport;
+
 use super::{Cip36KeyRegistration, Cip36RegistrationWitness};
 use crate::{MetadatumValue, Network};
 
@@ -46,7 +48,7 @@ pub(crate) struct Cip36Validation {
 pub(crate) fn validate_cip36(
     key_registration: &Cip36KeyRegistration, registration_witness: &Cip36RegistrationWitness,
     is_strict_catalyst: bool, network: Network, metadata: &MetadatumValue,
-    validation_report: &mut Vec<String>,
+    validation_report: &ProblemReport,
 ) -> Cip36Validation {
     // Need to make sure that when return false, the validation_report is updated.
     let is_valid_signature = validate_signature(
@@ -75,7 +77,7 @@ pub(crate) fn validate_cip36(
 #[allow(clippy::too_many_lines)]
 fn validate_signature(
     key_registration: &Cip36KeyRegistration, registration_witness: &Cip36RegistrationWitness,
-    metadata: &MetadatumValue, validation_report: &mut Vec<String>,
+    metadata: &MetadatumValue, validation_report: &ProblemReport,
 ) -> bool {
     let hash = blake2b_simd::Params::new()
         .hash_length(32)
@@ -85,7 +87,8 @@ fn validate_signature(
         .finalize();
 
     let Some(sig) = registration_witness.signature else {
-        validation_report.push("Validate CIP36 Signature, signature is invalid".to_string());
+        validation_report
+            .missing_field("Signature", "Validate CIP36 Signature, signature not found");
         return false;
     };
 
@@ -93,17 +96,23 @@ fn validate_signature(
         if let Ok(()) = stake_pk.verify_strict(hash.as_bytes(), &sig) {
             return true;
         }
-        validation_report.push("Validate CIP36 Signature, cannot verify signature".to_string());
+        validation_report.other(
+            "Cannot verify the signature using stake public key",
+            "Validate CIP36 Signature",
+        );
         return false;
     }
 
-    validation_report.push("Validate CIP36 Signature, stake public key is missing".to_string());
+    validation_report.missing_field(
+        "Stake public key",
+        "Validate CIP36 Signature, stake public Key not found",
+    );
     false
 }
 
 /// Validate the payment address network against the given network.
 fn validate_payment_address_network(
-    key_registration: &Cip36KeyRegistration, network: Network, validation_report: &mut Vec<String>,
+    key_registration: &Cip36KeyRegistration, network: Network, validation_report: &ProblemReport,
 ) -> Option<bool> {
     if let Some(address) = &key_registration.payment_addr {
         let network_tag = address.network();
@@ -112,15 +121,19 @@ fn validate_payment_address_network(
             Network::Preprod | Network::Preview => network_tag.value() == 0,
         };
         if !valid {
-            validation_report.push(format!(
-                "Validate CIP36 payment address network, network Tag of payment address {network_tag:?} does not match the network used",
-            ));
+            validation_report.invalid_value(
+                "Network tag of payment address",
+                format!("{network_tag:?}").as_str(),
+                format!("Expected {network}").as_str(),
+                "Validate CIP36 payment address network, CIP36 payment address network does not match the network used",
+            );
         }
 
         Some(valid)
     } else {
-        validation_report.push(
-            "Validate CIP36 payment address network, cannot find payment address in the registration".to_string()
+        validation_report.missing_field(
+            "Payment address",
+            "Validate CIP36 payment address network, payment address not found",
         );
         None
     }
@@ -129,13 +142,15 @@ fn validate_payment_address_network(
 /// Validate the voting keys.
 fn validate_voting_keys(
     key_registration: &Cip36KeyRegistration, is_strict_catalyst: bool,
-    validation_report: &mut Vec<String>,
+    validation_report: &ProblemReport,
 ) -> bool {
     if is_strict_catalyst && key_registration.voting_pks.len() != 1 {
-        validation_report.push(format!(
-            "Validate CIP-36 Voting Keys, Catalyst supports only a single voting key per registration, found {}",
-            key_registration.voting_pks.len()
-        ));
+        validation_report.invalid_value(
+            "Voting keys",
+            format!("{}", key_registration.voting_pks.len()).as_str(),
+            "Catalyst supports only a single voting key per registration",
+            "Validate CIP-36 Voting Keys",
+        );
         return false;
     }
     true
@@ -144,13 +159,16 @@ fn validate_voting_keys(
 /// Validate the purpose.
 fn validate_purpose(
     key_registration: &Cip36KeyRegistration, is_strict_catalyst: bool,
-    validation_report: &mut Vec<String>,
+    validation_report: &ProblemReport,
 ) -> bool {
     if is_strict_catalyst && key_registration.purpose != PROJECT_CATALYST_PURPOSE {
-        validation_report.push(format!(
-            "Validate CIP-36 Purpose, registration contains unknown purpose: {}",
-            key_registration.purpose
-        ));
+        validation_report.invalid_value(
+            "Purpose",
+            format!("{}", key_registration.purpose).as_str(),
+            format!("Registration contains unknown purpose, expected {PROJECT_CATALYST_PURPOSE}")
+                .as_str(),
+            "Validate CIP-36 Purpose",
+        );
         return false;
     }
     true
@@ -159,6 +177,7 @@ fn validate_purpose(
 #[cfg(test)]
 mod tests {
 
+    use catalyst_types::problem_report::ProblemReport;
     use ed25519_dalek::VerifyingKey;
     use pallas::ledger::addresses::Address;
 
@@ -184,11 +203,14 @@ mod tests {
             payment_addr: Some(shelley_addr),
             ..Default::default()
         };
-        let mut report = Vec::new();
-        let valid =
-            validate_payment_address_network(&key_registration, Network::Preprod, &mut report);
+        let validation_report = ProblemReport::new("CIP36 Registration Validation");
+        let valid = validate_payment_address_network(
+            &key_registration,
+            Network::Preprod,
+            &validation_report,
+        );
 
-        assert_eq!(report.len(), 0);
+        assert!(!validation_report.problematic());
         assert_eq!(valid, Some(true));
     }
 
@@ -204,14 +226,16 @@ mod tests {
             payment_addr: Some(shelley_addr),
             ..Default::default()
         };
-        let mut report = Vec::new();
-        let valid =
-            validate_payment_address_network(&key_registration, Network::Mainnet, &mut report);
+        let validation_report = ProblemReport::new("CIP36 Registration Validation");
+        let valid = validate_payment_address_network(
+            &key_registration,
+            Network::Mainnet,
+            &validation_report,
+        );
 
-        assert_eq!(report.len(), 1);
-        assert!(report
-            .first()
-            .expect("Failed to get the first index")
+        assert!(validation_report.problematic());
+        assert!(serde_json::to_string(&validation_report)
+            .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
             .contains("does not match the network used"));
         assert_eq!(valid, Some(false));
     }
@@ -223,11 +247,11 @@ mod tests {
         key_registration
             .voting_pks
             .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
-        let mut report = Vec::new();
+        let validation_report = ProblemReport::new("CIP36 Registration Validation");
 
-        let valid = validate_voting_keys(&key_registration, true, &mut report);
+        let valid = validate_voting_keys(&key_registration, true, &validation_report);
 
-        assert_eq!(report.len(), 0);
+        assert!(!validation_report.problematic());
         assert!(valid);
     }
 
@@ -242,14 +266,13 @@ mod tests {
         key_registration
             .voting_pks
             .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
-        let mut report = Vec::new();
+        let validation_report = ProblemReport::new("CIP36 Registration Validation");
 
-        let valid = validate_voting_keys(&key_registration, true, &mut report);
+        let valid = validate_voting_keys(&key_registration, true, &validation_report);
 
-        assert_eq!(report.len(), 1);
-        assert!(report
-            .first()
-            .expect("Failed to get the first index")
+        assert!(validation_report.problematic());
+        assert!(serde_json::to_string(&validation_report)
+            .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
             .contains("Catalyst supports only a single voting key"));
         assert!(!valid);
     }
@@ -257,11 +280,11 @@ mod tests {
     #[test]
     fn test_validate_purpose() {
         let key_registration = Cip36KeyRegistration::default();
-        let mut report = Vec::new();
+        let validation_report = ProblemReport::new("CIP36 Registration Validation");
 
-        let valid = validate_purpose(&key_registration, true, &mut report);
+        let valid = validate_purpose(&key_registration, true, &validation_report);
 
-        assert_eq!(report.len(), 0);
+        assert!(!validation_report.problematic());
         assert_eq!(key_registration.purpose, 0);
         assert!(valid);
     }
@@ -272,14 +295,13 @@ mod tests {
             purpose: 1,
             ..Default::default()
         };
-        let mut report = Vec::new();
+        let validation_report = ProblemReport::new("CIP36 Registration Validation");
 
-        let valid = validate_purpose(&key_registration, true, &mut report);
+        let valid = validate_purpose(&key_registration, true, &validation_report);
 
-        assert_eq!(report.len(), 1);
-        assert!(report
-            .first()
-            .expect("Failed to get the first index")
+        assert!(validation_report.problematic());
+        assert!(serde_json::to_string(&validation_report)
+            .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
             .contains("unknown purpose"));
         assert_eq!(key_registration.purpose, 1);
         assert!(!valid);
