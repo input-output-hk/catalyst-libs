@@ -68,6 +68,10 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
 
 * [`collabs`](./../signed_doc/meta.md#collabs-authorized-collaborators) (optional).
 
+#### Content format
+
+TODO
+
 ## Comment Template
 
 This document pr provides the template structure which a Comment must be formatted to, and validated against.
@@ -105,6 +109,10 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
 * [`reply`](./../signed_doc/meta.md#reply-reply-reference) (optional)
 * [`section`](./../signed_doc/meta.md#section-section-reference) (optional)
 * [`collabs`](./../signed_doc/meta.md#collabs-authorized-collaborators) (optional)
+
+#### Content format
+
+TODO
 
 ## Copyright
 
