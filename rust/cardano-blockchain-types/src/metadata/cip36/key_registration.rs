@@ -302,8 +302,12 @@ fn decode_voting_key(
 
 /// Helper function for converting `&[u8]` to `VerifyingKey`.
 fn voting_pk_vec_to_verifying_key(pub_key: &[u8]) -> anyhow::Result<VerifyingKey> {
-    let bytes = pub_key.try_into().context("Invalid verifying key length")?;
-    VerifyingKey::from_bytes(bytes).context("Failed to convert to VerifyingKey")
+    let bytes = pub_key.try_into().context(format!(
+        "Invalid verifying key length got {}",
+        pub_key.len()
+    ))?;
+    VerifyingKey::from_bytes(bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to convert to VerifyingKey: {:?}", e))
 }
 
 /// Helper function for decoding the stake public key.
