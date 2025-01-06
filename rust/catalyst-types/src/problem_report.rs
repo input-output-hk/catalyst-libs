@@ -351,7 +351,7 @@ impl ProblemReport {
     ///
     /// * `value`: A string slice representing the value of the duplicate data.
     /// * `context`: A string slice providing additional context or information about
-    ///     where and why this duplicate data was detected.
+    ///   where and why this duplicate data was detected.
     ///
     /// # Example
     ///
