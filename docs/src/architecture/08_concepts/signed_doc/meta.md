@@ -10,7 +10,7 @@
 
 * [Metadata Fields List](#metadata-fields-list)
   * [`ref` Document Reference](#ref-document-reference)
-  * [`ref-hash` Secured Document Reference](#ref-hash-secured-document-reference)
+  * [`ref_hash` Secured Document Reference](#ref-hash-secured-document-reference)
   * [`template` Template Reference](#template-template-reference)
   * [`reply` Reply Reference](#reply-reply-reference)
   * [`section` Section Reference](#section-section-reference)
@@ -33,14 +33,14 @@ If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
 * `<id>` - the [UUID] v7 of the referenced documents [`id`](./spec.md#id).
 * `<ver>` - the [UUID] v7 of the referenced documents [`ver`](./spec.md#ver).
 
-## `ref-hash` Secured Document Reference
+## `ref_hash` Secured Document Reference
 
 This is a cryptographically secured reference to another document.
 
 It consists of two fields:
 
 * [`ref`](#ref-document-reference) - simple reference to the document.
-* [`hash`] - hash of the referenced document [CBOR] bytes.
+* `hash` - hash of the referenced document [CBOR] bytes.
 
 ## `template` Template Reference
 
