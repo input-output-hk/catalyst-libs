@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn test_invalid_version_uuid() {
-        let invalid_version_uuid = UuidV4::from(Uuid::from_u128(0)); // Zero UUID is not valid.
+        let invalid_version_uuid = UuidV4::from(Uuid::from_u128(0));
         assert!(
             !invalid_version_uuid.is_valid(),
             "Zero UUID should not be valid"
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn test_try_from_cbor_invalid_uuid() {
-        let cbor_value = Value::Bytes(vec![0; 16]); // Zeroed-out UUID bytes
+        let cbor_value = Value::Bytes(vec![0; 16]);
         let result = UuidV4::try_from(&cbor_value);
 
         assert!(
