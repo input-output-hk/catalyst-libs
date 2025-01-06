@@ -10,10 +10,10 @@ pub use v7::UuidV7;
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 
 /// CBOR tag for UUID content.
-const UUID_CBOR_TAG: u64 = 37;
+pub const UUID_CBOR_TAG: u64 = 37;
 
 /// Decode `CBOR` encoded `UUID`.
-pub fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
+pub(crate) fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
     let Some((UUID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
         anyhow::bail!("Invalid CBOR encoded UUID type");
     };
