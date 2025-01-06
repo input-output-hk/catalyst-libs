@@ -210,7 +210,7 @@ mod tests {
             &validation_report,
         );
 
-        assert!(!validation_report.problematic());
+        assert!(!validation_report.is_problematic());
         assert_eq!(valid, Some(true));
     }
 
@@ -233,7 +233,7 @@ mod tests {
             &validation_report,
         );
 
-        assert!(validation_report.problematic());
+        assert!(validation_report.is_problematic());
         assert!(serde_json::to_string(&validation_report)
             .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
             .contains("does not match the network used"));
@@ -251,7 +251,7 @@ mod tests {
 
         let valid = validate_voting_keys(&key_registration, true, &validation_report);
 
-        assert!(!validation_report.problematic());
+        assert!(!validation_report.is_problematic());
         assert!(valid);
     }
 
@@ -270,7 +270,7 @@ mod tests {
 
         let valid = validate_voting_keys(&key_registration, true, &validation_report);
 
-        assert!(validation_report.problematic());
+        assert!(validation_report.is_problematic());
         assert!(serde_json::to_string(&validation_report)
             .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
             .contains("Catalyst supports only a single voting key"));
@@ -284,7 +284,7 @@ mod tests {
 
         let valid = validate_purpose(&key_registration, true, &validation_report);
 
-        assert!(!validation_report.problematic());
+        assert!(!validation_report.is_problematic());
         assert_eq!(key_registration.purpose, 0);
         assert!(valid);
     }
@@ -299,7 +299,7 @@ mod tests {
 
         let valid = validate_purpose(&key_registration, true, &validation_report);
 
-        assert!(validation_report.problematic());
+        assert!(validation_report.is_problematic());
         assert!(serde_json::to_string(&validation_report)
             .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
             .contains("unknown purpose"));

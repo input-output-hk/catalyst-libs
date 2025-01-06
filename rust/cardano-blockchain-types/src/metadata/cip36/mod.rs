@@ -101,7 +101,7 @@ impl Cip36 {
             is_catalyst_strict,
         };
 
-        if !validation_report.problematic() {
+        if !validation_report.is_problematic() {
             return Ok(cip36);
         }
         // If there are validation errors, the CIP36 is invalid

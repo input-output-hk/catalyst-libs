@@ -193,7 +193,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
             err_report.missing_field("Nonce", "Missing required key in CIP36 Key Registration");
         }
 
-        if err_report.problematic() {
+        if err_report.is_problematic() {
             return Err(decode::Error::message(
                 serde_json::to_string(&err_report)
                     .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string()),
@@ -428,7 +428,7 @@ mod tests {
         let err_report = ProblemReport::new("CIP36 Key Registration Decoding");
         let address =
             decode_payment_addr(&mut decoder, &err_report).expect("cannot decode payment address");
-        assert!(!err_report.problematic());
+        assert!(!err_report.is_problematic());
         assert_eq!(address.unwrap().to_vec().len(), 57);
     }
 
@@ -442,7 +442,7 @@ mod tests {
         let mut decoder = Decoder::new(&hex_data);
         let err_report = ProblemReport::new("CIP36 Key Registration Decoding");
         let stake_pk = decode_stake_pk(&mut decoder, &err_report).expect("cannot decode stake pk");
-        assert!(!err_report.problematic());
+        assert!(!err_report.is_problematic());
         assert!(stake_pk.is_some());
     }
 
@@ -459,7 +459,7 @@ mod tests {
         let (is_cip36, voting_pk) = decode_voting_key(&mut decoder, &err_report)
             .expect("cannot decode voting key")
             .unwrap();
-        assert!(!err_report.problematic());
+        assert!(!err_report.is_problematic());
         assert!(is_cip36.unwrap());
         assert_eq!(voting_pk.len(), 1);
     }
@@ -477,7 +477,7 @@ mod tests {
         let (is_cip36, voting_pk) = decode_voting_key(&mut decoder, &err_report)
             .expect("cannot decode voting key")
             .unwrap();
-        assert!(!err_report.problematic());
+        assert!(!err_report.is_problematic());
         assert!(!is_cip36.unwrap());
         assert_eq!(voting_pk.len(), 1);
     }

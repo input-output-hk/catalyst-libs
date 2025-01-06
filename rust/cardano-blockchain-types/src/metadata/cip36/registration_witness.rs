@@ -57,7 +57,7 @@ impl Decode<'_, ()> for Cip36RegistrationWitness {
             })
             .ok();
 
-        if err_report.problematic() {
+        if err_report.is_problematic() {
             return Err(decode::Error::message(
                 serde_json::to_string(&err_report)
                     .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string()),
