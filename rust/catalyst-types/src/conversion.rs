@@ -50,7 +50,7 @@ pub fn from_saturating<
     }
 }
 
-/// Try and convert a byte array into an ed25519 verifying key.
+/// Try and convert a byte array into an Ed25519 verifying key.
 ///
 /// # Errors
 ///
