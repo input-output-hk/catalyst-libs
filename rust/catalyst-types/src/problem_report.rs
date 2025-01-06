@@ -80,11 +80,23 @@ impl Serialize for Report {
     }
 }
 
+/// The Problem Report list
+#[derive(Clone)]
+struct Context(Arc<String>);
+
+impl Serialize for Context {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        let str = self.0.as_ref();
+        serializer.serialize_str(str)
+    }
+}
+
 /// Problem Report
 #[derive(Clone, Serialize)]
 pub struct ProblemReport {
     /// What context does the whole report have
-    context: Arc<String>,
+    context: Context,
     /// The report itself
     // Note, we use this because it allows:
     // 1. Cheap copy of this struct.
@@ -105,12 +117,13 @@ impl ProblemReport {
     ///
     /// # Examples
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// ```
     #[must_use]
     pub fn new(context: &str) -> Self {
         Self {
-            context: Arc::new(context.to_string()),
+            context: Context(Arc::new(context.to_string())),
             report: Report(ConcurrentVec::new()),
         }
     }
@@ -129,6 +142,7 @@ impl ProblemReport {
     ///
     /// # Examples
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// let report = ProblemReport::new("Example context");
     /// assert_eq!(report.problematic(), false); // Initially, there are no problems.
     /// ```
@@ -159,7 +173,9 @@ impl ProblemReport {
     /// # Example
     ///
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// // Assuming you have a ProblemReport instance `report`
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.missing_field("name", "In the JSON payload for user creation");
     /// ```
     pub fn missing_field(&self, field_name: &str, context: &str) {
@@ -188,7 +204,9 @@ impl ProblemReport {
     /// # Example
     ///
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// // Assuming you have a ProblemReport instance `report`
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.unknown_field(
     ///     "unsupported_option",
     ///     "true",
@@ -225,7 +243,9 @@ impl ProblemReport {
     /// # Example
     ///
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// // Assuming you have a ProblemReport instance `report`
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.invalid_value(
     ///     "age",
     ///     "300",
@@ -264,7 +284,9 @@ impl ProblemReport {
     /// # Example
     ///
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// // Assuming you have a ProblemReport instance `report`
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.invalid_encoding("data", "UTF-8", "ASCII", "During data import");
     /// ```
     pub fn invalid_encoding(
@@ -298,7 +320,9 @@ impl ProblemReport {
     /// # Example
     ///
     /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
     /// // Assuming you have a ProblemReport instance `report`
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.functional_validation(
     ///     "End date cannot be before start date",
     ///     "During contract creation",
@@ -328,6 +352,18 @@ impl ProblemReport {
     /// - `context`: Additional information that might help in understanding the context
     ///   or environment where the problem occurred. This could include details about the
     ///   system, user actions, or any other relevant data.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// # use catalyst_types::problem_report::ProblemReport;
+    /// // Assuming you have a ProblemReport instance `report`
+    /// let report = ProblemReport::new("RBAC Registration Decoding");
+    /// report.other(
+    ///     "Some other problem happened, but its rare, otherwise we would have a defined problem type.",
+    ///     "During contract creation",
+    /// );
+    /// ```
     pub fn other(&self, description: &str, context: &str) {
         self.add_entry(
             Kind::Other {
