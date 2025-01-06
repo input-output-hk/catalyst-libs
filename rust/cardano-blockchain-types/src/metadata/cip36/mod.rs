@@ -106,7 +106,7 @@ impl Cip36 {
         }
         // If there are validation errors, the CIP36 is invalid
         bail!(
-            "CIP-36 validation failed: {cip36:?}, Validation: {validation:?}, Reports: {:?}",
+            "CIP-36 validation failed: {cip36:?}, Validation: {validation:?}, Reports: {}",
             serde_json::to_string(&validation_report)
                 .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
         )
