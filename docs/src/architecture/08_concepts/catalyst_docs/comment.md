@@ -66,8 +66,6 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   Used when the comment only applies to a specific section to the document being commented upon,
   and not the entire document.
 
-* [`collabs`](./../signed_doc/meta.md#collabs-authorized-collaborators) (optional).
-
 #### Content format
 
 TODO
@@ -104,11 +102,6 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   ```CDDL
   "content-type" => "br"
   ```
-
-* [`ref`](./../signed_doc/meta.md#ref-document-reference) (optional)
-* [`reply`](./../signed_doc/meta.md#reply-reply-reference) (optional)
-* [`section`](./../signed_doc/meta.md#section-section-reference) (optional)
-* [`collabs`](./../signed_doc/meta.md#collabs-authorized-collaborators) (optional)
 
 #### Content format
 
