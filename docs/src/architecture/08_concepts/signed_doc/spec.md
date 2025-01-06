@@ -68,7 +68,7 @@ All these fields will be encoded as the [COSE] `protected` header
 
 Each Catalyst Signed Document will have a type identifier called `type`.
 
-The `type` is a [UUID] V4.
+The `type` is a [UUID] v4.
 
 [A full list of Catalyst supported document types](./types.md)
 
@@ -81,7 +81,7 @@ However, `id` uniqueness is only guaranteed on first use.
 
 If the same `id` is used, by unauthorized publishers, the Catalyst Signed Document is invalid.
 
-The `id` is a [UUID] V7.
+The `id` is a [UUID] v7.
 
 The first time a Catalyst Signed Document is created, it will be assigned by the creator a new `id` which must
 be well constructed.
@@ -105,7 +105,7 @@ including all otherwise legitimate publications by the same author being marked 
 Every Catalyst Signed Document in the system will be versioned.
 There can, and probably will, exist multiple versions of the same document.
 
-The `ver` is a [UUID] V7.
+The `ver` is a [UUID] v7.
 
 The initial `ver` assigned the first time a Catalyst Signed Document is published will be identical to the [`id`](#id).
 Subsequent versions will retain the same [`id`](#id) and will create a new `ver`,

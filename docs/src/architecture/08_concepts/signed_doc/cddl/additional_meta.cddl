@@ -5,9 +5,13 @@ additional_fields = {
   ? "reply" => ref_type,
   ? "section" => text,
   ? "collabs" => [+any],
+  ? "brand_id" => UUID, ; UUID v4
+  ? "campaign_id" => UUID, ; UUID v4
+  ? "election_id" => UUID, ; UUID v4
+  ? "category_id" => UUID, ; UUID v4
 }
 
-ref_type = UUID / [UUID, UUID]
+ref_type = UUID / [UUID, UUID] ; UUIDs v7
 ref_hash_type = [ref_type, hash-bytes]
 
 UUID = #6.37(bytes)

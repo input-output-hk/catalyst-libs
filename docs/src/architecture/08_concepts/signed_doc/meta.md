@@ -8,12 +8,17 @@
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
-* [`ref` Document Reference](#ref-document-reference)
-* [`ref-hash` Secured Document Reference](#ref-hash-secured-document-reference)
-* [`template` Template Reference](#template-template-reference)
-* [`reply` Reply Reference](#reply-reply-reference)
-* [`section` Section Reference](#section-section-reference)
-* [`collabs` Authorized Collaborators](#collabs-authorized-collaborators)
+* [Metadata Fields List](#metadata-fields-list)
+  * [`ref` Document Reference](#ref-document-reference)
+  * [`ref-hash` Secured Document Reference](#ref-hash-secured-document-reference)
+  * [`template` Template Reference](#template-template-reference)
+  * [`reply` Reply Reference](#reply-reply-reference)
+  * [`section` Section Reference](#section-section-reference)
+  * [`collabs` Authorized Collaborators](#collabs-authorized-collaborators)
+  * [`brand_id`](#brand_id)
+  * [`campaign_id`](#campaign_id)
+  * [`election_id`](#election_id)
+  * [`category_id`](#category_id)
 
 ## `ref` Document Reference
 
@@ -22,11 +27,11 @@ The purpose of the `ref` will vary depending on the document [`type`](./spec.md#
 
 The `ref` can be either a single [UUID] or a [CBOR] Array of Two [UUID].
 
-If the `ref` is a single [UUID], it is a reference to the document of that [`id`](./spec.md#id).
+If the `ref` is a single [UUID] v7, it is a reference to the document of that [`id`](./spec.md#id).
 If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
 
-* `<id>` - the [UUID] of the referenced documents [`id`](./spec.md#id).
-* `<ver>` - the [UUID] of the referenced documents [`ver`](./spec.md#ver).
+* `<id>` - the [UUID] v7 of the referenced documents [`id`](./spec.md#id).
+* `<ver>` - the [UUID] v7 of the referenced documents [`ver`](./spec.md#ver).
 
 ## `ref-hash` Secured Document Reference
 
@@ -80,3 +85,19 @@ It does NOT mean that the listed collaborators have agreed to collaborate, only 
 gives them permission to.*
 
 This list can impact actions that can be performed by the `Proposal Action Document`.
+
+## `brand_id`
+
+Unique identifier [UUID] v4, which represents a "brand" who is running the voting, e.g. Catalyst, Midnight.
+
+## `campaign_id`
+
+Unique identifier [UUID] v4, which defines a "campaign" of voting, e.g. "treasury campaign".
+
+## `election_id`
+
+Unique identifier [UUID] v4, which defines an election, e.g. "Catalyst Fund 1", "Catalyst Fund 2".
+
+## `category_id`
+
+Unique identifier [UUID] v4 which defines a voting category as a collection of proposals, e.g. "Development & Infrastructure", "Products & Integrations".
