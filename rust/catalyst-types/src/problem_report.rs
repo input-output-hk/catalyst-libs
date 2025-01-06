@@ -151,10 +151,10 @@ impl ProblemReport {
     /// ```rust
     /// # use catalyst_types::problem_report::ProblemReport;
     /// let report = ProblemReport::new("Example context");
-    /// assert_eq!(report.problematic(), false); // Initially, there are no problems.
+    /// assert_eq!(report.is_problematic(), false); // Initially, there are no problems.
     /// ```
     #[must_use]
-    pub fn problematic(&self) -> bool {
+    pub fn is_problematic(&self) -> bool {
         !self.report.0.is_empty()
     }
 
