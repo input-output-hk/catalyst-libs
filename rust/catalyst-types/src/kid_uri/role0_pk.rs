@@ -29,7 +29,7 @@ pub enum Role0PublicKeyError {
         /// The input string.
         input: String,
         /// The actual length of the input.
-        len: usize
+        len: usize,
     },
     /// Unexpected error during key conversion.
     #[error("Unable to read Role0 Public Key, this should never happen")]
