@@ -1,4 +1,7 @@
 //! COSE Signature Protected Header `kid`.
+
+// cspell: words userinfo rngs Fftx csprng
+
 mod authority;
 mod errors;
 mod key_rotation;
