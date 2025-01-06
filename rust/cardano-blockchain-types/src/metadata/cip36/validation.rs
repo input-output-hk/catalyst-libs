@@ -17,13 +17,35 @@ pub const SIGNDATA_PREAMBLE: [u8; 4] = [0xA1, 0x19, 0xEF, 0x64];
 #[derive(Clone, Default, Debug)]
 pub struct Cip36Validation {
     /// Is the signature valid? (signature in 61285)
-    pub is_valid_signature: bool,
+    is_valid_signature: bool,
     /// Is the payment address on the correct network?
-    pub is_valid_payment_address_network: bool,
+    is_valid_payment_address_network: bool,
     /// Is the voting keys valid?
-    pub is_valid_voting_keys: bool,
+    is_valid_voting_keys: bool,
     /// Is the purpose valid? (Always 0 for Catalyst)
-    pub is_valid_purpose: bool,
+    is_valid_purpose: bool,
+}
+
+impl Cip36Validation {
+    /// Is the signature from witness registration valid?
+    pub fn is_valid_signature(&self) -> bool {
+        self.is_valid_signature
+    }
+
+    /// Is the payment address network valid?
+    pub fn is_valid_payment_address_network(&self) -> bool {
+        self.is_valid_payment_address_network
+    }
+
+    /// Are the voting keys valid?
+    pub fn is_valid_voting_keys(&self) -> bool {
+        self.is_valid_voting_keys
+    }
+
+    /// Is the purpose valid?
+    pub fn is_valid_purpose(&self) -> bool {
+        self.is_valid_purpose
+    }
 }
 
 /// Validation for CIP-36
