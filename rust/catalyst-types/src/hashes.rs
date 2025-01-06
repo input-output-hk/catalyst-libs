@@ -166,3 +166,47 @@ impl<'a, C, const BYTES: usize> minicbor::Decode<'a, C> for Blake2bHash<BYTES> {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_blake2b_hash_init() {
+        let data = b"Cardano";
+        let hash_224 = Blake2b224Hash::new(data);
+        let hash_256 = Blake2b256Hash::new(data);
+        let hash_128 = Blake2b128Hash::new(data);
+
+        assert_eq!(hash_224.0.as_ref().len(), BLAKE_2B224_SIZE);
+        assert_eq!(hash_256.0.as_ref().len(), BLAKE_2B256_SIZE);
+        assert_eq!(hash_128.0.as_ref().len(), BLAKE_2B128_SIZE);
+    }
+
+    #[test]
+    fn test_blake2b_hash_conversion() {
+        let data = b"Cardano";
+        let hash = Blake2b224Hash::new(data);
+
+        let as_vec: Vec<u8> = hash.clone().into();
+        let from_vec = Blake2b224Hash::try_from(&as_vec).unwrap();
+        assert_eq!(hash, from_vec);
+
+        let from_slice = Blake2b224Hash::try_from(as_vec.as_slice()).unwrap();
+        assert_eq!(hash, from_slice);
+    }
+
+    #[test]
+    fn test_blake2b_hash_invalid_length() {
+        let invalid_data = vec![0u8; 10]; // Shorter than required length
+        let result = Blake2b224Hash::try_from(&invalid_data);
+        assert!(result.is_err());
+
+        if let Err(Blake2bHashError::InvalidLength { expected, actual }) = result {
+            assert_eq!(expected, BLAKE_2B224_SIZE);
+            assert_eq!(actual, invalid_data.len());
+        } else {
+            panic!("Expected InvalidLength error");
+        }
+    }
+}
