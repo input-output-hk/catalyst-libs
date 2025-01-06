@@ -2,8 +2,6 @@
 //!
 //! This is mainly to demonstrate sample usage of the types.
 
-use catalyst_types;
-
 #[allow(dead_code)]
 #[test]
 fn test_type_usage() {
