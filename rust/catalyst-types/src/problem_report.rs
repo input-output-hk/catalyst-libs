@@ -48,10 +48,12 @@ enum Kind {
         /// Explanation of the failed or problematic validation
         explanation: String,
     },
-    /// Duplicate data was detected.
-    DuplicateData {
-        /// The detected duplicate value.
-        value: String,
+    /// Duplicate field was detected.
+    DuplicateField {
+        /// The duplicated field.
+        field: String,
+        /// Additional information about the duplicate field.
+        description: String,
     },
     /// An uncategorized problem was encountered. Use only for rare problems, otherwise
     /// make a new problem kind.
@@ -342,28 +344,35 @@ impl ProblemReport {
         );
     }
 
-    /// Reports that duplicate data was detected in the problem report.
+    /// Reports that duplicate field was detected in the problem report.
     ///
-    /// This method adds an entry to the problem report indicating that duplicate data
-    /// is found, along with the value of the duplicate data and any additional context.
+    /// This method adds an entry to the problem report indicating that duplicate field
+    /// is found, along with the description of the duplicate field and any additional
+    /// context.
     ///
     /// # Arguments
     ///
-    /// * `value`: A string slice representing the value of the duplicate data.
+    /// * `field`: A string slice representing the value of the duplicate field.
+    /// * `description`: An additional information about the duplicate field.
     /// * `context`: A string slice providing additional context or information about
-    ///   where and why this duplicate data was detected.
+    ///   where and why this duplicate field was detected.
     ///
     /// # Example
     ///
     /// ```rust
     /// use catalyst_types::problem_report::ProblemReport;
     /// let report = ProblemReport::new("RBAC Registration Decoding");
-    /// report.duplicate_data("RBAC Purpose key at item 6 in map", "0");
+    /// report.duplicate_field(
+    ///     "key 0",
+    ///     "key is already defined, redundant key found in item 6 in RBAC map",
+    ///     "RBAC purpose",
+    /// );
     /// ```
-    pub fn duplicate_data(&self, value: &str, context: &str) {
+    pub fn duplicate_field(&self, field: &str, description: &str, context: &str) {
         self.add_entry(
-            Kind::DuplicateData {
-                value: value.to_owned(),
+            Kind::DuplicateField {
+                field: field.to_owned(),
+                description: description.to_owned(),
             },
             context,
         );
