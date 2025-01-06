@@ -1,6 +1,6 @@
 //! Validation function for CIP-36
 
-use super::Cip36;
+use super::{Cip36KeyRegistration, Cip36RegistrationWitness};
 use crate::{MetadatumValue, Network};
 
 /// Project Catalyst Purpose
@@ -12,10 +12,69 @@ pub const PROJECT_CATALYST_PURPOSE: u64 = 0;
 /// 19 EF64  # unsigned(61284)
 pub const SIGNDATA_PREAMBLE: [u8; 4] = [0xA1, 0x19, 0xEF, 0x64];
 
+/// Validation value for CIP-36.
+#[allow(clippy::struct_excessive_bools, clippy::module_name_repetitions)]
+#[derive(Clone, Default, Debug)]
+pub struct Cip36Validation {
+    /// Is the signature valid? (signature in 61285)
+    pub is_valid_signature: bool,
+    /// Is the payment address on the correct network?
+    pub is_valid_payment_address_network: bool,
+    /// Is the voting keys valid?
+    pub is_valid_voting_keys: bool,
+    /// Is the purpose valid? (Always 0 for Catalyst)
+    pub is_valid_purpose: bool,
+}
+
+/// Validation for CIP-36
+/// The validation include the following:
+/// * Signature validation of the registration witness 61285 against the stake public key
+///   in key registration 61284.
+/// * Payment address network validation against the network. The given network should
+///   match the network tag within the payment address.
+/// * Purpose validation, the purpose should be 0 for Catalyst (when `is_strict_catalyst`
+///   is true).
+/// * Voting keys validation, Catalyst supports only a single voting key per registration
+///   when `is_strict_catalyst` is true.
+///
+/// # Parameters
+///
+/// * `network` - The blockchain network.
+/// * `metadata` - The metadata value to be validated.
+/// * `validation_report` - Validation report to store the validation result.
+pub(crate) fn validate_cip36(
+    key_registration: &Cip36KeyRegistration, registration_witness: &Cip36RegistrationWitness,
+    is_strict_catalyst: bool, network: Network, metadata: &MetadatumValue,
+    validation_report: &mut Vec<String>,
+) -> Cip36Validation {
+    // Need to make sure that when return false, the validation_report is updated.
+    let is_valid_signature = validate_signature(
+        key_registration,
+        registration_witness,
+        metadata,
+        validation_report,
+    );
+    let is_valid_payment_address_network =
+        validate_payment_address_network(key_registration, network, validation_report)
+            .unwrap_or_default();
+    let is_valid_voting_keys =
+        validate_voting_keys(key_registration, is_strict_catalyst, validation_report);
+    let is_valid_purpose =
+        validate_purpose(key_registration, is_strict_catalyst, validation_report);
+
+    Cip36Validation {
+        is_valid_signature,
+        is_valid_payment_address_network,
+        is_valid_voting_keys,
+        is_valid_purpose,
+    }
+}
+
 /// Validate the signature against the public key.
 #[allow(clippy::too_many_lines)]
-pub(crate) fn validate_signature(
-    cip36: &Cip36, metadata: &MetadatumValue, validation_report: &mut Vec<String>,
+fn validate_signature(
+    key_registration: &Cip36KeyRegistration, registration_witness: &Cip36RegistrationWitness,
+    metadata: &MetadatumValue, validation_report: &mut Vec<String>,
 ) -> bool {
     let hash = blake2b_simd::Params::new()
         .hash_length(32)
@@ -24,12 +83,12 @@ pub(crate) fn validate_signature(
         .update(metadata.as_ref())
         .finalize();
 
-    let Some(sig) = cip36.signature() else {
+    let Some(sig) = registration_witness.signature else {
         validation_report.push("Validate CIP36 Signature, signature is invalid".to_string());
         return false;
     };
 
-    if let Some(stake_pk) = cip36.stake_pk() {
+    if let Some(stake_pk) = key_registration.stake_pk {
         if let Ok(()) = stake_pk.verify_strict(hash.as_bytes(), &sig) {
             return true;
         }
@@ -42,10 +101,10 @@ pub(crate) fn validate_signature(
 }
 
 /// Validate the payment address network against the given network.
-pub(crate) fn validate_payment_address_network(
-    cip36: &Cip36, network: Network, validation_report: &mut Vec<String>,
+fn validate_payment_address_network(
+    key_registration: &Cip36KeyRegistration, network: Network, validation_report: &mut Vec<String>,
 ) -> Option<bool> {
-    if let Some(address) = cip36.payment_address() {
+    if let Some(address) = &key_registration.payment_addr {
         let network_tag = address.network();
         let valid = match network {
             Network::Mainnet => network_tag.value() == 1,
@@ -59,16 +118,22 @@ pub(crate) fn validate_payment_address_network(
 
         Some(valid)
     } else {
+        validation_report.push(
+            "Validate CIP36 payment address network, cannot find payment address in the registration".to_string()
+        );
         None
     }
 }
 
 /// Validate the voting keys.
-pub(crate) fn validate_voting_keys(cip36: &Cip36, validation_report: &mut Vec<String>) -> bool {
-    if cip36.is_strict_catalyst() && cip36.voting_pks().len() != 1 {
+fn validate_voting_keys(
+    key_registration: &Cip36KeyRegistration, is_strict_catalyst: bool,
+    validation_report: &mut Vec<String>,
+) -> bool {
+    if is_strict_catalyst && key_registration.voting_pks.len() != 1 {
         validation_report.push(format!(
             "Validate CIP-36 Voting Keys, Catalyst supports only a single voting key per registration, found {}",
-            cip36.voting_pks().len()
+            key_registration.voting_pks.len()
         ));
         return false;
     }
@@ -76,11 +141,14 @@ pub(crate) fn validate_voting_keys(cip36: &Cip36, validation_report: &mut Vec<St
 }
 
 /// Validate the purpose.
-pub(crate) fn validate_purpose(cip36: &Cip36, validation_report: &mut Vec<String>) -> bool {
-    if cip36.is_strict_catalyst() && cip36.purpose() != PROJECT_CATALYST_PURPOSE {
+fn validate_purpose(
+    key_registration: &Cip36KeyRegistration, is_strict_catalyst: bool,
+    validation_report: &mut Vec<String>,
+) -> bool {
+    if is_strict_catalyst && key_registration.purpose != PROJECT_CATALYST_PURPOSE {
         validation_report.push(format!(
             "Validate CIP-36 Purpose, registration contains unknown purpose: {}",
-            cip36.purpose()
+            key_registration.purpose
         ));
         return false;
     }
@@ -96,33 +164,28 @@ mod tests {
     use super::validate_purpose;
     use crate::{
         metadata::cip36::{
-            key_registration::Cip36KeyRegistration, registration_witness::Cip36RegistrationWitness,
-            validate_payment_address_network, validate_voting_keys, voting_pk::VotingPubKey,
+            key_registration::Cip36KeyRegistration,
+            validation::{validate_payment_address_network, validate_voting_keys},
+            voting_pk::VotingPubKey,
         },
-        Cip36, Network,
+        Network,
     };
-
-    fn create_empty_cip36(strict: bool) -> Cip36 {
-        Cip36 {
-            key_registration: Cip36KeyRegistration::default(),
-            registration_witness: Cip36RegistrationWitness::default(),
-            is_catalyst_strict: strict,
-        }
-    }
 
     #[test]
     fn test_validate_payment_address_network() {
-        let mut cip36 = create_empty_cip36(true);
         // cSpell:disable
         let addr = Address::from_bech32("addr_test1qprhw4s70k0vzyhvxp6h97hvrtlkrlcvlmtgmaxdtjz87xrjkctk27ypuv9dzlzxusqse89naweygpjn5dxnygvus05sdq9h07").expect("Failed to create address");
         // cSpell:enable
         let Address::Shelley(shelley_addr) = addr else {
             panic!("Invalid address type")
         };
-        cip36.key_registration.payment_addr = Some(shelley_addr);
+        let key_registration = Cip36KeyRegistration {
+            payment_addr: Some(shelley_addr),
+            ..Default::default()
+        };
         let mut report = Vec::new();
-
-        let valid = validate_payment_address_network(&cip36, Network::Preprod, &mut report);
+        let valid =
+            validate_payment_address_network(&key_registration, Network::Preprod, &mut report);
 
         assert_eq!(report.len(), 0);
         assert_eq!(valid, Some(true));
@@ -130,17 +193,19 @@ mod tests {
 
     #[test]
     fn test_validate_invalid_payment_address_network() {
-        let mut cip36 = create_empty_cip36(true);
         // cSpell:disable
         let addr = Address::from_bech32("addr_test1qprhw4s70k0vzyhvxp6h97hvrtlkrlcvlmtgmaxdtjz87xrjkctk27ypuv9dzlzxusqse89naweygpjn5dxnygvus05sdq9h07").expect("Failed to create address");
         // cSpell:enable
         let Address::Shelley(shelley_addr) = addr else {
             panic!("Invalid address type")
         };
-        cip36.key_registration.payment_addr = Some(shelley_addr);
+        let key_registration = Cip36KeyRegistration {
+            payment_addr: Some(shelley_addr),
+            ..Default::default()
+        };
         let mut report = Vec::new();
-
-        let valid = validate_payment_address_network(&cip36, Network::Mainnet, &mut report);
+        let valid =
+            validate_payment_address_network(&key_registration, Network::Mainnet, &mut report);
 
         assert_eq!(report.len(), 1);
         assert!(report
@@ -152,14 +217,14 @@ mod tests {
 
     #[test]
     fn test_validate_voting_keys() {
-        let mut cip36 = create_empty_cip36(true);
-        cip36
-            .key_registration
+        let mut key_registration = Cip36KeyRegistration::default();
+
+        key_registration
             .voting_pks
             .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
         let mut report = Vec::new();
 
-        let valid = validate_voting_keys(&cip36, &mut report);
+        let valid = validate_voting_keys(&key_registration, true, &mut report);
 
         assert_eq!(report.len(), 0);
         assert!(valid);
@@ -167,18 +232,18 @@ mod tests {
 
     #[test]
     fn test_validate_invalid_voting_keys() {
-        let mut cip36 = create_empty_cip36(true);
-        cip36
-            .key_registration
+        let mut key_registration = Cip36KeyRegistration::default();
+
+        key_registration
             .voting_pks
             .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
-        cip36
-            .key_registration
+
+        key_registration
             .voting_pks
             .push(VotingPubKey::new(Some(VerifyingKey::default()), 1));
         let mut report = Vec::new();
 
-        let valid = validate_voting_keys(&cip36, &mut report);
+        let valid = validate_voting_keys(&key_registration, true, &mut report);
 
         assert_eq!(report.len(), 1);
         assert!(report
@@ -190,30 +255,32 @@ mod tests {
 
     #[test]
     fn test_validate_purpose() {
-        let cip36 = create_empty_cip36(true);
+        let key_registration = Cip36KeyRegistration::default();
         let mut report = Vec::new();
 
-        let valid = validate_purpose(&cip36, &mut report);
+        let valid = validate_purpose(&key_registration, true, &mut report);
 
         assert_eq!(report.len(), 0);
-        assert_eq!(cip36.purpose(), 0);
+        assert_eq!(key_registration.purpose, 0);
         assert!(valid);
     }
 
     #[test]
     fn test_validate_invalid_purpose() {
-        let mut cip36 = create_empty_cip36(true);
-        cip36.key_registration.purpose = 1;
+        let key_registration = Cip36KeyRegistration {
+            purpose: 1,
+            ..Default::default()
+        };
         let mut report = Vec::new();
 
-        let valid = validate_purpose(&cip36, &mut report);
+        let valid = validate_purpose(&key_registration, true, &mut report);
 
         assert_eq!(report.len(), 1);
         assert!(report
             .first()
             .expect("Failed to get the first index")
             .contains("unknown purpose"));
-        assert_eq!(cip36.purpose(), 1);
+        assert_eq!(key_registration.purpose, 1);
         assert!(!valid);
     }
 }
