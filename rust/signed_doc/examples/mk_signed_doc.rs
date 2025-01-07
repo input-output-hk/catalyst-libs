@@ -204,10 +204,7 @@ fn cose_protected_header() -> coset::Header {
 }
 
 fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign {
-    let mut builder = coset::HeaderBuilder::new();
-
-    if let Some(content_type) = meta.content_type() {
-        builder = builder.content_format(CoapContentFormat::from(content_type));
+    let mut builder = coset::HeaderBuilder::new().content_format(CoapContentFormat::from(meta.content_type()));
     }
 
     if let Some(content_encoding) = meta.content_encoding() {

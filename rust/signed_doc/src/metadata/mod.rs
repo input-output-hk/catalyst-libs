@@ -32,6 +32,12 @@ pub struct Metadata {
     id: DocumentId,
     /// Document Version `UUIDv7`.
     ver: DocumentVersion,
+    /// Document Payload Content Type.
+    #[serde(default, rename = "content-type")]
+    content_type: ContentType,
+    /// Document Payload Content Encoding.
+    #[serde(default, rename = "content-encoding")]
+    content_encoding: Option<ContentEncoding>,
     /// Reference to the latest document.
     #[serde(rename = "ref")]
     doc_ref: Option<DocumentRef>,
@@ -41,12 +47,6 @@ pub struct Metadata {
     reply: Option<DocumentRef>,
     /// Reference to the document section.
     section: Option<String>,
-    /// Document Payload Content Type.
-    #[serde(default, rename = "content-type")]
-    content_type: Option<ContentType>,
-    /// Document Payload Content Encoding.
-    #[serde(default, rename = "content-encoding")]
-    content_encoding: Option<ContentEncoding>,
     /// Metadata Content Errors
     #[serde(skip)]
     content_errors: Vec<String>,
@@ -109,7 +109,7 @@ impl Metadata {
 
     /// Returns the Document Content Type, if any.
     #[must_use]
-    pub fn content_type(&self) -> Option<ContentType> {
+    pub fn content_type(&self) -> ContentType {
         self.content_type
     }
 
@@ -130,7 +130,7 @@ impl Display for Metadata {
         writeln!(f, "  template: {:?},", self.template)?;
         writeln!(f, "  reply: {:?},", self.reply)?;
         writeln!(f, "  section: {:?}", self.section)?;
-        writeln!(f, "  content_type: {:?}", self.content_type)?;
+        writeln!(f, "  content_type: {}", self.content_type)?;
         writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
         writeln!(f, "}}")
     }
@@ -146,7 +146,7 @@ impl Default for Metadata {
             template: None,
             reply: None,
             section: None,
-            content_type: None,
+            content_type: ContentType::default(),
             content_encoding: None,
             content_errors: Vec::new(),
         }
@@ -173,7 +173,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         match protected.header.content_type.as_ref() {
             Some(iana_content_type) => {
                 match ContentType::try_from(iana_content_type) {
-                    Ok(content_type) => metadata.content_type = Some(content_type),
+                    Ok(content_type) => metadata.content_type = content_type,
                     Err(e) => {
                         errors.push(format!("Invalid Document Content-Type: {e}"));
                     },
