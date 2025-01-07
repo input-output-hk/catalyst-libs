@@ -75,8 +75,8 @@ enum Cip36KeyRegistrationKeys {
     Purpose = 5,
 }
 
-impl Decode<'_, ()> for Cip36KeyRegistration {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
+    fn decode(d: &mut Decoder, ctx: &mut ProblemReport) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Key Registration")?;
 
         let mut cip36_key_registration = Cip36KeyRegistration::default();
@@ -84,49 +84,46 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
         // Record of founded keys. Check for duplicate keys in the map
         let mut found_keys: Vec<Cip36KeyRegistrationKeys> = Vec::new();
 
-        // Record of errors found during decoding
-        let err_report = ProblemReport::new("CIP36 Key Registration Decoding");
-
         for index in 0..map_len {
             let key: u16 = decode_helper(d, "key in CIP36 Key Registration", ctx)?;
 
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
+                        if check_is_key_exist(&found_keys, &key, index, ctx) {
                             continue;
                         }
-                        if let Some((is_cip36, voting_keys)) = decode_voting_key(d, &err_report)? {
+                        if let Some((is_cip36, voting_keys)) = decode_voting_key(d, ctx)? {
                             cip36_key_registration.is_cip36 = is_cip36;
                             cip36_key_registration.voting_pks = voting_keys;
                         }
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
+                        if check_is_key_exist(&found_keys, &key, index, ctx) {
                             continue;
                         }
-                        if let Some(stake_pk) = decode_stake_pk(d, &err_report)? {
+                        if let Some(stake_pk) = decode_stake_pk(d, ctx)? {
                             cip36_key_registration.stake_pk = Some(stake_pk);
                         }
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
+                        if check_is_key_exist(&found_keys, &key, index, ctx) {
                             continue;
                         }
-                        if let Some(shelley_addr) = decode_payment_addr(d, &err_report)? {
+                        if let Some(shelley_addr) = decode_payment_addr(d, ctx)? {
                             cip36_key_registration.payment_addr = Some(shelley_addr.clone());
                             cip36_key_registration.is_payable =
                                 Some(!shelley_addr.payment().is_script());
                         }
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
+                        if check_is_key_exist(&found_keys, &key, index, ctx) {
                             continue;
                         }
                         cip36_key_registration.nonce = Some(decode_nonce(d)?);
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
-                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
+                        if check_is_key_exist(&found_keys, &key, index, ctx) {
                             continue;
                         }
                         cip36_key_registration.purpose = decode_purpose(d)?;
@@ -138,35 +135,28 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
         }
 
         if !found_keys.contains(&Cip36KeyRegistrationKeys::VotingKey) {
-            err_report.missing_field(
+            ctx.missing_field(
                 "Voting Key",
                 "Missing required key in CIP36 Key Registration",
             );
         }
 
         if !found_keys.contains(&Cip36KeyRegistrationKeys::StakePk) {
-            err_report.missing_field(
+            ctx.missing_field(
                 "Stake Public Key",
                 "Missing required key in CIP36 Key Registration",
             );
         }
 
         if !found_keys.contains(&Cip36KeyRegistrationKeys::PaymentAddr) {
-            err_report.missing_field(
+            ctx.missing_field(
                 "Payment Address",
                 "Missing required key in CIP36 Key Registration",
             );
         }
 
         if !found_keys.contains(&Cip36KeyRegistrationKeys::Nonce) {
-            err_report.missing_field("Nonce", "Missing required key in CIP36 Key Registration");
-        }
-
-        if err_report.is_problematic() {
-            return Err(decode::Error::message(
-                serde_json::to_string(&err_report)
-                    .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string()),
-            ));
+            ctx.missing_field("Nonce", "Missing required key in CIP36 Key Registration");
         }
 
         Ok(cip36_key_registration)

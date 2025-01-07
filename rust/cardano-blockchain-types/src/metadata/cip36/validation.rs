@@ -18,7 +18,7 @@ pub const SIGNDATA_PREAMBLE: [u8; 4] = [0xA1, 0x19, 0xEF, 0x64];
 #[allow(clippy::struct_excessive_bools, clippy::module_name_repetitions)]
 #[derive(Clone, Default, Debug)]
 #[allow(dead_code)]
-pub(crate) struct Cip36Validation {
+pub struct Cip36Validation {
     /// Is the signature valid? (signature in 61285)
     is_valid_signature: bool,
     /// Is the payment address on the correct network?
@@ -27,6 +27,36 @@ pub(crate) struct Cip36Validation {
     is_valid_voting_keys: bool,
     /// Is the purpose valid? (Always 0 for Catalyst)
     is_valid_purpose: bool,
+}
+
+impl Cip36Validation {
+    /// Is the CIP-36 registration valid?
+    pub fn is_valid(&self) -> bool {
+        self.is_valid_signature
+            && self.is_valid_payment_address_network
+            && self.is_valid_voting_keys
+            && self.is_valid_purpose
+    }
+
+    /// Is the signature valid?
+    pub fn is_valid_signature(&self) -> bool {
+        self.is_valid_signature
+    }
+
+    /// Is the payment address network tag match the provided network?
+    pub fn is_valid_payment_address_network(&self) -> bool {
+        self.is_valid_payment_address_network
+    }
+
+    /// Is the voting keys valid?
+    pub fn is_valid_voting_keys(&self) -> bool {
+        self.is_valid_voting_keys
+    }
+
+    /// Is the purpose valid?
+    pub fn is_valid_purpose(&self) -> bool {
+        self.is_valid_purpose
+    }
 }
 
 /// Validation for CIP-36

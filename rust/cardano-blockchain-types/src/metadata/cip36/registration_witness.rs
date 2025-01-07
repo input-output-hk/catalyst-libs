@@ -21,12 +21,9 @@ pub(crate) struct Cip36RegistrationWitness {
     pub signature: Option<ed25519_dalek::Signature>,
 }
 
-impl Decode<'_, ()> for Cip36RegistrationWitness {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for Cip36RegistrationWitness {
+    fn decode(d: &mut Decoder, ctx: &mut ProblemReport) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Registration Witness")?;
-
-        // Record of errors found during decoding
-        let err_report = ProblemReport::new("CIP36 Registration Witness Decoding");
 
         // Expected only 1 key in the map.
         if map_len != 1 {
@@ -39,7 +36,7 @@ impl Decode<'_, ()> for Cip36RegistrationWitness {
 
         // The key needs to be 1.
         if key != 1 {
-            err_report.invalid_value(
+            ctx.invalid_value(
                 "map key",
                 format!("{key}").as_str(),
                 "expected key 1",
@@ -50,19 +47,12 @@ impl Decode<'_, ()> for Cip36RegistrationWitness {
         let sig_bytes = decode_bytes(d, "CIP36 Registration Witness signature")?;
         let signature = ed25519_dalek::Signature::from_slice(&sig_bytes)
             .map_err(|_| {
-                err_report.other(
+                ctx.other(
                     "Cannot parse an Ed25519 signature from a byte slice",
                     "CIP36 Registration Witness signature",
                 );
             })
             .ok();
-
-        if err_report.is_problematic() {
-            return Err(decode::Error::message(
-                serde_json::to_string(&err_report)
-                    .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string()),
-            ));
-        }
 
         Ok(Cip36RegistrationWitness { signature })
     }

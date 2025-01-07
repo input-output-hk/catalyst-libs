@@ -12,7 +12,7 @@ use key_registration::Cip36KeyRegistration;
 use minicbor::{Decode, Decoder};
 use pallas::ledger::addresses::ShelleyAddress;
 use registration_witness::Cip36RegistrationWitness;
-use validation::validate_cip36;
+use validation::{validate_cip36, Cip36Validation};
 use voting_pk::VotingPubKey;
 
 use crate::{MetadatumLabel, MultiEraBlock, TxnIndex};
@@ -39,6 +39,9 @@ impl Cip36 {
     /// * `txn_idx` - The transaction index that contain the auxiliary data.
     /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
     ///
+    /// # Returns
+    /// A tuple containing the CIP-36 registration, the validation result, and a problem report.
+    /// 
     /// # Errors
     ///
     /// If the CIP-36 key registration or registration witness metadata is not found.
@@ -46,7 +49,7 @@ impl Cip36 {
     /// decoded.
     pub fn new(
         block: &MultiEraBlock, txn_idx: TxnIndex, is_catalyst_strict: bool,
-    ) -> anyhow::Result<Self> {
+    ) -> anyhow::Result<(Cip36, Cip36Validation, ProblemReport)> {
         let Some(k61284) = block.txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION) else {
             bail!("CIP-36 key registration metadata not found")
         };
@@ -60,56 +63,54 @@ impl Cip36 {
         let mut key_registration = Decoder::new(k61284.as_ref());
         let mut registration_witness = Decoder::new(k61285.as_ref());
 
-        let key_registration = match Cip36KeyRegistration::decode(&mut key_registration, &mut ()) {
-            Ok(mut metadata) => {
-                let nonce = if is_catalyst_strict && metadata.raw_nonce > Some(slot) {
-                    Some(slot)
-                } else {
-                    metadata.raw_nonce
-                };
+        // Record of errors found during decoding and validation
+        let mut err_report = ProblemReport::new("CIP36 Registration Decoding and Validation");
 
-                metadata.nonce = nonce;
-                metadata
-            },
-            Err(e) => {
-                bail!("Failed to construct CIP-36 key registration, {e}")
-            },
-        };
+        let key_registration =
+            match Cip36KeyRegistration::decode(&mut key_registration, &mut err_report) {
+                Ok(mut metadata) => {
+                    let nonce = if is_catalyst_strict && metadata.raw_nonce > Some(slot) {
+                        Some(slot)
+                    } else {
+                        metadata.raw_nonce
+                    };
+
+                    metadata.nonce = nonce;
+                    metadata
+                },
+                Err(e) => {
+                    bail!("Failed to construct CIP-36 key registration, {e}")
+                },
+            };
 
         let registration_witness =
-            match Cip36RegistrationWitness::decode(&mut registration_witness, &mut ()) {
+            match Cip36RegistrationWitness::decode(&mut registration_witness, &mut err_report) {
                 Ok(metadata) => metadata,
                 Err(e) => {
                     bail!("Failed to construct CIP-36 registration witness {e}")
                 },
             };
 
-        let validation_report = ProblemReport::new("CIP-36 Registration Validation");
         // If the code reach here, then the CIP36 decoding is successful.
+        // Now check whether everything is valid.
         let validation = validate_cip36(
             &key_registration,
             &registration_witness,
             is_catalyst_strict,
             network,
             k61284,
-            &validation_report,
+            &err_report,
         );
 
-        let cip36 = Self {
-            key_registration,
-            registration_witness,
-            is_catalyst_strict,
-        };
-
-        if !validation_report.is_problematic() {
-            return Ok(cip36);
-        }
-        // If there are validation errors, the CIP36 is invalid
-        bail!(
-            "CIP-36 validation failed: {cip36:?}, Validation: {validation:?}, Reports: {}",
-            serde_json::to_string(&validation_report)
-                .unwrap_or_else(|_| "Failed to serialize ProblemReport".to_string())
-        )
+        Ok((
+            Self {
+                key_registration,
+                registration_witness,
+                is_catalyst_strict,
+            },
+            validation,
+            err_report,
+        ))
     }
 
     /// Get the `is_cip36` flag from the registration.
