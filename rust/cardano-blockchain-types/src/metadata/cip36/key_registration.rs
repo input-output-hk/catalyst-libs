@@ -121,7 +121,7 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                 found_keys.push(key);
             }
         }
-        
+
         // Check whether all the required keys are found.
         let required_keys = [
             Cip36KeyRegistrationKeys::VotingKey,
