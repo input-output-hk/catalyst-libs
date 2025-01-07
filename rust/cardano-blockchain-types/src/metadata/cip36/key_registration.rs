@@ -88,28 +88,22 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
             let key: u16 = decode_helper(d, "key in CIP36 Key Registration", ctx)?;
 
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
+                if check_is_key_exist(&found_keys, &key, index, ctx) {
+                    continue;
+                }
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if check_is_key_exist(&found_keys, &key, index, ctx) {
-                            continue;
-                        }
                         if let Some((is_cip36, voting_keys)) = decode_voting_key(d, ctx)? {
                             cip36_key_registration.is_cip36 = is_cip36;
                             cip36_key_registration.voting_pks = voting_keys;
                         }
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if check_is_key_exist(&found_keys, &key, index, ctx) {
-                            continue;
-                        }
                         if let Some(stake_pk) = decode_stake_pk(d, ctx)? {
                             cip36_key_registration.stake_pk = Some(stake_pk);
                         }
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if check_is_key_exist(&found_keys, &key, index, ctx) {
-                            continue;
-                        }
                         if let Some(shelley_addr) = decode_payment_addr(d, ctx)? {
                             cip36_key_registration.payment_addr = Some(shelley_addr.clone());
                             cip36_key_registration.is_payable =
@@ -117,15 +111,9 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        if check_is_key_exist(&found_keys, &key, index, ctx) {
-                            continue;
-                        }
                         cip36_key_registration.nonce = Some(decode_nonce(d)?);
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
-                        if check_is_key_exist(&found_keys, &key, index, ctx) {
-                            continue;
-                        }
                         cip36_key_registration.purpose = decode_purpose(d)?;
                     },
                 }
@@ -133,30 +121,22 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                 found_keys.push(key);
             }
         }
+        
+        // Check whether all the required keys are found.
+        let required_keys = [
+            Cip36KeyRegistrationKeys::VotingKey,
+            Cip36KeyRegistrationKeys::StakePk,
+            Cip36KeyRegistrationKeys::PaymentAddr,
+            Cip36KeyRegistrationKeys::Nonce,
+        ];
 
-        if !found_keys.contains(&Cip36KeyRegistrationKeys::VotingKey) {
-            ctx.missing_field(
-                "Voting Key",
-                "Missing required key in CIP36 Key Registration",
-            );
-        }
-
-        if !found_keys.contains(&Cip36KeyRegistrationKeys::StakePk) {
-            ctx.missing_field(
-                "Stake Public Key",
-                "Missing required key in CIP36 Key Registration",
-            );
-        }
-
-        if !found_keys.contains(&Cip36KeyRegistrationKeys::PaymentAddr) {
-            ctx.missing_field(
-                "Payment Address",
-                "Missing required key in CIP36 Key Registration",
-            );
-        }
-
-        if !found_keys.contains(&Cip36KeyRegistrationKeys::Nonce) {
-            ctx.missing_field("Nonce", "Missing required key in CIP36 Key Registration");
+        for key in &required_keys {
+            if !found_keys.contains(key) {
+                ctx.missing_field(
+                    &format!("{key:?}"),
+                    "Missing required key in CIP36 Key Registration",
+                );
+            }
         }
 
         Ok(cip36_key_registration)
