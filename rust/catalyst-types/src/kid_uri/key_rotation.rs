@@ -6,14 +6,14 @@ use std::{
     str::FromStr,
 };
 
+use displaydoc::Display;
 use thiserror::Error;
 
 /// Errors from parsing the `KeyRotation`
-#[derive(Error, Debug)]
+#[derive(Display, Error, Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub enum KeyRotationError {
-    /// Key Rotation could not be parsed from a string
-    #[error("Invalid Role Key Rotation")]
+    /// Invalid Role Key Rotation
     InvalidRole(#[from] ParseIntError),
 }
 

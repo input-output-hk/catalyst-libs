@@ -1,20 +1,19 @@
 //! Conversion functions
 
+use displaydoc::Display;
 use thiserror::Error;
 
 /// Errors that can occur when converting bytes to an Ed25519 verifying key.
-#[derive(Debug, Error)]
+#[derive(Display, Debug, Error)]
 pub enum VKeyFromBytesError {
-    /// Indicates the provided byte slice has an invalid length.
-    #[error("Invalid byte length: expected {expected} bytes, got {actual}")]
+    /// Invalid byte length: expected {expected} bytes, got {actual}
     InvalidLength {
         /// The expected number of bytes (must be 32).
         expected: usize,
         /// The actual number of bytes in the provided input.
         actual: usize,
     },
-    /// Indicates that the bytes could not be parsed into an Ed25519 public key.
-    #[error("Failed to parse Ed25519 public key: {source}")]
+    /// Failed to parse Ed25519 public key: {source}
     ParseError {
         /// The underlying error from `ed25519_dalek`.
         #[from]

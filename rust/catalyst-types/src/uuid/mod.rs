@@ -1,5 +1,6 @@
 //! `UUID` types.
 
+use displaydoc::Display;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -16,16 +17,13 @@ pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 pub const UUID_CBOR_TAG: u64 = 37;
 
 /// Errors that can occur when decoding CBOR-encoded UUIDs.
-#[derive(Debug, Error)]
+#[derive(Display, Debug, Error)]
 pub enum CborUuidError {
-    /// Indicates that the CBOR value is not a valid UUID tag.
-    #[error("Invalid CBOR encoded UUID type")]
+    /// Invalid CBOR encoded UUID type
     InvalidCborType,
-    /// Indicates that the byte slice has an invalid size for a UUID.
-    #[error("Invalid CBOR encoded UUID type: invalid bytes size")]
+    /// Invalid CBOR encoded UUID type: invalid bytes size
     InvalidByteSize,
-    /// Indicates that the UUID version does not match the expected version.
-    #[error("UUID {uuid} is not `v{expected_version}`")]
+    /// UUID {uuid} is not `v{expected_version}`
     InvalidVersion {
         /// The decoded UUID that was checked.
         uuid: Uuid,

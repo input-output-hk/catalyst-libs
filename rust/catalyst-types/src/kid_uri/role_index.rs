@@ -6,14 +6,14 @@ use std::{
     str::FromStr,
 };
 
+use displaydoc::Display;
 use thiserror::Error;
 
 /// Role Index parsing error
-#[derive(Error, Debug)]
+#[derive(Display, Error, Debug)]
 #[allow(clippy::module_name_repetitions)]
 pub enum RoleIndexError {
-    /// Failed to parse the role index
-    #[error("Invalid Role Index")]
+    /// Invalid Role Index
     InvalidRole(#[from] ParseIntError),
 }
 

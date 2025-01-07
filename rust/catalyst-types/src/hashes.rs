@@ -3,6 +3,7 @@
 use std::{fmt, str::FromStr};
 
 use blake2b_simd::Params;
+use displaydoc::Display;
 use pallas_crypto::hash::Hash;
 use thiserror::Error;
 
@@ -25,19 +26,16 @@ pub const BLAKE_2B128_SIZE: usize = 128 / 8;
 pub type Blake2b128Hash = Blake2bHash<BLAKE_2B128_SIZE>;
 
 /// Errors that can occur when converting to a `Blake2bHash`.
-#[derive(Debug, Error)]
+#[derive(Display, Debug, Error)]
 pub enum Blake2bHashError {
-    /// Indicates that the input byte slice has invalid length of bytes to create a valid
-    /// hash.
-    #[error("Invalid length: expected {expected} bytes, got {actual}")]
+    /// Invalid length: expected {expected} bytes, got {actual}
     InvalidLength {
         /// The expected number of bytes (must be 32 or 28).
         expected: usize,
         /// The actual number of bytes in the provided input.
         actual: usize,
     },
-    /// The input string is not a valid hex-encoded string.
-    #[error("Invalid hex string: {source}")]
+    /// Invalid hex string: {source}
     InvalidHex {
         /// The underlying error from `hex`.
         #[from]
