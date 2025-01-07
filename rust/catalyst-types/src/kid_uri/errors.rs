@@ -4,9 +4,9 @@ use thiserror::Error;
 
 use super::{key_rotation::KeyRotationError, role_index::RoleIndexError};
 
-/// Errors that can occur when parsing a `KidURI`
+/// Errors that can occur when parsing a `KidUri`
 #[derive(Error, Debug)]
-pub enum KidURIError {
+pub enum KidUriError {
     /// Invalid KID URI
     #[error("Invalid URI")]
     InvalidURI(#[from] fluent_uri::error::ParseError),
