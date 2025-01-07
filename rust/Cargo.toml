@@ -10,7 +10,7 @@ members = [
     "cbork-cddl-parser",
     "cbork-utils",
     "catalyst-voting",
-    "catalyst-voting", 
+    "catalyst-types", 
     "immutable-ledger",
     "vote-tx-v1",
     "vote-tx-v2",
