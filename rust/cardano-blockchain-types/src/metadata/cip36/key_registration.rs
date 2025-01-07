@@ -76,7 +76,6 @@ enum Cip36KeyRegistrationKeys {
 }
 
 impl Decode<'_, ()> for Cip36KeyRegistration {
-    #[allow(clippy::too_many_lines)]
     fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Key Registration")?;
 
@@ -94,13 +93,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if found_keys.contains(&key) {
-                            err_report.duplicate_field(
-                                "Key 1",
-                                format!("Redundant key found in item {} in RBAC map", index + 1)
-                                    .as_str(),
-                                "CIP36 Key Registration voting key",
-                            );
+                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
                             continue;
                         }
                         if let Some((is_cip36, voting_keys)) = decode_voting_key(d, &err_report)? {
@@ -109,13 +102,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if found_keys.contains(&key) {
-                            err_report.duplicate_field(
-                                "Key 2",
-                                format!("Redundant key found in item {} in RBAC map", index + 1)
-                                    .as_str(),
-                                "CIP36 Key Registration stake public key",
-                            );
+                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
                             continue;
                         }
                         if let Some(stake_pk) = decode_stake_pk(d, &err_report)? {
@@ -123,13 +110,7 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if found_keys.contains(&key) {
-                            err_report.duplicate_field(
-                                "Key 3",
-                                format!("Redundant key found in item {} in RBAC map", index + 1)
-                                    .as_str(),
-                                "CIP36 Key Registration payment address",
-                            );
+                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
                             continue;
                         }
                         if let Some(shelley_addr) = decode_payment_addr(d, &err_report)? {
@@ -139,25 +120,13 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
                         }
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        if found_keys.contains(&key) {
-                            err_report.duplicate_field(
-                                "Key 4",
-                                format!("Redundant key found in item {} in RBAC map", index + 1)
-                                    .as_str(),
-                                "CIP36 Key Registration nonce",
-                            );
+                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
                             continue;
                         }
                         cip36_key_registration.nonce = Some(decode_nonce(d)?);
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
-                        if found_keys.contains(&key) {
-                            err_report.duplicate_field(
-                                "Key 5",
-                                format!("Redundant key found in item {} in RBAC map", index + 1)
-                                    .as_str(),
-                                "CIP36 Key Registration purpose",
-                            );
+                        if check_is_key_exist(&found_keys, &key, index, &err_report) {
                             continue;
                         }
                         cip36_key_registration.purpose = decode_purpose(d)?;
@@ -202,6 +171,23 @@ impl Decode<'_, ()> for Cip36KeyRegistration {
 
         Ok(cip36_key_registration)
     }
+}
+
+/// Helper function for checking whether the key is already in the `found_keys` or not.
+/// True if exist, false if not.
+fn check_is_key_exist(
+    found_keys: &[Cip36KeyRegistrationKeys], key: &Cip36KeyRegistrationKeys, index: u64,
+    err_report: &ProblemReport,
+) -> bool {
+    if found_keys.contains(key) {
+        err_report.duplicate_field(
+            format!("{key:?}").as_str(),
+            format!("Redundant key found in item {} in RBAC map", index + 1).as_str(),
+            format!("CIP36 Key Registration {key:?}").as_str(),
+        );
+        return true;
+    }
+    false
 }
 
 /// Helper function for decoding the voting key.
