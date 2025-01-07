@@ -5,6 +5,8 @@ pub mod registration_witness;
 mod validation;
 pub mod voting_pk;
 
+use std::collections::HashMap;
+
 use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::VerifyingKey;
 use key_registration::Cip36KeyRegistration;
@@ -151,6 +153,32 @@ impl Cip36 {
         cip36.validate_purpose();
 
         Ok(cip36)
+    }
+
+    /// Collect all CIP-36 registrations from a block.
+    ///
+    /// # Parameters
+    ///
+    /// * `block` - The block that wanted to be processed.
+    /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
+    ///
+    /// # Returns
+    ///
+    /// A map of transaction index to the Result of CIP-36 and its errors.
+    /// None if there is no CIP-36 registration found in the block.
+    #[must_use]
+    pub fn cip36_from_block(
+        block: &MultiEraBlock, is_catalyst_strict: bool,
+    ) -> Option<HashMap<TxnIndex, Result<Cip36, Cip36Error>>> {
+        let mut cip36_map = HashMap::new();
+
+        for (txn_idx, _tx) in block.decode().txs().iter().enumerate() {
+            let txn_idx: TxnIndex = txn_idx.into();
+            let cip36 = Cip36::new(block, txn_idx, is_catalyst_strict);
+            cip36_map.insert(txn_idx, cip36);
+        }
+
+        cip36_map.is_empty().then_some(cip36_map)
     }
 
     /// Get the `is_cip36` flag from the registration.
