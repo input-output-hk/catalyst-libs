@@ -4,8 +4,7 @@ pub mod key_registration;
 pub mod registration_witness;
 mod validation;
 pub mod voting_pk;
-
-use std::collections::HashMap;
+use std::{collections::HashMap, fmt};
 
 use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::VerifyingKey;
@@ -52,6 +51,19 @@ pub struct Cip36Error {
     error: anyhow::Error,
     /// The problem report that contains the errors found during decoding and validation.
     report: ProblemReport,
+}
+
+impl fmt::Display for Cip36Error {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let report_json = serde_json::to_string(&self.report)
+            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"));
+
+        write!(
+            fmt,
+            "Cip36Error {{ error: {}, report: {} }}",
+            self.error, report_json
+        )
+    }
 }
 
 impl Cip36 {
