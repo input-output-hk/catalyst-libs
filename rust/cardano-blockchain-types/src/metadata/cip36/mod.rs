@@ -40,8 +40,9 @@ impl Cip36 {
     /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
     ///
     /// # Returns
-    /// A tuple containing the CIP-36 registration, the validation result, and a problem report.
-    /// 
+    /// A tuple containing the CIP-36 registration, the validation result, and a problem
+    /// report.
+    ///
     /// # Errors
     ///
     /// If the CIP-36 key registration or registration witness metadata is not found.
