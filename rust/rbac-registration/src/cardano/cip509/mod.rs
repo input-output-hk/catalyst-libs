@@ -27,7 +27,7 @@ use validation::{
 use super::transaction::witness::TxWitness;
 use crate::{
     cardano::cip509::{
-        rbac::Cip509RbacMetadata,
+        rbac::{Cip509RbacMetadata, RoleData, RoleNumber},
         types::{TxInputHash, ValidationSignature},
         x509_chunks::X509Chunks,
     },
@@ -169,6 +169,20 @@ impl Cip509 {
             is_valid_signing_key,
             additional_data: AdditionalData { precomputed_aux },
         }
+    }
+
+    /// Returns all role numbers present in this `Cip509` instance.
+    pub fn all_roles(&self) -> Vec<RoleNumber> {
+        self.metadata
+            .map(|m| m.role_data.keys())
+            .iter()
+            .flatten()
+            .collect()
+    }
+
+    /// Returns a role data for the given role if it is present.
+    pub fn role_data(&self, role: RoleNumber) -> Option<&RoleData> {
+        self.metadata.and_then(|m| m.role_data.get(&role))
     }
 
     // TODO: FIXME: Consume fields in the registration chain, use methods everywhere else.
