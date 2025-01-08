@@ -7,9 +7,6 @@ use std::{
 
 use serde::{de, Deserialize, Deserializer};
 
-/// Catalyst Signed Document Content Encoding Key.
-const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
-
 /// IANA `CoAP` Content Encoding.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ContentEncoding {
@@ -52,6 +49,20 @@ impl TryFrom<&coset::cbor::Value> for ContentEncoding {
             Some(encoding) => encoding.parse(),
             None => {
                 anyhow::bail!("Expected Content Encoding to be a string");
+            },
+        }
+    }
+}
+
+impl ContentEncoding {
+    /// Decompress a Brotli payload
+    pub fn decode(self, payload: &Vec<u8>) -> anyhow::Result<Vec<u8>> {
+        match self {
+            Self::Brotli => {
+                let mut buf = Vec::new();
+                let mut bytes = payload.as_slice();
+                brotli::BrotliDecompress(&mut bytes, &mut buf)?;
+                Ok(buf)
             },
         }
     }
