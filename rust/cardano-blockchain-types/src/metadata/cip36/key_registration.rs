@@ -261,9 +261,11 @@ fn voting_pk_vec_to_verifying_key(
         .ok()?;
     VerifyingKey::from_bytes(bytes)
         .map_err(|e| {
-            err_report.other(
-                format!("Failed to convert to VerifyingKey: {e:?}").as_str(),
-                context,
+            err_report.conversion_error(
+                "Verifying key ",
+                format!("{bytes:?}").as_str(),
+                format!("EdDSA VerifyingKey, {e}").as_str(),
+                "Failed to bytes convert to VerifyingKey",
             );
         })
         .ok()
@@ -313,7 +315,9 @@ fn decode_payment_addr(
     let address = match Address::from_bytes(&raw_addr) {
         Ok(addr) => addr,
         Err(e) => {
-            err_report.other(
+            err_report.conversion_error(
+                "Cardano address",
+                format!("{raw_addr:?}").as_str(),
                 format!("Cannot convert to type Address: {e}").as_str(),
                 "CIP36 Key Registration payment address",
             );

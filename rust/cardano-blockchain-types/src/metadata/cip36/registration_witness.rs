@@ -47,8 +47,10 @@ impl Decode<'_, ProblemReport> for Cip36RegistrationWitness {
         let sig_bytes = decode_bytes(d, "CIP36 Registration Witness signature")?;
         let signature = ed25519_dalek::Signature::from_slice(&sig_bytes)
             .map_err(|_| {
-                ctx.other(
-                    "Cannot parse an Ed25519 signature from a byte slice",
+                ctx.conversion_error(
+                    "Signature",
+                    format!("{sig_bytes:?}").as_str(),
+                    "Cannot convert bytes to Ed25519 signature",
                     "CIP36 Registration Witness signature",
                 );
             })
