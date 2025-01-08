@@ -4,6 +4,7 @@ pub mod conversion;
 pub mod hashes;
 
 mod auxdata;
+mod cip134_uri;
 mod fork;
 mod multi_era_block_data;
 mod network;
@@ -20,6 +21,7 @@ pub use auxdata::{
     metadatum_value::MetadatumValue,
     scripts::{Script, ScriptArray, ScriptType, TransactionScripts},
 };
+pub use cip134_uri::Cip0134Uri;
 pub use fork::Fork;
 pub use multi_era_block_data::MultiEraBlock;
 pub use network::Network;

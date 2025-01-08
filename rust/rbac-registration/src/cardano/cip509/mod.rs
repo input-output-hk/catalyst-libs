@@ -168,23 +168,30 @@ impl Cip509 {
         }
     }
 
-    /// Returns a registration purpose.
-    #[must_use]
-    pub fn purpose(&self) -> Option<Uuid> {
-        self.purpose
-    }
-
-    /// Returns an identifier of the previous transaction.
-    #[must_use]
-    pub fn previous_transaction(&self) -> Option<&Blake2b256Hash> {
-        self.prv_tx_id.as_ref()
-    }
-
-    /// Returns CIP509 metadata.
-    #[must_use]
-    pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
-        self.metadata.as_ref()
-    }
+    // TODO: FIXME: Consume fields in the registration chain, use methods everywhere else.
+    // /// Returns a registration purpose.
+    // #[must_use]
+    // pub fn purpose(&self) -> Option<Uuid> {
+    //     self.purpose
+    // }
+    //
+    // // TODO: FIXME:
+    // // txn_inputs_hash?
+    //
+    // /// Returns an identifier of the previous transaction.
+    // #[must_use]
+    // pub fn previous_transaction(&self) -> Option<&Blake2b256Hash> {
+    //     self.prv_tx_id.as_ref()
+    // }
+    //
+    // /// Returns CIP509 metadata.
+    // #[must_use]
+    // pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
+    //     self.metadata.as_ref()
+    // }
+    //
+    // // TODO: FIXME:
+    // // validation_signature?
 }
 
 impl Decode<'_, ProblemReport> for Cip509 {

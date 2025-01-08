@@ -183,7 +183,7 @@ fn extract_stake_addresses(cip509: &Cip509) -> Vec<Vec<u8>> {
         .certificate_uris
         .x_uris()
         .iter()
-        .chain(cip509.metadata.certificate_uris.c_uris())
+        .chain(metadata.certificate_uris.c_uris())
         .flat_map(|(_index, uris)| uris.iter())
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
@@ -565,7 +565,7 @@ mod tests {
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
         assert!(!report.is_problematic());
 
-        let addresses = extract_stake_addresses(&cip);
+        let addresses = extract_stake_addresses(&cip509);
         // TODO: FIXME:
         todo!();
     }

@@ -7,6 +7,7 @@ use c509_certificate::{
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
     C509ExtensionType,
 };
+use cardano_blockchain_types::Cip0134Uri;
 use catalyst_types::problem_report::ProblemReport;
 use der_parser::der::parse_der_sequence;
 use tracing::debug;
@@ -17,7 +18,6 @@ use crate::cardano::cip509::{
         certs::{C509Cert, X509DerCert},
         Cip509RbacMetadata,
     },
-    utils::Cip0134Uri,
     validation::URI,
 };
 
@@ -281,8 +281,7 @@ mod tests {
     #[allow(clippy::indexing_slicing)]
     #[test]
     fn set_new() {
-        let block =
-            hex::decode(include_str!("../../../../test_data/cardano/conway_1.block")).unwrap();
+        let block = hex::decode(include_str!("../../../test_data/cardano/conway_1.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
         let tx = &block.txs()[3];
         let cip509 = cip509(tx);

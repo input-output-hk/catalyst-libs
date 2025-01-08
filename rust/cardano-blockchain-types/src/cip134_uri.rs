@@ -8,8 +8,6 @@ use std::fmt::{Display, Formatter};
 use anyhow::{anyhow, Context, Error, Result};
 use pallas::ledger::addresses::Address;
 
-use crate::utils::general::decode_utf8;
-
 /// An URI in the CIP-0134 format.
 ///
 /// See the [proposal] for more details.
@@ -33,7 +31,7 @@ impl Cip0134Uri {
     /// # Examples
     ///
     /// ```
-    /// use rbac_registration::cardano::cip509::utils::Cip0134Uri;
+    /// use cardano_blockchain_types::Cip0134Uri;
     ///
     /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
     /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
@@ -55,7 +53,7 @@ impl Cip0134Uri {
     /// # Examples
     ///
     /// ```
-    /// use rbac_registration::cardano::cip509::utils::Cip0134Uri;
+    /// use cardano_blockchain_types::Cip0134Uri;
     ///
     /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
     /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
@@ -71,8 +69,8 @@ impl Cip0134Uri {
     /// # Examples
     ///
     /// ```
+    /// use cardano_blockchain_types::Cip0134Uri;
     /// use pallas::ledger::addresses::{Address, Network};
-    /// use rbac_registration::cardano::cip509::utils::Cip0134Uri;
     ///
     /// let uri = "web+cardano://addr/stake1uyehkck0lajq8gr28t9uxnuvgcqrc6070x3k9r8048z8y5gh6ffgw";
     /// let cip0134_uri = Cip0134Uri::parse(uri).unwrap();
@@ -97,8 +95,9 @@ impl TryFrom<&[u8]> for Cip0134Uri {
     type Error = Error;
 
     fn try_from(value: &[u8]) -> Result<Self> {
-        let address = decode_utf8(value).context("Unable to convert bytes to string")?;
-        Self::parse(&address)
+        let address = std::str::from_utf8(value)
+            .with_context(|| format!("Invalid utf8 string: '{value:?}'"))?;
+        Self::parse(address)
     }
 }
 
