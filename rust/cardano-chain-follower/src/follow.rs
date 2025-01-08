@@ -208,8 +208,8 @@ impl ChainFollower {
         None
     }
 
-    /// Update the current Point, return `false` if this fails.
-    fn update_current(&mut self, update: &Option<ChainUpdate>) -> bool {
+    /// Update the current Point, and return `false` if this fails.
+    fn update_current(&mut self, update: Option<&ChainUpdate>) -> bool {
         if let Some(update) = update {
             let decoded = update.block_data().decode();
             self.current = Point::new(decoded.slot().into(), decoded.hash().into());
@@ -267,7 +267,7 @@ impl ChainFollower {
         }
 
         // Update the current block, so we know which one to get next.
-        if !self.update_current(&update) {
+        if !self.update_current(update.as_ref()) {
             return None;
         }
 
@@ -414,7 +414,7 @@ mod tests {
 
         let mut follower = ChainFollower::new(network, start.clone(), end.clone()).await;
 
-        let result = follower.update_current(&None);
+        let result = follower.update_current(None);
 
         assert!(!result);
     }
@@ -431,7 +431,7 @@ mod tests {
         let block_data = mock_block();
         let update = ChainUpdate::new(chain_update::Kind::Block, false, block_data);
 
-        let result = follower.update_current(&Some(update.clone()));
+        let result = follower.update_current(Some(&update.clone()));
 
         assert!(result);
         assert_eq!(follower.current, update.block_data().point());

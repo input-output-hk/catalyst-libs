@@ -1,3 +1,4 @@
+//! Comment Tests
 mod common;
 use common::{comments::*, Rule};
 

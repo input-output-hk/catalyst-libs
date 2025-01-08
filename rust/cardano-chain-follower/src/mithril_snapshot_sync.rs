@@ -474,7 +474,7 @@ enum SnapshotStatus {
 
 /// Check if we have a new snapshot to download, and if so, return its details.
 async fn check_snapshot_to_download(
-    network: Network, client: &Client, current_snapshot: &Option<SnapshotId>,
+    network: Network, client: &Client, current_snapshot: Option<&SnapshotId>,
 ) -> SnapshotStatus {
     debug!("Mithril Snapshot background updater for: {network} : Getting Latest Snapshot.");
 
@@ -489,7 +489,7 @@ async fn check_snapshot_to_download(
     debug!("Mithril Snapshot background updater for: {network} : Checking if we are up-to-date {current_snapshot:?}.");
 
     // Check if the latest snapshot is different from our actual previous one.
-    if let Some(current_mithril_snapshot) = &current_snapshot {
+    if let Some(current_mithril_snapshot) = current_snapshot {
         let latest_immutable_file_number = latest_snapshot.beacon.immutable_file_number;
         debug!("We have a current snapshot: {current_mithril_snapshot} == {latest_immutable_file_number} ??");
         if *current_mithril_snapshot == latest_immutable_file_number {
@@ -705,7 +705,7 @@ pub(crate) async fn background_mithril_update(
         let (client, downloader) = connect_client(&cfg).await;
 
         let (snapshot, certificate) =
-            match check_snapshot_to_download(cfg.network, &client, &current_snapshot).await {
+            match check_snapshot_to_download(cfg.network, &client, current_snapshot.as_ref()).await {
                 SnapshotStatus::Sleep(sleep) => {
                     next_sleep = sleep;
                     next_iteration!(client, downloader);

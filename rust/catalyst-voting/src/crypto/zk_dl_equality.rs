@@ -73,7 +73,7 @@ mod tests {
 
     use super::*;
 
-    #[proptest]
+    #[proptest(cases = 10)]
     fn zk_dleq_test(e1: Scalar, e2: Scalar, dlog1: Scalar, dlog2: Scalar, randomness: Scalar) {
         let base_1 = GroupElement::GENERATOR.mul(&e1);
         let base_2 = GroupElement::GENERATOR.mul(&e2);

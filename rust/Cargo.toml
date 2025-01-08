@@ -2,13 +2,15 @@
 resolver = "2"
 members = [
     "c509-certificate",
+    "cardano-blockchain-types",
     "cardano-chain-follower",
     "hermes-ipfs",
     "cbork",
     "cbork-abnf-parser",
     "cbork-cddl-parser",
+    "cbork-utils",
     "catalyst-voting",
-    "catalyst-voting", 
+    "catalyst-types", 
     "immutable-ledger",
     "vote-tx-v1",
     "vote-tx-v2",

@@ -134,7 +134,9 @@ impl Inner {
             self.ext_size.fetch_add(entry_size, Ordering::SeqCst);
 
             // Try and deduplicate the file if we can, otherwise just extract it.
-            if let Ok((prev_mmap, _)) = Self::can_deduplicate(&rel_file, entry_size, &prev_file) {
+            if let Ok((prev_mmap, _)) =
+                Self::can_deduplicate(&rel_file, entry_size, prev_file.as_ref())
+            {
                 let expected_file_size = usize_from_saturating(entry_size);
                 let mut buf: Vec<u8> = Vec::with_capacity(expected_file_size);
                 if entry.read_to_end(&mut buf)? != expected_file_size {
@@ -222,7 +224,7 @@ impl Inner {
 
     /// Check if a given path from the archive is able to be deduplicated.
     fn can_deduplicate(
-        rel_file: &Path, file_size: u64, prev_file: &Option<PathBuf>,
+        rel_file: &Path, file_size: u64, prev_file: Option<&PathBuf>,
     ) -> MithrilResult<(fmmap::MmapFile, u64)> {
         // Can't dedup if the current file is not de-dupable (must be immutable)
         if rel_file.starts_with("immutable") {

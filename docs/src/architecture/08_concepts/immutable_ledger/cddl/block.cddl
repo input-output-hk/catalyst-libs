@@ -8,12 +8,12 @@ block = [
 ]
 
 block-header = [
-    chain-id: ULID,
+    chain-id: UUID, ; UUID v7
     height: int,
     timestamp: #6.1(uint .ge 1722470400), ; Epoch-based date/time
     prev-block-id: hash-bytes, ; hash of the previous block
-    ?ledger-type: UUID,
-    ?purpose-id: ULID / UUID,
+    ?ledger-type: UUID, ; UUID v4
+    ?purpose-id: UUID, ; UUID v7
     ?validator,
     ~metadata,
 ]
@@ -21,7 +21,6 @@ block-header = [
 block-data = encoded-cbor
 
 UUID = #6.37(bytes) ; UUID type
-ULID = #6.32780(bytes) ; ULID type
 
 kid = hash-bytes ; hash of the x509/c509 certificate
 

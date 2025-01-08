@@ -64,7 +64,8 @@ pub mod signing;
 pub mod subject_pub_key_algo;
 mod tables;
 pub mod time;
-pub mod wasm_binding;
+// Only re-enable when building with wasm is detected, should not be used in a non wasm
+// build. pub mod wasm_binding;
 
 /// Generate a signed or unsigned C509 certificate.
 ///
@@ -78,7 +79,6 @@ pub mod wasm_binding;
 /// # Errors
 ///
 /// Returns an error if the generated data is invalid.
-
 pub fn generate(tbs_cert: &TbsCert, private_key: Option<&PrivateKey>) -> anyhow::Result<Vec<u8>> {
     // Encode the TbsCert
     let encoded_tbs = {

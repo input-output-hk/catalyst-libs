@@ -415,7 +415,7 @@ impl HermesIpfs {
     ///
     /// ## Parameters
     ///
-    /// * `topic` - `impl Into<String>`
+    /// * `topic` - `impl Into<Option<String>>`
     ///
     /// ## Returns
     ///
@@ -425,7 +425,7 @@ impl HermesIpfs {
     ///
     /// Returns error if unable to retrieve pubsub swarm events.
     pub async fn pubsub_events(
-        &self, topic: impl Into<String>,
+        &self, topic: impl Into<Option<String>>,
     ) -> anyhow::Result<BoxStream<'static, PubsubEvent>> {
         self.node.pubsub_events(topic).await
     }
