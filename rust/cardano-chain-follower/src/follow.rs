@@ -388,7 +388,6 @@ mod tests {
     }
 
     #[tokio::test]
-    // FIXME - This test should fail
     async fn test_chain_follower_new() {
         let network = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
@@ -406,7 +405,6 @@ mod tests {
     }
 
     #[tokio::test]
-    // FIXME - This test should fail
     async fn test_chain_follower_update_current_none() {
         let network = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
@@ -420,7 +418,6 @@ mod tests {
     }
 
     #[tokio::test]
-    // FIXME - This test should fail
     async fn test_chain_follower_update_current() {
         let network = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
