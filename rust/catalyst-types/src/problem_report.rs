@@ -55,6 +55,7 @@ enum Kind {
         /// Additional information about the duplicate field.
         description: String,
     },
+    /// Conversion error.
     ConversionError {
         /// The field that failed to convert
         field: String,
@@ -86,9 +87,7 @@ struct Report(ConcurrentVec<Entry>);
 
 impl Serialize for Report {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
+    where S: serde::Serializer {
         let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
         for e in self.0.iter_cloned() {
             seq.serialize_element(&e)?;
@@ -103,9 +102,7 @@ struct Context(Arc<String>);
 
 impl Serialize for Context {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
+    where S: serde::Serializer {
         let str = self.0.as_ref();
         serializer.serialize_str(str)
     }
@@ -391,22 +388,29 @@ impl ProblemReport {
     }
 
     /// Reports a conversion error.
-    /// 
-    /// This method adds an entry to the problem report indicating that a field failed to convert
-    /// to the expected type, along with the value that failed to convert and the expected type.
-    /// 
+    ///
+    /// This method adds an entry to the problem report indicating that a field failed to
+    /// convert to the expected type, along with the value that failed to convert and
+    /// the expected type.
+    ///
     /// # Arguments
-    /// 
+    ///
     /// * `field`: A string slice representing the field that failed to convert.
     /// * `value`: A string slice representing the value that failed to convert.
-    /// * `expected_type`: A string slice representing the type that the value was expected to convert to.
-    /// 
+    /// * `expected_type`: A string slice representing the type that the value was
+    ///   expected to convert to.
+    ///
     /// # Example
-    /// 
+    ///
     /// ```rust
     /// use catalyst_types::problem_report::ProblemReport;
     /// let report = ProblemReport::new("RBAC Registration Decoding");
-    /// report.conversion_error("address bytes", "[1, 2, 3, 4]", "Address", "RBAC stake address");
+    /// report.conversion_error(
+    ///     "address bytes",
+    ///     "[1, 2, 3, 4]",
+    ///     "Address",
+    ///     "RBAC stake address",
+    /// );
     /// ```
     pub fn conversion_error(&self, field: &str, value: &str, expected_type: &str, context: &str) {
         self.add_entry(
@@ -418,7 +422,7 @@ impl ProblemReport {
             context,
         );
     }
-    
+
     /// Reports an uncategorized problem with the given description and context.
     ///
     /// This method is intended for use in rare situations where a specific type of
