@@ -107,26 +107,35 @@ impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
 
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
-                        x509_certs = decode_array_rbac(d, "x509 certificate")?;
+                        x509_certs =
+                            decode_array(d, "Cip509RbacMetadata x509 certificates", report);
                     },
                     Cip509RbacMetadataInt::C509Certs => {
-                        c509_certs = decode_array_rbac(d, "c509 certificate")?;
+                        c509_certs = decode_array(d, "Cip509RbacMetadata c509 certificate", report);
                     },
                     Cip509RbacMetadataInt::PubKeys => {
-                        pub_keys = decode_array_rbac(d, "public keys")?;
+                        pub_keys = decode_array(d, "Cip509RbacMetadata public keys", report);
                     },
                     Cip509RbacMetadataInt::RevocationList => {
-                        revocation_list = decode_revocation_list(d)?;
+                        revocation_list = decode_revocation_list(d, report);
                     },
                     Cip509RbacMetadataInt::RoleSet => {
-                        role_set = decode_array_rbac(d, "role set")?;
+                        role_set = decode_array(d, "Cip509RbacMetadata role set", report);
                     },
                 }
             } else {
                 if !(FIRST_PURPOSE_KEY..=LAST_PURPOSE_KEY).contains(&key) {
                     report.other(&format!("Invalid purpose key set, should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}"), context);
-                } else {
-                    purpose_key_data.insert(key, decode_any(d, "purpose key")?);
+                    continue;
+                }
+
+                match decode_any(d, "purpose key") {
+                    Ok(v) => {
+                        purpose_key_data.insert(key, v);
+                    },
+                    Err(e) => {
+                        report.other(&format!("Unable to decode purpose value: {e:?}"), context);
+                    },
                 }
             }
         }
@@ -145,27 +154,75 @@ impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
     }
 }
 
-/// Decode an array of type T.
-fn decode_array_rbac<'b, T>(d: &mut Decoder<'b>, from: &str) -> Result<Vec<T>, decode::Error>
+/// Decodes an array of type T.
+fn decode_array<'b, T>(d: &mut Decoder<'b>, context: &str, report: &ProblemReport) -> Vec<T>
 where T: Decode<'b, ()> {
-    let len = decode_array_len(d, &format!("{from} Cip509RbacMetadata"))?;
-    let mut vec = Vec::with_capacity(usize::try_from(len).map_err(decode::Error::message)?);
+    let len = match decode_array_len(d, context) {
+        Ok(v) => v,
+        Err(e) => {
+            report.other(&format!("Unable to decode array length: {e:?}"), context);
+            return Vec::new();
+        },
+    };
+    let len = match usize::try_from(len) {
+        Ok(v) => v,
+        Err(e) => {
+            report.other(&format!("Invalid array length: {e:?}"), context);
+            return Vec::new();
+        },
+    };
+
+    let mut result = Vec::with_capacity(len);
     for _ in 0..len {
-        vec.push(T::decode(d, &mut ())?);
+        match T::decode(d, &mut ()) {
+            Ok(v) => result.push(v),
+            Err(e) => {
+                report.other(&format!("Unable to decode array value: {e:?}"), context);
+            },
+        }
     }
-    Ok(vec)
+    result
 }
 
 /// Decode an array of revocation list.
-fn decode_revocation_list(d: &mut Decoder) -> Result<Vec<CertKeyHash>, decode::Error> {
-    let len = decode_array_len(d, "revocation list Cip509RbacMetadata")?;
-    let mut revocation_list =
-        Vec::with_capacity(usize::try_from(len).map_err(decode::Error::message)?);
+fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Vec<CertKeyHash> {
+    let context = "Cip509RbacMetadata revocation list";
+    let len = match decode_array_len(d, context) {
+        Ok(v) => v,
+        Err(e) => {
+            report.other(&format!("Unable to decode array length: {e:?}"), context);
+            return Vec::new();
+        },
+    };
+    let len = match usize::try_from(len) {
+        Ok(v) => v,
+        Err(e) => {
+            report.other(&format!("Invalid array length: {e:?}"), context);
+            return Vec::new();
+        },
+    };
+
+    let mut result = Vec::with_capacity(len);
     for _ in 0..len {
-        let arr: [u8; 16] = decode_bytes(d, "revocation list Cip509RbacMetadata")?
-            .try_into()
-            .map_err(|_| decode::Error::message("Invalid revocation list size"))?;
-        revocation_list.push(CertKeyHash::from(arr));
+        let bytes = match decode_bytes(d, context) {
+            Ok(v) => v,
+            Err(e) => {
+                report.other(
+                    &format!("Unable to decode certificate hash bytes: {e:?}"),
+                    context,
+                );
+                continue;
+            },
+        };
+        match CertKeyHash::try_from(bytes) {
+            Ok(v) => result.push(v),
+            Err(e) => {
+                report.other(
+                    &format!("Invalid revocation list certificate hash: {e:?}"),
+                    context,
+                );
+            },
+        }
     }
-    Ok(revocation_list)
+    result
 }
