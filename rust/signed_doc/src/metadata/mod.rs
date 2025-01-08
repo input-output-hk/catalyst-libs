@@ -7,15 +7,14 @@ mod document_id;
 mod document_ref;
 mod document_type;
 mod document_version;
-mod uuid_type;
 
+pub use catalyst_types::uuid::{V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
 pub use document_type::DocumentType;
 pub use document_version::DocumentVersion;
-pub use uuid_type::{UuidV4, UuidV7};
 
 /// Catalyst Signed Document Content Encoding Key.
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
