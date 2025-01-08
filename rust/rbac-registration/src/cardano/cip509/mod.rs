@@ -7,17 +7,23 @@
 pub mod rbac;
 pub mod types;
 pub mod utils;
-pub(crate) mod validation;
 pub mod x509_chunks;
 
-use cardano_blockchain_types::hashes::{Blake2b256Hash, BLAKE_2B256_SIZE};
+pub(crate) mod validation;
+
+use anyhow::anyhow;
+use cardano_blockchain_types::{
+    hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
+    MultiEraBlock, Slot, TxnIndex,
+};
 use catalyst_types::problem_report::ProblemReport;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
 };
-use pallas::ledger::traverse::MultiEraTx;
+use pallas::{codec::utils::Nullable, ledger::traverse::MultiEraTx};
 use strum_macros::FromRepr;
+use tracing::warn;
 use uuid::Uuid;
 use validation::{
     validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
@@ -26,10 +32,13 @@ use validation::{
 
 use super::transaction::witness::TxWitness;
 use crate::{
-    cardano::cip509::{
-        rbac::{Cip509RbacMetadata, RoleData, RoleNumber},
-        types::{TxInputHash, ValidationSignature},
-        x509_chunks::X509Chunks,
+    cardano::{
+        cip509::{
+            rbac::{Cip509RbacMetadata, RoleData, RoleNumber},
+            types::{TxInputHash, ValidationSignature},
+            x509_chunks::X509Chunks,
+        },
+        transaction::raw_aux_data::RawAuxData,
     },
     utils::{
         decode_helper::{
@@ -49,7 +58,7 @@ pub const LABEL: u64 = 509;
 /// more details.
 ///
 /// [this document]: https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md
-#[derive(Debug, PartialEq, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct Cip509 {
     /// A registration purpose (`UUIDv4`).
     ///
@@ -65,8 +74,18 @@ pub struct Cip509 {
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
     metadata: Option<Cip509RbacMetadata>,
-    /// Validation signature.
+    /// A validation signature.
     validation_signature: Option<ValidationSignature>,
+    /// A report potentially containing all the issues occurred during `Cip509` decoding
+    /// and validation.
+    ///
+    /// The data located in `Cip509` is only considered valid if
+    /// `ProblemReport::is_problematic()` returns false.
+    report: ProblemReport,
+    /// A slot identifying the block that this `Cip509` was extracted from.
+    slot: Slot,
+    /// A transaction index.
+    transaction_index: TxnIndex,
 }
 
 /// Validation value for CIP509 metadatum.
@@ -110,8 +129,105 @@ enum Cip509IntIdentifier {
 }
 
 impl Cip509 {
-    // TODO: FIXME: Replace validation with construction from `MultiEraBlock` and `TxnIndex`.
-    // (https://github.com/input-output-hk/catalyst-libs/pull/127#discussion_r1901549418)
+    /// Returns a `Cip509` instance if it is present in the given transaction, otherwise
+    /// `None` is returned.
+    ///
+    /// # Errors
+    ///
+    /// An error is only returned if the data is completely corrupted. In all other cases
+    /// the `Cip509` structure contains fully or partially decoded data.
+    pub fn new(block: &MultiEraBlock, index: TxnIndex) -> Result<Option<Self>, anyhow::Error> {
+        let block = block.decode();
+        let transactions = block.txs();
+        let transaction = transactions.get(usize::from(index)).ok_or_else(|| {
+            anyhow!(
+                "Invalid transaction index {index:?}, transactions count = {}",
+                block.tx_count()
+            )
+        })?;
+
+        let MultiEraTx::Conway(transaction) = transaction else {
+            return Err(anyhow!("Unsupported era: {}", transaction.era()));
+        };
+
+        let auxiliary_data = match &transaction.auxiliary_data {
+            Nullable::Some(v) => v.raw_cbor(),
+            _ => return Ok(None),
+        };
+        let auxiliary_data = RawAuxData::new(auxiliary_data);
+        let Some(metadata) = auxiliary_data.get_metadata(509) else {
+            return Ok(None);
+        };
+
+        let mut decoder = Decoder::new(metadata.as_slice());
+        let mut report = ProblemReport::new("Decoding and validating Cip509");
+        let mut cip509 = match Cip509::decode(&mut decoder, &mut report) {
+            Ok(v) => v,
+            Err(e) => {
+                report.other(&format!("{e:?}"), "Failed to decode Cip509");
+                return Ok(Some(Self::with_slot_and_index(
+                    report,
+                    block.slot().into(),
+                    index,
+                )));
+            },
+        };
+        cip509.slot = block.slot().into();
+        cip509.transaction_index = index;
+
+        // After this point the decoding is finished and the structure shouldn't be modified
+        // except of populating the problem report during validation.
+        let cip509 = cip509;
+
+        // TODO: FIXME: Validation!
+        todo!();
+
+        Ok(Some(cip509))
+    }
+
+    /// Returns a list of Cip509 instances from all the transactions of the given block.
+    pub fn from_block(block: &MultiEraBlock) -> Vec<Self> {
+        let mut result = Vec::new();
+
+        let decoded_block = block.decode();
+        for index in 0..decoded_block.tx_count() {
+            let index = TxnIndex::from_saturating(index);
+            match Self::new(block, index) {
+                Ok(Some(v)) => result.push(v),
+                // Normal situation: there is no Cip509 data in this transaction.
+                Ok(None) => {},
+                Err(e) => {
+                    warn!(
+                        "Unable to extract Cip509 from the {} block {index:?} transaction: {e:?}",
+                        decoded_block.slot()
+                    );
+                },
+            }
+        }
+
+        result
+    }
+
+    /// Creates an "empty" `Cip509` instance with all fields set to `None`. Non-optional
+    /// fields set to dummy values that must be overwritten.
+    fn with_report(report: ProblemReport) -> Self {
+        Self::with_slot_and_index(report, 0.into(), TxnIndex::from_saturating(0))
+    }
+
+    /// Creates an "empty" `Cip509` instance with all fields set to `None`. Should only be
+    /// used internally.
+    fn with_slot_and_index(report: ProblemReport, slot: Slot, transaction_index: TxnIndex) -> Self {
+        Self {
+            purpose: None,
+            txn_inputs_hash: None,
+            prv_tx_id: None,
+            metadata: None,
+            validation_signature: None,
+            report,
+            slot,
+            transaction_index,
+        }
+    }
 
     /// Basic validation for CIP509
     /// The validation include the following:
@@ -173,42 +289,54 @@ impl Cip509 {
 
     /// Returns all role numbers present in this `Cip509` instance.
     pub fn all_roles(&self) -> Vec<RoleNumber> {
-        self.metadata
-            .map(|m| m.role_data.keys())
-            .iter()
-            .flatten()
-            .collect()
+        if let Some(metadata) = &self.metadata {
+            metadata.role_data.keys().cloned().collect()
+        } else {
+            Vec::new()
+        }
     }
 
     /// Returns a role data for the given role if it is present.
     pub fn role_data(&self, role: RoleNumber) -> Option<&RoleData> {
-        self.metadata.and_then(|m| m.role_data.get(&role))
+        self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
     }
 
-    // TODO: FIXME: Consume fields in the registration chain, use methods everywhere else.
-    // /// Returns a registration purpose.
-    // #[must_use]
-    // pub fn purpose(&self) -> Option<Uuid> {
-    //     self.purpose
-    // }
-    //
-    // // TODO: FIXME:
-    // // txn_inputs_hash?
-    //
-    // /// Returns an identifier of the previous transaction.
-    // #[must_use]
-    // pub fn previous_transaction(&self) -> Option<&Blake2b256Hash> {
-    //     self.prv_tx_id.as_ref()
-    // }
-    //
-    // /// Returns CIP509 metadata.
-    // #[must_use]
-    // pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
-    //     self.metadata.as_ref()
-    // }
-    //
-    // // TODO: FIXME:
-    // // validation_signature?
+    /// Returns a hash of the previous transaction.
+    pub fn previous_transaction(&self) -> Option<Blake2b256Hash> {
+        self.prv_tx_id
+    }
+
+    /// Returns a problem report
+    pub fn report(&self) -> &ProblemReport {
+        &self.report
+    }
+
+    /// Returns a slot and a transaction index where this data is originating from.
+    pub fn origin(&self) -> (Slot, TxnIndex) {
+        (self.slot, self.transaction_index)
+    }
+
+    /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
+    /// validated otherwise return the problem report that contains all the encountered
+    /// issues.
+    pub fn try_consume(
+        self,
+    ) -> Result<(Uuid, TxInputHash, Cip509RbacMetadata, ValidationSignature), ProblemReport> {
+        match (
+            self.purpose,
+            self.txn_inputs_hash,
+            self.metadata,
+            self.validation_signature,
+        ) {
+            (Some(purpose), Some(txn_inputs_hash), Some(metadata), Some(validation_signature))
+                if !self.report.is_problematic() =>
+            {
+                Ok((purpose, txn_inputs_hash, metadata, validation_signature))
+            },
+
+            _ => Err(self.report),
+        }
+    }
 }
 
 impl Decode<'_, ProblemReport> for Cip509 {
@@ -216,7 +344,8 @@ impl Decode<'_, ProblemReport> for Cip509 {
         let context = "Cip509";
         let map_len = decode_map_len(d, context)?;
 
-        let mut result = Self::default();
+        let mut result = Self::with_report(report.clone());
+
         let mut found_keys = Vec::new();
         let mut is_metadata_found = false;
 

@@ -8,16 +8,22 @@ pub struct TxnIndex(u16);
 
 impl TxnIndex {
     /// Convert an `<T>` to transaction index (saturate if out of range).
-    pub(crate) fn from_saturating<
+    pub fn from_saturating<
         T: Copy
             + TryInto<u16>
             + std::ops::Sub<Output = T>
-            + std::cmp::PartialOrd<T>
+            + PartialOrd<T>
             + num_traits::identities::Zero,
     >(
         value: T,
     ) -> Self {
         let value: u16 = from_saturating(value);
         Self(value)
+    }
+}
+
+impl From<TxnIndex> for usize {
+    fn from(value: TxnIndex) -> Self {
+        value.0.into()
     }
 }

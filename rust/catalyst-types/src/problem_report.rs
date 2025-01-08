@@ -10,7 +10,7 @@ use orx_concurrent_vec::ConcurrentVec;
 use serde::{ser::SerializeSeq, Serialize};
 
 /// The kind of problem being reported
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(tag = "type")]
 enum Kind {
     /// Expected and Required field is missing
@@ -64,7 +64,7 @@ enum Kind {
 }
 
 /// Problem Report Entry
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 struct Entry {
     /// The kind of problem we are recording.
     kind: Kind,
@@ -73,7 +73,7 @@ struct Entry {
 }
 
 /// The Problem Report list
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Report(ConcurrentVec<Entry>);
 
 impl Serialize for Report {
@@ -88,7 +88,7 @@ impl Serialize for Report {
 }
 
 /// The Problem Report list
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct Context(Arc<String>);
 
 impl Serialize for Context {
@@ -100,7 +100,7 @@ impl Serialize for Context {
 }
 
 /// Problem Report
-#[derive(Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ProblemReport {
     /// What context does the whole report have
     context: Context,
