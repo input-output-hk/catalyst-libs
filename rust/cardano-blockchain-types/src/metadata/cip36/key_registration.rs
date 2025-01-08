@@ -93,22 +93,20 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                 }
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        if let Some((is_cip36, voting_keys)) = decode_voting_key(d, ctx)? {
-                            cip36_key_registration.is_cip36 = is_cip36;
-                            cip36_key_registration.voting_pks = voting_keys;
-                        }
+                        let (is_cip36, voting_keys) = decode_voting_key(d, ctx)?;
+                        cip36_key_registration.is_cip36 = is_cip36;
+                        cip36_key_registration.voting_pks = voting_keys;
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        if let Some(stake_pk) = decode_stake_pk(d, ctx)? {
-                            cip36_key_registration.stake_pk = Some(stake_pk);
-                        }
+                        let stake_pk = decode_stake_pk(d, ctx)?;
+                        cip36_key_registration.stake_pk = stake_pk;
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        if let Some(shelley_addr) = decode_payment_addr(d, ctx)? {
-                            cip36_key_registration.payment_addr = Some(shelley_addr.clone());
-                            cip36_key_registration.is_payable =
-                                Some(!shelley_addr.payment().is_script());
-                        }
+                        let shelley_addr = decode_payment_addr(d, ctx)?;
+                        cip36_key_registration.is_payable = shelley_addr
+                            .as_ref()
+                            .map(|addr| !addr.payment().is_script())
+                            .or(None);
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
                         cip36_key_registration.nonce = Some(decode_nonce(d)?);
@@ -169,12 +167,10 @@ fn check_is_key_exist(
 ///       either CIP36 or CIP15.
 ///     - A vector of `VotingPubKey`, if the `voting_pk` vector cannot be converted to
 ///       verifying key, assign `voting_pk` to None.
-/// - None if there is invalid data.
 /// - Error if decoding failed.
-#[allow(clippy::type_complexity)]
 fn decode_voting_key(
     d: &mut Decoder, err_report: &ProblemReport,
-) -> Result<Option<(Option<bool>, Vec<VotingPubKey>)>, decode::Error> {
+) -> Result<(Option<bool>, Vec<VotingPubKey>), decode::Error> {
     let mut voting_keys = Vec::new();
     #[allow(unused_assignments)]
     let mut is_cip36 = None;
@@ -245,7 +241,7 @@ fn decode_voting_key(
             )));
         },
     }
-    Ok(Some((is_cip36, voting_keys)))
+    Ok((is_cip36, voting_keys))
 }
 
 /// Helper function for converting `&[u8]` to `VerifyingKey`.
@@ -412,9 +408,8 @@ mod tests {
         .expect("cannot decode hex");
         let mut decoder = Decoder::new(&hex_data);
         let err_report = ProblemReport::new("CIP36 Key Registration Decoding");
-        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder, &err_report)
-            .expect("cannot decode voting key")
-            .unwrap();
+        let (is_cip36, voting_pk) =
+            decode_voting_key(&mut decoder, &err_report).expect("cannot decode voting key");
         assert!(!err_report.is_problematic());
         assert!(is_cip36.unwrap());
         assert_eq!(voting_pk.len(), 1);
@@ -430,9 +425,8 @@ mod tests {
         .expect("cannot decode hex");
         let mut decoder = Decoder::new(&hex_data);
         let err_report = ProblemReport::new("CIP36 Key Registration Decoding");
-        let (is_cip36, voting_pk) = decode_voting_key(&mut decoder, &err_report)
-            .expect("cannot decode voting key")
-            .unwrap();
+        let (is_cip36, voting_pk) =
+            decode_voting_key(&mut decoder, &err_report).expect("cannot decode voting key");
         assert!(!err_report.is_problematic());
         assert!(!is_cip36.unwrap());
         assert_eq!(voting_pk.len(), 1);
