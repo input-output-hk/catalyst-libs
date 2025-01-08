@@ -38,21 +38,39 @@ pub struct Metadata {
     /// Document Payload Content Encoding.
     #[serde(default, rename = "content-encoding")]
     content_encoding: Option<ContentEncoding>,
+    /// Additional Metadata Fields.
+    #[serde(flatten)]
+    extra: Fields,
+    /// Metadata Content Errors
+    #[serde(skip)]
+    content_errors: Vec<String>,
+}
+
+/// Optional Metadata Fields.
+///
+/// These values are extracted from the COSE Sign protected header labels.
+#[derive(Default, Debug, serde::Deserialize)]
+struct Fields {
     /// Reference to the latest document.
     #[serde(rename = "ref")]
     doc_ref: Option<DocumentRef>,
+    /// Hash of the referenced document bytes.
+    ref_hash: Option<Vec<u8>>,
     /// Reference to the document template.
     template: Option<DocumentRef>,
     /// Reference to the document reply.
     reply: Option<DocumentRef>,
     /// Reference to the document section.
     section: Option<String>,
-    /// Metadata Content Errors
-    #[serde(skip)]
-    content_errors: Vec<String>,
 }
 
 impl Metadata {
+    /// Are there any validation errors (as opposed to structural errors).
+    #[must_use]
+    pub fn has_error(&self) -> bool {
+        !self.content_errors.is_empty()
+    }
+
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> uuid::Uuid {
@@ -71,42 +89,6 @@ impl Metadata {
         self.ver.uuid()
     }
 
-    /// Return Last Document Reference `Option<DocumentRef>`.
-    #[must_use]
-    pub fn doc_ref(&self) -> Option<DocumentRef> {
-        self.doc_ref
-    }
-
-    /// Return Document Template `Option<DocumentRef>`.
-    #[must_use]
-    pub fn doc_template(&self) -> Option<DocumentRef> {
-        self.template
-    }
-
-    /// Return Document Reply `Option<DocumentRef>`.
-    #[must_use]
-    pub fn doc_reply(&self) -> Option<DocumentRef> {
-        self.reply
-    }
-
-    /// Return Document Section `Option<String>`.
-    #[must_use]
-    pub fn doc_section(&self) -> Option<String> {
-        self.section.clone()
-    }
-
-    /// Are there any validation errors (as opposed to structural errors).
-    #[must_use]
-    pub fn has_error(&self) -> bool {
-        !self.content_errors.is_empty()
-    }
-
-    /// List of Content Errors.
-    #[must_use]
-    pub fn content_errors(&self) -> &Vec<String> {
-        &self.content_errors
-    }
-
     /// Returns the Document Content Type, if any.
     #[must_use]
     pub fn content_type(&self) -> ContentType {
@@ -118,6 +100,42 @@ impl Metadata {
     pub fn content_encoding(&self) -> Option<ContentEncoding> {
         self.content_encoding
     }
+
+    /// Return Last Document Reference `Option<Vec<u8>>`.
+    #[must_use]
+    pub fn doc_ref_hash(&self) -> Option<Vec<u8>> {
+        self.extra.ref_hash.clone()
+    }
+
+    /// Return Last Document Reference `Option<DocumentRef>`.
+    #[must_use]
+    pub fn doc_ref(&self) -> Option<DocumentRef> {
+        self.extra.doc_ref
+    }
+
+    /// Return Document Template `Option<DocumentRef>`.
+    #[must_use]
+    pub fn doc_template(&self) -> Option<DocumentRef> {
+        self.extra.template
+    }
+
+    /// Return Document Reply `Option<DocumentRef>`.
+    #[must_use]
+    pub fn doc_reply(&self) -> Option<DocumentRef> {
+        self.extra.reply
+    }
+
+    /// Return Document Section `Option<String>`.
+    #[must_use]
+    pub fn doc_section(&self) -> Option<String> {
+        self.extra.section.clone()
+    }
+
+    /// List of Content Errors.
+    #[must_use]
+    pub fn content_errors(&self) -> &Vec<String> {
+        &self.content_errors
+    }
 }
 
 impl Display for Metadata {
@@ -126,12 +144,9 @@ impl Display for Metadata {
         writeln!(f, "  type: {},", self.doc_type)?;
         writeln!(f, "  id: {},", self.id)?;
         writeln!(f, "  ver: {},", self.ver)?;
-        writeln!(f, "  ref: {:?},", self.doc_ref)?;
-        writeln!(f, "  template: {:?},", self.template)?;
-        writeln!(f, "  reply: {:?},", self.reply)?;
-        writeln!(f, "  section: {:?}", self.section)?;
         writeln!(f, "  content_type: {}", self.content_type)?;
         writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
+        writeln!(f, "  additional_fields: {:?},", self.extra)?;
         writeln!(f, "}}")
     }
 }
@@ -142,25 +157,11 @@ impl Default for Metadata {
             doc_type: DocumentType::invalid(),
             id: DocumentId::invalid(),
             ver: DocumentVersion::invalid(),
-            doc_ref: None,
-            template: None,
-            reply: None,
-            section: None,
             content_type: ContentType::default(),
             content_encoding: None,
+            extra: Fields::default(),
             content_errors: Vec::new(),
         }
-    }
-}
-
-/// Errors found when decoding content.
-#[derive(Default, Debug)]
-struct ContentErrors(Vec<String>);
-
-impl ContentErrors {
-    /// Appends an element to the back of the collection
-    fn push(&mut self, error_string: String) {
-        self.0.push(error_string);
     }
 }
 
@@ -261,7 +262,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         if let Some(cbor_doc_ref) = cose_protected_header_find(protected, "ref") {
             match DocumentRef::try_from(&cbor_doc_ref) {
                 Ok(doc_ref) => {
-                    metadata.doc_ref = Some(doc_ref);
+                    metadata.extra.doc_ref = Some(doc_ref);
                 },
                 Err(e) => {
                     errors.push(format!(
@@ -274,7 +275,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         if let Some(cbor_doc_template) = cose_protected_header_find(protected, "template") {
             match DocumentRef::try_from(&cbor_doc_template) {
                 Ok(doc_template) => {
-                    metadata.template = Some(doc_template);
+                    metadata.extra.template = Some(doc_template);
                 },
                 Err(e) => {
                     errors.push(format!(
@@ -287,7 +288,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         if let Some(cbor_doc_reply) = cose_protected_header_find(protected, "reply") {
             match DocumentRef::try_from(&cbor_doc_reply) {
                 Ok(doc_reply) => {
-                    metadata.reply = Some(doc_reply);
+                    metadata.extra.reply = Some(doc_reply);
                 },
                 Err(e) => {
                     errors.push(format!(
@@ -300,7 +301,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
         if let Some(cbor_doc_section) = cose_protected_header_find(protected, "section") {
             match cbor_doc_section.into_text() {
                 Ok(doc_section) => {
-                    metadata.section = Some(doc_section);
+                    metadata.extra.section = Some(doc_section);
                 },
                 Err(e) => {
                     errors.push(format!(

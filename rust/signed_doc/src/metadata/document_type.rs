@@ -14,11 +14,6 @@ impl DocumentType {
         Self(UuidV4::invalid())
     }
 
-    /// Check if this is a valid `UUIDv4`.
-    pub fn is_valid(&self) -> bool {
-        self.0.is_valid()
-    }
-
     /// Returns the `uuid::Uuid` type.
     #[must_use]
     pub fn uuid(&self) -> uuid::Uuid {

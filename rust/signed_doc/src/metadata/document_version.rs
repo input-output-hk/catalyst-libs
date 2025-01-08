@@ -13,11 +13,6 @@ impl DocumentVersion {
         Self(UuidV7::invalid())
     }
 
-    /// Check if this is a valid `UUIDv7`.
-    pub fn is_valid(&self) -> bool {
-        self.0.is_valid()
-    }
-
     /// Returns the `uuid::Uuid` type.
     #[must_use]
     pub fn uuid(&self) -> uuid::Uuid {

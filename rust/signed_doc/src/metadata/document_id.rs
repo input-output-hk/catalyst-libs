@@ -19,11 +19,6 @@ impl DocumentId {
         }
     }
 
-    /// Check if this is a valid `UUIDv7`.
-    pub fn is_valid(&self) -> bool {
-        self.uuid.is_valid()
-    }
-
     /// Returns the `uuid::Uuid` type.
     #[must_use]
     pub fn uuid(&self) -> uuid::Uuid {
