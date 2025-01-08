@@ -120,23 +120,7 @@ pub(crate) fn validate_stake_public_key(
         },
     };
 
-    // TODO: This should be improved, probably along with the `compare_key_hash` function
-    // implementation.
-    let pk_addrs: Vec<_> = cip509
-        .metadata
-        .certificate_uris
-        .x_uris()
-        .iter()
-        .chain(cip509.metadata.certificate_uris.c_uris())
-        .flat_map(|(_index, uris)| uris.iter())
-        .filter_map(|uri| {
-            if let Address::Stake(a) = uri.address() {
-                Some(a.payload().as_hash().to_vec())
-            } else {
-                None
-            }
-        })
-        .collect();
+    let pk_addrs: Vec<_> = extract_stake_addresses(cip509);
 
     Some(
         // Set transaction index to 0 because the list of transaction is manually constructed
@@ -186,6 +170,29 @@ pub(crate) fn validate_aux(
         validation_report.push(format!("{function_name}, Unsupported transaction era"));
         None
     }
+}
+
+/// Extracts all stake addresses from both X509 and C509 certificates containing in the
+/// given `Cip509` and their hashes to bytes.
+fn extract_stake_addresses(cip509: &Cip509) -> Vec<Vec<u8>> {
+    let Some(metadata) = cip509.metadata.as_ref() else {
+        return Vec::new();
+    };
+
+    metadata
+        .certificate_uris
+        .x_uris()
+        .iter()
+        .chain(cip509.metadata.certificate_uris.c_uris())
+        .flat_map(|(_index, uris)| uris.iter())
+        .filter_map(|uri| {
+            if let Address::Stake(a) = uri.address() {
+                Some(a.payload().as_hash().to_vec())
+            } else {
+                None
+            }
+        })
+        .collect()
 }
 
 /// Helper function for auxiliary data validation.
@@ -539,5 +546,27 @@ mod tests {
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
         assert!(!report.is_problematic());
         assert!(!validate_stake_public_key(&cip509, tx, &mut validation_report).unwrap());
+    }
+
+    #[test]
+    fn extract_stake_addresses_from_metadata() {
+        let conway_block_data = conway_1();
+        let multi_era_block = pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data)
+            .expect("Failed to decode MultiEraBlock");
+
+        let transactions = multi_era_block.txs();
+        // Forth transaction of this test data contains the CIP509 auxiliary data
+        let tx = transactions
+            .get(3)
+            .expect("Failed to get transaction index");
+        let aux_data = cip_509_aux_data(tx);
+        let mut decoder = Decoder::new(aux_data.as_slice());
+        let mut report = ProblemReport::new("Cip509");
+        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        assert!(!report.is_problematic());
+
+        let addresses = extract_stake_addresses(&cip);
+        // TODO: FIXME:
+        todo!();
     }
 }
