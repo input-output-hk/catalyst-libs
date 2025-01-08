@@ -151,6 +151,7 @@ impl Cip509 {
         let mut is_valid_payment_key = true;
         let mut is_valid_signing_key = true;
         // Validate only role 0
+        // TODO: FIXME: Use role0 constant.
         for role in &self.metadata.role_set {
             if role.role_number == 0 {
                 is_valid_stake_public_key =
