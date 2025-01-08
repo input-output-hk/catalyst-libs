@@ -10,7 +10,8 @@ pub mod utils;
 pub(crate) mod validation;
 pub mod x509_chunks;
 
-use cardano_blockchain_types::hashes::Blake2b256Hash;
+use cardano_blockchain_types::hashes::{Blake2b256Hash, BLAKE_2B256_SIZE};
+use catalyst_types::problem_report::ProblemReport;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
@@ -29,7 +30,9 @@ use super::transaction::witness::TxWitness;
 use crate::{
     cardano::cip509::{rbac::Cip509RbacMetadata, types::ValidationSignature},
     utils::{
-        decode_helper::{decode_bytes, decode_helper, decode_map_len},
+        decode_helper::{
+            decode_bytes, decode_helper, decode_map_len, report_duplicated_key, report_missing_keys,
+        },
         general::decremented_index,
         hashing::{blake2b_128, blake2b_256},
     },
@@ -44,14 +47,14 @@ pub const LABEL: u64 = 509;
 /// more details.
 ///
 /// [this document]: https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Default)]
 pub struct Cip509 {
     /// A registration purpose (`UUIDv4`).
     ///
     /// The purpose is defined by the consuming dApp.
-    purpose: Uuid,
+    purpose: Option<Uuid>,
     /// Transaction inputs hash.
-    txn_inputs_hash: TxInputHash,
+    txn_inputs_hash: Option<TxInputHash>,
     /// An optional hash of the previous transaction.
     ///
     /// The hash must always be present except for the first registration transaction.
@@ -59,9 +62,9 @@ pub struct Cip509 {
     /// Metadata.
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
-    metadata: Cip509RbacMetadata,
+    metadata: Option<Cip509RbacMetadata>,
     /// Validation signature.
-    validation_signature: ValidationSignature,
+    validation_signature: Option<ValidationSignature>,
 }
 
 /// Validation value for CIP509 metadatum.
@@ -91,9 +94,9 @@ pub struct AdditionalData {
 
 /// Enum of CIP509 metadatum with its associated unsigned integer value.
 #[allow(clippy::module_name_repetitions)]
-#[derive(FromRepr, Debug, PartialEq)]
+#[derive(FromRepr, Debug, PartialEq, Copy, Clone)]
 #[repr(u8)]
-pub(crate) enum Cip509IntIdentifier {
+enum Cip509IntIdentifier {
     /// Purpose.
     Purpose = 0,
     /// Transaction inputs hash.
@@ -104,85 +107,10 @@ pub(crate) enum Cip509IntIdentifier {
     ValidationSignature = 99,
 }
 
-impl Decode<'_, ()> for Cip509 {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
-        let map_len = decode_map_len(d, "CIP509")?;
-
-        let mut purpose = None;
-        let mut txn_inputs_hash = None;
-        let mut prv_tx_id = None;
-        let mut metadata = None;
-        let mut validation_signature = Vec::new();
-
-        for _ in 0..map_len {
-            // Use probe to peak
-            let key = d.probe().u8()?;
-            if let Some(key) = Cip509IntIdentifier::from_repr(key) {
-                // Consuming the int
-                let _: u8 = decode_helper(d, "CIP509", ctx)?;
-                match key {
-                    Cip509IntIdentifier::Purpose => {
-                        purpose =
-                            Some(Uuid::try_from(decode_bytes(d, "CIP509 purpose")?).map_err(
-                                |_| decode::Error::message("Invalid data size of Purpose"),
-                            )?);
-                    },
-                    Cip509IntIdentifier::TxInputsHash => {
-                        txn_inputs_hash = Some(
-                            TxInputHash::try_from(decode_bytes(d, "CIP509 txn inputs hash")?)
-                                .map_err(|_| {
-                                    decode::Error::message("Invalid data size of TxInputsHash")
-                                })?,
-                        );
-                    },
-                    Cip509IntIdentifier::PreviousTxId => {
-                        let hash: [u8; 32] = decode_bytes(d, "CIP509 previous tx ID")?
-                            .try_into()
-                            .map_err(|_| {
-                            decode::Error::message("Invalid data size of PreviousTxId")
-                        })?;
-                        prv_tx_id = Some(hash.into());
-                    },
-                    Cip509IntIdentifier::ValidationSignature => {
-                        let signature = decode_bytes(d, "CIP509 validation signature")?;
-                        validation_signature = signature;
-                    },
-                }
-            } else {
-                // Handle the x509 chunks 10 11 12
-                let x509_chunks = X509Chunks::decode(d, ctx)?;
-                // Technically it is possible to store multiple copies (or different instances) of
-                // metadata, but it isn't allowed. See this link for more details:
-                // https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md#keys-10-11-or-12---x509-chunked-data
-                if metadata.is_some() {
-                    return Err(decode::Error::message(
-                        "Only one instance of the chunked metadata should be present",
-                    ));
-                }
-                metadata = Some(x509_chunks.into());
-            }
-        }
-
-        let purpose = purpose.ok_or_else(|| decode::Error::message("Missing purpose in CIP509"))?;
-        let txn_inputs_hash = txn_inputs_hash
-            .ok_or_else(|| decode::Error::message("Missing txn_inputs_hash in CIP509"))?;
-        let metadata =
-            metadata.ok_or_else(|| decode::Error::message("Missing metadata in CIP509"))?;
-        let validation_signature = validation_signature
-            .try_into()
-            .map_err(|e| decode::Error::message(format!("Invalid validation signature: {e:?}")))?;
-
-        Ok(Self {
-            purpose,
-            txn_inputs_hash,
-            prv_tx_id,
-            metadata,
-            validation_signature,
-        })
-    }
-}
-
 impl Cip509 {
+    // TODO: FIXME: Replace validation with construction from `MultiEraBlock` and `TxnIndex`.
+    // (https://github.com/input-output-hk/catalyst-libs/pull/127#discussion_r1901549418)
+
     /// Basic validation for CIP509
     /// The validation include the following:
     /// * Hashing the transaction inputs within the transaction should match the
@@ -242,7 +170,7 @@ impl Cip509 {
 
     /// Returns a registration purpose.
     #[must_use]
-    pub fn purpose(&self) -> Uuid {
+    pub fn purpose(&self) -> Option<Uuid> {
         self.purpose
     }
 
@@ -254,7 +182,154 @@ impl Cip509 {
 
     /// Returns CIP509 metadata.
     #[must_use]
-    pub fn metadata(&self) -> &Cip509RbacMetadata {
-        &self.metadata
+    pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
+        self.metadata.as_ref()
+    }
+}
+
+impl Decode<'_, ProblemReport> for Cip509 {
+    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+        let context = "Cip509";
+        let map_len = decode_map_len(d, context)?;
+
+        let mut result = Self::default();
+        let mut found_keys = Vec::new();
+        let mut is_metadata_found = false;
+
+        for index in 0..map_len {
+            // Use probe to peak
+            let key = d.probe().u8()?;
+            if let Some(key) = Cip509IntIdentifier::from_repr(key) {
+                // Consuming the int
+                let _: u8 = decode_helper(d, context, &mut ())?;
+
+                if report_duplicated_key(&found_keys, &key, index, context, report) {
+                    continue;
+                }
+                found_keys.push(key);
+
+                match key {
+                    Cip509IntIdentifier::Purpose => {
+                        result.purpose = decode_purpose(d, context, report)?;
+                    },
+                    Cip509IntIdentifier::TxInputsHash => {
+                        result.txn_inputs_hash = decode_input_hash(d, context, report)?;
+                    },
+                    Cip509IntIdentifier::PreviousTxId => {
+                        result.prv_tx_id = decode_previous_transaction_id(d, context, report)?;
+                    },
+                    Cip509IntIdentifier::ValidationSignature => {
+                        result.validation_signature =
+                            decode_validation_signature(d, context, report)?;
+                    },
+                }
+            } else {
+                // Handle the x509 chunks 10 11 12
+                // Technically it is possible to store multiple copies (or different instances) of
+                // metadata, but it isn't allowed. See this link for more details:
+                // https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md#keys-10-11-or-12---x509-chunked-data
+                if is_metadata_found {
+                    report.duplicate_field(
+                        "metadata",
+                        "Only one instance of the chunked metadata should be present",
+                        context,
+                    );
+                    continue;
+                }
+                is_metadata_found = true;
+
+                let x509_chunks = X509Chunks::decode(d, report)?;
+                result.metadata = x509_chunks.into();
+            }
+        }
+
+        let required_keys = [
+            Cip509IntIdentifier::Purpose,
+            Cip509IntIdentifier::TxInputsHash,
+            Cip509IntIdentifier::PreviousTxId,
+            Cip509IntIdentifier::ValidationSignature,
+        ];
+        report_missing_keys(&found_keys, &required_keys, context, report);
+        if !is_metadata_found {
+            report.missing_field("metadata (10, 11 or 12 chunks)", context);
+        }
+
+        Ok(result)
+    }
+}
+
+fn decode_purpose(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<Uuid>, decode::Error> {
+    let bytes = decode_bytes(d, "Cip509 purpose")?;
+    let len = bytes.len();
+    match Uuid::try_from(bytes) {
+        Ok(v) => Ok(Some(v)),
+        Err(_) => {
+            report.invalid_value(
+                "purpose",
+                &format!("{len} bytes"),
+                "must be 16 bytes long",
+                context,
+            );
+            Ok(None)
+        },
+    }
+}
+
+fn decode_input_hash(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<TxInputHash>, decode::Error> {
+    let bytes = decode_bytes(d, "Cip509 txn inputs hash")?;
+    let len = bytes.len();
+    match TxInputHash::try_from(bytes) {
+        Ok(v) => Ok(Some(v)),
+        Err(_) => {
+            report.invalid_value(
+                "transaction inputs hash",
+                &format!("{len} bytes"),
+                "must be 16 bytes long",
+                context,
+            );
+            Ok(None)
+        },
+    }
+}
+
+fn decode_previous_transaction_id(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<Blake2b256Hash>, decode::Error> {
+    let bytes = decode_bytes(d, "Cip509 previous transaction id")?;
+    let len = bytes.len();
+    match Blake2b256Hash::try_from(bytes) {
+        Ok(v) => Ok(Some(v)),
+        Err(_) => {
+            report.invalid_value(
+                "previous transaction hash",
+                &format!("{len} bytes"),
+                &format!("must be {BLAKE_2B256_SIZE} bytes long"),
+                context,
+            );
+            Ok(None)
+        },
+    }
+}
+
+fn decode_validation_signature(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<ValidationSignature>, decode::Error> {
+    let bytes = decode_bytes(d, "Cip509 validation signature")?;
+    let len = bytes.len();
+    match ValidationSignature::try_from(bytes) {
+        Ok(v) => Ok(Some(v)),
+        Err(_) => {
+            report.invalid_value(
+                "validation signature",
+                &format!("{len} bytes"),
+                &format!("must be at least 1 byte and at most 64 bytes long"),
+                context,
+            );
+            Ok(None)
+        },
     }
 }

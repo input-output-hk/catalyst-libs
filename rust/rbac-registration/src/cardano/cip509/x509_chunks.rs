@@ -2,6 +2,7 @@
 
 use std::io::Read;
 
+use catalyst_types::problem_report::ProblemReport;
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
@@ -30,31 +31,48 @@ pub enum CompressionAlgorithm {
 /// ```
 /// This helper is used to decode them into the actual structure.
 #[derive(Debug, PartialEq, Clone)]
-pub struct X509Chunks(Cip509RbacMetadata);
+pub struct X509Chunks(Option<Cip509RbacMetadata>);
 
-impl From<X509Chunks> for Cip509RbacMetadata {
+impl From<X509Chunks> for Option<Cip509RbacMetadata> {
     fn from(value: X509Chunks) -> Self {
         value.0
     }
 }
 
-impl Decode<'_, ()> for X509Chunks {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for X509Chunks {
+    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
         // Determine the algorithm
-        let algo: u8 = decode_helper(d, "algorithm in X509Chunks", ctx)?;
-        let algorithm = CompressionAlgorithm::from_repr(algo)
-            .ok_or(decode::Error::message("Invalid chunk data type"))?;
+        let algorithm: u8 = decode_helper(d, "algorithm in X509Chunks", &mut ())?;
+        let Some(algorithm) = CompressionAlgorithm::from_repr(algorithm) else {
+            report.invalid_value(
+                "compression algorithm",
+                &format!("{algorithm}"),
+                "Allowed values: 10, 11, 12",
+                "Cip509 chunked metadata",
+            );
+            return Ok(Self(None));
+        };
 
-        // Decompress the data
-        let decompressed = decompress(d, &algorithm)
-            .map_err(|e| decode::Error::message(format!("Failed to decompress {e}")))?;
+        let decompressed = match decompress(d, &algorithm) {
+            Ok(v) => v,
+            Err(e) => {
+                report.invalid_value(
+                    "Chunked metadata",
+                    &format!("{algorithm:?}"),
+                    "Must contain properly compressed or raw metadata",
+                    &format!("Cip509 chunks decompression error: {e:?}"),
+                );
+                return Ok(Self(None));
+            },
+        };
 
         // Decode the decompressed data.
         let mut decoder = Decoder::new(&decompressed);
-        let chunk_data = Cip509RbacMetadata::decode(&mut decoder, &mut ())
-            .map_err(|e| decode::Error::message(format!("Failed to decode {e}")))?;
+        let chunk_data = Cip509RbacMetadata::decode(&mut decoder, report).map_err(|e| {
+            decode::Error::message(format!("Failed to decode Cip509 metadata: {e:?}"))
+        })?;
 
-        Ok(X509Chunks(chunk_data))
+        Ok(X509Chunks(Some(chunk_data)))
     }
 }
 
@@ -102,26 +120,32 @@ mod tests {
     fn test_decode_x509_chunks_raw() {
         let raw_bytes = hex::decode(RAW).unwrap();
         let mut decoder = Decoder::new(raw_bytes.as_slice());
-        let x509_chunks = X509Chunks::decode(&mut decoder, &mut ());
+        let mut report = ProblemReport::new("X509Chunks");
+        let x509_chunks = X509Chunks::decode(&mut decoder, &mut report).unwrap();
+        assert!(!report.is_problematic());
         // Decode the decompressed data should success.
-        assert!(x509_chunks.is_ok());
+        assert!(x509_chunks.0.is_some());
     }
 
     #[test]
     fn test_decode_x509_chunks_brotli() {
         let brotli_bytes = hex::decode(BROTLI).unwrap();
         let mut decoder = Decoder::new(brotli_bytes.as_slice());
-        let x509_chunks = X509Chunks::decode(&mut decoder, &mut ());
+        let mut report = ProblemReport::new("X509Chunks");
+        let x509_chunks = X509Chunks::decode(&mut decoder, &mut report).unwrap();
+        assert!(!report.is_problematic());
         // Decode the decompressed data should success.
-        assert!(x509_chunks.is_ok());
+        assert!(x509_chunks.0.is_some());
     }
 
     #[test]
     fn test_decode_x509_chunks_zstd() {
         let zstd_bytes = hex::decode(ZSTD).unwrap();
         let mut decoder = Decoder::new(zstd_bytes.as_slice());
-        let x509_chunks = X509Chunks::decode(&mut decoder, &mut ());
+        let mut report = ProblemReport::new("X509Chunks");
+        let x509_chunks = X509Chunks::decode(&mut decoder, &mut report).unwrap();
+        assert!(!report.is_problematic());
         // Decode the decompressed data should success.
-        assert!(x509_chunks.is_ok());
+        assert!(x509_chunks.0.is_some());
     }
 }

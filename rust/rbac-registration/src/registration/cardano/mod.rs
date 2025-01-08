@@ -200,7 +200,7 @@ impl RegistrationChainInner {
         }
 
         // Add purpose to the list
-        let purpose = vec![cip509.purpose()];
+        let purpose = cip509.purpose().into_iter().collect();
 
         let registration = cip509.metadata().clone();
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
@@ -270,9 +270,10 @@ impl RegistrationChainInner {
         }
 
         // Add purpose to the chain, if not already exist
-        let purpose = cip509.purpose();
-        if !self.purpose.contains(&purpose) {
-            new_inner.purpose.push(purpose);
+        if let Some(purpose) = cip509.purpose() {
+            if !self.purpose.contains(&purpose) {
+                new_inner.purpose.push(purpose);
+            }
         }
 
         let registration = cip509.metadata().clone();
@@ -594,6 +595,7 @@ fn update_tracking_payment_history(
 
 #[cfg(test)]
 mod test {
+    use catalyst_types::problem_report::ProblemReport;
     use minicbor::{Decode, Decoder};
     use pallas::{ledger::traverse::MultiEraTx, network::miniprotocols::Point};
 
@@ -650,7 +652,9 @@ mod test {
 
         let aux_data_1 = cip_509_aux_data(tx_1);
         let mut decoder = Decoder::new(aux_data_1.as_slice());
-        let cip509_1 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        let mut report = ProblemReport::new("Cip509");
+        let cip509_1 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        assert!(!report.is_problematic());
         let tracking_payment_keys = vec![];
 
         let registration_chain =
@@ -677,12 +681,14 @@ mod test {
 
         let aux_data_4 = cip_509_aux_data(tx);
         let mut decoder = Decoder::new(aux_data_4.as_slice());
-        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        let mut report = ProblemReport::new("Cip509");
+        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
 
         // Update the registration chain
         assert!(registration_chain
             .unwrap()
             .update(point_4.clone(), 1, tx, cip509)
             .is_ok());
+        assert!(!report.is_problematic());
     }
 }

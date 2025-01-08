@@ -347,6 +347,7 @@ pub(crate) fn validate_role_singing_key(
 #[cfg(test)]
 mod tests {
 
+    use catalyst_types::problem_report::ProblemReport;
     use minicbor::{Decode, Decoder};
 
     use super::*;
@@ -401,8 +402,10 @@ mod tests {
             .expect("Failed to get transaction index");
         let aux_data = cip_509_aux_data(tx);
         let mut decoder = Decoder::new(aux_data.as_slice());
-        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        let mut report = ProblemReport::new("Cip509");
+        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
         assert!(validate_txn_inputs_hash(&cip509, tx, &mut validation_report).unwrap());
+        assert!(!report.is_problematic());
     }
 
     #[test]
@@ -532,7 +535,9 @@ mod tests {
         let aux_data = cip_509_aux_data(tx);
 
         let mut decoder = Decoder::new(aux_data.as_slice());
-        let cip509 = Cip509::decode(&mut decoder, &mut ()).expect("Failed to decode Cip509");
+        let mut report = ProblemReport::new("Cip509");
+        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        assert!(!report.is_problematic());
         assert!(!validate_stake_public_key(&cip509, tx, &mut validation_report).unwrap());
     }
 }

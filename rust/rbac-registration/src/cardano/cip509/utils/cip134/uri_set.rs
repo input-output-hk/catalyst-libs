@@ -2,12 +2,12 @@
 
 use std::{collections::HashMap, sync::Arc};
 
-use anyhow::{anyhow, Context, Result};
 use c509_certificate::{
     extensions::{alt_name::GeneralNamesOrText, extension::ExtensionValue},
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
     C509ExtensionType,
 };
+use catalyst_types::problem_report::ProblemReport;
 use der_parser::der::parse_der_sequence;
 use tracing::debug;
 use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
@@ -46,15 +46,12 @@ struct Cip0134UriSetInner {
 
 impl Cip0134UriSet {
     /// Creates a new `Cip0134UriSet` instance from the given certificates.
-    ///
-    /// # Errors
-    /// - Invalid certificate.
-    pub fn new(x509_certs: &[X509DerCert], c509_certs: &[C509Cert]) -> Result<Self> {
-        let x_uris =
-            extract_x509_uris(x509_certs).with_context(|| "Error processing X509 certificates")?;
-        let c_uris =
-            extract_c509_uris(c509_certs).with_context(|| "Error processing C509 certificates")?;
-        Ok(Self(Arc::new(Cip0134UriSetInner { x_uris, c_uris })))
+    pub fn new(
+        x509_certs: &[X509DerCert], c509_certs: &[C509Cert], report: &ProblemReport,
+    ) -> Self {
+        let x_uris = extract_x509_uris(x509_certs, report);
+        let c_uris = extract_c509_uris(c509_certs, report);
+        Self(Arc::new(Cip0134UriSetInner { x_uris, c_uris }))
     }
 
     /// Returns a mapping from the x509 certificate index to URIs contained within.
@@ -145,8 +142,9 @@ impl Cip0134UriSet {
 }
 
 /// Iterates over X509 certificates and extracts CIP-0134 URIs.
-fn extract_x509_uris(certificates: &[X509DerCert]) -> Result<UrisMap> {
+fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> UrisMap {
     let mut result = UrisMap::new();
+    let context = "Extracting URIs from X509 certificates in Cip509 metadata";
 
     for (index, cert) in certificates.iter().enumerate() {
         let X509DerCert::X509Cert(cert) = cert else {
@@ -162,19 +160,25 @@ fn extract_x509_uris(certificates: &[X509DerCert]) -> Result<UrisMap> {
         else {
             continue;
         };
-        let (_, der) = parse_der_sequence(extension.extn_value.as_bytes()).with_context(|| {
-            format!("Failed to parse DER sequence for Subject Alternative Name ({extension:?})")
-        })?;
+        let Ok((_, der)) = parse_der_sequence(extension.extn_value.as_bytes()) else {
+            report.other(
+                &format!(
+                    "Failed to parse DER sequence for Subject Alternative Name ({extension:?})"
+                ),
+                context,
+            );
+            continue;
+        };
 
         let mut uris = Vec::new();
         for data in der.ref_iter() {
             if data.header.raw_tag() != Some(&[URI]) {
                 continue;
             }
-            let content = data
-                .content
-                .as_slice()
-                .with_context(|| "Unable to process content for {data:?}")?;
+            let Ok(content) = data.content.as_slice() else {
+                report.other(&format!("Unable to process content for {data:?}"), context);
+                continue;
+            };
             let address = match decode_utf8(content) {
                 Ok(a) => a,
                 Err(e) => {
@@ -184,15 +188,14 @@ fn extract_x509_uris(certificates: &[X509DerCert]) -> Result<UrisMap> {
                     continue;
                 },
             };
-            let uri = match Cip0134Uri::parse(&address) {
-                Ok(u) => u,
+            match Cip0134Uri::parse(&address) {
+                Ok(u) => uris.push(u),
                 Err(e) => {
                     // Same as above - simply skip non-confirming values.
                     debug!("Ignoring invalid CIP-0134 address: {e:?}");
                     continue;
                 },
             };
-            uris.push(uri);
         }
 
         if !uris.is_empty() {
@@ -200,12 +203,13 @@ fn extract_x509_uris(certificates: &[X509DerCert]) -> Result<UrisMap> {
         }
     }
 
-    Ok(result)
+    result
 }
 
 /// Iterates over C509 certificates and extracts CIP-0134 URIs.
-fn extract_c509_uris(certificates: &[C509Cert]) -> Result<UrisMap> {
+fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisMap {
     let mut result = UrisMap::new();
+    let context = "Extracting URIs from C509 certificates in Cip509 metadata";
 
     for (index, cert) in certificates.iter().enumerate() {
         let cert = match cert {
@@ -224,10 +228,18 @@ fn extract_c509_uris(certificates: &[C509Cert]) -> Result<UrisMap> {
                 continue;
             }
             let ExtensionValue::AlternativeName(alt_name) = extension.value() else {
-                return Err(anyhow!("Unexpected extension value type for {extension:?}"));
+                report.other(
+                    &format!("Unexpected extension value type for {extension:?}"),
+                    context,
+                );
+                continue;
             };
             let GeneralNamesOrText::GeneralNames(gen_names) = alt_name.general_name() else {
-                return Err(anyhow!("Unexpected general name type: {extension:?}"));
+                report.other(
+                    &format!("Unexpected general name type: {extension:?}"),
+                    context,
+                );
+                continue;
             };
 
             let mut uris = Vec::new();
@@ -236,11 +248,19 @@ fn extract_c509_uris(certificates: &[C509Cert]) -> Result<UrisMap> {
                     continue;
                 }
                 let GeneralNameValue::Text(address) = name.gn_value() else {
-                    return Err(anyhow!("Unexpected general name value format: {name:?}"));
+                    report.other(
+                        &format!("Unexpected general name value format: {name:?}"),
+                        context,
+                    );
+                    continue;
                 };
-                let uri = Cip0134Uri::parse(address)
-                    .with_context(|| format!("Failed to parse CIP-0134 address ({address})"))?;
-                uris.push(uri);
+                match Cip0134Uri::parse(address) {
+                    Ok(u) => uris.push(u),
+                    Err(e) => {
+                        debug!("Ignoring invalid CIP-0134 address: {e:?}");
+                        continue;
+                    },
+                };
             }
 
             if !uris.is_empty() {
@@ -249,11 +269,12 @@ fn extract_c509_uris(certificates: &[C509Cert]) -> Result<UrisMap> {
         }
     }
 
-    Ok(result)
+    result
 }
 
 #[cfg(test)]
 mod tests {
+    use catalyst_types::problem_report::ProblemReport;
     use minicbor::{Decode, Decoder};
     use pallas::{
         codec::utils::Nullable,
@@ -276,7 +297,7 @@ mod tests {
         let block = MultiEraBlock::decode(&block).unwrap();
         let tx = &block.txs()[3];
         let cip509 = cip509(tx);
-        let set = cip509.metadata.certificate_uris;
+        let set = cip509.metadata.unwrap().certificate_uris;
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
 
@@ -311,6 +332,9 @@ mod tests {
         let metadata = data.get_metadata(509).unwrap();
 
         let mut decoder = Decoder::new(metadata.as_slice());
-        Cip509::decode(&mut decoder, &mut ()).unwrap()
+        let mut report = ProblemReport::new("Cip509");
+        let res = Cip509::decode(&mut decoder, &mut report).unwrap();
+        assert!(!report.is_problematic());
+        res
     }
 }

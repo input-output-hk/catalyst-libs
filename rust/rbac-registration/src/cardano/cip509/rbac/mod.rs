@@ -9,6 +9,7 @@ pub(crate) mod tag;
 
 use std::collections::HashMap;
 
+use catalyst_types::problem_report::ProblemReport;
 use certs::{C509Cert, X509DerCert};
 use minicbor::{decode, Decode, Decoder};
 use pub_key::SimplePublicKeyType;
@@ -20,6 +21,7 @@ use crate::{
     cardano::cip509::utils::Cip0134UriSet,
     utils::decode_helper::{
         decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
+        report_duplicated_key,
     },
 };
 
@@ -52,6 +54,8 @@ pub struct Cip509RbacMetadata {
     /// A potentially empty list of revoked certificates.
     pub revocation_list: Vec<CertKeyHash>,
     /// A potentially empty list of role data.
+    // TODO: FIXME: decode into map.
+    // (https://github.com/input-output-hk/catalyst-libs/pull/127#discussion_r1901557870)
     pub role_set: Vec<RoleData>,
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
@@ -64,9 +68,9 @@ const FIRST_PURPOSE_KEY: u16 = 200;
 const LAST_PURPOSE_KEY: u16 = 299;
 
 /// Enum of CIP509 RBAC metadata with its associated unsigned integer value.
-#[derive(FromRepr, Debug, PartialEq)]
+#[derive(FromRepr, Debug, PartialEq, Copy, Clone)]
 #[repr(u16)]
-pub enum Cip509RbacMetadataInt {
+enum Cip509RbacMetadataInt {
     /// x509 certificates.
     X509Certs = 10,
     /// c509 certificates.
@@ -79,9 +83,12 @@ pub enum Cip509RbacMetadataInt {
     RoleSet = 100,
 }
 
-impl Decode<'_, ()> for Cip509RbacMetadata {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
-        let map_len = decode_map_len(d, "Cip509RbacMetadata")?;
+impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
+    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+        let context = "Cip509RbacMetadata";
+        let map_len = decode_map_len(d, context)?;
+
+        let mut found_keys = Vec::new();
 
         let mut x509_certs = Vec::new();
         let mut c509_certs = Vec::new();
@@ -90,9 +97,14 @@ impl Decode<'_, ()> for Cip509RbacMetadata {
         let mut role_set = Vec::new();
         let mut purpose_key_data = HashMap::new();
 
-        for _ in 0..map_len {
-            let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", ctx)?;
+        for index in 0..map_len {
+            let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", &mut ())?;
             if let Some(key) = Cip509RbacMetadataInt::from_repr(key) {
+                if report_duplicated_key(&found_keys, &key, index, context, report) {
+                    continue;
+                }
+                found_keys.push(key);
+
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
                         x509_certs = decode_array_rbac(d, "x509 certificate")?;
@@ -112,16 +124,14 @@ impl Decode<'_, ()> for Cip509RbacMetadata {
                 }
             } else {
                 if !(FIRST_PURPOSE_KEY..=LAST_PURPOSE_KEY).contains(&key) {
-                    return Err(decode::Error::message(format!("Invalid purpose key set, should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}")));
+                    report.other(&format!("Invalid purpose key set, should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}"), context);
+                } else {
+                    purpose_key_data.insert(key, decode_any(d, "purpose key")?);
                 }
-
-                purpose_key_data.insert(key, decode_any(d, "purpose key")?);
             }
         }
 
-        let certificate_uris = Cip0134UriSet::new(&x509_certs, &c509_certs).map_err(|e| {
-            decode::Error::message(format!("Unable to parse URIs from certificates: {e:?}"))
-        })?;
+        let certificate_uris = Cip0134UriSet::new(&x509_certs, &c509_certs, report);
 
         Ok(Self {
             x509_certs,
