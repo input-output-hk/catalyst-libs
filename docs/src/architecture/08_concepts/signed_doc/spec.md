@@ -31,7 +31,7 @@ License: CC-BY-4.0
 Project Catalyst both produces and consumes a lot of different data objects,
 in different places of the system.
 To ensure the data object is authoritative, it must be signed.
-Id addition to the data object content and the signature, metadata is also included
+In addition to the data object content and the signature, metadata is also included
 to describe different kind of Catalyst Signed Document properties.
 
 ## Motivation: why is this CIP necessary?
@@ -46,7 +46,7 @@ It fully inherits an original [COSE] design and specifies the details of differe
 
 ### Catalyst Signed Document metadata fields
 
-To uniquely specify a Catalyst Signed Document type, version etc., as it was mentioned before,
+To uniquely specify a Catalyst Signed Document `id`, `type`, `version` etc.,
 a list of different metadata fields is specified.
 
 Also as you can see from the specification,
@@ -75,7 +75,7 @@ The `type` is a [UUID] v4.
 #### `id`
 
 Every Catalyst Signed Document will have a unique ID.
-All Catalyst Signed Document with the same `id` are considered versions of the same Catalyst Signed Document
+All Catalyst Signed Document with the same `id` are considered different versions of the same Catalyst Signed Document
 (read about [`ver`](#ver)).
 However, `id` uniqueness is only guaranteed on first use.
 
