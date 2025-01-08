@@ -1,5 +1,4 @@
 //! Catalyst documents signing crate
-#![allow(dead_code)]
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter},
@@ -13,7 +12,7 @@ mod payload;
 mod signature;
 
 pub use metadata::{DocumentRef, Metadata, UuidV7};
-use payload::Content;
+use payload::JsonContent;
 pub use signature::KidURI;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
@@ -21,8 +20,8 @@ pub use signature::KidURI;
 struct InnerCatalystSignedDocument {
     /// Document Metadata
     metadata: Metadata,
-    /// Document Payload JSON Content
-    payload: Content,
+    /// Document Payload viewed as JSON Content
+    payload: JsonContent,
     /// Signatures
     signatures: Vec<coset::CoseSignature>,
     /// Raw COSE Sign data
@@ -81,19 +80,23 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
             content_errors.extend_from_slice(metadata.content_errors());
         }
 
-        let payload = if let Some(payload) = &cose.payload {
-            let mut buf = Vec::new();
-            let mut bytes = payload.as_slice();
-            brotli::BrotliDecompress(&mut bytes, &mut buf)?;
-            serde_json::from_slice(&buf)?
+        let mut payload = JsonContent::default();
+
+        if let Some(bytes) = &cose.payload {
+            match JsonContent::try_from((bytes, metadata.content_encoding())) {
+                Ok(c) => payload = c,
+                Err(e) => {
+                    content_errors.push(format!("Invalid Payload: {e}"));
+                },
+            }
         } else {
-            println!("COSE missing payload field with the JSON content in it");
-            serde_json::Value::Object(serde_json::Map::new())
+            content_errors.push("COSE payload is empty".to_string());
         };
+
         let signatures = cose.signatures.clone();
         let inner = InnerCatalystSignedDocument {
             metadata,
-            payload: payload.into(),
+            payload,
             signatures,
             cose_sign: cose,
             cose_bytes,

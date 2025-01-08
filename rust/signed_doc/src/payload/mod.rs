@@ -2,18 +2,31 @@
 
 use std::fmt::{Display, Formatter};
 
-/// JSON Content
-#[derive(Debug, Default)]
-pub struct Content(serde_json::Value);
+use serde::{Deserialize, Deserializer};
 
-impl From<serde_json::Value> for Content {
-    fn from(value: serde_json::Value) -> Self {
+mod json;
+
+pub use json::Json as JsonContent;
+
+/// JSON Content
+#[derive(Debug)]
+pub struct Content<T>(T);
+
+impl<T> From<T> for Content<T> {
+    fn from(value: T) -> Self {
         Self(value)
     }
 }
 
-impl Display for Content {
+impl<T: Display> Display for Content<T> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.0)
+    }
+}
+
+impl<'de, T: serde::Deserialize<'de>> Deserialize<'de> for Content<T> {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de> {
+        T::deserialize(deserializer).map(std::convert::Into::into)
     }
 }
