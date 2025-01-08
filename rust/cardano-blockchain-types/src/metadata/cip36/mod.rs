@@ -44,6 +44,27 @@ pub struct Cip36 {
     err_report: ProblemReport,
 }
 
+impl fmt::Display for Cip36 {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "Cip36 {{ network: {network}, slot: {slot:?}, txn_idx: {txn_idx:?}, is_catalyst_strict: {is_catalyst_strict}, key_registration: {key_registration:?}, registration_witness: {registration_witness:?}, validation: {{ signature: {is_valid_signature}, payment_address_network: {is_valid_payment_address_network}, voting_keys: {is_valid_voting_keys}, purpose: {is_valid_purpose} }}, err_report: {err_report} }}",
+            key_registration = self.key_registration,
+            registration_witness = self.registration_witness,
+            network = self.network,
+            slot = self.slot,
+            txn_idx = self.txn_idx,
+            is_catalyst_strict = self.is_catalyst_strict,
+            is_valid_signature = self.is_valid_signature,
+            is_valid_payment_address_network = self.is_valid_payment_address_network,
+            is_valid_voting_keys = self.is_valid_voting_keys,
+            is_valid_purpose = self.is_valid_purpose,
+            err_report = serde_json::to_string(&self.err_report)
+            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"))
+        )
+    }
+}
+
 /// CIP-36 Catalyst registration error
 #[allow(dead_code, clippy::module_name_repetitions)]
 pub struct Cip36Error {
