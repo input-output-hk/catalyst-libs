@@ -9,12 +9,12 @@ use std::{
 };
 
 use clap::Parser;
-use coset::{iana::CoapContentFormat, CborSerializable};
+use coset::{iana::CoapContentFormat, AsCborValue, CborSerializable};
 use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
-use signed_doc::{DocumentRef, KidURI, Metadata, UuidV7};
+use signed_doc::{DocumentRef, KidUri, Metadata, UuidV7};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -315,7 +315,7 @@ fn validate_cose(
             "COSE missing signature protected header `kid` field "
         );
 
-        let kid = KidURI::try_from(key_id.as_ref())?;
+        let kid = KidUri::try_from(key_id.as_ref())?;
         println!("Signature Key ID: {kid}");
         let data_to_sign = cose.tbs_data(&[], sign);
         let signature_bytes = sign.signature.as_slice().try_into().map_err(|_| {

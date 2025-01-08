@@ -13,7 +13,7 @@ mod signature;
 
 pub use metadata::{DocumentRef, Metadata, UuidV7};
 use payload::JsonContent;
-pub use signature::KidURI;
+pub use signature::KidUri;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Default)]
