@@ -1,9 +1,10 @@
 //! Catalyst Enhanced `MultiEraBlock` Structures
 
-mod auxdata;
 pub mod conversion;
-mod fork;
 pub mod hashes;
+
+mod auxdata;
+mod fork;
 mod multi_era_block_data;
 mod network;
 mod point;

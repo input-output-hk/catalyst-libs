@@ -12,16 +12,13 @@ use der_parser::der::parse_der_sequence;
 use tracing::debug;
 use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
 
-use crate::{
-    cardano::cip509::{
-        rbac::{
-            certs::{C509Cert, X509DerCert},
-            Cip509RbacMetadata,
-        },
-        utils::Cip0134Uri,
-        validation::URI,
+use crate::cardano::cip509::{
+    rbac::{
+        certs::{C509Cert, X509DerCert},
+        Cip509RbacMetadata,
     },
-    utils::general::decode_utf8,
+    utils::Cip0134Uri,
+    validation::URI,
 };
 
 /// A mapping from a certificate index to URIs contained within.
@@ -179,19 +176,11 @@ fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> Ur
                 report.other(&format!("Unable to process content for {data:?}"), context);
                 continue;
             };
-            let address = match decode_utf8(content) {
-                Ok(a) => a,
+            match Cip0134Uri::try_from(content) {
+                Ok(u) => uris.push(u),
                 Err(e) => {
                     // X.509 doesn't restrict the "alternative name" extension to be utf8 only, so
                     // we cannot treat this as error.
-                    debug!("Ignoring {e:?}");
-                    continue;
-                },
-            };
-            match Cip0134Uri::parse(&address) {
-                Ok(u) => uris.push(u),
-                Err(e) => {
-                    // Same as above - simply skip non-confirming values.
                     debug!("Ignoring invalid CIP-0134 address: {e:?}");
                     continue;
                 },

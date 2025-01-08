@@ -5,8 +5,10 @@
 
 use std::fmt::{Display, Formatter};
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Error, Result};
 use pallas::ledger::addresses::Address;
+
+use crate::utils::general::decode_utf8;
 
 /// An URI in the CIP-0134 format.
 ///
@@ -88,6 +90,15 @@ impl Cip0134Uri {
 impl Display for Cip0134Uri {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.uri())
+    }
+}
+
+impl TryFrom<&[u8]> for Cip0134Uri {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self> {
+        let address = decode_utf8(value).context("Unable to convert bytes to string")?;
+        Self::parse(&address)
     }
 }
 
