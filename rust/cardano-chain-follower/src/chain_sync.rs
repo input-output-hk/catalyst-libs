@@ -189,9 +189,9 @@ async fn process_rollback(
 ) -> anyhow::Result<Point> {
     let rollback_slot = point.slot_or_default();
     let head_slot = previous_point.slot_or_default();
-    debug!("Head slot: {}", head_slot);
-    debug!("Rollback slot: {}", rollback_slot);
-    let slot_rollback_size = head_slot.saturating_sub(rollback_slot);
+    debug!("Head slot: {head_slot:?}");
+    debug!("Rollback slot: {rollback_slot:?}");
+    let slot_rollback_size = head_slot - rollback_slot;
 
     // We actually do the work here...
     let response = process_rollback_actual(peer, chain, point, tip, fork).await?;

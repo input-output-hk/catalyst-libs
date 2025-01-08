@@ -705,7 +705,8 @@ pub(crate) async fn background_mithril_update(
         let (client, downloader) = connect_client(&cfg).await;
 
         let (snapshot, certificate) =
-            match check_snapshot_to_download(cfg.network, &client, current_snapshot.as_ref()).await {
+            match check_snapshot_to_download(cfg.network, &client, current_snapshot.as_ref()).await
+            {
                 SnapshotStatus::Sleep(sleep) => {
                     next_sleep = sleep;
                     next_iteration!(client, downloader);
