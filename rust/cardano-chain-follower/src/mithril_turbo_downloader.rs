@@ -14,6 +14,7 @@ use std::{
 
 use anyhow::{anyhow, bail};
 use async_trait::async_trait;
+use catalyst_types::conversion::from_saturating;
 use dashmap::DashSet;
 use fmmap::MmapFileExt;
 use memx::memcmp;
@@ -30,7 +31,6 @@ use crate::{
     mithril_snapshot_data::latest_mithril_snapshot_data,
     stats::{self},
     turbo_downloader::ParallelDownloadProcessor,
-    utils::usize_from_saturating,
 };
 
 /// A snapshot downloader that accelerates Download using `aria2`.
@@ -137,7 +137,7 @@ impl Inner {
             if let Ok((prev_mmap, _)) =
                 Self::can_deduplicate(&rel_file, entry_size, prev_file.as_ref())
             {
-                let expected_file_size = usize_from_saturating(entry_size);
+                let expected_file_size = from_saturating(entry_size);
                 let mut buf: Vec<u8> = Vec::with_capacity(expected_file_size);
                 if entry.read_to_end(&mut buf)? != expected_file_size {
                     bail!(
