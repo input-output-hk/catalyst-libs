@@ -59,6 +59,7 @@ dbsync
 dcbor
 decompressor
 delegators
+displaydoc
 dleq
 dlog
 dockerhub
@@ -257,6 +258,7 @@ Traceback
 txmonitor
 txns
 typenum
+uncategorized
 unfinalized
 unixfs
 unlinkat
