@@ -309,4 +309,9 @@ impl Cip36 {
     pub fn is_valid_purpose(&self) -> bool {
         self.is_valid_purpose
     }
+
+    /// Get the error report.
+    pub fn err_report(&self) -> &ProblemReport {
+        &self.err_report
+    }
 }
