@@ -27,11 +27,8 @@ use x509_cert::certificate::Certificate as X509Certificate;
 use crate::{
     cardano::cip509::{
         self,
-        rbac::{
-            certs::{C509Cert, X509DerCert},
-            pub_key::SimplePublicKeyType,
-        },
-        types::cert_key_hash::CertKeyHash,
+        rbac::{C509Cert, SimplePublicKeyType, X509DerCert},
+        types::CertKeyHash,
         utils::Cip0134UriSet,
         Cip509, Cip509Validation,
     },

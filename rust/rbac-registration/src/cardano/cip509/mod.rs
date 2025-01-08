@@ -18,17 +18,19 @@ use minicbor::{
 };
 use pallas::ledger::traverse::MultiEraTx;
 use strum_macros::FromRepr;
-use types::tx_input_hash::TxInputHash;
 use uuid::Uuid;
 use validation::{
     validate_aux, validate_payment_key, validate_role_singing_key, validate_stake_public_key,
     validate_txn_inputs_hash,
 };
-use x509_chunks::X509Chunks;
 
 use super::transaction::witness::TxWitness;
 use crate::{
-    cardano::cip509::{rbac::Cip509RbacMetadata, types::ValidationSignature},
+    cardano::cip509::{
+        rbac::Cip509RbacMetadata,
+        types::{TxInputHash, ValidationSignature},
+        x509_chunks::X509Chunks,
+    },
     utils::{
         decode_helper::{
             decode_bytes, decode_helper, decode_map_len, report_duplicated_key, report_missing_keys,

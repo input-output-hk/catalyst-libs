@@ -14,10 +14,7 @@ use tracing::debug;
 use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
 
 use crate::cardano::cip509::{
-    rbac::{
-        certs::{C509Cert, X509DerCert},
-        Cip509RbacMetadata,
-    },
+    rbac::{C509Cert, Cip509RbacMetadata, X509DerCert},
     validation::URI,
 };
 

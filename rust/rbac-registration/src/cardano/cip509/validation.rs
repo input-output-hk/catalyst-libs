@@ -31,11 +31,13 @@ use pallas::{
 
 use super::{
     blake2b_128, blake2b_256, decremented_index,
-    rbac::role_data::{LocalRefInt, RoleData},
     utils::cip19::{compare_key_hash, extract_key_hash},
     Cip509, TxInputHash, TxWitness,
 };
-use crate::utils::general::zero_out_last_n_bytes;
+use crate::{
+    cardano::cip509::rbac::role_data::{LocalRefInt, RoleData},
+    utils::general::zero_out_last_n_bytes,
+};
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
