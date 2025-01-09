@@ -59,12 +59,12 @@ impl Display for CatalystSignedDocument {
     }
 }
 
-impl TryFrom<Vec<u8>> for CatalystSignedDocument {
+impl TryFrom<&[u8]> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
-    fn try_from(cose_bytes: Vec<u8>) -> Result<Self, Self::Error> {
+    fn try_from(cose_bytes: &[u8]) -> Result<Self, Self::Error> {
         // Try reading as a tagged COSE SIGN, otherwise try reading as untagged.
-        let cose_sign = coset::CoseSign::from_slice(&cose_bytes)
+        let cose_sign = coset::CoseSign::from_slice(cose_bytes)
             .map_err(|e| anyhow::anyhow!("Invalid COSE Sign document: {e}"))?;
 
         let mut content_errors = Vec::new();

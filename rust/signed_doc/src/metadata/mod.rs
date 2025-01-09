@@ -1,6 +1,7 @@
 //! Catalyst Signed Document Metadata.
 use std::fmt::{Display, Formatter};
 
+mod additional_fields;
 mod content_encoding;
 mod content_type;
 mod document_id;
@@ -8,6 +9,8 @@ mod document_ref;
 mod document_type;
 mod document_version;
 
+use additional_fields::AdditionalFields;
+use anyhow::anyhow;
 pub use catalyst_types::uuid::{V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
@@ -45,24 +48,6 @@ pub struct Metadata {
     content_errors: Vec<String>,
 }
 
-/// Additional Metadata Fields.
-///
-/// These values are extracted from the COSE Sign protected header labels.
-#[derive(Default, Debug, serde::Deserialize)]
-struct AdditionalFields {
-    /// Reference to the latest document.
-    #[serde(rename = "ref")]
-    doc_ref: Option<DocumentRef>,
-    /// Hash of the referenced document bytes.
-    ref_hash: Option<Vec<u8>>,
-    /// Reference to the document template.
-    template: Option<DocumentRef>,
-    /// Reference to the document reply.
-    reply: Option<DocumentRef>,
-    /// Reference to the document section.
-    section: Option<String>,
-}
-
 impl Metadata {
     /// Are there any validation errors (as opposed to structural errors).
     #[must_use]
@@ -98,12 +83,6 @@ impl Metadata {
     #[must_use]
     pub fn content_encoding(&self) -> Option<ContentEncoding> {
         self.content_encoding
-    }
-
-    /// Return Last Document Reference `Option<Vec<u8>>`.
-    #[must_use]
-    pub fn doc_ref_hash(&self) -> Option<Vec<u8>> {
-        self.extra.ref_hash.clone()
     }
 
     /// Return Last Document Reference `Option<DocumentRef>`.
@@ -165,7 +144,6 @@ impl Default for Metadata {
 }
 
 impl From<&coset::ProtectedHeader> for Metadata {
-    #[allow(clippy::too_many_lines)]
     fn from(protected: &coset::ProtectedHeader) -> Self {
         let mut metadata = Metadata::default();
         let mut errors = Vec::new();
@@ -175,14 +153,14 @@ impl From<&coset::ProtectedHeader> for Metadata {
                 match ContentType::try_from(iana_content_type) {
                     Ok(content_type) => metadata.content_type = content_type,
                     Err(e) => {
-                        errors.push(format!("Invalid Document Content-Type: {e}"));
+                        errors.push(anyhow!("Invalid Document Content-Type: {e}"));
                     },
                 }
             },
             None => {
-                errors.push(
-                    "COSE document protected header `content-type` field is missing".to_string(),
-                );
+                errors.push(anyhow!(
+                    "COSE document protected header `content-type` field is missing"
+                ));
             },
         }
 
@@ -195,11 +173,11 @@ impl From<&coset::ProtectedHeader> for Metadata {
                     metadata.content_encoding = Some(encoding);
                 },
                 Err(e) => {
-                    errors.push(format!("Invalid Document Content Encoding: {e}"));
+                    errors.push(anyhow!("Invalid Document Content Encoding: {e}"));
                 },
             }
         } else {
-            errors.push(format!(
+            errors.push(anyhow!(
                 "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' is missing"
             ));
         }
@@ -212,11 +190,13 @@ impl From<&coset::ProtectedHeader> for Metadata {
                     metadata.doc_type = doc_type_uuid.into();
                 },
                 Err(e) => {
-                    errors.push(format!("Document `type` is invalid: {e}"));
+                    errors.push(anyhow!("Document `type` is invalid: {e}"));
                 },
             }
         } else {
-            errors.push("Invalid COSE protected header, missing `type` field".to_string());
+            errors.push(anyhow!(
+                "Invalid COSE protected header, missing `type` field"
+            ));
         }
 
         match cose_protected_header_find(protected, |key| {
@@ -228,11 +208,11 @@ impl From<&coset::ProtectedHeader> for Metadata {
                         metadata.id = doc_id_uuid.into();
                     },
                     Err(e) => {
-                        errors.push(format!("Document `id` is invalid: {e}"));
+                        errors.push(anyhow!("Document `id` is invalid: {e}"));
                     },
                 }
             },
-            None => errors.push("Invalid COSE protected header, missing `id` field".to_string()),
+            None => errors.push(anyhow!("Invalid COSE protected header, missing `id` field")),
         };
 
         match cose_protected_header_find(protected, |key| {
@@ -242,7 +222,7 @@ impl From<&coset::ProtectedHeader> for Metadata {
                 match UuidV7::try_from(doc_ver) {
                     Ok(doc_ver_uuid) => {
                         if doc_ver_uuid.uuid() < metadata.id.uuid() {
-                            errors.push(format!(
+                            errors.push(anyhow!(
                             "Document Version {doc_ver_uuid} cannot be smaller than Document ID {}", metadata.id
                         ));
                         } else {
@@ -250,75 +230,24 @@ impl From<&coset::ProtectedHeader> for Metadata {
                         }
                     },
                     Err(e) => {
-                        errors.push(format!(
+                        errors.push(anyhow!(
                             "Invalid COSE protected header `ver` field, err: {e}"
                         ));
                     },
                 }
             },
-            None => errors.push("Invalid COSE protected header, missing `ver` field".to_string()),
+            None => {
+                errors.push(anyhow!(
+                    "Invalid COSE protected header, missing `ver` field"
+                ));
+            },
         }
 
-        if let Some(cbor_doc_ref) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("ref".to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_ref) {
-                Ok(doc_ref) => {
-                    metadata.extra.doc_ref = Some(doc_ref);
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `ref` field, err: {e}"
-                    ));
-                },
-            }
-        }
+        match AdditionalFields::try_from(protected) {
+            Ok(extra) => metadata.extra = extra,
+            Err(e) => errors.extend(e),
+        };
 
-        if let Some(cbor_doc_template) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("template".to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_template) {
-                Ok(doc_template) => {
-                    metadata.extra.template = Some(doc_template);
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `template` field, err: {e}"
-                    ));
-                },
-            }
-        }
-
-        if let Some(cbor_doc_reply) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("reply".to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_reply) {
-                Ok(doc_reply) => {
-                    metadata.extra.reply = Some(doc_reply);
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `reply` field, err: {e}"
-                    ));
-                },
-            }
-        }
-
-        if let Some(cbor_doc_section) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("section".to_string())
-        }) {
-            match cbor_doc_section.clone().into_text() {
-                Ok(doc_section) => {
-                    metadata.extra.section = Some(doc_section);
-                },
-                Err(e) => {
-                    errors.push(format!(
-                        "Invalid COSE protected header `section` field, err: {e:?}"
-                    ));
-                },
-            }
-        }
-        metadata.content_errors = errors;
         metadata
     }
 }
