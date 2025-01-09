@@ -99,6 +99,7 @@ impl Cip36 {
     /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
     ///
     /// # Returns
+    /// 
     /// None if the metadata is not in the block at given index.
     ///
     /// # Errors
@@ -218,7 +219,10 @@ impl Cip36 {
             }
         }
 
-        cip36_map.is_empty().then_some(cip36_map)
+        if cip36_map.is_empty() {
+            return None;
+        }
+        Some(cip36_map)
     }
 
     /// Get the `is_cip36` flag from the registration.
