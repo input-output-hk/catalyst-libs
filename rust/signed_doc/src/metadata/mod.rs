@@ -39,17 +39,17 @@ pub struct Metadata {
     content_encoding: Option<ContentEncoding>,
     /// Additional Metadata Fields.
     #[serde(flatten)]
-    extra: Fields,
+    extra: AdditionalFields,
     /// Metadata Content Errors
     #[serde(skip)]
     content_errors: Vec<String>,
 }
 
-/// Optional Metadata Fields.
+/// Additional Metadata Fields.
 ///
 /// These values are extracted from the COSE Sign protected header labels.
 #[derive(Default, Debug, serde::Deserialize)]
-struct Fields {
+struct AdditionalFields {
     /// Reference to the latest document.
     #[serde(rename = "ref")]
     doc_ref: Option<DocumentRef>,
@@ -158,7 +158,7 @@ impl Default for Metadata {
             ver: DocumentVersion::invalid(),
             content_type: ContentType::default(),
             content_encoding: None,
-            extra: Fields::default(),
+            extra: AdditionalFields::default(),
             content_errors: Vec::new(),
         }
     }
@@ -185,46 +185,45 @@ impl From<&coset::ProtectedHeader> for Metadata {
                 );
             },
         }
-        match protected.header.rest.iter().find(|(key, _)| {
-            if let coset::Label::Text(label) = key {
-                label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)
-            } else {
-                false
-            }
-        }) {
-            Some((_key, value)) => {
-                match ContentEncoding::try_from(value) {
-                    Ok(encoding) => {
-                        metadata.content_encoding = Some(encoding);
-                    },
-                    Err(e) => {
-                        errors.push(format!("Invalid Document Content Encoding: {e}"));
-                    },
-                }
-            },
-            None => {
-                errors.push(format!(
-                    "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' is missing"
-                ));
-            },
-        }
-        match cose_protected_header_find(protected, "type") {
-            Some(doc_type) => {
-                match UuidV4::try_from(&doc_type) {
-                    Ok(doc_type_uuid) => {
-                        metadata.doc_type = doc_type_uuid.into();
-                    },
-                    Err(e) => {
-                        errors.push(format!("Document `type` is invalid: {e}"));
-                    },
-                }
-            },
-            None => errors.push("Invalid COSE protected header, missing `type` field".to_string()),
-        };
 
-        match cose_protected_header_find(protected, "id") {
+        if let Some(value) = cose_protected_header_find(
+            protected,
+            |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)),
+        ) {
+            match ContentEncoding::try_from(value) {
+                Ok(encoding) => {
+                    metadata.content_encoding = Some(encoding);
+                },
+                Err(e) => {
+                    errors.push(format!("Invalid Document Content Encoding: {e}"));
+                },
+            }
+        } else {
+            errors.push(format!(
+                "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' is missing"
+            ));
+        }
+
+        if let Some(doc_type) = cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("type".to_string())
+        }) {
+            match UuidV4::try_from(doc_type) {
+                Ok(doc_type_uuid) => {
+                    metadata.doc_type = doc_type_uuid.into();
+                },
+                Err(e) => {
+                    errors.push(format!("Document `type` is invalid: {e}"));
+                },
+            }
+        } else {
+            errors.push("Invalid COSE protected header, missing `type` field".to_string());
+        }
+
+        match cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("id".to_string())
+        }) {
             Some(doc_id) => {
-                match UuidV7::try_from(&doc_id) {
+                match UuidV7::try_from(doc_id) {
                     Ok(doc_id_uuid) => {
                         metadata.id = doc_id_uuid.into();
                     },
@@ -236,9 +235,11 @@ impl From<&coset::ProtectedHeader> for Metadata {
             None => errors.push("Invalid COSE protected header, missing `id` field".to_string()),
         };
 
-        match cose_protected_header_find(protected, "ver") {
+        match cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("ver".to_string())
+        }) {
             Some(doc_ver) => {
-                match UuidV7::try_from(&doc_ver) {
+                match UuidV7::try_from(doc_ver) {
                     Ok(doc_ver_uuid) => {
                         if doc_ver_uuid.uuid() < metadata.id.uuid() {
                             errors.push(format!(
@@ -258,8 +259,10 @@ impl From<&coset::ProtectedHeader> for Metadata {
             None => errors.push("Invalid COSE protected header, missing `ver` field".to_string()),
         }
 
-        if let Some(cbor_doc_ref) = cose_protected_header_find(protected, "ref") {
-            match DocumentRef::try_from(&cbor_doc_ref) {
+        if let Some(cbor_doc_ref) = cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("ref".to_string())
+        }) {
+            match DocumentRef::try_from(cbor_doc_ref) {
                 Ok(doc_ref) => {
                     metadata.extra.doc_ref = Some(doc_ref);
                 },
@@ -271,8 +274,10 @@ impl From<&coset::ProtectedHeader> for Metadata {
             }
         }
 
-        if let Some(cbor_doc_template) = cose_protected_header_find(protected, "template") {
-            match DocumentRef::try_from(&cbor_doc_template) {
+        if let Some(cbor_doc_template) = cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("template".to_string())
+        }) {
+            match DocumentRef::try_from(cbor_doc_template) {
                 Ok(doc_template) => {
                     metadata.extra.template = Some(doc_template);
                 },
@@ -284,8 +289,10 @@ impl From<&coset::ProtectedHeader> for Metadata {
             }
         }
 
-        if let Some(cbor_doc_reply) = cose_protected_header_find(protected, "reply") {
-            match DocumentRef::try_from(&cbor_doc_reply) {
+        if let Some(cbor_doc_reply) = cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("reply".to_string())
+        }) {
+            match DocumentRef::try_from(cbor_doc_reply) {
                 Ok(doc_reply) => {
                     metadata.extra.reply = Some(doc_reply);
                 },
@@ -297,8 +304,10 @@ impl From<&coset::ProtectedHeader> for Metadata {
             }
         }
 
-        if let Some(cbor_doc_section) = cose_protected_header_find(protected, "section") {
-            match cbor_doc_section.into_text() {
+        if let Some(cbor_doc_section) = cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("section".to_string())
+        }) {
+            match cbor_doc_section.clone().into_text() {
                 Ok(doc_section) => {
                     metadata.extra.section = Some(doc_section);
                 },
@@ -314,14 +323,14 @@ impl From<&coset::ProtectedHeader> for Metadata {
     }
 }
 
-/// Find a value for a given key in the protected header.
+/// Find a value for a predicate in the protected header.
 fn cose_protected_header_find(
-    protected: &coset::ProtectedHeader, rest_key: &str,
-) -> Option<coset::cbor::Value> {
+    protected: &coset::ProtectedHeader, mut predicate: impl FnMut(&coset::Label) -> bool,
+) -> Option<&coset::cbor::Value> {
     protected
         .header
         .rest
         .iter()
-        .find(|(key, _)| key == &coset::Label::Text(rest_key.to_string()))
-        .map(|(_, value)| value.clone())
+        .find(|(key, _)| predicate(key))
+        .map(|(_, value)| value)
 }
