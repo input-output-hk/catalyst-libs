@@ -1,6 +1,6 @@
 [package]
-name = "signed_doc"
-version = "0.1.0"
+name = "catalyst-signed-doc"
+version = "0.0.1"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
