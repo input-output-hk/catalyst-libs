@@ -98,6 +98,9 @@ impl Cip36 {
     /// * `txn_idx` - The transaction index that contain the auxiliary data.
     /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
     ///
+    /// # Returns
+    /// None if the metadata is not in the block at given index.
+    ///
     /// # Errors
     ///
     /// If the CIP-36 key registration or registration witness metadata is not found.
@@ -105,21 +108,15 @@ impl Cip36 {
     /// decoded.
     pub fn new(
         block: &MultiEraBlock, txn_idx: TxnIndex, is_catalyst_strict: bool,
-    ) -> Result<Cip36, Cip36Error> {
+    ) -> Result<Option<Cip36>, Cip36Error> {
         // Record of errors found during decoding and validation
         let mut err_report = ProblemReport::new("CIP36 Registration Decoding and Validation");
 
         let Some(k61284) = block.txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION) else {
-            return Err(Cip36Error {
-                error: anyhow::anyhow!("CIP-36 key registration metadata not found"),
-                report: err_report,
-            });
+            return Ok(None);
         };
         let Some(k61285) = block.txn_metadata(txn_idx, MetadatumLabel::CIP036_WITNESS) else {
-            return Err(Cip36Error {
-                error: anyhow::anyhow!("CIP-36 registration witness metadata not found"),
-                report: err_report,
-            });
+            return Ok(None);
         };
 
         let slot = block.decode().slot();
@@ -185,7 +182,7 @@ impl Cip36 {
         cip36.validate_voting_keys();
         cip36.validate_purpose();
 
-        Ok(cip36)
+        Ok(Some(cip36))
     }
 
     /// Collect all CIP-36 registrations from a block.
@@ -208,7 +205,17 @@ impl Cip36 {
         for (txn_idx, _tx) in block.decode().txs().iter().enumerate() {
             let txn_idx: TxnIndex = txn_idx.into();
             let cip36 = Cip36::new(block, txn_idx, is_catalyst_strict);
-            cip36_map.insert(txn_idx, cip36);
+            match cip36 {
+                Ok(Some(cip36)) => {
+                    cip36_map.insert(txn_idx, Ok(cip36));
+                },
+                // None - no CIP-36 metadata found in the block
+                Ok(None) => {},
+                // Error - found CIP-36 but there is some error
+                Err(e) => {
+                    cip36_map.insert(txn_idx, Err(e));
+                },
+            }
         }
 
         cip36_map.is_empty().then_some(cip36_map)
