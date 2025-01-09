@@ -37,13 +37,7 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
                 .action(ArgAction::SetTrue),
             arg!(--"halt-on-error" "Stop the process when an error occurs without retrying.")
                 .action(ArgAction::SetTrue),
-            arg!(--"log-bad-cip36" "Dump Bad CIP36 registrations detected.")
-                .action(ArgAction::SetTrue),
-            arg!(--"log-cip509" "Dump CIP509 validation.")
-                .action(ArgAction::SetTrue),
             arg!(--"log-raw-aux" "Dump raw auxiliary data.")
-                .action(ArgAction::SetTrue),
-            arg!(--"largest-metadata" "Dump The largest transaction metadata we find (as we find it).")
                 .action(ArgAction::SetTrue),
             arg!(--"mithril-sync-workers" <WORKERS> "The number of workers to use when downloading the blockchain snapshot.")
                 .value_parser(clap::value_parser!(u16).range(1..))
@@ -60,6 +54,9 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
             arg!(--"mithril-sync-data-read-timeout" <SECS> "The HTTP Data Read Timeout for mithril downloads, in seconds.")
                 .value_parser(clap::value_parser!(u64).range(1..))
                 .action(ArgAction::Set),
+            // Metadata
+            arg!(--"log-bad-cip36" "Dump Bad CIP36 registrations detected.")
+                .action(ArgAction::SetTrue),
         ])
         .get_matches();
 
@@ -147,10 +144,10 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let is_all_live_blocks = matches.get_flag("all-live-blocks");
     let is_stop_at_tip = matches.get_flag("stop-at-tip");
     let is_halt_on_error = matches.get_flag("halt-on-error");
-    let is_log_bad_cip36 = matches.get_flag("log-bad-cip36");
-    let _is_log_cip509 = matches.get_flag("log-cip509");
     let is_log_raw_aux = matches.get_flag("log-raw-aux");
-    let _is_largest_metadata = matches.get_flag("largest-metadata");
+
+    // Metadata
+    let is_log_bad_cip36 = matches.get_flag("log-bad-cip36");
 
     let mut current_era = String::new();
     let mut last_update: Option<ChainUpdate> = None;
@@ -163,8 +160,6 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let mut is_follow_all = false;
 
     let mut last_metrics_time = Instant::now();
-
-    // let mut biggest_aux_data: usize = 0;
 
     while let Some(chain_update) = follower.next().await {
         updates += 1;
@@ -237,29 +232,6 @@ async fn follow_for(network: Network, matches: ArgMatches) {
             break;
         }
 
-        // Logging bad CIP36.
-        if is_log_bad_cip36 {
-            log_bad_cip36_info(chain_update.block_data(), network);
-        }
-        // // Inspect the transactions in the block.
-        // for (txn_idx, _tx) in block.txs().iter().enumerate() {
-        //     // if let Some(aux_data) = update_biggest_aux_data(
-        //     //     &chain_update,
-        //     //     txn_idx,
-        //     //     is_largest_metadata,
-        //     //     biggest_aux_data,
-        //     // ) {
-        //     //     biggest_aux_data = aux_data;
-        //     // }
-
-        //     // If flag `is_log_bad_cip36` is set, log the bad CIP36.
-
-        //     // If flag `is_log_cip509` is set, log the CIP509 validation.
-        //     // if is_log_cip509 {
-        //     //     log_cip509_info(&decoded_metadata, network, txn_idx, block.number());
-        //     // }
-        // }
-
         if is_log_raw_aux {
             if let Some(x) = block.as_alonzo() {
                 info!(
@@ -278,6 +250,13 @@ async fn follow_for(network: Network, matches: ArgMatches) {
                 );
             }
         }
+
+        // Illustrate how the chain-follower works with metadata.
+        // Log bad CIP36.
+        if is_log_bad_cip36 {
+            log_bad_cip36_info(chain_update.block_data(), network);
+        }
+        // TODO - Add CIP509 example.
 
         prev_hash = Some(block.hash());
         last_update = Some(chain_update);
@@ -321,40 +300,8 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     info!(network = network.to_string(), "Following Completed.");
 }
 
-// // FIXME: Why do we need this? Should it be finding the largest aux data?
-// /// Helper function for updating the biggest aux data.
-// /// Comparing between CIP36 and CIP509.
-// fn update_biggest_aux_data(
-//     chain_update: &ChainUpdate, txn_idx: TxnIndex, largest_metadata: bool,
-// biggest_aux_data: usize, ) -> Option<usize> {
-//     let raw_size_cip36 = match chain_update
-//         .data
-//         .txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION)
-//     {
-//         Some(raw) => raw.as_ref().len(),
-//         None => 0,
-//     };
-
-//     let raw_size_cip509 = match chain_update
-//         .data
-//         .txn_metadata(txn_idx, MetadatumLabel::CIP509_RBAC)
-//     {
-//         Some(raw) => raw.as_ref().len(),
-//         None => 0,
-//     };
-
-//     // Get the maximum raw size from both cip36 and cip509
-//     let raw_size = raw_size_cip36.max(raw_size_cip509);
-
-//     if largest_metadata && raw_size > biggest_aux_data {
-//         return Some(raw_size);
-//     }
-
-//     None
-// }
-
-/// Helper function for logging bad CIP36.
-/// Bad CIP36 include:
+/// Function for logging bad CIP36.
+/// Bad CIP36 includes:
 /// - CIP36 that is valid decoded, but have problem.
 /// - CIP36 that is invalid decoded.
 fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
@@ -377,28 +324,6 @@ fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
         }
     }
 }
-
-// /// Helper function for logging CIP509 validation.
-// fn log_cip509_info(
-//     decoded_metadata: &DecodedMetadata, network: Network, txn_idx: TxnIndex, block:
-// u64, ) {
-//     if let Some(m) = decoded_metadata.get(MetadatumLabel::CIP509_RBAC) {
-//         if let Metadata::DecodedMetadataValues::Cip509(cip509) = &m.value {
-//             info!(
-//                 network = network.to_string(),
-//                 block, "CIP509 {txn_idx:?}: {:?}", &cip509
-//             );
-//         }
-
-//         // If report is not empty, log it, log it as a warning.
-//         if !m.report.is_empty() {
-//             warn!(
-//                 network = network.to_string(),
-//                 block, "CIP509 {txn_idx:?}: {:?}", decoded_metadata
-//             );
-//         }
-//     }
-// }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {

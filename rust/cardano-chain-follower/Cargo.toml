@@ -19,8 +19,6 @@ mithril-client = { version = "0.10.4", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
-
-# rbac-registration = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.8" }
 cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "fix/cip36" }
 catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250108-00" }
 
@@ -60,12 +58,12 @@ hickory-resolver = { version = "0.24.2", features = ["dns-over-rustls"] }
 moka = { version = "0.12.9", features = ["sync"] }
 
 [dev-dependencies]
-hex = "0.4.3"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
+# rbac-registration = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.8" }
 
 # Note, these features are for support of features exposed by dependencies.
 [features]
