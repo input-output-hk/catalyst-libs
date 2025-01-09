@@ -238,7 +238,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         }
 
         // Logging bad CIP36.
-        if !is_log_bad_cip36 {
+        if is_log_bad_cip36 {
             log_bad_cip36_info(chain_update.block_data(), network);
         }
         // // Inspect the transactions in the block.
