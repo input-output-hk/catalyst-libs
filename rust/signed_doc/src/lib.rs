@@ -22,8 +22,6 @@ struct InnerCatalystSignedDocument {
     metadata: Metadata,
     /// Document Payload viewed as JSON Content
     payload: JsonContent,
-    /// Signatures
-    signatures: Vec<coset::CoseSignature>,
     /// Raw COSE Sign data
     cose_sign: coset::CoseSign,
     /// Raw COSE Sign bytes
@@ -46,7 +44,7 @@ impl Display for CatalystSignedDocument {
         writeln!(f, "{}", self.inner.metadata)?;
         writeln!(f, "{:#?}\n", self.inner.payload)?;
         writeln!(f, "Signature Information [")?;
-        for signature in &self.inner.signatures {
+        for signature in &self.inner.cose_sign.signatures {
             writeln!(
                 f,
                 "  {} 0x{:#}",
@@ -93,11 +91,9 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
             content_errors.push("COSE payload is empty".to_string());
         };
 
-        let signatures = cose.signatures.clone();
         let inner = InnerCatalystSignedDocument {
             metadata,
             payload,
-            signatures,
             cose_sign: cose,
             cose_bytes,
             content_errors,
