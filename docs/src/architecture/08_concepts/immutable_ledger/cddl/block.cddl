@@ -4,18 +4,13 @@
 block = [
     block-header,
     block-data,
-    validator-signature,
 ]
 
 block-header = [
-    chain-id: UUID, ; UUID v7
     height: int,
-    timestamp: #6.1(uint .ge 1722470400), ; Epoch-based date/time
-    prev-block-id: hash-bytes, ; hash of the previous block
     ?ledger-type: UUID, ; UUID v4
     ?purpose-id: UUID, ; UUID v7
-    ?validator,
-    ~metadata,
+    ~extra-header-data,
 ]
 
 block-data = encoded-cbor
@@ -24,9 +19,6 @@ UUID = #6.37(bytes) ; UUID type
 
 kid = hash-bytes ; hash of the x509/c509 certificate
 
-validator = (kid / [2* kid])
-metadata = [ *any ]
-
-validator-signature = (bytes / [2* bytes])
+extra-header-data = [ *any ]
 
 ;# include hash
