@@ -13,7 +13,7 @@ use crate::{
     mithril_snapshot::MithrilSnapshot,
     mithril_snapshot_data::latest_mithril_snapshot_id,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
-    stats::{self, rollback},
+    stats::{self},
     Statistics,
 };
 
@@ -192,7 +192,11 @@ impl ChainFollower {
         if let Some(next_block) = next_block {
             // Update rollback stats for the follower if one is reported.
             if update_type == chain_update::Kind::Rollback {
-                rollback(self.network, stats::RollbackType::Follower, rollback_depth);
+                stats::rollback::rollback(
+                    self.network,
+                    stats::rollback::RollbackType::Follower,
+                    rollback_depth,
+                );
             }
             // debug!("Pre Previous update 4 : {:?}", self.previous);
             self.previous = self.current.clone();

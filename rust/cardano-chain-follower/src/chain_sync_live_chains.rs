@@ -15,7 +15,7 @@ use tracing::{debug, error};
 use crate::{
     error::{Error, Result},
     mithril_snapshot_data::latest_mithril_snapshot_id,
-    stats,
+    stats::{self},
 };
 
 /// Type we use to manage the Sync Task handle map.
@@ -241,7 +241,11 @@ impl ProtectedLiveChainBlockList {
 
             // Record a rollback statistic (We record the ACTUAL size our rollback effected our
             // internal live chain, not what the node thinks.)
-            stats::rollback(network, stats::RollbackType::LiveChain, rollback_size);
+            stats::rollback::rollback(
+                network,
+                stats::rollback::RollbackType::LiveChain,
+                rollback_size,
+            );
         }
 
         let head_slot = block.point().slot_or_default();

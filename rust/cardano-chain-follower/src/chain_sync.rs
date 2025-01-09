@@ -33,7 +33,8 @@ use crate::{
     error::{Error, Result},
     mithril_snapshot_config::MithrilUpdateMessage,
     mithril_snapshot_data::latest_mithril_snapshot_id,
-    stats, ChainSyncConfig,
+    stats::{self},
+    ChainSyncConfig,
 };
 
 /// The maximum number of seconds we wait for a node to connect.
@@ -199,7 +200,11 @@ async fn process_rollback(
     // We never really know how many blocks are rolled back when advised by the peer, but we
     // can work out how many slots. This function wraps the real work, so we can properly
     // record the stats when the rollback is complete. Even if it errors.
-    stats::rollback(chain, stats::RollbackType::Peer, slot_rollback_size.into());
+    stats::rollback::rollback(
+        chain,
+        stats::rollback::RollbackType::Peer,
+        slot_rollback_size.into(),
+    );
 
     Ok(response)
 }
