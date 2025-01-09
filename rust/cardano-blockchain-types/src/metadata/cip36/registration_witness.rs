@@ -22,7 +22,7 @@ pub(crate) struct Cip36RegistrationWitness {
 }
 
 impl Decode<'_, ProblemReport> for Cip36RegistrationWitness {
-    fn decode(d: &mut Decoder, ctx: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, err_report: &mut ProblemReport) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Registration Witness")?;
 
         // Expected only 1 key in the map.
@@ -32,11 +32,11 @@ impl Decode<'_, ProblemReport> for Cip36RegistrationWitness {
             )));
         }
 
-        let key: u16 = decode_helper(d, "key in CIP36 Registration Witness", ctx)?;
+        let key: u16 = decode_helper(d, "key in CIP36 Registration Witness", err_report)?;
 
         // The key needs to be 1.
         if key != 1 {
-            ctx.invalid_value(
+            err_report.invalid_value(
                 "map key",
                 format!("{key}").as_str(),
                 "expected key 1",
@@ -47,7 +47,7 @@ impl Decode<'_, ProblemReport> for Cip36RegistrationWitness {
         let sig_bytes = decode_bytes(d, "CIP36 Registration Witness signature")?;
         let signature = ed25519_dalek::Signature::from_slice(&sig_bytes)
             .map_err(|_| {
-                ctx.conversion_error(
+                err_report.conversion_error(
                     "Signature",
                     format!("{sig_bytes:?}").as_str(),
                     "Cannot convert bytes to Ed25519 signature",

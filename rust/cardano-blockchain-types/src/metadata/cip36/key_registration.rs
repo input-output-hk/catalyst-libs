@@ -76,7 +76,7 @@ enum Cip36KeyRegistrationKeys {
 }
 
 impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
-    fn decode(d: &mut Decoder, ctx: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, err_report: &mut ProblemReport) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Key Registration")?;
 
         let mut cip36_key_registration = Cip36KeyRegistration::default();
@@ -85,24 +85,24 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
         let mut found_keys: Vec<Cip36KeyRegistrationKeys> = Vec::new();
 
         for index in 0..map_len {
-            let key: u16 = decode_helper(d, "key in CIP36 Key Registration", ctx)?;
+            let key: u16 = decode_helper(d, "key in CIP36 Key Registration", err_report)?;
 
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
-                if check_is_key_exist(&found_keys, &key, index, ctx) {
+                if check_is_key_exist(&found_keys, &key, index, err_report) {
                     continue;
                 }
                 match key {
                     Cip36KeyRegistrationKeys::VotingKey => {
-                        let (is_cip36, voting_keys) = decode_voting_key(d, ctx)?;
+                        let (is_cip36, voting_keys) = decode_voting_key(d, err_report)?;
                         cip36_key_registration.is_cip36 = is_cip36;
                         cip36_key_registration.voting_pks = voting_keys;
                     },
                     Cip36KeyRegistrationKeys::StakePk => {
-                        let stake_pk = decode_stake_pk(d, ctx)?;
+                        let stake_pk = decode_stake_pk(d, err_report)?;
                         cip36_key_registration.stake_pk = stake_pk;
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        let shelley_addr = decode_payment_addr(d, ctx)?;
+                        let shelley_addr = decode_payment_addr(d, err_report)?;
                         cip36_key_registration.is_payable = shelley_addr
                             .as_ref()
                             .map(|addr| !addr.payment().is_script())
@@ -130,7 +130,7 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
 
         for key in &required_keys {
             if !found_keys.contains(key) {
-                ctx.missing_field(
+                err_report.missing_field(
                     &format!("{key:?}"),
                     "Missing required key in CIP36 Key Registration",
                 );
