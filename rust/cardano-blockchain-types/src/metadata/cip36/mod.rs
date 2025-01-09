@@ -99,7 +99,7 @@ impl Cip36 {
     /// * `is_catalyst_strict` - Is this a Catalyst strict registration?
     ///
     /// # Returns
-    /// 
+    ///
     /// None if the metadata is not in the block at given index.
     ///
     /// # Errors
