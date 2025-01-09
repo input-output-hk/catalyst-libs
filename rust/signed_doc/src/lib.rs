@@ -5,7 +5,7 @@ use std::{
     sync::Arc,
 };
 
-use coset::{CborSerializable, TaggedCborSerializable};
+use coset::CborSerializable;
 
 mod metadata;
 mod payload;
@@ -24,8 +24,6 @@ struct InnerCatalystSignedDocument {
     payload: JsonContent,
     /// Raw COSE Sign data
     cose_sign: coset::CoseSign,
-    /// Raw COSE Sign bytes
-    cose_bytes: Vec<u8>,
     /// Content Errors found when parsing the Document
     content_errors: Vec<String>,
 }
@@ -66,13 +64,12 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
 
     fn try_from(cose_bytes: Vec<u8>) -> Result<Self, Self::Error> {
         // Try reading as a tagged COSE SIGN, otherwise try reading as untagged.
-        let cose = coset::CoseSign::from_tagged_slice(&cose_bytes)
-            .or(coset::CoseSign::from_slice(&cose_bytes))
+        let cose_sign = coset::CoseSign::from_slice(&cose_bytes)
             .map_err(|e| anyhow::anyhow!("Invalid COSE Sign document: {e}"))?;
 
         let mut content_errors = Vec::new();
 
-        let metadata = Metadata::from(&cose.protected);
+        let metadata = Metadata::from(&cose_sign.protected);
 
         if metadata.is_valid() {
             content_errors.extend_from_slice(metadata.content_errors());
@@ -80,7 +77,7 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
 
         let mut payload = JsonContent::default();
 
-        if let Some(bytes) = &cose.payload {
+        if let Some(bytes) = &cose_sign.payload {
             match JsonContent::try_from((bytes, metadata.content_encoding())) {
                 Ok(c) => payload = c,
                 Err(e) => {
@@ -94,8 +91,7 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
         let inner = InnerCatalystSignedDocument {
             metadata,
             payload,
-            cose_sign: cose,
-            cose_bytes,
+            cose_sign,
             content_errors,
         };
         Ok(CatalystSignedDocument {
@@ -153,11 +149,5 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn doc_section(&self) -> Option<String> {
         self.inner.metadata.doc_section()
-    }
-
-    /// Return Raw COSE SIGN bytes.
-    #[must_use]
-    pub fn cose_sign_bytes(&self) -> &[u8] {
-        self.inner.cose_bytes.as_ref()
     }
 }
