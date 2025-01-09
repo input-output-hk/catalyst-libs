@@ -11,8 +11,12 @@ pub enum DocumentRef {
         id: UuidV7,
     },
     /// Reference to the specific document version
-    /// Document ID UUID, Document Ver UUID
-    WithVer(UuidV7, UuidV7),
+    WithVer {
+        /// Document ID UUID,
+        id: UuidV7,
+        /// Document Ver UUID
+        ver: UuidV7,
+    },
 }
 
 impl TryFrom<&coset::cbor::Value> for DocumentRef {
@@ -36,7 +40,7 @@ impl TryFrom<&coset::cbor::Value> for DocumentRef {
                 ver >= id,
                 "Document Reference Version can never be smaller than its ID"
             );
-            Ok(DocumentRef::WithVer(id, ver))
+            Ok(DocumentRef::WithVer { id, ver })
         }
     }
 }

@@ -9,7 +9,7 @@ use std::{
 };
 
 use clap::Parser;
-use coset::{iana::CoapContentFormat, AsCborValue, CborSerializable};
+use coset::{iana::CoapContentFormat, CborSerializable};
 use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
@@ -84,7 +84,7 @@ fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
 fn encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
     match doc_ref {
         DocumentRef::Latest { id } => encode_cbor_uuid(&id.uuid()),
-        DocumentRef::WithVer(id, ver) => {
+        DocumentRef::WithVer { id, ver } => {
             coset::cbor::Value::Array(vec![
                 encode_cbor_uuid(&id.uuid()),
                 encode_cbor_uuid(&ver.uuid()),
@@ -104,7 +104,7 @@ fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<Document
         anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
         let id = UuidV7::try_from(&array[0])?;
         let ver = UuidV7::try_from(&array[1])?;
-        Ok(DocumentRef::WithVer(id, ver))
+        Ok(DocumentRef::WithVer { id, ver })
     }
 }
 
