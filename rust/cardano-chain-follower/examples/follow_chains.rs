@@ -5,7 +5,7 @@
 // Allowing since this is example code.
 //#![allow(clippy::unwrap_used)]
 
-use cardano_blockchain_types::{BlockAuxData, Fork, MetadatumLabel, Network, Point, TxnIndex};
+use cardano_blockchain_types::{Cip36, Fork, MultiEraBlock, Network, Point};
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
 
@@ -16,10 +16,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 use std::{error::Error, time::Duration};
 
-use cardano_chain_follower::{
-    metadata::DecodedMetadata, ChainFollower, ChainSyncConfig, ChainUpdate, Kind, Metadata,
-    Statistics,
-};
+use cardano_chain_follower::{ChainFollower, ChainSyncConfig, ChainUpdate, Kind, Statistics};
 use clap::{arg, ArgAction, ArgMatches, Command};
 use tokio::time::Instant;
 use tracing::{error, info, level_filters::LevelFilter, warn};
@@ -151,9 +148,9 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let is_stop_at_tip = matches.get_flag("stop-at-tip");
     let is_halt_on_error = matches.get_flag("halt-on-error");
     let is_log_bad_cip36 = matches.get_flag("log-bad-cip36");
-    let is_log_cip509 = matches.get_flag("log-cip509");
+    let _is_log_cip509 = matches.get_flag("log-cip509");
     let is_log_raw_aux = matches.get_flag("log-raw-aux");
-    let is_largest_metadata = matches.get_flag("largest-metadata");
+    let _is_largest_metadata = matches.get_flag("largest-metadata");
 
     let mut current_era = String::new();
     let mut last_update: Option<ChainUpdate> = None;
@@ -167,7 +164,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
     let mut last_metrics_time = Instant::now();
 
-    let mut biggest_aux_data: usize = 0;
+    // let mut biggest_aux_data: usize = 0;
 
     while let Some(chain_update) = follower.next().await {
         updates += 1;
@@ -240,44 +237,28 @@ async fn follow_for(network: Network, matches: ArgMatches) {
             break;
         }
 
-        // Generate `BlockAuxData` from the block.
-        let block_aux_data = match BlockAuxData::try_from(block) {
-            Ok(aux_data) => aux_data,
-            Err(_) => continue,
-        };
-
-        // Inspect the transactions in the block.
-        for (txn_idx, tx) in block.txs().iter().enumerate() {
-            let txn_idx = TxnIndex::from_saturating(txn_idx);
-
-            // Get the auxiliary data for the transaction.
-            let tx_aux_data = match block_aux_data.get(txn_idx) {
-                Some(aux_data) => aux_data,
-                None => continue,
-            };
-
-            // Create new decoded metadata for the transaction.
-            let decoded_metadata = DecodedMetadata::new(network, block.slot(), tx, tx_aux_data);
-
-            if let Some(aux_data) = update_biggest_aux_data(
-                &chain_update,
-                txn_idx,
-                is_largest_metadata,
-                biggest_aux_data,
-            ) {
-                biggest_aux_data = aux_data;
-            }
-
-            // If flag `is_log_bad_cip36` is set, log the bad CIP36.
-            if is_log_bad_cip36 {
-                log_bad_cip36_info(&decoded_metadata, network, txn_idx, block.number());
-            }
-
-            // If flag `is_log_cip509` is set, log the CIP509 validation.
-            if is_log_cip509 {
-                log_cip509_info(&decoded_metadata, network, txn_idx, block.number());
-            }
+        // Logging bad CIP36.
+        if !is_log_bad_cip36 {
+            log_bad_cip36_info(chain_update.block_data(), network);
         }
+        // // Inspect the transactions in the block.
+        // for (txn_idx, _tx) in block.txs().iter().enumerate() {
+        //     // if let Some(aux_data) = update_biggest_aux_data(
+        //     //     &chain_update,
+        //     //     txn_idx,
+        //     //     is_largest_metadata,
+        //     //     biggest_aux_data,
+        //     // ) {
+        //     //     biggest_aux_data = aux_data;
+        //     // }
+
+        //     // If flag `is_log_bad_cip36` is set, log the bad CIP36.
+
+        //     // If flag `is_log_cip509` is set, log the CIP509 validation.
+        //     // if is_log_cip509 {
+        //     //     log_cip509_info(&decoded_metadata, network, txn_idx, block.number());
+        //     // }
+        // }
 
         if is_log_raw_aux {
             if let Some(x) = block.as_alonzo() {
@@ -340,75 +321,84 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     info!(network = network.to_string(), "Following Completed.");
 }
 
-// FIXME: Why do we need this? Should it be finding the largest aux data?
-/// Helper function for updating the biggest aux data.
-/// Comparing between CIP36 and CIP509.
-fn update_biggest_aux_data(
-    chain_update: &ChainUpdate, txn_idx: TxnIndex, largest_metadata: bool, biggest_aux_data: usize,
-) -> Option<usize> {
-    let raw_size_cip36 = match chain_update
-        .data
-        .txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION)
-    {
-        Some(raw) => raw.as_ref().len(),
-        None => 0,
-    };
+// // FIXME: Why do we need this? Should it be finding the largest aux data?
+// /// Helper function for updating the biggest aux data.
+// /// Comparing between CIP36 and CIP509.
+// fn update_biggest_aux_data(
+//     chain_update: &ChainUpdate, txn_idx: TxnIndex, largest_metadata: bool,
+// biggest_aux_data: usize, ) -> Option<usize> {
+//     let raw_size_cip36 = match chain_update
+//         .data
+//         .txn_metadata(txn_idx, MetadatumLabel::CIP036_REGISTRATION)
+//     {
+//         Some(raw) => raw.as_ref().len(),
+//         None => 0,
+//     };
 
-    let raw_size_cip509 = match chain_update
-        .data
-        .txn_metadata(txn_idx, MetadatumLabel::CIP509_RBAC)
-    {
-        Some(raw) => raw.as_ref().len(),
-        None => 0,
-    };
+//     let raw_size_cip509 = match chain_update
+//         .data
+//         .txn_metadata(txn_idx, MetadatumLabel::CIP509_RBAC)
+//     {
+//         Some(raw) => raw.as_ref().len(),
+//         None => 0,
+//     };
 
-    // Get the maximum raw size from both cip36 and cip509
-    let raw_size = raw_size_cip36.max(raw_size_cip509);
+//     // Get the maximum raw size from both cip36 and cip509
+//     let raw_size = raw_size_cip36.max(raw_size_cip509);
 
-    if largest_metadata && raw_size > biggest_aux_data {
-        return Some(raw_size);
-    }
+//     if largest_metadata && raw_size > biggest_aux_data {
+//         return Some(raw_size);
+//     }
 
-    None
-}
+//     None
+// }
 
 /// Helper function for logging bad CIP36.
-fn log_bad_cip36_info(
-    decoded_metadata: &DecodedMetadata, network: Network, txn_idx: TxnIndex, block: u64,
-) {
-    if let Some(m) = decoded_metadata.get(MetadatumLabel::CIP036_REGISTRATION) {
-        if let Metadata::DecodedMetadataValues::Cip36(cip36) = &m.value {
-            if !cip36.validation.is_valid_signature && !m.report.is_empty() {
-                info!(
-                    network = network.to_string(),
-                    block, "CIP36 {txn_idx:?}: {:?}", &cip36
-                );
+/// Bad CIP36 include:
+/// - CIP36 that is valid decoded, but have problem.
+/// - CIP36 that is invalid decoded.
+fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
+    if let Some(map) = Cip36::cip36_from_block(block, true) {
+        for (key, value) in &map {
+            match value {
+                Ok(value) => {
+                    // Logging the problematic CIP36.
+                    if value.err_report().is_problematic() {
+                        info!(
+                            network = network.to_string(),
+                            "CIP36 valid decoded, but have problem: index {:?}, {}", key, value
+                        );
+                    }
+                },
+                Err(e) => {
+                    warn!("CIP36 decode err {}: ", e);
+                },
             }
         }
     }
 }
 
-/// Helper function for logging CIP509 validation.
-fn log_cip509_info(
-    decoded_metadata: &DecodedMetadata, network: Network, txn_idx: TxnIndex, block: u64,
-) {
-    if let Some(m) = decoded_metadata.get(MetadatumLabel::CIP509_RBAC) {
-        if let Metadata::DecodedMetadataValues::Cip509(cip509) = &m.value {
-            info!(
-                network = network.to_string(),
-                block, "CIP509 {txn_idx:?}: {:?}", &cip509
-            );
-        }
+// /// Helper function for logging CIP509 validation.
+// fn log_cip509_info(
+//     decoded_metadata: &DecodedMetadata, network: Network, txn_idx: TxnIndex, block:
+// u64, ) {
+//     if let Some(m) = decoded_metadata.get(MetadatumLabel::CIP509_RBAC) {
+//         if let Metadata::DecodedMetadataValues::Cip509(cip509) = &m.value {
+//             info!(
+//                 network = network.to_string(),
+//                 block, "CIP509 {txn_idx:?}: {:?}", &cip509
+//             );
+//         }
 
-        // If report is not empty, log it, log it as a warning.
-        if !m.report.is_empty() {
-            warn!(
-                network = network.to_string(),
-                block, "CIP509 {txn_idx:?}: {:?}", decoded_metadata
-            );
-        }
-    }
-}
+//         // If report is not empty, log it, log it as a warning.
+//         if !m.report.is_empty() {
+//             warn!(
+//                 network = network.to_string(),
+//                 block, "CIP509 {txn_idx:?}: {:?}", decoded_metadata
+//             );
+//         }
+//     }
+// }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
