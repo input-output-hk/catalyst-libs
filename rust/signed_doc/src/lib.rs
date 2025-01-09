@@ -74,7 +74,7 @@ impl TryFrom<Vec<u8>> for CatalystSignedDocument {
 
         let metadata = Metadata::from(&cose.protected);
 
-        if metadata.has_error() {
+        if metadata.is_valid() {
             content_errors.extend_from_slice(metadata.content_errors());
         }
 
@@ -109,7 +109,7 @@ impl CatalystSignedDocument {
 
     /// Are there any validation errors (as opposed to structural errors).
     #[must_use]
-    pub fn has_error(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         !self.inner.content_errors.is_empty()
     }
 

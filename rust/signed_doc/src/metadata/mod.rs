@@ -66,7 +66,7 @@ struct AdditionalFields {
 impl Metadata {
     /// Are there any validation errors (as opposed to structural errors).
     #[must_use]
-    pub fn has_error(&self) -> bool {
+    pub fn is_valid(&self) -> bool {
         !self.content_errors.is_empty()
     }
 
