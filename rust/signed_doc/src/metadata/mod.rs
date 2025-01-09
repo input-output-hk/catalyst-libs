@@ -143,8 +143,11 @@ impl Default for Metadata {
     }
 }
 
-impl From<&coset::ProtectedHeader> for Metadata {
-    fn from(protected: &coset::ProtectedHeader) -> Self {
+impl TryFrom<&coset::ProtectedHeader> for Metadata {
+    type Error = Vec<anyhow::Error>;
+
+    #[allow(clippy::too_many_lines)]
+    fn try_from(protected: &coset::ProtectedHeader) -> Result<Self, Self::Error> {
         let mut metadata = Metadata::default();
         let mut errors = Vec::new();
 
@@ -248,7 +251,11 @@ impl From<&coset::ProtectedHeader> for Metadata {
             Err(e) => errors.extend(e),
         };
 
-        metadata
+        if errors.is_empty() {
+            Ok(metadata)
+        } else {
+            Err(errors)
+        }
     }
 }
 

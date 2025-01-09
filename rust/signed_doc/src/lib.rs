@@ -5,6 +5,7 @@ use std::{
     sync::Arc,
 };
 
+use anyhow::anyhow;
 use coset::CborSerializable;
 
 mod metadata;
@@ -24,8 +25,6 @@ struct InnerCatalystSignedDocument {
     payload: JsonContent,
     /// Raw COSE Sign data
     cose_sign: coset::CoseSign,
-    /// Content Errors found when parsing the Document
-    content_errors: Vec<String>,
 }
 
 /// Keep all the contents private.
@@ -50,49 +49,38 @@ impl Display for CatalystSignedDocument {
                 hex::encode(signature.signature.as_slice())
             )?;
         }
-        writeln!(f, "]\n")?;
-        writeln!(f, "Content Errors [")?;
-        for error in &self.inner.content_errors {
-            writeln!(f, "  {error:#}")?;
-        }
-        writeln!(f, "]")
+        writeln!(f, "]\n")
     }
 }
 
 impl TryFrom<&[u8]> for CatalystSignedDocument {
-    type Error = anyhow::Error;
+    type Error = Vec<anyhow::Error>;
 
     fn try_from(cose_bytes: &[u8]) -> Result<Self, Self::Error> {
         // Try reading as a tagged COSE SIGN, otherwise try reading as untagged.
         let cose_sign = coset::CoseSign::from_slice(cose_bytes)
-            .map_err(|e| anyhow::anyhow!("Invalid COSE Sign document: {e}"))?;
+            .map_err(|e| vec![anyhow::anyhow!("Invalid COSE Sign document: {e}")])?;
+
+        let metadata = Metadata::try_from(&cose_sign.protected)?;
 
         let mut content_errors = Vec::new();
-
-        let metadata = Metadata::from(&cose_sign.protected);
-
-        if metadata.is_valid() {
-            content_errors.extend_from_slice(metadata.content_errors());
-        }
-
         let mut payload = JsonContent::default();
 
         if let Some(bytes) = &cose_sign.payload {
             match JsonContent::try_from((bytes, metadata.content_encoding())) {
                 Ok(c) => payload = c,
                 Err(e) => {
-                    content_errors.push(format!("Invalid Payload: {e}"));
+                    content_errors.push(anyhow!("Invalid Payload: {e}"));
                 },
             }
         } else {
-            content_errors.push("COSE payload is empty".to_string());
+            content_errors.push(anyhow!("COSE payload is empty"));
         };
 
         let inner = InnerCatalystSignedDocument {
             metadata,
             payload,
             cose_sign,
-            content_errors,
         };
         Ok(CatalystSignedDocument {
             inner: Arc::new(inner),
@@ -102,12 +90,6 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
 
 impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
-
-    /// Are there any validation errors (as opposed to structural errors).
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        !self.inner.content_errors.is_empty()
-    }
 
     /// Return Document Type `UUIDv4`.
     #[must_use]
