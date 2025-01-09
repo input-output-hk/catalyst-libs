@@ -6,8 +6,9 @@ use std::{
 };
 
 use anyhow::anyhow;
-use coset::CborSerializable;
+use coset::{CborSerializable, CoseSignature};
 
+mod error;
 mod metadata;
 mod payload;
 mod signature;
@@ -15,6 +16,7 @@ mod signature;
 pub use metadata::{DocumentRef, Metadata, UuidV7};
 use payload::JsonContent;
 pub use signature::KidUri;
+use signature::Signatures;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Default)]
@@ -23,6 +25,8 @@ struct InnerCatalystSignedDocument {
     metadata: Metadata,
     /// Document Payload viewed as JSON Content
     payload: JsonContent,
+    /// Signatures
+    signatures: Signatures,
     /// Raw COSE Sign data
     cose_sign: coset::CoseSign,
 }
@@ -54,7 +58,7 @@ impl Display for CatalystSignedDocument {
 }
 
 impl TryFrom<&[u8]> for CatalystSignedDocument {
-    type Error = Vec<anyhow::Error>;
+    type Error = error::Error;
 
     fn try_from(cose_bytes: &[u8]) -> Result<Self, Self::Error> {
         // Try reading as a tagged COSE SIGN, otherwise try reading as untagged.
@@ -67,7 +71,7 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
         let mut payload = JsonContent::default();
 
         if let Some(bytes) = &cose_sign.payload {
-            match JsonContent::try_from((bytes, metadata.content_encoding())) {
+            match JsonContent::try_from((bytes.as_ref(), metadata.content_encoding())) {
                 Ok(c) => payload = c,
                 Err(e) => {
                     content_errors.push(anyhow!("Invalid Payload: {e}"));
@@ -77,11 +81,27 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
             content_errors.push(anyhow!("COSE payload is empty"));
         };
 
+        let mut signatures = Signatures::default();
+        match Signatures::try_from(&cose_sign.signatures) {
+            Ok(s) => signatures = s,
+            Err(errors) => {
+                for e in errors.errors() {
+                    content_errors.push(anyhow!("{e}"));
+                }
+            },
+        }
+
         let inner = InnerCatalystSignedDocument {
             metadata,
             payload,
+            signatures,
             cose_sign,
         };
+
+        if !content_errors.is_empty() {
+            return Err(error::Error(content_errors));
+        }
+
         Ok(CatalystSignedDocument {
             inner: Arc::new(inner),
         })
@@ -131,5 +151,23 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn doc_section(&self) -> Option<String> {
         self.inner.metadata.doc_section()
+    }
+
+    /// Return Raw COSE SIGN bytes.
+    #[must_use]
+    pub fn cose_sign_bytes(&self) -> Vec<u8> {
+        self.inner.cose_sign.clone().to_vec().unwrap_or_default()
+    }
+
+    /// Return a list of signature KIDs.
+    #[must_use]
+    pub fn signature_kids(&self) -> Vec<KidUri> {
+        self.inner.signatures.kids()
+    }
+
+    /// Return a list of signatures.
+    #[must_use]
+    pub fn signatures(&self) -> Vec<CoseSignature> {
+        self.inner.signatures.signatures()
     }
 }

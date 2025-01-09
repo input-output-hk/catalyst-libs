@@ -49,10 +49,10 @@ pub struct Metadata {
 }
 
 impl Metadata {
-    /// Are there any validation errors (as opposed to structural errors).
+    /// Returns true if metadata has no validation errors.
     #[must_use]
     pub fn is_valid(&self) -> bool {
-        !self.content_errors.is_empty()
+        self.content_errors.is_empty()
     }
 
     /// Return Document Type `UUIDv4`.
@@ -144,7 +144,7 @@ impl Default for Metadata {
 }
 
 impl TryFrom<&coset::ProtectedHeader> for Metadata {
-    type Error = Vec<anyhow::Error>;
+    type Error = crate::error::Error;
 
     #[allow(clippy::too_many_lines)]
     fn try_from(protected: &coset::ProtectedHeader) -> Result<Self, Self::Error> {
@@ -254,7 +254,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
         if errors.is_empty() {
             Ok(metadata)
         } else {
-            Err(errors)
+            Err(errors.into())
         }
     }
 }

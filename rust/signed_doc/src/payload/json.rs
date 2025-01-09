@@ -20,22 +20,19 @@ impl TryFrom<&[u8]> for Content<serde_json::Value> {
     }
 }
 
-impl TryFrom<(&Vec<u8>, Option<ContentEncoding>)> for Content<serde_json::Value> {
+impl TryFrom<(&[u8], Option<ContentEncoding>)> for Content<serde_json::Value> {
     type Error = anyhow::Error;
 
-    fn try_from(
-        (value, encoding): (&Vec<u8>, Option<ContentEncoding>),
-    ) -> Result<Self, Self::Error> {
+    fn try_from((value, encoding): (&[u8], Option<ContentEncoding>)) -> Result<Self, Self::Error> {
         if let Some(content_encoding) = encoding {
-            match content_encoding.decode(value) {
-                Ok(decompressed) => {
-                    return Self::try_from(decompressed.as_slice());
-                },
+            match content_encoding.decode(&value.to_vec()) {
+                Ok(decompressed) => Self::try_from(decompressed.as_slice()),
                 Err(e) => {
-                    anyhow::bail!("Failed to decode {encoding:?}: {e}");
+                    anyhow::bail!("Failed to decode {encoding:?} content: {e}");
                 },
             }
+        } else {
+            Self::try_from(value)
         }
-        Self::try_from(value.as_ref())
     }
 }

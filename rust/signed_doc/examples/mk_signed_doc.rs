@@ -8,13 +8,13 @@ use std::{
     path::PathBuf,
 };
 
+use catalyst_signed_doc::{DocumentRef, KidUri, Metadata, UuidV7};
 use clap::Parser;
 use coset::{iana::CoapContentFormat, CborSerializable};
 use ed25519_dalek::{
     ed25519::signature::Signer,
     pkcs8::{DecodePrivateKey, DecodePublicKey},
 };
-use signed_doc::{DocumentRef, KidUri, Metadata, UuidV7};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
