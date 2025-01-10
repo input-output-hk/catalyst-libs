@@ -78,8 +78,10 @@ impl Decode<'_, ProblemReport> for RoleNumberAndData {
                         match decode_helper(d, "RoleNumber in RoleData", &mut ()) {
                             Ok(v) => number = v,
                             Err(e) => {
-                                report
-                                    .other(&format!("Unable to decode role number: {e:?}"), context)
+                                report.other(
+                                    &format!("Unable to decode role number: {e:?}"),
+                                    context,
+                                );
                             },
                         }
                     },

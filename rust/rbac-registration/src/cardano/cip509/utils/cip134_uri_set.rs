@@ -169,11 +169,11 @@ fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> Ur
             if data.header.raw_tag() != Some(&[URI]) {
                 continue;
             }
-            let Ok(content) = data.content.as_slice() else {
+            let Ok(bytes) = data.content.as_slice() else {
                 report.other(&format!("Unable to process content for {data:?}"), context);
                 continue;
             };
-            match Cip0134Uri::try_from(content) {
+            match Cip0134Uri::try_from(bytes) {
                 Ok(u) => uris.push(u),
                 Err(e) => {
                     // X.509 doesn't restrict the "alternative name" extension to be utf8 only, so

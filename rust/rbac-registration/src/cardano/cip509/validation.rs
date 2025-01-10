@@ -36,7 +36,7 @@ use crate::{
         cip509::{
             role_data::{LocalRefInt, RoleData},
             types::TxInputHash,
-            Cip0134UriSet, Cip509,
+            Cip0134UriSet,
         },
         transaction::witness::TxWitness,
     },
@@ -94,13 +94,13 @@ pub fn validate_txn_inputs_hash(
                 &format!("{h:?}"),
                 &format!("Must be equal to the value in Cip509 ({hash:?})"),
                 context,
-            )
+            );
         },
         Err(e) => {
             report.other(
                 &format!("Failed to hash transaction inputs: {e:?}"),
                 context,
-            )
+            );
         },
     }
 }
@@ -124,13 +124,13 @@ pub fn validate_aux(
             report.other(
                 &format!("Incorrect transaction auxiliary data hash = '{h:?}', expected = '{auxiliary_data_hash:?}'"),
                 context,
-            )
+            );
         },
         Err(e) => {
             report.other(
                 &format!("Failed to hash transaction auxiliary data: {e:?}"),
                 context,
-            )
+            );
         },
     }
 }
@@ -314,7 +314,10 @@ mod tests {
     use pallas::{codec::utils::Nullable, ledger::traverse::MultiEraBlock};
 
     use super::*;
-    use crate::cardano::{cip509::rbac::RoleNumber, transaction::raw_aux_data::RawAuxData};
+    use crate::cardano::{
+        cip509::{rbac::RoleNumber, Cip509},
+        transaction::raw_aux_data::RawAuxData,
+    };
 
     fn cip_509_aux_data(tx: &MultiEraTx<'_>) -> Vec<u8> {
         let raw_auxiliary_data = tx
@@ -367,18 +370,20 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        if report.is_problematic() {
-            panic!("Failed to decode Cip509: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
 
         let MultiEraTx::Conway(tx) = tx else {
             panic!("Unexpected transaction era");
         };
         let hash = cip509.txn_inputs_hash().unwrap();
-        validate_txn_inputs_hash(hash, &tx, &report);
-        if report.is_problematic() {
-            panic!("validate_txn_inputs_hash failed: {report:?}");
-        }
+        validate_txn_inputs_hash(hash, tx, &report);
+        assert!(
+            !report.is_problematic(),
+            "validate_txn_inputs_hash failed: {report:?}"
+        );
     }
 
     #[test]
@@ -406,9 +411,7 @@ mod tests {
             tx.transaction_body.auxiliary_data_hash.as_ref(),
             &report,
         );
-        if report.is_problematic() {
-            panic!("validate_aux failed: {report:?}");
-        }
+        assert!(!report.is_problematic(), "validate_aux failed: {report:?}");
     }
 
     #[test]
@@ -428,14 +431,16 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        if report.is_problematic() {
-            panic!("Failed to decode Cip509: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
 
-        validate_stake_public_key(&tx, cip509.certificate_uris(), &report);
-        if report.is_problematic() {
-            panic!("validate_stake_public_key failed: {report:?}");
-        }
+        validate_stake_public_key(tx, cip509.certificate_uris(), &report);
+        assert!(
+            !report.is_problematic(),
+            "validate_stake_public_key failed: {report:?}"
+        );
     }
 
     #[test]
@@ -455,16 +460,18 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        if report.is_problematic() {
-            panic!("Failed to decode Cip509: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
 
         validate_stake_public_key(tx, cip509.certificate_uris(), &report);
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        if !report.contains("Failed to compare public keys with witnesses") {
-            panic!("Unexpected problem report content: {report}");
-        }
+        assert!(
+            report.contains("Failed to compare public keys with witnesses"),
+            "Unexpected problem report content: {report}"
+        );
     }
 
     #[test]
@@ -484,9 +491,10 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        if report.is_problematic() {
-            panic!("Failed to decode Cip509: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
 
         let MultiEraTx::Conway(conway_tx) = tx else {
             panic!("Unexpected transaction era");
@@ -495,9 +503,10 @@ mod tests {
             .role_data(RoleNumber::ROLE_0)
             .expect("There must be role0");
         validate_payment_key(tx, conway_tx, role_data, &report);
-        if report.is_problematic() {
-            panic!("validate_payment_key failed: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "validate_payment_key failed: {report:?}"
+        );
     }
 
     #[test]
@@ -517,9 +526,10 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        if report.is_problematic() {
-            panic!("Failed to decode Cip509: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
 
         let MultiEraTx::Conway(conway_tx) = tx else {
             panic!("Unexpected transaction era");
@@ -528,9 +538,10 @@ mod tests {
             .role_data(RoleNumber::ROLE_0)
             .expect("There must be role0");
         validate_payment_key(tx, conway_tx, role_data, &report);
-        if report.is_problematic() {
-            panic!("validate_payment_key failed: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "validate_payment_key failed: {report:?}"
+        );
     }
 
     #[test]
@@ -550,17 +561,19 @@ mod tests {
         let mut decoder = Decoder::new(aux_data.as_slice());
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        if report.is_problematic() {
-            panic!("Failed to decode Cip509: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
 
         let role_data = cip509
             .role_data(RoleNumber::ROLE_0)
             .expect("There must be role0");
         validate_role_signing_key(role_data, &report);
-        if report.is_problematic() {
-            panic!("validate_role_signing_key failed: {report:?}");
-        }
+        assert!(
+            !report.is_problematic(),
+            "validate_role_signing_key failed: {report:?}"
+        );
     }
 
     #[test]
@@ -577,11 +590,22 @@ mod tests {
         let mut decoder = Decoder::new(&aux_data);
         let mut report = ProblemReport::new("Cip509");
         let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        assert!(!report.is_problematic());
+        assert!(
+            !report.is_problematic(),
+            "Failed to decode Cip509: {report:?}"
+        );
+
+        let uris = cip509.certificate_uris().unwrap();
+        assert!(uris.c_uris().is_empty());
+        assert_eq!(1, uris.x_uris().len());
+        let Address::Stake(address) = uris.x_uris().get(&0).unwrap().first().unwrap().address()
+        else {
+            panic!("Unexpected address type");
+        };
+        let hash = address.payload().as_hash().to_vec();
 
         let addresses = extract_stake_addresses(cip509.certificate_uris());
-        // TODO: FIXME:
-        println!("{addresses:?}");
-        todo!();
+        assert_eq!(1, addresses.len());
+        assert_eq!(addresses.first().unwrap(), &hash);
     }
 }

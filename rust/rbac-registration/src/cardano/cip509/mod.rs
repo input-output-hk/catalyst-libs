@@ -10,6 +10,7 @@ pub use rbac::{
 pub use types::CertKeyHash;
 pub use utils::Cip0134UriSet;
 
+#[allow(clippy::module_inception)]
 mod cip509;
 mod rbac;
 mod types;

@@ -25,6 +25,12 @@ impl From<TxnIndex> for i16 {
     }
 }
 
+impl From<TxnIndex> for usize {
+    fn from(value: TxnIndex) -> Self {
+        value.0.into()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -80,11 +86,5 @@ mod tests {
         let txn_index = TxnIndex(0); // Should be able to convert to i16 without issue
         let result: i16 = txn_index.into();
         assert_eq!(result, 0);
-    }
-}
-
-impl From<TxnIndex> for usize {
-    fn from(value: TxnIndex) -> Self {
-        value.0.into()
     }
 }

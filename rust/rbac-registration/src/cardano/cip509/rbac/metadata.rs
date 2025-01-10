@@ -1,3 +1,5 @@
+//! Cip509 RBAC metadata.
+
 use std::collections::HashMap;
 
 use catalyst_types::problem_report::ProblemReport;
@@ -25,6 +27,7 @@ use crate::{
 ///
 /// [this document]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX
 #[derive(Debug, PartialEq, Clone)]
+#[allow(clippy::module_name_repetitions)]
 pub struct Cip509RbacMetadata {
     /// A potentially empty list of x509 certificates.
     pub x509_certs: Vec<X509DerCert>,

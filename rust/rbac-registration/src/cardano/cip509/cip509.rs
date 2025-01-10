@@ -49,6 +49,7 @@ pub const LABEL: u64 = 509;
 ///
 /// [this document]: https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md
 #[derive(Debug, Clone)]
+#[allow(clippy::module_name_repetitions)]
 pub struct Cip509 {
     /// A registration purpose (`UUIDv4`).
     ///
@@ -147,7 +148,7 @@ impl Cip509 {
 
         // Perform the validation.
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
-            validate_txn_inputs_hash(&txn_inputs_hash, conway_transaction, &cip509.report);
+            validate_txn_inputs_hash(txn_inputs_hash, conway_transaction, &cip509.report);
         };
         validate_aux(
             auxiliary_data,
@@ -211,7 +212,7 @@ impl Cip509 {
     /// Returns all role numbers present in this `Cip509` instance.
     pub fn all_roles(&self) -> Vec<RoleNumber> {
         if let Some(metadata) = &self.metadata {
-            metadata.role_data.keys().cloned().collect()
+            metadata.role_data.keys().copied().collect()
         } else {
             Vec::new()
         }
@@ -250,6 +251,10 @@ impl Cip509 {
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
     /// validated otherwise return the problem report that contains all the encountered
     /// issues.
+    ///
+    /// # Errors
+    ///
+    /// - `Err(ProblemReport)`
     pub fn try_consume(self) -> Result<(Uuid, Cip509RbacMetadata), ProblemReport> {
         match (
             self.purpose,
@@ -342,7 +347,6 @@ impl Decode<'_, ProblemReport> for Cip509 {
         let required_keys = [
             Cip509IntIdentifier::Purpose,
             Cip509IntIdentifier::TxInputsHash,
-            Cip509IntIdentifier::PreviousTxId,
             Cip509IntIdentifier::ValidationSignature,
         ];
         report_missing_keys(&found_keys, &required_keys, context, report);
@@ -354,6 +358,7 @@ impl Decode<'_, ProblemReport> for Cip509 {
     }
 }
 
+/// Decodes purpose.
 fn decode_purpose(d: &mut Decoder, context: &str, report: &ProblemReport) -> Option<Uuid> {
     let bytes = match decode_bytes(d, "Cip509 purpose") {
         Ok(v) => v,
@@ -364,20 +369,20 @@ fn decode_purpose(d: &mut Decoder, context: &str, report: &ProblemReport) -> Opt
     };
 
     let len = bytes.len();
-    match Uuid::try_from(bytes) {
-        Ok(v) => Some(v),
-        Err(_) => {
-            report.invalid_value(
-                "purpose",
-                &format!("{len} bytes"),
-                "must be 16 bytes long",
-                context,
-            );
-            None
-        },
+    if let Ok(v) = Uuid::try_from(bytes) {
+        Some(v)
+    } else {
+        report.invalid_value(
+            "purpose",
+            &format!("{len} bytes"),
+            "must be 16 bytes long",
+            context,
+        );
+        None
     }
 }
 
+/// Decodes input hash.
 fn decode_input_hash(
     d: &mut Decoder, context: &str, report: &ProblemReport,
 ) -> Option<TxInputHash> {
@@ -393,20 +398,20 @@ fn decode_input_hash(
     };
 
     let len = bytes.len();
-    match TxInputHash::try_from(bytes) {
-        Ok(v) => Some(v),
-        Err(_) => {
-            report.invalid_value(
-                "transaction inputs hash",
-                &format!("{len} bytes"),
-                "must be 16 bytes long",
-                context,
-            );
-            None
-        },
+    if let Ok(v) = TxInputHash::try_from(bytes) {
+        Some(v)
+    } else {
+        report.invalid_value(
+            "transaction inputs hash",
+            &format!("{len} bytes"),
+            "must be 16 bytes long",
+            context,
+        );
+        None
     }
 }
 
+/// Decodes previous transaction id.
 fn decode_previous_transaction_id(
     d: &mut Decoder, context: &str, report: &ProblemReport,
 ) -> Option<Blake2b256Hash> {
@@ -422,20 +427,20 @@ fn decode_previous_transaction_id(
     };
 
     let len = bytes.len();
-    match Blake2b256Hash::try_from(bytes) {
-        Ok(v) => Some(v),
-        Err(_) => {
-            report.invalid_value(
-                "previous transaction hash",
-                &format!("{len} bytes"),
-                &format!("must be {BLAKE_2B256_SIZE} bytes long"),
-                context,
-            );
-            None
-        },
+    if let Ok(v) = Blake2b256Hash::try_from(bytes) {
+        Some(v)
+    } else {
+        report.invalid_value(
+            "previous transaction hash",
+            &format!("{len} bytes"),
+            &format!("must be {BLAKE_2B256_SIZE} bytes long"),
+            context,
+        );
+        None
     }
 }
 
+/// Decodes validation signature.
 fn decode_validation_signature(
     d: &mut Decoder, context: &str, report: &ProblemReport,
 ) -> Option<ValidationSignature> {
@@ -451,17 +456,16 @@ fn decode_validation_signature(
     };
 
     let len = bytes.len();
-    match ValidationSignature::try_from(bytes) {
-        Ok(v) => Some(v),
-        Err(_) => {
-            report.invalid_value(
-                "validation signature",
-                &format!("{len} bytes"),
-                &format!("must be at least 1 byte and at most 64 bytes long"),
-                context,
-            );
-            None
-        },
+    if let Ok(v) = ValidationSignature::try_from(bytes) {
+        Some(v)
+    } else {
+        report.invalid_value(
+            "validation signature",
+            &format!("{len} bytes"),
+            "must be at least 1 byte and at most 64 bytes long",
+            context,
+        );
+        None
     }
 }
 
