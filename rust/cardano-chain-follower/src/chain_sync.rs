@@ -368,7 +368,7 @@ async fn live_sync_backfill(
 
     while let Some(block_data) = peer.blockfetch().recv_while_streaming().await? {
         // Backfilled blocks get placed in the oldest fork currently on the live-chain.
-        let block = MultiEraBlock::new(cfg.chain, block_data, &previous_point, 1.into())
+        let block = MultiEraBlock::new(cfg.chain, block_data, &previous_point, Fork::BACKFILL)
             .with_context(|| {
                 format!(
                     "Failed to decode block data. previous: {previous_point:?}, range: {range_msg}"
@@ -534,7 +534,7 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
     // Live Fill data starts at fork 1.
     // Immutable data from a mithril snapshot is fork 0.
     // Live backfill is always Fork 1.
-    let mut fork_count: Fork = 2.into();
+    let mut fork_count: Fork = Fork::FIRST_LIVE;
 
     loop {
         // We never have a connection if we end up around the loop, so make a new one.

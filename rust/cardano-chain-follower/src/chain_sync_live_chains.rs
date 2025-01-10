@@ -45,6 +45,9 @@ static PEER_TIP: LazyLock<SkipMap<Network, Point>> = LazyLock::new(|| {
     map
 });
 
+/// Initial slot age to probe.
+const INITIAL_SLOT_PROBE_AGE: u64 = 40;
+
 /// Set the last TIP received from the peer.
 fn update_peer_tip(chain: Network, tip: Point) {
     PEER_TIP.insert(chain, tip);
@@ -207,7 +210,7 @@ impl ProtectedLiveChainBlockList {
             let mut rollback_size: u64 = 0;
 
             // We are NOT contiguous, so check if we can become contiguous with a rollback.
-            debug!("Detected non-contiguous block, rolling back. Fork: {fork_count:?}");
+            debug!("Detected non-contiguous block, rolling back. Fork: {fork_count}");
 
             // First check if the previous is >= the earliest block in the live chain.
             // This is because when we start syncing we could rollback earlier than our
@@ -344,7 +347,7 @@ impl ProtectedLiveChainBlockList {
         }
 
         // Now find points based on an every increasing Slot age.
-        let mut slot_age: Slot = 40.into();
+        let mut slot_age: Slot = INITIAL_SLOT_PROBE_AGE.into();
         let reference_slot = entry.value().point().slot_or_default();
         let mut previous_point = entry.value().point();
 

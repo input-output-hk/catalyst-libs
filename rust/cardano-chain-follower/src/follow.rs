@@ -101,7 +101,7 @@ impl ChainFollower {
                     self.previous = self.current.clone();
                     // debug!("Post Previous update 3 : {:?}", self.previous);
                     self.current = next.point();
-                    self.fork = 0.into(); // Mithril Immutable data is always Fork 0.
+                    self.fork = Fork::IMMUTABLE; // Mithril Immutable data is always Fork 0.
                     let update = ChainUpdate::new(chain_update::Kind::Block, false, next);
                     return Some(update);
                 }

@@ -190,7 +190,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         // If these become true, we will show all blocks from the follower.
         follow_all = follow_all
             || (!chain_update.immutable() && all_live_blocks)
-            || ((chain_update.data.fork() > 1.into()) && all_tip_blocks);
+            || (chain_update.data.fork().is_live() && all_tip_blocks);
 
         // Don't know if this update will show or not, so say it didn't.
         last_update_shown = false;
