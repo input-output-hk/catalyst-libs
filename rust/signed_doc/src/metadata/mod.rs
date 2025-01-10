@@ -35,10 +35,10 @@ pub struct Metadata {
     /// Document Version `UUIDv7`.
     ver: DocumentVersion,
     /// Document Payload Content Type.
-    #[serde(default, rename = "content-type")]
+    #[serde(rename = "content-type")]
     content_type: ContentType,
     /// Document Payload Content Encoding.
-    #[serde(default, rename = "content-encoding")]
+    #[serde(rename = "content-encoding")]
     content_encoding: Option<ContentEncoding>,
     /// Additional Metadata Fields.
     #[serde(flatten)]
@@ -90,71 +90,46 @@ impl Display for Metadata {
     }
 }
 
-impl Default for Metadata {
-    fn default() -> Self {
-        Self {
-            doc_type: DocumentType::invalid(),
-            id: DocumentId::invalid(),
-            ver: DocumentVersion::invalid(),
-            content_type: ContentType::default(),
-            content_encoding: None,
-            extra: AdditionalFields::default(),
-        }
-    }
-}
-
 impl TryFrom<&coset::ProtectedHeader> for Metadata {
     type Error = crate::error::Error;
 
-    #[allow(clippy::too_many_lines)]
     fn try_from(protected: &coset::ProtectedHeader) -> Result<Self, Self::Error> {
-        let mut metadata = Metadata::default();
         let mut errors = Vec::new();
 
-        match protected.header.content_type.as_ref() {
-            Some(iana_content_type) => {
-                match ContentType::try_from(iana_content_type) {
-                    Ok(content_type) => metadata.content_type = content_type,
-                    Err(e) => {
-                        errors.push(anyhow!("Invalid Document Content-Type: {e}"));
-                    },
-                }
-            },
-            None => {
-                errors.push(anyhow!(
-                    "COSE document protected header `content-type` field is missing"
-                ));
-            },
+        let mut content_type = None;
+        if let Some(value) = protected.header.content_type.as_ref() {
+            match ContentType::try_from(value) {
+                Ok(ct) => content_type = Some(ct),
+                Err(e) => errors.push(anyhow!("Invalid Document Content-Type: {e}")),
+            }
+        } else {
+            errors.push(anyhow!(
+                "Invalid COSE protected header, missing Content-Type field"
+            ));
         }
 
+        let mut content_encoding = None;
         if let Some(value) = cose_protected_header_find(
             protected,
             |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)),
         ) {
             match ContentEncoding::try_from(value) {
-                Ok(encoding) => {
-                    metadata.content_encoding = Some(encoding);
-                },
-                Err(e) => {
-                    errors.push(anyhow!("Invalid Document Content Encoding: {e}"));
-                },
+                Ok(ce) => content_encoding = Some(ce),
+                Err(e) => errors.push(anyhow!("Invalid Document Content Encoding: {e}")),
             }
         } else {
             errors.push(anyhow!(
-                "Invalid COSE document protected header '{CONTENT_ENCODING_KEY}' is missing"
+                "Invalid COSE protected header, missing Content-Encoding field"
             ));
         }
 
-        if let Some(doc_type) = cose_protected_header_find(protected, |key| {
+        let mut doc_type = None;
+        if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text("type".to_string())
         }) {
-            match UuidV4::try_from(doc_type) {
-                Ok(doc_type_uuid) => {
-                    metadata.doc_type = doc_type_uuid.into();
-                },
-                Err(e) => {
-                    errors.push(anyhow!("Document `type` is invalid: {e}"));
-                },
+            match UuidV4::try_from(value) {
+                Ok(uuid) => doc_type = Some(uuid),
+                Err(e) => errors.push(anyhow!("Document `type` is invalid: {e}")),
             }
         } else {
             errors.push(anyhow!(
@@ -162,59 +137,66 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
             ));
         }
 
-        match cose_protected_header_find(protected, |key| {
+        let mut id = None;
+        if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text("id".to_string())
         }) {
-            Some(doc_id) => {
-                match UuidV7::try_from(doc_id) {
-                    Ok(doc_id_uuid) => {
-                        metadata.id = doc_id_uuid.into();
-                    },
-                    Err(e) => {
-                        errors.push(anyhow!("Document `id` is invalid: {e}"));
-                    },
-                }
-            },
-            None => errors.push(anyhow!("Invalid COSE protected header, missing `id` field")),
-        };
-
-        match cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("ver".to_string())
-        }) {
-            Some(doc_ver) => {
-                match UuidV7::try_from(doc_ver) {
-                    Ok(doc_ver_uuid) => {
-                        if doc_ver_uuid.uuid() < metadata.id.uuid() {
-                            errors.push(anyhow!(
-                            "Document Version {doc_ver_uuid} cannot be smaller than Document ID {}", metadata.id
-                        ));
-                        } else {
-                            metadata.ver = doc_ver_uuid.into();
-                        }
-                    },
-                    Err(e) => {
-                        errors.push(anyhow!(
-                            "Invalid COSE protected header `ver` field, err: {e}"
-                        ));
-                    },
-                }
-            },
-            None => {
-                errors.push(anyhow!(
-                    "Invalid COSE protected header, missing `ver` field"
-                ));
-            },
+            match UuidV7::try_from(value) {
+                Ok(uuid) => id = Some(uuid),
+                Err(e) => errors.push(anyhow!("Document `id` is invalid: {e}")),
+            }
+        } else {
+            errors.push(anyhow!("Invalid COSE protected header, missing `id` field"));
         }
 
-        match AdditionalFields::try_from(protected) {
-            Ok(extra) => metadata.extra = extra,
-            Err(e) => errors.extend(e),
-        };
-
-        if errors.is_empty() {
-            Ok(metadata)
+        let mut ver = None;
+        if let Some(value) = cose_protected_header_find(protected, |key| {
+            key == &coset::Label::Text("ver".to_string())
+        }) {
+            match UuidV7::try_from(value) {
+                Ok(uuid) => ver = Some(uuid),
+                Err(e) => errors.push(anyhow!("Document `ver` is invalid: {e}")),
+            }
         } else {
-            Err(errors.into())
+            errors.push(anyhow!(
+                "Invalid COSE protected header, missing `ver` field"
+            ));
+        }
+
+        let extra = AdditionalFields::try_from(protected).map_or_else(
+            |e| {
+                errors.extend(e);
+                None
+            },
+            Some,
+        );
+
+        match (content_type, content_encoding, id, doc_type, ver, extra) {
+            (
+                Some(content_type),
+                content_encoding,
+                Some(id),
+                Some(doc_type),
+                Some(ver),
+                Some(extra),
+            ) => {
+                if ver < id {
+                    errors.push(anyhow!(
+                        "Document Version {ver} cannot be smaller than Document ID {id}",
+                    ));
+                    return Err(crate::error::Error(errors));
+                }
+
+                Ok(Self {
+                    doc_type: doc_type.into(),
+                    id: id.into(),
+                    ver: ver.into(),
+                    content_encoding,
+                    content_type,
+                    extra,
+                })
+            },
+            _ => Err(crate::error::Error(errors)),
         }
     }
 }

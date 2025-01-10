@@ -9,11 +9,6 @@ use super::UuidV7;
 pub struct DocumentId(UuidV7);
 
 impl DocumentId {
-    /// Generates a zeroed out `UUIDv7` that can never be valid.
-    pub fn invalid() -> Self {
-        Self(UuidV7::invalid())
-    }
-
     /// Returns the `uuid::Uuid` type.
     #[must_use]
     pub fn uuid(&self) -> uuid::Uuid {

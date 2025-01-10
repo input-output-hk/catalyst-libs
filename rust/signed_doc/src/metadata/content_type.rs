@@ -17,12 +17,6 @@ pub enum ContentType {
     Json,
 }
 
-impl Default for ContentType {
-    fn default() -> Self {
-        Self::Json
-    }
-}
-
 impl Display for ContentType {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
