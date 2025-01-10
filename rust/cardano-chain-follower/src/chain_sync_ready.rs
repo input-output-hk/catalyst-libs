@@ -39,13 +39,13 @@ impl SyncReady {
 
 /// Sand a chain update to any subscribers that are listening.
 pub(crate) fn notify_follower(
-    network: Network, update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
+    chain: Network, update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
     kind: &chain_update::Kind,
 ) {
     if let Some(update_sender) = update_sender {
         if let Err(error) = update_sender.send(kind.clone()) {
             error!(
-                network = network.to_string(),
+                chain = chain.to_string(),
                 "Failed to broadcast the Update {kind} : {error}"
             );
         }
@@ -84,14 +84,14 @@ static SYNC_READY: LazyLock<DashMap<Network, RwLock<SyncReady>>> = LazyLock::new
 
 /// Write Lock the `SYNC_READY` lock for a network.
 /// When we are signaled to be ready, set it to true and release the lock.
-pub(crate) fn wait_for_sync_ready(network: Network) -> SyncReadyWaiter {
+pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
     let (tx, rx) = oneshot::channel::<()>();
 
     tokio::spawn(async move {
         // We are safe to use `expect` here because the SYNC_READY list is exhaustively
         // initialized. Its a Serious BUG if that not True, so panic is OK.
         #[allow(clippy::expect_used)]
-        let lock_entry = SYNC_READY.get(&network).expect("network should exist");
+        let lock_entry = SYNC_READY.get(&chain).expect("network should exist");
 
         let lock = lock_entry.value();
 
@@ -109,11 +109,11 @@ pub(crate) fn wait_for_sync_ready(network: Network) -> SyncReadyWaiter {
 }
 
 /// Get a Read lock on the Sync State, and return if we are ready or not.
-async fn check_sync_ready(network: Network) -> bool {
+async fn check_sync_ready(chain: Network) -> bool {
     // We are safe to use `expect` here because the SYNC_READY list is exhaustively
     // initialized. Its a Serious BUG if that not True, so panic is OK.
     #[allow(clippy::expect_used)]
-    let lock_entry = SYNC_READY.get(&network).expect("network should exist");
+    let lock_entry = SYNC_READY.get(&chain).expect("network should exist");
     let lock = lock_entry.value();
 
     let status = lock.read().await;
@@ -128,22 +128,22 @@ const SYNC_READY_RACE_BACKOFF_SECS: u64 = 1;
 /// Block until the chain is synced to TIP.
 /// This is necessary to ensure the Blockchain data is fully intact before attempting to
 /// consume it.
-pub(crate) async fn block_until_sync_ready(network: Network) {
+pub(crate) async fn block_until_sync_ready(chain: Network) {
     // There is a potential race where we haven't yet write locked the SYNC_READY lock when we
     // check it. So, IF the ready state returns as false, sleep a while and try again.
-    while !check_sync_ready(network).await {
+    while !check_sync_ready(chain).await {
         sleep(Duration::from_secs(SYNC_READY_RACE_BACKOFF_SECS)).await;
     }
 }
 
 /// Get the Broadcast Receive queue for the given chain updates.
 pub(crate) async fn get_chain_update_rx_queue(
-    network: Network,
+    chain: Network,
 ) -> broadcast::Receiver<chain_update::Kind> {
     // We are safe to use `expect` here because the SYNC_READY list is exhaustively
     // initialized. Its a Serious BUG if that not True, so panic is OK.
     #[allow(clippy::expect_used)]
-    let lock_entry = SYNC_READY.get(&network).expect("network should exist");
+    let lock_entry = SYNC_READY.get(&chain).expect("network should exist");
 
     let lock = lock_entry.value();
 
@@ -154,12 +154,12 @@ pub(crate) async fn get_chain_update_rx_queue(
 
 /// Get the Broadcast Transmit queue for the given chain updates.
 pub(crate) async fn get_chain_update_tx_queue(
-    network: Network,
+    chain: Network,
 ) -> Option<broadcast::Sender<chain_update::Kind>> {
     // We are safe to use `expect` here because the SYNC_READY list is exhaustively
     // initialized. Its a Serious BUG if that not True, so panic is OK.
     #[allow(clippy::expect_used)]
-    let lock_entry = SYNC_READY.get(&network).expect("network should exist");
+    let lock_entry = SYNC_READY.get(&chain).expect("network should exist");
 
     let lock = lock_entry.value();
 

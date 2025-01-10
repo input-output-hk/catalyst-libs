@@ -21,7 +21,7 @@ pub enum Error {
     /// Chainsync protocol error.
     #[error("Chainsync error: {0:?}")]
     Chainsync(chainsync::ClientError),
-    /// Backfill Sync error.
+    /// Backfill Synch error.
     #[error("Backfill Sync error: {0}")]
     BackfillSync(String),
     /// Live Sync error.

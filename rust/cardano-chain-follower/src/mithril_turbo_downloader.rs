@@ -99,7 +99,7 @@ impl Inner {
         };
 
         let tmp_dir = self.cfg.tmp_path();
-        let latest_snapshot = latest_mithril_snapshot_data(self.cfg.network);
+        let latest_snapshot = latest_mithril_snapshot_data(self.cfg.chain);
 
         for entry in entries {
             let mut entry = match entry {
@@ -164,13 +164,13 @@ impl Inner {
                 }
 
                 if let Err(error) = std::fs::write(&abs_file, buf) {
-                    error!(network = %self.cfg.network, "Failed to write file {} got {}", abs_file.display(), error);
+                    error!(chain = %self.cfg.chain, "Failed to write file {} got {}", abs_file.display(), error);
                     bail!("Failed to write file {} got {}", abs_file.display(), error);
                 }
             } else {
                 // No dedup, just extract it into the tmp directory as-is.
                 entry.unpack_in(&tmp_dir)?;
-                debug!(network = %self.cfg.network, "DeDup: Extracted file {rel_file:?}:{entry_size}");
+                debug!(chain = %self.cfg.chain, "DeDup: Extracted file {rel_file:?}:{entry_size}");
             }
             new_file!(self, rel_file, abs_file, entry_size);
         }
@@ -179,9 +179,9 @@ impl Inner {
             bail!("Failed to get the Parallel Download processor!");
         };
 
-        debug!(network = %self.cfg.network, "Download {} bytes", dl_handler.dl_size());
+        debug!(chain = %self.cfg.chain, "Download {} bytes", dl_handler.dl_size());
 
-        stats::mithril_dl_finished(self.cfg.network, Some(dl_handler.dl_size()));
+        stats::mithril_dl_finished(self.cfg.chain, Some(dl_handler.dl_size()));
 
         Ok(())
     }
@@ -205,7 +205,7 @@ impl Inner {
     /// Check if we are supposed to extract this file from the archive or not.
     fn check_for_extract(&self, path: &Path, extract_type: EntryType) -> bool {
         if path.is_absolute() {
-            error!(network = %self.cfg.network, "DeDup : Cannot extract an absolute path:  {:?}", path);
+            error!(chain = %self.cfg.chain, "DeDup : Cannot extract an absolute path:  {:?}", path);
             return false;
         }
 
@@ -215,7 +215,7 @@ impl Inner {
         }
 
         if !extract_type.is_file() {
-            error!(network  = %self.cfg.network, "DeDup : Cannot extract a non-file: {:?}:{:?}", path, extract_type);
+            error!(chain  = %self.cfg.chain, "DeDup : Cannot extract a non-file: {:?}:{:?}", path, extract_type);
             return false;
         }
 
@@ -308,7 +308,7 @@ impl MithrilTurboDownloader {
             return result;
         }
 
-        stats::mithril_dl_finished(self.inner.cfg.network, None);
+        stats::mithril_dl_finished(self.inner.cfg.chain, None);
         bail!("Download and Dedup task failed");
     }
 }
@@ -351,7 +351,7 @@ impl SnapshotDownloader for MithrilTurboDownloader {
         let new_files = self.inner.new_files.load(Ordering::SeqCst);
 
         stats::mithril_extract_finished(
-            self.inner.cfg.network,
+            self.inner.cfg.chain,
             Some(self.inner.ext_size.load(Ordering::SeqCst)),
             self.inner.dedup_size.load(Ordering::SeqCst),
             tot_files - (chg_files + new_files),
@@ -371,10 +371,10 @@ impl SnapshotDownloader for MithrilTurboDownloader {
         let dl_processor = ParallelDownloadProcessor::new(location, dl_config).await?;
 
         // Decompress and extract and de-dupe each file in the archive.
-        stats::mithril_extract_started(self.inner.cfg.network);
+        stats::mithril_extract_started(self.inner.cfg.chain);
 
         // We also immediately start downloading now.
-        stats::mithril_dl_started(self.inner.cfg.network);
+        stats::mithril_dl_started(self.inner.cfg.chain);
 
         // Save the DownloadProcessor in the inner struct for use to process the downloaded data.
         if let Err(_error) = self.inner.dl_handler.set(dl_processor) {

@@ -114,7 +114,7 @@ async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Bo
     cfg.mithril_cfg = cfg.mithril_cfg.with_dl_config(dl_config);
 
     info!(
-        network = cfg.network.to_string(),
+        chain = cfg.chain.to_string(),
         mithril_sync_dl_workers = mithril_dl_workers,
         mithril_sync_dl_chunk_size = mithril_dl_chunk_size,
         mithril_sync_dl_queue_ahead = mithril_dl_queue_ahead,
@@ -137,27 +137,27 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 /// Try and follow a chain continuously, from Genesis until Tip.
 #[allow(clippy::too_many_lines)]
 async fn follow_for(network: Network, matches: ArgMatches) {
-    info!(network = network.to_string(), "Following");
+    info!(chain = network.to_string(), "Following");
     let mut follower = ChainFollower::new(network, Point::ORIGIN, Point::TIP).await;
 
-    let is_all_tip_blocks = matches.get_flag("all-tip-blocks");
-    let is_all_live_blocks = matches.get_flag("all-live-blocks");
-    let is_stop_at_tip = matches.get_flag("stop-at-tip");
-    let is_halt_on_error = matches.get_flag("halt-on-error");
-    let is_log_raw_aux = matches.get_flag("log-raw-aux");
+    let all_tip_blocks = matches.get_flag("all-tip-blocks");
+    let all_live_blocks = matches.get_flag("all-live-blocks");
+    let stop_at_tip = matches.get_flag("stop-at-tip");
+    let halt_on_error = matches.get_flag("halt-on-error");
+    let log_raw_aux = matches.get_flag("log-raw-aux");
 
     // Metadata
-    let is_log_bad_cip36 = matches.get_flag("log-bad-cip36");
+    let log_bad_cip36 = matches.get_flag("log-bad-cip36");
 
     let mut current_era = String::new();
     let mut last_update: Option<ChainUpdate> = None;
-    let mut is_last_update_shown = false;
+    let mut last_update_shown = false;
     let mut prev_hash: Option<pallas_crypto::hash::Hash<32>> = None;
-    let mut is_last_immutable: bool = false;
-    let mut is_reached_tip = false; // After we reach TIP we show all block we process.
+    let mut last_immutable: bool = false;
+    let mut reached_tip = false; // After we reach TIP we show all block we process.
     let mut updates: u64 = 0;
     let mut last_fork: Fork = 0.into();
-    let mut is_follow_all = false;
+    let mut follow_all = false;
 
     let mut last_metrics_time = Instant::now();
 
@@ -165,7 +165,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         updates += 1;
 
         if chain_update.tip {
-            is_reached_tip = true;
+            reached_tip = true;
         }
 
         let block = chain_update.block_data().decode();
@@ -173,13 +173,13 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
         // When we transition between important points, show the last block as well.
         if ((current_era != this_era)
-            || (chain_update.is_immutable() != is_last_immutable)
+            || (chain_update.immutable() != last_immutable)
             || (last_fork != chain_update.data.fork()))
-            && !is_last_update_shown
+            && !last_update_shown
         {
             if let Some(last_update) = last_update.clone() {
                 info!(
-                    network = network.to_string(),
+                    chain = network.to_string(),
                     "Chain Update {}:{}",
                     updates - 1,
                     last_update
@@ -188,29 +188,29 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         }
 
         // If these become true, we will show all blocks from the follower.
-        is_follow_all = is_follow_all
-            || (!chain_update.is_immutable() && is_all_live_blocks)
-            || ((chain_update.data.fork() > 1.into()) && is_all_tip_blocks);
+        follow_all = follow_all
+            || (!chain_update.immutable() && all_live_blocks)
+            || ((chain_update.data.fork() > 1.into()) && all_tip_blocks);
 
         // Don't know if this update will show or not, so say it didn't.
-        is_last_update_shown = false;
+        last_update_shown = false;
 
         if (current_era != this_era)
-            || (chain_update.is_immutable() != is_last_immutable)
-            || is_reached_tip
-            || is_follow_all
+            || (chain_update.immutable() != last_immutable)
+            || reached_tip
+            || follow_all
             || (updates % RUNNING_UPDATE_INTERVAL == 0)
             || (last_fork != chain_update.data.fork())
         {
             current_era = this_era;
-            is_last_immutable = chain_update.is_immutable();
+            last_immutable = chain_update.immutable();
             last_fork = chain_update.data.fork();
             info!(
-                network = network.to_string(),
+                chain = network.to_string(),
                 "Chain Update {updates}:{}", chain_update
             );
             // We already showed the last update, no need to show it again.
-            is_last_update_shown = true;
+            last_update_shown = true;
         }
 
         let this_prev_hash = block.header().previous_hash();
@@ -226,26 +226,26 @@ async fn follow_for(network: Network, matches: ArgMatches) {
                 "This Can't Happen".to_string()
             };
             error!(
-                network = network.to_string(),
+                chain = network.to_string(),
                 "Chain is broken: {chain_update} Does not follow: {display_last_update}",
             );
             break;
         }
 
-        if is_log_raw_aux {
+        if log_raw_aux {
             if let Some(x) = block.as_alonzo() {
                 info!(
-                    network = network.to_string(),
+                    chain = network.to_string(),
                     "Raw Aux Data: {:02x?}", x.auxiliary_data_set
                 );
             } else if let Some(x) = block.as_babbage() {
                 info!(
-                    network = network.to_string(),
+                    chain = network.to_string(),
                     "Raw Aux Data: {:02x?}", x.auxiliary_data_set
                 );
             } else if let Some(x) = block.as_conway() {
                 info!(
-                    network = network.to_string(),
+                    chain = network.to_string(),
                     "Raw Aux Data: {:02x?}", x.auxiliary_data_set
                 );
             }
@@ -253,7 +253,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
         // Illustrate how the chain-follower works with metadata.
         // Log bad CIP36.
-        if is_log_bad_cip36 {
+        if log_bad_cip36 {
             log_bad_cip36_info(chain_update.block_data(), network);
         }
         // TODO - Add CIP509 example.
@@ -261,7 +261,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         prev_hash = Some(block.hash());
         last_update = Some(chain_update);
 
-        if is_reached_tip && is_stop_at_tip {
+        if reached_tip && stop_at_tip {
             break;
         }
 
@@ -273,7 +273,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
             info!("Json Metrics:  {}", stats.as_json(true));
 
-            if is_halt_on_error
+            if halt_on_error
                 && (stats.mithril.download_or_validation_failed > 0
                     || stats.mithril.failed_to_get_tip > 0
                     || stats.mithril.tip_did_not_advance > 0
@@ -285,19 +285,16 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         }
     }
 
-    if !is_last_update_shown {
+    if !last_update_shown {
         if let Some(last_update) = last_update.clone() {
-            info!(
-                network = network.to_string(),
-                "Last Update: {}", last_update
-            );
+            info!(chain = network.to_string(), "Last Update: {}", last_update);
         }
     }
 
     let stats = Statistics::new(network);
     info!("Json Metrics:  {}", stats.as_json(true));
 
-    info!(network = network.to_string(), "Following Completed.");
+    info!(chain = network.to_string(), "Following Completed.");
 }
 
 /// Function for logging bad CIP36.

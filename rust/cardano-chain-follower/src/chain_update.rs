@@ -42,7 +42,7 @@ impl ChainUpdate {
 
     /// Is the chain update immutable?
     #[must_use]
-    pub fn is_immutable(&self) -> bool {
+    pub fn immutable(&self) -> bool {
         self.data.is_immutable()
     }
 }

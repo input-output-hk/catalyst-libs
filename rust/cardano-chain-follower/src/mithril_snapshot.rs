@@ -21,13 +21,13 @@ use crate::{
 #[derive(Clone)]
 pub(crate) struct MithrilSnapshot {
     /// Network that this snapshot is configured for
-    network: Network,
+    chain: Network,
 }
 
 impl MithrilSnapshot {
     /// Create a new Mithril Snapshot handler
-    pub(crate) fn new(network: Network) -> Self {
-        Self { network }
+    pub(crate) fn new(chain: Network) -> Self {
+        Self { chain }
     }
 
     /// Checks if the snapshot contains a given point.
@@ -40,7 +40,7 @@ impl MithrilSnapshot {
     /// Returns true if the point exists within the Mithril snapshot for the specified
     /// network, false otherwise.
     pub(crate) fn contains_point(&self, point: &Point) -> bool {
-        let latest_id = latest_mithril_snapshot_id(self.network);
+        let latest_id = latest_mithril_snapshot_id(self.chain);
 
         point.slot_or_default() <= latest_id.tip().slot_or_default()
     }
@@ -61,7 +61,7 @@ impl MithrilSnapshot {
     pub(crate) async fn try_read_blocks_from_point(
         &self, point: &Point,
     ) -> Option<MithrilSnapshotIterator> {
-        let snapshot_id = latest_mithril_snapshot_id(self.network);
+        let snapshot_id = latest_mithril_snapshot_id(self.chain);
         let snapshot_path = snapshot_id.immutable_path();
 
         // Quick check if the block can be within the immutable data.
@@ -70,7 +70,7 @@ impl MithrilSnapshot {
         }
 
         // We don't know the previous block, so we need to find it.
-        MithrilSnapshotIterator::new(self.network, &snapshot_path, point, None)
+        MithrilSnapshotIterator::new(self.chain, &snapshot_path, point, None)
             .await
             .ok()
     }
