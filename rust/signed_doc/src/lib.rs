@@ -7,7 +7,7 @@ use std::{
 
 use anyhow::anyhow;
 use content::Content;
-use coset::{CborSerializable, CoseSignature};
+use coset::CborSerializable;
 
 mod content;
 mod error;
@@ -24,6 +24,8 @@ struct InnerCatalystSignedDocument {
     metadata: Metadata,
     /// Document Content
     content: Content,
+    /// Document Author
+    author: KidUri,
     /// Signatures
     signatures: Signatures,
 }
@@ -56,48 +58,54 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
         let cose_sign = coset::CoseSign::from_slice(cose_bytes)
             .map_err(|e| vec![anyhow::anyhow!("Invalid COSE Sign document: {e}")])?;
 
-        let metadata = Metadata::try_from(&cose_sign.protected)?;
-
         let mut errors = Vec::new();
 
-        let mut signatures = Signatures::default();
-        match Signatures::try_from(&cose_sign.signatures) {
-            Ok(s) => signatures = s,
-            Err(sign_errors) => {
-                for e in sign_errors.errors() {
-                    errors.push(anyhow!("{e}"));
-                }
+        let metadata = Metadata::try_from(&cose_sign.protected).map_or_else(
+            |e| {
+                errors.extend(e.0);
+                None
             },
+            Some,
+        );
+        let signatures = Signatures::try_from(&cose_sign.signatures).map_or_else(
+            |e| {
+                errors.extend(e.0);
+                None
+            },
+            Some,
+        );
+        let author = signatures.as_ref().and_then(|s| s.kids().first().cloned());
+
+        if cose_sign.payload.is_none() {
+            errors.push(anyhow!("Document Content is missing"));
+        }
+        if author.is_none() {
+            errors.push(anyhow!("Document Author is missing"));
         }
 
-        if let Some(payload) = cose_sign.payload {
-            match Content::new(
-                payload,
-                metadata.content_type(),
-                metadata.content_encoding(),
-            ) {
-                Ok(content) => {
-                    if !errors.is_empty() {
-                        return Err(error::Error(errors));
-                    }
+        match (cose_sign.payload, author, metadata, signatures) {
+            (Some(payload), Some(author), Some(metadata), Some(signatures)) => {
+                let content = Content::new(
+                    payload,
+                    metadata.content_type(),
+                    metadata.content_encoding(),
+                )
+                .map_err(|e| {
+                    errors.push(anyhow!("Invalid Document Content: {e}"));
+                    errors
+                })?;
 
-                    Ok(CatalystSignedDocument {
-                        inner: InnerCatalystSignedDocument {
-                            metadata,
-                            content,
-                            signatures,
-                        }
-                        .into(),
-                    })
-                },
-                Err(e) => {
-                    errors.push(anyhow::anyhow!("Invalid Document Content: {e}"));
-                    Err(error::Error(errors))
-                },
-            }
-        } else {
-            errors.push(anyhow!("Document content is missing"));
-            Err(error::Error(errors))
+                Ok(CatalystSignedDocument {
+                    inner: InnerCatalystSignedDocument {
+                        metadata,
+                        content,
+                        author,
+                        signatures,
+                    }
+                    .into(),
+                })
+            },
+            _ => Err(error::Error(errors)),
         }
     }
 }
@@ -129,15 +137,9 @@ impl CatalystSignedDocument {
         &self.inner.content
     }
 
-    /// Return a list of signature KIDs.
+    /// Return a Document's author
     #[must_use]
-    pub fn signature_kids(&self) -> Vec<KidUri> {
-        self.inner.signatures.kids()
-    }
-
-    /// Return a list of signatures.
-    #[must_use]
-    pub fn signatures(&self) -> Vec<CoseSignature> {
-        self.inner.signatures.signatures()
+    pub fn author(&self) -> KidUri {
+        self.inner.author.clone()
     }
 }

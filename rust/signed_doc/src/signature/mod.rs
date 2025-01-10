@@ -13,7 +13,6 @@ pub struct Signature {
 }
 
 /// List of Signatures.
-#[derive(Default)]
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
@@ -23,6 +22,7 @@ impl Signatures {
     }
 
     /// List of signatures.
+    #[allow(dead_code)]
     pub fn signatures(&self) -> Vec<CoseSignature> {
         self.0.iter().map(|sig| sig.signature.clone()).collect()
     }
