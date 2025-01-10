@@ -6,6 +6,8 @@
 //!
 //! Note: This fork terminology is different from fork in blockchain.
 
+use std::fmt;
+
 use crate::conversion::from_saturating;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd)]
@@ -13,6 +15,13 @@ use crate::conversion::from_saturating;
 pub struct Fork(u64);
 
 impl Fork {
+    /// Fork for immutable data. This indicates that there is no roll-back.
+    pub const IMMUTABLE: Self = Self(0);
+    /// Fork for data that read from the blockchain during a backfill on initial sync
+    pub const BACKFILL: Self = Self(1);
+    /// Fork count for the first live block.
+    pub const FIRST_LIVE: Self = Self(2);
+
     /// Convert an `<T>` to `Fork` (saturate if out of range).
     pub fn from_saturating<
         T: Copy
@@ -35,6 +44,17 @@ impl Fork {
     /// Decrement the fork count.
     pub fn decr(&mut self) {
         self.0 = self.0.saturating_sub(1);
+    }
+}
+
+impl fmt::Display for Fork {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            0 => write!(f, "IMMUTABLE"),
+            1 => write!(f, "BACKFILL"),
+            // For live forks: 2 maps to LIVE:1, 3 maps to LIVE:2 etc.
+            2..=u64::MAX => write!(f, "LIVE:{}", self.0 - 1),
+        }
     }
 }
 
