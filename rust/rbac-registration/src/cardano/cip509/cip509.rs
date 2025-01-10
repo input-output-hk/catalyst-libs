@@ -5,14 +5,17 @@
 use anyhow::anyhow;
 use cardano_blockchain_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
-    MultiEraBlock, Slot, TxnIndex,
+    Slot, TxnIndex,
 };
 use catalyst_types::problem_report::ProblemReport;
 use minicbor::{
     decode::{self},
     Decode, Decoder,
 };
-use pallas::{codec::utils::Nullable, ledger::traverse::MultiEraTx};
+use pallas::{
+    codec::utils::Nullable,
+    ledger::traverse::{MultiEraBlock, MultiEraTx},
+};
 use strum_macros::FromRepr;
 use tracing::warn;
 use uuid::Uuid;
@@ -100,7 +103,6 @@ impl Cip509 {
     /// the `Cip509` structure contains fully or partially decoded data.
     pub fn new(block: &MultiEraBlock, index: TxnIndex) -> Result<Option<Self>, anyhow::Error> {
         // Find the transaction and decode the relevant data.
-        let block = block.decode();
         let transactions = block.txs();
         let transaction = transactions.get(usize::from(index)).ok_or_else(|| {
             anyhow!(
@@ -168,8 +170,7 @@ impl Cip509 {
     pub fn from_block(block: &MultiEraBlock) -> Vec<Self> {
         let mut result = Vec::new();
 
-        let decoded_block = block.decode();
-        for index in 0..decoded_block.tx_count() {
+        for index in 0..block.tx_count() {
             let index = TxnIndex::from(index);
             match Self::new(block, index) {
                 Ok(Some(v)) => result.push(v),
@@ -178,7 +179,7 @@ impl Cip509 {
                 Err(e) => {
                     warn!(
                         "Unable to extract Cip509 from the {} block {index:?} transaction: {e:?}",
-                        decoded_block.slot()
+                        block.slot()
                     );
                 },
             }
@@ -236,8 +237,13 @@ impl Cip509 {
         (self.slot, self.transaction_index)
     }
 
+    /// Returns URIs contained in both x509 and c509 certificates of `Cip509` metadata.
     pub fn certificate_uris(&self) -> Option<&Cip0134UriSet> {
         self.metadata.as_ref().map(|m| &m.certificate_uris)
+    }
+
+    pub fn txn_inputs_hash(&self) -> Option<&TxInputHash> {
+        self.txn_inputs_hash.as_ref()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
@@ -459,5 +465,32 @@ fn decode_validation_signature(
             );
             None
         },
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn new() {
+        let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
+            .expect("Failed to decode hex block.");
+        let block = MultiEraBlock::decode(&block).unwrap();
+        let index = TxnIndex::from(3);
+        let res = Cip509::new(&block, index)
+            .expect("Failed to get Cip509")
+            .expect("There must be Cip509 in block");
+        assert!(!res.report.is_problematic());
+    }
+
+    #[test]
+    fn from_block() {
+        let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
+            .expect("Failed to decode hex block.");
+        let block = MultiEraBlock::decode(&block).unwrap();
+        let res = Cip509::from_block(&block);
+        assert_eq!(1, res.len());
+        assert!(!res.first().unwrap().report.is_problematic());
     }
 }
