@@ -1,6 +1,7 @@
 //! Certificates for the RBAC metadata.
 
 use c509_certificate::c509::C509;
+use catalyst_types::problem_report::ProblemReport;
 use minicbor::{decode, Decode, Decoder};
 use x509_cert::{der::Decode as x509Decode, Certificate};
 
@@ -21,8 +22,8 @@ pub enum X509DerCert {
     X509Cert(Box<Certificate>),
 }
 
-impl Decode<'_, ()> for X509DerCert {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for X509DerCert {
+    fn decode(d: &mut Decoder, _report: &mut ProblemReport) -> Result<Self, decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "X509DerCert")?;
@@ -60,8 +61,8 @@ pub enum C509Cert {
     C509Certificate(Box<C509>),
 }
 
-impl Decode<'_, ()> for C509Cert {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for C509Cert {
+    fn decode(d: &mut Decoder, _report: &mut ProblemReport) -> Result<Self, decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "C509Cert")?;
@@ -75,7 +76,7 @@ impl Decode<'_, ()> for C509Cert {
                 // C509CertInMetadatumReference must have 3 items
                 if arr_len == 3 {
                     Ok(Self::C509CertInMetadatumReference(
-                        C509CertInMetadatumReference::decode(d, ctx)?,
+                        C509CertInMetadatumReference::decode(d, &mut ())?,
                     ))
                 } else {
                     Err(decode::Error::message(
@@ -88,7 +89,7 @@ impl Decode<'_, ()> for C509Cert {
                 let mut c509_d = Decoder::new(&c509);
                 Ok(Self::C509Certificate(Box::new(C509::decode(
                     &mut c509_d,
-                    ctx,
+                    &mut (),
                 )?)))
             },
             minicbor::data::Type::Undefined => Ok(Self::Undefined),

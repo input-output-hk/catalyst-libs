@@ -282,7 +282,7 @@ mod tests {
         let block = MultiEraBlock::decode(&block).unwrap();
         let tx = &block.txs()[3];
         let cip509 = cip509(tx);
-        let set = cip509.metadata.unwrap().certificate_uris;
+        let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
 

@@ -4,7 +4,7 @@
 
 pub mod role_data;
 
-pub use certs::{C509Cert, C509CertInMetadatumReference, X509DerCert};
+pub use certs::{C509Cert, X509DerCert};
 pub use metadata::{Cip509RbacMetadata, Cip509RbacMetadataInt};
 pub use pub_key::SimplePublicKeyType;
 pub use role_data::RoleData;

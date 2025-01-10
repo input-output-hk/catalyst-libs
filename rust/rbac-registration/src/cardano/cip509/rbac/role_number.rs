@@ -6,7 +6,7 @@ pub struct RoleNumber(u8);
 
 impl RoleNumber {
     /// A number of the `Role0` role.
-    const Role0: Self = RoleNumber(0);
+    pub const Role0: Self = RoleNumber(0);
 }
 
 impl From<u8> for RoleNumber {

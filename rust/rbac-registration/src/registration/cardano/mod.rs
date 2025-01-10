@@ -26,11 +26,7 @@ use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::{
     cardano::cip509::{
-        self,
-        rbac::{C509Cert, SimplePublicKeyType, X509DerCert},
-        types::CertKeyHash,
-        utils::Cip0134UriSet,
-        Cip509, Cip509Validation,
+        C509Cert, CertKeyHash, Cip0134UriSet, Cip509, SimplePublicKeyType, X509DerCert,
     },
     utils::general::decremented_index,
 };
@@ -296,15 +292,6 @@ impl RegistrationChainInner {
     }
 }
 
-/// Check if the CIP509 is valid.
-fn is_valid_cip509(validation_data: &Cip509Validation) -> bool {
-    validation_data.is_valid_aux
-        && validation_data.is_valid_txn_inputs_hash
-        && validation_data.is_valid_stake_public_key
-        && validation_data.is_valid_payment_key
-        && validation_data.is_valid_signing_key
-}
-
 /// Process x509 certificate for chain root.
 fn chain_root_x509_certs(
     x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxIdx,
@@ -435,7 +422,7 @@ fn revocations_list(
 
 /// Process the role data for chain root.
 fn chain_root_role_data(
-    role_set: Vec<cip509::rbac::role_data::RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
+    role_set: Vec<role_data::RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<HashMap<u8, (PointTxIdx, RoleData)>> {
     let mut role_data_map = HashMap::new();
     for role_data in role_set {
@@ -464,8 +451,8 @@ fn chain_root_role_data(
 
 /// Update the role data in the registration chain.
 fn update_role_data(
-    inner: &mut RegistrationChainInner, role_set: Vec<cip509::rbac::role_data::RoleData>,
-    txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
+    inner: &mut RegistrationChainInner, role_set: Vec<RoleData>, txn: &MultiEraTx,
+    point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<()> {
     for role_data in role_set {
         // If there is new role singing key, use it, else use the old one

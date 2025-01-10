@@ -77,7 +77,7 @@ pub enum Cip509RbacMetadataInt {
 
 impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
     fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
-        let context = "Cip509RbacMetadata";
+        let context = "Decoding Cip509RbacMetadata";
         let map_len = decode_map_len(d, context)?;
 
         let mut found_keys = Vec::new();
@@ -124,7 +124,7 @@ impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
                 }
             } else {
                 if !(FIRST_PURPOSE_KEY..=LAST_PURPOSE_KEY).contains(&key) {
-                    report.other(&format!("Invalid purpose key set, should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}"), context);
+                    report.other(&format!("Invalid purpose key set ({key}), should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}"), context);
                     continue;
                 }
 
@@ -154,8 +154,8 @@ impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
 }
 
 /// Decodes an array of type T.
-fn decode_array<'b, T>(d: &mut Decoder<'b>, context: &str, report: &ProblemReport) -> Vec<T>
-where T: Decode<'b, ()> {
+fn decode_array<'b, T>(d: &mut Decoder<'b>, context: &str, report: &mut ProblemReport) -> Vec<T>
+where T: Decode<'b, ProblemReport> {
     let len = match decode_array_len(d, context) {
         Ok(v) => v,
         Err(e) => {
@@ -173,7 +173,7 @@ where T: Decode<'b, ()> {
 
     let mut result = Vec::with_capacity(len);
     for _ in 0..len {
-        match T::decode(d, &mut ()) {
+        match T::decode(d, report) {
             Ok(v) => result.push(v),
             Err(e) => {
                 report.other(&format!("Unable to decode array value: {e:?}"), context);

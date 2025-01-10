@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use pallas::ledger::addresses::ShelleyAddress;
 
-use crate::cardano::cip509::rbac::role_data::KeyLocalRef;
+use crate::cardano::cip509::role_data::KeyLocalRef;
 
 /// Role data
 #[derive(Clone)]

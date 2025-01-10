@@ -2,12 +2,15 @@
 
 use std::collections::HashMap;
 
+use catalyst_types::problem_report::ProblemReport;
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
 use crate::{
     cardano::cip509::rbac::{Cip509RbacMetadataInt, RoleNumber},
-    utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len},
+    utils::decode_helper::{
+        decode_any, decode_array_len, decode_helper, decode_map_len, report_duplicated_key,
+    },
 };
 
 /// Role data as it encoded in CBOR.
@@ -31,7 +34,7 @@ const LAST_ROLE_EXT_KEY: u8 = 99;
 
 /// Enum of role data with its associated unsigned integer value.
 #[allow(clippy::module_name_repetitions)]
-#[derive(FromRepr, Debug, PartialEq)]
+#[derive(FromRepr, Debug, PartialEq, Copy, Clone)]
 #[repr(u8)]
 pub enum RoleDataInt {
     /// Role number.
@@ -52,33 +55,75 @@ pub struct RoleNumberAndData {
     pub data: RoleData,
 }
 
-impl Decode<'_, ()> for RoleNumberAndData {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for RoleNumberAndData {
+    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+        let context = "Decoding role data";
         let map_len = decode_map_len(d, "RoleData")?;
+
+        let mut found_keys = Vec::new();
+
         let mut data = RoleData::default();
         let mut number: u8 = 0;
-        for _ in 0..map_len {
-            let key: u8 = decode_helper(d, "key in RoleData", ctx)?;
+
+        for index in 0..map_len {
+            let key: u8 = decode_helper(d, "key in RoleData", &mut ())?;
             if let Some(key) = RoleDataInt::from_repr(key) {
+                if report_duplicated_key(&found_keys, &key, index, context, report) {
+                    continue;
+                }
+                found_keys.push(key);
+
                 match key {
                     RoleDataInt::RoleNumber => {
-                        number = decode_helper(d, "RoleNumber in RoleData", ctx)?;
+                        match decode_helper(d, "RoleNumber in RoleData", &mut ()) {
+                            Ok(v) => number = v,
+                            Err(e) => {
+                                report
+                                    .other(&format!("Unable to decode role number: {e:?}"), context)
+                            },
+                        }
                     },
                     RoleDataInt::RoleSigningKey => {
-                        decode_array_len(d, "RoleSigningKey")?;
-                        data.role_signing_key = Some(KeyLocalRef::decode(d, ctx)?);
+                        if let Err(e) = decode_array_len(d, "RoleSigningKey") {
+                            report.other(&format!("{e:?}"), context);
+                            continue;
+                        }
+
+                        match KeyLocalRef::decode(d, &mut ()) {
+                            Ok(v) => data.role_signing_key = Some(v),
+                            Err(e) => {
+                                report.other(
+                                    &format!("Unable to decode role signing key: {e:?}"),
+                                    context,
+                                );
+                            },
+                        }
                     },
                     RoleDataInt::RoleEncryptionKey => {
-                        decode_array_len(d, "RoleEncryptionKey")?;
-                        data.role_encryption_key = Some(KeyLocalRef::decode(d, ctx)?);
+                        if let Err(e) = decode_array_len(d, "RoleEncryptionKey") {
+                            report.other(&format!("{e:?}"), context);
+                            continue;
+                        }
+
+                        match KeyLocalRef::decode(d, &mut ()) {
+                            Ok(v) => data.role_encryption_key = Some(v),
+                            Err(e) => {
+                                report.other(
+                                    &format!("Unable to decode role encryption key: {e:?}"),
+                                    context,
+                                );
+                            },
+                        }
                     },
                     RoleDataInt::PaymentKey => {
-                        data.payment_key = Some(decode_helper(d, "PaymentKey in RoleData", ctx)?);
+                        data.payment_key =
+                            Some(decode_helper(d, "PaymentKey in RoleData", &mut ())?);
                     },
                 }
             } else {
                 if !(FIRST_ROLE_EXT_KEY..=LAST_ROLE_EXT_KEY).contains(&key) {
-                    return Err(decode::Error::message(format!("Invalid role extended data key, should be with the range {FIRST_ROLE_EXT_KEY} - {LAST_ROLE_EXT_KEY}")));
+                    report.other(&format!("Invalid role extended data key ({key}), should be with the range {FIRST_ROLE_EXT_KEY} - {LAST_ROLE_EXT_KEY}"), context);
+                    continue;
                 }
                 data.role_extended_data_keys
                     .insert(key, decode_any(d, "Role extended data keys")?);

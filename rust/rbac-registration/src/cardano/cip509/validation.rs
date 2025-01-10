@@ -21,22 +21,29 @@
 //!
 //! Note: This CIP509 is still under development and is subject to change.
 
+use catalyst_types::problem_report::ProblemReport;
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
         utils::Bytes,
     },
-    ledger::{addresses::Address, traverse::MultiEraTx},
+    ledger::{addresses::Address, primitives::conway, traverse::MultiEraTx},
 };
 
-use super::{
-    blake2b_128, blake2b_256, decremented_index,
-    utils::cip19::{compare_key_hash, extract_key_hash},
-    Cip509, TxInputHash, TxWitness,
-};
+use super::utils::cip19::{compare_key_hash, extract_key_hash};
 use crate::{
-    cardano::cip509::rbac::role_data::{LocalRefInt, RoleData},
-    utils::general::zero_out_last_n_bytes,
+    cardano::{
+        cip509::{
+            role_data::{LocalRefInt, RoleData},
+            types::TxInputHash,
+            Cip0134UriSet, Cip509,
+        },
+        transaction::witness::TxWitness,
+    },
+    utils::{
+        general::decremented_index,
+        hashing::{blake2b_128, blake2b_256},
+    },
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -50,142 +57,126 @@ use crate::{
 /// Result in 0x86 or 134 in decimal.
 pub(crate) const URI: u8 = 134;
 
-// ------------------------ Validate Txn Inputs Hash ------------------------
+/// Checks that hashing transactions inputs produces the value equal to the given one.
+pub fn validate_txn_inputs_hash(
+    hash: &TxInputHash, transaction: &conway::MintedTx, report: &ProblemReport,
+) {
+    let context = "Cip509 transaction input hash validation";
 
-/// Transaction inputs hash validation.
-/// CIP509 `txn_inputs_hash` must match the hash of the transaction inputs within the
-/// body.
-pub(crate) fn validate_txn_inputs_hash(
-    cip509: &Cip509, txn: &MultiEraTx, validation_report: &mut Vec<String>,
-) -> Option<bool> {
-    let function_name = "Validate Transaction Inputs Hash";
     let mut buffer = Vec::new();
     let mut e = Encoder::new(&mut buffer);
-    // CIP-0509 should only be in conway era
-    if let MultiEraTx::Conway(tx) = txn {
-        let inputs = tx.transaction_body.inputs.clone();
-        if let Err(e) = e.array(inputs.len() as u64) {
-            validation_report.push(format!(
-                "{function_name}, Failed to encode array of transaction input: {e}"
-            ));
-            return None;
+
+    let inputs = &transaction.transaction_body.inputs;
+    if let Err(e) = e.array(inputs.len() as u64) {
+        report.other(
+            &format!("Failed to encode array of transaction inputs: {e:?}"),
+            context,
+        );
+        return;
+    };
+    for input in inputs {
+        if let Err(e) = input.encode(&mut e, &mut ()) {
+            report.other(
+                &format!("Failed to encode transaction input ({input:?}): {e:?}"),
+                context,
+            );
+            return;
         }
-        for input in &inputs {
-            match input.encode(&mut e, &mut ()) {
-                Ok(()) => {},
-                Err(e) => {
-                    validation_report.push(format!(
-                        "{function_name}, Failed to encode transaction input {e}"
-                    ));
-                    return None;
-                },
-            }
-        }
-        // Hash the transaction inputs
-        let inputs_hash = match blake2b_128(&buffer) {
-            Ok(hash) => hash,
-            Err(e) => {
-                validation_report.push(format!(
-                    "{function_name}, Failed to hash transaction inputs {e}"
-                ));
-                return None;
-            },
-        };
-        Some(TxInputHash::from(inputs_hash) == cip509.txn_inputs_hash)
-    } else {
-        validation_report.push(format!("{function_name}, Unsupported transaction era for"));
-        None
+    }
+
+    match blake2b_128(&buffer).map(TxInputHash::from) {
+        Ok(h) if h == *hash => {
+            // All good - the calculated hash is the same as in Cip509.
+        },
+        Ok(h) => {
+            report.invalid_value(
+                "txn_inputs_hash",
+                &format!("{h:?}"),
+                &format!("Must be equal to the value in Cip509 ({hash:?})"),
+                context,
+            )
+        },
+        Err(e) => {
+            report.other(
+                &format!("Failed to hash transaction inputs: {e:?}"),
+                context,
+            )
+        },
     }
 }
 
-// ------------------------ Validate Stake Public Key ------------------------
+/// Checks that the given transaction auxiliary data hash is correct.
+pub fn validate_aux(
+    auxiliary_data: &[u8], auxiliary_data_hash: Option<&Bytes>, report: &ProblemReport,
+) {
+    let context = "Cip509 auxiliary data validation";
 
-/// Validate the stake public key in the certificate with witness set in transaction.
-#[allow(clippy::too_many_lines)]
-pub(crate) fn validate_stake_public_key(
-    cip509: &Cip509, txn: &MultiEraTx, validation_report: &mut Vec<String>,
-) -> Option<bool> {
-    let function_name = "Validate Stake Public Key";
+    let Some(auxiliary_data_hash) = auxiliary_data_hash else {
+        report.other("Auxiliary data hash not found in transaction", context);
+        return;
+    };
 
-    if !matches!(txn, MultiEraTx::Conway(_)) {
-        validation_report.push(format!("{function_name}, Unsupported transaction era"));
-        return None;
-    }
-
-    // Create TxWitness
-    // Note that TxWitness designs to work with multiple transactions
-    let witnesses = match TxWitness::new(&[txn.clone()]) {
-        Ok(witnesses) => witnesses,
+    match blake2b_256(auxiliary_data) {
+        Ok(h) if h == ***auxiliary_data_hash => {
+            // The hash is correct.
+        },
+        Ok(h) => {
+            report.other(
+                &format!("Incorrect transaction auxiliary data hash = '{h:?}', expected = '{auxiliary_data_hash:?}'"),
+                context,
+            )
+        },
         Err(e) => {
-            validation_report.push(format!("{function_name}, Failed to create TxWitness: {e}"));
-            return None;
+            report.other(
+                &format!("Failed to hash transaction auxiliary data: {e:?}"),
+                context,
+            )
+        },
+    }
+}
+
+/// Checks that all public keys extracted from x509 and c509 certificates are present in
+/// the witness set of the transaction.
+pub fn validate_stake_public_key(
+    transaction: &MultiEraTx, uris: Option<&Cip0134UriSet>, report: &ProblemReport,
+) {
+    let context = "Cip509 stake public key validation";
+
+    let witness = match TxWitness::new(&[transaction.clone()]) {
+        Ok(w) => w,
+        Err(e) => {
+            report.other(&format!("Failed to create TxWitness: {e:?}"), context);
+            return;
         },
     };
 
-    let pk_addrs: Vec<_> = extract_stake_addresses(cip509);
+    let pk_addrs = extract_stake_addresses(uris);
+    if pk_addrs.is_empty() {
+        report.other(
+            "Unable to find stake addresses in Cip509 certificates",
+            context,
+        );
+        return;
+    }
 
-    Some(
-        // Set transaction index to 0 because the list of transaction is manually constructed
-        // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
-        // the witness within this transaction.
-        compare_key_hash(&pk_addrs, &witnesses, 0)
-            .map_err(|e| {
-                validation_report.push(format!(
-                    "{function_name}, Failed to compare public keys with witnesses: {e}"
-                ));
-            })
-            .is_ok(),
-    )
-}
-
-// ------------------------ Validate Aux ------------------------
-
-/// Validate the auxiliary data with the auxiliary data hash in the transaction body.
-/// Also return the pre-computed hash where the validation signature (99) set to
-pub(crate) fn validate_aux(
-    txn: &MultiEraTx, validation_report: &mut Vec<String>,
-) -> Option<(bool, Vec<u8>)> {
-    let function_name = "Validate Aux";
-
-    // CIP-0509 should only be in conway era
-    if let MultiEraTx::Conway(tx) = txn {
-        if let pallas::codec::utils::Nullable::Some(a) = &tx.auxiliary_data {
-            let original_aux = a.raw_cbor();
-            let aux_data_hash = tx
-                .transaction_body
-                .auxiliary_data_hash
-                .as_ref()
-                .or_else(|| {
-                    validation_report.push(format!(
-                        "{function_name}, Auxiliary data hash not found in transaction"
-                    ));
-                    None
-                })?;
-            validate_aux_helper(original_aux, aux_data_hash, validation_report)
-        } else {
-            validation_report.push(format!(
-                "{function_name}, Auxiliary data not found in transaction"
-            ));
-            None
-        }
-    } else {
-        validation_report.push(format!("{function_name}, Unsupported transaction era"));
-        None
+    if let Err(e) = compare_key_hash(&pk_addrs, &witness, 0) {
+        report.other(
+            &format!("Failed to compare public keys with witnesses: {e:?}"),
+            context,
+        );
     }
 }
 
 /// Extracts all stake addresses from both X509 and C509 certificates containing in the
-/// given `Cip509` and their hashes to bytes.
-fn extract_stake_addresses(cip509: &Cip509) -> Vec<Vec<u8>> {
-    let Some(metadata) = cip509.metadata.as_ref() else {
+/// given `Cip509` and converts their hashes to bytes.
+fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<Vec<u8>> {
+    let Some(uris) = uris else {
         return Vec::new();
     };
 
-    metadata
-        .certificate_uris
-        .x_uris()
+    uris.x_uris()
         .iter()
-        .chain(metadata.certificate_uris.c_uris())
+        .chain(uris.c_uris())
         .flat_map(|(_index, uris)| uris.iter())
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
@@ -197,161 +188,123 @@ fn extract_stake_addresses(cip509: &Cip509) -> Vec<Vec<u8>> {
         .collect()
 }
 
-/// Helper function for auxiliary data validation.
-/// Also compute The pre-computed hash.
-fn validate_aux_helper(
-    original_aux: &[u8], aux_data_hash: &Bytes, validation_report: &mut Vec<String>,
-) -> Option<(bool, Vec<u8>)> {
-    let mut vec_aux = original_aux.to_vec();
+/// Checks that the payment key reference is correct and points to a valid key.
+pub fn validate_payment_key(
+    transaction: &MultiEraTx, conway_transaction: &conway::MintedTx, role_data: &RoleData,
+    report: &ProblemReport,
+) {
+    let context = "Cip509 role0 payment key validation";
 
-    // Pre-computed aux with the last 64 bytes set to zero
-    zero_out_last_n_bytes(&mut vec_aux, 64);
-
-    // Compare the hash
-    match blake2b_256(original_aux) {
-        Ok(original_hash) => Some((aux_data_hash.as_ref() == original_hash, vec_aux)),
-        Err(e) => {
-            validation_report.push(format!("Cannot hash auxiliary data {e}"));
-            None
-        },
+    let Some(payment_key) = role_data.payment_key else {
+        report.other("Missing payment key in role0", context);
+        return;
+    };
+    if payment_key == 0 {
+        report.invalid_value(
+            "payment key",
+            "0",
+            "Payment reference key must not be 0",
+            context,
+        );
+        return;
     }
-}
 
-// ------------------------ Validate Payment Key ------------------------
-
-/// Validate the payment key reference.
-/// Negative ref is for transaction output.
-/// Positive ref is for transaction input.
-pub(crate) fn validate_payment_key(
-    txn: &MultiEraTx, role_data: &RoleData, validation_report: &mut Vec<String>,
-) -> Option<bool> {
-    let function_name = "Validate Payment Key";
-
-    if let Some(payment_key) = role_data.payment_key {
-        if payment_key == 0 {
-            validation_report.push(format!(
-                "{function_name}, Invalid payment reference key, 0 is not allowed"
-            ));
-            return None;
-        }
-        // CIP-0509 should only be in conway era
-        if let MultiEraTx::Conway(tx) = txn {
-            // Negative indicates reference to tx output
-            if payment_key < 0 {
-                let index = match decremented_index(payment_key.abs()) {
-                    Ok(value) => value,
-                    Err(e) => {
-                        validation_report.push(format!(
-                            "{function_name}, Failed to get index of payment key: {e}"
-                        ));
-                        return None;
-                    },
-                };
-                let outputs = tx.transaction_body.outputs.clone();
-                let witness = match TxWitness::new(&[txn.clone()]) {
-                    Ok(witnesses) => witnesses,
-                    Err(e) => {
-                        validation_report
-                            .push(format!("{function_name}, Failed to create TxWitness: {e}"));
-                        return None;
-                    },
-                };
-
-                if let Some(output) = outputs.get(index) {
-                    match output {
-                        pallas::ledger::primitives::conway::PseudoTransactionOutput::Legacy(o) => {
-                            return validate_payment_output_key_helper(
-                                &o.address.to_vec(),
-                                validation_report,
-                                &witness,
-                            );
-                        },
-                        pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(
-                            o,
-                        ) => {
-                            return validate_payment_output_key_helper(
-                                &o.address.to_vec(),
-                                validation_report,
-                                &witness,
-                            );
-                        },
-                    };
-                }
-                validation_report.push(
-                    format!("{function_name}, Role payment key reference index is not found in transaction outputs")
+    // Negative indicates reference to transaction output.
+    if payment_key < 0 {
+        let index = match decremented_index(payment_key.abs()) {
+            Ok(value) => value,
+            Err(e) => {
+                report.other(
+                    &format!("Failed to get index of payment key: {e:?}"),
+                    context,
                 );
-                return None;
-            }
-            // Positive indicates reference to tx input
-            let inputs = &tx.transaction_body.inputs;
-            let index = match decremented_index(payment_key) {
-                Ok(value) => value,
-                Err(e) => {
-                    validation_report.push(format!(
-                        "{function_name}, Failed to get index of payment key: {e}"
-                    ));
-                    return None;
-                },
-            };
-            // Check whether the index exists in transaction inputs
-            if inputs.get(index).is_none() {
-                validation_report.push(
-                    format!("{function_name}, Role payment key reference index is not found in transaction inputs")
+                return;
+            },
+        };
+        let outputs = &conway_transaction.transaction_body.outputs;
+        let witness = match TxWitness::new(&[transaction.clone()]) {
+            Ok(witnesses) => witnesses,
+            Err(e) => {
+                report.other(&format!("Failed to create TxWitness: {e:?}"), context);
+                return;
+            },
+        };
+
+        let address = match outputs.get(index) {
+            Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
+            Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
+            None => {
+                report.other(
+                    &format!("Role payment key reference index ({index}) is not found in transaction outputs"),
+                    context,
                 );
-                return None;
-            }
-            Some(true)
-        } else {
-            validation_report.push(format!(
-                "{function_name}, Unsupported transaction era for stake payment key validation"
-            ));
-            None
-        }
+                return;
+            },
+        };
+        validate_payment_output_key_helper(address, &witness, report, context);
     } else {
-        Some(false)
+        // Positive indicates reference to tx input.
+        let inputs = &conway_transaction.transaction_body.inputs;
+        let index = match decremented_index(payment_key) {
+            Ok(value) => value,
+            Err(e) => {
+                report.other(
+                    &format!("Failed to get index of payment key: {e:?}"),
+                    context,
+                );
+                return;
+            },
+        };
+        // Check whether the index exists in transaction inputs.
+        if inputs.get(index).is_none() {
+            report.other(
+                &format!(
+                    "Role payment key reference index ({index}) is not found in transaction inputs"
+                ),
+                context,
+            );
+        }
     }
 }
 
 /// Helper function for validating payment output key.
 fn validate_payment_output_key_helper(
-    output_address: &[u8], validation_report: &mut Vec<String>, witness: &TxWitness,
-) -> Option<bool> {
-    // Extract the key hash from the output address
-    if let Some(key) = extract_key_hash(output_address) {
-        // Compare the key hash and return the result
-        // Set transaction index to 0 because the list of transaction is manually constructed
-        // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
-        // the witness within this transaction.
-        return Some(compare_key_hash(&[key], witness, 0).is_ok());
-    }
-    validation_report.push("Failed to extract payment key hash from address".to_string());
-    None
-}
+    output_address: &[u8], witness: &TxWitness, report: &ProblemReport, context: &str,
+) {
+    let Some(key) = extract_key_hash(output_address) else {
+        report.other("Failed to extract payment key hash from address", context);
+        return;
+    };
 
-// ------------------------ Validate role signing key ------------------------
+    // Set transaction index to 0 because the list of transaction is manually constructed
+    // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
+    // the witness within this transaction.
+    if let Err(e) = compare_key_hash(&[key], witness, 0) {
+        report.other(
+            &format!(
+                "Unable to find payment output key ({key:?}) in the transaction witness set: {e:?}"
+            ),
+            context,
+        );
+    }
+}
 
 /// Validate role singing key for role 0.
 /// Must reference certificate not the public key
-pub(crate) fn validate_role_singing_key(
-    role_data: &RoleData, validation_report: &mut Vec<String>,
-) -> bool {
-    let function_name = "Validate Role Signing Key";
+pub fn validate_role_signing_key(role_data: &RoleData, report: &ProblemReport) {
+    let Some(role_signing_key) = role_data.role_signing_key else {
+        return;
+    };
 
-    // If signing key exist, it should not contain public key
-    if let Some(local_ref) = &role_data.role_signing_key {
-        if local_ref.local_ref == LocalRefInt::PubKeys {
-            validation_report.push(format!(
-                "{function_name}, Role signing key should reference certificate, not public key",
-            ));
-            println!("ja");
-            return false;
-        }
+    if role_signing_key.local_ref == LocalRefInt::PubKeys {
+        report.invalid_value(
+            "RoleData::role_signing_key",
+            &format!("{role_signing_key:?}"),
+            "Role signing key should reference certificate, not public key",
+            "Cip509 role0 signing key validation",
+        );
     }
-
-    true
 }
-
-// ------------------------ Tests ------------------------
 
 #[cfg(test)]
 mod tests {
