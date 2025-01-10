@@ -19,15 +19,16 @@ use pallas::{
 };
 use payment_history::PaymentHistory;
 use point_tx_idx::PointTxIdx;
-use role_data::RoleData;
-use tracing::error;
+use tracing::{error, warn};
 use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::{
     cardano::cip509::{
-        C509Cert, CertKeyHash, Cip0134UriSet, Cip509, SimplePublicKeyType, X509DerCert,
+        C509Cert, CertKeyHash, Cip0134UriSet, Cip509, RoleData as Cip509RoleData, RoleNumber,
+        SimplePublicKeyType, X509DerCert,
     },
+    registration::cardano::role_data::RoleData,
     utils::general::decremented_index,
 };
 
@@ -121,7 +122,7 @@ impl RegistrationChain {
 
     /// Get the map of role number to point, transaction index, and role data.
     #[must_use]
-    pub fn role_data(&self) -> &HashMap<u8, (PointTxIdx, RoleData)> {
+    pub fn role_data(&self) -> &HashMap<RoleNumber, (PointTxIdx, RoleData)> {
         &self.inner.role_data
     }
 
@@ -154,7 +155,7 @@ struct RegistrationChainInner {
 
     // Role
     /// Map of role number to point, transaction index, and role data.
-    role_data: HashMap<u8, (PointTxIdx, RoleData)>,
+    role_data: HashMap<RoleNumber, (PointTxIdx, RoleData)>,
     /// Map of tracked payment key to its history.
     tracking_payment_history: HashMap<ShelleyAddress, Vec<PaymentHistory>>,
 }
@@ -182,20 +183,18 @@ impl RegistrationChainInner {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
 
-        let mut validation_report = Vec::new();
-        let validation_data = cip509.validate(txn, &mut validation_report);
+        // TODO: FIXME: Remove txn_inputs_hash?
+        let (purpose, registration) = match cip509.try_consume() {
+            Ok(v) => v,
+            Err(e) => {
+                let error = format!("Invalid Cip509: {e:?}");
+                error!(error);
+                bail!(error);
+            },
+        };
 
-        // Do the CIP509 validation, ensuring the basic validation pass.
-        if !is_valid_cip509(&validation_data) {
-            // Log out the error if any
-            error!("CIP509 validation failed: {:?}", validation_report);
-            bail!("CIP509 validation failed, {:?}", validation_report);
-        }
+        let purpose = vec![purpose];
 
-        // Add purpose to the list
-        let purpose = cip509.purpose().into_iter().collect();
-
-        let registration = cip509.metadata().clone();
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         let certificate_uris = registration.certificate_uris;
@@ -203,7 +202,7 @@ impl RegistrationChainInner {
         let c509_cert_map = chain_root_c509_certs(registration.c509_certs, &point_tx_idx);
         let public_key_map = chain_root_public_keys(registration.pub_keys, &point_tx_idx);
         let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
-        let role_data_map = chain_root_role_data(registration.role_set, txn, &point_tx_idx)?;
+        let role_data_map = chain_root_role_data(registration.role_data, txn, &point_tx_idx)?;
 
         let mut tracking_payment_history = HashMap::new();
         // Create a payment history for each tracking payment key
@@ -242,45 +241,42 @@ impl RegistrationChainInner {
     ) -> anyhow::Result<Self> {
         let mut new_inner = self.clone();
 
-        let mut validation_report = Vec::new();
-        let validation_data = cip509.validate(txn, &mut validation_report);
-
-        // Do the CIP509 validation, ensuring the basic validation pass.
-        if !is_valid_cip509(&validation_data) {
-            error!("CIP509 validation failed: {:?}", validation_report);
-            bail!("CIP509 validation failed, {:?}", validation_report);
+        let Some(prv_tx_id) = cip509.previous_transaction() else {
+            bail!("Empty previous transaction ID");
+        };
+        // Previous transaction ID in the CIP509 should equal to the current transaction ID
+        // or else it is not a part of the chain
+        if prv_tx_id == self.current_tx_id_hash {
+            new_inner.current_tx_id_hash = prv_tx_id;
+        } else {
+            bail!("Invalid previous transaction ID, not a part of this registration chain");
         }
 
-        // Check and update the current transaction ID hash
-        if let Some(prv_tx_id) = cip509.previous_transaction() {
-            // Previous transaction ID in the CIP509 should equal to the current transaction ID
-            // or else it is not a part of the chain
-            if prv_tx_id == &self.current_tx_id_hash {
-                new_inner.current_tx_id_hash = *prv_tx_id;
-            } else {
-                bail!("Invalid previous transaction ID, not a part of this registration chain");
-            }
-        }
+        let (purpose, registration) = match cip509.try_consume() {
+            Ok(v) => v,
+            Err(e) => {
+                let error = format!("Invalid Cip509: {e:?}");
+                error!(error);
+                bail!(error);
+            },
+        };
 
         // Add purpose to the chain, if not already exist
-        if let Some(purpose) = cip509.purpose() {
-            if !self.purpose.contains(&purpose) {
-                new_inner.purpose.push(purpose);
-            }
+        if !self.purpose.contains(&purpose) {
+            new_inner.purpose.push(purpose);
         }
 
-        let registration = cip509.metadata().clone();
         let point_tx_idx = PointTxIdx::new(point, tx_idx);
         new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
         update_x509_certs(&mut new_inner, registration.x509_certs, &point_tx_idx);
-        update_c509_certs(&mut new_inner, registration.c509_certs, &point_tx_idx)?;
+        update_c509_certs(&mut new_inner, registration.c509_certs, &point_tx_idx);
         update_public_keys(&mut new_inner, registration.pub_keys, &point_tx_idx);
 
         let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
         // Revocation list should be appended
         new_inner.revocations.extend(revocations);
 
-        update_role_data(&mut new_inner, registration.role_set, txn, &point_tx_idx)?;
+        update_role_data(&mut new_inner, registration.role_data, txn, &point_tx_idx)?;
 
         update_tracking_payment_history(
             &mut new_inner.tracking_payment_history,
@@ -348,7 +344,7 @@ fn chain_root_c509_certs(
 /// Update c509 certificates in the registration chain.
 fn update_c509_certs(
     new_inner: &mut RegistrationChainInner, c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<()> {
+) {
     for (idx, cert) in c509_certs.into_iter().enumerate() {
         match cert {
             // Unchanged to that index, so continue
@@ -359,7 +355,7 @@ fn update_c509_certs(
             },
             // Certificate reference
             C509Cert::C509CertInMetadatumReference(_) => {
-                bail!("Unsupported c509 certificate in metadatum reference")
+                warn!("Unsupported C509CertInMetadatumReference");
             },
             // Add the new certificate
             C509Cert::C509Certificate(c509) => {
@@ -369,7 +365,6 @@ fn update_c509_certs(
             },
         }
     }
-    Ok(())
 }
 
 /// Process public keys for chain root.
@@ -422,26 +417,23 @@ fn revocations_list(
 
 /// Process the role data for chain root.
 fn chain_root_role_data(
-    role_set: Vec<role_data::RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<HashMap<u8, (PointTxIdx, RoleData)>> {
+    role_set: HashMap<RoleNumber, Cip509RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
+) -> anyhow::Result<HashMap<RoleNumber, (PointTxIdx, RoleData)>> {
     let mut role_data_map = HashMap::new();
-    for role_data in role_set {
-        let signing_key = role_data.role_signing_key.clone();
-        let encryption_key = role_data.role_encryption_key.clone();
-
+    for (role_number, role_data) in role_set {
         // Get the payment key
         let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
 
         // Map of role number to point and role data
         role_data_map.insert(
-            role_data.role_number,
+            role_number,
             (
                 point_tx_idx.clone(),
                 RoleData::new(
-                    signing_key,
-                    encryption_key,
+                    role_data.role_signing_key,
+                    role_data.role_encryption_key,
                     payment_key,
-                    role_data.role_extended_data_keys.clone(),
+                    role_data.role_extended_data_keys,
                 ),
             ),
         );
@@ -451,15 +443,15 @@ fn chain_root_role_data(
 
 /// Update the role data in the registration chain.
 fn update_role_data(
-    inner: &mut RegistrationChainInner, role_set: Vec<RoleData>, txn: &MultiEraTx,
-    point_tx_idx: &PointTxIdx,
+    inner: &mut RegistrationChainInner, role_set: HashMap<RoleNumber, Cip509RoleData>,
+    txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
 ) -> anyhow::Result<()> {
-    for role_data in role_set {
+    for (role_number, role_data) in role_set {
         // If there is new role singing key, use it, else use the old one
         let signing_key = match role_data.role_signing_key {
             Some(key) => Some(key),
             None => {
-                match inner.role_data.get(&role_data.role_number) {
+                match inner.role_data.get(&role_number) {
                     Some((_, role_data)) => role_data.signing_key_ref().clone(),
                     None => None,
                 }
@@ -470,7 +462,7 @@ fn update_role_data(
         let encryption_key = match role_data.role_encryption_key {
             Some(key) => Some(key),
             None => {
-                match inner.role_data.get(&role_data.role_number) {
+                match inner.role_data.get(&role_number) {
                     Some((_, role_data)) => role_data.encryption_ref().clone(),
                     None => None,
                 }
@@ -481,7 +473,7 @@ fn update_role_data(
         // Map of role number to point and role data
         // Note that new role data will overwrite the old one
         inner.role_data.insert(
-            role_data.role_number,
+            role_number,
             (
                 point_tx_idx.clone(),
                 RoleData::new(

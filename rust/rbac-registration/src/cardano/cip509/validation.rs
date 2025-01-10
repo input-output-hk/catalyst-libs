@@ -492,7 +492,7 @@ mod tests {
             panic!("Unexpected transaction era");
         };
         let role_data = cip509
-            .role_data(RoleNumber::Role0)
+            .role_data(RoleNumber::ROLE_0)
             .expect("There must be role0");
         validate_payment_key(tx, conway_tx, role_data, &report);
         if report.is_problematic() {
@@ -525,7 +525,7 @@ mod tests {
             panic!("Unexpected transaction era");
         };
         let role_data = cip509
-            .role_data(RoleNumber::Role0)
+            .role_data(RoleNumber::ROLE_0)
             .expect("There must be role0");
         validate_payment_key(tx, conway_tx, role_data, &report);
         if report.is_problematic() {
@@ -555,7 +555,7 @@ mod tests {
         }
 
         let role_data = cip509
-            .role_data(RoleNumber::Role0)
+            .role_data(RoleNumber::ROLE_0)
             .expect("There must be role0");
         validate_role_signing_key(role_data, &report);
         if report.is_problematic() {

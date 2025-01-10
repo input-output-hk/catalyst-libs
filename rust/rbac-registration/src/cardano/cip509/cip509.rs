@@ -157,7 +157,7 @@ impl Cip509 {
                 .as_ref(),
             &cip509.report,
         );
-        if let Some(role_data) = cip509.role_data(RoleNumber::Role0) {
+        if let Some(role_data) = cip509.role_data(RoleNumber::ROLE_0) {
             validate_stake_public_key(transaction, cip509.certificate_uris(), &cip509.report);
             validate_payment_key(transaction, conway_transaction, role_data, &cip509.report);
             validate_role_signing_key(role_data, &cip509.report);
@@ -242,6 +242,7 @@ impl Cip509 {
         self.metadata.as_ref().map(|m| &m.certificate_uris)
     }
 
+    /// Returns a transaction inputs hash.
     pub fn txn_inputs_hash(&self) -> Option<&TxInputHash> {
         self.txn_inputs_hash.as_ref()
     }
@@ -249,19 +250,15 @@ impl Cip509 {
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
     /// validated otherwise return the problem report that contains all the encountered
     /// issues.
-    pub fn try_consume(
-        self,
-    ) -> Result<(Uuid, TxInputHash, Cip509RbacMetadata, ValidationSignature), ProblemReport> {
+    pub fn try_consume(self) -> Result<(Uuid, Cip509RbacMetadata), ProblemReport> {
         match (
             self.purpose,
             self.txn_inputs_hash,
             self.metadata,
             self.validation_signature,
         ) {
-            (Some(purpose), Some(txn_inputs_hash), Some(metadata), Some(validation_signature))
-                if !self.report.is_problematic() =>
-            {
-                Ok((purpose, txn_inputs_hash, metadata, validation_signature))
+            (Some(purpose), Some(_), Some(metadata), Some(_)) if !self.report.is_problematic() => {
+                Ok((purpose, metadata))
             },
 
             _ => Err(self.report),

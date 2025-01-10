@@ -3,7 +3,10 @@
 //! CDDL Reference: <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
 
 pub use cip509::Cip509;
-pub use rbac::{role_data, C509Cert, SimplePublicKeyType, X509DerCert};
+pub use rbac::{
+    role_data::{self, RoleData},
+    C509Cert, RoleNumber, SimplePublicKeyType, X509DerCert,
+};
 pub use types::CertKeyHash;
 pub use utils::Cip0134UriSet;
 
