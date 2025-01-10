@@ -65,9 +65,9 @@ static ROLLBACKS_MAP: LazyLock<RollbackMap> = LazyLock::new(|| {
 
 /// Get the actual rollback map for a chain.
 fn lookup_rollback_map(
-    network: Network, rollback: RollbackType,
+    chain: Network, rollback: RollbackType,
 ) -> Option<Arc<RwLock<RollbackRecords>>> {
-    let Some(chain_rollback_map) = ROLLBACKS_MAP.get(&network) else {
+    let Some(chain_rollback_map) = ROLLBACKS_MAP.get(&chain) else {
         error!("Rollback stats SHOULD BE exhaustively pre-allocated.");
         return None;
     };
@@ -83,8 +83,8 @@ fn lookup_rollback_map(
 }
 
 /// Extract the current rollback stats as a vec.
-pub(crate) fn rollbacks(network: Network, rollback: RollbackType) -> Vec<Rollback> {
-    let Some(rollback_map) = lookup_rollback_map(network, rollback) else {
+pub(crate) fn rollbacks(chain: Network, rollback: RollbackType) -> Vec<Rollback> {
+    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
         return Vec::new();
     };
 
@@ -104,8 +104,8 @@ pub(crate) fn rollbacks(network: Network, rollback: RollbackType) -> Vec<Rollbac
 }
 
 /// Reset ALL the rollback stats for a given blockchain.
-pub(crate) fn rollbacks_reset(network: Network, rollback: RollbackType) -> Vec<Rollback> {
-    let Some(rollback_map) = lookup_rollback_map(network, rollback) else {
+pub(crate) fn rollbacks_reset(chain: Network, rollback: RollbackType) -> Vec<Rollback> {
+    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
         return Vec::new();
     };
 
@@ -120,8 +120,8 @@ pub(crate) fn rollbacks_reset(network: Network, rollback: RollbackType) -> Vec<R
 }
 
 /// Count a rollback
-pub(crate) fn rollback(network: Network, rollback: RollbackType, depth: u64) {
-    let Some(rollback_map) = lookup_rollback_map(network, rollback) else {
+pub(crate) fn rollback(chain: Network, rollback: RollbackType, depth: u64) {
+    let Some(rollback_map) = lookup_rollback_map(chain, rollback) else {
         return;
     };
 
