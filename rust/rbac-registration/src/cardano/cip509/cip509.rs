@@ -170,7 +170,7 @@ impl Cip509 {
 
         let decoded_block = block.decode();
         for index in 0..decoded_block.tx_count() {
-            let index = TxnIndex::from_saturating(index);
+            let index = TxnIndex::from(index);
             match Self::new(block, index) {
                 Ok(Some(v)) => result.push(v),
                 // Normal situation: there is no Cip509 data in this transaction.
@@ -190,7 +190,7 @@ impl Cip509 {
     /// Creates an "empty" `Cip509` instance with all optional fields set to `None`.
     /// Non-optional fields set to dummy values that must be overwritten.
     fn with_report(report: ProblemReport) -> Self {
-        Self::with_slot_and_index(report, 0.into(), TxnIndex::from_saturating(0))
+        Self::with_slot_and_index(report, 0.into(), TxnIndex::from(0))
     }
 
     /// Creates an "empty" `Cip509` instance with all optional fields set to `None`.
