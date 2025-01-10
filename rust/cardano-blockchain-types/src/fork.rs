@@ -15,28 +15,31 @@ use crate::conversion::from_saturating;
 pub struct Fork(u64);
 
 impl Fork {
-    /// Fork for immutable data. This indicates that there is no roll-back.
-    pub const IMMUTABLE: Self = Self(0);
     /// Fork for data that read from the blockchain during a backfill on initial sync
     pub const BACKFILL: Self = Self(1);
     /// Fork count for the first live block.
     pub const FIRST_LIVE: Self = Self(2);
+    /// Fork for immutable data. This indicates that there is no roll-back.
+    pub const IMMUTABLE: Self = Self(0);
 
     /// Is the fork for immutable data.
+    #[must_use]
     pub fn is_immutable(&self) -> bool {
         self.0 == 0
     }
 
     /// Is the fork for backfill data.
+    #[must_use]
     pub fn is_backfill(&self) -> bool {
         self.0 == 1
     }
 
     /// Is the fork for live data.
+    #[must_use]
     pub fn is_live(&self) -> bool {
         self.0 > 1
     }
-    
+
     /// Convert an `<T>` to `Fork` (saturate if out of range).
     pub fn from_saturating<
         T: Copy
