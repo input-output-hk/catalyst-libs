@@ -22,6 +22,21 @@ impl Fork {
     /// Fork count for the first live block.
     pub const FIRST_LIVE: Self = Self(2);
 
+    /// Is the fork for immutable data.
+    pub fn is_immutable(&self) -> bool {
+        self.0 == 0
+    }
+
+    /// Is the fork for backfill data.
+    pub fn is_backfill(&self) -> bool {
+        self.0 == 1
+    }
+
+    /// Is the fork for live data.
+    pub fn is_live(&self) -> bool {
+        self.0 > 1
+    }
+    
     /// Convert an `<T>` to `Fork` (saturate if out of range).
     pub fn from_saturating<
         T: Copy
