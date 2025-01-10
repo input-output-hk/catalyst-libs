@@ -19,15 +19,6 @@ impl Content {
                 .map_err(|e| anyhow::anyhow!("Failed to decode {encoding:?} content: {e}"))?;
         }
 
-        match content_type {
-            ContentType::Json => {
-                serde_json::from_slice::<serde_json::Value>(content.as_slice())?;
-            },
-            ContentType::Cbor => {
-                // TODO impelement a CBOR parsing validation
-            },
-        }
-
         Ok(Self(content, content_type))
     }
 
@@ -44,7 +35,7 @@ impl Content {
     }
 
     /// Return content bytes
-    pub fn bytes(&self) -> Vec<u8> {
-        self.0.clone()
+    pub fn bytes(&self) -> &[u8] {
+        self.0.as_slice()
     }
 }

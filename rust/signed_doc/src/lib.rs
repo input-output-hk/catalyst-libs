@@ -125,7 +125,7 @@ impl CatalystSignedDocument {
 
     /// Return document `Content`.
     #[must_use]
-    pub fn document_content(&self) -> &Content {
+    pub fn doc_content(&self) -> &Content {
         &self.inner.content
     }
 
