@@ -43,18 +43,9 @@ pub struct Metadata {
     /// Additional Metadata Fields.
     #[serde(flatten)]
     extra: AdditionalFields,
-    /// Metadata Content Errors
-    #[serde(skip)]
-    content_errors: Vec<String>,
 }
 
 impl Metadata {
-    /// Returns true if metadata has no validation errors.
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        self.content_errors.is_empty()
-    }
-
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> uuid::Uuid {
@@ -84,36 +75,6 @@ impl Metadata {
     pub fn content_encoding(&self) -> Option<ContentEncoding> {
         self.content_encoding
     }
-
-    /// Return Last Document Reference `Option<DocumentRef>`.
-    #[must_use]
-    pub fn doc_ref(&self) -> Option<DocumentRef> {
-        self.extra.doc_ref
-    }
-
-    /// Return Document Template `Option<DocumentRef>`.
-    #[must_use]
-    pub fn doc_template(&self) -> Option<DocumentRef> {
-        self.extra.template
-    }
-
-    /// Return Document Reply `Option<DocumentRef>`.
-    #[must_use]
-    pub fn doc_reply(&self) -> Option<DocumentRef> {
-        self.extra.reply
-    }
-
-    /// Return Document Section `Option<String>`.
-    #[must_use]
-    pub fn doc_section(&self) -> Option<String> {
-        self.extra.section.clone()
-    }
-
-    /// List of Content Errors.
-    #[must_use]
-    pub fn content_errors(&self) -> &Vec<String> {
-        &self.content_errors
-    }
 }
 
 impl Display for Metadata {
@@ -138,7 +99,6 @@ impl Default for Metadata {
             content_type: ContentType::default(),
             content_encoding: None,
             extra: AdditionalFields::default(),
-            content_errors: Vec::new(),
         }
     }
 }

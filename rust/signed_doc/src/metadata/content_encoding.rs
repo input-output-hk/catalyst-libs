@@ -56,12 +56,11 @@ impl TryFrom<&coset::cbor::Value> for ContentEncoding {
 
 impl ContentEncoding {
     /// Decompress a Brotli payload
-    pub fn decode(self, payload: &Vec<u8>) -> anyhow::Result<Vec<u8>> {
+    pub fn decode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
                 let mut buf = Vec::new();
-                let mut bytes = payload.as_slice();
-                brotli::BrotliDecompress(&mut bytes, &mut buf)?;
+                brotli::BrotliDecompress(&mut payload, &mut buf)?;
                 Ok(buf)
             },
         }

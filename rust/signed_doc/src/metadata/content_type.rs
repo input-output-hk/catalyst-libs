@@ -9,7 +9,7 @@ use coset::iana::CoapContentFormat;
 use serde::{de, Deserialize, Deserializer};
 
 /// Payload Content Type.
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum ContentType {
     /// 'application/cbor'
     Cbor,
