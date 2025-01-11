@@ -2,7 +2,7 @@
 use super::UuidV7;
 
 /// Reference to a Document.
-#[derive(Copy, Clone, Debug, serde::Deserialize)]
+#[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum DocumentRef {
     /// Reference to the latest document

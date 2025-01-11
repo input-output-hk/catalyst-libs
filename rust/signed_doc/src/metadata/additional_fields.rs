@@ -7,7 +7,7 @@ use super::{cose_protected_header_find, DocumentRef};
 /// Additional Metadata Fields.
 ///
 /// These values are extracted from the COSE Sign protected header labels.
-#[derive(Default, Debug, serde::Deserialize)]
+#[derive(Default, Debug, serde::Serialize, serde::Deserialize)]
 pub(super) struct AdditionalFields {
     /// Reference to the latest document.
     #[serde(rename = "ref")]
