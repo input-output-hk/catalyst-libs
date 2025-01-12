@@ -32,6 +32,14 @@ pub enum CborUuidError {
     },
 }
 
+/// Encode `UUID` into `CBOR`.
+pub(crate) fn encode_cbor_uuid(uuid: uuid::Uuid) -> coset::cbor::Value {
+    coset::cbor::Value::Tag(
+        UUID_CBOR_TAG,
+        coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
+    )
+}
+
 /// Decode `CBOR` encoded `UUID`.
 pub(crate) fn decode_cbor_uuid(val: &coset::cbor::Value) -> Result<uuid::Uuid, CborUuidError> {
     let Some((UUID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
