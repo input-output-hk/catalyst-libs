@@ -1,7 +1,7 @@
 //! `UUIDv7` Type.
 use std::fmt::{Display, Formatter};
 
-use super::{decode_cbor_uuid, INVALID_UUID};
+use super::{decode_cbor_uuid, encode_cbor_uuid, INVALID_UUID};
 
 /// Type representing a `UUIDv7`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
@@ -38,6 +38,12 @@ impl UuidV7 {
 impl Display for UuidV7 {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.uuid)
+    }
+}
+
+impl From<UuidV7> for coset::cbor::Value {
+    fn from(val: UuidV7) -> Self {
+        encode_cbor_uuid(val.into())
     }
 }
 
