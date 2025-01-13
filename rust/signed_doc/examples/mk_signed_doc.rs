@@ -81,7 +81,7 @@ fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
     Ok(uuid)
 }
 
-fn encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
+fn _encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
     match doc_ref {
         DocumentRef::Latest { id } => encode_cbor_uuid(&id.uuid()),
         DocumentRef::WithVer { id, ver } => {
@@ -227,30 +227,32 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign 
         coset::Label::Text("ver".to_string()),
         encode_cbor_uuid(&meta.doc_ver()),
     ));
-    if let Some(r#ref) = &meta.doc_ref() {
-        protected_header.rest.push((
-            coset::Label::Text("ref".to_string()),
-            encode_cbor_document_ref(r#ref),
-        ));
-    }
-    if let Some(template) = &meta.doc_template() {
-        protected_header.rest.push((
-            coset::Label::Text("template".to_string()),
-            encode_cbor_document_ref(template),
-        ));
-    }
-    if let Some(reply) = &meta.doc_reply() {
-        protected_header.rest.push((
-            coset::Label::Text("reply".to_string()),
-            encode_cbor_document_ref(reply),
-        ));
-    }
-    if let Some(section) = &meta.doc_section() {
-        protected_header.rest.push((
-            coset::Label::Text("section".to_string()),
-            coset::cbor::Value::Text(section.clone()),
-        ));
-    }
+    // WIP: encode additional metadata fields
+    //
+    // if let Some(r#ref) = &meta.doc_ref() {
+    //    protected_header.rest.push((
+    //        coset::Label::Text("ref".to_string()),
+    //        encode_cbor_document_ref(r#ref),
+    //    ));
+    //}
+    // if let Some(template) = &meta.doc_template() {
+    //    protected_header.rest.push((
+    //        coset::Label::Text("template".to_string()),
+    //        encode_cbor_document_ref(template),
+    //    ));
+    //}
+    // if let Some(reply) = &meta.doc_reply() {
+    //    protected_header.rest.push((
+    //        coset::Label::Text("reply".to_string()),
+    //        encode_cbor_document_ref(reply),
+    //    ));
+    //}
+    // if let Some(section) = &meta.doc_section() {
+    //    protected_header.rest.push((
+    //        coset::Label::Text("section".to_string()),
+    //        coset::cbor::Value::Text(section.clone()),
+    //    ));
+    //}
 
     coset::CoseSignBuilder::new()
         .protected(protected_header)
