@@ -25,19 +25,19 @@ impl Fork {
     /// Is the fork for immutable data.
     #[must_use]
     pub fn is_immutable(&self) -> bool {
-        self.0 == 0
+        self == &Self::IMMUTABLE
     }
 
     /// Is the fork for backfill data.
     #[must_use]
     pub fn is_backfill(&self) -> bool {
-        self.0 == 1
+        self == &Self::BACKFILL
     }
 
     /// Is the fork for live data.
     #[must_use]
     pub fn is_live(&self) -> bool {
-        self.0 > 1
+        self >= &Self::FIRST_LIVE
     }
 
     /// Convert an `<T>` to `Fork` (saturate if out of range).
