@@ -1,6 +1,6 @@
 //! Cip509 RBAC metadata.
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 use catalyst_types::problem_report::ProblemReport;
 use minicbor::{decode, Decode, Decoder};
@@ -8,12 +8,10 @@ use strum_macros::FromRepr;
 
 use crate::{
     cardano::cip509::{
-        rbac::{
-            role_data::RoleNumberAndData, C509Cert, RoleData, RoleNumber, SimplePublicKeyType,
-            X509DerCert,
-        },
-        types::CertKeyHash,
+        decode_context::DecodeContext,
+        rbac::{role_data::CborRoleData, C509Cert, SimplePublicKeyType, X509DerCert},
         utils::Cip0134UriSet,
+        CertKeyHash, RoleData, RoleNumber,
     },
     utils::decode_helper::{
         decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
@@ -78,9 +76,10 @@ pub enum Cip509RbacMetadataInt {
     RoleSet = 100,
 }
 
-impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
-    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
+    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
         let context = "Decoding Cip509RbacMetadata";
+
         let map_len = decode_map_len(d, context)?;
 
         let mut found_keys = Vec::new();
@@ -95,39 +94,58 @@ impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
         for index in 0..map_len {
             let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", &mut ())?;
             if let Some(key) = Cip509RbacMetadataInt::from_repr(key) {
-                if report_duplicated_key(&found_keys, &key, index, context, report) {
+                if report_duplicated_key(&found_keys, &key, index, context, decode_context.report) {
                     continue;
                 }
                 found_keys.push(key);
 
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
-                        x509_certs =
-                            decode_array(d, "Cip509RbacMetadata x509 certificates", report);
+                        x509_certs = decode_array(
+                            d,
+                            "Cip509RbacMetadata x509 certificates",
+                            decode_context.report,
+                        );
                     },
                     Cip509RbacMetadataInt::C509Certs => {
-                        c509_certs = decode_array(d, "Cip509RbacMetadata c509 certificate", report);
+                        c509_certs = decode_array(
+                            d,
+                            "Cip509RbacMetadata c509 certificate",
+                            decode_context.report,
+                        );
                     },
                     Cip509RbacMetadataInt::PubKeys => {
-                        pub_keys = decode_array(d, "Cip509RbacMetadata public keys", report);
+                        pub_keys = decode_array(
+                            d,
+                            "Cip509RbacMetadata public keys",
+                            decode_context.report,
+                        );
                     },
                     Cip509RbacMetadataInt::RevocationList => {
-                        revocation_list = decode_revocation_list(d, report);
+                        revocation_list = decode_revocation_list(d, decode_context.report);
                     },
                     Cip509RbacMetadataInt::RoleSet => {
-                        role_data = decode_array::<RoleNumberAndData>(
+                        let roles = decode_array::<CborRoleData>(
                             d,
                             "Cip509RbacMetadata role set",
-                            report,
-                        )
-                        .into_iter()
-                        .map(|v| (v.number, v.data))
-                        .collect();
+                            decode_context.report,
+                        );
+                        report_duplicated_roles(&roles, context, decode_context.report);
+                        role_data = roles
+                            .into_iter()
+                            .filter_map(|data| {
+                                if let Some(number) = data.number {
+                                    Some((number, RoleData::new(data, decode_context.transaction)))
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
                     },
                 }
             } else {
                 if !(FIRST_PURPOSE_KEY..=LAST_PURPOSE_KEY).contains(&key) {
-                    report.other(&format!("Invalid purpose key set ({key}), should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}"), context);
+                    decode_context.report.other(&format!("Invalid purpose key set ({key}), should be with the range {FIRST_PURPOSE_KEY} - {LAST_PURPOSE_KEY}"), context);
                     continue;
                 }
 
@@ -136,13 +154,15 @@ impl Decode<'_, ProblemReport> for Cip509RbacMetadata {
                         purpose_key_data.insert(key, v);
                     },
                     Err(e) => {
-                        report.other(&format!("Unable to decode purpose value: {e:?}"), context);
+                        decode_context
+                            .report
+                            .other(&format!("Unable to decode purpose value: {e:?}"), context);
                     },
                 }
             }
         }
 
-        let certificate_uris = Cip0134UriSet::new(&x509_certs, &c509_certs, report);
+        let certificate_uris = Cip0134UriSet::new(&x509_certs, &c509_certs, decode_context.report);
 
         Ok(Self {
             x509_certs,
@@ -227,4 +247,16 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Vec<CertKe
         }
     }
     result
+}
+
+fn report_duplicated_roles(data: &[CborRoleData], context: &str, report: &ProblemReport) {
+    let mut roles = HashSet::new();
+    for role in data {
+        let Some(number) = role.number else {
+            continue;
+        };
+        if !roles.insert(number) {
+            report.other(&format!("Duplicated role number {number:?} found"), context);
+        }
+    }
 }

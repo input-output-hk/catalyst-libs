@@ -23,14 +23,16 @@ use uuid::Uuid;
 use crate::{
     cardano::{
         cip509::{
-            rbac::{Cip509RbacMetadata, RoleData, RoleNumber},
-            types::{TxInputHash, ValidationSignature},
+            decode_context::DecodeContext,
+            rbac::Cip509RbacMetadata,
+            types::{RoleNumber, TxInputHash, ValidationSignature},
             utils::Cip0134UriSet,
             validation::{
                 validate_aux, validate_payment_key, validate_role_signing_key,
                 validate_stake_public_key, validate_txn_inputs_hash,
             },
             x509_chunks::X509Chunks,
+            RoleData,
         },
         transaction::raw_aux_data::RawAuxData,
     },
@@ -127,24 +129,22 @@ impl Cip509 {
 
         let mut decoder = Decoder::new(metadata.as_slice());
         let mut report = ProblemReport::new("Decoding and validating Cip509");
-        let mut cip509 = match Cip509::decode(&mut decoder, &mut report) {
+        let mut decode_context = DecodeContext {
+            slot: block.slot().into(),
+            transaction_index: index,
+            transaction: &conway_transaction,
+            report: &mut report,
+        };
+        let cip509 = match Cip509::decode(&mut decoder, &mut decode_context) {
             Ok(v) => v,
             Err(e) => {
                 // We should get here only if we were unable to decode even the first byte.
-                report.other(&format!("{e:?}"), "Failed to decode Cip509");
-                return Ok(Some(Self::with_slot_and_index(
-                    report,
-                    block.slot().into(),
-                    index,
-                )));
+                decode_context
+                    .report
+                    .other(&format!("{e:?}"), "Failed to decode Cip509");
+                return Ok(Some(Self::with_decode_context(&decode_context)));
             },
         };
-        cip509.slot = block.slot().into();
-        cip509.transaction_index = index;
-
-        // After this point the decoding is finished and the structure shouldn't be modified
-        // except of populating the problem report during validation.
-        let cip509 = cip509;
 
         // Perform the validation.
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
@@ -190,22 +190,16 @@ impl Cip509 {
     }
 
     /// Creates an "empty" `Cip509` instance with all optional fields set to `None`.
-    /// Non-optional fields set to dummy values that must be overwritten.
-    fn with_report(report: ProblemReport) -> Self {
-        Self::with_slot_and_index(report, 0.into(), TxnIndex::from(0))
-    }
-
-    /// Creates an "empty" `Cip509` instance with all optional fields set to `None`.
-    fn with_slot_and_index(report: ProblemReport, slot: Slot, transaction_index: TxnIndex) -> Self {
+    fn with_decode_context(context: &DecodeContext) -> Self {
         Self {
             purpose: None,
             txn_inputs_hash: None,
             prv_tx_id: None,
             metadata: None,
             validation_signature: None,
-            report,
-            slot,
-            transaction_index,
+            report: context.report.clone(),
+            slot: context.slot,
+            transaction_index: context.transaction_index,
         }
     }
 
@@ -255,7 +249,7 @@ impl Cip509 {
     /// # Errors
     ///
     /// - `Err(ProblemReport)`
-    pub fn try_consume(self) -> Result<(Uuid, Cip509RbacMetadata), ProblemReport> {
+    pub fn consume(self) -> Result<(Uuid, Cip509RbacMetadata), ProblemReport> {
         match (
             self.purpose,
             self.txn_inputs_hash,
@@ -271,14 +265,15 @@ impl Cip509 {
     }
 }
 
-impl Decode<'_, ProblemReport> for Cip509 {
-    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
+    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
         let context = "Decoding Cip509";
+
         // It is ok to return error here because we were unable to decode anything, but everywhere
         // below we should try to recover as much data as possible and not to return early.
         let map_len = decode_map_len(d, context)?;
 
-        let mut result = Self::with_report(report.clone());
+        let mut result = Self::with_decode_context(&decode_context);
 
         let mut found_keys = Vec::new();
         let mut is_metadata_found = false;
@@ -287,7 +282,7 @@ impl Decode<'_, ProblemReport> for Cip509 {
             // We don't want to consume key here because it can be a part of chunked metadata that
             // is decoded below.
             let Ok(key) = d.probe().u8() else {
-                report.other(
+                result.report.other(
                     &format!("Unable to decode map key ({index} index)"),
                     context,
                 );
@@ -297,24 +292,25 @@ impl Decode<'_, ProblemReport> for Cip509 {
                 // Consume the key. This should never fail because we used `probe` above.
                 let _: u8 = decode_helper(d, context, &mut ())?;
 
-                if report_duplicated_key(&found_keys, &key, index, context, report) {
+                if report_duplicated_key(&found_keys, &key, index, context, &result.report) {
                     continue;
                 }
                 found_keys.push(key);
 
                 match key {
                     Cip509IntIdentifier::Purpose => {
-                        result.purpose = decode_purpose(d, context, report);
+                        result.purpose = decode_purpose(d, context, &result.report);
                     },
                     Cip509IntIdentifier::TxInputsHash => {
-                        result.txn_inputs_hash = decode_input_hash(d, context, report);
+                        result.txn_inputs_hash = decode_input_hash(d, context, &result.report);
                     },
                     Cip509IntIdentifier::PreviousTxId => {
-                        result.prv_tx_id = decode_previous_transaction_id(d, context, report);
+                        result.prv_tx_id =
+                            decode_previous_transaction_id(d, context, &result.report);
                     },
                     Cip509IntIdentifier::ValidationSignature => {
                         result.validation_signature =
-                            decode_validation_signature(d, context, report);
+                            decode_validation_signature(d, context, &result.report);
                     },
                 }
             } else {
@@ -323,7 +319,7 @@ impl Decode<'_, ProblemReport> for Cip509 {
                 // metadata, but it isn't allowed. See this link for more details:
                 // https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md#keys-10-11-or-12---x509-chunked-data
                 if is_metadata_found {
-                    report.duplicate_field(
+                    result.report.duplicate_field(
                         "metadata",
                         "Only one instance of the chunked metadata should be present",
                         context,
@@ -332,10 +328,10 @@ impl Decode<'_, ProblemReport> for Cip509 {
                 }
                 is_metadata_found = true;
 
-                match X509Chunks::decode(d, report) {
+                match X509Chunks::decode(d, decode_context) {
                     Ok(chunks) => result.metadata = chunks.into(),
                     Err(e) => {
-                        report.other(
+                        result.report.other(
                             &format!("Unable to decode metadata from chunks: {e:?}"),
                             context,
                         );
@@ -349,9 +345,11 @@ impl Decode<'_, ProblemReport> for Cip509 {
             Cip509IntIdentifier::TxInputsHash,
             Cip509IntIdentifier::ValidationSignature,
         ];
-        report_missing_keys(&found_keys, &required_keys, context, report);
+        report_missing_keys(&found_keys, &required_keys, context, &result.report);
         if !is_metadata_found {
-            report.missing_field("metadata (10, 11 or 12 chunks)", context);
+            result
+                .report
+                .missing_field("metadata (10, 11 or 12 chunks)", context);
         }
 
         Ok(result)

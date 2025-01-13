@@ -7,7 +7,10 @@ use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
 use super::rbac::Cip509RbacMetadata;
-use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper};
+use crate::{
+    cardano::cip509::decode_context::DecodeContext,
+    utils::decode_helper::{decode_array_len, decode_bytes, decode_helper},
+};
 
 /// Enum of compression algorithms used to compress chunks.
 #[derive(FromRepr, Debug, PartialEq, Clone, Default)]
@@ -39,12 +42,12 @@ impl From<X509Chunks> for Option<Cip509RbacMetadata> {
     }
 }
 
-impl Decode<'_, ProblemReport> for X509Chunks {
-    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+impl Decode<'_, DecodeContext<'_, '_>> for X509Chunks {
+    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
         // Determine the algorithm
         let algorithm: u8 = decode_helper(d, "algorithm in X509Chunks", &mut ())?;
         let Some(algorithm) = CompressionAlgorithm::from_repr(algorithm) else {
-            report.invalid_value(
+            decode_context.report.invalid_value(
                 "compression algorithm",
                 &format!("{algorithm}"),
                 "Allowed values: 10, 11, 12",
@@ -56,7 +59,7 @@ impl Decode<'_, ProblemReport> for X509Chunks {
         let decompressed = match decompress(d, &algorithm) {
             Ok(v) => v,
             Err(e) => {
-                report.invalid_value(
+                decode_context.report.invalid_value(
                     "Chunked metadata",
                     &format!("{algorithm:?}"),
                     "Must contain properly compressed or raw metadata",
@@ -68,7 +71,7 @@ impl Decode<'_, ProblemReport> for X509Chunks {
 
         // Decode the decompressed data.
         let mut decoder = Decoder::new(&decompressed);
-        let chunk_data = Cip509RbacMetadata::decode(&mut decoder, report).map_err(|e| {
+        let chunk_data = Cip509RbacMetadata::decode(&mut decoder, decode_context).map_err(|e| {
             decode::Error::message(format!("Failed to decode Cip509 metadata: {e:?}"))
         })?;
 

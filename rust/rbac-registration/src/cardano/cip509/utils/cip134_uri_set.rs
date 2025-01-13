@@ -260,28 +260,16 @@ fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisM
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::problem_report::ProblemReport;
-    use minicbor::{Decode, Decoder};
-    use pallas::{
-        codec::utils::Nullable,
-        ledger::{
-            addresses::{Address, Network},
-            traverse::{MultiEraBlock, MultiEraTx},
-        },
+    use pallas::ledger::{
+        addresses::{Address, Network},
+        traverse::MultiEraBlock,
     };
 
-    use crate::cardano::{cip509::Cip509, transaction::raw_aux_data::RawAuxData};
+    use crate::cardano::cip509::Cip509;
 
-    // This lint is disabled locally because the `allow-indexing-slicing-in-tests` was added
-    // very recently and isn't present in the stable clippy yet. Also it is impossible to use
-    // `get(n).unwrap()` instead because Clippy will still complain (clippy::get-unwrap).
-    #[allow(clippy::indexing_slicing)]
     #[test]
     fn set_new() {
-        let block = hex::decode(include_str!("../../../test_data/cardano/conway_1.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
-        let tx = &block.txs()[3];
-        let cip509 = cip509(tx);
+        let cip509 = cip509();
         let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
@@ -309,17 +297,15 @@ mod tests {
         );
     }
 
-    fn cip509(tx: &MultiEraTx) -> Cip509 {
-        let Nullable::Some(data) = tx.as_conway().unwrap().clone().auxiliary_data else {
-            panic!("Auxiliary data is missing");
-        };
-        let data = RawAuxData::new(data.raw_cbor());
-        let metadata = data.get_metadata(509).unwrap();
-
-        let mut decoder = Decoder::new(metadata.as_slice());
-        let mut report = ProblemReport::new("Cip509");
-        let res = Cip509::decode(&mut decoder, &mut report).unwrap();
-        assert!(!report.is_problematic());
+    fn cip509() -> Cip509 {
+        let block = hex::decode(include_str!("../../../test_data/cardano/conway_1.block")).unwrap();
+        let block = MultiEraBlock::decode(&block).unwrap();
+        let res = Cip509::new(&block, 3.into()).unwrap().unwrap();
+        assert!(
+            !res.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            res.report()
+        );
         res
     }
 }

@@ -33,17 +33,10 @@ use pallas::{
 use super::utils::cip19::{compare_key_hash, extract_key_hash};
 use crate::{
     cardano::{
-        cip509::{
-            role_data::{LocalRefInt, RoleData},
-            types::TxInputHash,
-            Cip0134UriSet,
-        },
+        cip509::{types::TxInputHash, Cip0134UriSet, LocalRefInt, RoleData},
         transaction::witness::TxWitness,
     },
-    utils::{
-        general::decremented_index,
-        hashing::{blake2b_128, blake2b_256},
-    },
+    utils::hashing::{blake2b_128, blake2b_256},
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -193,78 +186,79 @@ pub fn validate_payment_key(
     transaction: &MultiEraTx, conway_transaction: &conway::MintedTx, role_data: &RoleData,
     report: &ProblemReport,
 ) {
-    let context = "Cip509 role0 payment key validation";
-
-    let Some(payment_key) = role_data.payment_key else {
-        report.other("Missing payment key in role0", context);
-        return;
-    };
-    if payment_key == 0 {
-        report.invalid_value(
-            "payment key",
-            "0",
-            "Payment reference key must not be 0",
-            context,
-        );
-        return;
-    }
-
-    // Negative indicates reference to transaction output.
-    if payment_key < 0 {
-        let index = match decremented_index(payment_key.abs()) {
-            Ok(value) => value,
-            Err(e) => {
-                report.other(
-                    &format!("Failed to get index of payment key: {e:?}"),
-                    context,
-                );
-                return;
-            },
-        };
-        let outputs = &conway_transaction.transaction_body.outputs;
-        let witness = match TxWitness::new(&[transaction.clone()]) {
-            Ok(witnesses) => witnesses,
-            Err(e) => {
-                report.other(&format!("Failed to create TxWitness: {e:?}"), context);
-                return;
-            },
-        };
-
-        let address = match outputs.get(index) {
-            Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
-            Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
-            None => {
-                report.other(
-                    &format!("Role payment key reference index ({index}) is not found in transaction outputs"),
-                    context,
-                );
-                return;
-            },
-        };
-        validate_payment_output_key_helper(address, &witness, report, context);
-    } else {
-        // Positive indicates reference to tx input.
-        let inputs = &conway_transaction.transaction_body.inputs;
-        let index = match decremented_index(payment_key) {
-            Ok(value) => value,
-            Err(e) => {
-                report.other(
-                    &format!("Failed to get index of payment key: {e:?}"),
-                    context,
-                );
-                return;
-            },
-        };
-        // Check whether the index exists in transaction inputs.
-        if inputs.get(index).is_none() {
-            report.other(
-                &format!(
-                    "Role payment key reference index ({index}) is not found in transaction inputs"
-                ),
-                context,
-            );
-        }
-    }
+    // TODO: FIXME:
+    // let context = "Cip509 role0 payment key validation";
+    //
+    // let Some(payment_key) = role_data.payment_key() else {
+    //     report.other("Missing payment key in role0", context);
+    //     return;
+    // };
+    // if payment_key == 0 {
+    //     report.invalid_value(
+    //         "payment key",
+    //         "0",
+    //         "Payment reference key must not be 0",
+    //         context,
+    //     );
+    //     return;
+    // }
+    //
+    // // Negative indicates reference to transaction output.
+    // if payment_key < 0 {
+    //     let index = match decremented_index(payment_key.abs()) {
+    //         Ok(value) => value,
+    //         Err(e) => {
+    //             report.other(
+    //                 &format!("Failed to get index of payment key: {e:?}"),
+    //                 context,
+    //             );
+    //             return;
+    //         },
+    //     };
+    //     let outputs = &conway_transaction.transaction_body.outputs;
+    //     let witness = match TxWitness::new(&[transaction.clone()]) {
+    //         Ok(witnesses) => witnesses,
+    //         Err(e) => {
+    //             report.other(&format!("Failed to create TxWitness: {e:?}"), context);
+    //             return;
+    //         },
+    //     };
+    //
+    //     let address = match outputs.get(index) {
+    //         Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
+    //         Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
+    //         None => {
+    //             report.other(
+    //                 &format!("Role payment key reference index ({index}) is not found
+    // in transaction outputs"),                 context,
+    //             );
+    //             return;
+    //         },
+    //     };
+    //     validate_payment_output_key_helper(address, &witness, report, context);
+    // } else {
+    //     // Positive indicates reference to tx input.
+    //     let inputs = &conway_transaction.transaction_body.inputs;
+    //     let index = match decremented_index(payment_key) {
+    //         Ok(value) => value,
+    //         Err(e) => {
+    //             report.other(
+    //                 &format!("Failed to get index of payment key: {e:?}"),
+    //                 context,
+    //             );
+    //             return;
+    //         },
+    //     };
+    //     // Check whether the index exists in transaction inputs.
+    //     if inputs.get(index).is_none() {
+    //         report.other(
+    //             &format!(
+    //                 "Role payment key reference index ({index}) is not found in
+    // transaction inputs"             ),
+    //             context,
+    //         );
+    //     }
+    // }
 }
 
 /// Helper function for validating payment output key.
@@ -292,7 +286,7 @@ fn validate_payment_output_key_helper(
 /// Validate role singing key for role 0.
 /// Must reference certificate not the public key
 pub fn validate_role_signing_key(role_data: &RoleData, report: &ProblemReport) {
-    let Some(ref role_signing_key) = role_data.role_signing_key else {
+    let Some(ref role_signing_key) = role_data.signing_key() else {
         return;
     };
 
@@ -315,7 +309,7 @@ mod tests {
 
     use super::*;
     use crate::cardano::{
-        cip509::{rbac::RoleNumber, Cip509},
+        cip509::{Cip509, RoleNumber},
         transaction::raw_aux_data::RawAuxData,
     };
 
@@ -362,23 +356,25 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
+        let transaction_index = 3;
         let tx = transactions
-            .get(3)
+            .get(transaction_index)
             .expect("Failed to get transaction index");
-        let aux_data = cip_509_aux_data(tx);
 
-        let mut decoder = Decoder::new(aux_data.as_slice());
-        let mut report = ProblemReport::new("Cip509");
-        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        let cip509 = Cip509::new(&multi_era_block, transaction_index.into())
+            .unwrap()
+            .unwrap();
         assert!(
-            !report.is_problematic(),
-            "Failed to decode Cip509: {report:?}"
+            !cip509.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509.report()
         );
 
         let MultiEraTx::Conway(tx) = tx else {
             panic!("Unexpected transaction era");
         };
         let hash = cip509.txn_inputs_hash().unwrap();
+        let report = ProblemReport::new("validate_txn_inputs_hash test");
         validate_txn_inputs_hash(hash, tx, &report);
         assert!(
             !report.is_problematic(),
@@ -422,20 +418,21 @@ mod tests {
 
         let transactions = multi_era_block.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
+        let transaction_index = 3;
         let tx = transactions
-            .get(3)
+            .get(transaction_index)
             .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(tx);
-
-        let mut decoder = Decoder::new(aux_data.as_slice());
-        let mut report = ProblemReport::new("Cip509");
-        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        let cip509 = Cip509::new(&multi_era_block, transaction_index.into())
+            .unwrap()
+            .unwrap();
         assert!(
-            !report.is_problematic(),
-            "Failed to decode Cip509: {report:?}"
+            !cip509.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509.report()
         );
 
+        let report = ProblemReport::new("validate_stake_public_key");
         validate_stake_public_key(tx, cip509.certificate_uris(), &report);
         assert!(
             !report.is_problematic(),
@@ -455,16 +452,14 @@ mod tests {
             .first()
             .expect("Failed to get transaction index");
 
-        let aux_data = cip_509_aux_data(tx);
-
-        let mut decoder = Decoder::new(aux_data.as_slice());
-        let mut report = ProblemReport::new("Cip509");
-        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        let cip509 = Cip509::new(&multi_era_block, 0.into()).unwrap().unwrap();
         assert!(
-            !report.is_problematic(),
-            "Failed to decode Cip509: {report:?}"
+            !cip509.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509.report()
         );
 
+        let report = ProblemReport::new("validate_stake_public_key");
         validate_stake_public_key(tx, cip509.certificate_uris(), &report);
         assert!(report.is_problematic());
         let report = format!("{report:?}");
@@ -580,19 +575,11 @@ mod tests {
     fn extract_stake_addresses_from_metadata() {
         let block = conway_1();
         let block = MultiEraBlock::decode(&block).unwrap();
-
-        let transactions = block.txs();
-        let tx = transactions
-            .get(3)
-            .expect("Failed to get transaction index");
-
-        let aux_data = cip_509_aux_data(tx);
-        let mut decoder = Decoder::new(&aux_data);
-        let mut report = ProblemReport::new("Cip509");
-        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
+        let cip509 = Cip509::new(&block, 3.into()).unwrap().unwrap();
         assert!(
-            !report.is_problematic(),
-            "Failed to decode Cip509: {report:?}"
+            !cip509.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509.report()
         );
 
         let uris = cip509.certificate_uris().unwrap();

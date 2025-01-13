@@ -3,15 +3,15 @@
 //! CDDL Reference: <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
 
 pub use cip509::Cip509;
-pub use rbac::{
-    role_data::{self, RoleData},
-    C509Cert, RoleNumber, SimplePublicKeyType, X509DerCert,
+pub use rbac::{C509Cert, SimplePublicKeyType, X509DerCert};
+pub use types::{
+    CertKeyHash, KeyLocalRef, LocalRefInt, RoleData, RoleNumber, TxInputHash, ValidationSignature,
 };
-pub use types::CertKeyHash;
 pub use utils::Cip0134UriSet;
 
 #[allow(clippy::module_inception)]
 mod cip509;
+mod decode_context;
 mod rbac;
 mod types;
 mod utils;

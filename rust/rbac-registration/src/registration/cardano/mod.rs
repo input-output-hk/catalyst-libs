@@ -2,7 +2,6 @@
 
 pub mod payment_history;
 pub mod point_tx_idx;
-pub mod role_data;
 
 use std::{collections::HashMap, sync::Arc};
 
@@ -23,13 +22,9 @@ use tracing::{error, warn};
 use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
 
-use crate::{
-    cardano::cip509::{
-        C509Cert, CertKeyHash, Cip0134UriSet, Cip509, RoleData as Cip509RoleData, RoleNumber,
-        SimplePublicKeyType, X509DerCert,
-    },
-    registration::cardano::role_data::RoleData,
-    utils::general::decremented_index,
+use crate::cardano::cip509::{
+    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, RoleData, RoleNumber, SimplePublicKeyType,
+    X509DerCert,
 };
 
 /// Registration chains.
@@ -184,7 +179,7 @@ impl RegistrationChainInner {
         }
 
         // TODO: FIXME: Remove txn_inputs_hash?
-        let (purpose, registration) = match cip509.try_consume() {
+        let (purpose, registration) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
                 let error = format!("Invalid Cip509: {e:?}");
@@ -202,7 +197,7 @@ impl RegistrationChainInner {
         let c509_cert_map = chain_root_c509_certs(registration.c509_certs, &point_tx_idx);
         let public_key_map = chain_root_public_keys(registration.pub_keys, &point_tx_idx);
         let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
-        let role_data_map = chain_root_role_data(registration.role_data, txn, &point_tx_idx)?;
+        let role_data_map = chain_root_role_data(registration.role_data, &point_tx_idx);
 
         let mut tracking_payment_history = HashMap::new();
         // Create a payment history for each tracking payment key
@@ -252,7 +247,7 @@ impl RegistrationChainInner {
             bail!("Invalid previous transaction ID, not a part of this registration chain");
         }
 
-        let (purpose, registration) = match cip509.try_consume() {
+        let (purpose, registration) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
                 let error = format!("Invalid Cip509: {e:?}");
@@ -276,7 +271,7 @@ impl RegistrationChainInner {
         // Revocation list should be appended
         new_inner.revocations.extend(revocations);
 
-        update_role_data(&mut new_inner, registration.role_data, txn, &point_tx_idx)?;
+        update_role_data(&mut new_inner, registration.role_data, &point_tx_idx);
 
         update_tracking_payment_history(
             &mut new_inner.tracking_payment_history,
@@ -417,115 +412,44 @@ fn revocations_list(
 
 /// Process the role data for chain root.
 fn chain_root_role_data(
-    role_set: HashMap<RoleNumber, Cip509RoleData>, txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<HashMap<RoleNumber, (PointTxIdx, RoleData)>> {
-    let mut role_data_map = HashMap::new();
-    for (role_number, role_data) in role_set {
-        // Get the payment key
-        let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
-
-        // Map of role number to point and role data
-        role_data_map.insert(
-            role_number,
-            (
-                point_tx_idx.clone(),
-                RoleData::new(
-                    role_data.role_signing_key,
-                    role_data.role_encryption_key,
-                    payment_key,
-                    role_data.role_extended_data_keys,
-                ),
-            ),
-        );
-    }
-    Ok(role_data_map)
+    role_data: HashMap<RoleNumber, RoleData>, point_tx_idx: &PointTxIdx,
+) -> HashMap<RoleNumber, (PointTxIdx, RoleData)> {
+    role_data
+        .into_iter()
+        .map(|(number, data)| (number, (point_tx_idx.clone(), data)))
+        .collect()
 }
 
 /// Update the role data in the registration chain.
 fn update_role_data(
-    inner: &mut RegistrationChainInner, role_set: HashMap<RoleNumber, Cip509RoleData>,
-    txn: &MultiEraTx, point_tx_idx: &PointTxIdx,
-) -> anyhow::Result<()> {
-    for (role_number, role_data) in role_set {
+    inner: &mut RegistrationChainInner, role_set: HashMap<RoleNumber, RoleData>,
+    point_tx_idx: &PointTxIdx,
+) {
+    for (number, mut data) in role_set {
         // If there is new role singing key, use it, else use the old one
-        let signing_key = match role_data.role_signing_key {
-            Some(key) => Some(key),
-            None => {
-                match inner.role_data.get(&role_number) {
-                    Some((_, role_data)) => role_data.signing_key_ref().clone(),
-                    None => None,
-                }
-            },
-        };
+        if data.signing_key().is_none() {
+            let signing_key = inner
+                .role_data
+                .get(&number)
+                .and_then(|(_, d)| d.signing_key())
+                .cloned();
+            data.set_signing_key(signing_key);
+        }
 
         // If there is new role encryption key, use it, else use the old one
-        let encryption_key = match role_data.role_encryption_key {
-            Some(key) => Some(key),
-            None => {
-                match inner.role_data.get(&role_number) {
-                    Some((_, role_data)) => role_data.encryption_ref().clone(),
-                    None => None,
-                }
-            },
-        };
-        let payment_key = get_payment_addr_from_tx(txn, role_data.payment_key)?;
+        if data.encryption_key().is_none() {
+            let signing_key = inner
+                .role_data
+                .get(&number)
+                .and_then(|(_, d)| d.encryption_key())
+                .cloned();
+            data.set_encryption_key(signing_key);
+        }
 
         // Map of role number to point and role data
         // Note that new role data will overwrite the old one
-        inner.role_data.insert(
-            role_number,
-            (
-                point_tx_idx.clone(),
-                RoleData::new(
-                    signing_key,
-                    encryption_key,
-                    payment_key,
-                    role_data.role_extended_data_keys.clone(),
-                ),
-            ),
-        );
+        inner.role_data.insert(number, (point_tx_idx.clone(), data));
     }
-    Ok(())
-}
-
-/// Helper function for retrieving the Shelley address from the transaction.
-fn get_payment_addr_from_tx(
-    txn: &MultiEraTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Option<ShelleyAddress>> {
-    // The index should exist since it pass the basic validation
-    if let Some(key_ref) = payment_key_ref {
-        if let MultiEraTx::Conway(tx) = txn {
-            // Transaction output
-            if key_ref < 0 {
-                let index = decremented_index(key_ref.abs())?;
-                if let Some(output) = tx.transaction_body.outputs.get(index) {
-                    // Conway era -> Post alonzo tx output
-                    match output {
-                        pallas::ledger::primitives::conway::PseudoTransactionOutput::PostAlonzo(
-                            o,
-                        ) => {
-                            let address =
-                                Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
-
-                            if let Address::Shelley(addr) = address {
-                                return Ok(Some(addr.clone()));
-                            }
-                            bail!("Unsupported address type in payment key reference");
-                        },
-                        // Not support legacy form of transaction output
-                        pallas::ledger::primitives::conway::PseudoTransactionOutput::Legacy(_) => {
-                            bail!("Unsupported transaction output type in payment key reference");
-                        },
-                    }
-                }
-                // Index doesn't exist
-                bail!("Payment key not found in transaction output");
-            }
-            // Transaction input, currently unsupported because of the reference to transaction hash
-            bail!("Unsupported payment key reference to transaction input");
-        }
-    }
-    Ok(None)
 }
 
 /// Update the payment history given the tracking payment keys.
@@ -571,8 +495,6 @@ fn update_tracking_payment_history(
 
 #[cfg(test)]
 mod test {
-    use catalyst_types::problem_report::ProblemReport;
-    use minicbor::{Decode, Decoder};
     use pallas::{ledger::traverse::MultiEraTx, network::miniprotocols::Point};
 
     use super::RegistrationChain;
@@ -620,19 +542,23 @@ mod test {
             pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data_1)
                 .expect("Failed to decode MultiEraBlock");
 
+        let cip509_1 = Cip509::new(&multi_era_block_1, 3.into())
+            .expect("Failed to decode Cip509")
+            .unwrap();
+        assert!(
+            !cip509_1.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509_1.report()
+        );
+
+        let tracking_payment_keys = vec![];
+
+        // TODO: FIXME: The transaction shouldn't be used here.
         let transactions_1 = multi_era_block_1.txs();
         // Forth transaction of this test data contains the CIP509 auxiliary data
         let tx_1 = transactions_1
             .get(3)
             .expect("Failed to get transaction index");
-
-        let aux_data_1 = cip_509_aux_data(tx_1);
-        let mut decoder = Decoder::new(aux_data_1.as_slice());
-        let mut report = ProblemReport::new("Cip509");
-        let cip509_1 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-        assert!(!report.is_problematic());
-        let tracking_payment_keys = vec![];
-
         let registration_chain =
             RegistrationChain::new(point_1.clone(), &tracking_payment_keys, 3, tx_1, cip509_1);
         // Able to add chain root to the registration chain
@@ -649,22 +575,24 @@ mod test {
             pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data_4)
                 .expect("Failed to decode MultiEraBlock");
 
+        let cip509 = Cip509::new(&multi_era_block_4, 1.into()).unwrap().unwrap();
+        assert!(
+            !cip509.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509.report()
+        );
+
+        // TODO: FIXME: The transaction shouldn't be used here.
         let transactions_4 = multi_era_block_4.txs();
         // Second transaction of this test data contains the CIP509 auxiliary data
         let tx = transactions_4
             .get(1)
             .expect("Failed to get transaction index");
 
-        let aux_data_4 = cip_509_aux_data(tx);
-        let mut decoder = Decoder::new(aux_data_4.as_slice());
-        let mut report = ProblemReport::new("Cip509");
-        let cip509 = Cip509::decode(&mut decoder, &mut report).expect("Failed to decode Cip509");
-
         // Update the registration chain
         assert!(registration_chain
             .unwrap()
             .update(point_4.clone(), 1, tx, cip509)
             .is_ok());
-        assert!(!report.is_problematic());
     }
 }

@@ -7,11 +7,8 @@ pub mod role_data;
 pub use certs::{C509Cert, X509DerCert};
 pub use metadata::{Cip509RbacMetadata, Cip509RbacMetadataInt};
 pub use pub_key::SimplePublicKeyType;
-pub use role_data::RoleData;
-pub use role_number::RoleNumber;
 
 mod certs;
 mod metadata;
 mod pub_key;
-mod role_number;
 mod tag;
