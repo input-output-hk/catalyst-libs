@@ -100,7 +100,7 @@ impl From<&AdditionalFields> for Vec<(Label, Value)> {
 }
 
 impl TryFrom<&ProtectedHeader> for AdditionalFields {
-    type Error = Vec<anyhow::Error>;
+    type Error = crate::error::Error;
 
     #[allow(clippy::too_many_lines)]
     fn try_from(protected: &ProtectedHeader) -> Result<Self, Self::Error> {
@@ -261,7 +261,7 @@ impl TryFrom<&ProtectedHeader> for AdditionalFields {
         if errors.is_empty() {
             Ok(extra)
         } else {
-            Err(errors)
+            Err(crate::error::Error(errors))
         }
     }
 }

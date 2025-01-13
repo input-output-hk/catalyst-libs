@@ -171,7 +171,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
 
         let extra = AdditionalFields::try_from(protected).map_or_else(
             |e| {
-                errors.extend(e);
+                errors.extend(e.0);
                 None
             },
             Some,
