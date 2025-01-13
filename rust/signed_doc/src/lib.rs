@@ -24,8 +24,6 @@ struct InnerCatalystSignedDocument {
     metadata: Metadata,
     /// Document Content
     content: Content,
-    /// Document Author
-    author: KidUri,
     /// Signatures
     signatures: Signatures,
 }
@@ -74,17 +72,13 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
             },
             Some,
         );
-        let author = signatures.as_ref().and_then(|s| s.kids().first().cloned());
 
         if cose_sign.payload.is_none() {
             errors.push(anyhow!("Document Content is missing"));
         }
-        if author.is_none() {
-            errors.push(anyhow!("Document Author is missing"));
-        }
 
-        match (cose_sign.payload, author, metadata, signatures) {
-            (Some(payload), Some(author), Some(metadata), Some(signatures)) => {
+        match (cose_sign.payload, metadata, signatures) {
+            (Some(payload), Some(metadata), Some(signatures)) => {
                 let content = Content::new(
                     payload,
                     metadata.content_type(),
@@ -99,7 +93,6 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
                     inner: InnerCatalystSignedDocument {
                         metadata,
                         content,
-                        author,
                         signatures,
                     }
                     .into(),
@@ -137,9 +130,9 @@ impl CatalystSignedDocument {
         &self.inner.content
     }
 
-    /// Return a Document's author
+    /// Return a Document's signatures
     #[must_use]
-    pub fn author(&self) -> KidUri {
-        self.inner.author.clone()
+    pub fn signatures(&self) -> &Signatures {
+        &self.inner.signatures
     }
 }
