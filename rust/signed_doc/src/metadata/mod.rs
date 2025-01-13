@@ -75,6 +75,12 @@ impl Metadata {
     pub fn content_encoding(&self) -> Option<ContentEncoding> {
         self.content_encoding
     }
+
+    /// Return reference to additional metadata fields.
+    #[must_use]
+    pub fn extra(&self) -> &AdditionalFields {
+        &self.extra
+    }
 }
 
 impl Display for Metadata {

@@ -227,33 +227,11 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign 
         coset::Label::Text("ver".to_string()),
         encode_cbor_uuid(&meta.doc_ver()),
     ));
-    // WIP: encode additional metadata fields
-    //
-    // if let Some(r#ref) = &meta.doc_ref() {
-    //    protected_header.rest.push((
-    //        coset::Label::Text("ref".to_string()),
-    //        encode_cbor_document_ref(r#ref),
-    //    ));
-    //}
-    // if let Some(template) = &meta.doc_template() {
-    //    protected_header.rest.push((
-    //        coset::Label::Text("template".to_string()),
-    //        encode_cbor_document_ref(template),
-    //    ));
-    //}
-    // if let Some(reply) = &meta.doc_reply() {
-    //    protected_header.rest.push((
-    //        coset::Label::Text("reply".to_string()),
-    //        encode_cbor_document_ref(reply),
-    //    ));
-    //}
-    // if let Some(section) = &meta.doc_section() {
-    //    protected_header.rest.push((
-    //        coset::Label::Text("section".to_string()),
-    //        coset::cbor::Value::Text(section.clone()),
-    //    ));
-    //}
+    let meta_rest = meta.extra().header_rest();
 
+    if !meta_rest.is_empty() {
+        protected_header.rest.extend(meta_rest);
+    }
     coset::CoseSignBuilder::new()
         .protected(protected_header)
         .payload(doc_bytes)

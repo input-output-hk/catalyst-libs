@@ -31,6 +31,13 @@ pub struct AdditionalFields {
     pub(super) category_id: Option<UuidV4>,
 }
 
+impl AdditionalFields {
+    /// Returns the COSE Sign protected header REST fields.
+    pub fn header_rest(&self) -> Vec<(Label, Value)> {
+        self.into()
+    }
+}
+
 impl From<&AdditionalFields> for Vec<(Label, Value)> {
     fn from(fields: &AdditionalFields) -> Self {
         let mut vec = Vec::new();
