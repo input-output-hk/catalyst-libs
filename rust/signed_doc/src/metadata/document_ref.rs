@@ -1,4 +1,6 @@
 //! Catalyst Signed Document Metadata.
+use coset::cbor::Value;
+
 use super::UuidV7;
 
 /// Reference to a Document.
@@ -19,11 +21,22 @@ pub enum DocumentRef {
     },
 }
 
-impl TryFrom<&coset::cbor::Value> for DocumentRef {
+impl From<&DocumentRef> for Value {
+    fn from(val: &DocumentRef) -> Self {
+        match val {
+            DocumentRef::Latest { id } => Value::from(*id),
+            DocumentRef::WithVer { id, ver } => {
+                Value::Array(vec![Value::from(*id), Value::from(*ver)])
+            },
+        }
+    }
+}
+
+impl TryFrom<&Value> for DocumentRef {
     type Error = anyhow::Error;
 
     #[allow(clippy::indexing_slicing)]
-    fn try_from(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
+    fn try_from(val: &Value) -> anyhow::Result<DocumentRef> {
         if let Ok(id) = UuidV7::try_from(val) {
             Ok(DocumentRef::Latest { id })
         } else {
