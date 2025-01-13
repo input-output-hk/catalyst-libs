@@ -4,8 +4,9 @@ use std::fmt::{Display, Formatter};
 use super::{decode_cbor_uuid, INVALID_UUID};
 
 /// Type representing a `UUIDv7`.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
 #[serde(from = "uuid::Uuid")]
+#[serde(into = "uuid::Uuid")]
 pub struct UuidV7 {
     /// UUID
     uuid: uuid::Uuid,
@@ -66,6 +67,15 @@ impl TryFrom<&coset::cbor::Value> for UuidV7 {
 impl From<uuid::Uuid> for UuidV7 {
     fn from(uuid: uuid::Uuid) -> Self {
         Self { uuid }
+    }
+}
+
+/// Returns a `uuid::Uuid` from `UUIDv7`.
+///
+/// NOTE: This does not guarantee that the `UUID` is valid.
+impl From<UuidV7> for uuid::Uuid {
+    fn from(value: UuidV7) -> Self {
+        value.uuid
     }
 }
 
