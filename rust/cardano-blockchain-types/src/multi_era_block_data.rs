@@ -288,6 +288,12 @@ impl MultiEraBlock {
     pub fn txs(&self) -> Vec<MultiEraTx> {
         self.decode().txs()
     }
+
+    /// Get the auxiliary data of the block.
+    #[must_use]
+    pub fn aux_data(&self) -> &BlockAuxData {
+        &self.inner.aux_data
+    }
 }
 
 impl Display for MultiEraBlock {
