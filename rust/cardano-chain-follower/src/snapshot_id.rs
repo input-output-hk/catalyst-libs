@@ -7,14 +7,11 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use cardano_blockchain_types::{Network, Point};
 use tracing::debug;
 
-use crate::{
-    mithril_snapshot_sync::{get_mithril_tip, MITHRIL_IMMUTABLE_SUB_DIRECTORY},
-    point::UNKNOWN_POINT,
-    Network, Point,
-};
-/// A Representation of a Snapshot Path and its represented Immutable File Number.
+use crate::mithril_snapshot_sync::{get_mithril_tip, MITHRIL_IMMUTABLE_SUB_DIRECTORY};
+/// A representation of a Snapshot Path and its represented immutable file number.
 #[derive(Clone, Debug)]
 pub(crate) struct SnapshotId {
     /// The Snapshot Path
@@ -101,7 +98,7 @@ impl default::Default for SnapshotId {
         SnapshotId {
             path: PathBuf::new(),
             file: 0,
-            tip: UNKNOWN_POINT,
+            tip: Point::UNKNOWN,
         }
     }
 }
@@ -142,7 +139,7 @@ impl PartialOrd for SnapshotId {
     }
 }
 
-// Allows us to compare a SnapshotID against Some(SnapshotID).
+// Allows us to compare a `SnapshotID` against Some(`SnapshotID`).
 impl PartialEq<Option<SnapshotId>> for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
@@ -165,7 +162,7 @@ impl PartialOrd<Option<SnapshotId>> for SnapshotId {
     }
 }
 
-// Allows us to compare a SnapshotID against u64 (Just the Immutable File Number).
+// Allows us to compare a `SnapshotID` against u64 (just the immutable file number).
 impl PartialEq<u64> for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
@@ -185,7 +182,6 @@ impl PartialOrd<u64> for SnapshotId {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::point::*;
 
     const TEST_DIR: &str = "test_data/test_snapshot_id";
 
@@ -219,9 +215,9 @@ mod tests {
         let dir_path_2 = &[TEST_DIR, "12346"].join("/");
         let dir_path_3 = &[TEST_DIR, "12347"].join("/");
 
-        let point_1 = Point::fuzzy(999);
-        let point_2 = Point::new(999, vec![0; 32]);
-        let point_3 = Point::new(12345, vec![8; 32]);
+        let point_1 = Point::fuzzy(999.into());
+        let point_2 = Point::new(999.into(), [0; 32].into());
+        let point_3 = Point::new(12345.into(), [8; 32].into());
 
         assert!(SnapshotId::new(&PathBuf::from(dir_path_1), point_1).is_some());
         assert!(SnapshotId::new(&PathBuf::from(dir_path_2), point_2).is_some());
@@ -245,7 +241,7 @@ mod tests {
     fn test_immutable_path() {
         let dir_path_1 = &[TEST_DIR, "12345"].join("/");
 
-        let point_1 = Point::fuzzy(999);
+        let point_1 = Point::fuzzy(999.into());
 
         let snapshot_id_1 = SnapshotId::new(&PathBuf::from(dir_path_1), point_1)
             .expect("cannot create snapshot id");
@@ -263,9 +259,9 @@ mod tests {
         let dir_path_3 = &[TEST_DIR, "12346"].join("/");
         let dir_path_4 = &[TEST_DIR, "12347"].join("/");
 
-        let point_1 = Point::fuzzy(999);
-        let point_2 = Point::new(999, vec![0; 32]);
-        let point_3 = Point::new(12345, vec![8; 32]);
+        let point_1 = Point::fuzzy(999.into());
+        let point_2 = Point::new(999.into(), [0; 32].into());
+        let point_3 = Point::new(12345.into(), [8; 32].into());
 
         let snapshot_id_1 = SnapshotId::new(&PathBuf::from(dir_path_1), point_1.clone());
         let snapshot_id_2 = SnapshotId::new(&PathBuf::from(dir_path_2), point_1);

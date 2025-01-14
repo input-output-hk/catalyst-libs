@@ -7,6 +7,7 @@ use std::{
     sync::Arc,
 };
 
+use cardano_blockchain_types::{MultiEraBlock, Network};
 use chrono::{TimeDelta, Utc};
 use dashmap::DashSet;
 use humantime::format_duration;
@@ -27,10 +28,8 @@ use crate::{
     mithril_snapshot_data::update_latest_mithril_snapshot,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
     mithril_turbo_downloader::MithrilTurboDownloader,
-    network::Network,
     snapshot_id::SnapshotId,
     stats::{self, mithril_sync_failure, mithril_validation_state},
-    MultiEraBlock,
 };
 
 /// The minimum duration between checks for a new Mithril Snapshot. (Must be same as
@@ -206,11 +205,7 @@ async fn download_and_verify_snapshot_certificate(
 ///
 /// # Arguments
 ///
-/// * `network` - The network type for the client to connect to.
-/// * `aggregator_url` - A reference to the URL of an aggregator that can be used to
-///   create the client.
-/// * `genesis_vkey` - The genesis verification key, which is needed to authenticate with
-///   the server.
+/// * `cfg` - Mithril snapshot configuration.
 ///
 /// # Returns
 ///
@@ -239,6 +234,7 @@ pub(crate) const MITHRIL_IMMUTABLE_SUB_DIRECTORY: &str = "immutable";
 ///
 /// # Arguments
 ///
+/// * `chain` - The network chain to get the tip block from.
 /// * `path` - The path where the immutable chain is stored.
 ///
 /// # Returns
@@ -677,11 +673,8 @@ macro_rules! next_iteration {
 /// networks.
 /// # Arguments
 ///
-/// * `network` - The network type for the client to connect to.
-/// * `aggregator_url` - A reference to the URL of an aggregator that can be used to
-///   create the client.
-/// * `genesis_vkey` - The genesis verification key, which is needed to authenticate with
-///   the server.
+/// * `cfg` - The configuration for the Mithril snapshot.
+/// * `tx` - The message to be sent when Mithril Snapshot updates.
 ///
 /// # Returns
 ///
