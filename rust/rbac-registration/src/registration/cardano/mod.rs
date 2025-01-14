@@ -495,10 +495,7 @@ fn update_tracking_payment_history(
 
 #[cfg(test)]
 mod test {
-    use pallas::network::miniprotocols::Point;
-
-    use super::RegistrationChain;
-    use crate::cardano::cip509::Cip509;
+    use super::*;
 
     fn conway_1() -> Vec<u8> {
         hex::decode(include_str!("../../test_data/cardano/conway_1.block"))

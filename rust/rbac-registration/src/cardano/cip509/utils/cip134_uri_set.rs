@@ -280,7 +280,7 @@ mod tests {
         let uris = x_uris.get(&0).unwrap();
         assert_eq!(uris.len(), 1);
 
-        let uri = &uris[0];
+        let uri = uris.first().unwrap();
         // cSpell:disable
         assert_eq!(
             uri.uri(),

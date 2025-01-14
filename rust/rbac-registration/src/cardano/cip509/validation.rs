@@ -228,7 +228,7 @@ mod tests {
             registration.report()
         );
         assert!(registration.previous_transaction().is_none());
-        assert_eq!(registration.origin(), (77429134.into(), 3.into()));
+        assert_eq!(registration.origin(), (77_429_134.into(), 3.into()));
 
         let (purpose, metadata) = registration.consume().unwrap();
         assert_eq!(
@@ -251,7 +251,7 @@ mod tests {
 
         let registration = registrations.pop().unwrap();
         assert!(registration.report().is_problematic());
-        assert_eq!(registration.origin(), (77171632.into(), 0.into()));
+        assert_eq!(registration.origin(), (77_171_632.into(), 0.into()));
 
         // The consume function must return the problem report contained within the registration.
         let report = registration.consume().unwrap_err();
@@ -284,7 +284,7 @@ mod tests {
                 .unwrap()
             )
         );
-        assert_eq!(registration.origin(), (77170639.into(), 0.into()));
+        assert_eq!(registration.origin(), (77_170_639.into(), 0.into()));
 
         let (purpose, metadata) = registration.consume().unwrap();
         assert_eq!(
@@ -318,7 +318,7 @@ mod tests {
                 .unwrap()
             )
         );
-        assert_eq!(registration.origin(), (77436369.into(), 1.into()));
+        assert_eq!(registration.origin(), (77_436_369.into(), 1.into()));
 
         let (purpose, metadata) = registration.consume().unwrap();
         assert_eq!(
