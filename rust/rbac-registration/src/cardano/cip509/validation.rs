@@ -23,6 +23,7 @@
 
 use std::borrow::Cow;
 
+use cardano_blockchain_types::{TxnWitness, VKeyHash};
 use catalyst_types::problem_report::ProblemReport;
 use pallas::{
     codec::{
@@ -34,9 +35,8 @@ use pallas::{
 
 use super::utils::cip19::compare_key_hash;
 use crate::{
-    cardano::{
-        cip509::{types::TxInputHash, Cip0134UriSet, LocalRefInt, RoleData},
-        transaction::witness::TxWitness,
+    cardano::cip509::{
+        types::TxInputHash, utils::cip19::extract_key_hash, Cip0134UriSet, LocalRefInt, RoleData,
     },
     utils::hashing::{blake2b_128, blake2b_256},
 };
@@ -138,7 +138,7 @@ pub fn validate_stake_public_key(
     let context = "Cip509 stake public key validation";
 
     let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
-    let witness = match TxWitness::new(&[transaction.clone()]) {
+    let witness = match TxnWitness::new(&[transaction.clone()]) {
         Ok(w) => w,
         Err(e) => {
             report.other(&format!("Failed to create TxWitness: {e:?}"), context);
@@ -155,7 +155,7 @@ pub fn validate_stake_public_key(
         return;
     }
 
-    if let Err(e) = compare_key_hash(&pk_addrs, &witness, 0) {
+    if let Err(e) = compare_key_hash(&pk_addrs, &witness, 0.into()) {
         report.other(
             &format!("Failed to compare public keys with witnesses: {e:?}"),
             context,
@@ -165,7 +165,7 @@ pub fn validate_stake_public_key(
 
 /// Extracts all stake addresses from both X509 and C509 certificates containing in the
 /// given `Cip509` and converts their hashes to bytes.
-fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<Vec<u8>> {
+fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
     let Some(uris) = uris else {
         return Vec::new();
     };
@@ -176,7 +176,7 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<Vec<u8>> {
         .flat_map(|(_index, uris)| uris.iter())
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
-                Some(a.payload().as_hash().to_vec())
+                extract_key_hash(a.payload().as_hash().as_ref())
             } else {
                 None
             }
@@ -346,7 +346,13 @@ mod tests {
         else {
             panic!("Unexpected address type");
         };
-        let hash = address.payload().as_hash().to_vec();
+        let hash = address
+            .payload()
+            .as_hash()
+            .get(1..29)
+            .unwrap()
+            .try_into()
+            .unwrap();
 
         let addresses = extract_stake_addresses(cip509.certificate_uris());
         assert_eq!(1, addresses.len());

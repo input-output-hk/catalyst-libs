@@ -2,6 +2,7 @@
 
 use std::{borrow::Cow, collections::HashMap};
 
+use cardano_blockchain_types::TxnWitness;
 use catalyst_types::problem_report::ProblemReport;
 use pallas::ledger::{
     addresses::{Address, ShelleyAddress},
@@ -10,13 +11,10 @@ use pallas::ledger::{
 };
 
 use crate::{
-    cardano::{
-        cip509::{
-            rbac::role_data::CborRoleData,
-            utils::cip19::{compare_key_hash, extract_key_hash},
-            KeyLocalRef, RoleNumber,
-        },
-        transaction::witness::TxWitness,
+    cardano::cip509::{
+        rbac::role_data::CborRoleData,
+        utils::cip19::{compare_key_hash, extract_key_hash},
+        KeyLocalRef, RoleNumber,
     },
     utils::general::decremented_index,
 };
@@ -151,7 +149,7 @@ fn convert_transaction_output(
 ) -> Option<ShelleyAddress> {
     let outputs = &transaction.transaction_body.outputs;
     let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
-    let witness = match TxWitness::new(&[transaction]) {
+    let witness = match TxnWitness::new(&[transaction]) {
         Ok(witnesses) => witnesses,
         Err(e) => {
             report.other(&format!("Failed to create TxWitness: {e:?}"), context);
@@ -202,7 +200,7 @@ fn convert_transaction_output(
 
 /// Helper function for validating payment output key.
 fn validate_payment_output(
-    output_address: &[u8], witness: &TxWitness, context: &str, report: &ProblemReport,
+    output_address: &[u8], witness: &TxnWitness, context: &str, report: &ProblemReport,
 ) {
     let Some(key) = extract_key_hash(output_address) else {
         report.other("Failed to extract payment key hash from address", context);
@@ -212,7 +210,7 @@ fn validate_payment_output(
     // Set transaction index to 0 because the list of transaction is manually constructed
     // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
     // the witness within this transaction.
-    if let Err(e) = compare_key_hash(&[key.clone()], witness, 0) {
+    if let Err(e) = compare_key_hash(&[key.clone()], witness, 0.into()) {
         report.other(
             &format!(
                 "Unable to find payment output key ({key:?}) in the transaction witness set: {e:?}"
