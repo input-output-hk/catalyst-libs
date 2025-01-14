@@ -1,8 +1,12 @@
 //! A context used to pass additional parameters during decoding.
 
+use std::collections::HashMap;
+
 use cardano_blockchain_types::{Slot, TxnIndex};
 use catalyst_types::problem_report::ProblemReport;
-use pallas::ledger::primitives::conway;
+use pallas::ledger::{addresses::ShelleyAddress, primitives::conway};
+
+use crate::cardano::cip509::Payment;
 
 /// A context used to pass the problem report and additional parameters during decoding.
 pub struct DecodeContext<'r, 't> {
@@ -12,6 +16,8 @@ pub struct DecodeContext<'r, 't> {
     pub transaction_index: TxnIndex,
     /// A transaction.
     pub transaction: &'t conway::MintedTx<'t>,
+    /// A payment history.
+    pub payment_history: HashMap<ShelleyAddress, Vec<Payment>>,
     /// A problem report.
     ///
     /// The reference must be mutable because the `Decode::decode` function takes a

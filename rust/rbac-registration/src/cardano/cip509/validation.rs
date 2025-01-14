@@ -218,7 +218,7 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let mut registrations = Cip509::from_block(&block);
+        let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
@@ -230,7 +230,7 @@ mod tests {
         assert!(registration.previous_transaction().is_none());
         assert_eq!(registration.origin(), (77_429_134.into(), 3.into()));
 
-        let (purpose, metadata) = registration.consume().unwrap();
+        let (purpose, metadata, _) = registration.consume().unwrap();
         assert_eq!(
             purpose,
             Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
@@ -246,7 +246,7 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_2.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let mut registrations = Cip509::from_block(&block);
+        let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
@@ -266,7 +266,7 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let mut registrations = Cip509::from_block(&block);
+        let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
@@ -286,7 +286,7 @@ mod tests {
         );
         assert_eq!(registration.origin(), (77_170_639.into(), 0.into()));
 
-        let (purpose, metadata) = registration.consume().unwrap();
+        let (purpose, metadata, _) = registration.consume().unwrap();
         assert_eq!(
             purpose,
             Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
@@ -300,7 +300,7 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_4.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let mut registrations = Cip509::from_block(&block);
+        let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
@@ -320,7 +320,7 @@ mod tests {
         );
         assert_eq!(registration.origin(), (77_436_369.into(), 1.into()));
 
-        let (purpose, metadata) = registration.consume().unwrap();
+        let (purpose, metadata, _) = registration.consume().unwrap();
         assert_eq!(
             purpose,
             Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
@@ -332,7 +332,7 @@ mod tests {
     fn extract_stake_addresses_from_metadata() {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
-        let cip509 = Cip509::new(&block, 3.into()).unwrap().unwrap();
+        let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
         assert!(
             !cip509.report().is_problematic(),
             "Failed to decode Cip509: {:?}",

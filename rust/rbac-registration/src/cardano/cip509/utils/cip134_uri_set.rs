@@ -300,7 +300,7 @@ mod tests {
     fn cip509() -> Cip509 {
         let block = hex::decode(include_str!("../../../test_data/cardano/conway_1.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
-        let res = Cip509::new(&block, 3.into()).unwrap().unwrap();
+        let res = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
         assert!(
             !res.report().is_problematic(),
             "Failed to decode Cip509: {:?}",

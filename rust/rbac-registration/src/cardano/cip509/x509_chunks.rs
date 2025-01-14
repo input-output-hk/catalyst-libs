@@ -109,6 +109,8 @@ fn decompress(d: &mut Decoder, algorithm: &CompressionAlgorithm) -> anyhow::Resu
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use catalyst_types::problem_report::ProblemReport;
     use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
 
@@ -141,6 +143,7 @@ mod tests {
             slot: 0.into(),
             transaction_index: 0.into(),
             transaction,
+            payment_history: HashMap::new(),
             report: &mut report,
         };
         let x509_chunks = X509Chunks::decode(&mut decoder, &mut context).unwrap();
@@ -174,6 +177,7 @@ mod tests {
             slot: 0.into(),
             transaction_index: 0.into(),
             transaction,
+            payment_history: HashMap::new(),
             report: &mut report,
         };
         let x509_chunks = X509Chunks::decode(&mut decoder, &mut context).unwrap();
@@ -207,6 +211,7 @@ mod tests {
             slot: 0.into(),
             transaction_index: 0.into(),
             transaction,
+            payment_history: HashMap::new(),
             report: &mut report,
         };
         let x509_chunks = X509Chunks::decode(&mut decoder, &mut context).unwrap();

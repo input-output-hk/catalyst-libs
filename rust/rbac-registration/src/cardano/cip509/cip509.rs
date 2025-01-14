@@ -2,6 +2,8 @@
 //! Doc Reference: <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
 //! CDDL Reference: <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
 
+use std::{borrow::Cow, collections::HashMap};
+
 use anyhow::anyhow;
 use cardano_blockchain_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
@@ -14,7 +16,12 @@ use minicbor::{
 };
 use pallas::{
     codec::utils::Nullable,
-    ledger::traverse::{MultiEraBlock, MultiEraTx},
+    ledger::{
+        addresses::{Address, ShelleyAddress},
+        primitives::conway,
+        traverse::{MultiEraBlock, MultiEraTx},
+    },
+    network::miniprotocols::Point,
 };
 use strum_macros::FromRepr;
 use tracing::warn;
@@ -25,14 +32,14 @@ use crate::{
         cip509::{
             decode_context::DecodeContext,
             rbac::Cip509RbacMetadata,
-            types::{RoleNumber, TxInputHash, ValidationSignature},
+            types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
             utils::Cip0134UriSet,
             validation::{
                 validate_aux, validate_role_signing_key, validate_stake_public_key,
                 validate_txn_inputs_hash,
             },
             x509_chunks::X509Chunks,
-            RoleData,
+            Payment, PointTxIdx, RoleData,
         },
         transaction::raw_aux_data::RawAuxData,
     },
@@ -69,6 +76,11 @@ pub struct Cip509 {
     metadata: Option<Cip509RbacMetadata>,
     /// A validation signature.
     validation_signature: Option<ValidationSignature>,
+    /// A payment history.
+    ///
+    /// The history is only tracked for the addresses that are passed to `Cip509`
+    /// constructors.
+    payment_history: PaymentHistory,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -104,7 +116,9 @@ impl Cip509 {
     ///
     /// An error is only returned if the data is completely corrupted. In all other cases
     /// the `Cip509` structure contains fully or partially decoded data.
-    pub fn new(block: &MultiEraBlock, index: TxnIndex) -> Result<Option<Self>, anyhow::Error> {
+    pub fn new(
+        block: &MultiEraBlock, index: TxnIndex, track_payment_addresses: &[ShelleyAddress],
+    ) -> Result<Option<Self>, anyhow::Error> {
         // Find the transaction and decode the relevant data.
         let transactions = block.txs();
         let transaction = transactions.get(usize::from(index)).ok_or_else(|| {
@@ -129,10 +143,12 @@ impl Cip509 {
 
         let mut decoder = Decoder::new(metadata.as_slice());
         let mut report = ProblemReport::new("Decoding and validating Cip509");
+        let payment_history = payment_history(transaction, track_payment_addresses, &report);
         let mut decode_context = DecodeContext {
             slot: block.slot().into(),
             transaction_index: index,
             transaction,
+            payment_history,
             report: &mut report,
         };
         let cip509 = match Cip509::decode(&mut decoder, &mut decode_context) {
@@ -165,12 +181,14 @@ impl Cip509 {
     }
 
     /// Returns a list of Cip509 instances from all the transactions of the given block.
-    pub fn from_block(block: &MultiEraBlock) -> Vec<Self> {
+    pub fn from_block(
+        block: &MultiEraBlock, track_payment_addresses: &[ShelleyAddress],
+    ) -> Vec<Self> {
         let mut result = Vec::new();
 
         for index in 0..block.tx_count() {
             let index = TxnIndex::from(index);
-            match Self::new(block, index) {
+            match Self::new(block, index, track_payment_addresses) {
                 Ok(Some(v)) => result.push(v),
                 // Normal situation: there is no Cip509 data in this transaction.
                 Ok(None) => {},
@@ -194,6 +212,7 @@ impl Cip509 {
             prv_tx_id: None,
             metadata: None,
             validation_signature: None,
+            payment_history: context.payment_history.clone(),
             report: context.report.clone(),
             slot: context.slot,
             transaction_index: context.transaction_index,
@@ -246,7 +265,7 @@ impl Cip509 {
     /// # Errors
     ///
     /// - `Err(ProblemReport)`
-    pub fn consume(self) -> Result<(Uuid, Cip509RbacMetadata), ProblemReport> {
+    pub fn consume(self) -> Result<(Uuid, Cip509RbacMetadata, PaymentHistory), ProblemReport> {
         match (
             self.purpose,
             self.txn_inputs_hash,
@@ -254,7 +273,7 @@ impl Cip509 {
             self.validation_signature,
         ) {
             (Some(purpose), Some(_), Some(metadata), Some(_)) if !self.report.is_problematic() => {
-                Ok((purpose, metadata))
+                Ok((purpose, metadata, self.payment_history))
             },
 
             _ => Err(self.report),
@@ -351,6 +370,71 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
 
         Ok(result)
     }
+}
+
+/// Records the payment history for the given set of addresses.
+fn payment_history(
+    transaction: &conway::MintedTx, track_payment_addresses: &[ShelleyAddress],
+    report: &ProblemReport,
+) -> HashMap<ShelleyAddress, Vec<Payment>> {
+    let hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction))).hash();
+    let context = format!("Populating payment history for Cip509, transaction hash = {hash:?}");
+
+    let mut result: HashMap<_, _> = track_payment_addresses
+        .iter()
+        .cloned()
+        .map(|a| (a, Vec::new()))
+        .collect();
+
+    for (index, output) in transaction.transaction_body.outputs.iter().enumerate() {
+        let conway::PseudoTransactionOutput::PostAlonzo(output) = output else {
+            report.other("Unsupported legacy transaction output", &context);
+            continue;
+        };
+
+        let address = match Address::from_bytes(&output.address) {
+            Ok(Address::Shelley(a)) => a,
+            Ok(a) => {
+                report.other(&format!("Unexpected output address type: {a:?}"), &context);
+                continue;
+            },
+            Err(e) => {
+                report.other(&format!("Invalid output address: {e:?}"), &context);
+                continue;
+            },
+        };
+
+        let index = match u16::try_from(index) {
+            Ok(v) => v,
+            Err(e) => {
+                report.other(&format!("Invalid output index ({index}): {e:?}"), &context);
+                continue;
+            },
+        };
+
+        if let Some(history) = result.get_mut(&address) {
+            // TODO: FIXME: Use proper point!
+            let point = Point::new(0, Vec::new());
+            let point = PointTxIdx::new(point, 0);
+            history.push(Payment::new(point, hash, index, output.value.clone()));
+        }
+
+        // Save history if the key is in the track_payment_addresses list.
+        // if let Some(vec) = tracking_payment_history.get_mut(&shelley_payment) {
+        //     let output_index: u16 = index.try_into().map_err(|_| {
+        //         anyhow::anyhow!("Cannot convert usize to u16 in update payment
+        // history")     })?;
+        //
+        //     vec.push(Payment::new(
+        //         point_tx_idx.clone(),
+        //         txn.hash(),
+        //         output_index,
+        //         o.value.clone(),
+        //     ));
+        // }
+    }
+
+    result
 }
 
 /// Decodes purpose.
@@ -474,7 +558,7 @@ mod tests {
             .expect("Failed to decode hex block.");
         let block = MultiEraBlock::decode(&block).unwrap();
         let index = TxnIndex::from(3);
-        let res = Cip509::new(&block, index)
+        let res = Cip509::new(&block, index, &[])
             .expect("Failed to get Cip509")
             .expect("There must be Cip509 in block");
         assert!(!res.report.is_problematic(), "{:?}", res.report);
@@ -485,7 +569,7 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
             .expect("Failed to decode hex block.");
         let block = MultiEraBlock::decode(&block).unwrap();
-        let res = Cip509::from_block(&block);
+        let res = Cip509::from_block(&block, &[]);
         assert_eq!(1, res.len());
         let cip509 = res.first().unwrap();
         assert!(!cip509.report.is_problematic(), "{:?}", cip509.report);

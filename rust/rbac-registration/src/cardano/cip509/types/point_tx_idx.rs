@@ -3,7 +3,7 @@
 use pallas::network::miniprotocols::Point;
 
 /// Point (slot) and transaction index.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct PointTxIdx((Point, usize));
 
 impl PointTxIdx {
