@@ -14,7 +14,7 @@ use crate::{
     },
 };
 
-/// Role data as it encoded in CBOR.
+/// Role data as encoded in CBOR.
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct CborRoleData {
     /// A role number.

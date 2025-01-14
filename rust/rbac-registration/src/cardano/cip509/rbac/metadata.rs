@@ -135,7 +135,14 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
                             .into_iter()
                             .filter_map(|data| {
                                 if let Some(number) = data.number {
-                                    Some((number, RoleData::new(data, decode_context.transaction)))
+                                    Some((
+                                        number,
+                                        RoleData::new(
+                                            data,
+                                            decode_context.transaction,
+                                            decode_context.report,
+                                        ),
+                                    ))
                                 } else {
                                     None
                                 }

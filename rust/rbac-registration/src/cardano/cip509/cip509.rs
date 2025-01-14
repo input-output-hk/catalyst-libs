@@ -28,8 +28,8 @@ use crate::{
             types::{RoleNumber, TxInputHash, ValidationSignature},
             utils::Cip0134UriSet,
             validation::{
-                validate_aux, validate_payment_key, validate_role_signing_key,
-                validate_stake_public_key, validate_txn_inputs_hash,
+                validate_aux, validate_role_signing_key, validate_stake_public_key,
+                validate_txn_inputs_hash,
             },
             x509_chunks::X509Chunks,
             RoleData,
@@ -114,11 +114,11 @@ impl Cip509 {
             )
         })?;
 
-        let MultiEraTx::Conway(conway_transaction) = transaction else {
+        let MultiEraTx::Conway(transaction) = transaction else {
             return Err(anyhow!("Unsupported era: {}", transaction.era()));
         };
 
-        let auxiliary_data = match &conway_transaction.auxiliary_data {
+        let auxiliary_data = match &transaction.auxiliary_data {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
@@ -132,7 +132,7 @@ impl Cip509 {
         let mut decode_context = DecodeContext {
             slot: block.slot().into(),
             transaction_index: index,
-            transaction: &conway_transaction,
+            transaction: &transaction,
             report: &mut report,
         };
         let cip509 = match Cip509::decode(&mut decoder, &mut decode_context) {
@@ -148,19 +148,16 @@ impl Cip509 {
 
         // Perform the validation.
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
-            validate_txn_inputs_hash(txn_inputs_hash, conway_transaction, &cip509.report);
+            validate_txn_inputs_hash(txn_inputs_hash, transaction, &cip509.report);
         };
         validate_aux(
             auxiliary_data,
-            conway_transaction
-                .transaction_body
-                .auxiliary_data_hash
-                .as_ref(),
+            transaction.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
+        // The following checks are only performed for  the role 0.
         if let Some(role_data) = cip509.role_data(RoleNumber::ROLE_0) {
             validate_stake_public_key(transaction, cip509.certificate_uris(), &cip509.report);
-            validate_payment_key(transaction, conway_transaction, role_data, &cip509.report);
             validate_role_signing_key(role_data, &cip509.report);
         }
 

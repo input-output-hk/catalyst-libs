@@ -12,6 +12,7 @@ use std::{cmp::Ordering, fmt::Display, sync::Arc};
 use anyhow::bail;
 use ed25519_dalek::VerifyingKey;
 use ouroboros::self_referencing;
+use pallas::ledger::traverse::MultiEraTx;
 use tracing::debug;
 
 use crate::{
@@ -280,6 +281,11 @@ impl MultiEraBlock {
         }
 
         None
+    }
+
+    /// Returns a list of transactions withing this block.
+    pub fn txs(&self) -> Vec<MultiEraTx> {
+        self.decode().txs()
     }
 }
 

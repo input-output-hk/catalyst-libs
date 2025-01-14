@@ -1,10 +1,25 @@
 //! RBAC role data
 
-use std::collections::HashMap;
+use std::{borrow::Cow, collections::HashMap};
 
-use pallas::ledger::{addresses::ShelleyAddress, primitives::conway};
+use catalyst_types::problem_report::ProblemReport;
+use pallas::ledger::{
+    addresses::{Address, ShelleyAddress},
+    primitives::conway,
+    traverse::MultiEraTx,
+};
 
-use crate::cardano::cip509::{rbac::role_data::CborRoleData, KeyLocalRef};
+use crate::{
+    cardano::{
+        cip509::{
+            rbac::role_data::CborRoleData,
+            utils::cip19::{compare_key_hash, extract_key_hash},
+            KeyLocalRef, RoleNumber,
+        },
+        transaction::witness::TxWitness,
+    },
+    utils::general::decremented_index,
+};
 
 /// A role data.
 #[derive(Debug, Clone, PartialEq)]
@@ -21,8 +36,20 @@ pub struct RoleData {
 
 impl RoleData {
     /// Create an instance of role data.
-    pub fn new(data: CborRoleData, transaction: &conway::MintedTx) -> Self {
-        let payment_key = todo!();
+    pub fn new(data: CborRoleData, transaction: &conway::MintedTx, report: &ProblemReport) -> Self {
+        let payment_key = if data.number == Some(RoleNumber::ROLE_0) && data.payment_key.is_none() {
+            report.other(
+                "Missing payment key in role0",
+                "Role data payment key validation",
+            );
+            None
+        } else {
+            let context = format!(
+                "Validating the role data payment key for {:?} role",
+                data.number
+            );
+            convert_payment_key(data.payment_key, transaction, &context, report)
+        };
 
         Self {
             signing_key: data.signing_key,
@@ -67,132 +94,117 @@ impl RoleData {
     }
 }
 
-// TODO: FIXME:
-/// Helper function for retrieving the Shelley address from the transaction.
-fn get_payment_addr_from_tx(
-    txn: &conway::MintedTx, payment_key_ref: Option<i16>,
-) -> anyhow::Result<Option<ShelleyAddress>> {
-    // The index should exist since it pass the basic validation
-    if let Some(key_ref) = payment_key_ref {
-        // Transaction output
-        if key_ref < 0 {
-            let index = decremented_index(key_ref.abs())?;
-            if let Some(output) = tx.transaction_body.outputs.get(index) {
-                // Conway era -> Post alonzo tx output
-                match output {
-                    conway::PseudoTransactionOutput::PostAlonzo(o) => {
-                        let address =
-                            Address::from_bytes(&o.address).map_err(|e| anyhow::anyhow!(e))?;
-
-                        if let Address::Shelley(addr) = address {
-                            return Ok(Some(addr.clone()));
-                        }
-                        bail!("Unsupported address type in payment key reference");
-                    },
-                    // Not support legacy form of transaction output
-                    conway::PseudoTransactionOutput::Legacy(_) => {
-                        bail!("Unsupported transaction output type in payment key reference");
-                    },
-                }
-            }
-            // Index doesn't exist
-            bail!("Payment key not found in transaction output");
-        }
-        // Transaction input, currently unsupported because of the reference to transaction hash
-        bail!("Unsupported payment key reference to transaction input");
-    }
-    Ok(None)
-}
-
-//
-
-// TODO: FIXME:
-/// Checks that the payment key reference is correct and points to a valid key.
-pub fn validate_payment_key(
-    transaction: &MultiEraTx, conway_transaction: &conway::MintedTx, role_data: &RoleData,
-    report: &ProblemReport,
-) {
-    let context = "Cip509 role0 payment key validation";
-
-    let Some(payment_key) = role_data.payment_key() else {
-        report.other("Missing payment key in role0", context);
-        return;
+/// Converts the payment key from the form encoded in CBOR role data to `ShelleyAddress`.
+fn convert_payment_key(
+    key: Option<i16>, transaction: &conway::MintedTx, context: &str, report: &ProblemReport,
+) -> Option<ShelleyAddress> {
+    let Some(key) = key else {
+        return None;
     };
-    if payment_key == 0 {
+
+    if key == 0 {
         report.invalid_value(
             "payment key",
             "0",
             "Payment reference key must not be 0",
             context,
         );
-        return;
+        return None;
     }
 
-    // Negative indicates reference to transaction output.
-    if payment_key < 0 {
-        let index = match decremented_index(payment_key.abs()) {
-            Ok(value) => value,
-            Err(e) => {
-                report.other(
-                    &format!("Failed to get index of payment key: {e:?}"),
-                    context,
-                );
-                return;
-            },
-        };
-        let outputs = &conway_transaction.transaction_body.outputs;
-        let witness = match TxWitness::new(&[transaction.clone()]) {
-            Ok(witnesses) => witnesses,
-            Err(e) => {
-                report.other(&format!("Failed to create TxWitness: {e:?}"), context);
-                return;
-            },
-        };
+    let index = match decremented_index(key.abs()) {
+        Ok(value) => value,
+        Err(e) => {
+            report.other(
+                &format!("Invalid index ({key:?}) of the payment key: {e:?}"),
+                context,
+            );
+            return None;
+        },
+    };
 
-        let address = match outputs.get(index) {
-            Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
-            Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
-            None => {
-                report.other(
-                    &format!(
-                        "Role payment key reference index ({index}) is not found
-in transaction outputs"
-                    ),
-                    context,
-                );
-                return;
-            },
-        };
-        validate_payment_output_key_helper(address, &witness, report, context);
+    // Negative indicates reference to transaction output.
+    if key < 0 {
+        convert_transaction_output(index, transaction, context, report)
     } else {
         // Positive indicates reference to tx input.
-        let inputs = &conway_transaction.transaction_body.inputs;
-        let index = match decremented_index(payment_key) {
-            Ok(value) => value,
-            Err(e) => {
-                report.other(
-                    &format!("Failed to get index of payment key: {e:?}"),
-                    context,
-                );
-                return;
-            },
-        };
+        let inputs = &transaction.transaction_body.inputs;
         // Check whether the index exists in transaction inputs.
         if inputs.get(index).is_none() {
             report.other(
                 &format!(
-                    "Role payment key reference index ({index}) is not found in
-transaction inputs"
+                    "Role payment key reference index ({index}) is not found in transaction inputs"
                 ),
                 context,
             );
         }
+
+        report.other(
+            &format!("Payment key reference ({key:?}) to transaction input is unsupported"),
+            context,
+        );
+        None
+    }
+}
+
+/// Converts payment key transaction output reference to `ShelleyAddress`.
+fn convert_transaction_output(
+    index: usize, transaction: &conway::MintedTx, context: &str, report: &ProblemReport,
+) -> Option<ShelleyAddress> {
+    let outputs = &transaction.transaction_body.outputs;
+    let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
+    let witness = match TxWitness::new(&[transaction]) {
+        Ok(witnesses) => witnesses,
+        Err(e) => {
+            report.other(&format!("Failed to create TxWitness: {e:?}"), context);
+            return None;
+        },
+    };
+
+    let address = match outputs.get(index) {
+        Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
+        Some(conway::PseudoTransactionOutput::Legacy(_)) => {
+            report.other(
+                &format!("Unsupported legacy transaction output type in payment key reference (index = {index})"),
+                context,
+            );
+            return None;
+        },
+        None => {
+            report.other(
+                &format!(
+                    "Role payment key reference index ({index}) is not found in transaction outputs"
+                ),
+                context,
+            );
+            return None;
+        },
+    };
+    validate_payment_output(address, &witness, context, report);
+    match Address::from_bytes(address) {
+        Ok(Address::Shelley(a)) => Some(a),
+        Ok(a) => {
+            report.other(
+                &format!(
+                    "Unsupported address type ({a:?}) in payment key reference (index = {index})"
+                ),
+                context,
+            );
+            None
+        },
+        Err(e) => {
+            report.other(
+                &format!("Invalid address in payment key reference (index = {index}): {e:?}"),
+                context,
+            );
+            None
+        },
     }
 }
 
 /// Helper function for validating payment output key.
-fn validate_payment_output_key_helper(
-    output_address: &[u8], witness: &TxWitness, report: &ProblemReport, context: &str,
+fn validate_payment_output(
+    output_address: &[u8], witness: &TxWitness, context: &str, report: &ProblemReport,
 ) {
     let Some(key) = extract_key_hash(output_address) else {
         report.other("Failed to extract payment key hash from address", context);
@@ -205,8 +217,7 @@ fn validate_payment_output_key_helper(
     if let Err(e) = compare_key_hash(&[key.clone()], witness, 0) {
         report.other(
             &format!(
-                "Unable to find payment output key ({key:?}) in the transaction witness
-set: {e:?}"
+                "Unable to find payment output key ({key:?}) in the transaction witness set: {e:?}"
             ),
             context,
         );

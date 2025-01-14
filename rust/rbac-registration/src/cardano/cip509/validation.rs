@@ -21,6 +21,8 @@
 //!
 //! Note: This CIP509 is still under development and is subject to change.
 
+use std::borrow::Cow;
+
 use catalyst_types::problem_report::ProblemReport;
 use pallas::{
     codec::{
@@ -131,10 +133,11 @@ pub fn validate_aux(
 /// Checks that all public keys extracted from x509 and c509 certificates are present in
 /// the witness set of the transaction.
 pub fn validate_stake_public_key(
-    transaction: &MultiEraTx, uris: Option<&Cip0134UriSet>, report: &ProblemReport,
+    transaction: &conway::MintedTx, uris: Option<&Cip0134UriSet>, report: &ProblemReport,
 ) {
     let context = "Cip509 stake public key validation";
 
+    let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
     let witness = match TxWitness::new(&[transaction.clone()]) {
         Ok(w) => w,
         Err(e) => {
@@ -179,86 +182,6 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<Vec<u8>> {
             }
         })
         .collect()
-}
-
-/// Checks that the payment key reference is correct and points to a valid key.
-pub fn validate_payment_key(
-    transaction: &MultiEraTx, conway_transaction: &conway::MintedTx, role_data: &RoleData,
-    report: &ProblemReport,
-) {
-    // TODO: FIXME:
-    // let context = "Cip509 role0 payment key validation";
-    //
-    // let Some(payment_key) = role_data.payment_key() else {
-    //     report.other("Missing payment key in role0", context);
-    //     return;
-    // };
-    // if payment_key == 0 {
-    //     report.invalid_value(
-    //         "payment key",
-    //         "0",
-    //         "Payment reference key must not be 0",
-    //         context,
-    //     );
-    //     return;
-    // }
-    //
-    // // Negative indicates reference to transaction output.
-    // if payment_key < 0 {
-    //     let index = match decremented_index(payment_key.abs()) {
-    //         Ok(value) => value,
-    //         Err(e) => {
-    //             report.other(
-    //                 &format!("Failed to get index of payment key: {e:?}"),
-    //                 context,
-    //             );
-    //             return;
-    //         },
-    //     };
-    //     let outputs = &conway_transaction.transaction_body.outputs;
-    //     let witness = match TxWitness::new(&[transaction.clone()]) {
-    //         Ok(witnesses) => witnesses,
-    //         Err(e) => {
-    //             report.other(&format!("Failed to create TxWitness: {e:?}"), context);
-    //             return;
-    //         },
-    //     };
-    //
-    //     let address = match outputs.get(index) {
-    //         Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
-    //         Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
-    //         None => {
-    //             report.other(
-    //                 &format!("Role payment key reference index ({index}) is not found
-    // in transaction outputs"),                 context,
-    //             );
-    //             return;
-    //         },
-    //     };
-    //     validate_payment_output_key_helper(address, &witness, report, context);
-    // } else {
-    //     // Positive indicates reference to tx input.
-    //     let inputs = &conway_transaction.transaction_body.inputs;
-    //     let index = match decremented_index(payment_key) {
-    //         Ok(value) => value,
-    //         Err(e) => {
-    //             report.other(
-    //                 &format!("Failed to get index of payment key: {e:?}"),
-    //                 context,
-    //             );
-    //             return;
-    //         },
-    //     };
-    //     // Check whether the index exists in transaction inputs.
-    //     if inputs.get(index).is_none() {
-    //         report.other(
-    //             &format!(
-    //                 "Role payment key reference index ({index}) is not found in
-    // transaction inputs"             ),
-    //             context,
-    //         );
-    //     }
-    // }
 }
 
 /// Helper function for validating payment output key.
