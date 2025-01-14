@@ -260,16 +260,20 @@ fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisM
 
 #[cfg(test)]
 mod tests {
-    use pallas::ledger::{
-        addresses::{Address, Network},
-        traverse::MultiEraBlock,
-    };
+    use pallas::ledger::addresses::{Address, Network};
 
-    use crate::cardano::cip509::Cip509;
+    use crate::{cardano::cip509::Cip509, utils::test::test_block_1};
 
     #[test]
     fn set_new() {
-        let cip509 = cip509();
+        let block = test_block_1();
+        let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
+        assert!(
+            !cip509.report().is_problematic(),
+            "Failed to decode Cip509: {:?}",
+            cip509.report()
+        );
+
         let set = cip509.certificate_uris().unwrap();
         assert!(!set.is_empty());
         assert!(set.c_uris().is_empty());
@@ -295,17 +299,5 @@ mod tests {
             "e075be10ec5c575caffb68b08c31470666d4fe1aeea07c16d6473903",
             address.payload().as_hash().to_string()
         );
-    }
-
-    fn cip509() -> Cip509 {
-        let block = hex::decode(include_str!("../../../test_data/cardano/conway_1.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
-        let res = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
-        assert!(
-            !res.report().is_problematic(),
-            "Failed to decode Cip509: {:?}",
-            res.report()
-        );
-        res
     }
 }

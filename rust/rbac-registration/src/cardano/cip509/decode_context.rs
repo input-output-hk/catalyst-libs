@@ -2,20 +2,19 @@
 
 use std::collections::HashMap;
 
-use cardano_blockchain_types::{Slot, TxnIndex};
+use cardano_blockchain_types::hashes::Blake2b256Hash;
 use catalyst_types::problem_report::ProblemReport;
 use pallas::ledger::{addresses::ShelleyAddress, primitives::conway};
 
-use crate::cardano::cip509::Payment;
+use crate::cardano::cip509::{Payment, PointTxnIdx};
 
 /// A context used to pass the problem report and additional parameters during decoding.
 pub struct DecodeContext<'r, 't> {
-    /// A slot identifying the block.
-    pub slot: Slot,
-    /// An index of the transaction that being decoded.
-    pub transaction_index: TxnIndex,
+    /// A slot and a transaction index.
+    pub origin: PointTxnIdx,
     /// A transaction.
-    pub transaction: &'t conway::MintedTx<'t>,
+    pub txn: &'t conway::MintedTx<'t>,
+    pub txn_hash: Blake2b256Hash,
     /// A payment history.
     pub payment_history: HashMap<ShelleyAddress, Vec<Payment>>,
     /// A problem report.

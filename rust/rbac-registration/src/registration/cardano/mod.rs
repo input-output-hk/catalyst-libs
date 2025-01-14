@@ -6,14 +6,14 @@ use anyhow::bail;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::hashes::Blake2b256Hash;
 use ed25519_dalek::VerifyingKey;
-use pallas::{ledger::traverse::MultiEraTx, network::miniprotocols::Point};
+use pallas::ledger::traverse::MultiEraTx;
 use tracing::{error, warn};
 use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
-    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, PaymentHistory, PointTxIdx, RoleData, RoleNumber,
-    SimplePublicKeyType, X509DerCert,
+    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, PaymentHistory, PointTxnIdx, RoleData,
+    RoleNumber, SimplePublicKeyType, X509DerCert,
 };
 
 /// Registration chains.
@@ -35,10 +35,8 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn new(
-        point: Point, tx_idx: usize, txn: &MultiEraTx, cip509: Cip509,
-    ) -> anyhow::Result<Self> {
-        let inner = RegistrationChainInner::new(cip509, point, tx_idx, txn)?;
+    pub fn new(txn: &MultiEraTx, cip509: Cip509) -> anyhow::Result<Self> {
+        let inner = RegistrationChainInner::new(cip509, txn)?;
 
         Ok(Self {
             inner: Arc::new(inner),
@@ -55,8 +53,8 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn update(&self, point: Point, tx_idx: usize, cip509: Cip509) -> anyhow::Result<Self> {
-        let new_inner = self.inner.update(point, tx_idx, cip509)?;
+    pub fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
+        let new_inner = self.inner.update(cip509)?;
 
         Ok(Self {
             inner: Arc::new(new_inner),
@@ -77,31 +75,31 @@ impl RegistrationChain {
 
     /// Get the map of index in array to point, transaction index, and x509 certificate.
     #[must_use]
-    pub fn x509_certs(&self) -> &HashMap<usize, (PointTxIdx, X509Certificate)> {
+    pub fn x509_certs(&self) -> &HashMap<usize, (PointTxnIdx, X509Certificate)> {
         &self.inner.x509_certs
     }
 
     /// Get the map of index in array to point, transaction index, and c509 certificate.
     #[must_use]
-    pub fn c509_certs(&self) -> &HashMap<usize, (PointTxIdx, C509)> {
+    pub fn c509_certs(&self) -> &HashMap<usize, (PointTxnIdx, C509)> {
         &self.inner.c509_certs
     }
 
     /// Get the map of index in array to point, transaction index, and public key.
     #[must_use]
-    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxIdx, VerifyingKey)> {
+    pub fn simple_keys(&self) -> &HashMap<usize, (PointTxnIdx, VerifyingKey)> {
         &self.inner.simple_keys
     }
 
     /// Get a list of revocations.
     #[must_use]
-    pub fn revocations(&self) -> &[(PointTxIdx, CertKeyHash)] {
+    pub fn revocations(&self) -> &[(PointTxnIdx, CertKeyHash)] {
         &self.inner.revocations
     }
 
     /// Get the map of role number to point, transaction index, and role data.
     #[must_use]
-    pub fn role_data(&self) -> &HashMap<RoleNumber, (PointTxIdx, RoleData)> {
+    pub fn role_data(&self) -> &HashMap<RoleNumber, (PointTxnIdx, RoleData)> {
         &self.inner.role_data
     }
 
@@ -122,19 +120,19 @@ struct RegistrationChainInner {
 
     // RBAC
     /// Map of index in array to point, transaction index, and x509 certificate.
-    x509_certs: HashMap<usize, (PointTxIdx, X509Certificate)>,
+    x509_certs: HashMap<usize, (PointTxnIdx, X509Certificate)>,
     /// Map of index in array to point, transaction index, and c509 certificate.
-    c509_certs: HashMap<usize, (PointTxIdx, C509)>,
+    c509_certs: HashMap<usize, (PointTxnIdx, C509)>,
     /// A set of URIs contained in both x509 and c509 certificates.
     certificate_uris: Cip0134UriSet,
     /// Map of index in array to point, transaction index, and public key.
-    simple_keys: HashMap<usize, (PointTxIdx, VerifyingKey)>,
+    simple_keys: HashMap<usize, (PointTxnIdx, VerifyingKey)>,
     /// List of point, transaction index, and certificate key hash.
-    revocations: Vec<(PointTxIdx, CertKeyHash)>,
+    revocations: Vec<(PointTxnIdx, CertKeyHash)>,
 
     // Role
     /// Map of role number to point, transaction index, and role data.
-    role_data: HashMap<RoleNumber, (PointTxIdx, RoleData)>,
+    role_data: HashMap<RoleNumber, (PointTxnIdx, RoleData)>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
 }
@@ -153,12 +151,13 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn new(cip509: Cip509, point: Point, tx_idx: usize, txn: &MultiEraTx) -> anyhow::Result<Self> {
+    fn new(cip509: Cip509, txn: &MultiEraTx) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
 
+        let point_tx_idx = cip509.origin().clone();
         let (purpose, registration, payment_history) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
@@ -169,8 +168,6 @@ impl RegistrationChainInner {
         };
 
         let purpose = vec![purpose];
-
-        let point_tx_idx = PointTxIdx::new(point, tx_idx);
 
         let certificate_uris = registration.certificate_uris;
         let x509_cert_map = chain_root_x509_certs(registration.x509_certs, &point_tx_idx);
@@ -203,7 +200,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn update(&self, point: Point, tx_idx: usize, cip509: Cip509) -> anyhow::Result<Self> {
+    fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
         let mut new_inner = self.clone();
 
         let Some(prv_tx_id) = cip509.previous_transaction() else {
@@ -217,6 +214,7 @@ impl RegistrationChainInner {
             bail!("Invalid previous transaction ID, not a part of this registration chain");
         }
 
+        let point_tx_idx = cip509.origin().clone();
         let (purpose, registration, payment_history) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
@@ -231,7 +229,6 @@ impl RegistrationChainInner {
             new_inner.purpose.push(purpose);
         }
 
-        let point_tx_idx = PointTxIdx::new(point, tx_idx);
         new_inner.certificate_uris = new_inner.certificate_uris.update(&registration);
         new_inner.payment_history.extend(payment_history);
         update_x509_certs(&mut new_inner, registration.x509_certs, &point_tx_idx);
@@ -250,8 +247,8 @@ impl RegistrationChainInner {
 
 /// Process x509 certificate for chain root.
 fn chain_root_x509_certs(
-    x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxIdx,
-) -> HashMap<usize, (PointTxIdx, X509Certificate)> {
+    x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxnIdx,
+) -> HashMap<usize, (PointTxnIdx, X509Certificate)> {
     x509_certs
         .into_iter()
         .enumerate()
@@ -267,7 +264,8 @@ fn chain_root_x509_certs(
 
 /// Update x509 certificates in the registration chain.
 fn update_x509_certs(
-    new_inner: &mut RegistrationChainInner, x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxIdx,
+    new_inner: &mut RegistrationChainInner, x509_certs: Vec<X509DerCert>,
+    point_tx_idx: &PointTxnIdx,
 ) {
     for (idx, cert) in x509_certs.into_iter().enumerate() {
         match cert {
@@ -289,8 +287,8 @@ fn update_x509_certs(
 
 /// Process c509 certificates for chain root.
 fn chain_root_c509_certs(
-    c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxIdx,
-) -> HashMap<usize, (PointTxIdx, C509)> {
+    c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxnIdx,
+) -> HashMap<usize, (PointTxnIdx, C509)> {
     let mut map = HashMap::new();
     for (idx, cert) in c509_certs.into_iter().enumerate() {
         if let C509Cert::C509Certificate(cert) = cert {
@@ -303,7 +301,7 @@ fn chain_root_c509_certs(
 
 /// Update c509 certificates in the registration chain.
 fn update_c509_certs(
-    new_inner: &mut RegistrationChainInner, c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxIdx,
+    new_inner: &mut RegistrationChainInner, c509_certs: Vec<C509Cert>, point_tx_idx: &PointTxnIdx,
 ) {
     for (idx, cert) in c509_certs.into_iter().enumerate() {
         match cert {
@@ -329,8 +327,8 @@ fn update_c509_certs(
 
 /// Process public keys for chain root.
 fn chain_root_public_keys(
-    pub_keys: Vec<SimplePublicKeyType>, point_tx_idx: &PointTxIdx,
-) -> HashMap<usize, (PointTxIdx, VerifyingKey)> {
+    pub_keys: Vec<SimplePublicKeyType>, point_tx_idx: &PointTxnIdx,
+) -> HashMap<usize, (PointTxnIdx, VerifyingKey)> {
     let mut map = HashMap::new();
     for (idx, key) in pub_keys.into_iter().enumerate() {
         // Chain root, expect only the public key not undefined or delete
@@ -344,7 +342,7 @@ fn chain_root_public_keys(
 /// Update public keys in the registration chain.
 fn update_public_keys(
     new_inner: &mut RegistrationChainInner, pub_keys: Vec<SimplePublicKeyType>,
-    point_tx_idx: &PointTxIdx,
+    point_tx_idx: &PointTxnIdx,
 ) {
     for (idx, cert) in pub_keys.into_iter().enumerate() {
         match cert {
@@ -366,8 +364,8 @@ fn update_public_keys(
 
 /// Process the revocation list.
 fn revocations_list(
-    revocation_list: Vec<CertKeyHash>, point_tx_idx: &PointTxIdx,
-) -> Vec<(PointTxIdx, CertKeyHash)> {
+    revocation_list: Vec<CertKeyHash>, point_tx_idx: &PointTxnIdx,
+) -> Vec<(PointTxnIdx, CertKeyHash)> {
     let mut revocations = Vec::new();
     for item in revocation_list {
         revocations.push((point_tx_idx.clone(), item.clone()));
@@ -377,8 +375,8 @@ fn revocations_list(
 
 /// Process the role data for chain root.
 fn chain_root_role_data(
-    role_data: HashMap<RoleNumber, RoleData>, point_tx_idx: &PointTxIdx,
-) -> HashMap<RoleNumber, (PointTxIdx, RoleData)> {
+    role_data: HashMap<RoleNumber, RoleData>, point_tx_idx: &PointTxnIdx,
+) -> HashMap<RoleNumber, (PointTxnIdx, RoleData)> {
     role_data
         .into_iter()
         .map(|(number, data)| (number, (point_tx_idx.clone(), data)))
@@ -388,7 +386,7 @@ fn chain_root_role_data(
 /// Update the role data in the registration chain.
 fn update_role_data(
     inner: &mut RegistrationChainInner, role_set: HashMap<RoleNumber, RoleData>,
-    point_tx_idx: &PointTxIdx,
+    point_tx_idx: &PointTxnIdx,
 ) {
     for (number, mut data) in role_set {
         // If there is new role singing key, use it, else use the old one
@@ -419,6 +417,9 @@ fn update_role_data(
 
 #[cfg(test)]
 mod test {
+    // TODO: FIXME:
+    // let block = test_block_1();
+    //
     // TODO: FIXME: chain from 4 blocks, one  with error!
     // use super::*;
     //

@@ -7,7 +7,7 @@ use std::{borrow::Cow, collections::HashMap};
 use anyhow::anyhow;
 use cardano_blockchain_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
-    Slot, TxnIndex,
+    MultiEraBlock, TxnIndex,
 };
 use catalyst_types::problem_report::ProblemReport;
 use minicbor::{
@@ -19,9 +19,8 @@ use pallas::{
     ledger::{
         addresses::{Address, ShelleyAddress},
         primitives::conway,
-        traverse::{MultiEraBlock, MultiEraTx},
+        traverse::MultiEraTx,
     },
-    network::miniprotocols::Point,
 };
 use strum_macros::FromRepr;
 use tracing::warn;
@@ -39,7 +38,7 @@ use crate::{
                 validate_txn_inputs_hash,
             },
             x509_chunks::X509Chunks,
-            Payment, PointTxIdx, RoleData,
+            Payment, PointTxnIdx, RoleData,
         },
         transaction::raw_aux_data::RawAuxData,
     },
@@ -81,17 +80,17 @@ pub struct Cip509 {
     /// The history is only tracked for the addresses that are passed to `Cip509`
     /// constructors.
     payment_history: PaymentHistory,
+    /// A hash of the transaction from which this registration is extracted.
+    txn_hash: Blake2b256Hash,
+    /// A point (slot) and a transaction index identifying the block and the transaction
+    /// that this `Cip509` was extracted from.
+    origin: PointTxnIdx,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
     /// The data located in `Cip509` is only considered valid if
     /// `ProblemReport::is_problematic()` returns false.
     report: ProblemReport,
-    // TODO: FIXME: Use the slot type from blockchain types crate.
-    /// A slot identifying the block that this `Cip509` was extracted from.
-    slot: Slot,
-    /// A transaction index.
-    transaction_index: TxnIndex,
 }
 
 /// Enum of CIP509 metadatum with its associated unsigned integer value.
@@ -121,19 +120,20 @@ impl Cip509 {
         block: &MultiEraBlock, index: TxnIndex, track_payment_addresses: &[ShelleyAddress],
     ) -> Result<Option<Self>, anyhow::Error> {
         // Find the transaction and decode the relevant data.
-        let transactions = block.txs();
-        let transaction = transactions.get(usize::from(index)).ok_or_else(|| {
+        let txns = block.txs();
+        let txn = txns.get(usize::from(index)).ok_or_else(|| {
             anyhow!(
                 "Invalid transaction index {index:?}, transactions count = {}",
-                block.tx_count()
+                txns.len()
             )
         })?;
+        let txn_hash = txn.hash().into();
 
-        let MultiEraTx::Conway(transaction) = transaction else {
-            return Err(anyhow!("Unsupported era: {}", transaction.era()));
+        let MultiEraTx::Conway(txn) = txn else {
+            return Err(anyhow!("Unsupported era: {}", txn.era()));
         };
 
-        let auxiliary_data = match &transaction.auxiliary_data {
+        let auxiliary_data = match &txn.auxiliary_data {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
@@ -144,11 +144,12 @@ impl Cip509 {
 
         let mut decoder = Decoder::new(metadata.as_slice());
         let mut report = ProblemReport::new("Decoding and validating Cip509");
-        let payment_history = payment_history(transaction, track_payment_addresses, &report);
+        let origin = PointTxnIdx::from_block(block, index);
+        let payment_history = payment_history(txn, track_payment_addresses, &origin, &report);
         let mut decode_context = DecodeContext {
-            slot: block.slot().into(),
-            transaction_index: index,
-            transaction,
+            origin,
+            txn,
+            txn_hash,
             payment_history,
             report: &mut report,
         };
@@ -165,16 +166,16 @@ impl Cip509 {
 
         // Perform the validation.
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
-            validate_txn_inputs_hash(txn_inputs_hash, transaction, &cip509.report);
+            validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
         };
         validate_aux(
             auxiliary_data,
-            transaction.transaction_body.auxiliary_data_hash.as_ref(),
+            txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
         // The following checks are only performed for  the role 0.
         if let Some(role_data) = cip509.role_data(RoleNumber::ROLE_0) {
-            validate_stake_public_key(transaction, cip509.certificate_uris(), &cip509.report);
+            validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
             validate_role_signing_key(role_data, &cip509.report);
         }
 
@@ -187,7 +188,7 @@ impl Cip509 {
     ) -> Vec<Self> {
         let mut result = Vec::new();
 
-        for index in 0..block.tx_count() {
+        for index in 0..block.decode().tx_count() {
             let index = TxnIndex::from(index);
             match Self::new(block, index, track_payment_addresses) {
                 Ok(Some(v)) => result.push(v),
@@ -196,7 +197,7 @@ impl Cip509 {
                 Err(e) => {
                     warn!(
                         "Unable to extract Cip509 from the {} block {index:?} transaction: {e:?}",
-                        block.slot()
+                        block.point()
                     );
                 },
             }
@@ -214,9 +215,9 @@ impl Cip509 {
             metadata: None,
             validation_signature: None,
             payment_history: context.payment_history.clone(),
+            txn_hash: context.txn_hash,
+            origin: context.origin.clone(),
             report: context.report.clone(),
-            slot: context.slot,
-            transaction_index: context.transaction_index,
         }
     }
 
@@ -244,9 +245,14 @@ impl Cip509 {
         &self.report
     }
 
-    /// Returns a slot and a transaction index where this data is originating from.
-    pub fn origin(&self) -> (Slot, TxnIndex) {
-        (self.slot, self.transaction_index)
+    /// Returns a point and a transaction index where this data is originating from.
+    pub fn origin(&self) -> &PointTxnIdx {
+        &self.origin
+    }
+
+    /// Returns a hash of the transaction where this data is originating from.
+    pub fn txn_hash(&self) -> Blake2b256Hash {
+        self.txn_hash
     }
 
     /// Returns URIs contained in both x509 and c509 certificates of `Cip509` metadata.
@@ -375,10 +381,10 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
 
 /// Records the payment history for the given set of addresses.
 fn payment_history(
-    transaction: &conway::MintedTx, track_payment_addresses: &[ShelleyAddress],
+    txn: &conway::MintedTx, track_payment_addresses: &[ShelleyAddress], origin: &PointTxnIdx,
     report: &ProblemReport,
 ) -> HashMap<ShelleyAddress, Vec<Payment>> {
-    let hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction))).hash();
+    let hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(txn))).hash();
     let context = format!("Populating payment history for Cip509, transaction hash = {hash:?}");
 
     let mut result: HashMap<_, _> = track_payment_addresses
@@ -387,7 +393,7 @@ fn payment_history(
         .map(|a| (a, Vec::new()))
         .collect();
 
-    for (index, output) in transaction.transaction_body.outputs.iter().enumerate() {
+    for (index, output) in txn.transaction_body.outputs.iter().enumerate() {
         let conway::PseudoTransactionOutput::PostAlonzo(output) = output else {
             report.other("Unsupported legacy transaction output", &context);
             continue;
@@ -414,25 +420,13 @@ fn payment_history(
         };
 
         if let Some(history) = result.get_mut(&address) {
-            // TODO: FIXME: Use proper point!
-            let point = Point::new(0, Vec::new());
-            let point = PointTxIdx::new(point, 0);
-            history.push(Payment::new(point, hash, index, output.value.clone()));
+            history.push(Payment::new(
+                origin.clone(),
+                hash,
+                index,
+                output.value.clone(),
+            ));
         }
-
-        // Save history if the key is in the track_payment_addresses list.
-        // if let Some(vec) = tracking_payment_history.get_mut(&shelley_payment) {
-        //     let output_index: u16 = index.try_into().map_err(|_| {
-        //         anyhow::anyhow!("Cannot convert usize to u16 in update payment
-        // history")     })?;
-        //
-        //     vec.push(Payment::new(
-        //         point_tx_idx.clone(),
-        //         txn.hash(),
-        //         output_index,
-        //         o.value.clone(),
-        //     ));
-        // }
     }
 
     result
@@ -552,12 +546,11 @@ fn decode_validation_signature(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::test::test_block_1;
 
     #[test]
     fn new() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
-            .expect("Failed to decode hex block.");
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_1();
         let index = TxnIndex::from(3);
         let res = Cip509::new(&block, index, &[])
             .expect("Failed to get Cip509")
@@ -567,9 +560,7 @@ mod tests {
 
     #[test]
     fn from_block() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
-            .expect("Failed to decode hex block.");
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_1();
         let res = Cip509::from_block(&block, &[]);
         assert_eq!(1, res.len());
         let cip509 = res.first().unwrap();

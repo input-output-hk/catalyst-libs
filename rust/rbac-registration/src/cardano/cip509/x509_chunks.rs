@@ -111,10 +111,12 @@ fn decompress(d: &mut Decoder, algorithm: &CompressionAlgorithm) -> anyhow::Resu
 mod tests {
     use std::collections::HashMap;
 
+    use cardano_blockchain_types::Point;
     use catalyst_types::problem_report::ProblemReport;
     use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
 
     use super::*;
+    use crate::cardano::cip509::PointTxnIdx;
 
     // RAW data: 10
     const RAW: &str =
@@ -136,13 +138,16 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
         let transactions = block.txs();
-        let MultiEraTx::Conway(transaction) = transactions.first().unwrap() else {
+        let txn = transactions.first().unwrap();
+        let txn_hash = txn.hash().into();
+        let MultiEraTx::Conway(txn) = txn else {
             panic!("Unexpected transaction type");
         };
+        let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
         let mut context = DecodeContext {
-            slot: 0.into(),
-            transaction_index: 0.into(),
-            transaction,
+            origin,
+            txn_hash,
+            txn,
             payment_history: HashMap::new(),
             report: &mut report,
         };
@@ -170,13 +175,16 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
         let transactions = block.txs();
-        let MultiEraTx::Conway(transaction) = transactions.first().unwrap() else {
+        let txn = transactions.first().unwrap();
+        let txn_hash = txn.hash().into();
+        let MultiEraTx::Conway(txn) = txn else {
             panic!("Unexpected transaction type");
         };
+        let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
         let mut context = DecodeContext {
-            slot: 0.into(),
-            transaction_index: 0.into(),
-            transaction,
+            origin,
+            txn_hash,
+            txn,
             payment_history: HashMap::new(),
             report: &mut report,
         };
@@ -204,13 +212,16 @@ mod tests {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
         let transactions = block.txs();
-        let MultiEraTx::Conway(transaction) = transactions.first().unwrap() else {
+        let txn = transactions.first().unwrap();
+        let txn_hash = txn.hash().into();
+        let MultiEraTx::Conway(txn) = txn else {
             panic!("Unexpected transaction type");
         };
+        let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
         let mut context = DecodeContext {
-            slot: 0.into(),
-            transaction_index: 0.into(),
-            transaction,
+            origin,
+            txn_hash,
+            txn,
             payment_history: HashMap::new(),
             report: &mut report,
         };

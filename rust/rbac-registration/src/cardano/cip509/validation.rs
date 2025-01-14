@@ -206,17 +206,17 @@ mod tests {
     use std::str::FromStr;
 
     use cardano_blockchain_types::hashes::Blake2b256Hash;
-    use pallas::ledger::traverse::MultiEraBlock;
     use uuid::Uuid;
 
     use super::*;
-    use crate::cardano::cip509::Cip509;
+    use crate::{
+        cardano::cip509::Cip509,
+        utils::test::{test_block_1, test_block_2, test_block_3, test_block_4},
+    };
 
-    // `conway_1.block` contains one transaction (index = 3) with the `Cip509` data.
     #[test]
     fn block_1() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_1();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -228,7 +228,10 @@ mod tests {
             registration.report()
         );
         assert!(registration.previous_transaction().is_none());
-        assert_eq!(registration.origin(), (77_429_134.into(), 3.into()));
+
+        let origin = registration.origin();
+        assert_eq!(origin.txn_index(), 3.into());
+        assert_eq!(origin.point().slot_or_default(), 77_429_134.into());
 
         let (purpose, metadata, _) = registration.consume().unwrap();
         assert_eq!(
@@ -238,20 +241,19 @@ mod tests {
         assert_eq!(1, metadata.role_data.len());
     }
 
-    // `conway_2.block` contains  one transaction (index = 0) with the `Cip509` data. Also
-    // this registration contains an invalid public key that isn't present in the transaction
-    // witness set.
     #[test]
     fn block_2() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_2.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_2();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
         assert!(registration.report().is_problematic());
-        assert_eq!(registration.origin(), (77_171_632.into(), 0.into()));
+
+        let origin = registration.origin();
+        assert_eq!(origin.txn_index(), 0.into());
+        assert_eq!(origin.point().slot_or_default(), 77_171_632.into());
 
         // The consume function must return the problem report contained within the registration.
         let report = registration.consume().unwrap_err();
@@ -260,11 +262,9 @@ mod tests {
         assert!(report.contains("Public key hash not found in transaction witness set"));
     }
 
-    // `conway_3.block` contains one transaction (index = 0) with the `Cip509` data.
     #[test]
     fn block_3() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_3();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -284,7 +284,10 @@ mod tests {
                 .unwrap()
             )
         );
-        assert_eq!(registration.origin(), (77_170_639.into(), 0.into()));
+
+        let origin = registration.origin();
+        assert_eq!(origin.txn_index(), 0.into());
+        assert_eq!(origin.point().slot_or_default(), 77_170_639.into());
 
         let (purpose, metadata, _) = registration.consume().unwrap();
         assert_eq!(
@@ -294,11 +297,9 @@ mod tests {
         assert_eq!(1, metadata.role_data.len());
     }
 
-    // `conway_3.block` contains one transaction (index = 1) with the `Cip509` data.
     #[test]
     fn block_4() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_4.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_4();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -318,7 +319,10 @@ mod tests {
                 .unwrap()
             )
         );
-        assert_eq!(registration.origin(), (77_436_369.into(), 1.into()));
+
+        let origin = registration.origin();
+        assert_eq!(origin.txn_index(), 1.into());
+        assert_eq!(origin.point().slot_or_default(), 77_436_369.into());
 
         let (purpose, metadata, _) = registration.consume().unwrap();
         assert_eq!(
@@ -330,8 +334,7 @@ mod tests {
 
     #[test]
     fn extract_stake_addresses_from_metadata() {
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_1();
         let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
         assert!(
             !cip509.report().is_problematic(),

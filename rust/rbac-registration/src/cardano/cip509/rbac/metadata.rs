@@ -139,7 +139,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
                                         number,
                                         RoleData::new(
                                             data,
-                                            decode_context.transaction,
+                                            decode_context.txn,
                                             decode_context.report,
                                         ),
                                     ))

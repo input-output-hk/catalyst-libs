@@ -3,7 +3,7 @@
 pub use cert_key_hash::CertKeyHash;
 pub use key_local_ref::{KeyLocalRef, LocalRefInt};
 pub use payment_history::{Payment, PaymentHistory};
-pub use point_tx_idx::PointTxIdx;
+pub use point_tx_idx::PointTxnIdx;
 pub use role_data::RoleData;
 pub use role_number::RoleNumber;
 pub use tx_input_hash::TxInputHash;

@@ -34,7 +34,7 @@ pub struct RoleData {
 
 impl RoleData {
     /// Create an instance of role data.
-    pub fn new(data: CborRoleData, transaction: &conway::MintedTx, report: &ProblemReport) -> Self {
+    pub fn new(data: CborRoleData, txn: &conway::MintedTx, report: &ProblemReport) -> Self {
         let payment_key = if data.number == Some(RoleNumber::ROLE_0) && data.payment_key.is_none() {
             report.other(
                 "Missing payment key in role0",
@@ -46,7 +46,7 @@ impl RoleData {
                 "Validating the role data payment key for {:?} role",
                 data.number
             );
-            convert_payment_key(data.payment_key, transaction, &context, report)
+            convert_payment_key(data.payment_key, txn, &context, report)
         };
 
         Self {
@@ -94,7 +94,7 @@ impl RoleData {
 
 /// Converts the payment key from the form encoded in CBOR role data to `ShelleyAddress`.
 fn convert_payment_key(
-    key: Option<i16>, transaction: &conway::MintedTx, context: &str, report: &ProblemReport,
+    key: Option<i16>, txn: &conway::MintedTx, context: &str, report: &ProblemReport,
 ) -> Option<ShelleyAddress> {
     let key = key?;
 
@@ -121,10 +121,10 @@ fn convert_payment_key(
 
     // Negative indicates reference to transaction output.
     if key < 0 {
-        convert_transaction_output(index, transaction, context, report)
+        convert_transaction_output(index, txn, context, report)
     } else {
         // Positive indicates reference to tx input.
-        let inputs = &transaction.transaction_body.inputs;
+        let inputs = &txn.transaction_body.inputs;
         // Check whether the index exists in transaction inputs.
         if inputs.get(index).is_none() {
             report.other(
@@ -145,11 +145,11 @@ fn convert_payment_key(
 
 /// Converts payment key transaction output reference to `ShelleyAddress`.
 fn convert_transaction_output(
-    index: usize, transaction: &conway::MintedTx, context: &str, report: &ProblemReport,
+    index: usize, txn: &conway::MintedTx, context: &str, report: &ProblemReport,
 ) -> Option<ShelleyAddress> {
-    let outputs = &transaction.transaction_body.outputs;
-    let transaction = MultiEraTx::Conway(Box::new(Cow::Borrowed(transaction)));
-    let witness = match TxnWitness::new(&[transaction]) {
+    let outputs = &txn.transaction_body.outputs;
+    let txn = MultiEraTx::Conway(Box::new(Cow::Borrowed(txn)));
+    let witness = match TxnWitness::new(&[txn]) {
         Ok(witnesses) => witnesses,
         Err(e) => {
             report.other(&format!("Failed to create TxWitness: {e:?}"), context);
