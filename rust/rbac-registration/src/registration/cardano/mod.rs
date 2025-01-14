@@ -6,7 +6,6 @@ use anyhow::bail;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::hashes::Blake2b256Hash;
 use ed25519_dalek::VerifyingKey;
-use pallas::ledger::traverse::MultiEraTx;
 use tracing::{error, warn};
 use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
@@ -17,6 +16,7 @@ use crate::cardano::cip509::{
 };
 
 /// Registration chains.
+#[derive(Debug)]
 pub struct RegistrationChain {
     /// Inner part of the registration chain.
     inner: Arc<RegistrationChainInner>,
@@ -28,15 +28,12 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `tracking_payment_keys` - The list of payment keys to track.
-    /// - `point` - The point (slot) of the transaction.
-    /// - `tx_idx` - The transaction index.
     ///
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn new(txn: &MultiEraTx, cip509: Cip509) -> anyhow::Result<Self> {
-        let inner = RegistrationChainInner::new(cip509, txn)?;
+    pub fn new(cip509: Cip509) -> anyhow::Result<Self> {
+        let inner = RegistrationChainInner::new(cip509)?;
 
         Ok(Self {
             inner: Arc::new(inner),
@@ -111,7 +108,7 @@ impl RegistrationChain {
 }
 
 /// Inner structure of registration chain.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Blake2b256Hash,
@@ -143,21 +140,18 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `tracking_payment_keys` - The list of payment keys to track.
-    /// - `point` - The point (slot) of the transaction.
-    /// - `tx_idx` - The transaction index.
-    /// - `txn` - The transaction.
     ///
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn new(cip509: Cip509, txn: &MultiEraTx) -> anyhow::Result<Self> {
+    fn new(cip509: Cip509) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
 
         let point_tx_idx = cip509.origin().clone();
+        let current_tx_id_hash = cip509.txn_hash();
         let (purpose, registration, payment_history) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
@@ -168,23 +162,22 @@ impl RegistrationChainInner {
         };
 
         let purpose = vec![purpose];
-
         let certificate_uris = registration.certificate_uris;
-        let x509_cert_map = chain_root_x509_certs(registration.x509_certs, &point_tx_idx);
-        let c509_cert_map = chain_root_c509_certs(registration.c509_certs, &point_tx_idx);
-        let public_key_map = chain_root_public_keys(registration.pub_keys, &point_tx_idx);
+        let x509_certs = chain_root_x509_certs(registration.x509_certs, &point_tx_idx);
+        let c509_certs = chain_root_c509_certs(registration.c509_certs, &point_tx_idx);
+        let simple_keys = chain_root_public_keys(registration.pub_keys, &point_tx_idx);
         let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
-        let role_data_map = chain_root_role_data(registration.role_data, &point_tx_idx);
+        let role_data = chain_root_role_data(registration.role_data, &point_tx_idx);
 
         Ok(Self {
             purpose,
-            current_tx_id_hash: txn.hash().into(),
-            x509_certs: x509_cert_map,
-            c509_certs: c509_cert_map,
+            current_tx_id_hash,
+            x509_certs,
+            c509_certs,
             certificate_uris,
-            simple_keys: public_key_map,
+            simple_keys,
             revocations,
-            role_data: role_data_map,
+            role_data,
             payment_history,
         })
     }
@@ -417,87 +410,51 @@ fn update_role_data(
 
 #[cfg(test)]
 mod test {
-    // TODO: FIXME:
-    // let block = test_block_1();
-    //
-    // TODO: FIXME: chain from 4 blocks, one  with error!
-    // use super::*;
-    //
-    //
-    // fn conway_1() -> Vec<u8> {
-    //     hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
-    //         .expect("Failed to decode hex block.")
-    // }
-    //
-    // fn conway_4() -> Vec<u8> {
-    //     hex::decode(include_str!("../../test_data/cardano/conway_4.block"))
-    //         .expect("Failed to decode hex block.")
-    // }
+    use super::*;
+    use crate::utils::test::{test_block_1, test_block_2, test_block_4};
 
-    // // TODO: FIXME:
-    // #[test]
-    // fn test_new_and_update_registration() {
-    //     let conway_block_data_1 = conway_1();
-    //     let point_1 = Point::new(
-    //         77_429_134,
-    //         hex::decode("
-    // 62483f96613b4c48acd28de482eb735522ac180df61766bdb476a7bf83e7bb98")
-    // .unwrap(),     );
-    //     let multi_era_block_1 =
-    //         pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data_1)
-    //             .expect("Failed to decode MultiEraBlock");
-    //
-    //     let cip509_1 = Cip509::new(&multi_era_block_1, 3.into())
-    //         .expect("Failed to decode Cip509")
-    //         .unwrap();
-    //     assert!(
-    //         !cip509_1.report().is_problematic(),
-    //         "Failed to decode Cip509: {:?}",
-    //         cip509_1.report()
-    //     );
-    //
-    //     let tracking_payment_keys = vec![];
-    //
-    //     // TODO: FIXME: The transaction shouldn't be used here.
-    //     let transactions_1 = multi_era_block_1.txs();
-    //     // Forth transaction of this test data contains the CIP509 auxiliary data
-    //     let tx_1 = transactions_1
-    //         .get(3)
-    //         .expect("Failed to get transaction index");
-    //     let registration_chain =
-    //         RegistrationChain::new(point_1.clone(), &tracking_payment_keys, 3, tx_1,
-    // cip509_1);     // Able to add chain root to the registration chain
-    //     assert!(registration_chain.is_ok());
-    //
-    //     let conway_block_data_4 = conway_4();
-    //     let point_4 = Point::new(
-    //         77_436_369,
-    //         hex::decode("
-    // b174fc697126f05046b847d47e60d66cbedaf25240027f9c07f27150889aac24")
-    // .unwrap(),     );
-    //
-    //     let multi_era_block_4 =
-    //         pallas::ledger::traverse::MultiEraBlock::decode(&conway_block_data_4)
-    //             .expect("Failed to decode MultiEraBlock");
-    //
-    //     let cip509 = Cip509::new(&multi_era_block_4, 1.into()).unwrap().unwrap();
-    //     assert!(
-    //         !cip509.report().is_problematic(),
-    //         "Failed to decode Cip509: {:?}",
-    //         cip509.report()
-    //     );
-    //
-    //     // TODO: FIXME: The transaction shouldn't be used here.
-    //     let transactions_4 = multi_era_block_4.txs();
-    //     // Second transaction of this test data contains the CIP509 auxiliary data
-    //     let tx = transactions_4
-    //         .get(1)
-    //         .expect("Failed to get transaction index");
-    //
-    //     // Update the registration chain
-    //     assert!(registration_chain
-    //         .unwrap()
-    //         .update(point_4.clone(), 1, tx, cip509)
-    //         .is_ok());
-    // }
+    #[test]
+    fn multiple_registrations() {
+        let block = test_block_1();
+        let registration = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
+        assert!(
+            !registration.report().is_problematic(),
+            "{:#?}",
+            registration.report()
+        );
+
+        // Create a chain with the first registration.
+        let chain = RegistrationChain::new(registration).unwrap();
+        assert_eq!(chain.purpose(), &[Uuid::parse_str(
+            "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
+        )
+        .unwrap()]);
+        assert_eq!(1, chain.x509_certs().len());
+        let origin = &chain.x509_certs().get(&0).unwrap().0;
+        assert_eq!(origin.point().slot_or_default(), 77429134.into());
+        assert_eq!(origin.txn_index(), 3.into());
+
+        // Try to add an invalid registration.
+        let block = test_block_2();
+        let registration = Cip509::new(&block, 0.into(), &[]).unwrap().unwrap();
+        assert!(registration.report().is_problematic());
+
+        let error = chain.update(registration).unwrap_err();
+        let error = format!("{error:?}");
+        assert!(
+            error.contains("Invalid previous transaction ID"),
+            "{}",
+            error
+        );
+
+        // Add the second registration.
+        let block = test_block_4();
+        let registration = Cip509::new(&block, 1.into(), &[]).unwrap().unwrap();
+        assert!(
+            !registration.report().is_problematic(),
+            "{:#?}",
+            registration.report()
+        );
+        chain.update(registration).unwrap();
+    }
 }

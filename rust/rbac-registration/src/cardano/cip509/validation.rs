@@ -35,9 +35,7 @@ use pallas::{
 
 use super::utils::cip19::compare_key_hash;
 use crate::{
-    cardano::cip509::{
-        types::TxInputHash, utils::cip19::extract_key_hash, Cip0134UriSet, LocalRefInt, RoleData,
-    },
+    cardano::cip509::{types::TxInputHash, Cip0134UriSet, LocalRefInt, RoleData},
     utils::hashing::{blake2b_128, blake2b_256},
 };
 
@@ -176,7 +174,7 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
         .flat_map(|(_index, uris)| uris.iter())
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
-                extract_key_hash(a.payload().as_hash().as_ref())
+                a.payload().as_hash().as_slice().try_into().ok()
             } else {
                 None
             }
@@ -349,13 +347,7 @@ mod tests {
         else {
             panic!("Unexpected address type");
         };
-        let hash = address
-            .payload()
-            .as_hash()
-            .get(1..29)
-            .unwrap()
-            .try_into()
-            .unwrap();
+        let hash = address.payload().as_hash().as_ref().try_into().unwrap();
 
         let addresses = extract_stake_addresses(cip509.certificate_uris());
         assert_eq!(1, addresses.len());
