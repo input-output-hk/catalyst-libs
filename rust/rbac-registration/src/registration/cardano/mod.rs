@@ -1,8 +1,5 @@
 //! Chain of Cardano registration data
 
-pub mod payment_history;
-pub mod point_tx_idx;
-
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
@@ -16,15 +13,13 @@ use pallas::{
     },
     network::miniprotocols::Point,
 };
-use payment_history::PaymentHistory;
-use point_tx_idx::PointTxIdx;
 use tracing::{error, warn};
 use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
-    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, RoleData, RoleNumber, SimplePublicKeyType,
-    X509DerCert,
+    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, PaymentHistory, PointTxIdx, RoleData, RoleNumber,
+    SimplePublicKeyType, X509DerCert,
 };
 
 /// Registration chains.
