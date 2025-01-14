@@ -284,6 +284,7 @@ impl MultiEraBlock {
     }
 
     /// Returns a list of transactions withing this block.
+    #[must_use]
     pub fn txs(&self) -> Vec<MultiEraTx> {
         self.decode().txs()
     }

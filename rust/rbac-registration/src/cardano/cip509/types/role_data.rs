@@ -98,9 +98,7 @@ impl RoleData {
 fn convert_payment_key(
     key: Option<i16>, transaction: &conway::MintedTx, context: &str, report: &ProblemReport,
 ) -> Option<ShelleyAddress> {
-    let Some(key) = key else {
-        return None;
-    };
+    let key = key?;
 
     if key == 0 {
         report.invalid_value(

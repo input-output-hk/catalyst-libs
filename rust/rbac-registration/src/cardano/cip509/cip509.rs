@@ -132,7 +132,7 @@ impl Cip509 {
         let mut decode_context = DecodeContext {
             slot: block.slot().into(),
             transaction_index: index,
-            transaction: &transaction,
+            transaction,
             report: &mut report,
         };
         let cip509 = match Cip509::decode(&mut decoder, &mut decode_context) {
@@ -270,7 +270,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
         // below we should try to recover as much data as possible and not to return early.
         let map_len = decode_map_len(d, context)?;
 
-        let mut result = Self::with_decode_context(&decode_context);
+        let mut result = Self::with_decode_context(decode_context);
 
         let mut found_keys = Vec::new();
         let mut is_metadata_found = false;

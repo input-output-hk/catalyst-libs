@@ -256,6 +256,7 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Vec<CertKe
     result
 }
 
+/// Adds report entries if duplicated roles are found.
 fn report_duplicated_roles(data: &[CborRoleData], context: &str, report: &ProblemReport) {
     let mut roles = HashSet::new();
     for role in data {

@@ -15,6 +15,7 @@ use crate::{
 };
 
 /// Role data as encoded in CBOR.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct CborRoleData {
     /// A role number.
@@ -113,6 +114,7 @@ impl Decode<'_, ProblemReport> for CborRoleData {
     }
 }
 
+/// Decodes a role number.
 fn decode_role_number(
     d: &mut Decoder, context: &str, report: &ProblemReport,
 ) -> Option<RoleNumber> {
@@ -125,6 +127,7 @@ fn decode_role_number(
     }
 }
 
+/// Decodes a signing key.
 fn decode_signing_key(
     d: &mut Decoder, context: &str, report: &ProblemReport,
 ) -> Option<KeyLocalRef> {
@@ -145,6 +148,7 @@ fn decode_signing_key(
     }
 }
 
+/// Decodes an encryption key.
 fn decode_encryption_key(
     d: &mut Decoder, context: &str, report: &ProblemReport,
 ) -> Option<KeyLocalRef> {

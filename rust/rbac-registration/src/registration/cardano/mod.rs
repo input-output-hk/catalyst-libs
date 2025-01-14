@@ -178,7 +178,6 @@ impl RegistrationChainInner {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
 
-        // TODO: FIXME: Remove txn_inputs_hash?
         let (purpose, registration) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
@@ -452,6 +451,7 @@ fn update_role_data(
     }
 }
 
+// TODO: FIXME: Move payment history into Cip509.
 /// Update the payment history given the tracking payment keys.
 fn update_tracking_payment_history(
     tracking_payment_history: &mut HashMap<ShelleyAddress, Vec<PaymentHistory>>, txn: &MultiEraTx,
@@ -495,30 +495,10 @@ fn update_tracking_payment_history(
 
 #[cfg(test)]
 mod test {
-    use pallas::{ledger::traverse::MultiEraTx, network::miniprotocols::Point};
+    use pallas::network::miniprotocols::Point;
 
     use super::RegistrationChain;
-    use crate::cardano::{cip509::Cip509, transaction::raw_aux_data::RawAuxData};
-
-    fn cip_509_aux_data(tx: &MultiEraTx<'_>) -> Vec<u8> {
-        let raw_auxiliary_data = tx
-            .as_conway()
-            .unwrap()
-            .clone()
-            .auxiliary_data
-            .map(|aux| aux.raw_cbor());
-
-        let raw_cbor_data = match raw_auxiliary_data {
-            pallas::codec::utils::Nullable::Some(data) => Ok(data),
-            _ => Err("Auxiliary data not found"),
-        };
-
-        let auxiliary_data = RawAuxData::new(raw_cbor_data.expect("Failed to get raw cbor data"));
-        auxiliary_data
-            .get_metadata(509)
-            .expect("Failed to get metadata")
-            .to_vec()
-    }
+    use crate::cardano::cip509::Cip509;
 
     fn conway_1() -> Vec<u8> {
         hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
