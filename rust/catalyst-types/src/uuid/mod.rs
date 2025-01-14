@@ -1,6 +1,7 @@
 //! `UUID` types.
 
 use displaydoc::Display;
+use minicbor::Decoder;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -12,9 +13,6 @@ pub use uuid_v7::UuidV7 as V7;
 
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
-
-/// CBOR tag for UUID content.
-pub const UUID_CBOR_TAG: u64 = 37;
 
 /// Errors that can occur when decoding CBOR-encoded UUIDs.
 #[derive(Display, Debug, Error)]
@@ -32,24 +30,21 @@ pub enum CborUuidError {
     },
 }
 
-/// Encode `UUID` into `CBOR`.
-pub(crate) fn encode_cbor_uuid(uuid: uuid::Uuid) -> coset::cbor::Value {
-    coset::cbor::Value::Tag(
-        UUID_CBOR_TAG,
-        coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
-    )
+/// Decode from `CBOR` into `UUID`
+pub(crate) fn decode_cbor_uuid(
+    d: &mut Decoder<'_>, (): &mut (),
+) -> Result<uuid::Uuid, minicbor::decode::Error> {
+    let decoded = d.bytes()?.try_into().map_err(|e| {
+        minicbor::decode::Error::message(format!("Expected UUID to have 16 bytes: {e}"))
+    })?;
+    let uuid = uuid::Uuid::from_bytes(decoded);
+    Ok(uuid)
 }
 
-/// Decode `CBOR` encoded `UUID`.
-pub(crate) fn decode_cbor_uuid(val: &coset::cbor::Value) -> Result<uuid::Uuid, CborUuidError> {
-    let Some((UUID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
-        return Err(CborUuidError::InvalidCborType);
-    };
-    let uuid = uuid::Uuid::from_bytes(
-        bytes
-            .clone()
-            .try_into()
-            .map_err(|_| CborUuidError::InvalidByteSize)?,
-    );
-    Ok(uuid)
+/// Encode `UUID` into `CBOR`
+pub(crate) fn encode_cbor_uuid<W: minicbor::encode::Write>(
+    uuid: uuid::Uuid, e: &mut minicbor::Encoder<W>, (): &mut (),
+) -> Result<(), minicbor::encode::Error<W::Error>> {
+    e.bytes(uuid.as_bytes())?;
+    Ok(())
 }
