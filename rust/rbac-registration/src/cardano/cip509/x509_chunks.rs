@@ -113,10 +113,10 @@ mod tests {
 
     use cardano_blockchain_types::Point;
     use catalyst_types::problem_report::ProblemReport;
-    use pallas::ledger::traverse::{MultiEraBlock, MultiEraTx};
+    use pallas::ledger::traverse::MultiEraTx;
 
     use super::*;
-    use crate::cardano::cip509::PointTxnIdx;
+    use crate::{cardano::cip509::PointTxnIdx, utils::test::test_block_3};
 
     // RAW data: 10
     const RAW: &str =
@@ -135,18 +135,14 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_3();
         let transactions = block.txs();
-        let txn = transactions.first().unwrap();
-        let txn_hash = txn.hash().into();
-        let MultiEraTx::Conway(txn) = txn else {
+        let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
         };
         let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
         let mut context = DecodeContext {
             origin,
-            txn_hash,
             txn,
             payment_history: HashMap::new(),
             report: &mut report,
@@ -172,18 +168,14 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_3();
         let transactions = block.txs();
-        let txn = transactions.first().unwrap();
-        let txn_hash = txn.hash().into();
-        let MultiEraTx::Conway(txn) = txn else {
+        let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
         };
         let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
         let mut context = DecodeContext {
             origin,
-            txn_hash,
             txn,
             payment_history: HashMap::new(),
             report: &mut report,
@@ -209,18 +201,14 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
-        let block = MultiEraBlock::decode(&block).unwrap();
+        let block = test_block_3();
         let transactions = block.txs();
-        let txn = transactions.first().unwrap();
-        let txn_hash = txn.hash().into();
-        let MultiEraTx::Conway(txn) = txn else {
+        let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
         };
         let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
         let mut context = DecodeContext {
             origin,
-            txn_hash,
             txn,
             payment_history: HashMap::new(),
             report: &mut report,

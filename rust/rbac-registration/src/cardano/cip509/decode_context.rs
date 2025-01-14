@@ -2,7 +2,6 @@
 
 use std::collections::HashMap;
 
-use cardano_blockchain_types::hashes::Blake2b256Hash;
 use catalyst_types::problem_report::ProblemReport;
 use pallas::ledger::{addresses::ShelleyAddress, primitives::conway};
 
@@ -14,7 +13,6 @@ pub struct DecodeContext<'r, 't> {
     pub origin: PointTxnIdx,
     /// A transaction.
     pub txn: &'t conway::MintedTx<'t>,
-    pub txn_hash: Blake2b256Hash,
     /// A payment history.
     pub payment_history: HashMap<ShelleyAddress, Vec<Payment>>,
     /// A problem report.

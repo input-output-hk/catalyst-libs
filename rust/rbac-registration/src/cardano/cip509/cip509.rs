@@ -127,8 +127,6 @@ impl Cip509 {
                 txns.len()
             )
         })?;
-        let txn_hash = txn.hash().into();
-
         let MultiEraTx::Conway(txn) = txn else {
             return Err(anyhow!("Unsupported era: {}", txn.era()));
         };
@@ -149,7 +147,6 @@ impl Cip509 {
         let mut decode_context = DecodeContext {
             origin,
             txn,
-            txn_hash,
             payment_history,
             report: &mut report,
         };
@@ -208,6 +205,10 @@ impl Cip509 {
 
     /// Creates an "empty" `Cip509` instance with all optional fields set to `None`.
     fn with_decode_context(context: &DecodeContext) -> Self {
+        let txn_hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(context.txn)))
+            .hash()
+            .into();
+
         Self {
             purpose: None,
             txn_inputs_hash: None,
@@ -215,7 +216,7 @@ impl Cip509 {
             metadata: None,
             validation_signature: None,
             payment_history: context.payment_history.clone(),
-            txn_hash: context.txn_hash,
+            txn_hash,
             origin: context.origin.clone(),
             report: context.report.clone(),
         }

@@ -170,8 +170,8 @@ impl RegistrationChainInner {
         let role_data = chain_root_role_data(registration.role_data, &point_tx_idx);
 
         Ok(Self {
-            purpose,
             current_tx_id_hash,
+            purpose,
             x509_certs,
             c509_certs,
             certificate_uris,
