@@ -9,7 +9,7 @@ mod document_ref;
 mod document_type;
 mod document_version;
 
-use additional_fields::AdditionalFields;
+pub use additional_fields::AdditionalFields;
 use anyhow::anyhow;
 pub use catalyst_types::uuid::{V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;

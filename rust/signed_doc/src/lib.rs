@@ -14,7 +14,7 @@ mod error;
 mod metadata;
 mod signature;
 
-pub use metadata::{DocumentRef, Metadata, UuidV7};
+pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV7};
 pub use signature::KidUri;
 use signature::Signatures;
 
@@ -128,6 +128,12 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn doc_content(&self) -> &Content {
         &self.inner.content
+    }
+
+    /// Return document metadata content.
+    #[must_use]
+    pub fn doc_meta(&self) -> &AdditionalFields {
+        self.inner.metadata.extra()
     }
 
     /// Return a Document's signatures
