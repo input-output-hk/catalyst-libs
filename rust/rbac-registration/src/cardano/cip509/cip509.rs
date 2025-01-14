@@ -477,7 +477,7 @@ mod tests {
         let res = Cip509::new(&block, index)
             .expect("Failed to get Cip509")
             .expect("There must be Cip509 in block");
-        assert!(!res.report.is_problematic());
+        assert!(!res.report.is_problematic(), "{:?}", res.report);
     }
 
     #[test]
@@ -487,6 +487,7 @@ mod tests {
         let block = MultiEraBlock::decode(&block).unwrap();
         let res = Cip509::from_block(&block);
         assert_eq!(1, res.len());
-        assert!(!res.first().unwrap().report.is_problematic());
+        let cip509 = res.first().unwrap();
+        assert!(!cip509.report.is_problematic(), "{:?}", cip509.report);
     }
 }

@@ -203,140 +203,130 @@ pub fn validate_role_signing_key(role_data: &RoleData, report: &ProblemReport) {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
 
-    use catalyst_types::problem_report::ProblemReport;
-    use pallas::{codec::utils::Nullable, ledger::traverse::MultiEraBlock};
+    use cardano_blockchain_types::hashes::Blake2b256Hash;
+    use pallas::ledger::traverse::MultiEraBlock;
+    use uuid::Uuid;
 
     use super::*;
     use crate::cardano::cip509::Cip509;
 
+    // `conway_1.block` contains one transaction (index = 3) with the `Cip509` data.
     #[test]
     fn block_1() {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_1.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let registrations = Cip509::from_block(&block);
-        // TODO: FIXME: Assert size, transaction indexes and check reports!
-        println!("{registrations:?}");
+        let mut registrations = Cip509::from_block(&block);
+        assert_eq!(1, registrations.len());
+
+        let registration = registrations.pop().unwrap();
+        assert!(
+            !registration.report().is_problematic(),
+            "{:?}",
+            registration.report()
+        );
+        assert!(registration.previous_transaction().is_none());
+        assert_eq!(registration.origin(), (77429134.into(), 3.into()));
+
+        let (purpose, metadata) = registration.consume().unwrap();
+        assert_eq!(
+            purpose,
+            Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
+        );
+        assert_eq!(1, metadata.role_data.len());
     }
 
+    // `conway_2.block` contains  one transaction (index = 0) with the `Cip509` data. Also
+    // this registration contains an invalid public key that isn't present in the transaction
+    // witness set.
     #[test]
     fn block_2() {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_2.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let registrations = Cip509::from_block(&block);
-        // TODO: FIXME: Assert size, transaction indexes and check reports!
-        println!("{registrations:?}");
+        let mut registrations = Cip509::from_block(&block);
+        assert_eq!(1, registrations.len());
+
+        let registration = registrations.pop().unwrap();
+        assert!(registration.report().is_problematic());
+        assert_eq!(registration.origin(), (77171632.into(), 0.into()));
+
+        // The consume function must return the problem report contained within the registration.
+        let report = registration.consume().unwrap_err();
+        assert!(report.is_problematic());
+        let report = format!("{report:?}");
+        assert!(report.contains("Public key hash not found in transaction witness set"));
     }
 
+    // `conway_3.block` contains one transaction (index = 0) with the `Cip509` data.
     #[test]
     fn block_3() {
         let block = hex::decode(include_str!("../../test_data/cardano/conway_3.block")).unwrap();
         let block = MultiEraBlock::decode(&block).unwrap();
 
-        let registrations = Cip509::from_block(&block);
-        // TODO: FIXME: Assert size, transaction indexes and check reports!
-        println!("{registrations:?}");
-    }
+        let mut registrations = Cip509::from_block(&block);
+        assert_eq!(1, registrations.len());
 
-    fn conway_1() -> Vec<u8> {
-        hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
-            .expect("Failed to decode hex block.")
-    }
-
-    #[test]
-    fn test_validate_txn_inputs_hash() {
-        let conway_block_data = conway_1();
-        let multi_era_block =
-            MultiEraBlock::decode(&conway_block_data).expect("Failed to decode MultiEraBlock");
-
-        let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
-        let transaction_index = 3;
-        let tx = transactions
-            .get(transaction_index)
-            .expect("Failed to get transaction index");
-
-        let cip509 = Cip509::new(&multi_era_block, transaction_index.into())
-            .unwrap()
-            .unwrap();
+        let registration = registrations.pop().unwrap();
         assert!(
-            !cip509.report().is_problematic(),
-            "Failed to decode Cip509: {:?}",
-            cip509.report()
+            !registration.report().is_problematic(),
+            "{:?}",
+            registration.report()
         );
+        assert_eq!(
+            registration.previous_transaction(),
+            Some(
+                Blake2b256Hash::from_str(
+                    "4d3f576f26db29139981a69443c2325daa812cc353a31b5a4db794a5bcbb06c2"
+                )
+                .unwrap()
+            )
+        );
+        assert_eq!(registration.origin(), (77170639.into(), 0.into()));
 
-        let MultiEraTx::Conway(tx) = tx else {
-            panic!("Unexpected transaction era");
-        };
-        let hash = cip509.txn_inputs_hash().unwrap();
-        let report = ProblemReport::new("validate_txn_inputs_hash test");
-        validate_txn_inputs_hash(hash, tx, &report);
-        assert!(
-            !report.is_problematic(),
-            "validate_txn_inputs_hash failed: {report:?}"
+        let (purpose, metadata) = registration.consume().unwrap();
+        assert_eq!(
+            purpose,
+            Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
         );
+        assert_eq!(1, metadata.role_data.len());
     }
 
+    // `conway_3.block` contains one transaction (index = 1) with the `Cip509` data.
     #[test]
-    fn test_validate_aux() {
-        let conway_block_data = conway_1();
-        let multi_era_block =
-            MultiEraBlock::decode(&conway_block_data).expect("Failed to decode MultiEraBlock");
+    fn block_4() {
+        let block = hex::decode(include_str!("../../test_data/cardano/conway_4.block")).unwrap();
+        let block = MultiEraBlock::decode(&block).unwrap();
 
-        let transactions = multi_era_block.txs();
-        // Forth transaction of this test data contains the CIP509 auxiliary data
-        let tx = transactions
-            .get(3)
-            .expect("Failed to get transaction index");
-        let MultiEraTx::Conway(tx) = tx else {
-            panic!("Unexpected transaction era");
-        };
-        let auxiliary_data = match &tx.auxiliary_data {
-            Nullable::Some(v) => v.raw_cbor(),
-            _ => panic!("Missing auxiliary data in transaction"),
-        };
+        let mut registrations = Cip509::from_block(&block);
+        assert_eq!(1, registrations.len());
 
-        let report = ProblemReport::new("Auxiliary data validation");
-        validate_aux(
-            auxiliary_data,
-            tx.transaction_body.auxiliary_data_hash.as_ref(),
-            &report,
+        let registration = registrations.pop().unwrap();
+        assert!(
+            !registration.report().is_problematic(),
+            "{:?}",
+            registration.report()
         );
-        assert!(!report.is_problematic(), "validate_aux failed: {report:?}");
-    }
+        assert_eq!(
+            registration.previous_transaction(),
+            Some(
+                Blake2b256Hash::from_str(
+                    "6695b9cac9230af5c8ee50747b1ca3c78a854d181c7e5c6c371de01b80274d31"
+                )
+                .unwrap()
+            )
+        );
+        assert_eq!(registration.origin(), (77436369.into(), 1.into()));
 
-    // TODO: FIXME:
-    // #[test]
-    // fn test_validate_public_key_fail() {
-    //     let conway_block_data = conway_2();
-    //     let multi_era_block =
-    //         MultiEraBlock::decode(&conway_block_data).expect("Failed to decode
-    // MultiEraBlock");
-    //
-    //     let transactions = multi_era_block.txs();
-    //     // First transaction of this test data contains the CIP509 auxiliary data
-    //     let tx = transactions
-    //         .first()
-    //         .expect("Failed to get transaction index");
-    //
-    //     let cip509 = Cip509::new(&multi_era_block, 0.into()).unwrap().unwrap();
-    //     assert!(
-    //         !cip509.report().is_problematic(),
-    //         "Failed to decode Cip509: {:?}",
-    //         cip509.report()
-    //     );
-    //
-    //     let report = ProblemReport::new("validate_stake_public_key");
-    //     validate_stake_public_key(tx, cip509.certificate_uris(), &report);
-    //     assert!(report.is_problematic());
-    //     let report = format!("{report:?}");
-    //     assert!(
-    //         report.contains("Failed to compare public keys with witnesses"),
-    //         "Unexpected problem report content: {report}"
-    //     );
-    // }
+        let (purpose, metadata) = registration.consume().unwrap();
+        assert_eq!(
+            purpose,
+            Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
+        );
+        assert_eq!(1, metadata.role_data.len());
+    }
 
     #[test]
     fn extract_stake_addresses_from_metadata() {

@@ -19,11 +19,7 @@ pub struct Slot(u64);
 impl Slot {
     /// Convert an `<T>` to Slot. (saturate if out of range.)
     pub fn from_saturating<
-        T: Copy
-            + TryInto<u64>
-            + std::ops::Sub<Output = T>
-            + std::cmp::PartialOrd<T>
-            + num_traits::identities::Zero,
+        T: Copy + TryInto<u64> + Sub<Output = T> + PartialOrd<T> + num_traits::identities::Zero,
     >(
         value: T,
     ) -> Self {
