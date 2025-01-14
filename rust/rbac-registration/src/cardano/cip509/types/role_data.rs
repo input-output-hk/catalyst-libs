@@ -210,7 +210,7 @@ fn validate_payment_output(
     // Set transaction index to 0 because the list of transaction is manually constructed
     // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
     // the witness within this transaction.
-    if let Err(e) = compare_key_hash(&[key.clone()], witness, 0.into()) {
+    if let Err(e) = compare_key_hash(&[key], witness, 0.into()) {
         report.other(
             &format!(
                 "Unable to find payment output key ({key:?}) in the transaction witness set: {e:?}"

@@ -19,7 +19,7 @@ pub(crate) fn compare_key_hash(
 
     pk_addrs.iter().try_for_each(|pk_addr| {
         // Key hash not found in the transaction witness set
-        if !witness.check_witness_in_tx(&pk_addr, txn_idx) {
+        if !witness.check_witness_in_tx(pk_addr, txn_idx) {
             bail!(
                 "Public key hash not found in transaction witness set given {:?}",
                 pk_addr
