@@ -262,11 +262,11 @@ fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisM
 mod tests {
     use pallas::ledger::addresses::{Address, Network};
 
-    use crate::{cardano::cip509::Cip509, utils::test::test_block_1};
+    use crate::{cardano::cip509::Cip509, utils::test};
 
     #[test]
     fn set_new() {
-        let block = test_block_1();
+        let block = test::block_1();
         let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
         assert!(
             !cip509.report().is_problematic(),

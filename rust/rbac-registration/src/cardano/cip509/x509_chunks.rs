@@ -116,7 +116,7 @@ mod tests {
     use pallas::ledger::traverse::MultiEraTx;
 
     use super::*;
-    use crate::{cardano::cip509::PointTxnIdx, utils::test::test_block_3};
+    use crate::{cardano::cip509::PointTxnIdx, utils::test};
 
     // RAW data: 10
     const RAW: &str =
@@ -135,7 +135,7 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = test_block_3();
+        let block = test::block_3();
         let transactions = block.txs();
         let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
@@ -168,7 +168,7 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = test_block_3();
+        let block = test::block_3();
         let transactions = block.txs();
         let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
@@ -201,7 +201,7 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = test_block_3();
+        let block = test::block_3();
         let transactions = block.txs();
         let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");

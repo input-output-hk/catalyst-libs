@@ -207,14 +207,11 @@ mod tests {
     use uuid::Uuid;
 
     use super::*;
-    use crate::{
-        cardano::cip509::Cip509,
-        utils::test::{test_block_1, test_block_2, test_block_3, test_block_4},
-    };
+    use crate::{cardano::cip509::Cip509, utils::test};
 
     #[test]
     fn block_1() {
-        let block = test_block_1();
+        let block = test::block_1();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -241,7 +238,7 @@ mod tests {
 
     #[test]
     fn block_2() {
-        let block = test_block_2();
+        let block = test::block_2();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -262,7 +259,7 @@ mod tests {
 
     #[test]
     fn block_3() {
-        let block = test_block_3();
+        let block = test::block_3();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -297,7 +294,7 @@ mod tests {
 
     #[test]
     fn block_4() {
-        let block = test_block_4();
+        let block = test::block_4();
 
         let mut registrations = Cip509::from_block(&block, &[]);
         assert_eq!(1, registrations.len());
@@ -332,7 +329,7 @@ mod tests {
 
     #[test]
     fn extract_stake_addresses_from_metadata() {
-        let block = test_block_1();
+        let block = test::block_1();
         let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
         assert!(
             !cip509.report().is_problematic(),

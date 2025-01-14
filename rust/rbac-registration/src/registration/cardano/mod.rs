@@ -411,11 +411,11 @@ fn update_role_data(
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::utils::test::{test_block_1, test_block_2, test_block_4};
+    use crate::utils::test;
 
     #[test]
     fn multiple_registrations() {
-        let block = test_block_1();
+        let block = test::block_1();
         let registration = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
         assert!(
             !registration.report().is_problematic(),
@@ -431,11 +431,11 @@ mod test {
         .unwrap()]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().0;
-        assert_eq!(origin.point().slot_or_default(), 77429134.into());
+        assert_eq!(origin.point().slot_or_default(), 77_429_134.into());
         assert_eq!(origin.txn_index(), 3.into());
 
         // Try to add an invalid registration.
-        let block = test_block_2();
+        let block = test::block_2();
         let registration = Cip509::new(&block, 0.into(), &[]).unwrap().unwrap();
         assert!(registration.report().is_problematic());
 
@@ -448,7 +448,7 @@ mod test {
         );
 
         // Add the second registration.
-        let block = test_block_4();
+        let block = test::block_4();
         let registration = Cip509::new(&block, 1.into(), &[]).unwrap().unwrap();
         assert!(
             !registration.report().is_problematic(),

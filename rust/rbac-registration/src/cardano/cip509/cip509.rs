@@ -547,11 +547,11 @@ fn decode_validation_signature(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::test::test_block_1;
+    use crate::utils::test;
 
     #[test]
     fn new() {
-        let block = test_block_1();
+        let block = test::block_1();
         let index = TxnIndex::from(3);
         let res = Cip509::new(&block, index, &[])
             .expect("Failed to get Cip509")
@@ -561,7 +561,7 @@ mod tests {
 
     #[test]
     fn from_block() {
-        let block = test_block_1();
+        let block = test::block_1();
         let res = Cip509::from_block(&block, &[]);
         assert_eq!(1, res.len());
         let cip509 = res.first().unwrap();
