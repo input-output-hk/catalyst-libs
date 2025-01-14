@@ -6,7 +6,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use cardano_blockchain_types::{MultiEraBlock, Network, Point};
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
 use logcall::logcall;
 use tokio::task;
 use tracing::{debug, error};
@@ -52,12 +52,14 @@ pub(crate) struct MithrilSnapshotIterator {
 
 /// Create a probe point used in iterations to find the start when its not exactly known.
 pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
+    /// Step back point to indicate origin.
+    const STEP_BACK_ORIGIN: u64 = 0;
     // Now that we have the tip, step back about 4 block intervals from tip, and do a fuzzy
     // iteration to find the exact two blocks at the end of the immutable chain.
     let step_back_search = point.slot_or_default() - distance.into();
 
     // We stepped back to the origin, so just return Origin
-    if step_back_search == 0.into() {
+    if step_back_search == STEP_BACK_ORIGIN.into() {
         return Point::ORIGIN;
     }
 
@@ -210,7 +212,7 @@ impl Iterator for MithrilSnapshotIteratorInner {
             if let Ok(block) = maybe_block {
                 if !self.previous.is_unknown() {
                     // We can safely fully decode this block.
-                    match MultiEraBlock::new(self.chain, block, &self.previous, 0.into()) {
+                    match MultiEraBlock::new(self.chain, block, &self.previous, Fork::IMMUTABLE) {
                         Ok(block_data) => {
                             // Update the previous point
                             // debug!("Pre Previous update 1 : {:?}", self.previous);

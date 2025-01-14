@@ -75,7 +75,7 @@ impl ChainFollower {
             end,
             previous: Point::UNKNOWN,
             current: start,
-            fork: 1.into(), // This is correct, because Mithril is Fork 0.
+            fork: Fork::BACKFILL, // This is correct, because Mithril is Fork 0.
             snapshot: MithrilSnapshot::new(chain),
             mithril_follower: None,
             mithril_tip: None,
