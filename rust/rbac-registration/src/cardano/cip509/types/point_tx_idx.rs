@@ -2,6 +2,7 @@
 
 use pallas::network::miniprotocols::Point;
 
+// TODO: FIXME: Remove and use point and index everywhere.
 /// Point (slot) and transaction index.
 #[derive(Debug, Clone)]
 pub struct PointTxIdx((Point, usize));

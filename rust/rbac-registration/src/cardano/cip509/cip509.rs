@@ -87,6 +87,7 @@ pub struct Cip509 {
     /// The data located in `Cip509` is only considered valid if
     /// `ProblemReport::is_problematic()` returns false.
     report: ProblemReport,
+    // TODO: FIXME: Use the slot type from blockchain types crate.
     /// A slot identifying the block that this `Cip509` was extracted from.
     slot: Slot,
     /// A transaction index.

@@ -419,7 +419,9 @@ fn update_role_data(
 
 #[cfg(test)]
 mod test {
+    // TODO: FIXME: chain from 4 blocks, one  with error!
     // use super::*;
+    //
     //
     // fn conway_1() -> Vec<u8> {
     //     hex::decode(include_str!("../../test_data/cardano/conway_1.block"))
