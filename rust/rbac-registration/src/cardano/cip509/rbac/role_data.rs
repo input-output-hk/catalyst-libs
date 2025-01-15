@@ -96,7 +96,7 @@ impl Decode<'_, ProblemReport> for CborRoleData {
                         continue;
                     },
                 };
-                if data.extended_data.insert(key, value).is_some() {
+                if data.extended_data.insert(key, value.to_vec()).is_some() {
                     report.other(
                         &format!("Duplicated {key} key in the role extended data"),
                         context,

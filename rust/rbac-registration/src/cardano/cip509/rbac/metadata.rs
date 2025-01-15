@@ -158,7 +158,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
 
                 match decode_any(d, "purpose key") {
                     Ok(v) => {
-                        purpose_key_data.insert(key, v);
+                        purpose_key_data.insert(key, v.to_vec());
                     },
                     Err(e) => {
                         decode_context
