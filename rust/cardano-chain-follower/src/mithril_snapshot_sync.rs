@@ -522,7 +522,11 @@ async fn check_snapshot_to_download(
 fn background_validate_mithril_snapshot(
     chain: Network, certificate: MithrilCertificate, tmp_path: PathBuf,
 ) -> tokio::task::JoinHandle<bool> {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "BGValidateMithrilSnapshot";
+
     tokio::spawn(async move {
+        stats::start_thread(chain, THREAD_NAME, true);
         debug!(
             "Mithril Snapshot background updater for: {} : Check Certificate.",
             chain
@@ -546,6 +550,7 @@ fn background_validate_mithril_snapshot(
             chain
         );
 
+        stats::stop_thread(chain, THREAD_NAME);
         true
     })
 }
@@ -704,7 +709,6 @@ pub(crate) async fn background_mithril_update(
     let mut current_snapshot = recover_existing_snapshot(&cfg, &tx).await;
 
     loop {
-        stats::resume_thread(cfg.chain, THREAD_NAME);
         debug!("Background Mithril Updater - New Loop");
 
         cleanup(&cfg).await;

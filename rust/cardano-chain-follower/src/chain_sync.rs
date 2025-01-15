@@ -446,7 +446,6 @@ async fn live_sync_backfill_and_purge(
     let live_chain_head: Point;
 
     loop {
-        stats::resume_thread(cfg.chain, THREAD_NAME);
         // We will re-attempt backfill, until its successful.
         // Backfill is atomic, it either fully works, or none of the live-chain is changed.
         debug!("Mithril Tip has advanced to: {update:?} : BACKFILL");
@@ -479,8 +478,6 @@ async fn live_sync_backfill_and_purge(
     let mut update_sender = get_chain_update_tx_queue(cfg.chain).await;
 
     loop {
-        stats::resume_thread(cfg.chain, THREAD_NAME);
-
         let Some(update) = rx.recv().await else {
             error!("Mithril Sync Failed, can not continue chain sync either.");
             stats::stop_thread(cfg.chain, THREAD_NAME);
@@ -561,7 +558,6 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
     let mut fork_count: Fork = Fork::FIRST_LIVE;
 
     loop {
-        stats::resume_thread(cfg.chain, THREAD_NAME);
         // We never have a connection if we end up around the loop, so make a new one.
         let mut peer = persistent_reconnect(&cfg.relay_address, cfg.chain).await;
         match resync_live_tip(&mut peer, cfg.chain).await {

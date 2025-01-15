@@ -468,7 +468,6 @@ impl ParallelDownloadProcessor {
         while let Ok(next_chunk) =
             Self::call_work_queue_receiver(chain, thread_name.as_str(), work_queue)
         {
-            stats::resume_thread(chain, thread_name.as_str());
             // Add a small delay to the first chunks for each worker.
             // So that the leading chunks are more likely to finish downloading first.
             if next_chunk > 0 && next_chunk < params.cfg.workers {
@@ -479,7 +478,6 @@ impl ParallelDownloadProcessor {
             let mut block;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
             loop {
-                stats::resume_thread(chain, thread_name.as_str());
 
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
