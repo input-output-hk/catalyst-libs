@@ -74,79 +74,23 @@ pub fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
         .map_err(|e| decode::Error::message(format!("Failed to decode tag in {from}: {e}")))
 }
 
-/// Decode any in CDDL, only support basic datatype
+/// Decode any in CDDL (any CBOR type) and return its bytes.
 ///
 /// # Errors
 ///
 /// Error if the decoding fails.
 pub fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
-    match d.datatype()? {
-        minicbor::data::Type::String => {
-            match decode_helper::<String, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.as_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U8 => {
-            match decode_helper::<u8, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U16 => {
-            match decode_helper::<u16, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U32 => {
-            match decode_helper::<u32, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U64 => {
-            match decode_helper::<u64, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I8 => {
-            match decode_helper::<i8, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I16 => {
-            match decode_helper::<i16, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I32 => {
-            match decode_helper::<i32, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I64 => {
-            match decode_helper::<i64, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::Bytes => Ok(decode_bytes(d, &format!("{from} Any"))?),
-        minicbor::data::Type::Array => {
-            Ok(decode_array_len(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
-        },
-        _ => {
-            Err(decode::Error::message(format!(
-                "{from} Any, Data type not supported"
-            )))
-        },
-    }
+    let start = d.position();
+    d.skip()?;
+    let end = d.position();
+    let bytes = d
+        .input()
+        .get(start..end)
+        .ok_or(decode::Error::message(format!(
+            "Failed to get any CBOR bytes in {from}. Ivalid CBOR bytes."
+        )))?
+        .to_vec();
+    Ok(bytes)
 }
 
 #[cfg(test)]
