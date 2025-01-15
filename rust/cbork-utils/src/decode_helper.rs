@@ -74,163 +74,105 @@ pub fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
         .map_err(|e| decode::Error::message(format!("Failed to decode tag in {from}: {e}")))
 }
 
-/// Decode any in CDDL, only support basic datatype
+/// Decode any in CDDL (any CBOR type) and return its bytes.
 ///
 /// # Errors
 ///
 /// Error if the decoding fails.
-pub fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
-    match d.datatype()? {
-        minicbor::data::Type::String => {
-            match decode_helper::<String, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.as_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U8 => {
-            match decode_helper::<u8, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U16 => {
-            match decode_helper::<u16, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U32 => {
-            match decode_helper::<u32, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::U64 => {
-            match decode_helper::<u64, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I8 => {
-            match decode_helper::<i8, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I16 => {
-            match decode_helper::<i16, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I32 => {
-            match decode_helper::<i32, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::I64 => {
-            match decode_helper::<i64, _>(d, &format!("{from} Any"), &mut ()) {
-                Ok(i) => Ok(i.to_be_bytes().to_vec()),
-                Err(e) => Err(e),
-            }
-        },
-        minicbor::data::Type::Bytes => Ok(decode_bytes(d, &format!("{from} Any"))?),
-        minicbor::data::Type::Array => {
-            Ok(decode_array_len(d, &format!("{from} Any"))?
-                .to_be_bytes()
-                .to_vec())
-        },
-        _ => {
-            Err(decode::Error::message(format!(
-                "{from} Any, Data type not supported"
-            )))
-        },
-    }
+pub fn decode_any<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decode::Error> {
+    let start = d.position();
+    d.skip()?;
+    let end = d.position();
+    let bytes = d
+        .input()
+        .get(start..end)
+        .ok_or(decode::Error::message(format!(
+            "Failed to get any CBOR bytes in {from}. Invalid CBOR bytes."
+        )))?;
+    Ok(bytes)
 }
 
 #[cfg(test)]
 mod tests {
-
     use minicbor::Encoder;
+    use test_strategy::proptest;
 
     use super::*;
 
-    #[test]
-    fn test_decode_any_bytes() {
+    #[proptest]
+    fn test_decode_any_bytes(random_bytes: Vec<u8>) {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
-        e.bytes(&[1, 2, 3, 4]).expect("Error encoding bytes");
+        e.bytes(&random_bytes).expect("Error encoding bytes");
 
         let mut d = Decoder::new(&buf);
-        let result = decode_any(&mut d, "test").expect("Error decoding bytes");
-        assert_eq!(result, vec![1, 2, 3, 4]);
+        let cbor_bytes = decode_any(&mut d, "test").expect("Error decoding bytes");
+
+        let result = decode_bytes(&mut Decoder::new(cbor_bytes), "test").unwrap();
+        assert_eq!(result, random_bytes);
     }
 
-    #[test]
-    fn test_decode_any_string() {
+    #[proptest]
+    fn test_decode_any_string(random_string: String) {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
-        e.str("hello").expect("Error encoding string");
+        e.str(&random_string).expect("Error encoding string");
 
         let mut d = Decoder::new(&buf);
-        let result = decode_any(&mut d, "test").expect("Error decoding string");
-        assert_eq!(result, b"hello".to_vec());
+        let cbor_bytes = decode_any(&mut d, "test").expect("Error decoding string");
+
+        let result =
+            decode_helper::<String, _>(&mut Decoder::new(cbor_bytes), "test", &mut ()).unwrap();
+        assert_eq!(result, random_string);
     }
 
-    #[test]
-    fn test_decode_any_array() {
+    #[proptest]
+    fn test_decode_any_array(random_array: Vec<u8>) {
         // The array should contain a supported type
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
-        e.array(2).expect("Error encoding array");
-        e.u8(1).expect("Error encoding u8");
-        e.u8(2).expect("Error encoding u8");
+        e.array(random_array.len() as u64)
+            .expect("Error encoding array");
+        for el in &random_array {
+            e.u8(*el).expect("Error encoding u8");
+        }
         let mut d = Decoder::new(&buf);
-        let result = decode_any(&mut d, "test").expect("Error decoding array");
+        let cbor_bytes = decode_any(&mut d, "test").expect("Error decoding array");
         // The decode of array is just a length of the array
-        assert_eq!(
-            u64::from_be_bytes(result.try_into().expect("Error converting bytes to u64")),
-            2
-        );
+        let result = decode_array_len(&mut Decoder::new(cbor_bytes), "test").unwrap();
+        assert_eq!(result, random_array.len() as u64);
+    }
+
+    #[proptest]
+    fn test_decode_any_u32(random_u32: u32) {
+        let mut buf = Vec::new();
+        let mut e = Encoder::new(&mut buf);
+        e.u32(random_u32).expect("Error encoding u32");
+
+        let mut d = Decoder::new(&buf);
+        let cbor_bytes = decode_any(&mut d, "test").expect("Error decoding u32");
+
+        let result =
+            decode_helper::<u32, _>(&mut Decoder::new(cbor_bytes), "test", &mut ()).unwrap();
+        assert_eq!(result, random_u32);
+    }
+
+    #[proptest]
+    fn test_decode_any_i32(random_i32: i32) {
+        let mut buf = Vec::new();
+        let mut e = Encoder::new(&mut buf);
+        e.i32(random_i32).expect("Error encoding i32");
+        let mut d = Decoder::new(&buf);
+        let cbor_bytes = decode_any(&mut d, "test").expect("Error decoding i32");
+
+        let result =
+            decode_helper::<i32, _>(&mut Decoder::new(cbor_bytes), "test", &mut ()).unwrap();
+        assert_eq!(result, random_i32);
     }
 
     #[test]
-    fn test_decode_any_u32() {
-        let mut buf = Vec::new();
-        let mut e = Encoder::new(&mut buf);
-        let num: u32 = 123_456_789;
-        e.u32(num).expect("Error encoding u32");
-
-        let mut d = Decoder::new(&buf);
-        let result = decode_any(&mut d, "test").expect("Error decoding u32");
-        assert_eq!(
-            u32::from_be_bytes(result.try_into().expect("Error converting bytes to u32")),
-            num
-        );
-    }
-
-    #[test]
-    fn test_decode_any_i32() {
-        let mut buf = Vec::new();
-        let mut e = Encoder::new(&mut buf);
-        let num: i32 = -123_456_789;
-        e.i32(num).expect("Error encoding i32");
-        let mut d = Decoder::new(&buf);
-        let result = decode_any(&mut d, "test").expect("Error decoding i32");
-        assert_eq!(
-            i32::from_be_bytes(result.try_into().expect("Error converting bytes to i32")),
-            num
-        );
-    }
-
-    #[test]
-    fn test_decode_any_unsupported_type() {
-        let mut buf = Vec::new();
-        let mut e = Encoder::new(&mut buf);
-        e.null().expect("Error encoding null"); // Encode a null type which is unsupported
-
-        let mut d = Decoder::new(&buf);
+    fn test_decode_any_not_cbor() {
+        let mut d = Decoder::new(&[]);
         let result = decode_any(&mut d, "test");
         // Should print out the error message with the location of the error
         assert!(result.is_err());
