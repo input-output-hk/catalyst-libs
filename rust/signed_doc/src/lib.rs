@@ -107,14 +107,14 @@ impl Decode<'_, ()> for CatalystSignedDocument {
 
         let metadata = Metadata::try_from(&cose_sign.protected).map_or_else(
             |e| {
-                errors.extend(e.0);
+                errors.extend(e.0 .0);
                 None
             },
             Some,
         );
         let signatures = Signatures::try_from(&cose_sign.signatures).map_or_else(
             |e| {
-                errors.extend(e.0);
+                errors.extend(e.0 .0);
                 None
             },
             Some,
@@ -133,7 +133,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 )
                 .map_err(|e| {
                     errors.push(anyhow!("Invalid Document Content: {e}"));
-                    minicbor::decode::Error::custom(error::Error(errors))
+                    minicbor::decode::Error::message(error::Error::from(errors))
                 })?;
 
                 Ok(CatalystSignedDocument {
@@ -145,7 +145,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                     .into(),
                 })
             },
-            _ => Err(minicbor::decode::Error::custom(error::Error(errors))),
+            _ => Err(minicbor::decode::Error::message(error::Error::from(errors))),
         }
     }
 }

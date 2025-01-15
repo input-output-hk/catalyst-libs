@@ -14,6 +14,7 @@ pub struct Signature {
 }
 
 /// List of Signatures.
+#[derive(Debug)]
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
@@ -45,9 +46,9 @@ impl TryFrom<&Vec<CoseSignature>> for Signatures {
             });
 
         if errors.is_empty() {
-            Err(errors.into())
-        } else {
             Ok(Signatures(signatures))
+        } else {
+            Err(errors.into())
         }
     }
 }

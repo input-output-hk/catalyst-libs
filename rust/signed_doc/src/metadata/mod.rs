@@ -172,7 +172,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
 
         let extra = AdditionalFields::try_from(protected).map_or_else(
             |e| {
-                errors.extend(e.0);
+                errors.extend(e.0 .0);
                 None
             },
             Some,
@@ -191,7 +191,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
                     errors.push(anyhow!(
                         "Document Version {ver} cannot be smaller than Document ID {id}",
                     ));
-                    return Err(crate::error::Error(errors));
+                    return Err(crate::error::Error(errors.into()));
                 }
 
                 Ok(Self {
@@ -203,7 +203,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
                     extra,
                 })
             },
-            _ => Err(crate::error::Error(errors)),
+            _ => Err(crate::error::Error(errors.into())),
         }
     }
 }

@@ -269,7 +269,7 @@ impl TryFrom<&ProtectedHeader> for AdditionalFields {
         if errors.is_empty() {
             Ok(extra)
         } else {
-            Err(crate::error::Error(errors))
+            Err(errors.into())
         }
     }
 }
