@@ -694,10 +694,6 @@ macro_rules! next_iteration {
 pub(crate) async fn background_mithril_update(
     cfg: MithrilSnapshotConfig, tx: Sender<MithrilUpdateMessage>,
 ) {
-    /// Thread name for stats.
-    const THREAD_NAME: &str = "MithrilSnapshotUpdater";
-
-    stats::start_thread(cfg.chain, THREAD_NAME, true);
     debug!(
         "Mithril Snapshot background updater for: {} from {} to {} : Starting",
         cfg.chain,

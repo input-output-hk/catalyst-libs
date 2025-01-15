@@ -533,10 +533,6 @@ async fn live_sync_backfill_and_purge(
 ///
 /// This does not return, it is a background task.
 pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilUpdateMessage>) {
-    /// Thread name for stats.
-    const THREAD_NAME: &str = "ChainSync";
-
-    stats::start_thread(cfg.chain, THREAD_NAME, true);
     debug!(
         "Chain Sync for: {} from {} : Starting",
         cfg.chain, cfg.relay_address,

@@ -1,9 +1,7 @@
 //! Configuration for the Mithril Snapshot used by the follower.
 
 use std::{
-    path::{Path, PathBuf},
-    str::FromStr,
-    sync::LazyLock,
+    panic, path::{Path, PathBuf}, str::FromStr, sync::LazyLock
 };
 
 use anyhow::bail;
@@ -20,11 +18,7 @@ use tokio::{
 use tracing::{debug, error};
 
 use crate::{
-    error::{Error, Result},
-    mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
-    mithril_snapshot_sync::background_mithril_update,
-    snapshot_id::SnapshotId,
-    turbo_downloader::DlConfig,
+    error::{Error, Result}, mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData}, mithril_snapshot_sync::background_mithril_update, snapshot_id::SnapshotId, stats, turbo_downloader::DlConfig
 };
 
 /// Type we use to manage the Sync Task handle map.
@@ -384,6 +378,9 @@ impl MithrilSnapshotConfig {
 
     /// Run a Mithril Follower for the given network and configuration.
     pub(crate) async fn run(&self) -> Result<mpsc::Receiver<MithrilUpdateMessage>> {
+        /// Thread name for stats.
+        const THREAD_NAME: &str = "MithrilSnapshotUpdater";
+
         debug!(
             chain = self.chain.to_string(),
             "Mithril Auto-update : Starting"
@@ -413,7 +410,23 @@ impl MithrilSnapshotConfig {
         let (tx, rx) = mpsc::channel::<MithrilUpdateMessage>(2);
 
         // let handle = tokio::spawn(background_mithril_update(chain, self.clone(), tx));
-        *locked_handle = Some(tokio::spawn(background_mithril_update(self.clone(), tx)));
+
+        // Wrap inside a panic catcher to detect if the task panics.
+        let result = panic::catch_unwind(|| {
+            stats::start_thread(self.chain, THREAD_NAME, true);
+            tokio::spawn(background_mithril_update(self.clone(), tx))
+        });
+
+        if let Ok(handle) = result {
+            *locked_handle = Some(handle);
+        } else {
+            // Mithril update panic, stop the thread and log.
+            error!(
+                chain = self.chain.to_string(),
+                "Background Mithril Update for {} : PANICKED", self.chain
+            );
+            stats::stop_thread(self.chain, THREAD_NAME);
+        }
 
         // sync_map.insert(chain, handle);
         debug!(
