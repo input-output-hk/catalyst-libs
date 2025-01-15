@@ -36,7 +36,9 @@ struct InnerThreadStat {
 
 impl Serialize for InnerThreadStat {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+    where
+        S: Serializer,
+    {
         let mut state = serializer.serialize_struct("ThreadStat", 6)?;
 
         state.serialize_field("counter", &self.counter.load(Ordering::SeqCst))?;
@@ -81,11 +83,11 @@ impl Default for InnerThreadStat {
 
 impl InnerThreadStat {
     /// Update the CPU time including the total CPU time and the latest CPU time.
-    fn update_cpu_time(&self) {
+    fn update_total_time(&self) {
         // Get the current CPU time as a Duration
         let current_time = ThreadTime::now().as_duration();
 
-        if let Ok(mut latest_cpu_time) = self.latest_cpu_time.lock() {
+        if let Ok(latest_cpu_time) = self.latest_cpu_time.lock() {
             // Calculate elapsed time (current - previous)
             let elapsed = if current_time > *latest_cpu_time {
                 current_time - *latest_cpu_time
@@ -98,8 +100,12 @@ impl InnerThreadStat {
                     *total_cpu_time += elapsed;
                 }
             }
-            // Update latest time to the current time
-            *latest_cpu_time = current_time;
+        }
+    }
+
+    fn update_latest_time(&self) {
+        if let Ok(mut latest_cpu_time) = self.latest_cpu_time.lock() {
+            *latest_cpu_time = ThreadTime::now().as_duration();
         }
     }
 
@@ -124,19 +130,20 @@ impl ThreadStat {
     /// Stop the thread.
     pub(crate) fn stop_thread(&self) {
         self.0.is_running.store(false, Ordering::SeqCst);
-        self.0.update_cpu_time();
+        self.0.update_latest_time();
+        self.0.update_total_time();
     }
 
     /// Resume the thread.
     pub(crate) fn resume_thread(&self) {
-        self.0.is_running.store(true, Ordering::SeqCst);
-        self.0.update_cpu_time();
         self.0.increment_counter();
+        self.0.update_latest_time();
     }
 
     /// Pause the thread.
     pub(crate) fn pause_thread(&self) {
-        self.0.update_cpu_time();
+        self.0.update_latest_time();
+        self.0.update_total_time();
     }
 
     /// Is the thread running?
