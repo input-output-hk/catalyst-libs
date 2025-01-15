@@ -119,7 +119,7 @@ fn decode_signed_doc(cose_bytes: &[u8]) {
             println!("This is a valid Catalyst Signed Document.");
             println!("{cat_signed_doc}");
         },
-        Err(e) => eprintln!("Invalid Cataylyst Signed Document, err: {e}"),
+        Err(e) => eprintln!("Invalid Catalyst Signed Document, err: {e}"),
     }
 }
 
