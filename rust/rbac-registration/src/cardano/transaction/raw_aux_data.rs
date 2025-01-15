@@ -31,7 +31,6 @@ pub(crate) struct RawAuxData {
 
 impl RawAuxData {
     /// Create a new `RawDecodedMetadata`.
-    #[allow(dead_code)]
     pub(crate) fn new(aux_data: &[u8]) -> Self {
         let mut raw_decoded_data = Self {
             metadata: DashMap::new(),
@@ -41,19 +40,19 @@ impl RawAuxData {
         let mut decoder = Decoder::new(aux_data);
 
         match decoder.datatype() {
-            Ok(minicbor::data::Type::Map) => {
+            Ok(Type::Map) => {
                 if let Err(error) = Self::decode_shelley_map(&mut raw_decoded_data, &mut decoder) {
                     error!("Failed to Deserialize Shelley Metadata: {error}: {aux_data:02x?}");
                 }
             },
-            Ok(minicbor::data::Type::Array) => {
+            Ok(Type::Array) => {
                 if let Err(error) =
                     Self::decode_shelley_ma_array(&mut raw_decoded_data, &mut decoder)
                 {
                     error!("Failed to Deserialize Shelley-MA Metadata: {error}: {aux_data:02x?}");
                 }
             },
-            Ok(minicbor::data::Type::Tag) => {
+            Ok(Type::Tag) => {
                 if let Err(error) =
                     Self::decode_alonzo_plus_map(&mut raw_decoded_data, &mut decoder)
                 {
@@ -73,7 +72,7 @@ impl RawAuxData {
 
     /// Decode the Shelley map of metadata.
     fn decode_shelley_map(
-        raw_decoded_data: &mut Self, decoder: &mut minicbor::Decoder,
+        raw_decoded_data: &mut Self, decoder: &mut Decoder,
     ) -> anyhow::Result<()> {
         let entries = match decoder.map() {
             Ok(Some(entries)) => entries,
@@ -133,7 +132,7 @@ impl RawAuxData {
 
     /// Decode a Shelley-MA Auxiliary Data Array
     fn decode_shelley_ma_array(
-        raw_decoded_data: &mut Self, decoder: &mut minicbor::Decoder,
+        raw_decoded_data: &mut Self, decoder: &mut Decoder,
     ) -> anyhow::Result<()> {
         match decoder.array() {
             Ok(Some(entries)) => {
@@ -161,7 +160,7 @@ impl RawAuxData {
 
     /// Decode a Shelley-MA Auxiliary Data Array
     fn decode_alonzo_plus_map(
-        raw_decoded_data: &mut Self, decoder: &mut minicbor::Decoder,
+        raw_decoded_data: &mut Self, decoder: &mut Decoder,
     ) -> anyhow::Result<()> {
         match decoder.tag() {
             Ok(tag) => {
@@ -219,8 +218,7 @@ impl RawAuxData {
 
     /// Decode an array of smart contract scripts
     fn decode_script_array(
-        raw_decoded_data: &mut Self, decoder: &mut minicbor::Decoder,
-        contract_type: SmartContractType,
+        raw_decoded_data: &mut Self, decoder: &mut Decoder, contract_type: SmartContractType,
     ) -> anyhow::Result<()> {
         let mut scripts: Vec<Vec<u8>> = Vec::new();
 
