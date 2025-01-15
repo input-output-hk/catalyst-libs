@@ -3,7 +3,7 @@
 use anyhow::anyhow;
 use coset::{cbor::Value, Label, ProtectedHeader};
 
-use super::{cose_protected_header_find, DocumentRef, UuidV4};
+use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_value, DocumentRef, UuidV4};
 
 /// Additional Metadata Fields.
 ///
@@ -33,25 +33,30 @@ pub struct AdditionalFields {
 
 impl AdditionalFields {
     /// Returns the COSE Sign protected header REST fields.
-    pub fn header_rest(&self) -> Vec<(Label, Value)> {
-        self.into()
+    ///
+    /// # Errors
+    /// If any internal field cannot be converted into `Value`.
+    pub fn header_rest(&self) -> anyhow::Result<Vec<(Label, Value)>> {
+        self.try_into()
     }
 }
 
-impl From<&AdditionalFields> for Vec<(Label, Value)> {
-    fn from(fields: &AdditionalFields) -> Self {
+impl TryFrom<&AdditionalFields> for Vec<(Label, Value)> {
+    type Error = anyhow::Error;
+
+    fn try_from(fields: &AdditionalFields) -> anyhow::Result<Self> {
         let mut vec = Vec::new();
 
         if let Some(doc_ref) = &fields.doc_ref {
-            vec.push((Label::Text("ref".to_string()), doc_ref.into()));
+            vec.push((Label::Text("ref".to_string()), doc_ref.try_into()?));
         }
 
         if let Some(template) = &fields.template {
-            vec.push((Label::Text("template".to_string()), template.into()));
+            vec.push((Label::Text("template".to_string()), template.try_into()?));
         }
 
         if let Some(reply) = &fields.reply {
-            vec.push((Label::Text("reply".to_string()), reply.into()));
+            vec.push((Label::Text("reply".to_string()), reply.try_into()?));
         }
 
         if let Some(section) = &fields.section {
@@ -71,31 +76,34 @@ impl From<&AdditionalFields> for Vec<(Label, Value)> {
         }
 
         if let Some(brand_id) = &fields.brand_id {
-            vec.push((Label::Text("brand_id".to_string()), Value::from(*brand_id)));
+            vec.push((
+                Label::Text("brand_id".to_string()),
+                encode_cbor_value(brand_id)?,
+            ));
         }
 
         if let Some(campaign_id) = &fields.campaign_id {
             vec.push((
                 Label::Text("campaign_id".to_string()),
-                Value::from(*campaign_id),
+                encode_cbor_value(campaign_id)?,
             ));
         }
 
         if let Some(election_id) = &fields.election_id {
             vec.push((
                 Label::Text("election_id".to_string()),
-                Value::from(*election_id),
+                encode_cbor_value(election_id)?,
             ));
         }
 
         if let Some(category_id) = &fields.category_id {
             vec.push((
                 Label::Text("category_id".to_string()),
-                Value::from(*category_id),
+                encode_cbor_value(*category_id)?,
             ));
         }
 
-        vec
+        Ok(vec)
     }
 }
 
@@ -201,7 +209,7 @@ impl TryFrom<&ProtectedHeader> for AdditionalFields {
         if let Some(cbor_doc_brand_id) =
             cose_protected_header_find(protected, |key| key == &Label::Text("brand_id".to_string()))
         {
-            match UuidV4::try_from(cbor_doc_brand_id) {
+            match decode_cbor_uuid(cbor_doc_brand_id.clone()) {
                 Ok(brand_id) => {
                     extra.brand_id = Some(brand_id);
                 },
@@ -216,7 +224,7 @@ impl TryFrom<&ProtectedHeader> for AdditionalFields {
         if let Some(cbor_doc_campaign_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text("campaign_id".to_string())
         }) {
-            match UuidV4::try_from(cbor_doc_campaign_id) {
+            match decode_cbor_uuid(cbor_doc_campaign_id.clone()) {
                 Ok(campaign_id) => {
                     extra.campaign_id = Some(campaign_id);
                 },
@@ -231,7 +239,7 @@ impl TryFrom<&ProtectedHeader> for AdditionalFields {
         if let Some(cbor_doc_election_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text("election_id".to_string())
         }) {
-            match UuidV4::try_from(cbor_doc_election_id) {
+            match decode_cbor_uuid(cbor_doc_election_id.clone()) {
                 Ok(election_id) => {
                     extra.election_id = Some(election_id);
                 },
@@ -246,7 +254,7 @@ impl TryFrom<&ProtectedHeader> for AdditionalFields {
         if let Some(cbor_doc_category_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text("category_id".to_string())
         }) {
-            match UuidV4::try_from(cbor_doc_category_id) {
+            match decode_cbor_uuid(cbor_doc_category_id.clone()) {
                 Ok(category_id) => {
                     extra.category_id = Some(category_id);
                 },

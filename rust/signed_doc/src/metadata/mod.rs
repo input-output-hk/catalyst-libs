@@ -14,6 +14,7 @@ use anyhow::anyhow;
 pub use catalyst_types::uuid::{V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
+use coset::CborSerializable;
 pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
 pub use document_type::DocumentType;
@@ -129,13 +130,13 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
             ));
         }
 
-        let mut doc_type = None;
+        let mut doc_type: Option<UuidV4> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text("type".to_string())
         }) {
-            match UuidV4::try_from(value) {
+            match decode_cbor_uuid(value.clone()) {
                 Ok(uuid) => doc_type = Some(uuid),
-                Err(e) => errors.push(anyhow!("Document `type` is invalid: {e}")),
+                Err(e) => errors.push(anyhow!("Invalid document type UUID: {e}")),
             }
         } else {
             errors.push(anyhow!(
@@ -143,25 +144,25 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
             ));
         }
 
-        let mut id = None;
+        let mut id: Option<UuidV7> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text("id".to_string())
         }) {
-            match UuidV7::try_from(value) {
+            match decode_cbor_uuid(value.clone()) {
                 Ok(uuid) => id = Some(uuid),
-                Err(e) => errors.push(anyhow!("Document `id` is invalid: {e}")),
+                Err(e) => errors.push(anyhow!("Invalid document ID UUID: {e}")),
             }
         } else {
             errors.push(anyhow!("Invalid COSE protected header, missing `id` field"));
         }
 
-        let mut ver = None;
+        let mut ver: Option<UuidV7> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text("ver".to_string())
         }) {
-            match UuidV7::try_from(value) {
+            match decode_cbor_uuid(value.clone()) {
                 Ok(uuid) => ver = Some(uuid),
-                Err(e) => errors.push(anyhow!("Document `ver` is invalid: {e}")),
+                Err(e) => errors.push(anyhow!("Invalid document version UUID: {e}")),
             }
         } else {
             errors.push(anyhow!(
@@ -217,4 +218,27 @@ fn cose_protected_header_find(
         .iter()
         .find(|(key, _)| predicate(key))
         .map(|(_, value)| value)
+}
+
+/// Convert from `minicbor` into `coset::cbor::Value`.
+pub(crate) fn encode_cbor_value<T: minicbor::encode::Encode<()>>(
+    value: T,
+) -> anyhow::Result<coset::cbor::Value> {
+    let mut cbor_bytes = Vec::new();
+    minicbor::encode(value, &mut cbor_bytes)
+        .map_err(|e| anyhow::anyhow!("Unable to encode CBOR value, err: {e}"))?;
+    coset::cbor::Value::from_slice(&cbor_bytes)
+        .map_err(|e| anyhow::anyhow!("Invalid CBOR value, err: {e}"))
+}
+
+/// Convert `coset::cbor::Value` into `UuidV4`.
+pub(crate) fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, ()> + From<uuid::Uuid>>(
+    value: coset::cbor::Value,
+) -> anyhow::Result<T> {
+    match value.to_vec() {
+        Ok(cbor_value) => {
+            minicbor::decode(&cbor_value).map_err(|e| anyhow!("Invalid UUID, err: {e}"))
+        },
+        Err(e) => anyhow::bail!("Invalid CBOR value, err: {e}"),
+    }
 }

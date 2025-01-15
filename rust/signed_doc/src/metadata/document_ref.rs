@@ -1,7 +1,7 @@
 //! Catalyst Signed Document Metadata.
 use coset::cbor::Value;
 
-use super::UuidV7;
+use super::{decode_cbor_uuid, encode_cbor_value, UuidV7};
 
 /// Reference to a Document.
 #[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -21,12 +21,17 @@ pub enum DocumentRef {
     },
 }
 
-impl From<&DocumentRef> for Value {
-    fn from(val: &DocumentRef) -> Self {
-        match val {
-            DocumentRef::Latest { id } => Value::from(*id),
+impl TryFrom<&DocumentRef> for Value {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &DocumentRef) -> Result<Self, Self::Error> {
+        match value {
+            DocumentRef::Latest { id } => encode_cbor_value(id),
             DocumentRef::WithVer { id, ver } => {
-                Value::Array(vec![Value::from(*id), Value::from(*ver)])
+                Ok(Value::Array(vec![
+                    encode_cbor_value(id)?,
+                    encode_cbor_value(ver)?,
+                ]))
             },
         }
     }
@@ -37,7 +42,7 @@ impl TryFrom<&Value> for DocumentRef {
 
     #[allow(clippy::indexing_slicing)]
     fn try_from(val: &Value) -> anyhow::Result<DocumentRef> {
-        if let Ok(id) = UuidV7::try_from(val) {
+        if let Ok(id) = decode_cbor_uuid(val.clone()) {
             Ok(DocumentRef::Latest { id })
         } else {
             let Some(array) = val.as_array() else {
@@ -47,8 +52,8 @@ impl TryFrom<&Value> for DocumentRef {
                 array.len() == 2,
                 "Document Reference array of two UUIDs was expected"
             );
-            let id = UuidV7::try_from(&array[0])?;
-            let ver = UuidV7::try_from(&array[1])?;
+            let id = decode_cbor_uuid(array[0].clone())?;
+            let ver = decode_cbor_uuid(array[1].clone())?;
             anyhow::ensure!(
                 ver >= id,
                 "Document Reference Version can never be smaller than its ID"

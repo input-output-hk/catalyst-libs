@@ -12,13 +12,14 @@ workspace = true
 
 [dependencies]
 cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.11" }
-catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250112-00" }
+catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250114-01" }
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
 # TODO: Bump this to the latest version and fix the code
 jsonschema = "0.18.3"
 coset = "0.3.8"
+minicbor = "0.25.1"
 brotli = "7.0.0"
 ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core"] }
 uuid = { version = "1.11.0", features = ["v4", "v7", "serde"] }

@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{DocumentRef, KidUri, Metadata, UuidV7};
+use catalyst_signed_doc::{DocumentRef, KidUri, Metadata};
 use clap::Parser;
 use coset::{iana::CoapContentFormat, CborSerializable};
 use ed25519_dalek::{
@@ -68,7 +68,7 @@ fn encode_cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
     )
 }
 
-fn decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
+fn _decode_cbor_uuid(val: &coset::cbor::Value) -> anyhow::Result<uuid::Uuid> {
     let Some((UUID_CBOR_TAG, coset::cbor::Value::Bytes(bytes))) = val.as_tag() else {
         anyhow::bail!("Invalid CBOR encoded UUID type");
     };
@@ -94,18 +94,8 @@ fn _encode_cbor_document_ref(doc_ref: &DocumentRef) -> coset::cbor::Value {
 }
 
 #[allow(clippy::indexing_slicing)]
-fn decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
-    if let Ok(id) = UuidV7::try_from(val) {
-        Ok(DocumentRef::Latest { id })
-    } else {
-        let Some(array) = val.as_array() else {
-            anyhow::bail!("Invalid CBOR encoded document `ref` type");
-        };
-        anyhow::ensure!(array.len() == 2, "Invalid CBOR encoded document `ref` type");
-        let id = UuidV7::try_from(&array[0])?;
-        let ver = UuidV7::try_from(&array[1])?;
-        Ok(DocumentRef::WithVer { id, ver })
-    }
+fn _decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
+    DocumentRef::try_from(val)
 }
 
 impl Cli {
@@ -227,7 +217,7 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign 
         coset::Label::Text("ver".to_string()),
         encode_cbor_uuid(&meta.doc_ver()),
     ));
-    let meta_rest = meta.extra().header_rest();
+    let meta_rest = meta.extra().header_rest().unwrap_or_default();
 
     if !meta_rest.is_empty() {
         protected_header.rest.extend(meta_rest);
@@ -336,89 +326,92 @@ fn validate_cose_protected_header(cose: &coset::CoseSign) -> anyhow::Result<()> 
         "Invalid COSE document protected header"
     );
 
-    let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("type".to_string()))
-    else {
-        anyhow::bail!("Invalid COSE protected header, missing `type` field");
-    };
-    decode_cbor_uuid(value)
-        .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `type` field, err: {e}"))?;
+    // let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("type".to_string()))
+    // else {
+    //     anyhow::bail!("Invalid COSE protected header, missing `type` field");
+    // };
+    // decode_cbor_uuid(value)
+    //     .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `type` field, err:
+    // {e}"))?;
 
-    let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("id".to_string()))
-    else {
-        anyhow::bail!("Invalid COSE protected header, missing `id` field");
-    };
-    decode_cbor_uuid(value)
-        .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `id` field, err: {e}"))?;
+    // let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("id".to_string()))
+    // else {
+    //     anyhow::bail!("Invalid COSE protected header, missing `id` field");
+    // };
+    // decode_cbor_uuid(value)
+    //     .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `id` field, err:
+    // {e}"))?;
 
-    let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("ver".to_string()))
-    else {
-        anyhow::bail!("Invalid COSE protected header, missing `ver` field");
-    };
-    decode_cbor_uuid(value)
-        .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `ver` field, err: {e}"))?;
+    // let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("ver".to_string()))
+    // else {
+    //     anyhow::bail!("Invalid COSE protected header, missing `ver` field");
+    // };
+    // decode_cbor_uuid(value)
+    //     .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `ver` field, err:
+    // {e}"))?;
 
-    if let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("ref".to_string()))
-    {
-        decode_cbor_document_ref(value)
-            .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `ref` field, err: {e}"))?;
-    }
+    // if let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("ref".to_string()))
+    // {
+    //     decode_cbor_document_ref(value)
+    //         .map_err(|e| anyhow::anyhow!("Invalid COSE protected header `ref` field, err:
+    // {e}"))?; }
 
-    if let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("template".to_string()))
-    {
-        decode_cbor_document_ref(value).map_err(|e| {
-            anyhow::anyhow!("Invalid COSE protected header `template` field, err: {e}")
-        })?;
-    }
+    // if let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("template".to_string()))
+    // {
+    //     decode_cbor_document_ref(value).map_err(|e| {
+    //         anyhow::anyhow!("Invalid COSE protected header `template` field, err: {e}")
+    //     })?;
+    // }
 
-    if let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("reply".to_string()))
-    {
-        decode_cbor_document_ref(value).map_err(|e| {
-            anyhow::anyhow!("Invalid COSE protected header `reply` field, err: {e}")
-        })?;
-    }
+    // if let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("reply".to_string()))
+    // {
+    //     decode_cbor_document_ref(value).map_err(|e| {
+    //         anyhow::anyhow!("Invalid COSE protected header `reply` field, err: {e}")
+    //     })?;
+    // }
 
-    if let Some((_, value)) = cose
-        .protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| key == &coset::Label::Text("section".to_string()))
-    {
-        anyhow::ensure!(
-            value.is_text(),
-            "Invalid COSE protected header, missing `section` field"
-        );
-    }
+    // if let Some((_, value)) = cose
+    //     .protected
+    //     .header
+    //     .rest
+    //     .iter()
+    //     .find(|(key, _)| key == &coset::Label::Text("section".to_string()))
+    // {
+    //     anyhow::ensure!(
+    //         value.is_text(),
+    //         "Invalid COSE protected header, missing `section` field"
+    //     );
+    // }
 
     Ok(())
 }
