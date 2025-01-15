@@ -11,7 +11,6 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.11" }
 catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250114-01" }
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
@@ -24,9 +23,7 @@ brotli = "7.0.0"
 ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core"] }
 uuid = { version = "1.11.0", features = ["v4", "v7", "serde"] }
 hex = "0.4.3"
-fluent-uri = "0.3.2"
 thiserror = "2.0.9"
-base64-url = "3.0.0"
 
 [dev-dependencies]
 clap = { version = "4.5.23",  features = ["derive", "env"] }
