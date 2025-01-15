@@ -432,7 +432,7 @@ impl ParallelDownloadProcessor {
 
     /// Call the work queue receiver.
     /// This is a helper function to pause and resume the stats thread.
-    fn work_queue_receiver(
+    fn call_work_queue_receiver(
         chain: Network, name: &str, work_queue: &Receiver<usize>,
     ) -> Result<usize, RecvError> {
         stats::pause_thread(chain, name);
@@ -466,7 +466,7 @@ impl ParallelDownloadProcessor {
         let http_agent = params.cfg.make_http_agent(worker_id);
 
         while let Ok(next_chunk) =
-            Self::work_queue_receiver(chain, thread_name.as_str(), work_queue)
+            Self::call_work_queue_receiver(chain, thread_name.as_str(), work_queue)
         {
             stats::resume_thread(chain, thread_name.as_str());
             // Add a small delay to the first chunks for each worker.
