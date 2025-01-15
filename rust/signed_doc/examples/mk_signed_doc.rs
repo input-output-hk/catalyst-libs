@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{CatalystSignedDocument, Decode, Decoder, DocumentRef, KidUri, Metadata};
+use catalyst_signed_doc::{CatalystSignedDocument, Decode, Decoder, KidUri, Metadata};
 use clap::Parser;
 use coset::{iana::CoapContentFormat, CborSerializable};
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
@@ -63,11 +63,6 @@ fn encode_cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
         UUID_CBOR_TAG,
         coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
     )
-}
-
-#[allow(clippy::indexing_slicing)]
-fn _decode_cbor_document_ref(val: &coset::cbor::Value) -> anyhow::Result<DocumentRef> {
-    DocumentRef::try_from(val)
 }
 
 impl Cli {
