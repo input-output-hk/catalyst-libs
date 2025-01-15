@@ -1,11 +1,11 @@
 //! Public key type for RBAC metadata
 
 use catalyst_types::problem_report::ProblemReport;
+use cbork_utils::decode_helper::{decode_bytes, decode_tag};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
 
 use super::tag::KeyTag;
-use crate::utils::decode_helper::{decode_bytes, decode_tag};
 
 /// Enum of possible public key type.
 #[derive(Debug, PartialEq, Clone, Default)]

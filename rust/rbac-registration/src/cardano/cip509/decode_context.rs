@@ -19,6 +19,6 @@ pub struct DecodeContext<'r, 't> {
     ///
     /// The reference must be mutable because the `Decode::decode` function takes a
     /// mutable reference to the context and sometimes we want to pass just the report
-    /// without th whole `DecodeContext`.
+    /// without whole `DecodeContext`.
     pub report: &'r mut ProblemReport,
 }

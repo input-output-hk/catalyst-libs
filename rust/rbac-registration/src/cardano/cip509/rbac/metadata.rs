@@ -3,6 +3,9 @@
 use std::collections::{HashMap, HashSet};
 
 use catalyst_types::problem_report::ProblemReport;
+use cbork_utils::decode_helper::{
+    decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
+};
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
@@ -13,10 +16,7 @@ use crate::{
         utils::Cip0134UriSet,
         CertKeyHash, RoleData, RoleNumber,
     },
-    utils::decode_helper::{
-        decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
-        report_duplicated_key,
-    },
+    utils::decode_helper::report_duplicated_key,
 };
 
 /// Cip509 RBAC metadata.

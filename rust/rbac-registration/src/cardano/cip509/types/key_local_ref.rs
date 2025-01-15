@@ -1,9 +1,10 @@
 //! A local key reference.
 
+use cbork_utils::decode_helper::decode_helper;
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
-use crate::{cardano::cip509::rbac::Cip509RbacMetadataInt, utils::decode_helper::decode_helper};
+use crate::cardano::cip509::rbac::Cip509RbacMetadataInt;
 
 /// Local key reference.
 #[derive(Debug, PartialEq, Clone)]

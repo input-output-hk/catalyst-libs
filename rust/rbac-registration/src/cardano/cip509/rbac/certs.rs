@@ -2,11 +2,11 @@
 
 use c509_certificate::c509::C509;
 use catalyst_types::problem_report::ProblemReport;
+use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_tag};
 use minicbor::{decode, Decode, Decoder};
 use x509_cert::{der::Decode as x509Decode, Certificate};
 
 use super::tag::KeyTag;
-use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_tag};
 
 // ------------------x509------------------------
 

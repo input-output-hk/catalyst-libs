@@ -10,6 +10,7 @@ use cardano_blockchain_types::{
     MultiEraBlock, TxnIndex,
 };
 use catalyst_types::problem_report::ProblemReport;
+use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
     decode::{self},
     Decode, Decoder,
@@ -42,9 +43,7 @@ use crate::{
         },
         transaction::raw_aux_data::RawAuxData,
     },
-    utils::decode_helper::{
-        decode_bytes, decode_helper, decode_map_len, report_duplicated_key, report_missing_keys,
-    },
+    utils::decode_helper::{report_duplicated_key, report_missing_keys},
 };
 
 /// CIP509 label.

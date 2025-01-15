@@ -3,15 +3,13 @@
 use std::collections::HashMap;
 
 use catalyst_types::problem_report::ProblemReport;
+use cbork_utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len};
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
 use crate::{
     cardano::cip509::{KeyLocalRef, RoleNumber},
-    utils::decode_helper::{
-        decode_any, decode_array_len, decode_helper, decode_map_len, report_duplicated_key,
-        report_missing_keys,
-    },
+    utils::decode_helper::{report_duplicated_key, report_missing_keys},
 };
 
 /// Role data as encoded in CBOR.
