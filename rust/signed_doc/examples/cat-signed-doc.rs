@@ -13,6 +13,7 @@ use std::{
 
 use catalyst_signed_doc::CatalystSignedDocument;
 use clap::Parser;
+use minicbor::Decode;
 
 /// Hermes cli commands
 #[derive(clap::Parser)]
@@ -42,7 +43,9 @@ impl Cli {
             Self::InspectBytes { cose_sign_str } => hex::decode(&cose_sign_str)?,
         };
         println!("Bytes read:\n{}\n", hex::encode(&cose_bytes));
-        let cat_signed_doc: CatalystSignedDocument = cose_bytes.as_slice().try_into()?;
+
+        let cat_signed_doc =
+            CatalystSignedDocument::decode(&mut minicbor::Decoder::new(&cose_bytes), &mut ())?;
         println!("{cat_signed_doc}");
         Ok(())
     }
