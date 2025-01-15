@@ -31,7 +31,7 @@ tokio = { version = "1.42.0", features = [
 ] }
 tracing = "0.1.41"
 tracing-log = "0.2.0"
-dashmap = "6.1.0"
+dashmap = { version = "6.1.0", features = ["serde"] }
 url = "2.5.4"
 anyhow = "1.0.95"
 chrono = "0.4.39"
@@ -56,6 +56,7 @@ ureq = { version = "2.12.1", features = ["native-certs"] }
 http = "1.2.0"
 hickory-resolver = { version = "0.24.2", features = ["dns-over-rustls"] }
 moka = { version = "0.12.9", features = ["sync"] }
+cpu-time = "1.0.0"
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }

@@ -416,9 +416,14 @@ async fn live_sync_backfill_and_purge(
     cfg: ChainSyncConfig, mut rx: mpsc::Receiver<MithrilUpdateMessage>,
     mut sync_ready: SyncReadyWaiter,
 ) {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "LiveSyncBackfillAndPurge";
+
+    stats::start_thread(cfg.chain, THREAD_NAME, true);
     // Wait for first Mithril Update advice, which triggers a BACKFILL of the Live Data.
     let Some(update) = rx.recv().await else {
         error!("Mithril Sync Failed, can not continue chain sync either.");
+        stats::stop_thread(cfg.chain, THREAD_NAME);
         return;
     };
 
@@ -430,12 +435,15 @@ async fn live_sync_backfill_and_purge(
     let live_chain_head: Point;
 
     loop {
+        stats::resume_thread(cfg.chain, THREAD_NAME);
         // We will re-attempt backfill, until its successful.
         // Backfill is atomic, it either fully works, or none of the live-chain is changed.
         debug!("Mithril Tip has advanced to: {update:?} : BACKFILL");
         while let Err(error) = live_sync_backfill(&cfg, &update).await {
             error!("Mithril Backfill Sync Failed: {}", error);
+            stats::pause_thread(cfg.chain, THREAD_NAME);
             sleep(Duration::from_secs(10)).await;
+            stats::resume_thread(cfg.chain, THREAD_NAME);
         }
 
         if let Some(head_point) = get_live_head_point(cfg.chain) {
@@ -462,8 +470,11 @@ async fn live_sync_backfill_and_purge(
     let mut update_sender = get_chain_update_tx_queue(cfg.chain).await;
 
     loop {
+        stats::resume_thread(cfg.chain, THREAD_NAME);
+
         let Some(update) = rx.recv().await else {
             error!("Mithril Sync Failed, can not continue chain sync either.");
+            stats::stop_thread(cfg.chain, THREAD_NAME);
             return;
         };
 
@@ -516,6 +527,10 @@ async fn live_sync_backfill_and_purge(
 ///
 /// This does not return, it is a background task.
 pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilUpdateMessage>) {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "ChainSync";
+
+    stats::start_thread(cfg.chain, THREAD_NAME, true);
     debug!(
         "Chain Sync for: {} from {} : Starting",
         cfg.chain, cfg.relay_address,
@@ -537,9 +552,9 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
     let mut fork_count: Fork = Fork::FIRST_LIVE;
 
     loop {
+        stats::resume_thread(cfg.chain, THREAD_NAME);
         // We never have a connection if we end up around the loop, so make a new one.
         let mut peer = persistent_reconnect(&cfg.relay_address, cfg.chain).await;
-
         match resync_live_tip(&mut peer, cfg.chain).await {
             Ok(tip) => debug!("Tip Resynchronized to {tip}"),
             Err(error) => {

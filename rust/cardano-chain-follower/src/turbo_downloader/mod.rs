@@ -19,13 +19,17 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
+use cardano_blockchain_types::Network;
 use catalyst_types::conversion::from_saturating;
+use crossbeam_channel::{Receiver, RecvError};
 use dashmap::DashMap;
 use http::{
     header::{ACCEPT_RANGES, CONTENT_LENGTH, RANGE},
     StatusCode,
 };
 use tracing::{debug, error};
+
+use crate::stats;
 
 /// A Simple DNS Balancing Resolver
 struct BalancingResolver {
@@ -364,14 +368,14 @@ impl ParallelDownloadProcessor {
     ///
     /// Can Fail IF there is no HTTP client provided or the URL does not support getting
     /// the content length.
-    pub(crate) async fn new(url: &str, mut cfg: DlConfig) -> anyhow::Result<Self> {
+    pub(crate) async fn new(url: &str, mut cfg: DlConfig, chain: Network) -> anyhow::Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
             bail!(
                 "Download chunk size must be at least {} bytes",
                 MIN_CHUNK_SIZE
             );
         }
-        let file_size = get_content_length_async(url).await?;
+        let file_size = get_content_length_async(url, chain).await?;
 
         // Get the minimum number of workers we need, just in case the chunk size is bigger than
         // the requested workers can process.
@@ -402,14 +406,14 @@ impl ParallelDownloadProcessor {
             next_requested_chunk: AtomicUsize::new(0),
         }));
 
-        processor.start_workers()?;
+        processor.start_workers(chain)?;
 
         Ok(processor)
     }
 
     /// Starts the worker tasks, they will not start doing any work until `download` is
     /// called, which happens immediately after they are started.
-    fn start_workers(&self) -> anyhow::Result<()> {
+    fn start_workers(&self, chain: Network) -> anyhow::Result<()> {
         for worker in 0..self.0.cfg.workers {
             // The channel is unbounded, because work distribution is controlled to be at most
             // `work_queue` deep per worker. And we don't want anything unexpected to
@@ -417,7 +421,7 @@ impl ParallelDownloadProcessor {
             let (work_queue_tx, work_queue_rx) = crossbeam_channel::unbounded::<DlWorkOrder>();
             let params = self.0.clone();
             thread::spawn(move || {
-                Self::worker(&params, worker, &work_queue_rx);
+                Self::worker(&params, worker, &work_queue_rx, chain);
             });
 
             let _unused = self.0.work_queue.insert(worker, work_queue_tx);
@@ -426,12 +430,29 @@ impl ParallelDownloadProcessor {
         self.download()
     }
 
+    /// Call the work queue receiver.
+    /// This is a helper function to pause and resume the stats thread.
+    fn work_queue_receiver(
+        chain: Network, name: &str, work_queue: &Receiver<usize>,
+    ) -> Result<usize, RecvError> {
+        stats::pause_thread(chain, name);
+        let recv = work_queue.recv();
+        stats::resume_thread(chain, name);
+        recv
+    }
+
     /// The worker task - It is running in parallel and downloads chunks of the file as
     /// requested.
     fn worker(
         params: &Arc<ParallelDownloadProcessorInner>, worker_id: usize,
-        work_queue: &crossbeam_channel::Receiver<DlWorkOrder>,
+        work_queue: &crossbeam_channel::Receiver<DlWorkOrder>, chain: Network,
     ) {
+        /// Thread name for stats.
+        const THREAD_NAME: &str = "ParallelDownloadProcessor::Worker";
+        let thread_name = format!("{THREAD_NAME}::{worker_id}");
+
+        stats::start_thread(chain, thread_name.as_str(), false);
+
         debug!("Worker {worker_id} started");
 
         // Each worker has its own http_client, so there is no cross worker pathology
@@ -444,7 +465,10 @@ impl ParallelDownloadProcessor {
         }
         let http_agent = params.cfg.make_http_agent(worker_id);
 
-        while let Ok(next_chunk) = work_queue.recv() {
+        while let Ok(next_chunk) =
+            Self::work_queue_receiver(chain, thread_name.as_str(), work_queue)
+        {
+            stats::resume_thread(chain, thread_name.as_str());
             // Add a small delay to the first chunks for each worker.
             // So that the leading chunks are more likely to finish downloading first.
             if next_chunk > 0 && next_chunk < params.cfg.workers {
@@ -455,6 +479,8 @@ impl ParallelDownloadProcessor {
             let mut block;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
             loop {
+                stats::resume_thread(chain, thread_name.as_str());
+
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {
@@ -495,6 +521,7 @@ impl ParallelDownloadProcessor {
             // debug!("Worker {worker_id} DL chunk queued {next_chunk}");
         }
         debug!("Worker {worker_id} ended");
+        stats::stop_thread(chain, thread_name.as_str());
     }
 
     /// Send a work order to a worker.
@@ -680,9 +707,19 @@ impl std::io::Read for ParallelDownloadProcessor {
 ///
 /// This exists because the `Probe` call made by Mithril is Async, and this makes
 /// interfacing to that easier.
-async fn get_content_length_async(url: &str) -> anyhow::Result<usize> {
+async fn get_content_length_async(url: &str, chain: Network) -> anyhow::Result<usize> {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "GetContentLength";
+
     let url = url.to_owned();
-    match tokio::task::spawn_blocking(move || get_content_length(&url)).await {
+    match tokio::task::spawn_blocking(move || {
+        stats::start_thread(chain, THREAD_NAME, false);
+        let result = get_content_length(&url);
+        stats::stop_thread(chain, THREAD_NAME);
+        result
+    })
+    .await
+    {
         Ok(result) => result,
         Err(error) => {
             error!("get_content_length failed");

@@ -2,25 +2,35 @@
 
 use std::path::Path;
 
-use cardano_blockchain_types::Point;
+use cardano_blockchain_types::{Network, Point};
 use pallas_hardano::storage::immutable::FallibleBlock;
 use tokio::task;
 
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    stats,
+};
 
 /// Synchronous Immutable block iterator.
 pub(crate) type ImmutableBlockIterator = Box<dyn Iterator<Item = FallibleBlock> + Send + Sync>;
 
 /// Get a mithril snapshot iterator.
 pub(crate) async fn make_mithril_iterator(
-    path: &Path, start: &Point,
+    path: &Path, start: &Point, chain: Network,
 ) -> Result<ImmutableBlockIterator> {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "MithrilIterator";
+
     let path = path.to_path_buf();
     let start = start.clone();
     // Initial input
     let res = task::spawn_blocking(move || {
-        pallas_hardano::storage::immutable::read_blocks_from_point(&path, start.clone().into())
-            .map_err(|error| Error::MithrilSnapshot(Some(error)))
+        stats::start_thread(chain, THREAD_NAME, false);
+        let result =
+            pallas_hardano::storage::immutable::read_blocks_from_point(&path, start.clone().into())
+                .map_err(|error| Error::MithrilSnapshot(Some(error)));
+        stats::stop_thread(chain, THREAD_NAME);
+        result
     })
     .await;
 

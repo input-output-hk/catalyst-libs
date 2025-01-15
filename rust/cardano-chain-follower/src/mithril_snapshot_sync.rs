@@ -295,14 +295,20 @@ async fn get_mithril_snapshot_and_certificate(
 async fn validate_mithril_snapshot(
     chain: Network, certificate: &MithrilCertificate, path: &Path,
 ) -> bool {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "ValidateMithrilSnapshot";
+
     let cert = certificate.clone();
     let mithril_path = path.to_path_buf();
     match tokio::spawn(async move {
         // This can be long running and CPU Intensive.
         // So we spawn it off to a background task.
-        MessageBuilder::new()
+        stats::start_thread(chain, THREAD_NAME, true);
+        let result = MessageBuilder::new()
             .compute_snapshot_message(&cert, &mithril_path)
-            .await
+            .await;
+        stats::stop_thread(chain, THREAD_NAME);
+        result
     })
     .await
     {
@@ -683,6 +689,10 @@ macro_rules! next_iteration {
 pub(crate) async fn background_mithril_update(
     cfg: MithrilSnapshotConfig, tx: Sender<MithrilUpdateMessage>,
 ) {
+    /// Thread name for stats.
+    const THREAD_NAME: &str = "MithrilSnapshotUpdater";
+
+    stats::start_thread(cfg.chain, THREAD_NAME, true);
     debug!(
         "Mithril Snapshot background updater for: {} from {} to {} : Starting",
         cfg.chain,
@@ -694,6 +704,7 @@ pub(crate) async fn background_mithril_update(
     let mut current_snapshot = recover_existing_snapshot(&cfg, &tx).await;
 
     loop {
+        stats::resume_thread(cfg.chain, THREAD_NAME);
         debug!("Background Mithril Updater - New Loop");
 
         cleanup(&cfg).await;

@@ -15,6 +15,7 @@ use tracing_log::log;
 use crate::{
     error::{Error, Result},
     mithril_query::{make_mithril_iterator, ImmutableBlockIterator},
+    stats,
 };
 
 /// Search backwards by 60 slots (seconds) looking for a previous block.
@@ -73,7 +74,7 @@ impl MithrilSnapshotIterator {
         chain: Network, path: &Path, from: &Point, search_interval: u64,
     ) -> Option<MithrilSnapshotIterator> {
         let point = probe_point(from, search_interval);
-        let Ok(mut iterator) = make_mithril_iterator(path, &point).await else {
+        let Ok(mut iterator) = make_mithril_iterator(path, &point, chain).await else {
             return None;
         };
 
@@ -116,7 +117,7 @@ impl MithrilSnapshotIterator {
         let this = this?;
 
         // Remake the iterator, based on the new known point.
-        let Ok(iterator) = make_mithril_iterator(path, &this).await else {
+        let Ok(iterator) = make_mithril_iterator(path, &this, chain).await else {
             return None;
         };
 
@@ -176,7 +177,7 @@ impl MithrilSnapshotIterator {
 
         debug!("Actual Mithril Iterator Start: {}", from);
 
-        let iterator = make_mithril_iterator(path, from).await?;
+        let iterator = make_mithril_iterator(path, from, chain).await?;
 
         Ok(MithrilSnapshotIterator {
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
@@ -191,12 +192,18 @@ impl MithrilSnapshotIterator {
     /// Get the next block, in a way that is Async friendly.
     /// Returns the next block, or None if there are no more blocks.
     pub(crate) async fn next(&self) -> Option<MultiEraBlock> {
+        /// Thread name for stats.
+        const THREAD_NAME: &str = "MithrilSnapshotIterator::Next";
+
         let inner = self.inner.clone();
 
         let res = task::spawn_blocking(move || {
             #[allow(clippy::unwrap_used)] // Unwrap is safe here because the lock can't be poisoned.
             let mut inner_iterator = inner.lock().unwrap();
-            inner_iterator.next()
+            stats::start_thread(inner_iterator.chain, THREAD_NAME, false);
+            let next = inner_iterator.next();
+            stats::stop_thread(inner_iterator.chain, THREAD_NAME);
+            next
         })
         .await;
 
