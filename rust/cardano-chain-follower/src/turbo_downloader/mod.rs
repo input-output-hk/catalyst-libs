@@ -19,14 +19,13 @@ use std::{
 };
 
 use anyhow::{bail, Context, Result};
+use catalyst_types::conversion::from_saturating;
 use dashmap::DashMap;
 use http::{
     header::{ACCEPT_RANGES, CONTENT_LENGTH, RANGE},
     StatusCode,
 };
 use tracing::{debug, error};
-
-use crate::utils::u64_from_saturating;
 
 /// A Simple DNS Balancing Resolver
 struct BalancingResolver {
@@ -333,7 +332,7 @@ impl ParallelDownloadProcessorInner {
 
         let bytes_read = get_range_response
             .into_reader()
-            .take(u64_from_saturating(range_size))
+            .take(from_saturating(range_size))
             .read_to_end(&mut bytes)?;
 
         if bytes_read != range_size {
@@ -474,7 +473,7 @@ impl ParallelDownloadProcessor {
 
             if let Some(ref block) = block {
                 if let Some(dl_stat) = params.bytes_downloaded.get(worker_id) {
-                    let this_bytes_downloaded = u64_from_saturating(block.len());
+                    let this_bytes_downloaded = from_saturating(block.len());
                     let _last_bytes_downloaded = dl_stat
                         .fetch_add(this_bytes_downloaded, std::sync::atomic::Ordering::SeqCst);
                     // debug!("Worker {worker_id} DL chunk {next_chunk}:

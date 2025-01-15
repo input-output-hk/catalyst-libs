@@ -3,6 +3,7 @@
 
 use std::{sync::LazyLock, time::Duration};
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use strum::IntoEnumIterator;
 use tokio::{
@@ -11,7 +12,7 @@ use tokio::{
 };
 use tracing::error;
 
-use crate::{chain_update, Network};
+use crate::chain_update;
 
 /// Data we hold related to sync being ready or not.
 struct SyncReady {
