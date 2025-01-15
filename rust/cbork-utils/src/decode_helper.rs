@@ -87,7 +87,7 @@ pub fn decode_any(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error>
         .input()
         .get(start..end)
         .ok_or(decode::Error::message(format!(
-            "Failed to get any CBOR bytes in {from}. Ivalid CBOR bytes."
+            "Failed to get any CBOR bytes in {from}. Invalid CBOR bytes."
         )))?
         .to_vec();
     Ok(bytes)
