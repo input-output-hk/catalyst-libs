@@ -36,9 +36,7 @@ struct InnerThreadStat {
 
 impl Serialize for InnerThreadStat {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         let mut state = serializer.serialize_struct("ThreadStat", 6)?;
 
         state.serialize_field("counter", &self.counter.load(Ordering::SeqCst))?;
@@ -82,7 +80,7 @@ impl Default for InnerThreadStat {
 }
 
 impl InnerThreadStat {
-    /// Update the CPU time including the total CPU time and the latest CPU time.
+    /// Update the total time of the CPU used.
     fn update_total_time(&self) {
         // Get the current CPU time as a Duration
         let current_time = ThreadTime::now().as_duration();
@@ -103,6 +101,7 @@ impl InnerThreadStat {
         }
     }
 
+    /// Update the latest time of the CPU used.
     fn update_latest_time(&self) {
         if let Ok(mut latest_cpu_time) = self.latest_cpu_time.lock() {
             *latest_cpu_time = ThreadTime::now().as_duration();

@@ -478,7 +478,6 @@ impl ParallelDownloadProcessor {
             let mut block;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
             loop {
-
                 block = match params.get_range(&http_agent, next_chunk) {
                     Ok(block) => Some(block),
                     Err(error) => {

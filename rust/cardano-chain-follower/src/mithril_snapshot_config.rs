@@ -1,7 +1,10 @@
 //! Configuration for the Mithril Snapshot used by the follower.
 
 use std::{
-    panic, path::{Path, PathBuf}, str::FromStr, sync::LazyLock
+    panic,
+    path::{Path, PathBuf},
+    str::FromStr,
+    sync::LazyLock,
 };
 
 use anyhow::bail;
@@ -18,7 +21,12 @@ use tokio::{
 use tracing::{debug, error};
 
 use crate::{
-    error::{Error, Result}, mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData}, mithril_snapshot_sync::background_mithril_update, snapshot_id::SnapshotId, stats, turbo_downloader::DlConfig
+    error::{Error, Result},
+    mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
+    mithril_snapshot_sync::background_mithril_update,
+    snapshot_id::SnapshotId,
+    stats,
+    turbo_downloader::DlConfig,
 };
 
 /// Type we use to manage the Sync Task handle map.

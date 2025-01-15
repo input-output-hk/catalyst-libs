@@ -125,6 +125,7 @@ impl ChainSyncConfig {
     ///
     /// `Error`: On error.
     pub async fn run(self) -> Result<()> {
+        /// Thread name for stats.
         const THREAD_NAME: &str = "ChainSync";
         debug!(
             chain = self.chain.to_string(),
