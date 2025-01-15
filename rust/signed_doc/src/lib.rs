@@ -1,4 +1,10 @@
 //! Catalyst documents signing crate
+
+mod content;
+mod error;
+mod metadata;
+mod signature;
+
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter},
@@ -8,13 +14,8 @@ use std::{
 use anyhow::anyhow;
 use content::Content;
 use coset::CborSerializable;
-
-mod content;
-mod error;
-mod metadata;
-mod signature;
-
 pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV7};
+pub use minicbor::{decode, Decode, Decoder};
 pub use signature::KidUri;
 use signature::Signatures;
 
@@ -88,8 +89,8 @@ impl CatalystSignedDocument {
     }
 }
 
-impl minicbor::Decode<'_, ()> for CatalystSignedDocument {
-    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+impl Decode<'_, ()> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, decode::Error> {
         let start = d.position();
         d.skip()?;
         let end = d.position();
