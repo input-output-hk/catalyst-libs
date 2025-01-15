@@ -154,7 +154,6 @@ impl Inner {
                         // Make sure our big mmap get dropped.
                         drop(prev_mmap);
                         stats::set_mmap_drop(self.cfg.chain);
-                        error!("Drop ka");
 
                         // File is the same, so dedup it.
                         if self.cfg.dedup_tmp(&abs_file, &latest_snapshot).is_ok() {
@@ -170,7 +169,6 @@ impl Inner {
                 // Need to do this way because drop is moved into the if block.
                 if let Some(prev_mmap) = prev_mmap_option {
                     drop(prev_mmap);
-                    error!("Drop ja");
                     stats::set_mmap_drop(self.cfg.chain);
                 }
 
