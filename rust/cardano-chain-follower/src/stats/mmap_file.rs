@@ -10,10 +10,10 @@ use serde::{ser::SerializeStruct, Serialize, Serializer};
 
 /// Memory-mapped file statistics.
 #[derive(Debug, Default, Clone, Serialize)]
-pub struct MMapFileStat(Arc<InnerMMapFileStat>);
+pub struct MemMapFileStat(Arc<InnerMemMapFileStat>);
 
 /// Inner memory-mapped file statistics.
-struct InnerMMapFileStat {
+struct InnerMemMapFileStat {
     /// A counter for the number of memory-mapped files.
     file_counter: AtomicU64,
     /// The total size of memory-mapped files.
@@ -22,10 +22,10 @@ struct InnerMMapFileStat {
     is_drop: AtomicBool,
 }
 
-impl Serialize for InnerMMapFileStat {
+impl Serialize for InnerMemMapFileStat {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: Serializer {
-        let mut state = serializer.serialize_struct("MMapFileStat", 3)?;
+        let mut state = serializer.serialize_struct("MemMapFileStat", 3)?;
 
         state.serialize_field("file_counter", &self.file_counter.load(Ordering::SeqCst))?;
         state.serialize_field("total_size", &self.total_size.load(Ordering::SeqCst))?;
@@ -34,9 +34,9 @@ impl Serialize for InnerMMapFileStat {
     }
 }
 
-impl fmt::Debug for InnerMMapFileStat {
+impl fmt::Debug for InnerMemMapFileStat {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("InnerMMapFileStat")
+        f.debug_struct("InnerMemMapFileStat")
             .field("file_counter", &self.file_counter.load(Ordering::SeqCst))
             .field("total_size", &self.total_size.load(Ordering::SeqCst))
             .field("is_drop", &self.is_drop.load(Ordering::SeqCst))
@@ -44,7 +44,7 @@ impl fmt::Debug for InnerMMapFileStat {
     }
 }
 
-impl Default for InnerMMapFileStat {
+impl Default for InnerMemMapFileStat {
     fn default() -> Self {
         Self {
             file_counter: AtomicU64::new(0),
@@ -54,7 +54,7 @@ impl Default for InnerMMapFileStat {
     }
 }
 
-impl MMapFileStat {
+impl MemMapFileStat {
     /// Increment the memory-mapped file counter.
     pub fn incr_file_counter(&self) {
         self.0.file_counter.fetch_add(1, Ordering::SeqCst);

@@ -12,7 +12,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use cardano_blockchain_types::{Network, Slot};
 use chrono::Utc;
 use dashmap::DashMap;
-use mmap_file::MMapFileStat;
+use mmap_file::MemMapFileStat;
 use rollback::{rollbacks, rollbacks_reset, RollbackType};
 use serde::Serialize;
 use strum::IntoEnumIterator;
@@ -33,7 +33,7 @@ pub struct Statistics {
     /// Statistics related to the threads.
     pub thread_stats: DashMap<String, thread::ThreadStat>,
     /// Statistics related to the memory mapped files.
-    pub mmap_file_stat: MMapFileStat,
+    pub mmap_file_stat: MemMapFileStat,
 }
 
 /// Type we use to manage the Sync Task handle map.
@@ -612,7 +612,7 @@ pub(crate) fn set_mmap_drop(chain: Network) {
 
 /// Get the mmap file statistic.
 #[allow(dead_code)]
-pub(crate) fn mmap_file_stat(chain: Network) -> Option<MMapFileStat> {
+pub(crate) fn mmap_file_stat(chain: Network) -> Option<MemMapFileStat> {
     // This will actually always succeed.
     let stats = lookup_stats(chain)?;
 
