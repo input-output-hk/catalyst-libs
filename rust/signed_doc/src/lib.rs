@@ -48,61 +48,6 @@ impl Display for CatalystSignedDocument {
     }
 }
 
-impl TryFrom<&[u8]> for CatalystSignedDocument {
-    type Error = error::Error;
-
-    fn try_from(cose_bytes: &[u8]) -> Result<Self, Self::Error> {
-        // Try reading as a tagged COSE SIGN, otherwise try reading as untagged.
-        let cose_sign = coset::CoseSign::from_slice(cose_bytes)
-            .map_err(|e| vec![anyhow::anyhow!("Invalid COSE Sign document: {e}")])?;
-
-        let mut errors = Vec::new();
-
-        let metadata = Metadata::try_from(&cose_sign.protected).map_or_else(
-            |e| {
-                errors.extend(e.0);
-                None
-            },
-            Some,
-        );
-        let signatures = Signatures::try_from(&cose_sign.signatures).map_or_else(
-            |e| {
-                errors.extend(e.0);
-                None
-            },
-            Some,
-        );
-
-        if cose_sign.payload.is_none() {
-            errors.push(anyhow!("Document Content is missing"));
-        }
-
-        match (cose_sign.payload, metadata, signatures) {
-            (Some(payload), Some(metadata), Some(signatures)) => {
-                let content = Content::new(
-                    payload,
-                    metadata.content_type(),
-                    metadata.content_encoding(),
-                )
-                .map_err(|e| {
-                    errors.push(anyhow!("Invalid Document Content: {e}"));
-                    errors
-                })?;
-
-                Ok(CatalystSignedDocument {
-                    inner: InnerCatalystSignedDocument {
-                        metadata,
-                        content,
-                        signatures,
-                    }
-                    .into(),
-                })
-            },
-            _ => Err(error::Error(errors)),
-        }
-    }
-}
-
 impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
 
@@ -140,5 +85,66 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn signatures(&self) -> &Signatures {
         &self.inner.signatures
+    }
+}
+
+impl minicbor::Decode<'_, ()> for CatalystSignedDocument {
+    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+        let start = d.position();
+        d.skip()?;
+        let end = d.position();
+        let cose_bytes = d
+            .input()
+            .get(start..end)
+            .ok_or(minicbor::decode::Error::end_of_input())?;
+
+        let cose_sign = coset::CoseSign::from_slice(cose_bytes).map_err(|e| {
+            minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
+        })?;
+
+        let mut errors = Vec::new();
+
+        let metadata = Metadata::try_from(&cose_sign.protected).map_or_else(
+            |e| {
+                errors.extend(e.0);
+                None
+            },
+            Some,
+        );
+        let signatures = Signatures::try_from(&cose_sign.signatures).map_or_else(
+            |e| {
+                errors.extend(e.0);
+                None
+            },
+            Some,
+        );
+
+        if cose_sign.payload.is_none() {
+            errors.push(anyhow!("Document Content is missing"));
+        }
+
+        match (cose_sign.payload, metadata, signatures) {
+            (Some(payload), Some(metadata), Some(signatures)) => {
+                let content = Content::new(
+                    payload,
+                    metadata.content_type(),
+                    metadata.content_encoding(),
+                )
+                .map_err(|e| {
+                    errors.push(anyhow!("Invalid Document Content: {e}"));
+                    minicbor::decode::Error::custom(error::Error(errors))
+                })?;
+
+                Ok(CatalystSignedDocument {
+                    inner: InnerCatalystSignedDocument {
+                        metadata,
+                        content,
+                        signatures,
+                    }
+                    .into(),
+                })
+            },
+            _ => Err(minicbor::decode::Error::custom(error::Error(errors))),
+        }
     }
 }
