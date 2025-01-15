@@ -5,9 +5,11 @@
 // Allowing since this is example code.
 //#![allow(clippy::unwrap_used)]
 
+use cardano_blockchain_types::{
+    Cip36, Fork, MetadatumLabel, MultiEraBlock, Network, Point, TxnIndex,
+};
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
-use rbac_registration::cardano::cip509;
 
 /// Use Mimalloc for the global allocator.
 #[cfg(feature = "mimalloc")]
@@ -16,11 +18,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 
 use std::{error::Error, time::Duration};
 
-use cardano_chain_follower::{
-    ChainFollower, ChainSyncConfig, ChainUpdate, Kind,
-    Metadata::{self},
-    Network, Statistics, ORIGIN_POINT, TIP_POINT,
-};
+use cardano_chain_follower::{ChainFollower, ChainSyncConfig, ChainUpdate, Kind, Statistics};
 use clap::{arg, ArgAction, ArgMatches, Command};
 use tokio::time::Instant;
 use tracing::{error, info, level_filters::LevelFilter, warn};
@@ -41,13 +39,11 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
                 .action(ArgAction::SetTrue),
             arg!(--"halt-on-error" "Stop the process when an error occurs without retrying.")
                 .action(ArgAction::SetTrue),
-            arg!(--"log-bad-cip36" "Dump Bad CIP36 registrations detected.")
-                .action(ArgAction::SetTrue),
-            arg!(--"log-cip509" "Dump CIP509 validation.")
-                .action(ArgAction::SetTrue),
             arg!(--"log-raw-aux" "Dump raw auxiliary data.")
                 .action(ArgAction::SetTrue),
             arg!(--"largest-metadata" "Dump The largest transaction metadata we find (as we find it).")
+                .action(ArgAction::SetTrue),
+            arg!(--"largest-aux" "Dump The largest auxiliary metadata we find (as we find it).")
                 .action(ArgAction::SetTrue),
             arg!(--"mithril-sync-workers" <WORKERS> "The number of workers to use when downloading the blockchain snapshot.")
                 .value_parser(clap::value_parser!(u16).range(1..))
@@ -64,6 +60,11 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
             arg!(--"mithril-sync-data-read-timeout" <SECS> "The HTTP Data Read Timeout for mithril downloads, in seconds.")
                 .value_parser(clap::value_parser!(u64).range(1..))
                 .action(ArgAction::Set),
+            // Metadata
+            arg!(--"log-bad-cip36" "Dump Bad CIP36 registrations detected.")
+                .action(ArgAction::SetTrue),
+            arg!(--"log-bad-cip509" "Dump Bad CIP509 detected.")
+                .action(ArgAction::SetTrue),
         ])
         .get_matches();
 
@@ -84,7 +85,6 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
 /// Start syncing a particular network
 async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Box<dyn Error>> {
     let mut cfg = ChainSyncConfig::default_for(*network);
-
     let mut mithril_dl_connect_timeout = "Not Set".to_string();
     let mut mithril_dl_data_timeout = "Not Set".to_string();
 
@@ -146,16 +146,19 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 #[allow(clippy::too_many_lines)]
 async fn follow_for(network: Network, matches: ArgMatches) {
     info!(chain = network.to_string(), "Following");
-    let mut follower = ChainFollower::new(network, ORIGIN_POINT, TIP_POINT).await;
+    let mut follower = ChainFollower::new(network, Point::ORIGIN, Point::TIP).await;
 
     let all_tip_blocks = matches.get_flag("all-tip-blocks");
     let all_live_blocks = matches.get_flag("all-live-blocks");
     let stop_at_tip = matches.get_flag("stop-at-tip");
     let halt_on_error = matches.get_flag("halt-on-error");
-    let log_bad_cip36 = matches.get_flag("log-bad-cip36");
-    let log_cip509 = matches.get_flag("log-cip509");
     let log_raw_aux = matches.get_flag("log-raw-aux");
     let largest_metadata = matches.get_flag("largest-metadata");
+    let largest_aux = matches.get_flag("largest-aux");
+
+    // Metadata
+    let log_bad_cip36 = matches.get_flag("log-bad-cip36");
+    let log_bad_cip509 = matches.get_flag("log-bad-cip509");
 
     let mut current_era = String::new();
     let mut last_update: Option<ChainUpdate> = None;
@@ -164,12 +167,13 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let mut last_immutable: bool = false;
     let mut reached_tip = false; // After we reach TIP we show all block we process.
     let mut updates: u64 = 0;
-    let mut last_fork = 0;
+    let mut last_fork: Fork = 0.into();
     let mut follow_all = false;
 
     let mut last_metrics_time = Instant::now();
 
-    let mut biggest_aux_data: usize = 0;
+    let mut largest_metadata_size: usize = 0;
+    let mut largest_aux_size: usize = 0;
 
     while let Some(chain_update) = follower.next().await {
         updates += 1;
@@ -178,8 +182,9 @@ async fn follow_for(network: Network, matches: ArgMatches) {
             reached_tip = true;
         }
 
-        let block = chain_update.block_data().decode();
-        let this_era = block.era().to_string();
+        let block = chain_update.block_data();
+        let decoded_block = block.decode();
+        let this_era = decoded_block.era().to_string();
 
         // When we transition between important points, show the last block as well.
         if ((current_era != this_era)
@@ -200,7 +205,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         // If these become true, we will show all blocks from the follower.
         follow_all = follow_all
             || (!chain_update.immutable() && all_live_blocks)
-            || ((chain_update.data.fork() > 1) && all_tip_blocks);
+            || (chain_update.data.fork().is_live() && all_tip_blocks);
 
         // Don't know if this update will show or not, so say it didn't.
         last_update_shown = false;
@@ -223,7 +228,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
             last_update_shown = true;
         }
 
-        let this_prev_hash = block.header().previous_hash();
+        let this_prev_hash = decoded_block.header().previous_hash();
 
         // We have no state, so can only check consistency with block updates.
         // But thats OK, the chain follower itself is also checking chain consistency.
@@ -242,44 +247,33 @@ async fn follow_for(network: Network, matches: ArgMatches) {
             break;
         }
 
-        // Inspect the transactions in the block.
-        for (tx_idx, _tx) in block.txs().iter().enumerate() {
-            if let Some(aux_data) =
-                update_biggest_aux_data(&chain_update, tx_idx, largest_metadata, biggest_aux_data)
-            {
-                biggest_aux_data = aux_data;
-            }
-
-            // If flag `log_bad_cip36` is set, log the bad CIP36.
-            if log_bad_cip36 {
-                log_bad_cip36_info(&chain_update, network, tx_idx);
-            }
-            // If flag `log_cip509` is set, log the CIP509 validation.
-            if log_cip509 {
-                log_cip509_info(&chain_update, block.number(), network, tx_idx);
+        // Update and log the largest metadata
+        if largest_metadata {
+            for (txn_idx, _tx) in decoded_block.txs().iter().enumerate() {
+                update_largest_metadata(block, network, txn_idx.into(), &mut largest_metadata_size);
             }
         }
+        // Update and log the largest transaction auxiliary data.
+        if largest_aux {
+            update_largest_aux(decoded_block, network, &mut largest_aux_size);
+        }
 
+        // Log the raw auxiliary data.
         if log_raw_aux {
-            if let Some(x) = block.as_alonzo() {
-                info!(
-                    chain = network.to_string(),
-                    "Raw Aux Data: {:02x?}", x.auxiliary_data_set
-                );
-            } else if let Some(x) = block.as_babbage() {
-                info!(
-                    chain = network.to_string(),
-                    "Raw Aux Data: {:02x?}", x.auxiliary_data_set
-                );
-            } else if let Some(x) = block.as_conway() {
-                info!(
-                    chain = network.to_string(),
-                    "Raw Aux Data: {:02x?}", x.auxiliary_data_set
-                );
-            }
+            raw_aux_info(decoded_block, network);
         }
 
-        prev_hash = Some(block.hash());
+        // Illustrate how the chain-follower works with metadata.
+        // Log bad CIP36.
+        if log_bad_cip36 {
+            log_bad_cip36_info(block, network);
+        }
+        // Log bad CIP509.
+        if log_bad_cip509 {
+            log_bad_cip509_info(block, network);
+        }
+
+        prev_hash = Some(decoded_block.hash());
         last_update = Some(chain_update);
 
         if reached_tip && stop_at_tip {
@@ -318,72 +312,149 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     info!(chain = network.to_string(), "Following Completed.");
 }
 
-/// Helper function for updating the biggest aux data.
-fn update_biggest_aux_data(
-    chain_update: &ChainUpdate, tx_idx: usize, largest_metadata: bool, biggest_aux_data: usize,
-) -> Option<usize> {
-    let raw_size_cip36 = match chain_update
-        .data
-        .txn_raw_metadata(tx_idx, Metadata::cip36::LABEL)
-    {
-        Some(raw) => raw.len(),
-        None => 0,
-    };
+/// Helper function for updating the biggest metadata from a list of
+/// interested metadata label.
+fn update_largest_metadata(
+    block: &MultiEraBlock, network: Network, txn_idx: TxnIndex, largest_metadata_size: &mut usize,
+) {
+    let labels = [
+        MetadatumLabel::CIP509_RBAC,
+        MetadatumLabel::CIP036_AUXDATA,
+        MetadatumLabel::CIP020_MESSAGE,
+    ];
 
-    let raw_size_cip509 = match chain_update.data.txn_raw_metadata(tx_idx, cip509::LABEL) {
-        Some(raw) => raw.len(),
-        None => 0,
-    };
-
-    // Get the maximum raw size from both cip36 and cip509
-    let raw_size = raw_size_cip36.max(raw_size_cip509);
-
-    if largest_metadata && raw_size > biggest_aux_data {
-        return Some(raw_size);
-    }
-
-    None
-}
-
-/// Helper function for logging bad CIP36.
-fn log_bad_cip36_info(chain_update: &ChainUpdate, network: Network, tx_idx: usize) {
-    if let Some(decoded_metadata) = chain_update
-        .data
-        .txn_metadata(tx_idx, Metadata::cip36::LABEL)
-    {
-        if let Metadata::DecodedMetadataValues::Cip36(cip36) = &decoded_metadata.value {
-            if (!cip36.signed || !decoded_metadata.report.is_empty())
-                && !decoded_metadata.report.is_empty()
-            {
+    for label in &labels {
+        let metadata = block.txn_metadata(txn_idx, *label);
+        if let Some(data) = metadata {
+            let metadata_len = data.as_ref().len();
+            if metadata_len > *largest_metadata_size {
+                *largest_metadata_size = metadata_len;
                 info!(
                     chain = network.to_string(),
-                    "CIP36 {tx_idx}: {:?}", decoded_metadata
+                    "Largest Metadata updated, point: {:?}, tx index: {:?}, label: {:?}, size: {}",
+                    block.point(),
+                    txn_idx,
+                    label,
+                    largest_metadata_size
                 );
             }
         }
     }
 }
 
-/// Helper function for logging CIP509 validation.
-fn log_cip509_info(chain_update: &ChainUpdate, block_num: u64, network: Network, tx_idx: usize) {
-    if let Some(decoded_metadata) = chain_update.data.txn_metadata(tx_idx, cip509::LABEL) {
-        info!("Block Number {}", block_num);
-
-        if let Metadata::DecodedMetadataValues::Cip509(cip509) = &decoded_metadata.value {
+/// Helper function for logging the raw box auxiliary data.
+fn raw_aux_info(block: &pallas::ledger::traverse::MultiEraBlock, network: Network) {
+    match block {
+        pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
             info!(
                 chain = network.to_string(),
-                "CIP509 {tx_idx}: {:?}", cip509.validation
+                "Raw Aux Data: {:02x?}", b.auxiliary_data_set
             );
-        }
-
-        // If report is not empty, log it, log it as a warning.
-        if !decoded_metadata.report.is_empty() {
-            warn!(
+        },
+        pallas::ledger::traverse::MultiEraBlock::Babbage(b) => {
+            info!(
                 chain = network.to_string(),
-                "CIP509 {tx_idx}: {:?}", decoded_metadata.report
+                "Raw Aux Data: {:02x?}", b.auxiliary_data_set
             );
+        },
+        pallas::ledger::traverse::MultiEraBlock::Conway(b) => {
+            info!(
+                chain = network.to_string(),
+                "Raw Aux Data: {:02x?}", b.auxiliary_data_set
+            );
+        },
+        _ => {},
+    }
+}
+
+/// Helper function for updating the largest auxiliary data.
+fn update_largest_aux(
+    block: &pallas::ledger::traverse::MultiEraBlock, network: Network,
+    largest_metadata_size: &mut usize,
+) {
+    match block {
+        pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(ref b, _) => {
+            b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
+                compare_and_log_aux(
+                    aux_data.raw_cbor().len(),
+                    block.number(),
+                    *txn_idx,
+                    network,
+                    largest_metadata_size,
+                );
+            });
+        },
+        pallas::ledger::traverse::MultiEraBlock::Babbage(ref b) => {
+            b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
+                compare_and_log_aux(
+                    aux_data.raw_cbor().len(),
+                    block.number(),
+                    *txn_idx,
+                    network,
+                    largest_metadata_size,
+                );
+            });
+        },
+        pallas::ledger::traverse::MultiEraBlock::Conway(ref b) => {
+            b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
+                compare_and_log_aux(
+                    aux_data.raw_cbor().len(),
+                    block.number(),
+                    *txn_idx,
+                    network,
+                    largest_metadata_size,
+                );
+            });
+        },
+        _ => {},
+    }
+}
+
+/// Helper function for comparing and logging the largest auxiliary data.
+fn compare_and_log_aux(
+    aux_len: usize, block_no: u64, txn_idx: u32, network: Network,
+    largest_metadata_size: &mut usize,
+) {
+    if aux_len > *largest_metadata_size {
+        *largest_metadata_size = aux_len;
+        info!(
+            chain = network.to_string(),
+            "Largest Aux Data updated, block: {}, tx index: {}, size: {}",
+            block_no,
+            txn_idx,
+            largest_metadata_size
+        );
+    }
+}
+
+/// Function for logging bad CIP36.
+/// Bad CIP36 includes:
+/// - CIP36 that is valid decoded, but have problem.
+/// - CIP36 that is invalid decoded.
+fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
+    if let Some(map) = Cip36::cip36_from_block(block, true) {
+        for (key, value) in &map {
+            match value {
+                Ok(value) => {
+                    // Logging the problematic CIP36.
+                    if value.err_report().is_problematic() {
+                        info!(
+                            network = network.to_string(),
+                            "CIP36 valid decoded, but have problem: index {:?}, {}", key, value
+                        );
+                    }
+                },
+                Err(e) => {
+                    warn!("CIP36 decode err {}: ", e);
+                },
+            }
         }
     }
+}
+
+/// Function for logging bad CIP509.
+fn log_bad_cip509_info(_block: &MultiEraBlock, _network: Network) {
+    // TODO - Implement this function.
 }
 
 #[tokio::main]

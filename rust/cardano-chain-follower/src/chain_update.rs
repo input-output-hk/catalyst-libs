@@ -2,9 +2,8 @@
 
 use std::fmt::Display;
 
+use cardano_blockchain_types::MultiEraBlock;
 use strum::Display;
-
-use crate::multi_era_block_data::MultiEraBlock;
 
 /// Enum of chain updates received by the follower.
 #[derive(Debug, Clone, Display, PartialEq)]
@@ -41,10 +40,10 @@ impl ChainUpdate {
         &self.data
     }
 
-    /// Gets the chain update's block data.
+    /// Is the chain update immutable?
     #[must_use]
     pub fn immutable(&self) -> bool {
-        self.data.immutable()
+        self.data.is_immutable()
     }
 }
 

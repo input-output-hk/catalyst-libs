@@ -1,5 +1,6 @@
 //! Cardano chain follow module.
 
+use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
 use pallas::network::miniprotocols::txmonitor::{TxBody, TxId};
 use tokio::sync::broadcast::{self};
 use tracing::{debug, error};
@@ -12,10 +13,8 @@ use crate::{
     mithril_snapshot::MithrilSnapshot,
     mithril_snapshot_data::latest_mithril_snapshot_id,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
-    network::Network,
-    point::{TIP_POINT, UNKNOWN_POINT},
-    stats::{self, rollback},
-    MultiEraBlock, Point, Statistics,
+    stats::{self},
+    Statistics,
 };
 
 /// The Chain Follower
@@ -24,12 +23,12 @@ pub struct ChainFollower {
     chain: Network,
     /// Where we end following.
     end: Point,
-    /// Block we processed most recently.
+    /// Point we processed most recently.
     previous: Point,
-    /// Where we are currently in the following process.
+    /// Point we are currently in the following process.
     current: Point,
     /// What fork were we last on
-    fork: u64,
+    fork: Fork,
     /// Mithril Snapshot
     snapshot: MithrilSnapshot,
     /// Mithril Snapshot Follower
@@ -74,9 +73,9 @@ impl ChainFollower {
         ChainFollower {
             chain,
             end,
-            previous: UNKNOWN_POINT,
+            previous: Point::UNKNOWN,
             current: start,
-            fork: 1, // This is correct, because Mithril is Fork 0.
+            fork: Fork::BACKFILL, // This is correct, because Mithril is Fork 0.
             snapshot: MithrilSnapshot::new(chain),
             mithril_follower: None,
             mithril_tip: None,
@@ -102,7 +101,7 @@ impl ChainFollower {
                     self.previous = self.current.clone();
                     // debug!("Post Previous update 3 : {:?}", self.previous);
                     self.current = next.point();
-                    self.fork = 0; // Mithril Immutable data is always Fork 0.
+                    self.fork = Fork::IMMUTABLE; // Mithril Immutable data is always Fork 0.
                     let update = ChainUpdate::new(chain_update::Kind::Block, false, next);
                     return Some(update);
                 }
@@ -135,14 +134,14 @@ impl ChainFollower {
         None
     }
 
-    /// If we can, get the next update from the mithril snapshot.
+    /// If we can, get the next update from the live chain.
     async fn next_from_live_chain(&mut self) -> Option<ChainUpdate> {
         let mut next_block: Option<MultiEraBlock> = None;
         let mut update_type = chain_update::Kind::Block;
         let mut rollback_depth: u64 = 0;
 
         // Special Case: point = TIP_POINT.  Just return the latest block in the live chain.
-        if self.current == TIP_POINT {
+        if self.current == Point::TIP {
             next_block = {
                 let block = get_live_block(self.chain, &self.current, -1, false)?;
                 Some(block)
@@ -193,7 +192,11 @@ impl ChainFollower {
         if let Some(next_block) = next_block {
             // Update rollback stats for the follower if one is reported.
             if update_type == chain_update::Kind::Rollback {
-                rollback(self.chain, stats::RollbackType::Follower, rollback_depth);
+                stats::rollback::rollback(
+                    self.chain,
+                    stats::rollback::RollbackType::Follower,
+                    rollback_depth,
+                );
             }
             // debug!("Pre Previous update 4 : {:?}", self.previous);
             self.previous = self.current.clone();
@@ -213,7 +216,7 @@ impl ChainFollower {
     fn update_current(&mut self, update: Option<&ChainUpdate>) -> bool {
         if let Some(update) = update {
             let decoded = update.block_data().decode();
-            self.current = Point::new(decoded.slot(), decoded.hash().to_vec());
+            self.current = Point::new(decoded.slot().into(), decoded.hash().into());
             return true;
         }
         false
@@ -279,7 +282,7 @@ impl ChainFollower {
     /// Returns NONE is there is no block left to return.
     pub async fn next(&mut self) -> Option<ChainUpdate> {
         // If we aren't syncing TIP, and Current >= End, then return None
-        if self.end != TIP_POINT && self.current >= self.end {
+        if self.end != Point::TIP && self.current >= self.end {
             return None;
         }
 
@@ -301,7 +304,7 @@ impl ChainFollower {
         // Get the block from the chain.
         // This function suppose to run only once, so the end point
         // can be set to `TIP_POINT`
-        let mut follower = Self::new(chain, point, TIP_POINT).await;
+        let mut follower = Self::new(chain, point, Point::TIP).await;
         follower.next().await
     }
 
@@ -371,31 +374,36 @@ mod tests {
             .expect("cannot decode block");
 
         let previous_point = Point::new(
-            pallas_block.slot() - 1,
+            (pallas_block.slot() - 1).into(),
             pallas_block
                 .header()
                 .previous_hash()
                 .expect("cannot get previous hash")
-                .to_vec(),
+                .into(),
         );
 
-        MultiEraBlock::new(Network::Preprod, raw_block.clone(), &previous_point, 1)
-            .expect("cannot create block")
+        MultiEraBlock::new(
+            Network::Preprod,
+            raw_block.clone(),
+            &previous_point,
+            1.into(),
+        )
+        .expect("cannot create block")
     }
 
     #[tokio::test]
     async fn test_chain_follower_new() {
         let chain = Network::Mainnet;
-        let start = Point::new(100u64, vec![]);
-        let end = Point::fuzzy(999u64);
+        let start = Point::new(100u64.into(), [0; 32].into());
+        let end = Point::fuzzy(999u64.into());
 
         let follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
 
         assert_eq!(follower.chain, chain);
         assert_eq!(follower.end, end);
-        assert_eq!(follower.previous, UNKNOWN_POINT);
+        assert_eq!(follower.previous, Point::UNKNOWN);
         assert_eq!(follower.current, start);
-        assert_eq!(follower.fork, 1);
+        assert_eq!(follower.fork, 1.into());
         assert!(follower.mithril_follower.is_none());
         assert!(follower.mithril_tip.is_none());
     }
@@ -403,8 +411,8 @@ mod tests {
     #[tokio::test]
     async fn test_chain_follower_update_current_none() {
         let chain = Network::Mainnet;
-        let start = Point::new(100u64, vec![]);
-        let end = Point::fuzzy(999u64);
+        let start = Point::new(100u64.into(), [0; 32].into());
+        let end = Point::fuzzy(999u64.into());
 
         let mut follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
 
@@ -416,8 +424,8 @@ mod tests {
     #[tokio::test]
     async fn test_chain_follower_update_current() {
         let chain = Network::Mainnet;
-        let start = Point::new(100u64, vec![]);
-        let end = Point::fuzzy(999u64);
+        let start = Point::new(100u64.into(), [0; 32].into());
+        let end = Point::fuzzy(999u64.into());
 
         let mut follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
 

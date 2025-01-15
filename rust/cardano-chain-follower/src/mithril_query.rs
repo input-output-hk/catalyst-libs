@@ -2,13 +2,11 @@
 
 use std::path::Path;
 
+use cardano_blockchain_types::Point;
 use pallas_hardano::storage::immutable::FallibleBlock;
 use tokio::task;
 
-use crate::{
-    error::{Error, Result},
-    Point,
-};
+use crate::error::{Error, Result};
 
 /// Synchronous Immutable block iterator.
 pub(crate) type ImmutableBlockIterator = Box<dyn Iterator<Item = FallibleBlock> + Send + Sync>;

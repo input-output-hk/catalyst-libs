@@ -1,9 +1,10 @@
 //! Data about the current Mithril Snapshot
 use std::{default, sync::LazyLock};
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 
-use crate::{network::Network, snapshot_id::SnapshotId};
+use crate::snapshot_id::SnapshotId;
 
 /// Current Mithril Snapshot Data for a network.
 #[derive(Debug, Clone)]
@@ -25,7 +26,7 @@ impl SnapshotData {
 }
 
 impl default::Default for SnapshotData {
-    /// The default snapshot data represents there is no latest snapshot.
+    /// The default snapshot data represents, there is no latest snapshot.
     fn default() -> Self {
         SnapshotData {
             id: SnapshotId::default(),
@@ -40,7 +41,6 @@ static CURRENT_MITHRIL_SNAPSHOT: LazyLock<DashMap<Network, SnapshotData>> =
 /// Get the current latest snapshot data we have recorded.
 pub(crate) fn latest_mithril_snapshot_data(chain: Network) -> SnapshotData {
     // There should ALWAYS be a snapshot for the chain if this is called.
-
     match CURRENT_MITHRIL_SNAPSHOT.get(&chain) {
         Some(snapshot_data) => snapshot_data.value().clone(),
         None => SnapshotData::default(),
