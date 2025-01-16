@@ -7,7 +7,7 @@ use minicbor::{decode, Decode, Decoder};
 
 use crate::cardano::cip509::rbac::{certs::C509CertInMetadatumReference, tag::KeyTag};
 
-/// Enum of possible X.509 DER certificate.
+/// An enum of possible C509 certificate values.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Clone, Default)]
 pub enum C509Cert {

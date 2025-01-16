@@ -127,7 +127,7 @@ impl Cip509 {
             )
         })?;
         let MultiEraTx::Conway(txn) = txn else {
-            return Err(anyhow!("Unsupported era: {}", txn.era()));
+            return Ok(None);
         };
 
         let auxiliary_data = match &txn.auxiliary_data {
@@ -169,7 +169,7 @@ impl Cip509 {
             txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
-        // The following checks are only performed for  the role 0.
+        // The following checks are only performed for the role 0.
         if let Some(role_data) = cip509.role_data(RoleNumber::ROLE_0) {
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
             validate_role_signing_key(role_data, &cip509.report);
@@ -395,14 +395,12 @@ fn payment_history(
 
     for (index, output) in txn.transaction_body.outputs.iter().enumerate() {
         let conway::PseudoTransactionOutput::PostAlonzo(output) = output else {
-            report.other("Unsupported legacy transaction output", &context);
             continue;
         };
 
         let address = match Address::from_bytes(&output.address) {
             Ok(Address::Shelley(a)) => a,
-            Ok(a) => {
-                report.other(&format!("Unexpected output address type: {a:?}"), &context);
+            Ok(_) => {
                 continue;
             },
             Err(e) => {
