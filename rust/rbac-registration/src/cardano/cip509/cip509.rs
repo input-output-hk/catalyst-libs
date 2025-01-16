@@ -470,7 +470,7 @@ fn decode_input_hash(
     };
 
     let len = bytes.len();
-    if let Ok(v) = TxInputHash::try_from(bytes) {
+    if let Ok(v) = TxInputHash::try_from(bytes.as_slice()) {
         Some(v)
     } else {
         report.invalid_value(

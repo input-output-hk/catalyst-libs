@@ -23,7 +23,10 @@
 
 use std::borrow::Cow;
 
-use cardano_blockchain_types::{TxnWitness, VKeyHash};
+use cardano_blockchain_types::{
+    hashes::{Blake2b128Hash, Blake2b256Hash},
+    TxnWitness, VKeyHash,
+};
 use catalyst_types::problem_report::ProblemReport;
 use pallas::{
     codec::{
@@ -34,10 +37,7 @@ use pallas::{
 };
 
 use super::utils::cip19::compare_key_hash;
-use crate::{
-    cardano::cip509::{types::TxInputHash, Cip0134UriSet, LocalRefInt, RoleData},
-    utils::hashing::{blake2b_128, blake2b_256},
-};
+use crate::cardano::cip509::{types::TxInputHash, Cip0134UriSet, LocalRefInt, RoleData};
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
@@ -77,24 +77,14 @@ pub fn validate_txn_inputs_hash(
         }
     }
 
-    match blake2b_128(&buffer).map(TxInputHash::from) {
-        Ok(h) if h == *hash => {
-            // All good - the calculated hash is the same as in Cip509.
-        },
-        Ok(h) => {
-            report.invalid_value(
-                "txn_inputs_hash",
-                &format!("{h:?}"),
-                &format!("Must be equal to the value in Cip509 ({hash:?})"),
-                context,
-            );
-        },
-        Err(e) => {
-            report.other(
-                &format!("Failed to hash transaction inputs: {e:?}"),
-                context,
-            );
-        },
+    let calculated_hash = TxInputHash::from(Blake2b128Hash::new(&buffer));
+    if &calculated_hash != hash {
+        report.invalid_value(
+            "txn_inputs_hash",
+            &format!("{hash:?}"),
+            &format!("Must be equal to the value in Cip509 ({hash:?})"),
+            context,
+        );
     }
 }
 
@@ -108,23 +98,23 @@ pub fn validate_aux(
         report.other("Auxiliary data hash not found in transaction", context);
         return;
     };
-
-    match blake2b_256(auxiliary_data) {
-        Ok(h) if h == ***auxiliary_data_hash => {
-            // The hash is correct.
-        },
-        Ok(h) => {
-            report.other(
-                &format!("Incorrect transaction auxiliary data hash = '{h:?}', expected = '{auxiliary_data_hash:?}'"),
-                context,
-            );
-        },
+    let auxiliary_data_hash = match Blake2b256Hash::try_from(auxiliary_data_hash.as_slice()) {
+        Ok(v) => v,
         Err(e) => {
             report.other(
-                &format!("Failed to hash transaction auxiliary data: {e:?}"),
+                &format!("Invalid transaction auxiliary data hash: {e:?}"),
                 context,
             );
+            return;
         },
+    };
+
+    let hash = Blake2b256Hash::new(auxiliary_data);
+    if hash != auxiliary_data_hash {
+        report.other(
+            &format!("Incorrect transaction auxiliary data hash = '{hash:?}', expected = '{auxiliary_data_hash:?}'"),
+            context,
+        );
     }
 }
 

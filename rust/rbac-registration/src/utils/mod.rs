@@ -1,8 +1,8 @@
 //! Utility functions for the RBAC registration module.
 
-pub(crate) mod decode_helper;
+pub mod decode_helper;
+// TODO: FIXME: Remove module or pub crate?
 pub(crate) mod general;
-pub(crate) mod hashing;
 
 #[cfg(test)]
 pub mod test;
