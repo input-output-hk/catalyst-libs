@@ -8,7 +8,7 @@
 
 use std::fmt;
 
-use crate::conversion::from_saturating;
+use catalyst_types::conversion::from_saturating;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd)]
 /// Counter that is incremented every time there is a roll-back in live-chain.

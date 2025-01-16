@@ -5,10 +5,9 @@ use std::{
     ops::{MulAssign, Sub},
 };
 
+use catalyst_types::conversion::from_saturating;
 use num_bigint::{BigInt, Sign};
 use serde::Serialize;
-
-use crate::conversion::from_saturating;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default, Serialize)]
 
