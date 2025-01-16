@@ -5,11 +5,11 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::anyhow;
-use cardano_blockchain_types::{
+use cardano_blockchain_types::{MultiEraBlock, TxnIndex};
+use catalyst_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
-    MultiEraBlock, TxnIndex,
+    problem_report::ProblemReport,
 };
-use catalyst_types::problem_report::ProblemReport;
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
     decode::{self},

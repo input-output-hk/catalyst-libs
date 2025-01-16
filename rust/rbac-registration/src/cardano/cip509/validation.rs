@@ -23,11 +23,11 @@
 
 use std::borrow::Cow;
 
-use cardano_blockchain_types::{
+use cardano_blockchain_types::{TxnWitness, VKeyHash};
+use catalyst_types::{
     hashes::{Blake2b128Hash, Blake2b256Hash},
-    TxnWitness, VKeyHash,
+    problem_report::ProblemReport,
 };
-use catalyst_types::problem_report::ProblemReport;
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -193,7 +193,6 @@ pub fn validate_role_signing_key(role_data: &RoleData, report: &ProblemReport) {
 mod tests {
     use std::str::FromStr;
 
-    use cardano_blockchain_types::hashes::Blake2b256Hash;
     use uuid::Uuid;
 
     use super::*;

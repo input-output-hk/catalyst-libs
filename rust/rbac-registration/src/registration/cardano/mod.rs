@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::hashes::Blake2b256Hash;
+use catalyst_types::hashes::Blake2b256Hash;
 use ed25519_dalek::VerifyingKey;
 use tracing::{error, warn};
 use uuid::Uuid;
