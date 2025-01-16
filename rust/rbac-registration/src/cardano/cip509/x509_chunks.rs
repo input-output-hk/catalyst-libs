@@ -68,9 +68,16 @@ impl Decode<'_, DecodeContext<'_, '_>> for X509Chunks {
 
         // Decode the decompressed data.
         let mut decoder = Decoder::new(&decompressed);
-        let chunk_data = Cip509RbacMetadata::decode(&mut decoder, decode_context).map_err(|e| {
-            decode::Error::message(format!("Failed to decode Cip509 metadata: {e:?}"))
-        })?;
+        let chunk_data = match Cip509RbacMetadata::decode(&mut decoder, decode_context) {
+            Ok(d) => d,
+            Err(e) => {
+                decode_context.report.other(
+                    &format!("Failed to decode: {e:?}"),
+                    "Cip509 chunked metadata",
+                );
+                return Ok(Self(None));
+            },
+        };
 
         Ok(X509Chunks(Some(chunk_data)))
     }

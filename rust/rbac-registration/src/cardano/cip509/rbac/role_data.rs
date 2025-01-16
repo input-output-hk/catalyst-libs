@@ -77,8 +77,7 @@ impl Decode<'_, ProblemReport> for CborRoleData {
                         data.encryption_key = decode_encryption_key(d, context, report);
                     },
                     RoleDataInt::PaymentKey => {
-                        data.payment_key =
-                            Some(decode_helper(d, "PaymentKey in RoleData", &mut ())?);
+                        data.payment_key = decode_payment_key(d, context, report);
                     },
                 }
             } else {
@@ -160,6 +159,20 @@ fn decode_encryption_key(
         Err(e) => {
             report.other(
                 &format!("Unable to decode role encryption key: {e:?}"),
+                context,
+            );
+            None
+        },
+    }
+}
+
+/// Decodes a payment key.
+fn decode_payment_key(d: &mut Decoder, context: &str, report: &ProblemReport) -> Option<u16> {
+    match decode_helper(d, "PaymentKey in RoleData", &mut ()) {
+        Ok(v) => Some(v),
+        Err(e) => {
+            report.other(
+                &format!("Unable to decode role payment key: {e:?}"),
                 context,
             );
             None
