@@ -8,9 +8,10 @@ use std::{
     fmt::{Debug, Display, Formatter},
 };
 
+use catalyst_types::hashes::Blake2b256Hash;
 use pallas::crypto::hash::Hash;
 
-use crate::{hashes::Blake2b256Hash, Slot};
+use crate::Slot;
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
@@ -347,11 +348,9 @@ impl PartialEq<Option<Blake2b256Hash>> for Point {
                     pallas::network::miniprotocols::Point::Origin => false,
                 }
             },
-            None => {
-                match self.0 {
-                    pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
-                    pallas::network::miniprotocols::Point::Origin => true,
-                }
+            None => match self.0 {
+                pallas::network::miniprotocols::Point::Specific(_, ref hash) => hash.is_empty(),
+                pallas::network::miniprotocols::Point::Origin => true,
             },
         }
     }
@@ -470,26 +469,22 @@ fn cmp_point(
     a: &pallas::network::miniprotocols::Point, b: &pallas::network::miniprotocols::Point,
 ) -> Ordering {
     match a {
-        pallas::network::miniprotocols::Point::Origin => {
-            match b {
-                pallas::network::miniprotocols::Point::Origin => Ordering::Equal,
-                pallas::network::miniprotocols::Point::Specific(..) => Ordering::Less,
-            }
+        pallas::network::miniprotocols::Point::Origin => match b {
+            pallas::network::miniprotocols::Point::Origin => Ordering::Equal,
+            pallas::network::miniprotocols::Point::Specific(..) => Ordering::Less,
         },
-        pallas::network::miniprotocols::Point::Specific(slot, _) => {
-            match b {
-                pallas::network::miniprotocols::Point::Origin => Ordering::Greater,
-                pallas::network::miniprotocols::Point::Specific(other_slot, _) => {
-                    slot.cmp(other_slot)
-                },
-            }
+        pallas::network::miniprotocols::Point::Specific(slot, _) => match b {
+            pallas::network::miniprotocols::Point::Origin => Ordering::Greater,
+            pallas::network::miniprotocols::Point::Specific(other_slot, _) => slot.cmp(other_slot),
         },
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::{hashes::Blake2bHash, point::*};
+    use catalyst_types::hashes::Blake2bHash;
+
+    use crate::point::*;
 
     #[test]
     fn test_cmp_hash_simple() {

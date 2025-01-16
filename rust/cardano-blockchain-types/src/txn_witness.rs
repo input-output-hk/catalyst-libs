@@ -1,11 +1,12 @@
 //! Transaction Witness
 use std::fmt::{Display, Formatter};
 
+use catalyst_types::{conversion::vkey_from_bytes, hashes::Blake2b224Hash};
 use dashmap::{DashMap, DashSet};
 use ed25519_dalek::VerifyingKey;
 use pallas::ledger::traverse::MultiEraTx;
 
-use crate::{conversion::vkey_from_bytes, hashes::Blake2b224Hash, TxnIndex};
+use crate::TxnIndex;
 
 /// Hash of a witness verifying public key
 pub type VKeyHash = Blake2b224Hash;
