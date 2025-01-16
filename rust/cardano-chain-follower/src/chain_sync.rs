@@ -414,11 +414,11 @@ async fn live_sync_backfill(
 /// Call the live sync backfill.
 /// This is a helper function to pause and resume the stats thread.
 async fn call_live_sync_backfill(
-    cfg: &ChainSyncConfig, name: &str, update: &MithrilUpdateMessage,
+    cfg: &ChainSyncConfig, update: &MithrilUpdateMessage,
 ) -> anyhow::Result<()> {
-    stats::pause_thread(cfg.chain, name);
+    stats::pause_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
     let result = live_sync_backfill(cfg, update).await;
-    stats::resume_thread(cfg.chain, name);
+    stats::resume_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
     result
 }
 
@@ -427,14 +427,15 @@ async fn live_sync_backfill_and_purge(
     cfg: ChainSyncConfig, mut rx: mpsc::Receiver<MithrilUpdateMessage>,
     mut sync_ready: SyncReadyWaiter,
 ) {
-    /// Thread name for stats.
-    const THREAD_NAME: &str = "LiveSyncBackfillAndPurge";
-
-    stats::start_thread(cfg.chain, THREAD_NAME, true);
+    stats::start_thread(
+        cfg.chain,
+        stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE,
+        true,
+    );
     // Wait for first Mithril Update advice, which triggers a BACKFILL of the Live Data.
     let Some(update) = rx.recv().await else {
         error!("Mithril Sync Failed, can not continue chain sync either.");
-        stats::stop_thread(cfg.chain, THREAD_NAME);
+        stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
         return;
     };
 
@@ -449,7 +450,7 @@ async fn live_sync_backfill_and_purge(
         // We will re-attempt backfill, until its successful.
         // Backfill is atomic, it either fully works, or none of the live-chain is changed.
         debug!("Mithril Tip has advanced to: {update:?} : BACKFILL");
-        while let Err(error) = call_live_sync_backfill(&cfg, THREAD_NAME, &update).await {
+        while let Err(error) = call_live_sync_backfill(&cfg, &update).await {
             error!("Mithril Backfill Sync Failed: {}", error);
             sleep(Duration::from_secs(10)).await;
         }
@@ -480,7 +481,7 @@ async fn live_sync_backfill_and_purge(
     loop {
         let Some(update) = rx.recv().await else {
             error!("Mithril Sync Failed, can not continue chain sync either.");
-            stats::stop_thread(cfg.chain, THREAD_NAME);
+            stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
             return;
         };
 

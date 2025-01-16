@@ -447,9 +447,7 @@ impl ParallelDownloadProcessor {
         params: &Arc<ParallelDownloadProcessorInner>, worker_id: usize,
         work_queue: &crossbeam_channel::Receiver<DlWorkOrder>, chain: Network,
     ) {
-        /// Thread name for stats.
-        const THREAD_NAME: &str = "ParallelDownloadProcessor::Worker";
-        let thread_name = format!("{THREAD_NAME}::{worker_id}");
+        let thread_name = format!("{}::{worker_id}", stats::thread::name::PARALLEL_DL_WORKER);
 
         stats::start_thread(chain, thread_name.as_str(), false);
 
@@ -705,14 +703,15 @@ impl std::io::Read for ParallelDownloadProcessor {
 /// This exists because the `Probe` call made by Mithril is Async, and this makes
 /// interfacing to that easier.
 async fn get_content_length_async(url: &str, chain: Network) -> anyhow::Result<usize> {
-    /// Thread name for stats.
-    const THREAD_NAME: &str = "GetContentLength";
-
     let url = url.to_owned();
     match tokio::task::spawn_blocking(move || {
-        stats::start_thread(chain, THREAD_NAME, false);
+        stats::start_thread(
+            chain,
+            stats::thread::name::PARALLEL_DL_GET_CONTENT_LENGTH,
+            false,
+        );
         let result = get_content_length(&url);
-        stats::stop_thread(chain, THREAD_NAME);
+        stats::stop_thread(chain, stats::thread::name::PARALLEL_DL_GET_CONTENT_LENGTH);
         result
     })
     .await

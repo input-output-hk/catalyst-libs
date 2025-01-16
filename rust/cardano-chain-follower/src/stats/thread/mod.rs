@@ -1,5 +1,7 @@
 //! Thread statistics.
 
+pub(crate) mod name;
+
 use std::{
     fmt,
     sync::{

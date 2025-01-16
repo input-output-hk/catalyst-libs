@@ -386,9 +386,6 @@ impl MithrilSnapshotConfig {
 
     /// Run a Mithril Follower for the given network and configuration.
     pub(crate) async fn run(&self) -> Result<mpsc::Receiver<MithrilUpdateMessage>> {
-        /// Thread name for stats.
-        const THREAD_NAME: &str = "MithrilSnapshotUpdater";
-
         debug!(
             chain = self.chain.to_string(),
             "Mithril Auto-update : Starting"
@@ -421,7 +418,11 @@ impl MithrilSnapshotConfig {
 
         // Wrap inside a panic catcher to detect if the task panics.
         let result = panic::catch_unwind(|| {
-            stats::start_thread(self.chain, THREAD_NAME, true);
+            stats::start_thread(
+                self.chain,
+                stats::thread::name::MITHRIL_SNAPSHOT_UPDATER,
+                true,
+            );
             tokio::spawn(background_mithril_update(self.clone(), tx))
         });
 
@@ -433,7 +434,7 @@ impl MithrilSnapshotConfig {
                 chain = self.chain.to_string(),
                 "Background Mithril Update for {} : PANICKED", self.chain
             );
-            stats::stop_thread(self.chain, THREAD_NAME);
+            stats::stop_thread(self.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
         }
 
         // sync_map.insert(chain, handle);

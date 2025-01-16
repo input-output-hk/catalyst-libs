@@ -319,9 +319,6 @@ impl MithrilTurboDownloader {
 
     /// Parallel Download, Extract and Dedup the Mithril Archive.
     async fn dl_and_dedup(&self, location: &str, target_dir: &Path) -> MithrilResult<()> {
-        /// Thread name for stats.
-        const THREAD_NAME: &str = "MithrilTurboDownloader::DlAndDedup";
-
         // Get a copy of the inner data to use in the sync download task.
         let inner = self.inner.clone();
         let location = location.to_owned();
@@ -329,9 +326,13 @@ impl MithrilTurboDownloader {
 
         // This is fully synchronous IO, so do it on a sync thread.
         let result = spawn_blocking(move || {
-            stats::start_thread(inner.cfg.chain, THREAD_NAME, false);
+            stats::start_thread(
+                inner.cfg.chain,
+                stats::thread::name::MITHRIL_DL_DEDUP,
+                false,
+            );
             let result = inner.dl_and_dedup(&location, &target_dir);
-            stats::stop_thread(inner.cfg.chain, THREAD_NAME);
+            stats::stop_thread(inner.cfg.chain, stats::thread::name::MITHRIL_DL_DEDUP);
             result
         })
         .await;

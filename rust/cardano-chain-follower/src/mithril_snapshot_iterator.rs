@@ -192,17 +192,21 @@ impl MithrilSnapshotIterator {
     /// Get the next block, in a way that is Async friendly.
     /// Returns the next block, or None if there are no more blocks.
     pub(crate) async fn next(&self) -> Option<MultiEraBlock> {
-        /// Thread name for stats.
-        const THREAD_NAME: &str = "MithrilSnapshotIterator::Next";
-
         let inner = self.inner.clone();
 
         let res = task::spawn_blocking(move || {
             #[allow(clippy::unwrap_used)] // Unwrap is safe here because the lock can't be poisoned.
             let mut inner_iterator = inner.lock().unwrap();
-            stats::start_thread(inner_iterator.chain, THREAD_NAME, false);
+            stats::start_thread(
+                inner_iterator.chain,
+                stats::thread::name::MITHRIL_ITERATOR_NEXT,
+                false,
+            );
             let next = inner_iterator.next();
-            stats::stop_thread(inner_iterator.chain, THREAD_NAME);
+            stats::stop_thread(
+                inner_iterator.chain,
+                stats::thread::name::MITHRIL_ITERATOR_NEXT,
+            );
             next
         })
         .await;

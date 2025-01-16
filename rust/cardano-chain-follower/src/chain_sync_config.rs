@@ -125,8 +125,6 @@ impl ChainSyncConfig {
     ///
     /// `Error`: On error.
     pub async fn run(self) -> Result<()> {
-        /// Thread name for stats.
-        const THREAD_NAME: &str = "ChainSync";
         debug!(
             chain = self.chain.to_string(),
             "Chain Synchronization Starting"
@@ -154,7 +152,7 @@ impl ChainSyncConfig {
 
         // Wrap inside a panic catcher to detect if the task panics.
         let result = panic::catch_unwind(|| {
-            stats::start_thread(self.chain, THREAD_NAME, true);
+            stats::start_thread(self.chain, stats::thread::name::CHAIN_SYNC, true);
             // Start Chain Sync
             tokio::spawn(chain_sync(self.clone(), rx))
         });
@@ -167,7 +165,7 @@ impl ChainSyncConfig {
                 chain = self.chain.to_string(),
                 "Chain Sync for {} : PANICKED", self.chain
             );
-            stats::stop_thread(self.chain, THREAD_NAME);
+            stats::stop_thread(self.chain, stats::thread::name::CHAIN_SYNC);
         }
 
         // sync_map.insert(chain, handle);
