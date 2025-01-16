@@ -119,8 +119,14 @@ mod tests {
     #[test]
     fn test_optional_cbor_uuid_v4_roundtrip() {
         let uuid: V4 = uuid::Uuid::new_v4().into();
+
         let mut bytes = Vec::new();
-        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Optional).unwrap();
+        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
+        let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Optional).unwrap();
+        assert_eq!(uuid, decoded);
+
+        let mut bytes = Vec::new();
+        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Tagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Optional).unwrap();
         assert_eq!(uuid, decoded);
     }
@@ -128,10 +134,6 @@ mod tests {
     #[test]
     fn test_optional_cbor_uuid_v7_roundtrip() {
         let uuid: V7 = uuid::Uuid::now_v7().into();
-        let mut bytes = Vec::new();
-        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Optional).unwrap();
-        let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Optional).unwrap();
-        assert_eq!(uuid, decoded);
 
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
