@@ -11,7 +11,7 @@ mod document_version;
 
 pub use additional_fields::AdditionalFields;
 use anyhow::anyhow;
-pub use catalyst_types::uuid::{V4 as UuidV4, V7 as UuidV7};
+pub use catalyst_types::uuid::{CborContext, V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::CborSerializable;
@@ -221,23 +221,26 @@ fn cose_protected_header_find(
 }
 
 /// Convert from `minicbor` into `coset::cbor::Value`.
-pub(crate) fn encode_cbor_value<T: minicbor::encode::Encode<()>>(
+pub(crate) fn encode_cbor_value<T: minicbor::encode::Encode<CborContext>>(
     value: T,
 ) -> anyhow::Result<coset::cbor::Value> {
     let mut cbor_bytes = Vec::new();
-    minicbor::encode(value, &mut cbor_bytes)
+    minicbor::encode_with(value, &mut cbor_bytes, &mut CborContext::Tagged)
         .map_err(|e| anyhow::anyhow!("Unable to encode CBOR value, err: {e}"))?;
     coset::cbor::Value::from_slice(&cbor_bytes)
         .map_err(|e| anyhow::anyhow!("Invalid CBOR value, err: {e}"))
 }
 
 /// Convert `coset::cbor::Value` into `UuidV4`.
-pub(crate) fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, ()> + From<uuid::Uuid>>(
+pub(crate) fn decode_cbor_uuid<
+    T: for<'a> minicbor::decode::Decode<'a, CborContext> + From<uuid::Uuid>,
+>(
     value: coset::cbor::Value,
 ) -> anyhow::Result<T> {
     match value.to_vec() {
         Ok(cbor_value) => {
-            minicbor::decode(&cbor_value).map_err(|e| anyhow!("Invalid UUID, err: {e}"))
+            minicbor::decode_with(&cbor_value, &mut CborContext::Tagged)
+                .map_err(|e| anyhow!("Invalid UUID, err: {e}"))
         },
         Err(e) => anyhow::bail!("Invalid CBOR value, err: {e}"),
     }
