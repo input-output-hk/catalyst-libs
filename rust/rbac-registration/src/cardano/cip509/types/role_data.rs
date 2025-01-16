@@ -10,13 +10,10 @@ use pallas::ledger::{
     traverse::MultiEraTx,
 };
 
-use crate::{
-    cardano::cip509::{
-        rbac::role_data::CborRoleData,
-        utils::cip19::{compare_key_hash, extract_key_hash},
-        KeyLocalRef, RoleNumber,
-    },
-    utils::general::decremented_index,
+use crate::cardano::cip509::{
+    rbac::role_data::CborRoleData,
+    utils::cip19::{compare_key_hash, extract_key_hash},
+    KeyLocalRef, RoleNumber,
 };
 
 /// A role data.
@@ -94,59 +91,10 @@ impl RoleData {
 
 /// Converts the payment key from the form encoded in CBOR role data to `ShelleyAddress`.
 fn convert_payment_key(
-    key: Option<i16>, txn: &conway::MintedTx, context: &str, report: &ProblemReport,
+    index: Option<u16>, txn: &conway::MintedTx, context: &str, report: &ProblemReport,
 ) -> Option<ShelleyAddress> {
-    let key = key?;
+    let index: usize = index?.into();
 
-    if key == 0 {
-        report.invalid_value(
-            "payment key",
-            "0",
-            "Payment reference key must not be 0",
-            context,
-        );
-        return None;
-    }
-
-    let index = match decremented_index(key.abs()) {
-        Ok(value) => value,
-        Err(e) => {
-            report.other(
-                &format!("Invalid index ({key:?}) of the payment key: {e:?}"),
-                context,
-            );
-            return None;
-        },
-    };
-
-    // Negative indicates reference to transaction output.
-    if key < 0 {
-        convert_transaction_output(index, txn, context, report)
-    } else {
-        // Positive indicates reference to tx input.
-        let inputs = &txn.transaction_body.inputs;
-        // Check whether the index exists in transaction inputs.
-        if inputs.get(index).is_none() {
-            report.other(
-                &format!(
-                    "Role payment key reference index ({index}) is not found in transaction inputs"
-                ),
-                context,
-            );
-        }
-
-        report.other(
-            &format!("Payment key reference ({key:?}) to transaction input is unsupported"),
-            context,
-        );
-        None
-    }
-}
-
-/// Converts payment key transaction output reference to `ShelleyAddress`.
-fn convert_transaction_output(
-    index: usize, txn: &conway::MintedTx, context: &str, report: &ProblemReport,
-) -> Option<ShelleyAddress> {
     let outputs = &txn.transaction_body.outputs;
     let txn = MultiEraTx::Conway(Box::new(Cow::Borrowed(txn)));
     let witness = match TxnWitness::new(&[txn]) {
@@ -161,7 +109,9 @@ fn convert_transaction_output(
         Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
         Some(conway::PseudoTransactionOutput::Legacy(_)) => {
             report.other(
-                &format!("Unsupported legacy transaction output type in payment key reference (index = {index})"),
+                &format!(
+                    "Unsupported legacy transaction output type in payment key index ({index})"
+                ),
                 context,
             );
             return None;
@@ -177,20 +127,19 @@ fn convert_transaction_output(
         },
     };
     validate_payment_output(address, &witness, context, report);
+
     match Address::from_bytes(address) {
         Ok(Address::Shelley(a)) => Some(a),
         Ok(a) => {
             report.other(
-                &format!(
-                    "Unsupported address type ({a:?}) in payment key reference (index = {index})"
-                ),
+                &format!("Unsupported address type ({a:?}) in payment key index ({index})"),
                 context,
             );
             None
         },
         Err(e) => {
             report.other(
-                &format!("Invalid address in payment key reference (index = {index}): {e:?}"),
+                &format!("Invalid address in payment key index ({index}): {e:?}"),
                 context,
             );
             None

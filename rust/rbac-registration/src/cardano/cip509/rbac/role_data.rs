@@ -23,7 +23,7 @@ pub struct CborRoleData {
     /// Optional role encryption key.
     pub encryption_key: Option<KeyLocalRef>,
     /// Optional payment key.
-    pub payment_key: Option<i16>,
+    pub payment_key: Option<u16>,
     /// Optional role extended data keys.
     /// Empty map if no role extended data keys.
     pub extended_data: HashMap<u8, Vec<u8>>,
