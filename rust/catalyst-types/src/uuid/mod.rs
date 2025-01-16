@@ -1,10 +1,5 @@
 //! `UUID` types.
 
-use displaydoc::Display;
-use minicbor::Decoder;
-use thiserror::Error;
-use uuid::Uuid;
-
 mod uuid_v4;
 mod uuid_v7;
 
@@ -14,39 +9,26 @@ pub use uuid_v7::UuidV7 as V7;
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 
-// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
-// pub(crate) const UUID_CBOR_TAG: u64 = 37;
-
-/// Errors that can occur when decoding CBOR-encoded UUIDs.
-#[derive(Display, Debug, Error)]
-pub enum CborUuidError {
-    /// Invalid CBOR encoded UUID type
-    InvalidCborType,
-    /// Invalid CBOR encoded UUID type: invalid bytes size
-    InvalidByteSize,
-    /// UUID {uuid} is not `v{expected_version}`
-    InvalidVersion {
-        /// The decoded UUID that was checked.
-        uuid: Uuid,
-        /// The expected version of the UUID, which did not match the decoded one.
-        expected_version: usize,
-    },
-}
+/// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
+#[allow(dead_code)]
+const UUID_CBOR_TAG: u64 = 37;
 
 /// Decode from `CBOR` into `UUID`
-pub(crate) fn decode_cbor_uuid<C>(
-    d: &mut Decoder<'_>, ctx: &mut C,
+fn decode_cbor_uuid<C>(
+    d: &mut minicbor::Decoder<'_>, _ctx: &mut C,
 ) -> Result<uuid::Uuid, minicbor::decode::Error> {
-    let decoded: [u8; 16] = d.decode_with(ctx)?;
+    let decoded: [u8; 16] = d.bytes()?.try_into().map_err(|_| {
+        minicbor::decode::Error::message("Invalid CBOR encoded UUID type: invalid bytes size")
+    })?;
     let uuid = uuid::Uuid::from_bytes(decoded);
     Ok(uuid)
 }
 
 /// Encode `UUID` into `CBOR`
-pub(crate) fn encode_cbor_uuid<C, W: minicbor::encode::Write>(
-    uuid: uuid::Uuid, e: &mut minicbor::Encoder<W>, ctx: &mut C,
+fn encode_cbor_uuid<C, W: minicbor::encode::Write>(
+    uuid: uuid::Uuid, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
 ) -> Result<(), minicbor::encode::Error<W::Error>> {
-    e.encode_with(uuid.as_bytes(), ctx)?;
+    e.bytes(uuid.as_bytes())?;
     Ok(())
 }
 
