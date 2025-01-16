@@ -13,11 +13,46 @@ pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 #[allow(dead_code)]
 const UUID_CBOR_TAG: u64 = 37;
 
+/// Context for `CBOR` encoding and decoding
+pub enum CborContext {
+    /// Untagged bytes
+    Untagged,
+    /// IANA CBOR tag and bytes
+    Tagged,
+    /// Optional tag
+    Optional,
+}
+
 /// Decode from `CBOR` into `UUID`
-fn decode_cbor_uuid<C>(
-    d: &mut minicbor::Decoder<'_>, _ctx: &mut C,
+fn decode_cbor_uuid(
+    d: &mut minicbor::Decoder<'_>, ctx: &mut CborContext,
 ) -> Result<uuid::Uuid, minicbor::decode::Error> {
-    let decoded: [u8; 16] = d.bytes()?.try_into().map_err(|_| {
+    let bytes = match ctx {
+        CborContext::Untagged => d.bytes()?,
+        CborContext::Tagged => {
+            let tag = d.tag()?.as_u64();
+            if UUID_CBOR_TAG == tag {
+                return Err(minicbor::decode::Error::message(format!(
+                    "tag value must be: {UUID_CBOR_TAG}, provided: {tag}"
+                )));
+            }
+            d.bytes()?
+        },
+        CborContext::Optional => {
+            if let Ok(tag) = d.tag() {
+                let tag = tag.as_u64();
+                if UUID_CBOR_TAG == tag {
+                    return Err(minicbor::decode::Error::message(format!(
+                        "tag value must be: {UUID_CBOR_TAG}, provided: {tag}"
+                    )));
+                }
+                d.bytes()?
+            } else {
+                d.bytes()?
+            }
+        },
+    };
+    let decoded: [u8; 16] = bytes.try_into().map_err(|_| {
         minicbor::decode::Error::message("Invalid CBOR encoded UUID type: invalid bytes size")
     })?;
     let uuid = uuid::Uuid::from_bytes(decoded);
@@ -34,9 +69,10 @@ fn encode_cbor_uuid<C, W: minicbor::encode::Write>(
 
 #[cfg(test)]
 mod tests {
-    use minicbor::data::Tagged;
+    use minicbor::data::{Tag, Tagged};
 
     use super::{V4, V7};
+    use crate::uuid::CborContext;
 
     const UUID_CBOR_TAG: u64 = 37;
 
@@ -45,7 +81,7 @@ mod tests {
         let uuid: V4 = uuid::Uuid::new_v4().into();
         let mut bytes = Vec::new();
         minicbor::encode(uuid, &mut bytes).unwrap();
-        let decoded = minicbor::decode(bytes.as_slice()).unwrap();
+        let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
         assert_eq!(uuid, decoded);
     }
 
@@ -54,7 +90,7 @@ mod tests {
         let uuid: V7 = uuid::Uuid::now_v7().into();
         let mut bytes = Vec::new();
         minicbor::encode(uuid, &mut bytes).unwrap();
-        let decoded = minicbor::decode(bytes.as_slice()).unwrap();
+        let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
         assert_eq!(uuid, decoded);
     }
 
@@ -64,7 +100,7 @@ mod tests {
         let tagged: Tagged<UUID_CBOR_TAG, V4> = uuid.into();
         let mut bytes = Vec::new();
         minicbor::encode(tagged, &mut bytes).unwrap();
-        let decoded = minicbor::decode(bytes.as_slice()).unwrap();
+        let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
         assert_eq!(tagged, decoded);
     }
 
@@ -74,7 +110,8 @@ mod tests {
         let tagged: Tagged<UUID_CBOR_TAG, V7> = uuid.into();
         let mut bytes = Vec::new();
         minicbor::encode(tagged, &mut bytes).unwrap();
-        let decoded = minicbor::decode(bytes.as_slice()).unwrap();
+        let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
         assert_eq!(tagged, decoded);
+        assert_eq!(tagged.tag(), Tag::new(UUID_CBOR_TAG));
     }
 }

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use minicbor::{Decode, Decoder, Encode};
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, INVALID_UUID};
+use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, INVALID_UUID};
 
 /// Type representing a `UUIDv4`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
@@ -43,8 +43,8 @@ impl Display for UuidV4 {
     }
 }
 
-impl<C> Decode<'_, C> for UuidV4 {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
+impl Decode<'_, CborContext> for UuidV4 {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut CborContext) -> Result<Self, minicbor::decode::Error> {
         let uuid = decode_cbor_uuid(d, ctx)?;
         Ok(Self { uuid })
     }
