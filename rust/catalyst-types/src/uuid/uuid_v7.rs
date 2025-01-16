@@ -43,16 +43,16 @@ impl Display for UuidV7 {
     }
 }
 
-impl Decode<'_, ()> for UuidV7 {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+impl<C> Decode<'_, C> for UuidV7 {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
         let uuid = decode_cbor_uuid(d, ctx)?;
         Ok(Self { uuid })
     }
 }
 
-impl Encode<()> for UuidV7 {
+impl<C> Encode<C> for UuidV7 {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         encode_cbor_uuid(self.uuid(), e, ctx)
     }
