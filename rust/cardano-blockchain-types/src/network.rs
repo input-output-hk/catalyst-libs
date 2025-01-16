@@ -2,6 +2,7 @@
 
 use std::{ffi::OsStr, path::PathBuf};
 
+use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
 use pallas::{
     ledger::traverse::wellknown::GenesisValues,
@@ -11,7 +12,7 @@ use pallas::{
 // use strum_macros;
 use tracing::debug;
 
-use crate::{conversion::from_saturating, Slot};
+use crate::Slot;
 
 /// Default name of the executable if we can't derive it.
 pub(crate) const DEFAULT_EXE_NAME: &str = "cardano_chain_follower";
