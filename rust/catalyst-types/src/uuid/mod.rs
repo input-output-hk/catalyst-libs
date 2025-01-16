@@ -37,13 +37,7 @@ pub enum CborUuidError {
 pub(crate) fn decode_cbor_uuid<C>(
     d: &mut Decoder<'_>, ctx: &mut C,
 ) -> Result<uuid::Uuid, minicbor::decode::Error> {
-    let decoded_vec: Vec<u8> = d.decode_with(ctx)?;
-    let decoded = decoded_vec.try_into().map_err(|e| {
-        minicbor::decode::Error::message(format!(
-            "Expected UUID to have 16 bytes, err: {}",
-            hex::encode(e)
-        ))
-    })?;
+    let decoded: [u8; 16] = d.decode_with(ctx)?;
     let uuid = uuid::Uuid::from_bytes(decoded);
     Ok(uuid)
 }
