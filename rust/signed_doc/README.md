@@ -26,6 +26,3 @@ Inspect document
 ```shell
 cargo run -p catalyst-signed-doc --example mk_signed_doc inspect signed_doc/doc.cose
 ```
-
-[COSE]: https://datatracker.ietf.org/doc/html/rfc9052
-[brotli]: https://datatracker.ietf.org/doc/html/rfc7932
