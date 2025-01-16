@@ -50,9 +50,9 @@ impl Decode<'_, CborContext> for UuidV7 {
     }
 }
 
-impl<C> Encode<C> for UuidV7 {
+impl Encode<CborContext> for UuidV7 {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut C,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut CborContext,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         encode_cbor_uuid(self.uuid(), e, ctx)
     }
