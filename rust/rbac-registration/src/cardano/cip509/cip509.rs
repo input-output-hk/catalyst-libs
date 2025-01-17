@@ -172,7 +172,7 @@ impl Cip509 {
         // The following checks are only performed for the role 0.
         if let Some(role_data) = cip509.role_data(RoleNumber::ROLE_0) {
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
-            validate_role_signing_key(role_data, &cip509.report);
+            validate_role_signing_key(role_data, cip509.metadata.as_ref(), &cip509.report);
         }
 
         Ok(Some(cip509))

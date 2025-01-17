@@ -37,7 +37,9 @@ use pallas::{
 };
 
 use super::utils::cip19::compare_key_hash;
-use crate::cardano::cip509::{types::TxInputHash, Cip0134UriSet, LocalRefInt, RoleData};
+use crate::cardano::cip509::{
+    rbac::Cip509RbacMetadata, types::TxInputHash, Cip0134UriSet, KeyLocalRef, LocalRefInt, RoleData,
+};
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
@@ -174,17 +176,71 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 
 /// Validate role singing key for role 0.
 /// Must reference certificate not the public key
-pub fn validate_role_signing_key(role_data: &RoleData, report: &ProblemReport) {
-    let Some(role_signing_key) = role_data.signing_key() else {
+pub fn validate_role_signing_key(
+    role_data: &RoleData, metadata: Option<&Cip509RbacMetadata>, report: &ProblemReport,
+) {
+    let context = "Cip509 role0 signing key validation";
+
+    let Some(signing_key) = role_data.signing_key() else {
+        report.missing_field("RoleData::signing_key", context);
         return;
     };
 
-    if role_signing_key.local_ref == LocalRefInt::PubKeys {
+    let Some(metadata) = metadata else {
+        report.other("Missing metadata", context);
+        return;
+    };
+
+    match signing_key.local_ref {
+        LocalRefInt::X509Certs => {
+            check_key_offset(
+                signing_key,
+                metadata.x509_certs.as_slice(),
+                "X509",
+                context,
+                report,
+            );
+        },
+        LocalRefInt::C509Certs => {
+            check_key_offset(
+                signing_key,
+                metadata.c509_certs.as_slice(),
+                "C509",
+                context,
+                report,
+            );
+        },
+        LocalRefInt::PubKeys => {
+            report.invalid_value(
+                "RoleData::signing_key",
+                &format!("{signing_key:?}"),
+                "Role signing key should reference certificate, not public key",
+                context,
+            );
+        },
+    }
+}
+
+fn check_key_offset<T>(
+    key: &KeyLocalRef, certificates: &[T], certificate_type: &str, context: &str,
+    report: &ProblemReport,
+) {
+    let Ok(offset) = usize::try_from(key.key_offset) else {
         report.invalid_value(
-            "RoleData::role_signing_key",
-            &format!("{role_signing_key:?}"),
-            "Role signing key should reference certificate, not public key",
-            "Cip509 role0 signing key validation",
+            "RoleData::signing_key",
+            &format!("{key:?}"),
+            "Role signing key offset is too big",
+            context,
+        );
+        return;
+    };
+
+    if offset >= certificates.len() {
+        report.invalid_value(
+            "RoleData::signing_key",
+            &format!("{key:?}"),
+            &format!("Role signing key should reference existing certificate, but there are only {} {} certificates in this registration", certificates.len(), certificate_type),
+            context,
         );
     }
 }
