@@ -1,5 +1,6 @@
 //! Catalyst documents signing crate
 
+mod builder;
 mod content;
 mod error;
 mod metadata;
@@ -12,6 +13,7 @@ use std::{
 };
 
 use anyhow::anyhow;
+pub use builder::Builder;
 use content::Content;
 use coset::CborSerializable;
 pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV7};
@@ -35,7 +37,7 @@ struct InnerCatalystSignedDocument {
 /// non-optional.
 pub struct CatalystSignedDocument {
     /// Catalyst Signed Document metadata, raw doc, with content errors.
-    inner: Arc<InnerCatalystSignedDocument>,
+    pub(crate) inner: Arc<InnerCatalystSignedDocument>,
 }
 
 impl Display for CatalystSignedDocument {
