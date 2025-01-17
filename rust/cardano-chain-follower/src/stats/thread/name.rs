@@ -10,8 +10,6 @@ pub(crate) const LIVE_SYNC_BACKFILL_AND_PURGE: &str = "LiveSyncBackfillAndPurge"
 pub(crate) const MITHRIL_ITERATOR: &str = "MithrilIterator";
 /// Background Mithril Snapshot Updater.
 pub(crate) const MITHRIL_SNAPSHOT_UPDATER: &str = "MithrilSnapshotUpdater";
-/// Mithril Snapshot Iterator Next.
-pub(crate) const MITHRIL_ITERATOR_NEXT: &str = "MithrilIteratorNext";
 /// Mithril compute snapshot.
 pub(crate) const COMPUTE_SNAPSHOT_MSG: &str = "ComputeSnapshotMsg";
 /// Background Mithril Snapshot Validator.

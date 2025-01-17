@@ -1,7 +1,6 @@
 //! Configuration for the Mithril Snapshot used by the follower.
 
 use std::{
-    panic,
     path::{Path, PathBuf},
     str::FromStr,
     sync::LazyLock,
@@ -415,27 +414,16 @@ impl MithrilSnapshotConfig {
         let (tx, rx) = mpsc::channel::<MithrilUpdateMessage>(2);
 
         // let handle = tokio::spawn(background_mithril_update(chain, self.clone(), tx));
-
-        // Wrap inside a panic catcher to detect if the task panics.
-        let result = panic::catch_unwind(|| {
+        let config = self.clone();
+        *locked_handle = Some(tokio::spawn(async move {
             stats::start_thread(
-                self.chain,
+                config.chain,
                 stats::thread::name::MITHRIL_SNAPSHOT_UPDATER,
                 true,
             );
-            tokio::spawn(background_mithril_update(self.clone(), tx))
-        });
-
-        if let Ok(handle) = result {
-            *locked_handle = Some(handle);
-        } else {
-            // Mithril update panic, stop the thread and log.
-            error!(
-                chain = self.chain.to_string(),
-                "Background Mithril Update for {} : PANICKED", self.chain
-            );
-            stats::stop_thread(self.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
-        }
+            background_mithril_update(config.clone(), tx).await;
+            stats::stop_thread(config.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
+        }));
 
         // sync_map.insert(chain, handle);
         debug!(

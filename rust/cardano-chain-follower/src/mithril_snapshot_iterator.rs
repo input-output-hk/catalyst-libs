@@ -15,7 +15,6 @@ use tracing_log::log;
 use crate::{
     error::{Error, Result},
     mithril_query::{make_mithril_iterator, ImmutableBlockIterator},
-    stats,
 };
 
 /// Search backwards by 60 slots (seconds) looking for a previous block.
@@ -197,17 +196,7 @@ impl MithrilSnapshotIterator {
         let res = task::spawn_blocking(move || {
             #[allow(clippy::unwrap_used)] // Unwrap is safe here because the lock can't be poisoned.
             let mut inner_iterator = inner.lock().unwrap();
-            stats::start_thread(
-                inner_iterator.chain,
-                stats::thread::name::MITHRIL_ITERATOR_NEXT,
-                false,
-            );
-            let next = inner_iterator.next();
-            stats::stop_thread(
-                inner_iterator.chain,
-                stats::thread::name::MITHRIL_ITERATOR_NEXT,
-            );
-            next
+            inner_iterator.next()
         })
         .await;
 

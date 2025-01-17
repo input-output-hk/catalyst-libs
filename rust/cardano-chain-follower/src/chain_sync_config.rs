@@ -4,7 +4,7 @@
 //! each network. Chain Followers use the data supplied by the Chain-Sync.
 //! This module configures the chain sync processes.
 
-use std::{panic, sync::LazyLock};
+use std::sync::LazyLock;
 
 use cardano_blockchain_types::Network;
 use dashmap::DashMap;
@@ -150,23 +150,13 @@ impl ChainSyncConfig {
         // Start the Mithril Snapshot Follower
         let rx = self.mithril_cfg.run().await?;
 
-        // Wrap inside a panic catcher to detect if the task panics.
-        let result = panic::catch_unwind(|| {
-            stats::start_thread(self.chain, stats::thread::name::CHAIN_SYNC, true);
-            // Start Chain Sync
-            tokio::spawn(chain_sync(self.clone(), rx))
-        });
-
-        if let Ok(handle) = result {
-            *locked_handle = Some(handle);
-        } else {
-            // Chain sync panic, stop the thread and log.
-            error!(
-                chain = self.chain.to_string(),
-                "Chain Sync for {} : PANICKED", self.chain
-            );
-            stats::stop_thread(self.chain, stats::thread::name::CHAIN_SYNC);
-        }
+        let config = self.clone();
+        // Start Chain Sync
+        *locked_handle = Some(tokio::spawn(async move {
+            stats::start_thread(config.chain, stats::thread::name::CHAIN_SYNC, true);
+            chain_sync(config.clone(), rx).await;
+            stats::stop_thread(config.chain, stats::thread::name::CHAIN_SYNC);
+        }));
 
         // sync_map.insert(chain, handle);
         debug!("Chain Sync for {} : Started", self.chain);

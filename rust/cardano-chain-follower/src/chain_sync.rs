@@ -411,31 +411,14 @@ async fn live_sync_backfill(
     Ok(())
 }
 
-/// Call the live sync backfill.
-/// This is a helper function to pause and resume the stats thread.
-async fn call_live_sync_backfill(
-    cfg: &ChainSyncConfig, update: &MithrilUpdateMessage,
-) -> anyhow::Result<()> {
-    stats::pause_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
-    let result = live_sync_backfill(cfg, update).await;
-    stats::resume_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
-    result
-}
-
 /// Backfill and Purge the live chain, based on the Mithril Sync updates.
 async fn live_sync_backfill_and_purge(
     cfg: ChainSyncConfig, mut rx: mpsc::Receiver<MithrilUpdateMessage>,
     mut sync_ready: SyncReadyWaiter,
 ) {
-    stats::start_thread(
-        cfg.chain,
-        stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE,
-        true,
-    );
     // Wait for first Mithril Update advice, which triggers a BACKFILL of the Live Data.
     let Some(update) = rx.recv().await else {
         error!("Mithril Sync Failed, can not continue chain sync either.");
-        stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
         return;
     };
 
@@ -450,7 +433,7 @@ async fn live_sync_backfill_and_purge(
         // We will re-attempt backfill, until its successful.
         // Backfill is atomic, it either fully works, or none of the live-chain is changed.
         debug!("Mithril Tip has advanced to: {update:?} : BACKFILL");
-        while let Err(error) = call_live_sync_backfill(&cfg, &update).await {
+        while let Err(error) = live_sync_backfill(&cfg, &update).await {
             error!("Mithril Backfill Sync Failed: {}", error);
             sleep(Duration::from_secs(10)).await;
         }
@@ -481,7 +464,6 @@ async fn live_sync_backfill_and_purge(
     loop {
         let Some(update) = rx.recv().await else {
             error!("Mithril Sync Failed, can not continue chain sync either.");
-            stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
             return;
         };
 
@@ -546,7 +528,13 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
 
     // Start the Live chain backfill task.
     let _backfill_join_handle = spawn(async move {
+        stats::start_thread(
+            cfg.chain,
+            stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE,
+            true,
+        );
         live_sync_backfill_and_purge(backfill_cfg.clone(), rx, sync_waiter).await;
+        stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
     });
 
     // Live Fill data starts at fork 1.
