@@ -14,7 +14,6 @@ mod mithril_snapshot_data;
 mod mithril_snapshot_iterator;
 mod mithril_snapshot_sync;
 mod mithril_turbo_downloader;
-mod mmap_file;
 mod snapshot_id;
 mod stats;
 pub mod turbo_downloader;

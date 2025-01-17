@@ -14,7 +14,7 @@ use std::{
 
 use anyhow::{anyhow, bail};
 use async_trait::async_trait;
-use catalyst_types::conversion::from_saturating;
+use catalyst_types::{conversion::from_saturating, mmap_file::MemoryMapFile};
 use dashmap::DashSet;
 use memx::memcmp;
 use mithril_client::{
@@ -28,7 +28,6 @@ use zstd::Decoder;
 use crate::{
     mithril_snapshot_config::MithrilSnapshotConfig,
     mithril_snapshot_data::latest_mithril_snapshot_data,
-    mmap_file::MemoryMapFile,
     stats::{self},
     turbo_downloader::ParallelDownloadProcessor,
 };
@@ -134,7 +133,8 @@ impl Inner {
             self.ext_size.fetch_add(entry_size, Ordering::SeqCst);
 
             // Try and deduplicate the file if we can, otherwise just extract it.
-            if let Ok(prev_mmap) = self.can_deduplicate(&rel_file, entry_size, prev_file.as_ref()) {
+            if let Ok(prev_mmap) = Self::can_deduplicate(&rel_file, entry_size, prev_file.as_ref())
+            {
                 let expected_file_size = from_saturating(entry_size);
                 let mut buf: Vec<u8> = Vec::with_capacity(expected_file_size);
                 if entry.read_to_end(&mut buf)? != expected_file_size {
@@ -145,31 +145,20 @@ impl Inner {
                         buf.len()
                     );
                 }
+                // Got the full file and its the expected size.  Is it different?
+                if memcmp(prev_mmap.file_as_slice(), buf.as_slice()) == cmp::Ordering::Equal {
+                    // Same so lets Hardlink it, and throw away the temp buffer.
 
-                let mut prev_mmap_option = Some(prev_mmap);
-                // Take the value inside the option out
-                if let Some(prev_mmap) = prev_mmap_option.take() {
-                    if memcmp(prev_mmap.file_as_slice(), buf.as_slice()) == cmp::Ordering::Equal {
-                        // Same so let's hardlink it, and throw away the temp buffer.
-                        // Make sure our big mmap get dropped.
-                        drop(prev_mmap);
-                        stats::set_mmap_drop(self.cfg.chain);
-
-                        // File is the same, so dedup it.
-                        if self.cfg.dedup_tmp(&abs_file, &latest_snapshot).is_ok() {
-                            self.dedup_size.fetch_add(entry_size, Ordering::SeqCst);
-                            changed_file!(self, rel_file, abs_file, entry_size);
-                            drop(buf);
-                            continue;
-                        }
-                    }
-                }
-
-                // If the `prev_mmap` is not yet drop, drop it now.
-                // Need to do this way because drop is moved into the if block.
-                if let Some(prev_mmap) = prev_mmap_option {
+                    // Make sure our big mmap get dropped.
                     drop(prev_mmap);
-                    stats::set_mmap_drop(self.cfg.chain);
+
+                    // File is the same, so dedup it.
+                    if self.cfg.dedup_tmp(&abs_file, &latest_snapshot).is_ok() {
+                        self.dedup_size.fetch_add(entry_size, Ordering::SeqCst);
+                        changed_file!(self, rel_file, abs_file, entry_size);
+                        drop(buf);
+                        continue;
+                    }
                 }
 
                 if let Err(error) = std::fs::write(&abs_file, buf) {
@@ -233,7 +222,7 @@ impl Inner {
 
     /// Check if a given path from the archive is able to be deduplicated.
     fn can_deduplicate(
-        &self, rel_file: &Path, file_size: u64, prev_file: Option<&PathBuf>,
+        rel_file: &Path, file_size: u64, prev_file: Option<&PathBuf>,
     ) -> MithrilResult<MemoryMapFile> {
         // Can't dedup if the current file is not de-dupable (must be immutable)
         if rel_file.starts_with("immutable") {
@@ -243,7 +232,7 @@ impl Inner {
                     // If the current file is not exactly the same as the previous file size, we
                     // can't dedup.
                     if file_size == current_size {
-                        if let Ok(pref_file_loaded) = self.mmap_open_sync(prev_file) {
+                        if let Ok(pref_file_loaded) = Self::mmap_open_sync(prev_file) {
                             if pref_file_loaded.size() == file_size {
                                 return Ok(pref_file_loaded);
                             }
@@ -256,12 +245,9 @@ impl Inner {
     }
 
     /// Open a file using mmap for performance.
-    fn mmap_open_sync(&self, path: &Path) -> MithrilResult<MemoryMapFile> {
+    fn mmap_open_sync(path: &Path) -> MithrilResult<MemoryMapFile> {
         match MemoryMapFile::try_from(path) {
-            Ok(mmap_file) => {
-                stats::update_mmap_count_and_size(self.cfg.chain, mmap_file.size());
-                Ok(mmap_file)
-            },
+            Ok(mmap_file) => Ok(mmap_file),
             Err(error) => {
                 error!(error=%error, file=%path.to_string_lossy(), "Failed to open file");
                 Err(error.into())

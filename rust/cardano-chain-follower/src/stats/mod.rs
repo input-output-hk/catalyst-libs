@@ -3,16 +3,15 @@
 pub(crate) mod follower;
 pub(crate) mod live_chain;
 pub(crate) mod mithril;
-pub(crate) mod mmap_file;
 pub(crate) mod rollback;
 pub(crate) mod thread;
 
 use std::sync::{Arc, LazyLock, RwLock};
 
 use cardano_blockchain_types::{Network, Slot};
+use catalyst_types::mmap_file::MemMapFileStat;
 use chrono::Utc;
 use dashmap::DashMap;
-use mmap_file::MemMapFileStat;
 use rollback::{rollbacks, rollbacks_reset, RollbackType};
 use serde::Serialize;
 use strum::IntoEnumIterator;
@@ -573,56 +572,6 @@ pub fn thread_stat_name(chain: Network) -> Vec<String> {
         .iter()
         .map(|entry| entry.key().clone())
         .collect()
-}
-
-// ----------------- MMap File STATISTICS-------------------
-
-/// Update the mmap file counter and total size.
-pub(crate) fn update_mmap_count_and_size(chain: Network, size: u64) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
-
-    let Ok(chain_stats) = stats.write() else {
-        // Worst case if this fails (it never should) is we stop updating stats.
-        error!("Stats RwLock should never be able to error.");
-        return;
-    };
-
-    chain_stats.mmap_file_stat.incr_file_counter();
-    chain_stats.mmap_file_stat.update_total_size(size);
-}
-
-/// Set the mmap file to be dropped.
-pub(crate) fn set_mmap_drop(chain: Network) {
-    // This will actually always succeed.
-    let Some(stats) = lookup_stats(chain) else {
-        return;
-    };
-
-    let Ok(chain_stats) = stats.write() else {
-        // Worst case if this fails (it never should) is we stop updating stats.
-        error!("Stats RwLock should never be able to error.");
-        return;
-    };
-
-    chain_stats.mmap_file_stat.set_is_drop();
-}
-
-/// Get the mmap file statistic.
-#[allow(dead_code)]
-pub(crate) fn mmap_file_stat(chain: Network) -> Option<MemMapFileStat> {
-    // This will actually always succeed.
-    let stats = lookup_stats(chain)?;
-
-    let Ok(chain_stats) = stats.write() else {
-        // Worst case if this fails (it never should) is we stop updating stats.
-        error!("Stats RwLock should never be able to error.");
-        return None;
-    };
-
-    Some(chain_stats.mmap_file_stat.clone())
 }
 
 #[cfg(test)]

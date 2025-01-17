@@ -30,6 +30,8 @@ serde = { version = "1.0.217", features = ["derive"] }
 thiserror = "2.0.9"
 base64-url = "3.0.0"
 uuid = { version = "1.11.0", features = ["v4", "v7", "serde"] }
+fmmap = { version = "0.3.3", features = ["sync", "tokio-async"] }
+once_cell = "1.20.2"
 
 [dev-dependencies]
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
