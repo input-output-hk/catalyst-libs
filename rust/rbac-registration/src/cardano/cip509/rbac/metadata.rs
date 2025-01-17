@@ -132,8 +132,8 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
                     },
                     Cip509RbacMetadataInt::RevocationList => {
                         match decode_revocation_list(d, decode_context.report) {
-                            Ok(v) => revocation_list = v,
-                            Err(()) => break,
+                            Some(v) => revocation_list = v,
+                            None => break,
                         }
                     },
                     Cip509RbacMetadataInt::RoleSet => {
@@ -212,20 +212,20 @@ where T: Decode<'b, ProblemReport> {
 }
 
 /// Decode an array of revocation list.
-fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Result<Vec<CertKeyHash>, ()> {
+fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Option<Vec<CertKeyHash>> {
     let context = "Cip509RbacMetadata revocation list";
     let len = match decode_array_len(d, context) {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Unable to decode array length: {e:?}"), context);
-            return Err(());
+            return None;
         },
     };
     let len = match usize::try_from(len) {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Invalid array length: {e:?}"), context);
-            return Ok(Vec::new());
+            return Some(Vec::new());
         },
     };
 
@@ -238,7 +238,7 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Result<Vec
                     &format!("Unable to decode certificate hash bytes: {e:?}"),
                     context,
                 );
-                return Err(());
+                return None;
             },
         };
         match CertKeyHash::try_from(bytes) {
@@ -251,7 +251,7 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Result<Vec
             },
         }
     }
-    Ok(result)
+    Some(result)
 }
 
 /// Adds report entries if duplicated roles are found.
