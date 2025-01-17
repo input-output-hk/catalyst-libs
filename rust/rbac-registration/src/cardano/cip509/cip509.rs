@@ -299,18 +299,28 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
 
                 match key {
                     Cip509IntIdentifier::Purpose => {
-                        purpose = decode_purpose(d, context, decode_context.report);
+                        match decode_purpose(d, context, decode_context.report) {
+                            Ok(v) => purpose = v,
+                            Err(()) => break,
+                        }
                     },
                     Cip509IntIdentifier::TxInputsHash => {
-                        txn_inputs_hash = decode_input_hash(d, context, decode_context.report);
+                        match decode_input_hash(d, context, decode_context.report) {
+                            Ok(v) => txn_inputs_hash = v,
+                            Err(()) => break,
+                        }
                     },
                     Cip509IntIdentifier::PreviousTxId => {
-                        prv_tx_id =
-                            decode_previous_transaction_id(d, context, decode_context.report);
+                        match decode_previous_transaction_id(d, context, decode_context.report) {
+                            Ok(v) => prv_tx_id = v,
+                            Err(()) => break,
+                        }
                     },
                     Cip509IntIdentifier::ValidationSignature => {
-                        validation_signature =
-                            decode_validation_signature(d, context, decode_context.report);
+                        match decode_validation_signature(d, context, decode_context.report) {
+                            Ok(v) => validation_signature = v,
+                            Err(()) => break,
+                        }
                     },
                 }
             } else {
@@ -335,6 +345,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                             &format!("Unable to decode metadata from chunks: {e:?}"),
                             context,
                         );
+                        break;
                     },
                 };
             }
@@ -421,18 +432,20 @@ fn payment_history(
 }
 
 /// Decodes purpose.
-fn decode_purpose(d: &mut Decoder, context: &str, report: &ProblemReport) -> Option<Uuid> {
+fn decode_purpose(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<Uuid>, ()> {
     let bytes = match decode_bytes(d, "Cip509 purpose") {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Unable to decode purpose: {e:?}"), context);
-            return None;
+            return Err(());
         },
     };
 
     let len = bytes.len();
     if let Ok(v) = Uuid::try_from(bytes) {
-        Some(v)
+        Ok(Some(v))
     } else {
         report.invalid_value(
             "purpose",
@@ -440,14 +453,14 @@ fn decode_purpose(d: &mut Decoder, context: &str, report: &ProblemReport) -> Opt
             "must be 16 bytes long",
             context,
         );
-        None
+        Ok(None)
     }
 }
 
 /// Decodes input hash.
 fn decode_input_hash(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Option<TxInputHash> {
+) -> Result<Option<TxInputHash>, ()> {
     let bytes = match decode_bytes(d, "Cip509 txn inputs hash") {
         Ok(v) => v,
         Err(e) => {
@@ -455,13 +468,13 @@ fn decode_input_hash(
                 &format!("Unable to decode transaction inputs hash: {e:?}"),
                 context,
             );
-            return None;
+            return Err(());
         },
     };
 
     let len = bytes.len();
     if let Ok(v) = TxInputHash::try_from(bytes.as_slice()) {
-        Some(v)
+        Ok(Some(v))
     } else {
         report.invalid_value(
             "transaction inputs hash",
@@ -469,14 +482,14 @@ fn decode_input_hash(
             "must be 16 bytes long",
             context,
         );
-        None
+        Ok(None)
     }
 }
 
 /// Decodes previous transaction id.
 fn decode_previous_transaction_id(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Option<Blake2b256Hash> {
+) -> Result<Option<Blake2b256Hash>, ()> {
     let bytes = match decode_bytes(d, "Cip509 previous transaction id") {
         Ok(v) => v,
         Err(e) => {
@@ -484,13 +497,13 @@ fn decode_previous_transaction_id(
                 &format!("Unable to decode previous transaction id: {e:?}"),
                 context,
             );
-            return None;
+            return Err(());
         },
     };
 
     let len = bytes.len();
     if let Ok(v) = Blake2b256Hash::try_from(bytes) {
-        Some(v)
+        Ok(Some(v))
     } else {
         report.invalid_value(
             "previous transaction hash",
@@ -498,14 +511,14 @@ fn decode_previous_transaction_id(
             &format!("must be {BLAKE_2B256_SIZE} bytes long"),
             context,
         );
-        None
+        Ok(None)
     }
 }
 
 /// Decodes validation signature.
 fn decode_validation_signature(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Option<ValidationSignature> {
+) -> Result<Option<ValidationSignature>, ()> {
     let bytes = match decode_bytes(d, "Cip509 validation signature") {
         Ok(v) => v,
         Err(e) => {
@@ -513,13 +526,13 @@ fn decode_validation_signature(
                 &format!("Unable to decode validation signature: {e:?}"),
                 context,
             );
-            return None;
+            return Err(());
         },
     };
 
     let len = bytes.len();
     if let Ok(v) = ValidationSignature::try_from(bytes) {
-        Some(v)
+        Ok(Some(v))
     } else {
         report.invalid_value(
             "validation signature",
@@ -527,7 +540,7 @@ fn decode_validation_signature(
             "must be at least 1 byte and at most 64 bytes long",
             context,
         );
-        None
+        Ok(None)
     }
 }
 

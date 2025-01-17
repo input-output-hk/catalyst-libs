@@ -101,53 +101,47 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
 
                 match key {
                     Cip509RbacMetadataInt::X509Certs => {
-                        x509_certs = decode_array(
+                        match decode_array(
                             d,
                             "Cip509RbacMetadata x509 certificates",
                             decode_context.report,
-                        );
+                        ) {
+                            Some(v) => x509_certs = v,
+                            None => break,
+                        }
                     },
                     Cip509RbacMetadataInt::C509Certs => {
-                        c509_certs = decode_array(
+                        match decode_array(
                             d,
-                            "Cip509RbacMetadata c509 certificate",
+                            "Cip509RbacMetadata c509 certificates",
                             decode_context.report,
-                        );
+                        ) {
+                            Some(v) => c509_certs = v,
+                            None => break,
+                        }
                     },
                     Cip509RbacMetadataInt::PubKeys => {
-                        pub_keys = decode_array(
+                        match decode_array(
                             d,
                             "Cip509RbacMetadata public keys",
                             decode_context.report,
-                        );
+                        ) {
+                            Some(v) => pub_keys = v,
+                            None => break,
+                        }
                     },
                     Cip509RbacMetadataInt::RevocationList => {
-                        revocation_list = decode_revocation_list(d, decode_context.report);
+                        match decode_revocation_list(d, decode_context.report) {
+                            Ok(v) => revocation_list = v,
+                            Err(()) => break,
+                        }
                     },
                     Cip509RbacMetadataInt::RoleSet => {
-                        let roles = decode_array::<CborRoleData>(
-                            d,
-                            "Cip509RbacMetadata role set",
-                            decode_context.report,
-                        );
-                        report_duplicated_roles(&roles, context, decode_context.report);
-                        role_data = roles
-                            .into_iter()
-                            .filter_map(|data| {
-                                if let Some(number) = data.number {
-                                    Some((
-                                        number,
-                                        RoleData::new(
-                                            data,
-                                            decode_context.txn,
-                                            decode_context.report,
-                                        ),
-                                    ))
-                                } else {
-                                    None
-                                }
-                            })
-                            .collect();
+                        if let Some(data) = decode_role_data(d, context, decode_context) {
+                            role_data = data;
+                        } else {
+                            break;
+                        }
                     },
                 }
             } else {
@@ -164,6 +158,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
                         decode_context
                             .report
                             .other(&format!("Unable to decode purpose value: {e:?}"), context);
+                        break;
                     },
                 }
             }
@@ -184,20 +179,22 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
 }
 
 /// Decodes an array of type T.
-fn decode_array<'b, T>(d: &mut Decoder<'b>, context: &str, report: &mut ProblemReport) -> Vec<T>
+fn decode_array<'b, T>(
+    d: &mut Decoder<'b>, context: &str, report: &mut ProblemReport,
+) -> Option<Vec<T>>
 where T: Decode<'b, ProblemReport> {
     let len = match decode_array_len(d, context) {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Unable to decode array length: {e:?}"), context);
-            return Vec::new();
+            return None;
         },
     };
     let len = match usize::try_from(len) {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Invalid array length: {e:?}"), context);
-            return Vec::new();
+            return Some(Vec::new());
         },
     };
 
@@ -207,27 +204,28 @@ where T: Decode<'b, ProblemReport> {
             Ok(v) => result.push(v),
             Err(e) => {
                 report.other(&format!("Unable to decode array value: {e:?}"), context);
+                return None;
             },
         }
     }
-    result
+    Some(result)
 }
 
 /// Decode an array of revocation list.
-fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Vec<CertKeyHash> {
+fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Result<Vec<CertKeyHash>, ()> {
     let context = "Cip509RbacMetadata revocation list";
     let len = match decode_array_len(d, context) {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Unable to decode array length: {e:?}"), context);
-            return Vec::new();
+            return Err(());
         },
     };
     let len = match usize::try_from(len) {
         Ok(v) => v,
         Err(e) => {
             report.other(&format!("Invalid array length: {e:?}"), context);
-            return Vec::new();
+            return Ok(Vec::new());
         },
     };
 
@@ -240,7 +238,7 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Vec<CertKe
                     &format!("Unable to decode certificate hash bytes: {e:?}"),
                     context,
                 );
-                continue;
+                return Err(());
             },
         };
         match CertKeyHash::try_from(bytes) {
@@ -253,7 +251,7 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Vec<CertKe
             },
         }
     }
-    result
+    Ok(result)
 }
 
 /// Adds report entries if duplicated roles are found.
@@ -267,4 +265,26 @@ fn report_duplicated_roles(data: &[CborRoleData], context: &str, report: &Proble
             report.other(&format!("Duplicated role number {number:?} found"), context);
         }
     }
+}
+
+/// Decodes and converts a role data.
+fn decode_role_data(
+    d: &mut Decoder, context: &str, decode_context: &mut DecodeContext,
+) -> Option<HashMap<RoleNumber, RoleData>> {
+    let roles = decode_array(d, "Cip509RbacMetadata role set", decode_context.report)?;
+    report_duplicated_roles(&roles, context, decode_context.report);
+    let roles = roles
+        .into_iter()
+        .filter_map(|data| {
+            if let Some(number) = data.number {
+                Some((
+                    number,
+                    RoleData::new(data, decode_context.txn, decode_context.report),
+                ))
+            } else {
+                None
+            }
+        })
+        .collect();
+    Some(roles)
 }

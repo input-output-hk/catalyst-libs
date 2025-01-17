@@ -68,16 +68,40 @@ impl Decode<'_, ProblemReport> for CborRoleData {
 
                 match key {
                     RoleDataInt::RoleNumber => {
-                        data.number = decode_role_number(d, context, report);
+                        match decode_helper::<u8, _>(d, "RoleNumber in RoleData", &mut ()) {
+                            Ok(v) => data.number = Some(v.into()),
+                            Err(e) => {
+                                report.other(
+                                    &format!("Unable to decode role number: {e:?}"),
+                                    context,
+                                );
+                                break;
+                            },
+                        }
                     },
                     RoleDataInt::RoleSigningKey => {
-                        data.signing_key = decode_signing_key(d, context, report);
+                        match decode_signing_key(d, context, report) {
+                            Ok(v) => data.signing_key = v,
+                            Err(()) => break,
+                        }
                     },
                     RoleDataInt::RoleEncryptionKey => {
-                        data.encryption_key = decode_encryption_key(d, context, report);
+                        match decode_encryption_key(d, context, report) {
+                            Ok(v) => data.encryption_key = v,
+                            Err(()) => break,
+                        }
                     },
                     RoleDataInt::PaymentKey => {
-                        data.payment_key = decode_payment_key(d, context, report);
+                        match decode_helper(d, "PaymentKey in RoleData", &mut ()) {
+                            Ok(v) => data.payment_key = Some(v),
+                            Err(e) => {
+                                report.other(
+                                    &format!("Unable to decode role payment key: {e:?}"),
+                                    context,
+                                );
+                                break;
+                            },
+                        }
                     },
                 }
             } else {
@@ -111,36 +135,23 @@ impl Decode<'_, ProblemReport> for CborRoleData {
     }
 }
 
-/// Decodes a role number.
-fn decode_role_number(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Option<RoleNumber> {
-    match decode_helper::<u8, _>(d, "RoleNumber in RoleData", &mut ()) {
-        Ok(v) => Some(v.into()),
-        Err(e) => {
-            report.other(&format!("Unable to decode role number: {e:?}"), context);
-            None
-        },
-    }
-}
-
 /// Decodes a signing key.
 fn decode_signing_key(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Option<KeyLocalRef> {
+) -> Result<Option<KeyLocalRef>, ()> {
     if let Err(e) = decode_array_len(d, "RoleSigningKey") {
         report.other(&format!("{e:?}"), context);
-        return None;
+        return Err(());
     }
 
     match KeyLocalRef::decode(d, &mut ()) {
-        Ok(v) => Some(v),
+        Ok(v) => Ok(Some(v)),
         Err(e) => {
             report.other(
                 &format!("Unable to decode role signing key: {e:?}"),
                 context,
             );
-            None
+            Ok(None)
         },
     }
 }
@@ -148,34 +159,20 @@ fn decode_signing_key(
 /// Decodes an encryption key.
 fn decode_encryption_key(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Option<KeyLocalRef> {
+) -> Result<Option<KeyLocalRef>, ()> {
     if let Err(e) = decode_array_len(d, "RoleEncryptionKey") {
         report.other(&format!("{e:?}"), context);
-        return None;
+        return Err(());
     }
 
     match KeyLocalRef::decode(d, &mut ()) {
-        Ok(v) => Some(v),
+        Ok(v) => Ok(Some(v)),
         Err(e) => {
             report.other(
                 &format!("Unable to decode role encryption key: {e:?}"),
                 context,
             );
-            None
-        },
-    }
-}
-
-/// Decodes a payment key.
-fn decode_payment_key(d: &mut Decoder, context: &str, report: &ProblemReport) -> Option<u16> {
-    match decode_helper(d, "PaymentKey in RoleData", &mut ()) {
-        Ok(v) => Some(v),
-        Err(e) => {
-            report.other(
-                &format!("Unable to decode role payment key: {e:?}"),
-                context,
-            );
-            None
+            Ok(None)
         },
     }
 }
