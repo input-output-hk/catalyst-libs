@@ -4,7 +4,7 @@
 
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use cardano_blockchain_types::{MultiEraBlock, TxnIndex};
 use catalyst_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
@@ -149,16 +149,8 @@ impl Cip509 {
             payment_history,
             report: &mut report,
         };
-        let cip509 = match Cip509::decode(&mut decoder, &mut decode_context) {
-            Ok(v) => v,
-            Err(e) => {
-                // We should get here only if we were unable to decode even the first byte.
-                decode_context
-                    .report
-                    .other(&format!("{e:?}"), "Failed to decode Cip509");
-                return Ok(Some(Self::with_decode_context(&decode_context)));
-            },
-        };
+        let cip509 =
+            Cip509::decode(&mut decoder, &mut decode_context).context("Failed to decode Cip509")?;
 
         // Perform the validation.
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
