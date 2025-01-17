@@ -3,7 +3,7 @@
 use anyhow::anyhow;
 use coset::{cbor::Value, Label, ProtectedHeader};
 
-use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_value, DocumentRef, UuidV4};
+use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef, UuidV4};
 
 /// Additional Metadata Fields.
 ///
@@ -36,71 +36,56 @@ impl AdditionalFields {
     ///
     /// # Errors
     /// If any internal field cannot be converted into `Value`.
-    pub fn header_rest(&self) -> anyhow::Result<Vec<(Label, Value)>> {
+    pub fn header_rest(&self) -> anyhow::Result<Vec<(String, Value)>> {
         self.try_into()
     }
 }
 
-impl TryFrom<&AdditionalFields> for Vec<(Label, Value)> {
+impl TryFrom<&AdditionalFields> for Vec<(String, Value)> {
     type Error = anyhow::Error;
 
     fn try_from(fields: &AdditionalFields) -> anyhow::Result<Self> {
         let mut vec = Vec::new();
 
         if let Some(doc_ref) = &fields.doc_ref {
-            vec.push((Label::Text("ref".to_string()), doc_ref.try_into()?));
+            vec.push(("ref".to_string(), Value::try_from(*doc_ref)?));
         }
 
         if let Some(template) = &fields.template {
-            vec.push((Label::Text("template".to_string()), template.try_into()?));
+            vec.push(("template".to_string(), Value::try_from(*template)?));
         }
 
         if let Some(reply) = &fields.reply {
-            vec.push((Label::Text("reply".to_string()), reply.try_into()?));
+            vec.push(("reply".to_string(), Value::try_from(*reply)?));
         }
 
         if let Some(section) = &fields.section {
-            vec.push((
-                Label::Text("section".to_string()),
-                Value::Text(section.clone()),
-            ));
+            vec.push(("section".to_string(), Value::Text(section.clone())));
         }
 
         if let Some(collabs) = &fields.collabs {
             if !collabs.is_empty() {
                 vec.push((
-                    Label::Text("collabs".to_string()),
+                    "collabs".to_string(),
                     Value::Array(collabs.iter().cloned().map(Value::Text).collect()),
                 ));
             }
         }
 
         if let Some(brand_id) = &fields.brand_id {
-            vec.push((
-                Label::Text("brand_id".to_string()),
-                encode_cbor_value(brand_id)?,
-            ));
+            vec.push(("brand_id".to_string(), encode_cbor_uuid(brand_id)?));
         }
 
         if let Some(campaign_id) = &fields.campaign_id {
-            vec.push((
-                Label::Text("campaign_id".to_string()),
-                encode_cbor_value(campaign_id)?,
-            ));
+            vec.push(("campaign_id".to_string(), encode_cbor_uuid(campaign_id)?));
         }
 
         if let Some(election_id) = &fields.election_id {
-            vec.push((
-                Label::Text("election_id".to_string()),
-                encode_cbor_value(election_id)?,
-            ));
+            vec.push(("election_id".to_string(), encode_cbor_uuid(election_id)?));
         }
 
         if let Some(category_id) = &fields.category_id {
-            vec.push((
-                Label::Text("category_id".to_string()),
-                encode_cbor_value(*category_id)?,
-            ));
+            vec.push(("category_id".to_string(), encode_cbor_uuid(*category_id)?));
         }
 
         Ok(vec)

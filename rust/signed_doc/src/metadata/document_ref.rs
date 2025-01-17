@@ -1,7 +1,7 @@
 //! Catalyst Signed Document Metadata.
 use coset::cbor::Value;
 
-use super::{decode_cbor_uuid, encode_cbor_value, UuidV7};
+use super::{decode_cbor_uuid, encode_cbor_uuid, UuidV7};
 
 /// Reference to a Document.
 #[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -21,16 +21,16 @@ pub enum DocumentRef {
     },
 }
 
-impl TryFrom<&DocumentRef> for Value {
+impl TryFrom<DocumentRef> for Value {
     type Error = anyhow::Error;
 
-    fn try_from(value: &DocumentRef) -> Result<Self, Self::Error> {
+    fn try_from(value: DocumentRef) -> Result<Self, Self::Error> {
         match value {
-            DocumentRef::Latest { id } => encode_cbor_value(id),
+            DocumentRef::Latest { id } => encode_cbor_uuid(id),
             DocumentRef::WithVer { id, ver } => {
                 Ok(Value::Array(vec![
-                    encode_cbor_value(id)?,
-                    encode_cbor_value(ver)?,
+                    encode_cbor_uuid(id)?,
+                    encode_cbor_uuid(ver)?,
                 ]))
             },
         }

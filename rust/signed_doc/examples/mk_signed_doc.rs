@@ -10,7 +10,7 @@ use std::{
 
 use catalyst_signed_doc::{CatalystSignedDocument, Decode, Decoder, KidUri, Metadata};
 use clap::Parser;
-use coset::{iana::CoapContentFormat, CborSerializable};
+use coset::{CborSerializable, Header};
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
 
 fn main() {
@@ -55,16 +55,6 @@ enum Cli {
     },
 }
 
-const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
-const UUID_CBOR_TAG: u64 = 37;
-
-fn encode_cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
-    coset::cbor::Value::Tag(
-        UUID_CBOR_TAG,
-        coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
-    )
-}
-
 impl Cli {
     fn exec(self) -> anyhow::Result<()> {
         match self {
@@ -76,12 +66,12 @@ impl Cli {
             } => {
                 let doc_schema = load_schema_from_file(&schema)?;
                 let json_doc = load_json_from_file(&doc)?;
-                let json_meta = load_json_from_file(&meta)
+                let json_meta = &load_json_from_file(&meta)
                     .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
                 println!("{json_meta}");
                 validate_json(&json_doc, &doc_schema)?;
                 let compressed_doc = brotli_compress_json(&json_doc)?;
-                let empty_cose_sign = build_empty_cose_doc(compressed_doc, &json_meta);
+                let empty_cose_sign = build_empty_cose_doc(compressed_doc, json_meta)?;
                 store_cose_file(empty_cose_sign, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
@@ -159,39 +149,12 @@ fn brotli_compress_json(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
     Ok(buf)
 }
 
-fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign {
-    let mut builder =
-        coset::HeaderBuilder::new().content_format(CoapContentFormat::from(meta.content_type()));
-
-    if let Some(content_encoding) = meta.content_encoding() {
-        builder = builder.text_value(
-            CONTENT_ENCODING_KEY.to_string(),
-            format!("{content_encoding}").into(),
-        );
-    }
-    let mut protected_header = builder.build();
-
-    protected_header.rest.push((
-        coset::Label::Text("type".to_string()),
-        encode_cbor_uuid(&meta.doc_type()),
-    ));
-    protected_header.rest.push((
-        coset::Label::Text("id".to_string()),
-        encode_cbor_uuid(&meta.doc_id()),
-    ));
-    protected_header.rest.push((
-        coset::Label::Text("ver".to_string()),
-        encode_cbor_uuid(&meta.doc_ver()),
-    ));
-    let meta_rest = meta.extra().header_rest().unwrap_or_default();
-
-    if !meta_rest.is_empty() {
-        protected_header.rest.extend(meta_rest);
-    }
-    coset::CoseSignBuilder::new()
+fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> anyhow::Result<coset::CoseSign> {
+    let protected_header = Header::try_from(meta)?;
+    Ok(coset::CoseSignBuilder::new()
         .protected(protected_header)
         .payload(doc_bytes)
-        .build()
+        .build())
 }
 
 fn load_cose_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSign> {

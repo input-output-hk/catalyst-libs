@@ -14,7 +14,7 @@ use anyhow::anyhow;
 pub use catalyst_types::uuid::{CborContext, V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::CborSerializable;
+use coset::{iana::CoapContentFormat, CborSerializable};
 pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
 pub use document_type::DocumentType;
@@ -49,20 +49,20 @@ pub struct Metadata {
 impl Metadata {
     /// Return Document Type `UUIDv4`.
     #[must_use]
-    pub fn doc_type(&self) -> uuid::Uuid {
-        self.doc_type.uuid()
+    pub fn doc_type(&self) -> UuidV4 {
+        self.doc_type.into()
     }
 
     /// Return Document ID `UUIDv7`.
     #[must_use]
-    pub fn doc_id(&self) -> uuid::Uuid {
-        self.id.uuid()
+    pub fn doc_id(&self) -> UuidV7 {
+        self.id.into()
     }
 
     /// Return Document Version `UUIDv7`.
     #[must_use]
-    pub fn doc_ver(&self) -> uuid::Uuid {
-        self.ver.uuid()
+    pub fn doc_ver(&self) -> UuidV7 {
+        self.ver.into()
     }
 
     /// Returns the Document Content Type, if any.
@@ -94,6 +94,65 @@ impl Display for Metadata {
         writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
         writeln!(f, "  additional_fields: {:?},", self.extra)?;
         writeln!(f, "}}")
+    }
+}
+
+impl TryFrom<&Metadata> for coset::Header {
+    type Error = crate::error::Error;
+
+    fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
+        let mut builder = coset::HeaderBuilder::new()
+            .content_format(CoapContentFormat::from(meta.content_type()));
+
+        let mut errors = Vec::new();
+
+        if let Some(content_encoding) = meta.content_encoding() {
+            builder = builder.text_value(
+                CONTENT_ENCODING_KEY.to_string(),
+                format!("{content_encoding}").into(),
+            );
+        }
+
+        match coset::cbor::Value::try_from(meta.doc_type) {
+            Ok(value) => {
+                builder = builder.text_value("type".to_string(), value);
+            },
+            Err(e) => {
+                errors.push(anyhow::anyhow!("Invalid document type UUID: {e}"));
+            },
+        }
+
+        match coset::cbor::Value::try_from(meta.id) {
+            Ok(value) => {
+                builder = builder.text_value("id".to_string(), value);
+            },
+            Err(e) => {
+                errors.push(anyhow::anyhow!("Invalid document id UUID: {e}"));
+            },
+        }
+
+        match coset::cbor::Value::try_from(meta.ver) {
+            Ok(value) => {
+                builder = builder.text_value("ver".to_string(), value);
+            },
+            Err(e) => {
+                errors.push(anyhow::anyhow!("Invalid document ver UUID: {e}"));
+            },
+        }
+
+        if let Ok(rest) = meta.extra().header_rest() {
+            for (label, value) in rest {
+                builder = builder.text_value(label, value);
+            }
+        }
+
+        let header = builder.build();
+
+        if errors.is_empty() {
+            Ok(header)
+        } else {
+            Err(crate::error::Error::from(errors))
+        }
     }
 }
 
@@ -220,8 +279,10 @@ fn cose_protected_header_find(
         .map(|(_, value)| value)
 }
 
-/// Convert from `minicbor` into `coset::cbor::Value`.
-pub(crate) fn encode_cbor_value<T: minicbor::encode::Encode<CborContext>>(
+/// Encode `uuid::Uuid` type into `coset::cbor::Value`.
+///
+/// This is used to encode `UuidV4` and `UuidV7` types.
+pub(crate) fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
     value: T,
 ) -> anyhow::Result<coset::cbor::Value> {
     let mut cbor_bytes = Vec::new();
@@ -231,7 +292,9 @@ pub(crate) fn encode_cbor_value<T: minicbor::encode::Encode<CborContext>>(
         .map_err(|e| anyhow::anyhow!("Invalid CBOR value, err: {e}"))
 }
 
-/// Convert `coset::cbor::Value` into `UuidV4`.
+/// Decode `From<uuid::Uuid>` type from `coset::cbor::Value`.
+///
+/// This is used to decode `UuidV4` and `UuidV7` types.
 pub(crate) fn decode_cbor_uuid<
     T: for<'a> minicbor::decode::Decode<'a, CborContext> + From<uuid::Uuid>,
 >(

@@ -15,9 +15,9 @@ use std::{
 use anyhow::anyhow;
 pub use builder::Builder;
 use content::Content;
-use coset::CborSerializable;
-pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV7};
-pub use minicbor::{decode, Decode, Decoder};
+use coset::{CborSerializable, Header};
+pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV4, UuidV7};
+pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::KidUri;
 use signature::Signatures;
 
@@ -56,19 +56,19 @@ impl CatalystSignedDocument {
 
     /// Return Document Type `UUIDv4`.
     #[must_use]
-    pub fn doc_type(&self) -> uuid::Uuid {
+    pub fn doc_type(&self) -> UuidV4 {
         self.inner.metadata.doc_type()
     }
 
     /// Return Document ID `UUIDv7`.
     #[must_use]
-    pub fn doc_id(&self) -> uuid::Uuid {
+    pub fn doc_id(&self) -> UuidV7 {
         self.inner.metadata.doc_id()
     }
 
     /// Return Document Version `UUIDv7`.
     #[must_use]
-    pub fn doc_ver(&self) -> uuid::Uuid {
+    pub fn doc_ver(&self) -> UuidV7 {
         self.inner.metadata.doc_ver()
     }
 
@@ -149,5 +149,27 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             },
             _ => Err(minicbor::decode::Error::message(error::Error::from(errors))),
         }
+    }
+}
+
+impl Encode<()> for CatalystSignedDocument {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut encode::Encoder<W>, ctx: &mut (),
+    ) -> Result<(), encode::Error<W::Error>> {
+        let protected_header = Header::try_from(&self.inner.metadata).map_err(|e| {
+            minicbor::encode::Error::message(format!("Failed to encode Document Metadata: {e}"))
+        })?;
+        let mut builder = coset::CoseSignBuilder::new()
+            .protected(protected_header)
+            .payload(self.inner.content.bytes().to_vec());
+        for signature in self.signatures().signatures() {
+            builder = builder.add_signature(signature);
+        }
+        let cose_sign = builder.build();
+        let cose_bytes = cose_sign.to_vec().map_err(|e| {
+            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
+        })?;
+        cose_bytes.encode(e, ctx)?;
+        Ok(())
     }
 }

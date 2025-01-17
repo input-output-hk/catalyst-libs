@@ -9,7 +9,6 @@ pub struct Signature {
     /// Key ID
     kid: KidUri,
     /// COSE Signature
-    #[allow(dead_code)]
     signature: CoseSignature,
 }
 
@@ -21,6 +20,11 @@ impl Signatures {
     /// List of signature Key IDs.
     pub fn kids(&self) -> Vec<KidUri> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
+    }
+
+    /// List of signatures.
+    pub fn signatures(&self) -> Vec<CoseSignature> {
+        self.0.iter().map(|sig| sig.signature.clone()).collect()
     }
 }
 
