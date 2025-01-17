@@ -221,6 +221,7 @@ pub fn validate_role_signing_key(
     }
 }
 
+/// Add a problem report entry if the key offset is invalid.
 fn check_key_offset<T>(
     key: &KeyLocalRef, certificates: &[T], certificate_type: &str, context: &str,
     report: &ProblemReport,

@@ -292,26 +292,25 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 // Consume the key. This should never fail because we used `probe` above.
                 let _: u8 = decode_helper(d, context, &mut ())?;
 
-                if report_duplicated_key(&found_keys, &key, index, context, &decode_context.report)
-                {
+                if report_duplicated_key(&found_keys, &key, index, context, decode_context.report) {
                     continue;
                 }
                 found_keys.push(key);
 
                 match key {
                     Cip509IntIdentifier::Purpose => {
-                        purpose = decode_purpose(d, context, &decode_context.report);
+                        purpose = decode_purpose(d, context, decode_context.report);
                     },
                     Cip509IntIdentifier::TxInputsHash => {
-                        txn_inputs_hash = decode_input_hash(d, context, &decode_context.report);
+                        txn_inputs_hash = decode_input_hash(d, context, decode_context.report);
                     },
                     Cip509IntIdentifier::PreviousTxId => {
                         prv_tx_id =
-                            decode_previous_transaction_id(d, context, &decode_context.report);
+                            decode_previous_transaction_id(d, context, decode_context.report);
                     },
                     Cip509IntIdentifier::ValidationSignature => {
                         validation_signature =
-                            decode_validation_signature(d, context, &decode_context.report);
+                            decode_validation_signature(d, context, decode_context.report);
                     },
                 }
             } else {
@@ -346,7 +345,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             Cip509IntIdentifier::TxInputsHash,
             Cip509IntIdentifier::ValidationSignature,
         ];
-        report_missing_keys(&found_keys, &required_keys, context, &decode_context.report);
+        report_missing_keys(&found_keys, &required_keys, context, decode_context.report);
         if !is_metadata_found {
             decode_context
                 .report
@@ -362,7 +361,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             prv_tx_id,
             metadata,
             validation_signature,
-            payment_history: Default::default(),
+            payment_history: HashMap::new(),
             txn_hash,
             origin: decode_context.origin.clone(),
             report: decode_context.report.clone(),
