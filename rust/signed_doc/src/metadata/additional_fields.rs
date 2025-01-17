@@ -8,7 +8,7 @@ use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, Docu
 /// Additional Metadata Fields.
 ///
 /// These values are extracted from the COSE Sign protected header labels.
-#[derive(Default, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Default, Debug, serde::Serialize, serde::Deserialize)]
 pub struct AdditionalFields {
     /// Reference to the latest document.
     #[serde(rename = "ref")]

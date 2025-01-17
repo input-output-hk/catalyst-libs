@@ -3,7 +3,6 @@ use crate::{CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metada
 
 /// Catalyst Signed Document Builder.
 #[derive(Debug, Default)]
-#[allow(dead_code)]
 pub struct Builder {
     /// Document Metadata
     metadata: Option<Metadata>,
@@ -45,18 +44,16 @@ impl Builder {
     ///
     /// ## Errors
     ///
-    /// Returns
+    /// Fails if any of the fields are missing.
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
         match (self.metadata, self.content, self.signatures) {
             (Some(metadata), Some(content), Some(signatures)) => {
-                Ok(CatalystSignedDocument {
-                    inner: InnerCatalystSignedDocument {
-                        metadata,
-                        content,
-                        signatures,
-                    }
-                    .into(),
-                })
+                Ok(InnerCatalystSignedDocument {
+                    metadata,
+                    content,
+                    signatures,
+                }
+                .into())
             },
             _ => Err(anyhow::anyhow!("Failed to build Catalyst Signed Document")),
         }

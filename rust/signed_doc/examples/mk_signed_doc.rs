@@ -8,7 +8,9 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{CatalystSignedDocument, Decode, Decoder, KidUri, Metadata};
+use catalyst_signed_doc::{
+    Builder, CatalystSignedDocument, Content, Decode, Decoder, KidUri, Metadata, Signatures,
+};
 use clap::Parser;
 use coset::{CborSerializable, Header};
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
@@ -60,19 +62,39 @@ impl Cli {
         match self {
             Self::Build {
                 doc,
-                schema,
+                schema: _,
                 output,
                 meta,
             } => {
-                let doc_schema = load_schema_from_file(&schema)?;
-                let json_doc = load_json_from_file(&doc)?;
-                let json_meta = &load_json_from_file(&meta)
+                // Load Metadata from JSON file
+                let metadata: Metadata = load_json_from_file(&meta)
                     .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
-                println!("{json_meta}");
-                validate_json(&json_doc, &doc_schema)?;
-                let compressed_doc = brotli_compress_json(&json_doc)?;
-                let empty_cose_sign = build_empty_cose_doc(compressed_doc, json_meta)?;
-                store_cose_file(empty_cose_sign, &output)?;
+                println!("{metadata}");
+                // Load Document from JSON file
+                let json_doc: serde_json::Value = load_json_from_file(&doc)?;
+                // Possibly encode if Metadata has an encoding set.
+                let payload_bytes = serde_json::to_vec(&json_doc)?;
+                let payload = match metadata.content_encoding() {
+                    Some(encoding) => encoding.encode(&payload_bytes)?,
+                    None => payload_bytes,
+                };
+                let content = Content::new(
+                    payload,
+                    metadata.content_type(),
+                    metadata.content_encoding(),
+                )?;
+                // Start with no signatures.
+                let signatures = Signatures::try_from(&Vec::new())?;
+                let signed_doc = Builder::new()
+                    .content(content)
+                    .metadata(metadata)
+                    .signatures(signatures)
+                    .build()?;
+                let mut bytes: Vec<u8> = Vec::new();
+                minicbor::encode(signed_doc, &mut bytes)
+                    .map_err(|e| anyhow::anyhow!("Failed to encode document: {e}"))?;
+
+                write_bytes_to_file(&bytes, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
                 let sk = load_secret_key_from_file(&sk)
@@ -106,14 +128,14 @@ fn decode_signed_doc(cose_bytes: &[u8]) {
     );
     match CatalystSignedDocument::decode(&mut Decoder::new(cose_bytes), &mut ()) {
         Ok(cat_signed_doc) => {
-            println!("This is a valid Catalyst Signed Document.");
+            println!("This is a valid Catalyst Document.");
             println!("{cat_signed_doc}");
         },
-        Err(e) => eprintln!("Invalid Catalyst Signed Document, err: {e}"),
+        Err(e) => eprintln!("Invalid Catalyst Document, err: {e}"),
     }
 }
 
-fn load_schema_from_file(schema_path: &PathBuf) -> anyhow::Result<jsonschema::JSONSchema> {
+fn _load_schema_from_file(schema_path: &PathBuf) -> anyhow::Result<jsonschema::JSONSchema> {
     let schema_file = File::open(schema_path)?;
     let schema_json = serde_json::from_reader(schema_file)?;
     let schema = jsonschema::JSONSchema::options()
@@ -130,7 +152,7 @@ where T: for<'de> serde::Deserialize<'de> {
     Ok(json)
 }
 
-fn validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> anyhow::Result<()> {
+fn _validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> anyhow::Result<()> {
     schema.validate(doc).map_err(|err| {
         let mut validation_error = String::new();
         for e in err {
@@ -141,15 +163,15 @@ fn validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> an
     Ok(())
 }
 
-fn brotli_compress_json(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
+fn _brotli_compress_json(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
     let brotli_params = brotli::enc::BrotliEncoderParams::default();
-    let doc_bytes = serde_json::to_vec(&doc)?;
+    let doc_bytes = serde_json::to_vec(doc)?;
     let mut buf = Vec::new();
     brotli::BrotliCompress(&mut doc_bytes.as_slice(), &mut buf, &brotli_params)?;
     Ok(buf)
 }
 
-fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> anyhow::Result<coset::CoseSign> {
+fn _build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> anyhow::Result<coset::CoseSign> {
     let protected_header = Header::try_from(meta)?;
     Ok(coset::CoseSignBuilder::new()
         .protected(protected_header)
@@ -158,20 +180,28 @@ fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> anyhow::Result<c
 }
 
 fn load_cose_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSign> {
-    let mut cose_file = File::open(cose_path)?;
-    let mut cose_file_bytes = Vec::new();
-    cose_file.read_to_end(&mut cose_file_bytes)?;
+    let cose_file_bytes = read_bytes_from_file(cose_path)?;
     let cose = coset::CoseSign::from_slice(&cose_file_bytes).map_err(|e| anyhow::anyhow!("{e}"))?;
     Ok(cose)
 }
 
+fn read_bytes_from_file(path: &PathBuf) -> anyhow::Result<Vec<u8>> {
+    let mut file_bytes = Vec::new();
+    File::open(path)?.read_to_end(&mut file_bytes)?;
+    Ok(file_bytes)
+}
+
+fn write_bytes_to_file(bytes: &[u8], output: &PathBuf) -> anyhow::Result<()> {
+    File::create(output)?
+        .write_all(bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to write to file {output:?}: {e}"))
+}
+
 fn store_cose_file(cose: coset::CoseSign, output: &PathBuf) -> anyhow::Result<()> {
-    let mut cose_file = File::create(output)?;
     let cose_bytes = cose
         .to_vec()
         .map_err(|e| anyhow::anyhow!("Failed to Store COSE SIGN: {e}"))?;
-    cose_file.write_all(&cose_bytes)?;
-    Ok(())
+    write_bytes_to_file(&cose_bytes, output)
 }
 
 fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::SigningKey> {

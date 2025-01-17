@@ -14,14 +14,14 @@ use std::{
 
 use anyhow::anyhow;
 pub use builder::Builder;
-use content::Content;
+pub use content::Content;
 use coset::{CborSerializable, Header};
 pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
-pub use signature::KidUri;
-use signature::Signatures;
+pub use signature::{KidUri, Signatures};
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
+#[derive(Debug, Clone)]
 struct InnerCatalystSignedDocument {
     /// Document Metadata
     metadata: Metadata,
@@ -37,17 +37,30 @@ struct InnerCatalystSignedDocument {
 /// non-optional.
 pub struct CatalystSignedDocument {
     /// Catalyst Signed Document metadata, raw doc, with content errors.
-    pub(crate) inner: Arc<InnerCatalystSignedDocument>,
+    inner: Arc<InnerCatalystSignedDocument>,
 }
 
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
-        writeln!(f, "Signature Information [")?;
-        for kid in &self.inner.signatures.kids() {
-            writeln!(f, "  {kid}")?;
+        writeln!(f, "Payload Size: {} bytes", self.inner.content.len())?;
+        writeln!(f, "Signature Information")?;
+        if self.inner.signatures.0.is_empty() {
+            writeln!(f, "  This document is unsigned.")?;
+        } else {
+            for kid in &self.inner.signatures.kids() {
+                writeln!(f, "  Signature Key ID: {kid}")?;
+            }
         }
-        writeln!(f, "]\n")
+        Ok(())
+    }
+}
+
+impl From<InnerCatalystSignedDocument> for CatalystSignedDocument {
+    fn from(inner: InnerCatalystSignedDocument) -> Self {
+        Self {
+            inner: inner.into(),
+        }
     }
 }
 
@@ -154,22 +167,28 @@ impl Decode<'_, ()> for CatalystSignedDocument {
 
 impl Encode<()> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut encode::Encoder<W>, ctx: &mut (),
+        &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
         let protected_header = Header::try_from(&self.inner.metadata).map_err(|e| {
             minicbor::encode::Error::message(format!("Failed to encode Document Metadata: {e}"))
         })?;
+
         let mut builder = coset::CoseSignBuilder::new()
             .protected(protected_header)
             .payload(self.inner.content.bytes().to_vec());
+
         for signature in self.signatures().signatures() {
             builder = builder.add_signature(signature);
         }
+
         let cose_sign = builder.build();
+
         let cose_bytes = cose_sign.to_vec().map_err(|e| {
             minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
         })?;
-        cose_bytes.encode(e, ctx)?;
-        Ok(())
+
+        e.writer_mut()
+            .write_all(&cose_bytes)
+            .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
     }
 }

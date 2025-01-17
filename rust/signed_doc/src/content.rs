@@ -10,6 +10,9 @@ impl Content {
     /// Creates a new `Content` value,
     /// verifies a Document's content, that it is correctly encoded and it corresponds and
     /// parsed to the specified type
+    ///
+    /// # Errors
+    /// Returns an error if content is not correctly encoded
     pub fn new(
         mut content: Vec<u8>, content_type: ContentType, encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
@@ -35,7 +38,20 @@ impl Content {
     }
 
     /// Return content bytes
+    #[must_use]
     pub fn bytes(&self) -> &[u8] {
         self.0.as_slice()
+    }
+
+    /// Return content byte size
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// Return `true` if content is empty
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }

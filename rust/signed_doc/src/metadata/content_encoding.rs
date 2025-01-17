@@ -14,6 +14,31 @@ pub enum ContentEncoding {
     Brotli,
 }
 
+impl ContentEncoding {
+    /// Compress a Brotli payload
+    pub fn encode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
+        match self {
+            Self::Brotli => {
+                let brotli_params = brotli::enc::BrotliEncoderParams::default();
+                let mut buf = Vec::new();
+                brotli::BrotliCompress(&mut payload, &mut buf, &brotli_params)?;
+                Ok(buf)
+            },
+        }
+    }
+
+    /// Decompress a Brotli payload
+    pub fn decode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
+        match self {
+            Self::Brotli => {
+                let mut buf = Vec::new();
+                brotli::BrotliDecompress(&mut payload, &mut buf)?;
+                Ok(buf)
+            },
+        }
+    }
+}
+
 impl Display for ContentEncoding {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
@@ -49,19 +74,6 @@ impl TryFrom<&coset::cbor::Value> for ContentEncoding {
             Some(encoding) => encoding.parse(),
             None => {
                 anyhow::bail!("Expected Content Encoding to be a string");
-            },
-        }
-    }
-}
-
-impl ContentEncoding {
-    /// Decompress a Brotli payload
-    pub fn decode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
-        match self {
-            Self::Brotli => {
-                let mut buf = Vec::new();
-                brotli::BrotliDecompress(&mut payload, &mut buf)?;
-                Ok(buf)
             },
         }
     }

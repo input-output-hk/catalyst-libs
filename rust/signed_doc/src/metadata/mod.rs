@@ -26,7 +26,7 @@ const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
 /// Document Metadata.
 ///
 /// These values are extracted from the COSE Sign protected header.
-#[derive(Debug, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Deserialize)]
 pub struct Metadata {
     /// Document Type `UUIDv4`.
     #[serde(rename = "type")]
