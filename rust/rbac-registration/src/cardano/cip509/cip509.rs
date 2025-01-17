@@ -194,25 +194,6 @@ impl Cip509 {
         result
     }
 
-    /// Creates an "empty" `Cip509` instance with all optional fields set to `None`.
-    fn with_decode_context(context: &DecodeContext) -> Self {
-        let txn_hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(context.txn)))
-            .hash()
-            .into();
-
-        Self {
-            purpose: None,
-            txn_inputs_hash: None,
-            prv_tx_id: None,
-            metadata: None,
-            validation_signature: None,
-            payment_history: context.payment_history.clone(),
-            txn_hash,
-            origin: context.origin.clone(),
-            report: context.report.clone(),
-        }
-    }
-
     /// Returns all role numbers present in this `Cip509` instance.
     pub fn all_roles(&self) -> Vec<RoleNumber> {
         if let Some(metadata) = &self.metadata {
@@ -288,7 +269,11 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
         // below we should try to recover as much data as possible and not to return early.
         let map_len = decode_map_len(d, context)?;
 
-        let mut result = Self::with_decode_context(decode_context);
+        let mut purpose = None;
+        let mut txn_inputs_hash = None;
+        let mut prv_tx_id = None;
+        let mut validation_signature = None;
+        let mut metadata = None;
 
         let mut found_keys = Vec::new();
         let mut is_metadata_found = false;
@@ -297,7 +282,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             // We don't want to consume key here because it can be a part of chunked metadata that
             // is decoded below.
             let Ok(key) = d.probe().u8() else {
-                result.report.other(
+                decode_context.report.other(
                     &format!("Unable to decode map key ({index} index)"),
                     context,
                 );
@@ -307,25 +292,26 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 // Consume the key. This should never fail because we used `probe` above.
                 let _: u8 = decode_helper(d, context, &mut ())?;
 
-                if report_duplicated_key(&found_keys, &key, index, context, &result.report) {
+                if report_duplicated_key(&found_keys, &key, index, context, &decode_context.report)
+                {
                     continue;
                 }
                 found_keys.push(key);
 
                 match key {
                     Cip509IntIdentifier::Purpose => {
-                        result.purpose = decode_purpose(d, context, &result.report);
+                        purpose = decode_purpose(d, context, &decode_context.report);
                     },
                     Cip509IntIdentifier::TxInputsHash => {
-                        result.txn_inputs_hash = decode_input_hash(d, context, &result.report);
+                        txn_inputs_hash = decode_input_hash(d, context, &decode_context.report);
                     },
                     Cip509IntIdentifier::PreviousTxId => {
-                        result.prv_tx_id =
-                            decode_previous_transaction_id(d, context, &result.report);
+                        prv_tx_id =
+                            decode_previous_transaction_id(d, context, &decode_context.report);
                     },
                     Cip509IntIdentifier::ValidationSignature => {
-                        result.validation_signature =
-                            decode_validation_signature(d, context, &result.report);
+                        validation_signature =
+                            decode_validation_signature(d, context, &decode_context.report);
                     },
                 }
             } else {
@@ -334,7 +320,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 // metadata, but it isn't allowed. See this link for more details:
                 // https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md#keys-10-11-or-12---x509-chunked-data
                 if is_metadata_found {
-                    result.report.duplicate_field(
+                    decode_context.report.duplicate_field(
                         "metadata",
                         "Only one instance of the chunked metadata should be present",
                         context,
@@ -344,9 +330,9 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 is_metadata_found = true;
 
                 match X509Chunks::decode(d, decode_context) {
-                    Ok(chunks) => result.metadata = chunks.into(),
+                    Ok(chunks) => metadata = chunks.into(),
                     Err(e) => {
-                        result.report.other(
+                        decode_context.report.other(
                             &format!("Unable to decode metadata from chunks: {e:?}"),
                             context,
                         );
@@ -360,14 +346,27 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             Cip509IntIdentifier::TxInputsHash,
             Cip509IntIdentifier::ValidationSignature,
         ];
-        report_missing_keys(&found_keys, &required_keys, context, &result.report);
+        report_missing_keys(&found_keys, &required_keys, context, &decode_context.report);
         if !is_metadata_found {
-            result
+            decode_context
                 .report
                 .missing_field("metadata (10, 11 or 12 chunks)", context);
         }
 
-        Ok(result)
+        let txn_hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(decode_context.txn)))
+            .hash()
+            .into();
+        Ok(Self {
+            purpose,
+            txn_inputs_hash,
+            prv_tx_id,
+            metadata,
+            validation_signature,
+            payment_history: Default::default(),
+            txn_hash,
+            origin: decode_context.origin.clone(),
+            report: decode_context.report.clone(),
+        })
     }
 }
 
