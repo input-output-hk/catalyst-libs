@@ -1,5 +1,5 @@
 ---
-Title: RBAC Key Identifier URI Specification
+Title: RBAC Catalyst Identifier URI Specification
 Category: Catalyst
 Status: Proposed
 Authors:
@@ -20,8 +20,7 @@ License: CC-BY-4.0
     * [`authority` - `host`](#authority---host)
       * [List of defined hosts](#list-of-defined-hosts)
     * [`authority` - `userinfo`](#authority---userinfo)
-      * [Lists of defined subnetwork `userinfo` values](#lists-of-defined-subnetwork-userinfo-values)
-        * [Cardano](#cardano)
+      * [Example `userinfo` with a `hostname`](#example-userinfo-with-a-hostname)
   * [`path`](#path)
 * [Reference Implementation](#reference-implementation)
 * [Test Vectors](#test-vectors)
@@ -38,34 +37,37 @@ unambiguously identified.
 
 ## Motivation: why is this CIP necessary?
 
-There is a need to identify which Key from a RBAC registration was used to sign data.
+There is a need to identify which RBAC Registration is referenced,
+or which Key from a RBAC registration was used to sign data.
 RBAC defines a universal keychain of different keys that can be used for different purposes.
 They can be used not only for Signatures, but also Encryption.
 
-Therefore, there needs to be an unambiguous and easy to lookup identifier to signify which key was
-used for a particular purpose.
+Sometimes all that is required is to identify the individual key chain.
+Other times a specific key on the chain needs to be referenced.
 
-This document defines a [URI] scheme to unambiguously define a particular key with reference to a
-particular RBAC keychain.
+Therefore, there needs to be an unambiguous and easy to lookup identifier to signify which keychain,
+or key in a particular chain was used for a particular purpose.
+
+This document defines a [URI] scheme to unambiguously define a keychain or a specific key within the keychain.
 
 ## Specification
 
 ### URI
 
-The RBAC Kid is formatted using a [Universal Resource Identifier].
+The Catalyst RBAC Id is formatted using a [Universal Resource Identifier].
 Refer to [RFC3986] for the specification of the URI format.
 
 ### `scheme`
 
-The [scheme](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1) **MUST** be `kid.catalyst-rbac`;
+The [scheme](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1) **MUST** be `id.catalyst`;
 
 ### `authority`
 
 The [authority](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2) references the blockchain or network
 the key was registered within.
 
-It is perfectly valid for a Kid to reference a different network than the place where the Key is used.
-For example, a `cardano` KID can be used to post documents to `IPFS`.
+It is perfectly valid for a Kid to reference a different network than the place where the Id or Key is used.
+For example, a `cardano` ID can be used to post documents to `IPFS`.
 Its purpose is to define WHERE the key was registered, and nothing more.
 
 The Authority will consist of a `host` and optional `userinfo`.
@@ -78,30 +80,43 @@ It **IS NOT** resolvable with **DNS**, and **IS NOT** a public host name.
 It is used as a decentralized network identifier.
 The consumer of the `KID` must be able to resolve these host names.
 
+The hostname may have one or more subdomains which could specify side-chains of a particular network,
+or test networks.
+
 ##### List of defined hosts
 
 | `host` | Description |
 | --- | --- |
 | `cardano` | Cardano Blockchain |
+| `preprod.cardano` | Preprod Cardano Blockchain test network |
+| `preview.cardano` | Preview Cardano Blockchain test network |
 | `midnight` | Midnight Blockchain |
 | `ethereum` | Ethereum Blockchain |
 | `cosmos` | Cosmos Blockchain |
 
+This list is indicative of the host names that can be used, any hostname is valid provided it is
+capable of storing catalyst RBAC registration keychains.
+
 #### `authority` - `userinfo`
 
-The [userinfo](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.1)
-is used to distinguish a subnetwork from the primary main network.
-The absence of `userinfo` is used to indicate the primary main network.
+The [userinfo] is used to hold a user defined readable name that can be attached to the keychain.
+It may contain an optional `nonce` which is separated from the users name by a `:` and replaces a
+traditional password used for HTTP basic authentication.
 
-##### Lists of defined subnetwork `userinfo` values
+Because the name is not unique, and is provided by the user, it is informational only.
+A URI is identical, provided the hostname and path are the same, the [userinfo] does not play
+a part in validating or finding the catalyst keychain being referenced.
 
-###### Cardano
+The `nonce` part contained in the `password` component of the username *MUST* be an integer,
+and it is the number of seconds since 1970 UTC, when the nonce was generated.
 
-| `userinfo` | Description |
-| --- | --- |
-| `preprod` | Cardano Pre-Production Network |
-| `preview` | Cardano Preview Network |
-| 0x<hex_number>  | Cardano network identified by this magic number in hex |
+Applications which use the `nonce` will define its use, anything that does not use the `nonce` will ignore it.
+
+##### Example `userinfo` with a `hostname`
+
+* `anne@cardano`  - username `anne` no nonce.
+* `blake:1737101079@midnight` - username `blake` with nonce 1737101079.
+* `:173710179#ethereum` - no username with nonce 173710179.
 
 ### `path`
 
@@ -115,13 +130,16 @@ The overall `path` specification is: `<initial role0 key>/<role>/<rotation>#encr
   * This does not change, even if the Initial Role 0 key is revoked.
   * This allows for an unambiguous identifier for the RBAC keychain.
   * It is not necessarily the key being identified.
-* `<role>` - This is the Role number being used.
+* `<role>` - *Optional* This is the Role number being used.
   * It is a positive number, starting at 0, and no greater than 65535.
-* `<rotation>` - This is the rotation of the defined role key being identified.
+  * If it is not defined, then its default value is 0.
+  * If it is not defined, there can be no `<rotation>` part of the path following.
+* `<rotation>` - *Optional* This is the rotation of the defined role key being identified.
   * It starts at 0 for the first published key for the role, and increments by one for each subsequent published rotation.
   * This number refers to the published sequence of keys for the role in the RBAC registration keychain,
   not the index used in the key derivation.
   * It is positive and no greater than 65535.
+  * If not present, it defaults to 0.
 * `#encrypt` - [Fragment](https://datatracker.ietf.org/doc/html/rfc3986#section-3.5)
   disambiguates Encryption Public Keys from signing public keys.
   * Roles can have 1 active public signing key, and 1 active public encryption key.
@@ -134,26 +152,46 @@ The first implementation will be Catalyst Voices.
 
 ## Test Vectors
 
-* `kid.catalyst-rbac://cardano/<key>/0/0`
+* `id.catalyst://cardano/<key>`
   * A Signing key registered on the Cardano Main network.
   * Role 0 - Rotation 0.
+  * `username` - undefined.
+  * `nonce` - undefined.
   In this example, it is exactly the same as the `<key>`.
-* `kid.catalyst-rbac://preprod@cardano/<key>/7/3`
+* `id.catalyst://cardano/<key>/0`
+  * A Signing key registered on the Cardano Main network.
+  * Role 0 - Rotation 0.
+  * `username` - undefined.
+  * `nonce` - undefined.
+* `id.catalyst://gary@cardano/<key>/0/0`
+  * A Signing key registered on the Cardano Main network.
+  * Role 0 - Rotation 0.
+  * `username` - `gary`.
+  * `nonce` - undefined.
+* `id.catalyst://faith@preprod@cardano/<key>/7/3`
   * A Signing key registered on the Cardano pre-production network.
   * Role 7 - Rotation 3.
+  * `username` - `faith`
+  * `nonce` - undefined.
   The Key for Role 7, and its third published rotation
   (i.e., the fourth key published, the first is the initial key, plus 3 rotations following it).
-* `kid.catalyst-rbac://preprod@cardano/<key>/2/0#encrypt`
+* `id.catalyst://faith:173710179@preprod@cardano/<key>/2/0#encrypt`
   * A Public Encryption key registered on the Cardano pre-production network.
   * Role 2 - Rotation 0.
+  * `username` - `faith`
+  * `nonce` - 173710179.
   The initially published Public Encryption Key for Role 2.
-* `kid.catalyst-rbac://midnight/<key>/0/1`
+* `kid.catalyst-rbac://:173710179@midnight/<key>/0/1`
   * A Signing key registered on the Midnight Blockchain Main network
   * Role 0 - Rotation 1.
+  * `username` - undefined.
+  * `nonce` - 173710179.
   In this example, it is NOT the same as the `<key>`, as it identifies the first rotation after `<key>`.
 * `kid.catalyst-rbac://midnight/<key>/2/1#encrypt`
   * A public encryption key registered on the Midnight Blockchain Main network.
   * Role 2 - Rotation 1.
+  * `username` - undefined.
+  * `nonce` - 173710179.
 
 ## Rationale: how does this CIP achieve its goals?
 
@@ -178,3 +216,4 @@ This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses
 [Universal Resource Identifier]: https://datatracker.ietf.org/doc/html/rfc3986
 [RFC3986]: https://datatracker.ietf.org/doc/html/rfc3986
 [Base64 URL]: https://datatracker.ietf.org/doc/html/rfc4648#section-5
+[userinfo]: (https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.1)
