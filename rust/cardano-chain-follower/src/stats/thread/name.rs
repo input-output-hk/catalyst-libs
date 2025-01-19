@@ -18,5 +18,3 @@ pub(crate) const VALIDATE_MITHRIL_SNAPSHOT: &str = "ValidateMithrilSnapshot";
 pub(crate) const MITHRIL_DL_DEDUP: &str = "MithrilDlDedup";
 /// Parallel Download Processor Worker.
 pub(crate) const PARALLEL_DL_WORKER: &str = "ParallelDlWorker";
-/// Parallel Download Processor Get Content Length.
-pub(crate) const PARALLEL_DL_GET_CONTENT_LENGTH: &str = "ParallelDlGetContentLength";

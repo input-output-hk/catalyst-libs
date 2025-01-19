@@ -375,7 +375,7 @@ impl ParallelDownloadProcessor {
                 MIN_CHUNK_SIZE
             );
         }
-        let file_size = get_content_length_async(url, chain).await?;
+        let file_size = get_content_length_async(url).await?;
 
         // Get the minimum number of workers we need, just in case the chunk size is bigger than
         // the requested workers can process.
@@ -701,20 +701,9 @@ impl std::io::Read for ParallelDownloadProcessor {
 ///
 /// This exists because the `Probe` call made by Mithril is Async, and this makes
 /// interfacing to that easier.
-async fn get_content_length_async(url: &str, chain: Network) -> anyhow::Result<usize> {
+async fn get_content_length_async(url: &str) -> anyhow::Result<usize> {
     let url = url.to_owned();
-    match tokio::task::spawn_blocking(move || {
-        stats::start_thread(
-            chain,
-            stats::thread::name::PARALLEL_DL_GET_CONTENT_LENGTH,
-            false,
-        );
-        let result = get_content_length(&url);
-        stats::stop_thread(chain, stats::thread::name::PARALLEL_DL_GET_CONTENT_LENGTH);
-        result
-    })
-    .await
-    {
+    match tokio::task::spawn_blocking(move || get_content_length(&url)).await {
         Ok(result) => result,
         Err(error) => {
             error!("get_content_length failed");
