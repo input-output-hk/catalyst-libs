@@ -9,7 +9,6 @@ pub(crate) mod thread;
 use std::sync::{Arc, LazyLock, RwLock};
 
 use cardano_blockchain_types::{Network, Slot};
-use catalyst_types::mmap_file::MemMapFileStat;
 use chrono::Utc;
 use dashmap::DashMap;
 use rollback::{rollbacks, rollbacks_reset, RollbackType};
@@ -31,8 +30,6 @@ pub struct Statistics {
     pub mithril: Mithril,
     /// Statistics related to the threads.
     pub thread_stats: DashMap<String, thread::ThreadStat>,
-    /// Statistics related to the memory mapped files.
-    pub mmap_file_stat: MemMapFileStat,
 }
 
 /// Type we use to manage the Sync Task handle map.
@@ -557,7 +554,7 @@ pub fn thread_stat(chain: Network, name: &str) -> Option<ThreadStat> {
 
 /// Get the names of all the thread statistics.
 #[allow(dead_code)]
-pub fn thread_stat_name(chain: Network) -> Vec<String> {
+pub fn thread_stat_names(chain: Network) -> Vec<String> {
     let Some(stats) = lookup_stats(chain) else {
         return Vec::new();
     };

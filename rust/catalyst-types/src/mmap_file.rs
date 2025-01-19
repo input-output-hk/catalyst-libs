@@ -27,6 +27,20 @@ static MEMMAP_FILE_STATS: Lazy<MemMapFileStat> = Lazy::new(MemMapFileStat::defau
 #[derive(Debug, Default, Clone, Serialize)]
 pub struct MemMapFileStat(Arc<MemMapFileStatInner>);
 
+/// Internal structure to hold stats.
+struct MemMapFileStatInner {
+    /// A counter for the number of memory-mapped files.
+    file_count: AtomicU64,
+    /// The total size of memory-mapped files.
+    total_size: AtomicU64,
+    /// The amount of time that memory-mapped files have been dropped.
+    drop_count: AtomicU64,
+    /// The total size of memory-mapped files that have been dropped.
+    drop_size: AtomicU64,
+    /// A count of errors encountered.
+    error_count: AtomicU64,
+}
+
 impl MemMapFileStat {
     /// Get the statistic file count.
     #[must_use]
@@ -57,20 +71,6 @@ impl MemMapFileStat {
     pub fn error_count(&self) -> u64 {
         self.0.error_count.load(Ordering::SeqCst)
     }
-}
-
-/// Internal structure to hold stats.
-struct MemMapFileStatInner {
-    /// A counter for the number of memory-mapped files.
-    file_count: AtomicU64,
-    /// The total size of memory-mapped files.
-    total_size: AtomicU64,
-    /// The amount of time that memory-mapped files have been dropped.
-    drop_count: AtomicU64,
-    /// The total size of memory-mapped files that have been dropped.
-    drop_size: AtomicU64,
-    /// A count of errors encountered.
-    error_count: AtomicU64,
 }
 
 impl MemoryMapFile {
