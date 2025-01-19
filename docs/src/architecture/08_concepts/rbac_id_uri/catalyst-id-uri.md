@@ -32,7 +32,7 @@ License: CC-BY-4.0
 
 ## Abstract
 
-Definition of a [URI] which allows for RBAC keys used for different purposes to be easily and
+Definition of a [URI], which allows for RBAC keys used for different purposes to be easily and
 unambiguously identified.
 
 ## Motivation: why is this CIP necessary?
@@ -42,7 +42,7 @@ or which Key from a RBAC registration was used to sign data.
 RBAC defines a universal keychain of different keys that can be used for different purposes.
 They can be used not only for Signatures, but also Encryption.
 
-Sometimes all that is required is to identify the individual key chain.
+Sometimes all that is required is to identify the individual keychain.
 Other times a specific key on the chain needs to be referenced.
 
 Therefore, there needs to be an unambiguous and easy to lookup identifier to signify which keychain,
@@ -54,19 +54,21 @@ This document defines a [URI] scheme to unambiguously define a keychain or a spe
 
 ### URI
 
-The Catalyst RBAC Id is formatted using a [Universal Resource Identifier].
+The Catalyst RBAC ID is formatted using a [Universal Resource Identifier].
 Refer to [RFC3986] for the specification of the URI format.
 
 ### `scheme`
 
-The [scheme](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1) **MUST** be `id.catalyst`;
+The [scheme](https://datatracker.ietf.org/doc/html/rfc3986#section-3.1) **MUST** be `id.catalyst`.
+
+When used as a Catalyst ID, where only catalyst IDs would be used, the scheme can be omitted.
 
 ### `authority`
 
 The [authority](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2) references the blockchain or network
 the key was registered within.
 
-It is perfectly valid for a Kid to reference a different network than the place where the Id or Key is used.
+It is perfectly valid for an ID Uri to reference a different network than the place where the ID or Key is used.
 For example, a `cardano` ID can be used to post documents to `IPFS`.
 Its purpose is to define WHERE the key was registered, and nothing more.
 
@@ -100,7 +102,7 @@ capable of storing catalyst RBAC registration keychains.
 #### `authority` - `userinfo`
 
 The [userinfo] is used to hold a user defined readable name that can be attached to the keychain.
-It may contain an optional `nonce` which is separated from the users name by a `:` and replaces a
+It may contain an optional `nonce` which is separated from the user's name by a `:` and replaces a
 traditional password used for HTTP basic authentication.
 
 Because the name is not unique, and is provided by the user, it is informational only.
@@ -108,13 +110,13 @@ A URI is identical, provided the hostname and path are the same, the [userinfo] 
 a part in validating or finding the catalyst keychain being referenced.
 
 The `nonce` part contained in the `password` component of the username *MUST* be an integer,
-and it is the number of seconds since 1970 UTC, when the nonce was generated.
+and it is the number of seconds since 1970 UTC, when the Catalyst ID URI was generated.
 
 Applications which use the `nonce` will define its use, anything that does not use the `nonce` will ignore it.
 
 ##### Example `userinfo` with a `hostname`
 
-* `anne@cardano`  - username `anne` no nonce.
+* `anne@cardano` - username `anne` no nonce.
 * `blake:1737101079@midnight` - username `blake` with nonce 1737101079.
 * `:173710179#ethereum` - no username with nonce 173710179.
 
@@ -157,36 +159,38 @@ The first implementation will be Catalyst Voices.
   * Role 0 - Rotation 0.
   * `username` - undefined.
   * `nonce` - undefined.
-  In this example, it is exactly the same as the `<key>`.
+  * In this example, it is identical to `<key>/0/0` or `<key>/0`.
 * `id.catalyst://cardano/<key>/0`
   * A Signing key registered on the Cardano Main network.
   * Role 0 - Rotation 0.
   * `username` - undefined.
   * `nonce` - undefined.
+  * In this example, it is identical to `<key>/0/0` or `<key>`.
 * `id.catalyst://gary@cardano/<key>/0/0`
   * A Signing key registered on the Cardano Main network.
   * Role 0 - Rotation 0.
   * `username` - `gary`.
   * `nonce` - undefined.
+  * In this example, it is identical to `<key>` or `<key>/0`.
 * `id.catalyst://faith@preprod@cardano/<key>/7/3`
   * A Signing key registered on the Cardano pre-production network.
   * Role 7 - Rotation 3.
   * `username` - `faith`
   * `nonce` - undefined.
-  The Key for Role 7, and its third published rotation
+  * The Key for Role 7, and its third published rotation
   (i.e., the fourth key published, the first is the initial key, plus 3 rotations following it).
 * `id.catalyst://faith:173710179@preprod@cardano/<key>/2/0#encrypt`
   * A Public Encryption key registered on the Cardano pre-production network.
   * Role 2 - Rotation 0.
   * `username` - `faith`
   * `nonce` - 173710179.
-  The initially published Public Encryption Key for Role 2.
+  * The initially published Public Encryption Key for Role 2.
 * `kid.catalyst-rbac://:173710179@midnight/<key>/0/1`
   * A Signing key registered on the Midnight Blockchain Main network
   * Role 0 - Rotation 1.
   * `username` - undefined.
   * `nonce` - 173710179.
-  In this example, it is NOT the same as the `<key>`, as it identifies the first rotation after `<key>`.
+  * In this example, it is NOT the same as the `<key>`, as it identifies the first rotation after `<key>`.
 * `kid.catalyst-rbac://midnight/<key>/2/1#encrypt`
   * A public encryption key registered on the Midnight Blockchain Main network.
   * Role 2 - Rotation 1.
