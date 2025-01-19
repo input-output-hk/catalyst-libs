@@ -1,9 +1,6 @@
 //! Memory-mapped file.
 
 use core::fmt;
-use fmmap::{MmapFile, MmapFileExt};
-use once_cell::sync::Lazy;
-use serde::{ser::SerializeStruct, Serialize, Serializer};
 use std::{
     path::Path,
     sync::{
@@ -11,6 +8,10 @@ use std::{
         Arc,
     },
 };
+
+use fmmap::{MmapFile, MmapFileExt};
+use once_cell::sync::Lazy;
+use serde::{ser::SerializeStruct, Serialize, Serializer};
 
 /// Memory-mapped file.
 pub struct MemoryMapFile {
@@ -179,9 +180,7 @@ impl fmt::Debug for MemMapFileStatInner {
 
 impl Serialize for MemMapFileStatInner {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
+    where S: Serializer {
         let mut state = serializer.serialize_struct("MemMapFileStat", 5)?;
 
         state.serialize_field("file_count", &self.file_count.load(Ordering::SeqCst))?;
