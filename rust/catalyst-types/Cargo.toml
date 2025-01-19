@@ -17,7 +17,6 @@ name = "catalyst_types"
 
 [dependencies]
 blake2b_simd = "1.0.2"
-coset = "0.3.8"
 displaydoc = "0.2.5"
 ed25519-dalek = "2.1.1"
 fluent-uri = "0.3.2"

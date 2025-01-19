@@ -1,7 +1,9 @@
 //! `UUIDv4` Type.
 use std::fmt::{Display, Formatter};
 
-use super::{decode_cbor_uuid, INVALID_UUID};
+use minicbor::{Decode, Decoder, Encode};
+
+use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, INVALID_UUID};
 
 /// Type representing a `UUIDv4`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize, serde::Deserialize)]
@@ -41,23 +43,18 @@ impl Display for UuidV4 {
     }
 }
 
-impl TryFrom<&coset::cbor::Value> for UuidV4 {
-    type Error = super::CborUuidError;
+impl Decode<'_, CborContext> for UuidV4 {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut CborContext) -> Result<Self, minicbor::decode::Error> {
+        let uuid = decode_cbor_uuid(d, ctx)?;
+        Ok(Self { uuid })
+    }
+}
 
-    fn try_from(cbor_value: &coset::cbor::Value) -> Result<Self, Self::Error> {
-        match decode_cbor_uuid(cbor_value) {
-            Ok(uuid) => {
-                if uuid.get_version_num() == Self::UUID_VERSION_NUMBER {
-                    Ok(Self { uuid })
-                } else {
-                    Err(super::CborUuidError::InvalidVersion {
-                        uuid,
-                        expected_version: Self::UUID_VERSION_NUMBER,
-                    })
-                }
-            },
-            Err(e) => Err(e),
-        }
+impl Encode<CborContext> for UuidV4 {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut CborContext,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        encode_cbor_uuid(self.uuid(), e, ctx)
     }
 }
 
@@ -81,11 +78,9 @@ impl From<UuidV4> for uuid::Uuid {
 
 #[cfg(test)]
 mod tests {
-    use coset::cbor::Value;
     use uuid::Uuid;
 
     use super::*;
-    use crate::uuid::UUID_CBOR_TAG;
 
     #[test]
     fn test_invalid_uuid() {
@@ -110,39 +105,6 @@ mod tests {
         assert!(
             !invalid_version_uuid.is_valid(),
             "Zero UUID should not be valid"
-        );
-    }
-
-    #[test]
-    fn test_try_from_cbor_valid_uuid() {
-        let uuid = Uuid::new_v4();
-        let cbor_value = Value::Tag(
-            UUID_CBOR_TAG,
-            Box::new(Value::Bytes(uuid.as_bytes().to_vec())),
-        );
-        let result = UuidV4::try_from(&cbor_value);
-
-        assert!(
-            result.is_ok(),
-            "Should successfully parse valid UUID from CBOR"
-        );
-        let uuid_v4 = result.unwrap();
-        assert!(uuid_v4.is_valid(), "Parsed UUIDv4 should be valid");
-        assert_eq!(
-            uuid_v4.uuid(),
-            uuid,
-            "Parsed UUID should match original UUID"
-        );
-    }
-
-    #[test]
-    fn test_try_from_cbor_invalid_uuid() {
-        let cbor_value = Value::Bytes(vec![0; 16]);
-        let result = UuidV4::try_from(&cbor_value);
-
-        assert!(
-            result.is_err(),
-            "Should fail to parse invalid UUID from CBOR"
         );
     }
 }

@@ -49,6 +49,7 @@ coverallsapp
 cpus
 crontabs
 crontagged
+csprng
 cstring
 dalek
 dashmap
@@ -122,6 +123,7 @@ jorm
 jormungandr
 Jörmungandr
 jsonschema
+kiduri
 lcov
 Leay
 Leshiy
@@ -210,6 +212,8 @@ reqwest
 retriggering
 ristretto
 rlib
+rngs
+rsplit
 rulelist
 RULENAME
 runable
@@ -236,6 +240,7 @@ smac
 stevenj
 stringzilla
 subsec
+subnetwork
 symlinkat
 syscall
 tacho
@@ -263,8 +268,11 @@ unlinkat
 upnp
 ureq
 userid
+userinfo
 utimensat
 UTXO
+uuidv4
+uuidv7
 vitss
 Vkey
 vkeywitness

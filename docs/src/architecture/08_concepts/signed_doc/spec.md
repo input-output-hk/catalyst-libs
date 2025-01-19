@@ -107,7 +107,7 @@ There can, and probably will, exist multiple versions of the same document.
 
 The `ver` is a [UUID] v7.
 
-The initial `ver` assigned the first time a Catalyst Signed Document is published will be identical to the [`id`](#id).
+The initial `ver` assigned the first time a Catalyst Signed Document is published **MUST** be identical to the [`id`](#id).
 Subsequent versions will retain the same [`id`](#id) and will create a new `ver`,
 following best practice for creating a new [UUID] v7.
 
