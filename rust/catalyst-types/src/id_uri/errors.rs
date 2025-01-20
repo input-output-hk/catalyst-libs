@@ -32,4 +32,6 @@ pub enum IdUriError {
     InvalidRotationValue(#[from] KeyRotationError),
     /// Encryption key Identifier Fragment is not valid
     InvalidEncryptionKeyFragment,
+    /// Invalid Text encoding
+    InvalidTextEncoding(#[from] std::string::FromUtf8Error),
 }

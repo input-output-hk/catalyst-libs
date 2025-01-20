@@ -395,7 +395,7 @@ impl FromStr for IdUri {
             let mut cat_id = Self::new(network, subnet, role0_pk)
                 .with_role(role_index)
                 .with_rotation(rotation);
-            
+
             if uri.has_fragment() {
                 if uri.fragment() == Some(Self::ENCRYPTION_FRAGMENT) {
                     cat_id = cat_id.with_encryption();
@@ -476,7 +476,7 @@ impl TryFrom<&[u8]> for IdUri {
     type Error = errors::IdUriError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        let kid_str = String::from_utf8_lossy(value);
+        let kid_str = String::from_utf8(value.to_vec())?;
         IdUri::from_str(&kid_str)
     }
 }
