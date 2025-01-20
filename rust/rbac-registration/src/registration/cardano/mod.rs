@@ -420,15 +420,11 @@ mod test {
         let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
-        assert!(
-            !registration.report().is_problematic(),
-            "{:#?}",
-            registration.report()
-        );
+        data.assert_valid(&registration);
 
         // Create a chain with the first registration.
         let chain = RegistrationChain::new(registration).unwrap();
-        assert_eq!(chain.purpose(), &[Uuid::parse_str(&data.purpose).unwrap()]);
+        assert_eq!(chain.purpose(), &[data.purpose]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().0;
         assert_eq!(origin.point().slot_or_default(), data.slot);
@@ -454,17 +450,11 @@ mod test {
         let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
-        assert!(
-            !registration.report().is_problematic(),
-            "{:#?}",
-            registration.report()
-        );
+        data.assert_valid(&registration);
         let update = chain.update(registration).unwrap();
 
-        // Current tx hash should updated to RBAC data in block 4
-        assert_eq!(update.current_tx_id_hash().to_string(), data.tx_hash);
-        assert!(update
-            .role_data()
-            .contains_key(&RoleNumber::from(data.role)));
+        // Current tx hash should be equal to the hash from block 4.
+        assert_eq!(update.current_tx_id_hash(), data.txn_hash);
+        assert!(update.role_data().contains_key(&data.role));
     }
 }

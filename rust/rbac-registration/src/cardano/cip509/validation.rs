@@ -248,10 +248,6 @@ fn check_key_offset<T>(
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use uuid::Uuid;
-
     use super::*;
     use crate::{cardano::cip509::Cip509, utils::test};
 
@@ -263,20 +259,7 @@ mod tests {
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
-        assert!(
-            !registration.report().is_problematic(),
-            "{:?}",
-            registration.report()
-        );
-        assert!(registration.previous_transaction().is_none());
-
-        let origin = registration.origin();
-        assert_eq!(origin.txn_index(), data.txn_index);
-        assert_eq!(origin.point().slot_or_default(), data.slot);
-
-        let (purpose, metadata, _) = registration.consume().unwrap();
-        assert_eq!(purpose, Uuid::parse_str(&data.purpose).unwrap());
-        assert_eq!(1, metadata.role_data.len());
+        data.assert_valid(&registration);
     }
 
     #[test]
@@ -310,10 +293,7 @@ mod tests {
         let registration = registrations.pop().unwrap();
         assert!(registration.report().is_problematic());
 
-        assert_eq!(
-            registration.previous_transaction(),
-            Some(Blake2b256Hash::from_str(data.prv_hash.unwrap().as_str()).unwrap())
-        );
+        assert_eq!(registration.previous_transaction(), data.prv_hash);
 
         let origin = registration.origin();
         assert_eq!(origin.txn_index(), data.txn_index);
@@ -334,23 +314,7 @@ mod tests {
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
-        assert!(
-            !registration.report().is_problematic(),
-            "{:?}",
-            registration.report()
-        );
-        assert_eq!(
-            registration.previous_transaction(),
-            Some(Blake2b256Hash::from_str(data.prv_hash.unwrap().as_str()).unwrap())
-        );
-
-        let origin = registration.origin();
-        assert_eq!(origin.txn_index(), data.txn_index);
-        assert_eq!(origin.point().slot_or_default(), data.slot);
-
-        let (purpose, metadata, _) = registration.consume().unwrap();
-        assert_eq!(purpose, Uuid::parse_str(&data.purpose).unwrap());
-        assert_eq!(1, metadata.role_data.len());
+        data.assert_valid(&registration);
     }
 
     #[test]
