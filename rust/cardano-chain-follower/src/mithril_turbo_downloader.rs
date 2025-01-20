@@ -146,7 +146,7 @@ impl Inner {
                     );
                 }
                 // Got the full file and its the expected size.  Is it different?
-                if memcmp(prev_mmap.file_as_slice(), buf.as_slice()) == cmp::Ordering::Equal {
+                if memcmp(prev_mmap.as_slice(), buf.as_slice()) == cmp::Ordering::Equal {
                     // Same so lets Hardlink it, and throw away the temp buffer.
 
                     // Make sure our big mmap get dropped.

@@ -1,17 +1,13 @@
 //! Memory-mapped file.
 
-use core::fmt;
 use std::{
     path::Path,
-    sync::{
-        atomic::{AtomicU64, Ordering},
-        Arc,
-    },
+    sync::{Arc, RwLock},
 };
 
 use fmmap::{MmapFile, MmapFileExt};
 use once_cell::sync::Lazy;
-use serde::{ser::SerializeStruct, Serialize, Serializer};
+use serde::Serialize;
 
 /// Memory-mapped file.
 pub struct MemoryMapFile {
@@ -20,111 +16,94 @@ pub struct MemoryMapFile {
     /// The size of the memory-mapped file.
     size: u64,
 }
+
 /// Global statistic for memory-mapped files.
-static MEMMAP_FILE_STATS: Lazy<MemMapFileStat> = Lazy::new(MemMapFileStat::default);
+static MEMMAP_FILE_STATS: Lazy<Arc<RwLock<MemMapFileStat>>> =
+    Lazy::new(|| Arc::new(RwLock::new(MemMapFileStat::default())));
 
 /// Memory-mapped file statistic.
 #[derive(Debug, Default, Clone, Serialize)]
-pub struct MemMapFileStat(Arc<MemMapFileStatInner>);
-
-/// Internal structure to hold stats.
-struct MemMapFileStatInner {
+pub struct MemMapFileStat {
     /// A counter for the number of memory-mapped files.
-    file_count: AtomicU64,
+    file_count: u64,
     /// The total size of memory-mapped files.
-    total_size: AtomicU64,
+    total_size: u64,
     /// The amount of time that memory-mapped files have been dropped.
-    drop_count: AtomicU64,
+    drop_count: u64,
     /// The total size of memory-mapped files that have been dropped.
-    drop_size: AtomicU64,
+    drop_size: u64,
     /// A count of errors encountered.
-    error_count: AtomicU64,
+    error_count: u64,
 }
 
 impl MemMapFileStat {
     /// Get the statistic file count.
     #[must_use]
     pub fn file_count(&self) -> u64 {
-        self.0.file_count.load(Ordering::SeqCst)
+        self.file_count
     }
 
     /// Get the statistic total size.
     #[must_use]
     pub fn total_size(&self) -> u64 {
-        self.0.total_size.load(Ordering::SeqCst)
+        self.total_size
     }
 
     /// Get the statistic drop count.
     #[must_use]
     pub fn drop_count(&self) -> u64 {
-        self.0.drop_count.load(Ordering::SeqCst)
+        self.drop_count
     }
 
     /// Get the statistic drop size.
     #[must_use]
     pub fn drop_size(&self) -> u64 {
-        self.0.drop_size.load(Ordering::SeqCst)
+        self.drop_size
     }
 
     /// Get the statistic error count.
     #[must_use]
     pub fn error_count(&self) -> u64 {
-        self.0.error_count.load(Ordering::SeqCst)
+        self.error_count
     }
 }
 
 impl MemoryMapFile {
-    /// Get the memory-mapped file.
-    pub fn file(&self) -> &MmapFile {
-        &self.file
-    }
-
     /// Get the memory-mapped file as a slice.
-    pub fn file_as_slice(&self) -> &[u8] {
-        self.file().as_slice()
-    }
-
-    /// Get the size of the memory-mapped file.
-    pub fn size(&self) -> u64 {
-        self.size
+    pub fn as_slice(&self) -> &[u8] {
+        self.file.as_slice()
     }
 
     /// Get the global memory-mapped file statistics.
-    #[must_use]
-    pub fn stat() -> &'static MemMapFileStat {
-        &MEMMAP_FILE_STATS
+    pub fn stat() -> Option<MemMapFileStat> {
+        if let Ok(stat) = MEMMAP_FILE_STATS.read() {
+            Some(stat.clone())
+        } else {
+            None
+        }
     }
 
     /// Update the global stats when a file is created.
     fn update_create_stat(&self) {
-        MEMMAP_FILE_STATS
-            .0
-            .file_count
-            .fetch_add(1, Ordering::SeqCst);
-        MEMMAP_FILE_STATS
-            .0
-            .total_size
-            .fetch_add(self.size, Ordering::SeqCst);
+        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
+            stat.file_count += 1;
+            stat.total_size += self.size;
+        }
     }
 
     /// Update the global stats when a file is dropped.
     fn update_drop_stat(&self) {
-        MEMMAP_FILE_STATS
-            .0
-            .drop_count
-            .fetch_add(1, Ordering::SeqCst);
-        MEMMAP_FILE_STATS
-            .0
-            .drop_size
-            .fetch_add(self.size, Ordering::SeqCst);
+        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
+            stat.drop_count += 1;
+            stat.drop_size += self.size;
+        }
     }
 
     /// Update the global error count when an error occurs.
     pub fn update_err_stat() {
-        MEMMAP_FILE_STATS
-            .0
-            .error_count
-            .fetch_add(1, Ordering::SeqCst);
+        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
+            stat.error_count += 1;
+        }
     }
 }
 
@@ -151,43 +130,5 @@ impl TryFrom<&Path> for MemoryMapFile {
                 Err(error)
             },
         }
-    }
-}
-
-impl Default for MemMapFileStatInner {
-    fn default() -> Self {
-        Self {
-            file_count: AtomicU64::new(0),
-            total_size: AtomicU64::new(0),
-            drop_count: AtomicU64::new(0),
-            drop_size: AtomicU64::new(0),
-            error_count: AtomicU64::new(0),
-        }
-    }
-}
-
-impl fmt::Debug for MemMapFileStatInner {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("MemMapFileStat")
-            .field("file_count", &self.file_count.load(Ordering::SeqCst))
-            .field("total_size", &self.total_size.load(Ordering::SeqCst))
-            .field("drop_count", &self.drop_count.load(Ordering::SeqCst))
-            .field("drop_size", &self.drop_size.load(Ordering::SeqCst))
-            .field("error_count", &self.error_count.load(Ordering::SeqCst))
-            .finish()
-    }
-}
-
-impl Serialize for MemMapFileStatInner {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
-        let mut state = serializer.serialize_struct("MemMapFileStat", 5)?;
-
-        state.serialize_field("file_count", &self.file_count.load(Ordering::SeqCst))?;
-        state.serialize_field("total_size", &self.total_size.load(Ordering::SeqCst))?;
-        state.serialize_field("drop_count", &self.drop_count.load(Ordering::SeqCst))?;
-        state.serialize_field("drop_size", &self.drop_size.load(Ordering::SeqCst))?;
-        state.serialize_field("error_count", &self.error_count.load(Ordering::SeqCst))?;
-        state.end()
     }
 }
