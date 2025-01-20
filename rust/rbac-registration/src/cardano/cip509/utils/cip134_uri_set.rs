@@ -266,8 +266,10 @@ mod tests {
 
     #[test]
     fn set_new() {
-        let block = test::block_1();
-        let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
+        let data = test::block_1();
+        let cip509 = Cip509::new(&data.block, data.tx_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(
             !cip509.report().is_problematic(),
             "Failed to decode Cip509: {:?}",
@@ -288,7 +290,7 @@ mod tests {
         // cSpell:disable
         assert_eq!(
             uri.uri(),
-            "web+cardano://addr/stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr"
+            format!("web+cardano://addr/{}", data.stake_addr.unwrap())
         );
         // cSpell:enable
         let Address::Stake(address) = uri.address() else {

@@ -415,8 +415,10 @@ mod test {
 
     #[test]
     fn multiple_registrations() {
-        let block = test::block_1();
-        let registration = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
+        let data = test::block_1();
+        let registration = Cip509::new(&data.block, data.tx_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(
             !registration.report().is_problematic(),
             "{:#?}",
@@ -425,18 +427,17 @@ mod test {
 
         // Create a chain with the first registration.
         let chain = RegistrationChain::new(registration).unwrap();
-        assert_eq!(chain.purpose(), &[Uuid::parse_str(
-            "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
-        )
-        .unwrap()]);
+        assert_eq!(chain.purpose(), &[Uuid::parse_str(&data.purpose).unwrap()]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().0;
-        assert_eq!(origin.point().slot_or_default(), 77_429_134.into());
-        assert_eq!(origin.txn_index(), 3.into());
+        assert_eq!(origin.point().slot_or_default(), data.slot);
+        assert_eq!(origin.txn_index(), data.tx_index);
 
         // Try to add an invalid registration.
-        let block = test::block_2();
-        let registration = Cip509::new(&block, 0.into(), &[]).unwrap().unwrap();
+        let data = test::block_2();
+        let registration = Cip509::new(&data.block, data.tx_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(registration.report().is_problematic());
 
         let error = chain.update(registration).unwrap_err();
@@ -448,8 +449,10 @@ mod test {
         );
 
         // Add the second registration.
-        let block = test::block_4();
-        let registration = Cip509::new(&block, 1.into(), &[]).unwrap().unwrap();
+        let data = test::block_4();
+        let registration = Cip509::new(&data.block, data.tx_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(
             !registration.report().is_problematic(),
             "{:#?}",

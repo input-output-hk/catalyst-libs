@@ -551,9 +551,8 @@ mod tests {
 
     #[test]
     fn new() {
-        let block = test::block_1();
-        let index = TxnIndex::from(3);
-        let res = Cip509::new(&block, index, &[])
+        let data = test::block_1();
+        let res = Cip509::new(&data.block, data.tx_index, &[])
             .expect("Failed to get Cip509")
             .expect("There must be Cip509 in block");
         assert!(!res.report.is_problematic(), "{:?}", res.report);
@@ -561,8 +560,8 @@ mod tests {
 
     #[test]
     fn from_block() {
-        let block = test::block_1();
-        let res = Cip509::from_block(&block, &[]);
+        let data = test::block_1();
+        let res = Cip509::from_block(&data.block, &[]);
         assert_eq!(1, res.len());
         let cip509 = res.first().unwrap();
         assert!(!cip509.report.is_problematic(), "{:?}", cip509.report);
