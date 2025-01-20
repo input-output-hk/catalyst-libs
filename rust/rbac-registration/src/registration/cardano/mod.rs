@@ -202,7 +202,8 @@ impl RegistrationChainInner {
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
         // or else it is not a part of the chain
         if prv_tx_id == self.current_tx_id_hash {
-            new_inner.current_tx_id_hash = prv_tx_id;
+            // Update the current transaction ID hash
+            new_inner.current_tx_id_hash = cip509.txn_hash();
         } else {
             bail!("Invalid previous transaction ID, not a part of this registration chain");
         }
@@ -415,8 +416,10 @@ mod test {
 
     #[test]
     fn multiple_registrations() {
-        let block = test::block_1();
-        let registration = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
+        let data = test::block_1();
+        let registration = Cip509::new(&data.block, data.txn_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(
             !registration.report().is_problematic(),
             "{:#?}",
@@ -425,18 +428,17 @@ mod test {
 
         // Create a chain with the first registration.
         let chain = RegistrationChain::new(registration).unwrap();
-        assert_eq!(chain.purpose(), &[Uuid::parse_str(
-            "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
-        )
-        .unwrap()]);
+        assert_eq!(chain.purpose(), &[Uuid::parse_str(&data.purpose).unwrap()]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().0;
-        assert_eq!(origin.point().slot_or_default(), 77_429_134.into());
-        assert_eq!(origin.txn_index(), 3.into());
+        assert_eq!(origin.point().slot_or_default(), data.slot);
+        assert_eq!(origin.txn_index(), data.txn_index);
 
         // Try to add an invalid registration.
-        let block = test::block_2();
-        let registration = Cip509::new(&block, 0.into(), &[]).unwrap().unwrap();
+        let data = test::block_2();
+        let registration = Cip509::new(&data.block, data.txn_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(registration.report().is_problematic());
 
         let error = chain.update(registration).unwrap_err();
@@ -448,13 +450,21 @@ mod test {
         );
 
         // Add the second registration.
-        let block = test::block_4();
-        let registration = Cip509::new(&block, 1.into(), &[]).unwrap().unwrap();
+        let data = test::block_4();
+        let registration = Cip509::new(&data.block, data.txn_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(
             !registration.report().is_problematic(),
             "{:#?}",
             registration.report()
         );
-        chain.update(registration).unwrap();
+        let update = chain.update(registration).unwrap();
+
+        // Current tx hash should updated to RBAC data in block 4
+        assert_eq!(update.current_tx_id_hash().to_string(), data.tx_hash);
+        assert!(update
+            .role_data()
+            .contains_key(&RoleNumber::from(data.role)));
     }
 }

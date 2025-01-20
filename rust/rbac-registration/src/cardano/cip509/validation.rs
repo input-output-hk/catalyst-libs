@@ -257,9 +257,9 @@ mod tests {
 
     #[test]
     fn block_1() {
-        let block = test::block_1();
+        let data = test::block_1();
 
-        let mut registrations = Cip509::from_block(&block, &[]);
+        let mut registrations = Cip509::from_block(&data.block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
@@ -271,30 +271,27 @@ mod tests {
         assert!(registration.previous_transaction().is_none());
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), 3.into());
-        assert_eq!(origin.point().slot_or_default(), 77_429_134.into());
+        assert_eq!(origin.txn_index(), data.txn_index);
+        assert_eq!(origin.point().slot_or_default(), data.slot);
 
         let (purpose, metadata, _) = registration.consume().unwrap();
-        assert_eq!(
-            purpose,
-            Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
-        );
+        assert_eq!(purpose, Uuid::parse_str(&data.purpose).unwrap());
         assert_eq!(1, metadata.role_data.len());
     }
 
     #[test]
     fn block_2() {
-        let block = test::block_2();
+        let data = test::block_2();
 
-        let mut registrations = Cip509::from_block(&block, &[]);
+        let mut registrations = Cip509::from_block(&data.block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
         assert!(registration.report().is_problematic());
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), 0.into());
-        assert_eq!(origin.point().slot_or_default(), 77_171_632.into());
+        assert_eq!(origin.txn_index(), data.txn_index);
+        assert_eq!(origin.point().slot_or_default(), data.slot);
 
         // The consume function must return the problem report contained within the registration.
         let report = registration.consume().unwrap_err();
@@ -305,44 +302,35 @@ mod tests {
 
     #[test]
     fn block_3() {
-        let block = test::block_3();
+        let data = test::block_3();
 
-        let mut registrations = Cip509::from_block(&block, &[]);
+        let mut registrations = Cip509::from_block(&data.block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
-        assert!(
-            !registration.report().is_problematic(),
-            "{:?}",
-            registration.report()
-        );
+        assert!(registration.report().is_problematic());
+
         assert_eq!(
             registration.previous_transaction(),
-            Some(
-                Blake2b256Hash::from_str(
-                    "4d3f576f26db29139981a69443c2325daa812cc353a31b5a4db794a5bcbb06c2"
-                )
-                .unwrap()
-            )
+            Some(Blake2b256Hash::from_str(data.prv_hash.unwrap().as_str()).unwrap())
         );
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), 0.into());
-        assert_eq!(origin.point().slot_or_default(), 77_170_639.into());
+        assert_eq!(origin.txn_index(), data.txn_index);
+        assert_eq!(origin.point().slot_or_default(), data.slot);
 
-        let (purpose, metadata, _) = registration.consume().unwrap();
-        assert_eq!(
-            purpose,
-            Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
-        );
-        assert_eq!(1, metadata.role_data.len());
+        let report = registration.consume().unwrap_err();
+        assert!(report.is_problematic());
+        let report = format!("{report:?}");
+        assert!(report
+            .contains("Role payment key reference index (1) is not found in transaction outputs"));
     }
 
     #[test]
     fn block_4() {
-        let block = test::block_4();
+        let data = test::block_4();
 
-        let mut registrations = Cip509::from_block(&block, &[]);
+        let mut registrations = Cip509::from_block(&data.block, &[]);
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
@@ -353,30 +341,24 @@ mod tests {
         );
         assert_eq!(
             registration.previous_transaction(),
-            Some(
-                Blake2b256Hash::from_str(
-                    "6695b9cac9230af5c8ee50747b1ca3c78a854d181c7e5c6c371de01b80274d31"
-                )
-                .unwrap()
-            )
+            Some(Blake2b256Hash::from_str(data.prv_hash.unwrap().as_str()).unwrap())
         );
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), 1.into());
-        assert_eq!(origin.point().slot_or_default(), 77_436_369.into());
+        assert_eq!(origin.txn_index(), data.txn_index);
+        assert_eq!(origin.point().slot_or_default(), data.slot);
 
         let (purpose, metadata, _) = registration.consume().unwrap();
-        assert_eq!(
-            purpose,
-            Uuid::parse_str("ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c").unwrap()
-        );
+        assert_eq!(purpose, Uuid::parse_str(&data.purpose).unwrap());
         assert_eq!(1, metadata.role_data.len());
     }
 
     #[test]
     fn extract_stake_addresses_from_metadata() {
-        let block = test::block_1();
-        let cip509 = Cip509::new(&block, 3.into(), &[]).unwrap().unwrap();
+        let data = test::block_1();
+        let cip509 = Cip509::new(&data.block, data.txn_index, &[])
+            .unwrap()
+            .unwrap();
         assert!(
             !cip509.report().is_problematic(),
             "Failed to decode Cip509: {:?}",

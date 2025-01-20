@@ -137,8 +137,8 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = test::block_3();
-        let transactions = block.txs();
+        let data = test::block_3();
+        let transactions = data.block.txs();
         let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
         };
@@ -170,8 +170,8 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = test::block_3();
-        let transactions = block.txs();
+        let data = test::block_3();
+        let transactions = data.block.txs();
         let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
         };
@@ -203,8 +203,8 @@ mod tests {
         let mut report = ProblemReport::new("X509Chunks");
         // We don't care about actual values in the context, all we want is to check the decoding
         // of differently compressed data.
-        let block = test::block_3();
-        let transactions = block.txs();
+        let data = test::block_3();
+        let transactions = data.block.txs();
         let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
             panic!("Unexpected transaction type");
         };
