@@ -2,6 +2,7 @@
 use std::fmt::{Display, Formatter};
 
 mod additional_fields;
+mod algorithm;
 mod content_encoding;
 mod content_type;
 mod document_id;
@@ -10,6 +11,7 @@ mod document_type;
 mod document_version;
 
 pub use additional_fields::AdditionalFields;
+use algorithm::Algorithm;
 use anyhow::anyhow;
 pub use catalyst_types::uuid::{CborContext, V4 as UuidV4, V7 as UuidV7};
 pub use content_encoding::ContentEncoding;
@@ -35,6 +37,8 @@ pub struct Metadata {
     id: DocumentId,
     /// Document Version `UUIDv7`.
     ver: DocumentVersion,
+    /// Crytpography Algorithm
+    alg: Algorithm,
     /// Document Payload Content Type.
     #[serde(rename = "content-type")]
     content_type: ContentType,
@@ -65,6 +69,12 @@ impl Metadata {
         self.ver.into()
     }
 
+    /// Return Cryptography Algorithm.
+    #[must_use]
+    pub fn algorithm(&self) -> coset::iana::Algorithm {
+        self.alg.into()
+    }
+
     /// Returns the Document Content Type, if any.
     #[must_use]
     pub fn content_type(&self) -> ContentType {
@@ -90,6 +100,7 @@ impl Display for Metadata {
         writeln!(f, "  type: {},", self.doc_type)?;
         writeln!(f, "  id: {},", self.id)?;
         writeln!(f, "  ver: {},", self.ver)?;
+        writeln!(f, "  alg: {:?},", self.alg)?;
         writeln!(f, "  content_type: {}", self.content_type)?;
         writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
         writeln!(f, "  additional_fields: {:?},", self.extra)?;
@@ -102,6 +113,7 @@ impl TryFrom<&Metadata> for coset::Header {
 
     fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
         let mut builder = coset::HeaderBuilder::new()
+            .algorithm(meta.alg.into())
             .content_format(CoapContentFormat::from(meta.content_type()));
 
         let mut errors = Vec::new();
@@ -159,8 +171,21 @@ impl TryFrom<&Metadata> for coset::Header {
 impl TryFrom<&coset::ProtectedHeader> for Metadata {
     type Error = crate::error::Error;
 
+    #[allow(clippy::too_many_lines)]
     fn try_from(protected: &coset::ProtectedHeader) -> Result<Self, Self::Error> {
         let mut errors = Vec::new();
+
+        let mut algorithm = Algorithm::default();
+        if let Some(coset::RegisteredLabelWithPrivate::Assigned(alg)) = protected.header.alg {
+            match Algorithm::try_from(alg) {
+                Ok(alg) => algorithm = alg,
+                Err(e) => errors.push(anyhow!("Invalid Document Algorithm: {e}")),
+            }
+        } else {
+            errors.push(anyhow!(
+                "Invalid COSE protected header, missing Content-Type field"
+            ));
+        }
 
         let mut content_type = None;
         if let Some(value) = protected.header.content_type.as_ref() {
@@ -257,6 +282,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
                     doc_type: doc_type.into(),
                     id: id.into(),
                     ver: ver.into(),
+                    alg: algorithm,
                     content_encoding,
                     content_type,
                     extra,

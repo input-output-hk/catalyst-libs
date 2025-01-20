@@ -37,11 +37,11 @@ enum Cli {
     },
     /// Adds a signature to already formed COSE document
     Sign {
-        /// Path to the secret key in PEM format
-        sk: PathBuf,
         /// Path to the formed (could be empty, without any signatures) COSE document
         /// This exact file would be modified and new signature would be added
         doc: PathBuf,
+        /// Path to the secret key in PEM format
+        sk: PathBuf,
         /// Signer kid
         kid: KidUri,
     },
