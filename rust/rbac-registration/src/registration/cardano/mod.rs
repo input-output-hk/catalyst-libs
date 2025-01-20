@@ -202,7 +202,8 @@ impl RegistrationChainInner {
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
         // or else it is not a part of the chain
         if prv_tx_id == self.current_tx_id_hash {
-            new_inner.current_tx_id_hash = prv_tx_id;
+            // Update the current transaction ID hash
+            new_inner.current_tx_id_hash = cip509.txn_hash();
         } else {
             bail!("Invalid previous transaction ID, not a part of this registration chain");
         }
@@ -458,6 +459,12 @@ mod test {
             "{:#?}",
             registration.report()
         );
-        chain.update(registration).unwrap();
+        let update = chain.update(registration).unwrap();
+
+        // Current tx hash should updated to RBAC data in block 4
+        assert_eq!(update.current_tx_id_hash().to_string(), data.tx_hash);
+        assert!(update
+            .role_data()
+            .contains_key(&RoleNumber::from(data.role)));
     }
 }
