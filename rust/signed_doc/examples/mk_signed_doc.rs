@@ -23,13 +23,12 @@ fn main() {
 
 /// Hermes cli commands
 #[derive(clap::Parser)]
+#[allow(clippy::large_enum_variant)]
 enum Cli {
     /// Builds a COSE document without signatures
     Build {
         /// Path to the document in the json format
         doc: PathBuf,
-        /// Path to the json schema (Draft 7) to validate document against it
-        schema: PathBuf,
         /// Path to the output COSE file to store.
         output: PathBuf,
         /// Document metadata, must be in JSON format
@@ -60,12 +59,7 @@ enum Cli {
 impl Cli {
     fn exec(self) -> anyhow::Result<()> {
         match self {
-            Self::Build {
-                doc,
-                schema: _,
-                output,
-                meta,
-            } => {
+            Self::Build { doc, output, meta } => {
                 // Load Metadata from JSON file
                 let metadata: Metadata = load_json_from_file(&meta)
                     .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
