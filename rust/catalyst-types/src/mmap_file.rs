@@ -69,6 +69,11 @@ impl MemMapFileStat {
 }
 
 impl MemoryMapFile {
+    /// Get the size of the memory-mapped file.
+    pub fn size(&self) -> u64 {
+        self.size
+    }
+
     /// Get the memory-mapped file as a slice.
     pub fn as_slice(&self) -> &[u8] {
         self.file.as_slice()
