@@ -112,20 +112,17 @@ impl IdUri {
 
     /// Create a new `IdUri` for a Signing Key
     #[must_use]
-    pub fn new(
-        network: &str, subnet: Option<&str>, role0_pk: VerifyingKey, role: RoleIndex,
-        rotation: KeyRotation,
-    ) -> Self {
+    pub fn new(network: &str, subnet: Option<&str>, role0_pk: VerifyingKey) -> Self {
         Self {
             username: None, // Default to Not set, use `with_username` if required.
             nonce: None,    // Default to Not set, use `with_nonce` if required.
             network: network.to_string(),
             subnet: subnet.map(str::to_string),
             role0_pk,
-            role,
-            rotation,
-            encryption: false,
-            id: false, // Default to `URI` formatted.
+            role: RoleIndex::default(), // Defaulted, use `with_role()` to change it.
+            rotation: KeyRotation::default(), // Defaulted, use `with_rotation()` to change it.
+            encryption: false,          // Defaulted, use `with_encryption()` to change it.
+            id: false,                  // Default to `URI` formatted.
         }
     }
 
@@ -395,7 +392,10 @@ impl FromStr for IdUri {
         };
 
         let cat_id = {
-            let mut cat_id = Self::new(network, subnet, role0_pk, role_index, rotation);
+            let mut cat_id = Self::new(network, subnet, role0_pk)
+                .with_role(role_index)
+                .with_rotation(rotation);
+            
             if uri.has_fragment() {
                 if uri.fragment() == Some(Self::ENCRYPTION_FRAGMENT) {
                     cat_id = cat_id.with_encryption();
