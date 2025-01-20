@@ -200,7 +200,7 @@ The first implementation will be Catalyst Voices.
   * A public encryption key registered on the Midnight Blockchain Main network.
   * Role 2 - Rotation 1.
   * `username` - undefined.
-  * `nonce` - 173710179.
+  * `nonce` - undefined.
 
 ## Rationale: how does this CIP achieve its goals?
 
