@@ -80,7 +80,7 @@ The [host](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2.2)
 refers to the network type where the RBAC registration was made.
 It **IS NOT** resolvable with **DNS**, and **IS NOT** a public host name.
 It is used as a decentralized network identifier.
-The consumer of the `KID` must be able to resolve these host names.
+The consumer of the `ID` must be able to resolve these host names to known and supported blockchain networks.
 
 The hostname may have one or more subdomains which could specify side-chains of a particular network,
 or test networks.
@@ -118,7 +118,7 @@ Applications which use the `nonce` will define its use, anything that does not u
 
 * `anne@cardano` - username `anne` no nonce.
 * `blake:1737101079@midnight` - username `blake` with nonce 1737101079.
-* `:173710179#ethereum` - no username with nonce 173710179.
+* `:173710179@ethereum` - no username with nonce 173710179.
 
 ### `path`
 
@@ -176,27 +176,27 @@ The first implementation will be Catalyst Voices.
   * `nonce` - undefined.
   * In this example, it is identical to `FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE` or
   `FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0`.
-* `id.catalyst://faith@preprod@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3`
+* `id.catalyst://faith@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3`
   * A Signing key registered on the Cardano pre-production network.
   * Role 7 - Rotation 3.
   * `username` - `faith`
   * `nonce` - undefined.
   * The Key for Role 7, and its third published rotation
   (i.e., the fourth key published, the first is the initial key, plus 3 rotations following it).
-* `id.catalyst://faith:173710179@preprod@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt`
+* `id.catalyst://faith:173710179@preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt`
   * A Public Encryption key registered on the Cardano pre-production network.
   * Role 2 - Rotation 0.
   * `username` - `faith`
   * `nonce` - 173710179.
   * The initially published Public Encryption Key for Role 2.
-* `kid.catalyst-rbac://:173710179@midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1`
+* `id.catalyst://:173710179@midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1`
   * A Signing key registered on the Midnight Blockchain Main network
   * Role 0 - Rotation 1.
   * `username` - undefined.
   * `nonce` - 173710179.
   * In this example, it is NOT the same as the `FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE`,
   as it identifies the first rotation after `FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE`.
-* `kid.catalyst-rbac://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt`
+* `id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt`
   * A public encryption key registered on the Midnight Blockchain Main network.
   * Role 2 - Rotation 1.
   * `username` - undefined.
