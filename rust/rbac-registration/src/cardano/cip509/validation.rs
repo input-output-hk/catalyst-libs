@@ -271,7 +271,7 @@ mod tests {
         assert!(registration.previous_transaction().is_none());
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), data.tx_index);
+        assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
         let (purpose, metadata, _) = registration.consume().unwrap();
@@ -290,7 +290,7 @@ mod tests {
         assert!(registration.report().is_problematic());
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), data.tx_index);
+        assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
         // The consume function must return the problem report contained within the registration.
@@ -316,7 +316,7 @@ mod tests {
         );
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), data.tx_index);
+        assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
         let report = registration.consume().unwrap_err();
@@ -345,7 +345,7 @@ mod tests {
         );
 
         let origin = registration.origin();
-        assert_eq!(origin.txn_index(), data.tx_index);
+        assert_eq!(origin.txn_index(), data.txn_index);
         assert_eq!(origin.point().slot_or_default(), data.slot);
 
         let (purpose, metadata, _) = registration.consume().unwrap();
@@ -356,7 +356,7 @@ mod tests {
     #[test]
     fn extract_stake_addresses_from_metadata() {
         let data = test::block_1();
-        let cip509 = Cip509::new(&data.block, data.tx_index, &[])
+        let cip509 = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
         assert!(

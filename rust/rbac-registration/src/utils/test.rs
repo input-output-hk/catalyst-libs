@@ -14,7 +14,7 @@ pub struct BlockTestData {
     /// Role.
     pub role: u8,
     /// Transaction index.
-    pub tx_index: TxnIndex,
+    pub txn_index: TxnIndex,
     /// Transaction hash.
     pub tx_hash: String,
     /// Previous hash.
@@ -41,7 +41,7 @@ pub fn block_1() -> BlockTestData {
         block: block(data),
         slot: 81_440_954.into(),
         role: 0,
-        tx_index: 2.into(),
+        txn_index: 2.into(),
         tx_hash: "22469cb214ad2c95265630f5c26b96166ea618722b38401d55ecf68a1fd893ec".to_string(),
         prv_hash: None,
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c".to_string(),
@@ -68,7 +68,7 @@ pub fn block_2() -> BlockTestData {
         block: block(data),
         slot: 77_171_632.into(),
         role: 0,
-        tx_index: 0.into(),
+        txn_index: 0.into(),
         tx_hash: "337d35026efaa48b5ee092d38419e102add1b535364799eb8adec8ac6d573b79".to_string(),
         prv_hash: Some(
             "4d3f576f26db29139981a69443c2325daa812cc353a31b5a4db794a5bcbb06c2".to_string(),
@@ -95,7 +95,7 @@ pub fn block_3() -> BlockTestData {
         block: block(data),
         slot: 77_170_639.into(),
         role: 0,
-        tx_index: 0.into(),
+        txn_index: 0.into(),
         tx_hash: "0fda4c9f86e763fecd33f57d8f93540b1598c0a0e539dd996c48052ce94bab80".to_string(),
         prv_hash: Some(
             "4d3f576f26db29139981a69443c2325daa812cc353a31b5a4db794a5bcbb06c2".to_string(),
@@ -123,7 +123,7 @@ pub fn block_4() -> BlockTestData {
         block: block(data),
         slot: 81_441_637.into(),
         role: 4,
-        tx_index: 4.into(),
+        txn_index: 4.into(),
         tx_hash: "730cc97496b2aec16af58d27284deae2b3347e4c4c5e9ac97458e80131ccd575".to_string(),
         prv_hash: Some(block_1().tx_hash),
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c".to_string(),

@@ -552,7 +552,7 @@ mod tests {
     #[test]
     fn new() {
         let data = test::block_1();
-        let res = Cip509::new(&data.block, data.tx_index, &[])
+        let res = Cip509::new(&data.block, data.txn_index, &[])
             .expect("Failed to get Cip509")
             .expect("There must be Cip509 in block");
         assert!(!res.report.is_problematic(), "{:?}", res.report);

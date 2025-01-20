@@ -416,7 +416,7 @@ mod test {
     #[test]
     fn multiple_registrations() {
         let data = test::block_1();
-        let registration = Cip509::new(&data.block, data.tx_index, &[])
+        let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
         assert!(
@@ -431,11 +431,11 @@ mod test {
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().0;
         assert_eq!(origin.point().slot_or_default(), data.slot);
-        assert_eq!(origin.txn_index(), data.tx_index);
+        assert_eq!(origin.txn_index(), data.txn_index);
 
         // Try to add an invalid registration.
         let data = test::block_2();
-        let registration = Cip509::new(&data.block, data.tx_index, &[])
+        let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
         assert!(registration.report().is_problematic());
@@ -450,7 +450,7 @@ mod test {
 
         // Add the second registration.
         let data = test::block_4();
-        let registration = Cip509::new(&data.block, data.tx_index, &[])
+        let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
         assert!(

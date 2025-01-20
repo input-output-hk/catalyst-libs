@@ -267,7 +267,7 @@ mod tests {
     #[test]
     fn set_new() {
         let data = test::block_1();
-        let cip509 = Cip509::new(&data.block, data.tx_index, &[])
+        let cip509 = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
         assert!(
