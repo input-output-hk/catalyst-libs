@@ -1,4 +1,4 @@
-//! COSE Signature Protected Header `kid`.
+//! Catalyst ID URI.
 
 // cspell: words userinfo rngs Fftx csprng
 

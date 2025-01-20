@@ -199,7 +199,7 @@ The first implementation will be Catalyst Voices.
   * In this example, it is NOT the same as the `FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE`,
   as it identifies the first rotation after `FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE`.
 * `id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt`
-  * A public encryption key registered on the Midnight Blockchain Main network.
+  * A Public Encryption key registered on the Midnight Blockchain Main network.
   * Role 2 - Rotation 1.
   * `username` - undefined.
   * `nonce` - undefined.
