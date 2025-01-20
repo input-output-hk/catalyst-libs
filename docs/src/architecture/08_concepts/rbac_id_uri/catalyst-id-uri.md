@@ -11,6 +11,8 @@ Created: 2025-01-05
 License: CC-BY-4.0
 ---
 
+<!-- cspell: words Fftx -->
+
 * [Abstract](#abstract)
 * [Motivation: why is this CIP necessary?](#motivation-why-is-this-cip-necessary)
 * [Specification](#specification)
