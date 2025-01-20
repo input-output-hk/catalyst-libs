@@ -108,7 +108,7 @@ struct State {
 /// Problem Report.
 ///
 /// This structure allows making a cheap copies that share the same state.
-#[derive(Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ProblemReport(Arc<State>);
 
 impl ProblemReport {
