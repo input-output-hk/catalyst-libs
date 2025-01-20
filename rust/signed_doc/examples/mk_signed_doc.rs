@@ -12,7 +12,7 @@ use catalyst_signed_doc::{
     Builder, CatalystSignedDocument, Content, Decode, Decoder, KidUri, Metadata, Signatures,
 };
 use clap::Parser;
-use coset::{CborSerializable, Header};
+use coset::CborSerializable;
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
 
 fn main() {
@@ -135,48 +135,11 @@ fn decode_signed_doc(cose_bytes: &[u8]) {
     }
 }
 
-fn _load_schema_from_file(schema_path: &PathBuf) -> anyhow::Result<jsonschema::JSONSchema> {
-    let schema_file = File::open(schema_path)?;
-    let schema_json = serde_json::from_reader(schema_file)?;
-    let schema = jsonschema::JSONSchema::options()
-        .with_draft(jsonschema::Draft::Draft7)
-        .compile(&schema_json)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-    Ok(schema)
-}
-
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>
 where T: for<'de> serde::Deserialize<'de> {
     let file = File::open(path)?;
     let json = serde_json::from_reader(file)?;
     Ok(json)
-}
-
-fn _validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> anyhow::Result<()> {
-    schema.validate(doc).map_err(|err| {
-        let mut validation_error = String::new();
-        for e in err {
-            validation_error.push_str(&format!("\n - {e}"));
-        }
-        anyhow::anyhow!("{validation_error}")
-    })?;
-    Ok(())
-}
-
-fn _brotli_compress_json(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
-    let brotli_params = brotli::enc::BrotliEncoderParams::default();
-    let doc_bytes = serde_json::to_vec(doc)?;
-    let mut buf = Vec::new();
-    brotli::BrotliCompress(&mut doc_bytes.as_slice(), &mut buf, &brotli_params)?;
-    Ok(buf)
-}
-
-fn _build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> anyhow::Result<coset::CoseSign> {
-    let protected_header = Header::try_from(meta)?;
-    Ok(coset::CoseSignBuilder::new()
-        .protected(protected_header)
-        .payload(doc_bytes)
-        .build())
 }
 
 fn load_cose_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSign> {
