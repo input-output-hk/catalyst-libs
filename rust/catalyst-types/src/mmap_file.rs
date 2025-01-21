@@ -8,6 +8,7 @@ use std::{
 use fmmap::{MmapFile, MmapFileExt};
 use once_cell::sync::Lazy;
 use serde::Serialize;
+use tracing::error;
 
 /// Memory-mapped file.
 pub struct MemoryMapFile {
@@ -37,6 +38,17 @@ pub struct MemMapFileStat {
 }
 
 impl MemMapFileStat {
+    /// Get the global memory-mapped file statistics.
+    /// Return default statistics if the mutex is poisoned.
+    pub fn current() -> MemMapFileStat {
+        if let Ok(stat) = MEMMAP_FILE_STATS.read() {
+            stat.clone()
+        } else {
+            error!("RwLock read poisoned, failed to read memory-mapped file statistics.");
+            MemMapFileStat::default()
+        }
+    }
+
     /// Get the statistic file count.
     #[must_use]
     pub fn file_count(&self) -> u64 {
@@ -66,6 +78,39 @@ impl MemMapFileStat {
     pub fn error_count(&self) -> u64 {
         self.error_count
     }
+
+    /// Update the global stats when a file is created.
+    fn update_create_stat(size: u64) {
+        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
+            stat.file_count += 1;
+            stat.total_size += size;
+        } else {
+            error!(
+                "RwLock write poisoned, failed to update created memory-mapped file statistics."
+            );
+        }
+    }
+
+    /// Update the global stats when a file is dropped.
+    fn update_drop_stat(size: u64) {
+        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
+            stat.drop_count += 1;
+            stat.drop_size += size;
+        } else {
+            error!(
+                "RwLock write poisoned, failed to update dropped memory-mapped file statistics."
+            );
+        }
+    }
+
+    /// Update the global error count when an error occurs.
+    fn update_err_stat() {
+        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
+            stat.error_count += 1;
+        } else {
+            error!("RwLock write poisoned, failed to update error memory-mapped file statistics.");
+        }
+    }
 }
 
 impl MemoryMapFile {
@@ -78,43 +123,11 @@ impl MemoryMapFile {
     pub fn as_slice(&self) -> &[u8] {
         self.file.as_slice()
     }
-
-    /// Get the global memory-mapped file statistics.
-    pub fn stat() -> Option<MemMapFileStat> {
-        if let Ok(stat) = MEMMAP_FILE_STATS.read() {
-            Some(stat.clone())
-        } else {
-            None
-        }
-    }
-
-    /// Update the global stats when a file is created.
-    fn update_create_stat(&self) {
-        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
-            stat.file_count += 1;
-            stat.total_size += self.size;
-        }
-    }
-
-    /// Update the global stats when a file is dropped.
-    fn update_drop_stat(&self) {
-        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
-            stat.drop_count += 1;
-            stat.drop_size += self.size;
-        }
-    }
-
-    /// Update the global error count when an error occurs.
-    pub fn update_err_stat() {
-        if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
-            stat.error_count += 1;
-        }
-    }
 }
 
 impl Drop for MemoryMapFile {
     fn drop(&mut self) {
-        self.update_drop_stat();
+        MemMapFileStat::update_drop_stat(self.size);
     }
 }
 
@@ -127,11 +140,11 @@ impl TryFrom<&Path> for MemoryMapFile {
             Ok(file) => {
                 let len = file.len() as u64;
                 let memory_map_file = MemoryMapFile { file, size: len };
-                memory_map_file.update_create_stat();
+                MemMapFileStat::update_create_stat(len);
                 Ok(memory_map_file)
             },
             Err(error) => {
-                Self::update_err_stat();
+                MemMapFileStat::update_err_stat();
                 Err(error)
             },
         }
