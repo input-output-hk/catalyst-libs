@@ -40,6 +40,7 @@ struct Cip0134UriSetInner {
 
 impl Cip0134UriSet {
     /// Creates a new `Cip0134UriSet` instance from the given certificates.
+    #[must_use]
     pub fn new(
         x509_certs: &[X509DerCert], c509_certs: &[C509Cert], report: &ProblemReport,
     ) -> Self {
@@ -287,12 +288,10 @@ mod tests {
         assert_eq!(uris.len(), 1);
 
         let uri = uris.first().unwrap();
-        // cSpell:disable
         assert_eq!(
             uri.uri(),
             format!("web+cardano://addr/{}", data.stake_addr.unwrap())
         );
-        // cSpell:enable
         let Address::Stake(address) = uri.address() else {
             panic!("Unexpected address type");
         };

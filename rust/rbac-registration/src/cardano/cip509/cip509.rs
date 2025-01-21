@@ -195,6 +195,7 @@ impl Cip509 {
     }
 
     /// Returns all role numbers present in this `Cip509` instance.
+    #[must_use]
     pub fn all_roles(&self) -> Vec<RoleNumber> {
         if let Some(metadata) = &self.metadata {
             metadata.role_data.keys().copied().collect()
@@ -204,36 +205,43 @@ impl Cip509 {
     }
 
     /// Returns a role data for the given role if it is present.
+    #[must_use]
     pub fn role_data(&self, role: RoleNumber) -> Option<&RoleData> {
         self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
     }
 
     /// Returns a hash of the previous transaction.
+    #[must_use]
     pub fn previous_transaction(&self) -> Option<Blake2b256Hash> {
         self.prv_tx_id
     }
 
-    /// Returns a problem report
+    /// Returns a problem report.
+    #[must_use]
     pub fn report(&self) -> &ProblemReport {
         &self.report
     }
 
     /// Returns a point and a transaction index where this data is originating from.
+    #[must_use]
     pub fn origin(&self) -> &PointTxnIdx {
         &self.origin
     }
 
     /// Returns a hash of the transaction where this data is originating from.
+    #[must_use]
     pub fn txn_hash(&self) -> Blake2b256Hash {
         self.txn_hash
     }
 
     /// Returns URIs contained in both x509 and c509 certificates of `Cip509` metadata.
+    #[must_use]
     pub fn certificate_uris(&self) -> Option<&Cip0134UriSet> {
         self.metadata.as_ref().map(|m| &m.certificate_uris)
     }
 
     /// Returns a transaction inputs hash.
+    #[must_use]
     pub fn txn_inputs_hash(&self) -> Option<&TxInputHash> {
         self.txn_inputs_hash.as_ref()
     }
@@ -556,6 +564,7 @@ mod tests {
             .expect("Failed to get Cip509")
             .expect("There must be Cip509 in block");
         assert!(!res.report.is_problematic(), "{:?}", res.report);
+        data.assert_valid(&res);
     }
 
     #[test]
@@ -565,5 +574,6 @@ mod tests {
         assert_eq!(1, res.len());
         let cip509 = res.first().unwrap();
         assert!(!cip509.report.is_problematic(), "{:?}", cip509.report);
+        data.assert_valid(cip509);
     }
 }

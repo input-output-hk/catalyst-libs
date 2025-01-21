@@ -31,6 +31,7 @@ pub struct RoleData {
 
 impl RoleData {
     /// Create an instance of role data.
+    #[must_use]
     pub fn new(data: CborRoleData, txn: &conway::MintedTx, report: &ProblemReport) -> Self {
         let payment_key = if data.number == Some(RoleNumber::ROLE_0) && data.payment_key.is_none() {
             report.other(
