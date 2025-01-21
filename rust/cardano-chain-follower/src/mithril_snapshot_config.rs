@@ -24,6 +24,7 @@ use crate::{
     mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
     mithril_snapshot_sync::background_mithril_update,
     snapshot_id::SnapshotId,
+    stats,
     turbo_downloader::DlConfig,
 };
 
@@ -413,7 +414,16 @@ impl MithrilSnapshotConfig {
         let (tx, rx) = mpsc::channel::<MithrilUpdateMessage>(2);
 
         // let handle = tokio::spawn(background_mithril_update(chain, self.clone(), tx));
-        *locked_handle = Some(tokio::spawn(background_mithril_update(self.clone(), tx)));
+        let config = self.clone();
+        *locked_handle = Some(tokio::spawn(async move {
+            stats::start_thread(
+                config.chain,
+                stats::thread::name::MITHRIL_SNAPSHOT_UPDATER,
+                true,
+            );
+            background_mithril_update(config.clone(), tx).await;
+            stats::stop_thread(config.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
+        }));
 
         // sync_map.insert(chain, handle);
         debug!(
