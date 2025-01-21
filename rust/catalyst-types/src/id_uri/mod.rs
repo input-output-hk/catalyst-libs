@@ -163,12 +163,23 @@ impl IdUri {
     }
 
     /// Add or change the nonce to a specific value in a Catalyst ID URI.
+    ///
+    /// Note, this will not fail, but if the Datetime is < `MIN_NONCE`,
+    /// or greater than `MAX_NONCE`, it will be clamped into that range.
     #[must_use]
     pub fn with_specific_nonce(self, nonce: DateTime<Utc>) -> Self {
-        Self {
-            nonce: Some(nonce),
-            ..self
-        }
+        let secs = nonce.timestamp();
+        let clamped_secs = secs.clamp(Self::MIN_NONCE, Self::MAX_NONCE);
+
+        let nonce = {
+            if clamped_secs == secs {
+                Some(nonce)
+            } else {
+                DateTime::<Utc>::from_timestamp(clamped_secs, 0)
+            }
+        };
+
+        Self { nonce, ..self }
     }
 
     /// Add or change the nonce in a Catalyst ID URI.
