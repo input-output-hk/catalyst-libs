@@ -22,7 +22,7 @@ pub enum KeyRotationError {
 pub struct KeyRotation(u16);
 
 impl KeyRotation {
-    /// Default Role Index
+    /// Default Key Rotation
     pub const DEFAULT: KeyRotation = KeyRotation(0);
 
     /// Is the `KeyRotation` the default value
