@@ -41,8 +41,8 @@ pub struct Cip509RbacMetadata {
     pub certificate_uris: Cip0134UriSet,
     /// A list of public keys that can be used instead of storing full certificates.
     ///
-    /// Check [this section] to understand the how certificates and the public keys list
-    /// are related.
+    /// Check [this section] to understand how certificates and the public keys list are
+    /// related.
     ///
     /// [this section]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX#storing-certificates-and-public-key
     pub pub_keys: Vec<SimplePublicKeyType>,

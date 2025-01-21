@@ -35,7 +35,7 @@ use crate::{
             types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
             utils::Cip0134UriSet,
             validation::{
-                validate_aux, validate_role_signing_key, validate_stake_public_key,
+                validate_aux, validate_role_data, validate_stake_public_key,
                 validate_txn_inputs_hash,
             },
             x509_chunks::X509Chunks,
@@ -161,10 +161,12 @@ impl Cip509 {
             txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
-        // The following checks are only performed for the role 0.
-        if let Some(role_data) = cip509.role_data(RoleNumber::ROLE_0) {
+        if cip509.role_data(RoleNumber::ROLE_0).is_some() {
+            // The following check is only performed for the role 0.
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
-            validate_role_signing_key(role_data, cip509.metadata.as_ref(), &cip509.report);
+        }
+        if let Some(metadata) = &cip509.metadata {
+            validate_role_data(metadata, &cip509.report);
         }
 
         Ok(Some(cip509))

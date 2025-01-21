@@ -110,7 +110,7 @@ impl RawAuxData {
 
             let _unused = raw_decoded_data.metadata.insert(key, Arc::new(value));
 
-            // Look for End Sentinel IF its an indefinite MAP (which we know because entries is
+            // Look for End Sentinel IF it is an indefinite MAP (which we know because entries is
             // u64::MAX).
             if entries == u64::MAX {
                 match decoder.datatype() {
