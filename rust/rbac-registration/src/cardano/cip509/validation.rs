@@ -176,15 +176,22 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 }
 
 /// Checks that only role 0 uses certificates with zero index.
+#[allow(clippy::similar_names)]
 pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
     let context = "Role data validation";
 
-    if matches!(
+    let has_x_0_cert = matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)));
+    let has_c_0_cert = matches!(
         metadata.c509_certs.first(),
         Some(C509Cert::C509Certificate(_))
-    ) && matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-    {
+    );
+    // There should be only one role 0 certificate.
+    if has_x_0_cert && has_c_0_cert {
         report.other("Only one certificate can be defined at index 0", context);
+    }
+    // Only role 0 can contain certificates at 0 index.
+    if !metadata.role_data.contains_key(&RoleNumber::ROLE_0) && (has_x_0_cert || has_c_0_cert) {
+        report.other("Only role 0 can contain certificates at index 0", context);
     }
 
     for (number, data) in &metadata.role_data {
