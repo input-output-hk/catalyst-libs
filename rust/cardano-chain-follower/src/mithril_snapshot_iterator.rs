@@ -73,7 +73,7 @@ impl MithrilSnapshotIterator {
         chain: Network, path: &Path, from: &Point, search_interval: u64,
     ) -> Option<MithrilSnapshotIterator> {
         let point = probe_point(from, search_interval);
-        let Ok(mut iterator) = make_mithril_iterator(path, &point).await else {
+        let Ok(mut iterator) = make_mithril_iterator(path, &point, chain).await else {
             return None;
         };
 
@@ -116,7 +116,7 @@ impl MithrilSnapshotIterator {
         let this = this?;
 
         // Remake the iterator, based on the new known point.
-        let Ok(iterator) = make_mithril_iterator(path, &this).await else {
+        let Ok(iterator) = make_mithril_iterator(path, &this, chain).await else {
             return None;
         };
 
@@ -176,7 +176,7 @@ impl MithrilSnapshotIterator {
 
         debug!("Actual Mithril Iterator Start: {}", from);
 
-        let iterator = make_mithril_iterator(path, from).await?;
+        let iterator = make_mithril_iterator(path, from, chain).await?;
 
         Ok(MithrilSnapshotIterator {
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {

@@ -37,13 +37,15 @@ pub(crate) const ENVVAR_MITHRIL_EXE_NAME: &str = "MITHRIL_EXE_NAME";
     strum::Display,
 )]
 #[strum(ascii_case_insensitive)]
+#[strum(serialize_all = "snake_case")]
+#[repr(usize)]
 pub enum Network {
     /// Cardano mainnet network.
-    Mainnet,
+    Mainnet = 0,
     /// Cardano pre-production network.
-    Preprod,
+    Preprod = 1,
     /// Cardano preview network.
-    Preview,
+    Preview = 2,
 }
 
 // Mainnet Defaults.
@@ -224,6 +226,7 @@ mod tests {
 
     use anyhow::Ok;
     use chrono::{TimeZone, Utc};
+    use strum::VariantNames;
 
     use super::*;
 
@@ -246,6 +249,23 @@ mod tests {
         assert_eq!(preview, Network::Preview);
 
         Ok(())
+    }
+
+    #[test]
+    fn test_variant_to_usize() {
+        assert_eq!(Network::Mainnet as usize, 0);
+        assert_eq!(Network::Preprod as usize, 1);
+        assert_eq!(Network::Preview as usize, 2);
+    }
+
+    #[test]
+    fn test_variant_to_string() {
+        assert_eq!(Network::Mainnet.to_string(), "mainnet");
+        assert_eq!(Network::Preprod.to_string(), "preprod");
+        assert_eq!(Network::Preview.to_string(), "preview");
+
+        let expected_names = ["mainnet", "preprod", "preview"];
+        assert_eq!(Network::VARIANTS, expected_names);
     }
 
     #[test]

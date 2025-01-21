@@ -528,7 +528,13 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
 
     // Start the Live chain backfill task.
     let _backfill_join_handle = spawn(async move {
+        stats::start_thread(
+            cfg.chain,
+            stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE,
+            true,
+        );
         live_sync_backfill_and_purge(backfill_cfg.clone(), rx, sync_waiter).await;
+        stats::stop_thread(cfg.chain, stats::thread::name::LIVE_SYNC_BACKFILL_AND_PURGE);
     });
 
     // Live Fill data starts at fork 1.
@@ -539,7 +545,6 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
     loop {
         // We never have a connection if we end up around the loop, so make a new one.
         let mut peer = persistent_reconnect(&cfg.relay_address, cfg.chain).await;
-
         match resync_live_tip(&mut peer, cfg.chain).await {
             Ok(tip) => debug!("Tip Resynchronized to {tip}"),
             Err(error) => {
