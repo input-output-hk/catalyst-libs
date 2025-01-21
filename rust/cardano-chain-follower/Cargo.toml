@@ -20,7 +20,7 @@ mithril-client = { version = "0.10.4", default-features = false, features = [
     "num-integer-backend",
 ] }
 cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250114-00" }
-catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250108-00" }
+catalyst-types = { version = "0.0.1", path = "../catalyst-types" }
 
 thiserror = "1.0.69"
 tokio = { version = "1.42.0", features = [
@@ -31,7 +31,7 @@ tokio = { version = "1.42.0", features = [
 ] }
 tracing = "0.1.41"
 tracing-log = "0.2.0"
-dashmap = "6.1.0"
+dashmap = { version = "6.1.0", features = ["serde"] }
 url = "2.5.4"
 anyhow = "1.0.95"
 chrono = "0.4.39"
@@ -48,7 +48,6 @@ serde = "1.0.217"
 serde_json = "1.0.134"
 mimalloc = { version = "0.1.43", optional = true }
 memx = "0.1.32"
-fmmap = { version = "0.3.3", features = ["sync", "tokio-async"] }
 zstd = "0.13.2"
 logcall = "0.1.11"
 tar = "0.4.43"
@@ -56,6 +55,7 @@ ureq = { version = "2.12.1", features = ["native-certs"] }
 http = "1.2.0"
 hickory-resolver = { version = "0.24.2", features = ["dns-over-rustls"] }
 moka = { version = "0.12.9", features = ["sync"] }
+cpu-time = "1.0.0"
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
