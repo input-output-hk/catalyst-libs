@@ -191,17 +191,25 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
         if number == &RoleNumber::ROLE_0 {
             validate_role_0(data, metadata, context, report);
         } else {
-            let Some(signing_key) = data.signing_key() else {
-                // It is ok for other roles to not have a signing key.
-                continue;
-            };
-            if signing_key.key_offset == 0 {
-                report.other(
-                    &format!(
-                        "Only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
-                    ),
-                    context,
-                );
+            if let Some(signing_key) = data.signing_key() {
+                if signing_key.key_offset == 0 {
+                    report.other(
+                        &format!(
+                            "Invalid signing key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
+                        ),
+                        context,
+                    );
+                }
+            }
+            if let Some(encryption_key) = data.encryption_key() {
+                if encryption_key.key_offset == 0 {
+                    report.other(
+                        &format!(
+                            "Invalid encryption key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
+                        ),
+                        context,
+                    );
+                }
             }
         }
     }
