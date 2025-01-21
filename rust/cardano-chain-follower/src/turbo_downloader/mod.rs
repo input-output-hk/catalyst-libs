@@ -421,11 +421,11 @@ impl ParallelDownloadProcessor {
             let (work_queue_tx, work_queue_rx) = crossbeam_channel::unbounded::<DlWorkOrder>();
             let params = self.0.clone();
             thread::spawn(move || {
-                let thread_name = format!("{}::{worker}", stats::thread::name::PARALLEL_DL_WORKER);
+                let worker_name = &format!("{}::{worker}", stats::thread::name::PARALLEL_DL_WORKER);
 
-                stats::start_thread(chain, thread_name.as_str(), false);
-                Self::worker(&params, worker, &work_queue_rx, chain);
-                stats::stop_thread(chain, thread_name.as_str());
+                stats::start_thread(chain, worker_name, false);
+                Self::worker(&params, worker, worker_name, &work_queue_rx, chain);
+                stats::stop_thread(chain, worker_name);
             });
 
             let _unused = self.0.work_queue.insert(worker, work_queue_tx);
@@ -437,20 +437,18 @@ impl ParallelDownloadProcessor {
     /// Call the work queue receiver.
     /// This is a helper function to pause and resume the stats thread.
     fn call_work_queue_receiver(
-        chain: Network, worker_id: usize, work_queue: &Receiver<usize>,
+        chain: Network, worker_name: &str, work_queue: &Receiver<usize>,
     ) -> Result<usize, RecvError> {
-        let thread_name = format!("{}::{worker_id}", stats::thread::name::PARALLEL_DL_WORKER);
-
-        stats::pause_thread(chain, &thread_name);
+        stats::pause_thread(chain, worker_name);
         let recv = work_queue.recv();
-        stats::resume_thread(chain, &thread_name);
+        stats::resume_thread(chain, worker_name);
         recv
     }
 
     /// The worker task - It is running in parallel and downloads chunks of the file as
     /// requested.
     fn worker(
-        params: &Arc<ParallelDownloadProcessorInner>, worker_id: usize,
+        params: &Arc<ParallelDownloadProcessorInner>, worker_id: usize, worker_name: &str,
         work_queue: &crossbeam_channel::Receiver<DlWorkOrder>, chain: Network,
     ) {
         debug!("Worker {worker_id} started");
@@ -465,7 +463,7 @@ impl ParallelDownloadProcessor {
         }
         let http_agent = params.cfg.make_http_agent(worker_id);
 
-        while let Ok(next_chunk) = Self::call_work_queue_receiver(chain, worker_id, work_queue) {
+        while let Ok(next_chunk) = Self::call_work_queue_receiver(chain, worker_name, work_queue) {
             // Add a small delay to the first chunks for each worker.
             // So that the leading chunks are more likely to finish downloading first.
             if next_chunk > 0 && next_chunk < params.cfg.workers {
