@@ -142,12 +142,12 @@ pub fn block_3() -> BlockTestData {
 }
 
 /// Returns the decoded `conway_4.block` block that contains 6 transactions.
-/// Slot number: `81_441_637`, Block number: `3_096_104`
-/// Tx hash: 0x730cc97496b2aec16af58d27284deae2b3347e4c4c5e9ac97458e80131ccd575
+/// Slot number: `81_754_705`, Block number: `3_108_476`
+/// Tx hash: 0x8149d5cb43d2f57224adb3b916fad1d6a5944eef151baafe43272b3bfb2efe59
 ///
-/// CIP509 details (valid data):
+/// CIP509 details (valid data, signing key ref to x509 cert index 1):
 /// Role: 4
-/// Tx index: 4
+/// Tx index: 1
 /// prv hash: Link to `block_1`
 /// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
@@ -155,10 +155,10 @@ pub fn block_4() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_4.block")).unwrap();
     BlockTestData {
         block: block(data),
-        slot: 81_441_637.into(),
+        slot: 81_754_705.into(),
         role: 4.into(),
-        txn_index: 4.into(),
-        txn_hash: "730cc97496b2aec16af58d27284deae2b3347e4c4c5e9ac97458e80131ccd575"
+        txn_index: 1.into(),
+        txn_hash: "8149d5cb43d2f57224adb3b916fad1d6a5944eef151baafe43272b3bfb2efe59"
             .parse()
             .unwrap(),
         prv_hash: Some(block_1().txn_hash),
