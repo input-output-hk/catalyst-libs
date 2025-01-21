@@ -1,10 +1,10 @@
 //! Cardano Chain Follower Statistics
 
-pub(crate) mod follower;
-pub(crate) mod live_chain;
-pub(crate) mod mithril;
-pub(crate) mod rollback;
-pub(crate) mod thread;
+pub mod follower;
+pub mod live_chain;
+pub mod mithril;
+pub mod rollback;
+pub mod thread;
 
 use std::sync::{Arc, LazyLock, RwLock};
 

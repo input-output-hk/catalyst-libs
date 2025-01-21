@@ -148,19 +148,16 @@ impl ThreadStat {
     }
 
     /// Is the thread running?
-    #[allow(dead_code)]
     pub fn is_running(&self) -> bool {
         self.0.is_running.load(Ordering::SeqCst)
     }
 
     /// The number of times the thread has been resumed.
-    #[allow(dead_code)]
     pub fn counter(&self) -> u64 {
         self.0.counter.load(Ordering::SeqCst)
     }
 
     /// Get the total CPU time for a thread.
-    #[allow(dead_code)]
     pub fn total_cpu_time(&self) -> Option<Duration> {
         self.0
             .total_cpu_time
@@ -170,7 +167,6 @@ impl ThreadStat {
     }
 
     /// Get the latest CPU time for a thread.
-    #[allow(dead_code)]
     pub fn latest_cpu_time(&self) -> Option<Duration> {
         self.0
             .latest_cpu_time
