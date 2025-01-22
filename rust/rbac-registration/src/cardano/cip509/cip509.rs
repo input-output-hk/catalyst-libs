@@ -5,7 +5,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MultiEraBlock, TxnIndex};
+use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionAuxData, TxnIndex};
 use catalyst_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
     problem_report::ProblemReport,
@@ -28,26 +28,19 @@ use tracing::warn;
 use uuid::Uuid;
 
 use crate::{
-    cardano::{
-        cip509::{
-            decode_context::DecodeContext,
-            rbac::Cip509RbacMetadata,
-            types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
-            utils::Cip0134UriSet,
-            validation::{
-                validate_aux, validate_role_data, validate_stake_public_key,
-                validate_txn_inputs_hash,
-            },
-            x509_chunks::X509Chunks,
-            Payment, PointTxnIdx, RoleData,
+    cardano::cip509::{
+        decode_context::DecodeContext,
+        rbac::Cip509RbacMetadata,
+        types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
+        utils::Cip0134UriSet,
+        validation::{
+            validate_aux, validate_role_data, validate_stake_public_key, validate_txn_inputs_hash,
         },
-        transaction::raw_aux_data::RawAuxData,
+        x509_chunks::X509Chunks,
+        Payment, PointTxnIdx, RoleData,
     },
     utils::decode_helper::{report_duplicated_key, report_missing_keys},
 };
-
-/// CIP509 label.
-pub const LABEL: u64 = 509;
 
 /// A x509 metadata envelope.
 ///
@@ -134,12 +127,15 @@ impl Cip509 {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
-        let raw_auxiliary_data = RawAuxData::new(auxiliary_data);
-        let Some(metadata) = raw_auxiliary_data.get_metadata(LABEL) else {
+        let mut decoder = Decoder::new(auxiliary_data);
+        let Ok(txn_aux_data) = TransactionAuxData::decode(&mut decoder, &mut ()) else {
+            return Ok(None);
+        };
+        let Some(metadata) = txn_aux_data.metadata(MetadatumLabel::CIP509_RBAC) else {
             return Ok(None);
         };
 
-        let mut decoder = Decoder::new(metadata.as_slice());
+        let mut decoder = Decoder::new(metadata.as_ref());
         let mut report = ProblemReport::new("Decoding and validating Cip509");
         let origin = PointTxnIdx::from_block(block, index);
         let payment_history = payment_history(txn, track_payment_addresses, &origin, &report);

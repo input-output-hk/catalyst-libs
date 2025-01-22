@@ -1,25 +1,8 @@
-//! Basic validation for CIP-0509
-//! The validation include the following:
-//! * Hashing the transaction inputs within the transaction should match the
-//!   txn-inputs-hash in CIP-0509 data.
-//! * Auxiliary data hash within the transaction should match the hash of the auxiliary
-//!   data itself.
-//! * Public key validation for role 0 where public key extracted from x509 and c509
-//!   subject alternative name should match one of the witness in witness set within the
-//!   transaction.
-//! * Payment key reference validation for role 0 where the reference should be either
-//!     1. Negative index reference - reference to transaction output in transaction:
-//!        should match some of the key within witness set.
-//!     2. Positive index reference - reference to the transaction input in transaction:
-//!        only check whether the index exist within the transaction inputs.
-//! * Role signing key validation for role 0 where the signing keys should only be the
-//!   certificates
+//! Utilities for validation CIP-0509.
 //!
-//!  See:
-//! * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
-//! * <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
+//! See [this document] for all the details.
 //!
-//! Note: This CIP509 is still under development and is subject to change.
+//! [this document]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX
 
 use std::borrow::Cow;
 
