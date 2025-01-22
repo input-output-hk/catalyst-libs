@@ -22,8 +22,14 @@ pub use document_type::DocumentType;
 pub use document_version::DocumentVersion;
 pub use extra_fields::ExtraFields;
 
-/// Catalyst Signed Document Content Encoding Key.
+/// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
+/// `doc_type` field COSE key value
+const TYPE_KEY: &str = "type";
+/// `id` field COSE key value
+const ID_KEY: &str = "id";
+/// `ver` field COSE key value
+const VER_KEY: &str = "ver";
 
 /// Document Metadata.
 ///
@@ -43,7 +49,7 @@ pub struct Metadata {
     #[serde(rename = "content-type")]
     content_type: ContentType,
     /// Document Payload Content Encoding.
-    #[serde(rename = "content-encoding")]
+    #[serde(rename = "content-encoding", skip_serializing_if = "Option::is_none")]
     content_encoding: Option<ContentEncoding>,
     /// Additional Metadata Fields.
     #[serde(flatten)]
@@ -127,7 +133,7 @@ impl TryFrom<&Metadata> for coset::Header {
 
         match coset::cbor::Value::try_from(meta.doc_type) {
             Ok(value) => {
-                builder = builder.text_value("type".to_string(), value);
+                builder = builder.text_value(TYPE_KEY.to_string(), value);
             },
             Err(e) => {
                 errors.push(anyhow::anyhow!("Invalid document type UUID: {e}"));
@@ -136,7 +142,7 @@ impl TryFrom<&Metadata> for coset::Header {
 
         match coset::cbor::Value::try_from(meta.id) {
             Ok(value) => {
-                builder = builder.text_value("id".to_string(), value);
+                builder = builder.text_value(ID_KEY.to_string(), value);
             },
             Err(e) => {
                 errors.push(anyhow::anyhow!("Invalid document id UUID: {e}"));
@@ -145,7 +151,7 @@ impl TryFrom<&Metadata> for coset::Header {
 
         match coset::cbor::Value::try_from(meta.ver) {
             Ok(value) => {
-                builder = builder.text_value("ver".to_string(), value);
+                builder = builder.text_value(VER_KEY.to_string(), value);
             },
             Err(e) => {
                 errors.push(anyhow::anyhow!("Invalid document ver UUID: {e}"));
@@ -216,7 +222,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
 
         let mut doc_type: Option<UuidV4> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("type".to_string())
+            key == &coset::Label::Text(TYPE_KEY.to_string())
         }) {
             match decode_cbor_uuid(value.clone()) {
                 Ok(uuid) => doc_type = Some(uuid),
@@ -230,7 +236,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
 
         let mut id: Option<UuidV7> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("id".to_string())
+            key == &coset::Label::Text(ID_KEY.to_string())
         }) {
             match decode_cbor_uuid(value.clone()) {
                 Ok(uuid) => id = Some(uuid),
@@ -242,7 +248,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
 
         let mut ver: Option<UuidV7> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text("ver".to_string())
+            key == &coset::Label::Text(VER_KEY.to_string())
         }) {
             match decode_cbor_uuid(value.clone()) {
                 Ok(uuid) => ver = Some(uuid),
