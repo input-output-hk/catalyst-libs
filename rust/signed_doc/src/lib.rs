@@ -16,7 +16,7 @@ use anyhow::anyhow;
 pub use builder::Builder;
 pub use content::Content;
 use coset::{CborSerializable, Header};
-pub use metadata::{AdditionalFields, DocumentRef, Metadata, UuidV4, UuidV7};
+pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{KidUri, Signatures};
 
@@ -93,7 +93,7 @@ impl CatalystSignedDocument {
 
     /// Return document metadata content.
     #[must_use]
-    pub fn doc_meta(&self) -> &AdditionalFields {
+    pub fn doc_meta(&self) -> &ExtraFields {
         self.inner.metadata.extra()
     }
 

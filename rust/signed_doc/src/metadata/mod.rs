@@ -1,7 +1,6 @@
 //! Catalyst Signed Document Metadata.
 use std::fmt::{Display, Formatter};
 
-mod additional_fields;
 mod algorithm;
 mod content_encoding;
 mod content_type;
@@ -9,8 +8,8 @@ mod document_id;
 mod document_ref;
 mod document_type;
 mod document_version;
+mod extra_fields;
 
-pub use additional_fields::AdditionalFields;
 use algorithm::Algorithm;
 use anyhow::anyhow;
 pub use catalyst_types::uuid::{CborContext, V4 as UuidV4, V7 as UuidV7};
@@ -21,6 +20,7 @@ pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
 pub use document_type::DocumentType;
 pub use document_version::DocumentVersion;
+pub use extra_fields::ExtraFields;
 
 /// Catalyst Signed Document Content Encoding Key.
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -47,7 +47,7 @@ pub struct Metadata {
     content_encoding: Option<ContentEncoding>,
     /// Additional Metadata Fields.
     #[serde(flatten)]
-    extra: AdditionalFields,
+    extra: ExtraFields,
 }
 
 impl Metadata {
@@ -89,7 +89,7 @@ impl Metadata {
 
     /// Return reference to additional metadata fields.
     #[must_use]
-    pub fn extra(&self) -> &AdditionalFields {
+    pub fn extra(&self) -> &ExtraFields {
         &self.extra
     }
 }
@@ -254,7 +254,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
             ));
         }
 
-        let extra = AdditionalFields::try_from(protected).map_or_else(
+        let extra = ExtraFields::try_from(protected).map_or_else(
             |e| {
                 errors.extend(e.0 .0);
                 None
