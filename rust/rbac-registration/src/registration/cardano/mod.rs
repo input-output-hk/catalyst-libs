@@ -43,8 +43,6 @@ impl RegistrationChain {
     /// Update the registration chain.
     ///
     /// # Arguments
-    /// - `point` - The point (slot) of the transaction.
-    /// - `tx_idx` - The transaction index.
     /// - `cip509` - The CIP509.
     ///
     /// # Errors
@@ -185,9 +183,6 @@ impl RegistrationChainInner {
     /// Update the registration chain.
     ///
     /// # Arguments
-    /// - `point` - The point (slot) of the transaction.
-    /// - `tx_idx` - The transaction index.
-    /// - `txn` - The transaction.
     /// - `cip509` - The CIP509.
     ///
     /// # Errors
