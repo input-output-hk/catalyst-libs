@@ -141,9 +141,9 @@ pub fn block_3() -> BlockTestData {
     }
 }
 
-/// Returns the decoded `conway_4.block` block that contains 6 transactions.
-/// Slot number: `81_754_705`, Block number: `3_108_476`
-/// Tx hash: 0x8149d5cb43d2f57224adb3b916fad1d6a5944eef151baafe43272b3bfb2efe59
+/// Returns the decoded `conway_4.block` block that contains 10 transactions.
+/// Slot number: `81_845_364`, Block number: `3_112_041`
+/// Tx hash: 0x98cf12dc6187626de50b5562ebf1753f1b39e1e568e99d83bfdcfb1713c8f4a4
 ///
 /// CIP509 details (valid data, signing key ref to x509 cert index 1):
 /// Role: 4
@@ -155,10 +155,10 @@ pub fn block_4() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_4.block")).unwrap();
     BlockTestData {
         block: block(data),
-        slot: 81_754_705.into(),
+        slot: 81_845_364.into(),
         role: 4.into(),
         txn_index: 1.into(),
-        txn_hash: "8149d5cb43d2f57224adb3b916fad1d6a5944eef151baafe43272b3bfb2efe59"
+        txn_hash: "98cf12dc6187626de50b5562ebf1753f1b39e1e568e99d83bfdcfb1713c8f4a4"
             .parse()
             .unwrap(),
         prv_hash: Some(block_1().txn_hash),

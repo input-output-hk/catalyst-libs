@@ -45,7 +45,10 @@ impl Decode<'_, ProblemReport> for SimplePublicKeyType {
                     _ => Err(decode::Error::message("Unknown tag for Self")),
                 }
             },
-            minicbor::data::Type::Undefined => Ok(Self::Undefined),
+            minicbor::data::Type::Undefined => {
+                d.undefined()?;
+                Ok(Self::Undefined)
+            },
             _ => {
                 Err(decode::Error::message(
                     "Invalid datatype for SimplePublicKeyType",
