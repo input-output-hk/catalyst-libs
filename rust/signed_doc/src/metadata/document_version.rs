@@ -39,6 +39,6 @@ impl TryFrom<DocumentVersion> for Value {
     type Error = anyhow::Error;
 
     fn try_from(value: DocumentVersion) -> Result<Self, Self::Error> {
-        encode_cbor_uuid(value.0).map_err(|e| anyhow::anyhow!("{e}"))
+        encode_cbor_uuid(value.0)
     }
 }
