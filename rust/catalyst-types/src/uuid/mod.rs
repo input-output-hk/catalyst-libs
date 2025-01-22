@@ -104,9 +104,9 @@ mod tests {
 
     #[test]
     fn test_cbor_uuid_v4_invalid_decoding() {
-        let uuid = V7::new();
+        let uuid_v7 = V7::new();
         let mut bytes = Vec::new();
-        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
+        minicbor::encode_with(uuid_v7, &mut bytes, &mut CborContext::Untagged).unwrap();
         assert!(
             minicbor::decode_with::<_, V4>(bytes.as_slice(), &mut CborContext::Untagged).is_err()
         );
@@ -123,9 +123,9 @@ mod tests {
 
     #[test]
     fn test_cbor_uuid_v7_invalid_decoding() {
-        let uuid = V7::new();
+        let uuid_v4 = V4::new();
         let mut bytes = Vec::new();
-        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
+        minicbor::encode_with(uuid_v4, &mut bytes, &mut CborContext::Untagged).unwrap();
         assert!(
             minicbor::decode_with::<_, V7>(bytes.as_slice(), &mut CborContext::Untagged).is_err()
         );
