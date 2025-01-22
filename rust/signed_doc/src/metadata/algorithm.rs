@@ -1,4 +1,4 @@
-//! Algorith in COSE SIGN protected header.
+//! Cryptographic Algorithm in COSE SIGN protected header.
 
 /// Cryptography Algorithm.
 #[derive(Copy, Clone, Debug, serde::Deserialize)]

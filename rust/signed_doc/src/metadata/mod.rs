@@ -37,7 +37,7 @@ pub struct Metadata {
     id: DocumentId,
     /// Document Version `UUIDv7`.
     ver: DocumentVersion,
-    /// Crytpography Algorithm
+    /// Cryptographic Algorithm
     alg: Algorithm,
     /// Document Payload Content Type.
     #[serde(rename = "content-type")]
@@ -322,7 +322,7 @@ pub(crate) fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
 ///
 /// This is used to decode `UuidV4` and `UuidV7` types.
 pub(crate) fn decode_cbor_uuid<
-    T: for<'a> minicbor::decode::Decode<'a, CborContext> + From<uuid::Uuid>,
+    T: for<'a> minicbor::decode::Decode<'a, CborContext> + TryFrom<uuid::Uuid>,
 >(
     value: coset::cbor::Value,
 ) -> anyhow::Result<T> {
