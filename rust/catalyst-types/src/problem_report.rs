@@ -469,4 +469,14 @@ mod tests {
         // The original report must have the same (problematic) state.
         assert!(original.is_problematic());
     }
+
+    #[test]
+    fn serialize() {
+        let report = ProblemReport::new("top level context");
+        report.invalid_value("field name", "found", "constraint", "context");
+
+        let serialized = serde_json::to_string(&report).unwrap();
+        let expected = r#"{"context":"top level context","report":[{"kind":{"type":"InvalidValue","field":"field name","value":"found","constraint":"constraint"},"context":"context"}]}"#;
+        assert_eq!(serialized, expected);
+    }
 }
