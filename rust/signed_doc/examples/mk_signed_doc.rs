@@ -67,11 +67,7 @@ impl Cli {
                 // Load Document from JSON file
                 let json_doc: serde_json::Value = load_json_from_file(&doc)?;
                 // Possibly encode if Metadata has an encoding set.
-                let payload_bytes = serde_json::to_vec(&json_doc)?;
-                let payload = match metadata.content_encoding() {
-                    Some(encoding) => encoding.encode(&payload_bytes)?,
-                    None => payload_bytes,
-                };
+                let payload = serde_json::to_vec(&json_doc)?;
                 let content = Content::new(
                     payload,
                     metadata.content_type(),
