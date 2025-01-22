@@ -5,7 +5,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionAuxData, TxnIndex};
+use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TxnIndex};
 use catalyst_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
     problem_report::ProblemReport,
@@ -122,16 +122,11 @@ impl Cip509 {
         let MultiEraTx::Conway(txn) = txn else {
             return Ok(None);
         };
-
-        let auxiliary_data = match &txn.auxiliary_data {
+        let raw_aux_data = match &txn.auxiliary_data {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
-        let mut decoder = Decoder::new(auxiliary_data);
-        let Ok(txn_aux_data) = TransactionAuxData::decode(&mut decoder, &mut ()) else {
-            return Ok(None);
-        };
-        let Some(metadata) = txn_aux_data.metadata(MetadatumLabel::CIP509_RBAC) else {
+        let Some(metadata) = block.txn_metadata(index, MetadatumLabel::CIP509_RBAC) else {
             return Ok(None);
         };
 
@@ -153,7 +148,7 @@ impl Cip509 {
             validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
         };
         validate_aux(
-            auxiliary_data,
+            raw_aux_data,
             txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );

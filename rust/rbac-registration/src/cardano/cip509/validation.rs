@@ -76,7 +76,7 @@ pub fn validate_txn_inputs_hash(
 
 /// Checks that the given transaction auxiliary data hash is correct.
 pub fn validate_aux(
-    auxiliary_data: &[u8], auxiliary_data_hash: Option<&Bytes>, report: &ProblemReport,
+    raw_aux_data: &[u8], auxiliary_data_hash: Option<&Bytes>, report: &ProblemReport,
 ) {
     let context = "Cip509 auxiliary data validation";
 
@@ -95,7 +95,7 @@ pub fn validate_aux(
         },
     };
 
-    let hash = Blake2b256Hash::new(auxiliary_data);
+    let hash = Blake2b256Hash::new(raw_aux_data);
     if hash != auxiliary_data_hash {
         report.other(
             &format!("Incorrect transaction auxiliary data hash = '{hash:?}', expected = '{auxiliary_data_hash:?}'"),
