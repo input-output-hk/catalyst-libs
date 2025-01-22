@@ -103,12 +103,32 @@ mod tests {
     }
 
     #[test]
+    fn test_cbor_uuid_v4_invalid_decoding() {
+        let uuid = V7::new();
+        let mut bytes = Vec::new();
+        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
+        assert!(
+            minicbor::decode_with::<_, V4>(bytes.as_slice(), &mut CborContext::Untagged).is_err()
+        );
+    }
+
+    #[test]
     fn test_cbor_uuid_v7_roundtrip() {
         let uuid = V7::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
         assert_eq!(uuid, decoded);
+    }
+
+    #[test]
+    fn test_cbor_uuid_v7_invalid_decoding() {
+        let uuid = V7::new();
+        let mut bytes = Vec::new();
+        minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
+        assert!(
+            minicbor::decode_with::<_, V7>(bytes.as_slice(), &mut CborContext::Untagged).is_err()
+        );
     }
 
     #[test]
