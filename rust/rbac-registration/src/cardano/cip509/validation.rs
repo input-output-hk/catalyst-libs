@@ -22,7 +22,7 @@ use pallas::{
 use super::utils::cip19::compare_key_hash;
 use crate::cardano::cip509::{
     rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    RoleNumber, X509DerCert,
+    RoleNumber, SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -163,18 +163,76 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
     let context = "Role data validation";
 
-    let has_x_0_cert = matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)));
-    let has_c_0_cert = matches!(
-        metadata.c509_certs.first(),
-        Some(C509Cert::C509Certificate(_))
-    );
-    // There should be only one role 0 certificate.
-    if has_x_0_cert && has_c_0_cert {
-        report.other("Only one certificate can be defined at index 0", context);
+    if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
+        // For the role 0 there must be exactly once certificate and it must not have `deleted`,
+        // `undefined` or `C509CertInMetadatumReference` values.
+        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+            && matches!(
+                metadata.c509_certs.first(),
+                Some(C509Cert::C509Certificate(_))
+            )
+        {
+            report.other(
+                "Only one certificate can be defined at index 0 for the role 0",
+                context,
+            );
+        }
+        if matches!(
+            metadata.c509_certs.first(),
+            Some(C509Cert::C509CertInMetadatumReference(_))
+        ) {
+            report.other(
+                "C509 certificate at 0 index cannot be in metadatum reference",
+                context,
+            );
+        }
+        if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+            && !matches!(
+                metadata.c509_certs.first(),
+                Some(C509Cert::C509Certificate(_))
+            )
+        {
+            report.other("The role 0 certificate must be present", context);
+        }
+    } else {
+        // For other roles there still must be exactly one certificate at 0 index, but it must
+        // have the `undefined` value.
+        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+            || matches!(
+                metadata.c509_certs.first(),
+                Some(C509Cert::C509Certificate(_))
+            )
+        {
+            report.other("Only role 0 can contain a certificate at 0 index", context);
+        }
+        if matches!(metadata.x509_certs.first(), Some(X509DerCert::Deleted))
+            || matches!(metadata.c509_certs.first(), Some(C509Cert::Deleted))
+        {
+            report.other("Only role 0 can delete a certificate at 0 index", context);
+        }
     }
-    // Only role 0 can contain certificates at 0 index.
-    if !metadata.role_data.contains_key(&RoleNumber::ROLE_0) && (has_x_0_cert || has_c_0_cert) {
-        report.other("Only role 0 can contain certificates at index 0", context);
+
+    // It isn't allowed for any role to use a public key at 0 index.
+    if !matches!(
+        metadata.pub_keys.first(),
+        None | Some(SimplePublicKeyType::Undefined)
+    ) {
+        report.other(
+            "The public key cannot be used for the role 0, only a certificate",
+            context,
+        );
+    }
+    // It isn't allowed for the role 0 to have a certificate in the
+    // `C509CertInMetadatumReference` form and other roles must not contain certificate at 0
+    // index.
+    if matches!(
+        metadata.c509_certs.first(),
+        Some(C509Cert::C509CertInMetadatumReference(_))
+    ) {
+        report.other(
+            "C509 certificate at 0 index cannot be in metadatum reference",
+            context,
+        );
     }
 
     for (number, data) in &metadata.role_data {
