@@ -30,7 +30,10 @@ impl Decode<'_, ProblemReport> for X509DerCert {
                     _ => Err(decode::Error::message("Unknown tag for X509DerCert")),
                 }
             },
-            minicbor::data::Type::Undefined => Ok(Self::Undefined),
+            minicbor::data::Type::Undefined => {
+                d.undefined()?;
+                Ok(Self::Undefined)
+            },
             minicbor::data::Type::Bytes => {
                 let data = decode_bytes(d, "X509DerCert")?;
                 let certificate = Certificate::from_der(&data).map_err(|e| {
