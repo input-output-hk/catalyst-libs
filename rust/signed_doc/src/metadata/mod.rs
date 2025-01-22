@@ -115,14 +115,12 @@ impl Display for Metadata {
 }
 
 impl TryFrom<&Metadata> for coset::Header {
-    type Error = crate::error::Error;
+    type Error = anyhow::Error;
 
     fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
         let mut builder = coset::HeaderBuilder::new()
             .algorithm(meta.alg.into())
             .content_format(CoapContentFormat::from(meta.content_type()));
-
-        let mut errors = Vec::new();
 
         if let Some(content_encoding) = meta.content_encoding() {
             builder = builder.text_value(
@@ -131,46 +129,14 @@ impl TryFrom<&Metadata> for coset::Header {
             );
         }
 
-        match coset::cbor::Value::try_from(meta.doc_type) {
-            Ok(value) => {
-                builder = builder.text_value(TYPE_KEY.to_string(), value);
-            },
-            Err(e) => {
-                errors.push(anyhow::anyhow!("Invalid document type UUID: {e}"));
-            },
-        }
+        builder = builder
+            .text_value(TYPE_KEY.to_string(), meta.doc_type.try_into()?)
+            .text_value(ID_KEY.to_string(), meta.id.try_into()?)
+            .text_value(VER_KEY.to_string(), meta.ver.try_into()?);
 
-        match coset::cbor::Value::try_from(meta.id) {
-            Ok(value) => {
-                builder = builder.text_value(ID_KEY.to_string(), value);
-            },
-            Err(e) => {
-                errors.push(anyhow::anyhow!("Invalid document id UUID: {e}"));
-            },
-        }
+        builder = meta.extra.fill_cose_header_fields(builder)?;
 
-        match coset::cbor::Value::try_from(meta.ver) {
-            Ok(value) => {
-                builder = builder.text_value(VER_KEY.to_string(), value);
-            },
-            Err(e) => {
-                errors.push(anyhow::anyhow!("Invalid document ver UUID: {e}"));
-            },
-        }
-
-        if let Ok(rest) = meta.extra().header_rest() {
-            for (label, value) in rest {
-                builder = builder.text_value(label, value);
-            }
-        }
-
-        let header = builder.build();
-
-        if errors.is_empty() {
-            Ok(header)
-        } else {
-            Err(crate::error::Error::from(errors))
-        }
+        Ok(builder.build())
     }
 }
 

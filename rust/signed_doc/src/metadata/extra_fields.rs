@@ -59,61 +59,49 @@ pub struct ExtraFields {
 }
 
 impl ExtraFields {
-    /// Returns the COSE Sign protected header REST fields.
-    ///
-    /// # Errors
-    /// If any internal field cannot be converted into `Value`.
-    pub fn header_rest(&self) -> anyhow::Result<Vec<(String, Value)>> {
-        self.try_into()
-    }
-}
-
-impl TryFrom<&ExtraFields> for Vec<(String, Value)> {
-    type Error = anyhow::Error;
-
-    fn try_from(fields: &ExtraFields) -> anyhow::Result<Self> {
-        let mut vec = Vec::new();
-
-        if let Some(doc_ref) = &fields.doc_ref {
-            vec.push((REF_KEY.to_string(), Value::try_from(*doc_ref)?));
+    /// Fill the COSE hedear `ExtraFields` data into the header builder.
+    pub(super) fn fill_cose_header_fields(
+        &self, mut builder: coset::HeaderBuilder,
+    ) -> anyhow::Result<coset::HeaderBuilder> {
+        if let Some(doc_ref) = &self.doc_ref {
+            builder = builder.text_value(REF_KEY.to_string(), Value::try_from(*doc_ref)?);
+        }
+        if let Some(template) = &self.template {
+            builder = builder.text_value(TEMPLATE_KEY.to_string(), Value::try_from(*template)?);
+        }
+        if let Some(reply) = &self.reply {
+            builder = builder.text_value(REPLY_KEY.to_string(), Value::try_from(*reply)?);
         }
 
-        if let Some(template) = &fields.template {
-            vec.push((TEMPLATE_KEY.to_string(), Value::try_from(*template)?));
+        if let Some(section) = &self.section {
+            builder = builder.text_value(SECTION_KEY.to_string(), Value::Text(section.clone()));
         }
 
-        if let Some(reply) = &fields.reply {
-            vec.push((REPLY_KEY.to_string(), Value::try_from(*reply)?));
-        }
-
-        if let Some(section) = &fields.section {
-            vec.push((SECTION_KEY.to_string(), Value::Text(section.clone())));
-        }
-
-        if !fields.collabs.is_empty() {
-            vec.push((
+        if !self.collabs.is_empty() {
+            builder = builder.text_value(
                 COLLABS_KEY.to_string(),
-                Value::Array(fields.collabs.iter().cloned().map(Value::Text).collect()),
-            ));
+                Value::Array(self.collabs.iter().cloned().map(Value::Text).collect()),
+            );
+        }
+        if let Some(brand_id) = &self.brand_id {
+            builder = builder.text_value(BRAND_ID_KEY.to_string(), encode_cbor_uuid(brand_id)?);
         }
 
-        if let Some(brand_id) = &fields.brand_id {
-            vec.push((BRAND_ID_KEY.to_string(), encode_cbor_uuid(brand_id)?));
+        if let Some(campaign_id) = &self.campaign_id {
+            builder =
+                builder.text_value(CAMPAIGN_ID_KEY.to_string(), encode_cbor_uuid(campaign_id)?);
         }
 
-        if let Some(campaign_id) = &fields.campaign_id {
-            vec.push((CAMPAIGN_ID_KEY.to_string(), encode_cbor_uuid(campaign_id)?));
+        if let Some(election_id) = &self.election_id {
+            builder =
+                builder.text_value(ELECTION_ID_KEY.to_string(), encode_cbor_uuid(election_id)?);
         }
 
-        if let Some(election_id) = &fields.election_id {
-            vec.push((ELECTION_ID_KEY.to_string(), encode_cbor_uuid(election_id)?));
+        if let Some(category_id) = &self.category_id {
+            builder =
+                builder.text_value(CATEGORY_ID_KEY.to_string(), encode_cbor_uuid(*category_id)?);
         }
-
-        if let Some(category_id) = &fields.category_id {
-            vec.push((CATEGORY_ID_KEY.to_string(), encode_cbor_uuid(*category_id)?));
-        }
-
-        Ok(vec)
+        Ok(builder)
     }
 }
 
@@ -278,5 +266,55 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
         } else {
             Err(errors.into())
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use catalyst_types::uuid::{V4, V7};
+
+    use super::*;
+
+    #[test]
+    fn extra_fields_json_serde_test() {
+        let extra = ExtraFields::default();
+
+        let json = serde_json::to_value(extra).unwrap();
+        assert_eq!(json, serde_json::json!({}));
+
+        let uuid_v7 = V7::new();
+        let uuid_v4 = V4::new();
+        let section = "some section".to_string();
+        let collabs = vec!["collab1".to_string(), "collab2".to_string()];
+        let extra = ExtraFields {
+            doc_ref: Some(DocumentRef::Latest { id: uuid_v7 }),
+            reply: Some(DocumentRef::WithVer {
+                id: uuid_v7,
+                ver: uuid_v7,
+            }),
+            template: Some(DocumentRef::Latest { id: uuid_v7 }),
+            section: Some(section.clone()),
+            collabs: collabs.clone(),
+            campaign_id: Some(uuid_v4),
+            election_id: Some(uuid_v4),
+            brand_id: Some(uuid_v4),
+            category_id: Some(uuid_v4),
+        };
+
+        let json = serde_json::to_value(extra).unwrap();
+        assert_eq!(
+            json,
+            serde_json::json!({
+                "ref": {"id": uuid_v7.to_string()},
+                "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+                "template": {"id": uuid_v7.to_string()},
+                "section": section,
+                "collabs": collabs,
+                "campaign_id": uuid_v4.to_string(),
+                "election_id":  uuid_v4.to_string(),
+                "brand_id":  uuid_v4.to_string(),
+                "category_id": uuid_v4.to_string(),
+            })
+        );
     }
 }
