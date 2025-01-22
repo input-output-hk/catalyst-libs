@@ -13,10 +13,16 @@ pub struct Signature {
 }
 
 /// List of Signatures.
-#[derive(Debug, Clone)]
-pub struct Signatures(pub(crate) Vec<Signature>);
+#[derive(Debug, Clone, Default)]
+pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
+    /// Creates an empty signatures list.
+    #[must_use]
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     /// List of signature Key IDs.
     #[must_use]
     pub fn kids(&self) -> Vec<KidUri> {
@@ -25,7 +31,7 @@ impl Signatures {
 
     /// List of signatures.
     #[must_use]
-    pub fn signatures(&self) -> Vec<CoseSignature> {
+    pub fn cose_signatures(&self) -> Vec<CoseSignature> {
         self.0.iter().map(|sig| sig.signature.clone()).collect()
     }
 

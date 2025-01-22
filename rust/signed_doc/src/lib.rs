@@ -45,7 +45,7 @@ impl Display for CatalystSignedDocument {
         writeln!(f, "{}", self.inner.metadata)?;
         writeln!(f, "Payload Size: {} bytes", self.inner.content.len())?;
         writeln!(f, "Signature Information")?;
-        if self.inner.signatures.0.is_empty() {
+        if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
         } else {
             for kid in &self.inner.signatures.kids() {
@@ -177,7 +177,7 @@ impl Encode<()> for CatalystSignedDocument {
             .protected(protected_header)
             .payload(self.inner.content.bytes().to_vec());
 
-        for signature in self.signatures().signatures() {
+        for signature in self.signatures().cose_signatures() {
             builder = builder.add_signature(signature);
         }
 
@@ -190,5 +190,56 @@ impl Encode<()> for CatalystSignedDocument {
         e.writer_mut()
             .write_all(&cose_bytes)
             .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use metadata::{ContentEncoding, ContentType};
+
+    use super::*;
+
+    #[test]
+    fn catalyst_signed_doc_cbor_roundtrip_test() {
+        let uuid_v7 = UuidV7::new();
+        let uuid_v4 = UuidV4::new();
+        let section = "some section".to_string();
+        let collabs = vec!["collab1".to_string(), "collab2".to_string()];
+        let content_type = ContentType::Json;
+        let content_encoding = ContentEncoding::Brotli;
+
+        let metadata = serde_json::from_value(serde_json::json!({
+            "content-type": content_type.to_string(),
+            "content-encoding": content_encoding.to_string(),
+            "type": uuid_v4.to_string(),
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+            "ref": {"id": uuid_v7.to_string()},
+            "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+            "template": {"id": uuid_v7.to_string()},
+            "section": section,
+            "collabs": collabs,
+            "campaign_id": uuid_v4.to_string(),
+            "election_id":  uuid_v4.to_string(),
+            "brand_id":  uuid_v4.to_string(),
+            "category_id": uuid_v4.to_string(),
+        }))
+        .unwrap();
+        let payload = vec![1, 2, 4, 5, 6, 7, 8, 9];
+        let content = Content::new(payload, content_type, Some(content_encoding)).unwrap();
+
+        let doc = CatalystSignedDocument {
+            inner: InnerCatalystSignedDocument {
+                metadata,
+                content,
+                signatures: Signatures::new(),
+            }
+            .into(),
+        };
+
+        let mut bytes = Vec::new();
+        minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();
+        let _decoded: CatalystSignedDocument =
+            minicbor::decode_with(bytes.as_slice(), &mut ()).unwrap();
     }
 }

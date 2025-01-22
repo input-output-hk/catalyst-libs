@@ -4,7 +4,7 @@ use coset::cbor::Value;
 use super::{decode_cbor_uuid, encode_cbor_uuid, UuidV7};
 
 /// Reference to a Document.
-#[derive(Copy, Clone, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 #[serde(untagged)]
 pub enum DocumentRef {
     /// Reference to the latest document

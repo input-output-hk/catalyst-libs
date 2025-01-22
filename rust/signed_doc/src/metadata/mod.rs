@@ -34,8 +34,11 @@ const VER_KEY: &str = "ver";
 /// Document Metadata.
 ///
 /// These values are extracted from the COSE Sign protected header.
-#[derive(Clone, Debug, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
 pub struct Metadata {
+    /// Cryptographic Algorithm
+    #[serde(default = "Algorithm::default")]
+    alg: Algorithm,
     /// Document Type `UUIDv4`.
     #[serde(rename = "type")]
     doc_type: DocumentType,
@@ -43,8 +46,6 @@ pub struct Metadata {
     id: DocumentId,
     /// Document Version `UUIDv7`.
     ver: DocumentVersion,
-    /// Cryptographic Algorithm
-    alg: Algorithm,
     /// Document Payload Content Type.
     #[serde(rename = "content-type")]
     content_type: ContentType,
@@ -73,12 +74,6 @@ impl Metadata {
     #[must_use]
     pub fn doc_ver(&self) -> UuidV7 {
         self.ver.into()
-    }
-
-    /// Return Cryptography Algorithm.
-    #[must_use]
-    pub fn algorithm(&self) -> coset::iana::Algorithm {
-        self.alg.into()
     }
 
     /// Returns the Document Content Type, if any.
@@ -154,9 +149,7 @@ impl TryFrom<&coset::ProtectedHeader> for Metadata {
                 Err(e) => errors.push(anyhow!("Invalid Document Algorithm: {e}")),
             }
         } else {
-            errors.push(anyhow!(
-                "Invalid COSE protected header, missing Content-Type field"
-            ));
+            errors.push(anyhow!("Invalid COSE protected header, missing alg field"));
         }
 
         let mut content_type = None;

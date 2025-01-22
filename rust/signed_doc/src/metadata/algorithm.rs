@@ -1,7 +1,7 @@
 //! Cryptographic Algorithm in COSE SIGN protected header.
 
 /// Cryptography Algorithm.
-#[derive(Copy, Clone, Debug, serde::Deserialize)]
+#[derive(Copy, Clone, Debug, PartialEq, serde::Deserialize)]
 pub enum Algorithm {
     /// `EdDSA`
     EdDSA,

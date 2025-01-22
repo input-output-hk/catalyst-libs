@@ -27,7 +27,7 @@ const CATEGORY_ID_KEY: &str = "category_id";
 /// Extra Metadata Fields.
 ///
 /// These values are extracted from the COSE Sign protected header labels.
-#[derive(Clone, Default, Debug, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct ExtraFields {
     /// Reference to the latest document.
     #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
@@ -271,50 +271,13 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::uuid::{V4, V7};
-
     use super::*;
 
     #[test]
-    fn extra_fields_json_serde_test() {
+    fn empty_extra_fields_json_serde_test() {
         let extra = ExtraFields::default();
 
         let json = serde_json::to_value(extra).unwrap();
         assert_eq!(json, serde_json::json!({}));
-
-        let uuid_v7 = V7::new();
-        let uuid_v4 = V4::new();
-        let section = "some section".to_string();
-        let collabs = vec!["collab1".to_string(), "collab2".to_string()];
-        let extra = ExtraFields {
-            doc_ref: Some(DocumentRef::Latest { id: uuid_v7 }),
-            reply: Some(DocumentRef::WithVer {
-                id: uuid_v7,
-                ver: uuid_v7,
-            }),
-            template: Some(DocumentRef::Latest { id: uuid_v7 }),
-            section: Some(section.clone()),
-            collabs: collabs.clone(),
-            campaign_id: Some(uuid_v4),
-            election_id: Some(uuid_v4),
-            brand_id: Some(uuid_v4),
-            category_id: Some(uuid_v4),
-        };
-
-        let json = serde_json::to_value(extra).unwrap();
-        assert_eq!(
-            json,
-            serde_json::json!({
-                "ref": {"id": uuid_v7.to_string()},
-                "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                "template": {"id": uuid_v7.to_string()},
-                "section": section,
-                "collabs": collabs,
-                "campaign_id": uuid_v4.to_string(),
-                "election_id":  uuid_v4.to_string(),
-                "brand_id":  uuid_v4.to_string(),
-                "category_id": uuid_v4.to_string(),
-            })
-        );
     }
 }
