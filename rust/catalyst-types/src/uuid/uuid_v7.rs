@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 use minicbor::{Decode, Decoder, Encode};
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, INVALID_UUID};
+use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
 
 /// Type representing a `UUIDv7`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]
@@ -53,7 +53,13 @@ impl Display for UuidV7 {
 impl Decode<'_, CborContext> for UuidV7 {
     fn decode(d: &mut Decoder<'_>, ctx: &mut CborContext) -> Result<Self, minicbor::decode::Error> {
         let uuid = decode_cbor_uuid(d, ctx)?;
-        Ok(Self(uuid))
+        if is_valid(&uuid) {
+            Ok(Self(uuid))
+        } else {
+            Err(minicbor::decode::Error::message(UuidError::InvalidUuidV7(
+                uuid,
+            )))
+        }
     }
 }
 
@@ -67,11 +73,14 @@ impl Encode<CborContext> for UuidV7 {
 
 /// Returns a `UUIDv7` from `uuid::Uuid`.
 impl TryFrom<uuid::Uuid> for UuidV7 {
-    type Error = anyhow::Error;
+    type Error = UuidError;
 
     fn try_from(uuid: uuid::Uuid) -> Result<Self, Self::Error> {
-        anyhow::ensure!(is_valid(&uuid), "'{uuid}' is not a valid UUIDv7");
-        Ok(Self(uuid))
+        if is_valid(&uuid) {
+            Ok(Self(uuid))
+        } else {
+            Err(UuidError::InvalidUuidV7(uuid))
+        }
     }
 }
 
@@ -91,9 +100,7 @@ impl<'de> serde::Deserialize<'de> for UuidV7 {
         if is_valid(&uuid) {
             Ok(Self(uuid))
         } else {
-            Err(serde::de::Error::custom(format!(
-                "'{uuid}' is not a valid UUIDv4"
-            )))
+            Err(serde::de::Error::custom(UuidError::InvalidUuidV7(uuid)))
         }
     }
 }

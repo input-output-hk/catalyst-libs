@@ -2,12 +2,13 @@
 use std::fmt::{Display, Formatter};
 
 use minicbor::{Decode, Decoder, Encode};
+use uuid::Uuid;
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, INVALID_UUID};
+use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
 
 /// Type representing a `UUIDv4`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]
-pub struct UuidV4(uuid::Uuid);
+pub struct UuidV4(Uuid);
 
 impl UuidV4 {
     /// Version for `UUIDv4`.
@@ -17,7 +18,7 @@ impl UuidV4 {
     #[must_use]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Self(uuid::Uuid::new_v4())
+        Self(Uuid::new_v4())
     }
 
     /// Generates a zeroed out `UUIDv4` that can never be valid.
@@ -34,13 +35,13 @@ impl UuidV4 {
 
     /// Returns the `uuid::Uuid` type.
     #[must_use]
-    pub fn uuid(&self) -> uuid::Uuid {
+    pub fn uuid(&self) -> Uuid {
         self.0
     }
 }
 
 /// Check if this is a valid `UUIDv4`.
-fn is_valid(uuid: &uuid::Uuid) -> bool {
+fn is_valid(uuid: &Uuid) -> bool {
     uuid != &INVALID_UUID && uuid.get_version_num() == UuidV4::UUID_VERSION_NUMBER
 }
 
@@ -56,8 +57,8 @@ impl Decode<'_, CborContext> for UuidV4 {
         if is_valid(&uuid) {
             Ok(Self(uuid))
         } else {
-            Err(minicbor::decode::Error::message(format!(
-                "'{uuid}' is not a valid UUIDv4"
+            Err(minicbor::decode::Error::message(UuidError::InvalidUuidV4(
+                uuid,
             )))
         }
     }
@@ -72,19 +73,22 @@ impl Encode<CborContext> for UuidV4 {
 }
 
 /// Returns a `UUIDv4` from `uuid::Uuid`.
-impl TryFrom<uuid::Uuid> for UuidV4 {
-    type Error = anyhow::Error;
+impl TryFrom<Uuid> for UuidV4 {
+    type Error = UuidError;
 
-    fn try_from(uuid: uuid::Uuid) -> Result<Self, Self::Error> {
-        anyhow::ensure!(is_valid(&uuid), "'{uuid}' is not a valid UUIDv4");
-        Ok(Self(uuid))
+    fn try_from(uuid: Uuid) -> Result<Self, Self::Error> {
+        if is_valid(&uuid) {
+            Ok(Self(uuid))
+        } else {
+            Err(UuidError::InvalidUuidV4(uuid))
+        }
     }
 }
 
 /// Returns a `uuid::Uuid` from `UUIDv4`.
 ///
 /// NOTE: This does not guarantee that the `UUID` is valid.
-impl From<UuidV4> for uuid::Uuid {
+impl From<UuidV4> for Uuid {
     fn from(value: UuidV4) -> Self {
         value.0
     }
@@ -93,21 +97,17 @@ impl From<UuidV4> for uuid::Uuid {
 impl<'de> serde::Deserialize<'de> for UuidV4 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
-        let uuid = uuid::Uuid::deserialize(deserializer)?;
+        let uuid = Uuid::deserialize(deserializer)?;
         if is_valid(&uuid) {
             Ok(Self(uuid))
         } else {
-            Err(serde::de::Error::custom(format!(
-                "'{uuid}' is not a valid UUIDv4"
-            )))
+            Err(serde::de::Error::custom(UuidError::InvalidUuidV4(uuid)))
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use uuid::Uuid;
-
     use super::*;
 
     #[test]

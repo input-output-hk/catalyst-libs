@@ -14,6 +14,19 @@ pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 #[allow(dead_code)]
 const UUID_CBOR_TAG: u64 = 37;
 
+/// Uuid validation errors, which could occur during decoding or converting to
+/// `UuidV4` or `UuidV7` types.
+#[derive(Debug, Clone, thiserror::Error)]
+#[allow(clippy::module_name_repetitions)]
+pub enum UuidError {
+    /// `UUIDv4` invalid error
+    #[error("'{0}' is not a valid UUIDv4")]
+    InvalidUuidV4(uuid::Uuid),
+    /// `UUIDv7` invalid error
+    #[error("'{0}' is not a valid UUIDv7")]
+    InvalidUuidV7(uuid::Uuid),
+}
+
 /// Context for `CBOR` encoding and decoding
 pub enum CborContext {
     /// Untagged bytes
