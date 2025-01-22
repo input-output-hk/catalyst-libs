@@ -6,13 +6,40 @@
 //!
 //! Note: This fork terminology is different from fork in blockchain.
 
-use crate::conversion::from_saturating;
+use std::fmt;
+
+use catalyst_types::conversion::from_saturating;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd)]
 /// Counter that is incremented every time there is a roll-back in live-chain.
 pub struct Fork(u64);
 
 impl Fork {
+    /// Fork for data that read from the blockchain during a backfill on initial sync
+    pub const BACKFILL: Self = Self(1);
+    /// Fork count for the first live block.
+    pub const FIRST_LIVE: Self = Self(2);
+    /// Fork for immutable data. This indicates that there is no roll-back.
+    pub const IMMUTABLE: Self = Self(0);
+
+    /// Is the fork for immutable data.
+    #[must_use]
+    pub fn is_immutable(&self) -> bool {
+        self == &Self::IMMUTABLE
+    }
+
+    /// Is the fork for backfill data.
+    #[must_use]
+    pub fn is_backfill(&self) -> bool {
+        self == &Self::BACKFILL
+    }
+
+    /// Is the fork for live data.
+    #[must_use]
+    pub fn is_live(&self) -> bool {
+        self >= &Self::FIRST_LIVE
+    }
+
     /// Convert an `<T>` to `Fork` (saturate if out of range).
     pub fn from_saturating<
         T: Copy
@@ -35,6 +62,17 @@ impl Fork {
     /// Decrement the fork count.
     pub fn decr(&mut self) {
         self.0 = self.0.saturating_sub(1);
+    }
+}
+
+impl fmt::Display for Fork {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.0 {
+            0 => write!(f, "IMMUTABLE"),
+            1 => write!(f, "BACKFILL"),
+            // For live forks: 2 maps to LIVE:1, 3 maps to LIVE:2 etc.
+            2..=u64::MAX => write!(f, "LIVE:{}", self.0 - 1),
+        }
     }
 }
 

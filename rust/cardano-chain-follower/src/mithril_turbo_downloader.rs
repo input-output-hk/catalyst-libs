@@ -14,8 +14,8 @@ use std::{
 
 use anyhow::{anyhow, bail};
 use async_trait::async_trait;
+use catalyst_types::{conversion::from_saturating, mmap_file::MemoryMapFile};
 use dashmap::DashSet;
-use fmmap::MmapFileExt;
 use memx::memcmp;
 use mithril_client::{
     common::CompressionAlgorithm, snapshot_downloader::SnapshotDownloader, MithrilResult,
@@ -30,7 +30,6 @@ use crate::{
     mithril_snapshot_data::latest_mithril_snapshot_data,
     stats::{self},
     turbo_downloader::ParallelDownloadProcessor,
-    utils::usize_from_saturating,
 };
 
 /// A snapshot downloader that accelerates Download using `aria2`.
@@ -134,10 +133,9 @@ impl Inner {
             self.ext_size.fetch_add(entry_size, Ordering::SeqCst);
 
             // Try and deduplicate the file if we can, otherwise just extract it.
-            if let Ok((prev_mmap, _)) =
-                Self::can_deduplicate(&rel_file, entry_size, prev_file.as_ref())
+            if let Ok(prev_mmap) = Self::can_deduplicate(&rel_file, entry_size, prev_file.as_ref())
             {
-                let expected_file_size = usize_from_saturating(entry_size);
+                let expected_file_size = from_saturating(entry_size);
                 let mut buf: Vec<u8> = Vec::with_capacity(expected_file_size);
                 if entry.read_to_end(&mut buf)? != expected_file_size {
                     bail!(
@@ -225,7 +223,7 @@ impl Inner {
     /// Check if a given path from the archive is able to be deduplicated.
     fn can_deduplicate(
         rel_file: &Path, file_size: u64, prev_file: Option<&PathBuf>,
-    ) -> MithrilResult<(fmmap::MmapFile, u64)> {
+    ) -> MithrilResult<MemoryMapFile> {
         // Can't dedup if the current file is not de-dupable (must be immutable)
         if rel_file.starts_with("immutable") {
             // Can't dedup if we don't have a previous file to dedup against.
@@ -234,8 +232,8 @@ impl Inner {
                     // If the current file is not exactly the same as the previous file size, we
                     // can't dedup.
                     if file_size == current_size {
-                        if let Ok(pref_file_loaded) = mmap_open_sync(prev_file) {
-                            if pref_file_loaded.1 == file_size {
+                        if let Ok(pref_file_loaded) = Self::mmap_open_sync(prev_file) {
+                            if pref_file_loaded.size() == file_size {
                                 return Ok(pref_file_loaded);
                             }
                         }
@@ -244,6 +242,17 @@ impl Inner {
             }
         }
         bail!("Can not deduplicate.");
+    }
+
+    /// Open a file using mmap for performance.
+    fn mmap_open_sync(path: &Path) -> MithrilResult<MemoryMapFile> {
+        match MemoryMapFile::try_from(path) {
+            Ok(mmap_file) => Ok(mmap_file),
+            Err(error) => {
+                error!(error=%error, file=%path.to_string_lossy(), "Failed to open file");
+                Err(error.into())
+            },
+        }
     }
 }
 
@@ -302,7 +311,17 @@ impl MithrilTurboDownloader {
         let target_dir = target_dir.to_owned();
 
         // This is fully synchronous IO, so do it on a sync thread.
-        let result = spawn_blocking(move || inner.dl_and_dedup(&location, &target_dir)).await;
+        let result = spawn_blocking(move || {
+            stats::start_thread(
+                inner.cfg.chain,
+                stats::thread::name::MITHRIL_DL_DEDUP,
+                false,
+            );
+            let result = inner.dl_and_dedup(&location, &target_dir);
+            stats::stop_thread(inner.cfg.chain, stats::thread::name::MITHRIL_DL_DEDUP);
+            result
+        })
+        .await;
 
         if let Ok(result) = result {
             return result;
@@ -319,20 +338,6 @@ fn get_file_size_sync(file: &Path) -> Option<u64> {
         return None;
     };
     Some(metadata.len())
-}
-
-/// Open a file using mmap for performance.
-fn mmap_open_sync(path: &Path) -> MithrilResult<(fmmap::MmapFile, u64)> {
-    match fmmap::MmapFile::open_with_options(path, fmmap::Options::new().read(true).populate()) {
-        Ok(file) => {
-            let len = file.len() as u64;
-            Ok((file, len))
-        },
-        Err(error) => {
-            error!(error=%error, file=%path.to_string_lossy(), "Failed to open file");
-            Err(error.into())
-        },
-    }
 }
 
 #[async_trait]
@@ -366,9 +371,9 @@ impl SnapshotDownloader for MithrilTurboDownloader {
 
     async fn probe(&self, location: &str) -> MithrilResult<()> {
         debug!("Probe Snapshot location='{location}'.");
-
         let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
-        let dl_processor = ParallelDownloadProcessor::new(location, dl_config).await?;
+        let dl_processor =
+            ParallelDownloadProcessor::new(location, dl_config, self.inner.cfg.chain).await?;
 
         // Decompress and extract and de-dupe each file in the archive.
         stats::mithril_extract_started(self.inner.cfg.chain);

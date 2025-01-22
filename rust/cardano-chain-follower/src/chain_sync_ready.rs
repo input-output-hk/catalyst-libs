@@ -3,6 +3,7 @@
 
 use std::{sync::LazyLock, time::Duration};
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use strum::IntoEnumIterator;
 use tokio::{
@@ -11,7 +12,7 @@ use tokio::{
 };
 use tracing::error;
 
-use crate::{chain_update, Network};
+use crate::{chain_update, stats};
 
 /// Data we hold related to sync being ready or not.
 struct SyncReady {
@@ -87,6 +88,7 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
     let (tx, rx) = oneshot::channel::<()>();
 
     tokio::spawn(async move {
+        stats::start_thread(chain, stats::thread::name::WAIT_FOR_SYNC_READY, true);
         // We are safe to use `expect` here because the SYNC_READY list is exhaustively
         // initialized. Its a Serious BUG if that not True, so panic is OK.
         #[allow(clippy::expect_used)]
@@ -100,7 +102,7 @@ pub(crate) fn wait_for_sync_ready(chain: Network) -> SyncReadyWaiter {
         if let Ok(()) = rx.await {
             status.ready = true;
         }
-
+        stats::stop_thread(chain, stats::thread::name::WAIT_FOR_SYNC_READY);
         // If the channel closes early, we can NEVER use the Blockchain data.
     });
 

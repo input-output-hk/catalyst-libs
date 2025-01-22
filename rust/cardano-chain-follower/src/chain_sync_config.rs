@@ -6,6 +6,7 @@
 
 use std::sync::LazyLock;
 
+use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use strum::IntoEnumIterator;
 use tokio::{sync::Mutex, task::JoinHandle};
@@ -15,19 +16,19 @@ use crate::{
     chain_sync::chain_sync,
     error::{Error, Result},
     mithril_snapshot_config::MithrilSnapshotConfig,
-    network::Network,
     stats,
 };
 
 /// Default Follower block buffer size.
 const DEFAULT_CHAIN_UPDATE_BUFFER_SIZE: usize = 32;
 
-/// How many slots back from TIP is considered Immutable in the absence of a mithril
-/// snapshot.
+/// How many window (in slot) back from TIP is considered Immutable in the
+/// absence of a mithril snapshot.
 const DEFAULT_IMMUTABLE_SLOT_WINDOW: u64 = 12 * 60 * 60;
 
 /// Type we use to manage the Sync Task handle map.
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
+
 /// Handle to the mithril sync thread. One for each Network ONLY.
 static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
     let map = DashMap::new();
@@ -68,7 +69,7 @@ impl ChainSyncConfig {
         }
     }
 
-    /// Sets the relay to use for Chain Sync.
+    /// Sets the relay address to use for Chain Sync.
     ///
     /// # Arguments
     ///
@@ -101,12 +102,11 @@ impl ChainSyncConfig {
         self
     }
 
-    /// Sets the the Mithril snapshot Config the `ChainSync` will use.
+    /// Sets the Mithril snapshot Config the `ChainSync` will use.
     ///
     /// # Arguments
     ///
-    /// * `path`: Mithril snapshot path.
-    /// * `update`: Auto-update this path with the latest mithril snapshot as it changes.
+    /// * `cfg`: Mithril snapshot configuration.
     #[must_use]
     pub fn mithril_cfg(mut self, cfg: MithrilSnapshotConfig) -> Self {
         self.mithril_cfg = cfg;
@@ -116,10 +116,6 @@ impl ChainSyncConfig {
     /// Runs Chain Synchronization.
     ///
     /// Must be done BEFORE the chain can be followed.
-    ///
-    /// # Arguments
-    ///
-    /// * `chain`: The chain to follow.
     ///
     /// # Returns
     ///
@@ -154,8 +150,13 @@ impl ChainSyncConfig {
         // Start the Mithril Snapshot Follower
         let rx = self.mithril_cfg.run().await?;
 
+        let config = self.clone();
         // Start Chain Sync
-        *locked_handle = Some(tokio::spawn(chain_sync(self.clone(), rx)));
+        *locked_handle = Some(tokio::spawn(async move {
+            stats::start_thread(config.chain, stats::thread::name::CHAIN_SYNC, true);
+            chain_sync(config.clone(), rx).await;
+            stats::stop_thread(config.chain, stats::thread::name::CHAIN_SYNC);
+        }));
 
         // sync_map.insert(chain, handle);
         debug!("Chain Sync for {} : Started", self.chain);

@@ -96,30 +96,20 @@ impl Serialize for Report {
     }
 }
 
-/// The Problem Report list
-#[derive(Clone)]
-struct Context(Arc<String>);
-
-impl Serialize for Context {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
-        let str = self.0.as_ref();
-        serializer.serialize_str(str)
-    }
-}
-
-/// Problem Report
-#[derive(Clone, Serialize)]
-pub struct ProblemReport {
+/// An inner state of the report.
+#[derive(Serialize)]
+struct State {
     /// What context does the whole report have
-    context: Context,
+    context: String,
     /// The report itself
-    // Note, we use this because it allows:
-    // 1. Cheap copy of this struct.
-    // 2. Ergonomic Inner mutability.
-    // 3. Safety for the Problem Report to be used across threads
     report: Report,
 }
+
+/// Problem Report.
+///
+/// This structure allows making a cheap copies that share the same state.
+#[derive(Clone, Serialize)]
+pub struct ProblemReport(Arc<State>);
 
 impl ProblemReport {
     /// Creates a new `ProblemReport` with the given context string.
@@ -138,10 +128,11 @@ impl ProblemReport {
     /// ```
     #[must_use]
     pub fn new(context: &str) -> Self {
-        Self {
-            context: Context(Arc::new(context.to_string())),
+        let state = State {
+            context: context.to_owned(),
             report: Report(ConcurrentVec::new()),
-        }
+        };
+        Self(Arc::new(state))
     }
 
     /// Determines if the problem report contains any issues.
@@ -164,12 +155,12 @@ impl ProblemReport {
     /// ```
     #[must_use]
     pub fn is_problematic(&self) -> bool {
-        !self.report.0.is_empty()
+        !self.0.report.0.is_empty()
     }
 
     /// Add an entry to the report
     fn add_entry(&self, kind: Kind, context: &str) {
-        self.report.0.push(Entry {
+        self.0.report.0.push(Entry {
             kind,
             context: context.to_owned(),
         });
@@ -457,5 +448,35 @@ impl ProblemReport {
             },
             context,
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Check that the Clone implementation performs the shallow copy, so all instances share
+    // the same state.
+    #[test]
+    fn clone_shared_state() {
+        let original = ProblemReport::new("top level context");
+        assert!(!original.is_problematic());
+
+        let clone = original.clone();
+        clone.other("description", "error context");
+        assert!(clone.is_problematic());
+
+        // The original report must have the same (problematic) state.
+        assert!(original.is_problematic());
+    }
+
+    #[test]
+    fn serialize() {
+        let report = ProblemReport::new("top level context");
+        report.invalid_value("field name", "found", "constraint", "context");
+
+        let serialized = serde_json::to_string(&report).unwrap();
+        let expected = r#"{"context":"top level context","report":[{"kind":{"type":"InvalidValue","field":"field name","value":"found","constraint":"constraint"},"context":"context"}]}"#;
+        assert_eq!(serialized, expected);
     }
 }

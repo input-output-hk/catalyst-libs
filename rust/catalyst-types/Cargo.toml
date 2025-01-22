@@ -17,7 +17,6 @@ name = "catalyst_types"
 
 [dependencies]
 blake2b_simd = "1.0.2"
-coset = "0.3.8"
 displaydoc = "0.2.5"
 ed25519-dalek = "2.1.1"
 fluent-uri = "0.3.2"
@@ -26,11 +25,15 @@ minicbor = { version = "0.25.1", features = ["std"] }
 num-traits = "0.2.19"
 orx-concurrent-vec = "3.1.0"
 pallas-crypto = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9b5183c8b90b90fe2cc319d986e933e9518957b3" }
-serde = { version = "1.0.217", features = ["derive"] }
+serde = { version = "1.0.217", features = ["derive", "rc"] }
 thiserror = "2.0.9"
 base64-url = "3.0.0"
 uuid = { version = "1.11.0", features = ["v4", "v7", "serde"] }
+fmmap = { version = "0.3.3", features = ["sync", "tokio-async"] }
+once_cell = "1.20.2"
+tracing = "0.1.41"
 
 [dev-dependencies]
 ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
 rand = "0.8.5"
+serde_json = "1"

@@ -8,9 +8,10 @@ use std::{
     fmt::{Debug, Display, Formatter},
 };
 
+use catalyst_types::hashes::Blake2b256Hash;
 use pallas::crypto::hash::Hash;
 
-use crate::{hashes::Blake2b256Hash, Slot};
+use crate::Slot;
 
 /// A specific point in the blockchain. It can be used to
 /// identify a particular location within the blockchain, such as the tip (the
@@ -279,7 +280,8 @@ impl Point {
     /// # Examples
     ///
     /// ```
-    /// use cardano_blockchain_types::{hashes::Blake2b256Hash, Point};
+    /// use cardano_blockchain_types::Point;
+    /// use catalyst_types::hashes::Blake2b256Hash;
     ///
     /// let specific_point = Point::new(42.into(), [0; 32].into());
     /// assert_eq!(
@@ -489,7 +491,9 @@ fn cmp_point(
 
 #[cfg(test)]
 mod tests {
-    use crate::{hashes::Blake2bHash, point::*};
+    use catalyst_types::hashes::Blake2bHash;
+
+    use crate::point::*;
 
     #[test]
     fn test_cmp_hash_simple() {

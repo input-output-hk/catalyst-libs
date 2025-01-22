@@ -7,6 +7,7 @@ use std::{
 };
 
 use anyhow::bail;
+use cardano_blockchain_types::{Network, Point};
 use dashmap::DashMap;
 use futures::future::join_all;
 use strum::IntoEnumIterator;
@@ -22,15 +23,14 @@ use crate::{
     error::{Error, Result},
     mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
     mithril_snapshot_sync::background_mithril_update,
-    network::Network,
-    point::ORIGIN_POINT,
     snapshot_id::SnapshotId,
+    stats,
     turbo_downloader::DlConfig,
-    Point,
 };
 
 /// Type we use to manage the Sync Task handle map.
 type SyncMap = DashMap<Network, Mutex<Option<JoinHandle<()>>>>;
+
 /// Handle to the mithril sync thread. One for each Network ONLY.
 static SYNC_JOIN_HANDLE_MAP: LazyLock<SyncMap> = LazyLock::new(|| {
     let map = DashMap::new();
@@ -200,7 +200,7 @@ impl MithrilSnapshotConfig {
                     };
 
                     // If None, its not a snapshot path, so continue.
-                    if let Some(this_snapshot) = SnapshotId::new(&entry.path(), ORIGIN_POINT) {
+                    if let Some(this_snapshot) = SnapshotId::new(&entry.path(), Point::ORIGIN) {
                         // Don't do anything with the latest snapshot.
                         // Comparison does NOT use `tip` so we construct a temporary ID without it.
                         if this_snapshot != latest_snapshot {
@@ -296,7 +296,7 @@ impl MithrilSnapshotConfig {
         snapshot_path
     }
 
-    /// Check if the Mithril Snapshot Path is valid an usable.
+    /// Check if the Mithril Snapshot Path is valid and usable.
     async fn validate_path(&self) -> Result<()> {
         let path = self.path.clone();
         debug!(
@@ -414,7 +414,16 @@ impl MithrilSnapshotConfig {
         let (tx, rx) = mpsc::channel::<MithrilUpdateMessage>(2);
 
         // let handle = tokio::spawn(background_mithril_update(chain, self.clone(), tx));
-        *locked_handle = Some(tokio::spawn(background_mithril_update(self.clone(), tx)));
+        let config = self.clone();
+        *locked_handle = Some(tokio::spawn(async move {
+            stats::start_thread(
+                config.chain,
+                stats::thread::name::MITHRIL_SNAPSHOT_UPDATER,
+                true,
+            );
+            background_mithril_update(config.clone(), tx).await;
+            stats::stop_thread(config.chain, stats::thread::name::MITHRIL_SNAPSHOT_UPDATER);
+        }));
 
         // sync_map.insert(chain, handle);
         debug!(
