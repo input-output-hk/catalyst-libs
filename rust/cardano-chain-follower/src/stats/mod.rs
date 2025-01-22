@@ -1,9 +1,10 @@
 //! Cardano Chain Follower Statistics
 
-pub(crate) mod follower;
-pub(crate) mod live_chain;
-pub(crate) mod mithril;
-pub(crate) mod rollback;
+pub mod follower;
+pub mod live_chain;
+pub mod mithril;
+pub mod rollback;
+pub mod thread;
 
 use std::sync::{Arc, LazyLock, RwLock};
 
@@ -13,6 +14,7 @@ use dashmap::DashMap;
 use rollback::{rollbacks, rollbacks_reset, RollbackType};
 use serde::Serialize;
 use strum::IntoEnumIterator;
+use thread::ThreadStat;
 use tracing::error;
 
 use crate::stats::{live_chain::Live, mithril::Mithril};
@@ -26,6 +28,8 @@ pub struct Statistics {
     pub live: Live,
     /// Statistics related to the mithril certified blockchain archive.
     pub mithril: Mithril,
+    /// Statistics related to the threads.
+    pub thread_stats: DashMap<String, thread::ThreadStat>,
 }
 
 /// Type we use to manage the Sync Task handle map.
@@ -456,6 +460,115 @@ pub(crate) fn mithril_sync_failure(chain: Network, failure: MithrilSyncFailures)
             chain_stats.mithril.failed_to_activate_new_snapshot += 1;
         },
     }
+}
+
+// ----------------- THREAD STATISTICS-------------------
+
+/// Initialize a thread statistic with the given name.
+/// If it is service thread, mark it as such.
+pub(crate) fn start_thread(chain: Network, name: &str, is_service: bool) {
+    // This will actually always succeed.
+    let Some(stats) = lookup_stats(chain) else {
+        return;
+    };
+
+    let Ok(chain_stats) = stats.write() else {
+        // Worst case if this fails (it never should) is we stop updating stats.
+        error!("Stats RwLock should never be able to error.");
+        return;
+    };
+
+    chain_stats
+        .thread_stats
+        .insert(name.to_string(), ThreadStat::start_thread(is_service));
+}
+
+/// Stop the thread with the given name.
+pub(crate) fn stop_thread(chain: Network, name: &str) {
+    // This will actually always succeed.
+    let Some(stats) = lookup_stats(chain) else {
+        return;
+    };
+
+    let Ok(chain_stats) = stats.write() else {
+        // Worst case if this fails (it never should) is we stop updating stats.
+        error!("Stats RwLock should never be able to error.");
+        return;
+    };
+
+    if let Some(thread_stat) = chain_stats.thread_stats.get(name) {
+        thread_stat.stop_thread();
+    };
+}
+
+/// Resume the thread with the given name.
+pub(crate) fn resume_thread(chain: Network, name: &str) {
+    // This will actually always succeed.
+    let Some(stats) = lookup_stats(chain) else {
+        return;
+    };
+
+    let Ok(chain_stats) = stats.write() else {
+        // Worst case if this fails (it never should) is we stop updating stats.
+        error!("Stats RwLock should never be able to error.");
+        return;
+    };
+
+    if let Some(thread_stat) = chain_stats.thread_stats.get(name) {
+        thread_stat.resume_thread();
+    };
+}
+
+/// Pause the thread with the given name.
+pub(crate) fn pause_thread(chain: Network, name: &str) {
+    // This will actually always succeed.
+    let Some(stats) = lookup_stats(chain) else {
+        return;
+    };
+
+    let Ok(chain_stats) = stats.write() else {
+        // Worst case if this fails (it never should) is we stop updating stats.
+        error!("Stats RwLock should never be able to error.");
+        return;
+    };
+
+    if let Some(thread_stat) = chain_stats.thread_stats.get(name) {
+        thread_stat.pause_thread();
+    };
+}
+
+/// Get the thread statistic with the given name.
+#[allow(dead_code)]
+pub fn thread_stat(chain: Network, name: &str) -> Option<ThreadStat> {
+    // This will actually always succeed.
+    let stats = lookup_stats(chain)?;
+
+    let Ok(chain_stats) = stats.write() else {
+        // Worst case if this fails (it never should) is we stop updating stats.
+        error!("Stats RwLock should never be able to error.");
+        return None;
+    };
+
+    chain_stats.thread_stats.get(name).map(|stat| stat.clone())
+}
+
+/// Get the names of all the thread statistics.
+#[allow(dead_code)]
+pub fn thread_stat_names(chain: Network) -> Vec<String> {
+    let Some(stats) = lookup_stats(chain) else {
+        return Vec::new();
+    };
+
+    let Ok(chain_stats) = stats.write() else {
+        error!("Stats RwLock should never be able to error.");
+        return Vec::new();
+    };
+
+    chain_stats
+        .thread_stats
+        .iter()
+        .map(|entry| entry.key().clone())
+        .collect()
 }
 
 #[cfg(test)]
