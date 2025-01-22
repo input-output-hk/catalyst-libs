@@ -300,9 +300,12 @@ async fn validate_mithril_snapshot(
     match tokio::spawn(async move {
         // This can be long running and CPU Intensive.
         // So we spawn it off to a background task.
-        MessageBuilder::new()
+        stats::start_thread(chain, stats::thread::name::COMPUTE_SNAPSHOT_MSG, true);
+        let result = MessageBuilder::new()
             .compute_snapshot_message(&cert, &mithril_path)
-            .await
+            .await;
+        stats::stop_thread(chain, stats::thread::name::COMPUTE_SNAPSHOT_MSG);
+        result
     })
     .await
     {
@@ -517,6 +520,7 @@ fn background_validate_mithril_snapshot(
     chain: Network, certificate: MithrilCertificate, tmp_path: PathBuf,
 ) -> tokio::task::JoinHandle<bool> {
     tokio::spawn(async move {
+        stats::start_thread(chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT, true);
         debug!(
             "Mithril Snapshot background updater for: {} : Check Certificate.",
             chain
@@ -540,6 +544,7 @@ fn background_validate_mithril_snapshot(
             chain
         );
 
+        stats::stop_thread(chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT);
         true
     })
 }

@@ -150,8 +150,13 @@ impl ChainSyncConfig {
         // Start the Mithril Snapshot Follower
         let rx = self.mithril_cfg.run().await?;
 
+        let config = self.clone();
         // Start Chain Sync
-        *locked_handle = Some(tokio::spawn(chain_sync(self.clone(), rx)));
+        *locked_handle = Some(tokio::spawn(async move {
+            stats::start_thread(config.chain, stats::thread::name::CHAIN_SYNC, true);
+            chain_sync(config.clone(), rx).await;
+            stats::stop_thread(config.chain, stats::thread::name::CHAIN_SYNC);
+        }));
 
         // sync_map.insert(chain, handle);
         debug!("Chain Sync for {} : Started", self.chain);

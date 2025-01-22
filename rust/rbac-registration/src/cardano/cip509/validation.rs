@@ -38,14 +38,15 @@ use pallas::{
 
 use super::utils::cip19::compare_key_hash;
 use crate::cardano::cip509::{
-    rbac::Cip509RbacMetadata, types::TxInputHash, Cip0134UriSet, KeyLocalRef, LocalRefInt, RoleData,
+    rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
+    RoleNumber, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
 /// uniform resource identifier (URI) in the subject alternative name extension.
 /// Following the ASN.1
 /// <https://www.oss.com/asn1/resources/asn1-made-simple/asn1-quick-reference/asn1-tags.html>
-/// the tag is derive from
+/// the tag is derived from
 /// | Class   (2 bit)    | P/C  (1 bit)   | Tag Number (5 bit) |
 /// |`CONTEXT_SPECIFIC`  | `PRIMITIVE`   `|      6`            |
 /// |`10`                | `0`           `|      00110`        |
@@ -174,75 +175,97 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
         .collect()
 }
 
-/// Validate role singing key for role 0.
-/// Must reference certificate not the public key
-pub fn validate_role_signing_key(
-    role_data: &RoleData, metadata: Option<&Cip509RbacMetadata>, report: &ProblemReport,
+/// Checks that only role 0 uses certificates with zero index.
+#[allow(clippy::similar_names)]
+pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
+    let context = "Role data validation";
+
+    let has_x_0_cert = matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)));
+    let has_c_0_cert = matches!(
+        metadata.c509_certs.first(),
+        Some(C509Cert::C509Certificate(_))
+    );
+    // There should be only one role 0 certificate.
+    if has_x_0_cert && has_c_0_cert {
+        report.other("Only one certificate can be defined at index 0", context);
+    }
+    // Only role 0 can contain certificates at 0 index.
+    if !metadata.role_data.contains_key(&RoleNumber::ROLE_0) && (has_x_0_cert || has_c_0_cert) {
+        report.other("Only role 0 can contain certificates at index 0", context);
+    }
+
+    for (number, data) in &metadata.role_data {
+        if number == &RoleNumber::ROLE_0 {
+            validate_role_0(data, metadata, context, report);
+        } else {
+            if let Some(signing_key) = data.signing_key() {
+                if signing_key.key_offset == 0 {
+                    report.other(
+                        &format!(
+                            "Invalid signing key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
+                        ),
+                        context,
+                    );
+                }
+            }
+            if let Some(encryption_key) = data.encryption_key() {
+                if encryption_key.key_offset == 0 {
+                    report.other(
+                        &format!(
+                            "Invalid encryption key: only role 0 can reference a certificate with 0 index ({number:?} {data:?})"
+                        ),
+                        context,
+                    );
+                }
+            }
+        }
+    }
+}
+
+/// Checks that the role 0 data is correct.
+fn validate_role_0(
+    role: &RoleData, metadata: &Cip509RbacMetadata, context: &str, report: &ProblemReport,
 ) {
-    let context = "Cip509 role0 signing key validation";
-
-    let Some(signing_key) = role_data.signing_key() else {
-        report.missing_field("RoleData::signing_key", context);
+    let Some(signing_key) = role.signing_key() else {
+        report.missing_field("(Role 0) RoleData::signing_key", context);
         return;
     };
 
-    let Some(metadata) = metadata else {
-        report.other("Missing metadata", context);
+    if signing_key.key_offset != 0 {
+        report.other(
+            &format!("The role 0 must reference a certificate with 0 index ({role:?})"),
+            context,
+        );
         return;
-    };
+    }
 
     match signing_key.local_ref {
         LocalRefInt::X509Certs => {
-            check_key_offset(
-                signing_key,
-                metadata.x509_certs.as_slice(),
-                "X509",
-                context,
-                report,
-            );
+            match metadata.x509_certs.first() {
+                Some(X509DerCert::X509Cert(_)) => {
+                    // All good: role 0 references a valid X509 certificate.
+                }
+                Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
+                None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
+            }
         },
         LocalRefInt::C509Certs => {
-            check_key_offset(
-                signing_key,
-                metadata.c509_certs.as_slice(),
-                "C509",
-                context,
-                report,
-            );
+            match metadata.c509_certs.first() {
+                Some(C509Cert::C509Certificate(_)) => {
+                    // All good: role 0 references a valid C509 certificate.
+                }
+                Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
+                None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),
+            }
         },
         LocalRefInt::PubKeys => {
             report.invalid_value(
-                "RoleData::signing_key",
+                "(Role 0) RoleData::signing_key",
                 &format!("{signing_key:?}"),
                 "Role signing key should reference certificate, not public key",
                 context,
             );
         },
-    }
-}
-
-/// Add a problem report entry if the key offset is invalid.
-fn check_key_offset<T>(
-    key: &KeyLocalRef, certificates: &[T], certificate_type: &str, context: &str,
-    report: &ProblemReport,
-) {
-    let Ok(offset) = usize::try_from(key.key_offset) else {
-        report.invalid_value(
-            "RoleData::signing_key",
-            &format!("{key:?}"),
-            "Role signing key offset is too big",
-            context,
-        );
-        return;
-    };
-
-    if offset >= certificates.len() {
-        report.invalid_value(
-            "RoleData::signing_key",
-            &format!("{key:?}"),
-            &format!("Role signing key should reference existing certificate, but there are only {} {} certificates in this registration", certificates.len(), certificate_type),
-            context,
-        );
     }
 }
 
