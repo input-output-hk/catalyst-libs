@@ -16,6 +16,7 @@ workspace = true
 name = "catalyst_types"
 
 [dependencies]
+anyhow = "1.0.95"
 blake2b_simd = "1.0.2"
 displaydoc = "0.2.5"
 ed25519-dalek = "2.1.1"
