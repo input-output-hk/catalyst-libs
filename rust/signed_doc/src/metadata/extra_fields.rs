@@ -42,7 +42,7 @@ pub struct ExtraFields {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub(super) section: Option<String>,
     /// Reference to the document collaborators. Collaborator type is TBD.
-    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default = "Vec::new", skip_serializing_if = "Vec::is_empty")]
     pub(super) collabs: Vec<String>,
     /// Unique identifier for the brand that is running the voting.
     #[serde(skip_serializing_if = "Option::is_none")]
