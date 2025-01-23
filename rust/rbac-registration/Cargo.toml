@@ -33,5 +33,5 @@ uuid = "1.11.0"
 c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.3" }
 pallas = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9b5183c8b90b90fe2cc319d986e933e9518957b3" }
 cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", rev = "78dfbbaff3245cf65e9e4d73716523e386bd73b2" }
-cardano-blockchain-types = { version = "0.0.1", path = "../cardano-blockchain-types" }
-catalyst-types = { version = "0.0.1", path = "../catalyst-types" }
+cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", rev = "eaf071e915f818d229fc2bb71793bfbe6280c997" }
+catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", rev = "eaf071e915f818d229fc2bb71793bfbe6280c997" }

@@ -1,6 +1,7 @@
 //! Catalyst Enhanced `MultiEraBlock` Structures
 
 mod auxdata;
+mod cip134_uri;
 mod fork;
 mod metadata;
 mod multi_era_block_data;
@@ -27,5 +28,3 @@ pub use point::Point;
 pub use slot::Slot;
 pub use txn_index::TxnIndex;
 pub use txn_witness::{TxnWitness, VKeyHash};
-
-mod cip134_uri;
