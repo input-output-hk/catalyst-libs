@@ -7,7 +7,7 @@
 use std::sync::Arc;
 
 use orx_concurrent_vec::ConcurrentVec;
-use serde::{ser::SerializeSeq, Serialize};
+use serde::Serialize;
 
 /// The kind of problem being reported
 #[derive(Debug, Serialize, Clone)]
@@ -82,19 +82,8 @@ struct Entry {
 }
 
 /// The Problem Report list
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 struct Report(ConcurrentVec<Entry>);
-
-impl Serialize for Report {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
-        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
-        for e in self.0.iter_cloned() {
-            seq.serialize_element(&e)?;
-        }
-        seq.end()
-    }
-}
 
 /// An inner state of the report.
 #[derive(Debug, Serialize)]

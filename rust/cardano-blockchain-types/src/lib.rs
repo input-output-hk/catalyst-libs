@@ -1,6 +1,7 @@
 //! Catalyst Enhanced `MultiEraBlock` Structures
 
 mod auxdata;
+mod cip134_uri;
 mod fork;
 mod metadata;
 mod multi_era_block_data;
