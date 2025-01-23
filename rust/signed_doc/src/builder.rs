@@ -47,7 +47,7 @@ impl Builder {
         };
         let signatures = self.signatures;
 
-        let content = Content::new(
+        let content = Content::from_decoded(
             content,
             metadata.content_type(),
             metadata.content_encoding(),

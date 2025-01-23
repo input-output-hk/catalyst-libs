@@ -141,7 +141,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
 
         match (cose_sign.payload, metadata, signatures) {
             (Some(payload), Some(metadata), Some(signatures)) => {
-                let content = Content::new(
+                let content = Content::from_encoded(
                     payload,
                     metadata.content_type(),
                     metadata.content_encoding(),
@@ -175,7 +175,12 @@ impl Encode<()> for CatalystSignedDocument {
 
         let mut builder = coset::CoseSignBuilder::new()
             .protected(protected_header)
-            .payload(self.inner.content.bytes().to_vec());
+            .payload(
+                self.inner
+                    .content
+                    .encoded_bytes()
+                    .map_err(encode::Error::message)?,
+            );
 
         for signature in self.signatures().cose_signatures() {
             builder = builder.add_signature(signature);
@@ -208,7 +213,7 @@ mod tests {
         let content_type = ContentType::Json;
         let content_encoding = ContentEncoding::Brotli;
 
-        let metadata = serde_json::from_value(serde_json::json!({
+        let metadata: Metadata = serde_json::from_value(serde_json::json!({
             "content-type": content_type.to_string(),
             "content-encoding": content_encoding.to_string(),
             "type": uuid_v4.to_string(),
@@ -228,14 +233,20 @@ mod tests {
         let content = vec![1, 2, 4, 5, 6, 7, 8, 9];
 
         let doc = Builder::new()
-            .with_metadata(metadata)
-            .with_content(content)
+            .with_metadata(metadata.clone())
+            .with_content(content.clone())
             .build()
             .unwrap();
 
         let mut bytes = Vec::new();
         minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();
-        let _decoded: CatalystSignedDocument =
+        let decoded: CatalystSignedDocument =
             minicbor::decode_with(bytes.as_slice(), &mut ()).unwrap();
+
+        assert_eq!(decoded.doc_type(), uuid_v4);
+        assert_eq!(decoded.doc_id(), uuid_v7);
+        assert_eq!(decoded.doc_ver(), uuid_v7);
+        assert_eq!(decoded.doc_content().decoded_bytes(), &content);
+        assert_eq!(decoded.doc_meta(), metadata.extra());
     }
 }
