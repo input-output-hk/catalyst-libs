@@ -17,8 +17,9 @@ impl Content {
         mut content: Vec<u8>, content_type: ContentType, encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
         if let Some(content_encoding) = encoding {
+            println!("here");
             content = content_encoding
-                .decode(content.as_slice())
+                .encode(content.as_slice())
                 .map_err(|e| anyhow::anyhow!("Failed to decode {encoding:?} content: {e}"))?;
         }
 

@@ -225,17 +225,13 @@ mod tests {
             "category_id": uuid_v4.to_string(),
         }))
         .unwrap();
-        let payload = vec![1, 2, 4, 5, 6, 7, 8, 9];
-        let content = Content::new(payload, content_type, Some(content_encoding)).unwrap();
+        let content = vec![1, 2, 4, 5, 6, 7, 8, 9];
 
-        let doc = CatalystSignedDocument {
-            inner: InnerCatalystSignedDocument {
-                metadata,
-                content,
-                signatures: Signatures::new(),
-            }
-            .into(),
-        };
+        let doc = Builder::new()
+            .with_metadata(metadata)
+            .with_content(content)
+            .build()
+            .unwrap();
 
         let mut bytes = Vec::new();
         minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();

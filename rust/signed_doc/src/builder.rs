@@ -7,9 +7,9 @@ pub struct Builder {
     /// Document Metadata
     metadata: Option<Metadata>,
     /// Document Content
-    content: Option<Content>,
+    content: Option<Vec<u8>>,
     /// Signatures
-    signatures: Option<Signatures>,
+    signatures: Signatures,
 }
 
 impl Builder {
@@ -21,22 +21,15 @@ impl Builder {
 
     /// Set document metadata
     #[must_use]
-    pub fn metadata(mut self, metadata: Metadata) -> Self {
+    pub fn with_metadata(mut self, metadata: Metadata) -> Self {
         self.metadata = Some(metadata);
         self
     }
 
     /// Set document content
     #[must_use]
-    pub fn content(mut self, content: Content) -> Self {
+    pub fn with_content(mut self, content: Vec<u8>) -> Self {
         self.content = Some(content);
-        self
-    }
-
-    /// Set document signatures
-    #[must_use]
-    pub fn signatures(mut self, signatures: Signatures) -> Self {
-        self.signatures = Some(signatures);
         self
     }
 
@@ -46,16 +39,25 @@ impl Builder {
     ///
     /// Fails if any of the fields are missing.
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
-        match (self.metadata, self.content, self.signatures) {
-            (Some(metadata), Some(content), Some(signatures)) => {
-                Ok(InnerCatalystSignedDocument {
-                    metadata,
-                    content,
-                    signatures,
-                }
-                .into())
-            },
-            _ => Err(anyhow::anyhow!("Failed to build Catalyst Signed Document")),
+        let Some(metadata) = self.metadata else {
+            anyhow::bail!("Failed to build Catalyst Signed Document, missing metadata");
+        };
+        let Some(content) = self.content else {
+            anyhow::bail!("Failed to build Catalyst Signed Document, missing document's content");
+        };
+        let signatures = self.signatures;
+
+        let content = Content::new(
+            content,
+            metadata.content_type(),
+            metadata.content_encoding(),
+        )?;
+
+        Ok(InnerCatalystSignedDocument {
+            metadata,
+            content,
+            signatures,
         }
+        .into())
     }
 }
