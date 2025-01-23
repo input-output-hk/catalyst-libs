@@ -9,8 +9,8 @@ fn test_type_usage() {
     type B = catalyst_types::hashes::Blake2b224Hash;
     type C = catalyst_types::hashes::Blake2b256Hash;
 
-    type D = catalyst_types::uuid::V4;
-    type E = catalyst_types::uuid::V7;
+    type D = catalyst_types::uuid::UuidV4;
+    type E = catalyst_types::uuid::UuidV7;
 
     type F = catalyst_types::kid_uri::KidUri;
 
