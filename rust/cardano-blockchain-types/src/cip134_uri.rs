@@ -8,7 +8,7 @@ use std::fmt::{Display, Formatter};
 use anyhow::{anyhow, Context, Error, Result};
 use pallas::ledger::addresses::Address;
 
-/// An URI in the CIP-0134 format.
+/// A URI in the CIP-0134 format.
 ///
 /// See the [proposal] for more details.
 ///
