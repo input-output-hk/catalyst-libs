@@ -11,18 +11,14 @@ use serde::Serialize;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default, Serialize)]
 
-/// Slot on the blockchain, typically one slot equals one second.  However chain
+/// Slot on the blockchain, typically one slot equals one second. However chain
 /// parameters can alter how long a slot is.
 pub struct Slot(u64);
 
 impl Slot {
     /// Convert an `<T>` to Slot. (saturate if out of range.)
     pub fn from_saturating<
-        T: Copy
-            + TryInto<u64>
-            + std::ops::Sub<Output = T>
-            + std::cmp::PartialOrd<T>
-            + num_traits::identities::Zero,
+        T: Copy + TryInto<u64> + Sub<Output = T> + PartialOrd<T> + num_traits::identities::Zero,
     >(
         value: T,
     ) -> Self {
