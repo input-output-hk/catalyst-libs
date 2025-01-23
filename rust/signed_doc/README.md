@@ -17,8 +17,7 @@ Prepare non-signed document,
 `meta.json` file should follow the [`meta.schema.json`](./meta.schema.json).
 
 ```shell
-cargo run -p catalyst-signed-doc --example mk_signed_doc build
-signed_doc/doc.json  signed_doc/schema.json signed_doc/doc.cose signed_doc/meta.json
+cargo run -p catalyst-signed-doc --example mk_signed_doc build signed_doc/doc.json signed_doc/doc.cose signed_doc/meta.json
 ```
 
 Inspect document

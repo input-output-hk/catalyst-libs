@@ -4,23 +4,47 @@ pub use catalyst_types::kid_uri::KidUri;
 use coset::CoseSignature;
 
 /// Catalyst Signed Document COSE Signature.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Signature {
     /// Key ID
     kid: KidUri,
     /// COSE Signature
-    #[allow(dead_code)]
     signature: CoseSignature,
 }
 
 /// List of Signatures.
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
+    /// Creates an empty signatures list.
+    #[must_use]
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
     /// List of signature Key IDs.
+    #[must_use]
     pub fn kids(&self) -> Vec<KidUri> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
+    }
+
+    /// List of signatures.
+    #[must_use]
+    pub fn cose_signatures(&self) -> Vec<CoseSignature> {
+        self.0.iter().map(|sig| sig.signature.clone()).collect()
+    }
+
+    /// Number of signatures.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// True if the document has no signatures.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
     }
 }
 
