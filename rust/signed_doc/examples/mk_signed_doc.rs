@@ -19,7 +19,7 @@ fn main() {
     }
 }
 
-/// Hermes cli commands
+/// Catalyst Sign Document CLI Commands
 #[derive(clap::Parser)]
 #[allow(clippy::large_enum_variant)]
 enum Cli {
