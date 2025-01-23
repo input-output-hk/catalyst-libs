@@ -267,10 +267,10 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
 fn validate_role_0(
     role: &RoleData, metadata: &Cip509RbacMetadata, context: &str, report: &ProblemReport,
 ) {
-    if role.encryption_key().is_some() {
+    if let Some(key) = role.encryption_key() {
         report.invalid_value(
             "Role 0 encryption key",
-            "<some value>",
+            &format!("{key:?}"),
             "The role 0 shouldn't have the encryption key",
             context,
         );
