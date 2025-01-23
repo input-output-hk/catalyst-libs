@@ -151,14 +151,12 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                     minicbor::decode::Error::message(error::Error::from(errors))
                 })?;
 
-                Ok(CatalystSignedDocument {
-                    inner: InnerCatalystSignedDocument {
-                        metadata,
-                        content,
-                        signatures,
-                    }
-                    .into(),
-                })
+                Ok(InnerCatalystSignedDocument {
+                    metadata,
+                    content,
+                    signatures,
+                }
+                .into())
             },
             _ => Err(minicbor::decode::Error::message(error::Error::from(errors))),
         }
