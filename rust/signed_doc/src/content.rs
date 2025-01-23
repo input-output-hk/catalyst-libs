@@ -45,7 +45,7 @@ impl Content {
     pub(crate) fn from_decoded(
         data: Vec<u8>, content_type: ContentType, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
-        // TODO add conten_type verification
+        // TODO add content_type verification
         Ok(Self {
             data,
             content_type,

@@ -59,7 +59,7 @@ pub struct ExtraFields {
 }
 
 impl ExtraFields {
-    /// Fill the COSE hedear `ExtraFields` data into the header builder.
+    /// Fill the COSE header `ExtraFields` data into the header builder.
     pub(super) fn fill_cose_header_fields(
         &self, mut builder: coset::HeaderBuilder,
     ) -> anyhow::Result<coset::HeaderBuilder> {

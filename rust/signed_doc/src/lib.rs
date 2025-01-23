@@ -207,7 +207,7 @@ mod tests {
         let uuid_v7 = UuidV7::new();
         let uuid_v4 = UuidV4::new();
         let section = "some section".to_string();
-        let collabs = vec!["collab1".to_string(), "collab2".to_string()];
+        let collabs = vec!["Alex1".to_string(), "Alex2".to_string()];
         let content_type = ContentType::Json;
         let content_encoding = ContentEncoding::Brotli;
 
