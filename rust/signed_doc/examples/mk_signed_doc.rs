@@ -8,9 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{
-    Builder, CatalystSignedDocument, Content, Decode, Decoder, KidUri, Metadata, Signatures,
-};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, Decode, Decoder, KidUri, Metadata};
 use clap::Parser;
 use coset::CborSerializable;
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
@@ -68,17 +66,10 @@ impl Cli {
                 let json_doc: serde_json::Value = load_json_from_file(&doc)?;
                 // Possibly encode if Metadata has an encoding set.
                 let payload = serde_json::to_vec(&json_doc)?;
-                let content = Content::new(
-                    payload,
-                    metadata.content_type(),
-                    metadata.content_encoding(),
-                )?;
                 // Start with no signatures.
-                let signatures = Signatures::try_from(&Vec::new())?;
                 let signed_doc = Builder::new()
-                    .content(content)
-                    .metadata(metadata)
-                    .signatures(signatures)
+                    .with_content(payload)
+                    .with_metadata(metadata)
                     .build()?;
                 let mut bytes: Vec<u8> = Vec::new();
                 minicbor::encode(signed_doc, &mut bytes)
