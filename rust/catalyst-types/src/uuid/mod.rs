@@ -1,13 +1,11 @@
 //! `UUID` types.
 
-mod uuid_v4;
-mod uuid_v7;
+mod v4;
+mod v7;
 
 use minicbor::data::Tag;
-#[allow(clippy::module_name_repetitions)]
-pub use uuid_v4::UuidV4;
-#[allow(clippy::module_name_repetitions)]
-pub use uuid_v7::UuidV7;
+pub use v4::UuidV4;
+pub use v7::UuidV7;
 
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
