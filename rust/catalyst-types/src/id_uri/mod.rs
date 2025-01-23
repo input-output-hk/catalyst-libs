@@ -2,9 +2,9 @@
 
 // cspell: words userinfo rngs Fftx csprng
 
-mod errors;
-mod key_rotation;
-mod role_index;
+pub mod errors;
+pub mod key_rotation;
+pub mod role_index;
 
 use std::{
     fmt::{Display, Formatter},
@@ -162,10 +162,27 @@ impl IdUri {
         }
     }
 
-    /// Add or change the nonce to a specific value in a Catalyst ID URI.
+    /// Add or change the nonce (a unique identifier for a data update) to a specific
+    /// value in a Catalyst `IdUri`.
     ///
-    /// Note, this will not fail, but if the Datetime is < `MIN_NONCE`,
-    /// or greater than `MAX_NONCE`, it will be clamped into that range.
+    /// This method is intended for use with trusted data where the nonce is known and
+    /// verified beforehand. It ensures that the provided nonce is within the valid
+    /// range, clamping it if necessary between `MIN_NONCE` and `MAX_NONCE`.
+    /// Properly generated or trusted nonces will not be altered by this function.
+    ///
+    /// # Parameters
+    /// - `nonce`: A `DateTime` representing the specific nonce value to set in the
+    ///   Catalyst `IdUri`. This should be a valid UTC datetime.
+    ///
+    /// # Returns
+    /// The updated Catalyst `IdUri` with the specified nonce, if it was within the
+    /// allowed range; otherwise, it will be updated with a clamped value of the
+    /// nonce.
+    ///
+    /// # Safety
+    /// - **Pre-validation of the nonce is required**: If you are working with untrusted
+    ///   data, ensure that the nonce has been pre-validated and take appropriate action
+    ///   before calling this function.
     #[must_use]
     pub fn with_specific_nonce(self, nonce: DateTime<Utc>) -> Self {
         let secs = nonce.timestamp();
@@ -182,13 +199,44 @@ impl IdUri {
         Self { nonce, ..self }
     }
 
-    /// Add or change the nonce in a Catalyst ID URI.
+    /// Add or change the nonce in a Catalyst ID URI. The nonce will be set to the current
+    /// UTC time when this method is called.
+    ///
+    /// This function returns a new instance of the type with the nonce field updated to
+    /// the current UTC time.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use catalyst_types::id_uri::IdUri;
+    /// use chrono::Utc;
+    ///
+    /// let id_uri = IdUri::default();
+    /// let id_uri_with_nonce = id_uri.with_nonce();
+    /// assert!(id_uri_with_nonce.nonce.is_some());
+    /// ```
     #[must_use]
     pub fn with_nonce(self) -> Self {
         self.with_specific_nonce(Utc::now())
     }
 
     /// Set that there is no Nonce in the ID or URI
+    /// Represents an ID or URI without a Nonce.
+    ///
+    /// This method creates a new instance of the type, but sets the nonce field to
+    /// `None`. The rest of the fields are inherited from the original instance.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use catalyst_types::id_uri::IdUri;
+    /// use chrono::{DateTime, Duration, Utc};
+    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<IdUri>()
+    ///     .unwrap()
+    ///     .with_nonce();
+    ///
+    /// let id_uri_without_nonce = id_uri.without_nonce();
+    /// assert_eq!(id_uri_without_nonce.nonce(), None);
+    /// ```
     #[must_use]
     pub fn without_nonce(self) -> Self {
         Self {
@@ -197,7 +245,27 @@ impl IdUri {
         }
     }
 
-    /// Create a new `IdUri` for an Encryption Key
+    /// Set that the `IdUri` is used to identify an encryption key.
+    ///
+    /// This method sets `IdUri` is identifying an encryption key.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the type with the updated encryption flag.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use catalyst_types::id_uri::IdUri;
+    ///
+    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<IdUri>()
+    ///     .unwrap();
+    /// assert_eq!(id_uri.is_encryption_key(), false);
+    ///
+    /// let id_uri = id_uri.with_encryption();
+    /// assert_eq!(id_uri.is_encryption_key(), true);
+    /// ```
     #[must_use]
     pub fn with_encryption(self) -> Self {
         Self {
@@ -206,7 +274,27 @@ impl IdUri {
         }
     }
 
-    /// Set that the ID is not for encryption
+    /// Set that the `IdUri` is not for encryption
+    ///
+    /// This method sets `IdUri` is not identifying an encryption key.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the type with the updated encryption flag.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use catalyst_types::id_uri::IdUri;
+    ///
+    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE#encrypt"
+    ///     .parse::<IdUri>()
+    ///     .unwrap();
+    /// assert_eq!(id_uri.is_encryption_key(), true);
+    ///
+    /// let id_uri = id_uri.without_encryption();
+    /// assert_eq!(id_uri.is_encryption_key(), false);
+    /// ```
     #[must_use]
     pub fn without_encryption(self) -> Self {
         Self {
@@ -215,13 +303,60 @@ impl IdUri {
         }
     }
 
-    /// Set the role explicitly
+    /// Set the role explicitly.
+    ///
+    /// This method sets the role field to the specified value while leaving other
+    /// fields unchanged.
+    ///
+    /// # Parameters
+    /// - `role`: The new value for the role field.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of the type with the updated role field.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use catalyst_types::id_uri::{role_index::RoleIndex, IdUri};
+    ///
+    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<IdUri>()
+    ///     .unwrap();
+    /// let new_role: RoleIndex = 5.into();
+    /// let id_uri_with_role = id_uri.with_role(new_role);
+    /// let (role, _) = id_uri_with_role.role_and_rotation();
+    /// assert_eq!(role, new_role);
+    /// ```
     #[must_use]
     pub fn with_role(self, role: RoleIndex) -> Self {
         Self { role, ..self }
     }
 
-    /// Set the rotation explicitly
+    /// Set the rotation explicitly.
+    ///
+    /// This method sets the rotation field to the specified value while leaving other
+    /// fields unchanged.
+    ///
+    /// # Parameters
+    /// - `rotation`: The new value for the rotation field.  0 = First Key, 1+ is each
+    ///   subsequent rotation.
+    ///
+    /// # Returns
+    /// A new instance of the type with the updated rotation field.
+    ///
+    /// # Examples
+    /// ```rust
+    /// use catalyst_types::id_uri::{key_rotation::KeyRotation, IdUri};
+    ///
+    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<IdUri>()
+    ///     .unwrap();
+    /// let new_rotation: KeyRotation = 4.into();
+    /// let id_uri_with_rotation = id_uri.with_rotation(new_rotation);
+    /// let (_, rotation) = id_uri_with_rotation.role_and_rotation();
+    /// assert_eq!(rotation, new_rotation);
+    /// ```
     #[must_use]
     pub fn with_rotation(self, rotation: KeyRotation) -> Self {
         Self { rotation, ..self }
@@ -286,10 +421,41 @@ impl IdUri {
         }
     }
 
-    /// Convert the `IdUri` to its shortest form.
-    /// This is an ID without any role/rotation information, no scheme, no username or
-    /// nonce.
-    /// This is used to get the most generalized form of a Catalyst ID.
+    /// Converts the `IdUri` to its shortest form.
+    /// This method returns a new instance of the type with no role information, no
+    /// scheme, no username, no nonce, and no encryption settings. It effectively
+    /// strips away all additional metadata to provide a most generalized form of the
+    /// Catalyst ID.
+    ///
+    /// # Returns
+    ///
+    /// A new `IdUri` instance representing the shortest form of the current `IdUri`.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use catalyst_types::id_uri::{key_rotation::KeyRotation, role_index::RoleIndex, IdUri};
+    ///
+    /// let id_uri =
+    ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"
+    ///         .parse::<IdUri>()
+    ///         .unwrap();
+    ///
+    /// let short_id = id_uri.as_short_id();
+    /// assert_eq!(
+    ///     short_id.role_and_rotation(),
+    ///     (RoleIndex::default(), KeyRotation::default())
+    /// );
+    /// assert_eq!(short_id.username(), None);
+    /// assert_eq!(short_id.nonce(), None);
+    /// assert_eq!(short_id.is_encryption_key(), false);
+    ///
+    /// let short_id_str = format!("{short_id}");
+    /// assert_eq!(
+    ///     short_id_str,
+    ///     "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    /// )
+    /// ```
     #[must_use]
     pub fn as_short_id(&self) -> Self {
         self.clone()
