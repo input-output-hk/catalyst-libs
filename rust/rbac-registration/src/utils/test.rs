@@ -3,7 +3,7 @@
 // cspell: words stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr
 
 use cardano_blockchain_types::{MultiEraBlock, Network, Point, Slot, TxnIndex};
-use catalyst_types::{hashes::Blake2b256Hash, uuid::V4};
+use catalyst_types::{hashes::Blake2b256Hash, uuid::UuidV4};
 use uuid::Uuid;
 
 use crate::cardano::cip509::{Cip509, RoleNumber};
@@ -24,7 +24,7 @@ pub struct BlockTestData {
     /// Previous hash.
     pub prv_hash: Option<Blake2b256Hash>,
     /// Purpose.
-    pub purpose: V4,
+    pub purpose: UuidV4,
     /// Stake address.
     pub stake_addr: Option<String>,
 }
@@ -71,7 +71,8 @@ pub fn block_1() -> BlockTestData {
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
             .parse::<Uuid>()
             .unwrap()
-            .into(),
+            .try_into()
+            .unwrap(),
         stake_addr: Some(
             "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr".to_string(),
         ),
@@ -107,7 +108,8 @@ pub fn block_2() -> BlockTestData {
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
             .parse::<Uuid>()
             .unwrap()
-            .into(),
+            .try_into()
+            .unwrap(),
         stake_addr: None,
     }
 }
@@ -141,7 +143,8 @@ pub fn block_3() -> BlockTestData {
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
             .parse::<Uuid>()
             .unwrap()
-            .into(),
+            .try_into()
+            .unwrap(),
         stake_addr: Some(
             "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr"
                 .parse()
@@ -174,7 +177,8 @@ pub fn block_4() -> BlockTestData {
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
             .parse::<Uuid>()
             .unwrap()
-            .into(),
+            .try_into()
+            .unwrap(),
         stake_addr: Some(
             "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr".to_string(),
         ),

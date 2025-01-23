@@ -9,7 +9,7 @@ use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TxnIndex};
 use catalyst_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
     problem_report::ProblemReport,
-    uuid::V4,
+    uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
@@ -55,7 +55,7 @@ pub struct Cip509 {
     /// A registration purpose (`UUIDv4`).
     ///
     /// The purpose is defined by the consuming dApp.
-    purpose: Option<V4>,
+    purpose: Option<UuidV4>,
     /// Transaction inputs hash.
     txn_inputs_hash: Option<TxInputHash>,
     /// An optional hash of the previous transaction.
@@ -247,7 +247,7 @@ impl Cip509 {
     /// # Errors
     ///
     /// - `Err(ProblemReport)`
-    pub fn consume(self) -> Result<(V4, Cip509RbacMetadata, PaymentHistory), ProblemReport> {
+    pub fn consume(self) -> Result<(UuidV4, Cip509RbacMetadata, PaymentHistory), ProblemReport> {
         match (
             self.purpose,
             self.txn_inputs_hash,
@@ -436,7 +436,7 @@ fn payment_history(
 /// Decodes purpose.
 fn decode_purpose(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Result<Option<V4>, ()> {
+) -> Result<Option<UuidV4>, ()> {
     let bytes = match decode_bytes(d, "Cip509 purpose") {
         Ok(v) => v,
         Err(e) => {
@@ -455,17 +455,12 @@ fn decode_purpose(
         );
         return Ok(None);
     };
-    let uuid = V4::from(uuid);
-    if uuid.is_valid() {
-        Ok(Some(uuid))
-    } else {
-        report.invalid_value(
-            "purpose",
-            &format!("{uuid:?}"),
-            "Invalid UUID version, UuidV4 expected",
-            context,
-        );
-        Ok(None)
+    match UuidV4::try_from(uuid) {
+        Ok(v) => Ok(Some(v)),
+        Err(e) => {
+            report.other(&format!("Invalid purpose UUID: {e:?}"), context);
+            Ok(None)
+        },
     }
 }
 

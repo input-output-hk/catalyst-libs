@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use catalyst_types::{hashes::Blake2b256Hash, uuid::V4};
+use catalyst_types::{hashes::Blake2b256Hash, uuid::UuidV4};
 use ed25519_dalek::VerifyingKey;
 use tracing::{error, warn};
 use x509_cert::certificate::Certificate as X509Certificate;
@@ -63,7 +63,7 @@ impl RegistrationChain {
 
     /// Get a list of purpose for this registration chain.
     #[must_use]
-    pub fn purpose(&self) -> &[V4] {
+    pub fn purpose(&self) -> &[UuidV4] {
         &self.inner.purpose
     }
 
@@ -110,7 +110,7 @@ struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Blake2b256Hash,
     /// List of purpose for this registration chain
-    purpose: Vec<V4>,
+    purpose: Vec<UuidV4>,
 
     // RBAC
     /// Map of index in array to point, transaction index, and x509 certificate.
