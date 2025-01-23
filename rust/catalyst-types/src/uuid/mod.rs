@@ -4,8 +4,8 @@ mod uuid_v4;
 mod uuid_v7;
 
 use minicbor::data::Tag;
-pub use uuid_v4::UuidV4;
-pub use uuid_v7::UuidV7;
+pub use uuid_v4::UuidV4 as V4;
+pub use uuid_v7::UuidV7 as V7;
 
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
@@ -77,12 +77,12 @@ fn encode_cbor_uuid<W: minicbor::encode::Write>(
 #[cfg(test)]
 mod tests {
 
-    use super::{UuidV4, UuidV7};
+    use super::{V4, V7};
     use crate::uuid::CborContext;
 
     #[test]
     fn test_cbor_uuid_v4_roundtrip() {
-        let uuid: UuidV4 = uuid::Uuid::new_v4().into();
+        let uuid: V4 = uuid::Uuid::new_v4().into();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
@@ -91,7 +91,7 @@ mod tests {
 
     #[test]
     fn test_cbor_uuid_v7_roundtrip() {
-        let uuid: UuidV7 = uuid::Uuid::now_v7().into();
+        let uuid: V7 = uuid::Uuid::now_v7().into();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
@@ -100,7 +100,7 @@ mod tests {
 
     #[test]
     fn test_tagged_cbor_uuid_v4_roundtrip() {
-        let uuid: UuidV4 = uuid::Uuid::new_v4().into();
+        let uuid: V4 = uuid::Uuid::new_v4().into();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Tagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Tagged).unwrap();
@@ -109,7 +109,7 @@ mod tests {
 
     #[test]
     fn test_tagged_cbor_uuid_v7_roundtrip() {
-        let uuid: UuidV7 = uuid::Uuid::now_v7().into();
+        let uuid: V7 = uuid::Uuid::now_v7().into();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Tagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Tagged).unwrap();
@@ -118,7 +118,7 @@ mod tests {
 
     #[test]
     fn test_optional_cbor_uuid_v4_roundtrip() {
-        let uuid: UuidV4 = uuid::Uuid::new_v4().into();
+        let uuid: V4 = uuid::Uuid::new_v4().into();
 
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
@@ -133,7 +133,7 @@ mod tests {
 
     #[test]
     fn test_optional_cbor_uuid_v7_roundtrip() {
-        let uuid: UuidV7 = uuid::Uuid::now_v7().into();
+        let uuid: V7 = uuid::Uuid::now_v7().into();
 
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
