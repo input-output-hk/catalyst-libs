@@ -177,15 +177,6 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
                 context,
             );
         }
-        if matches!(
-            metadata.c509_certs.first(),
-            Some(C509Cert::C509CertInMetadatumReference(_))
-        ) {
-            report.other(
-                "C509 certificate at 0 index cannot be in metadatum reference",
-                context,
-            );
-        }
         if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
             && !matches!(
                 metadata.c509_certs.first(),
