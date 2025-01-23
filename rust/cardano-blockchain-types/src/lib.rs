@@ -1,6 +1,7 @@
 //! Catalyst Enhanced `MultiEraBlock` Structures
 
 mod auxdata;
+mod cip134_uri;
 mod fork;
 mod metadata;
 mod multi_era_block_data;
@@ -18,6 +19,7 @@ pub use auxdata::{
     metadatum_value::MetadatumValue,
     scripts::{Script, ScriptArray, ScriptType, TransactionScripts},
 };
+pub use cip134_uri::Cip0134Uri;
 pub use fork::Fork;
 pub use metadata::cip36::{voting_pk::VotingPubKey, Cip36};
 pub use multi_era_block_data::MultiEraBlock;
