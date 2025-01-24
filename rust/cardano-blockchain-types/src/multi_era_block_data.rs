@@ -12,6 +12,7 @@ use std::{cmp::Ordering, fmt::Display, sync::Arc};
 use anyhow::bail;
 use ed25519_dalek::VerifyingKey;
 use ouroboros::self_referencing;
+use pallas::ledger::traverse::MultiEraTx;
 use tracing::debug;
 
 use crate::{
@@ -91,7 +92,7 @@ impl MultiEraBlock {
     /// # Errors
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
-    fn new_block(
+    pub fn new(
         network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
@@ -147,17 +148,6 @@ impl MultiEraBlock {
                 witness_map,
             }),
         })
-    }
-
-    /// Creates a new `MultiEraBlockData` from the given bytes.
-    ///
-    /// # Errors
-    ///
-    /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
-    pub fn new(
-        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
-    ) -> anyhow::Result<Self> {
-        MultiEraBlock::new_block(network, raw_data, previous, fork)
     }
 
     /// Remake the block on a new fork.
@@ -280,6 +270,12 @@ impl MultiEraBlock {
         }
 
         None
+    }
+
+    /// Returns a list of transactions withing this block.
+    #[must_use]
+    pub fn txs(&self) -> Vec<MultiEraTx> {
+        self.decode().txs()
     }
 
     /// Get the auxiliary data of the block.

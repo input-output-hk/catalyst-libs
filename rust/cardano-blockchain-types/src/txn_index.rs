@@ -10,7 +10,7 @@ impl<
         T: Copy
             + TryInto<u16>
             + std::ops::Sub<Output = T>
-            + std::cmp::PartialOrd<T>
+            + PartialOrd<T>
             + num_traits::identities::Zero,
     > From<T> for TxnIndex
 {
@@ -22,6 +22,12 @@ impl<
 impl From<TxnIndex> for i16 {
     fn from(val: TxnIndex) -> Self {
         i16::try_from(val.0).unwrap_or(i16::MAX)
+    }
+}
+
+impl From<TxnIndex> for usize {
+    fn from(value: TxnIndex) -> Self {
+        value.0.into()
     }
 }
 
