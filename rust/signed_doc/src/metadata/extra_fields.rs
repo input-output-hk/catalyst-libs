@@ -59,6 +59,60 @@ pub struct ExtraFields {
 }
 
 impl ExtraFields {
+    /// Return `ref` field.
+    #[must_use]
+    pub fn doc_ref(&self) -> Option<DocumentRef> {
+        self.doc_ref
+    }
+
+    /// Return `template` field.
+    #[must_use]
+    pub fn template(&self) -> Option<DocumentRef> {
+        self.template
+    }
+
+    /// Return `reply` field.
+    #[must_use]
+    pub fn reply(&self) -> Option<DocumentRef> {
+        self.reply
+    }
+
+    /// Return `section` field.
+    #[must_use]
+    pub fn section(&self) -> Option<&String> {
+        self.section.as_ref()
+    }
+
+    /// Return `collabs` field.
+    #[must_use]
+    pub fn collabs(&self) -> &Vec<String> {
+        &self.collabs
+    }
+
+    /// Return `brand_id` field.
+    #[must_use]
+    pub fn brand_id(&self) -> Option<UuidV4> {
+        self.brand_id
+    }
+
+    /// Return `campaign_id` field.
+    #[must_use]
+    pub fn campaign_id(&self) -> Option<UuidV4> {
+        self.campaign_id
+    }
+
+    /// Return `election_id` field.
+    #[must_use]
+    pub fn election_id(&self) -> Option<UuidV4> {
+        self.election_id
+    }
+
+    /// Return `category_id` field.
+    #[must_use]
+    pub fn category_id(&self) -> Option<UuidV4> {
+        self.category_id
+    }
+
     /// Fill the COSE header `ExtraFields` data into the header builder.
     pub(super) fn fill_cose_header_fields(
         &self, mut builder: coset::HeaderBuilder,
