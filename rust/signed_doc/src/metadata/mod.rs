@@ -12,7 +12,7 @@ mod extra_fields;
 
 use algorithm::Algorithm;
 use anyhow::anyhow;
-pub use catalyst_types::uuid::{CborContext, V4 as UuidV4, V7 as UuidV7};
+pub use catalyst_types::uuid::{CborContext, UuidV4, UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::{iana::CoapContentFormat, CborSerializable};
