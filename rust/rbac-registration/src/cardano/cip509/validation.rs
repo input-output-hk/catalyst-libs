@@ -1,25 +1,8 @@
-//! Basic validation for CIP-0509
-//! The validation include the following:
-//! * Hashing the transaction inputs within the transaction should match the
-//!   txn-inputs-hash in CIP-0509 data.
-//! * Auxiliary data hash within the transaction should match the hash of the auxiliary
-//!   data itself.
-//! * Public key validation for role 0 where public key extracted from x509 and c509
-//!   subject alternative name should match one of the witness in witness set within the
-//!   transaction.
-//! * Payment key reference validation for role 0 where the reference should be either
-//!     1. Negative index reference - reference to transaction output in transaction:
-//!        should match some of the key within witness set.
-//!     2. Positive index reference - reference to the transaction input in transaction:
-//!        only check whether the index exist within the transaction inputs.
-//! * Role signing key validation for role 0 where the signing keys should only be the
-//!   certificates
+//! Utilities for validation CIP-0509.
 //!
-//!  See:
-//! * <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
-//! * <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
+//! See [this document] for all the details.
 //!
-//! Note: This CIP509 is still under development and is subject to change.
+//! [this document]: https://github.com/input-output-hk/catalyst-CIPs/tree/x509-role-registration-metadata/CIP-XXXX
 
 use std::borrow::Cow;
 
@@ -39,7 +22,7 @@ use pallas::{
 use super::utils::cip19::compare_key_hash;
 use crate::cardano::cip509::{
     rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    RoleNumber, X509DerCert,
+    RoleNumber, SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -93,7 +76,7 @@ pub fn validate_txn_inputs_hash(
 
 /// Checks that the given transaction auxiliary data hash is correct.
 pub fn validate_aux(
-    auxiliary_data: &[u8], auxiliary_data_hash: Option<&Bytes>, report: &ProblemReport,
+    raw_aux_data: &[u8], auxiliary_data_hash: Option<&Bytes>, report: &ProblemReport,
 ) {
     let context = "Cip509 auxiliary data validation";
 
@@ -112,7 +95,7 @@ pub fn validate_aux(
         },
     };
 
-    let hash = Blake2b256Hash::new(auxiliary_data);
+    let hash = Blake2b256Hash::new(raw_aux_data);
     if hash != auxiliary_data_hash {
         report.other(
             &format!("Incorrect transaction auxiliary data hash = '{hash:?}', expected = '{auxiliary_data_hash:?}'"),
@@ -180,18 +163,67 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
     let context = "Role data validation";
 
-    let has_x_0_cert = matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)));
-    let has_c_0_cert = matches!(
-        metadata.c509_certs.first(),
-        Some(C509Cert::C509Certificate(_))
-    );
-    // There should be only one role 0 certificate.
-    if has_x_0_cert && has_c_0_cert {
-        report.other("Only one certificate can be defined at index 0", context);
+    if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
+        // For the role 0 there must be exactly once certificate and it must not have `deleted`,
+        // `undefined` or `C509CertInMetadatumReference` values.
+        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+            && matches!(
+                metadata.c509_certs.first(),
+                Some(C509Cert::C509Certificate(_))
+            )
+        {
+            report.other(
+                "Only one certificate can be defined at index 0 for the role 0",
+                context,
+            );
+        }
+        if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+            && !matches!(
+                metadata.c509_certs.first(),
+                Some(C509Cert::C509Certificate(_))
+            )
+        {
+            report.other("The role 0 certificate must be present", context);
+        }
+    } else {
+        // For other roles there still must be exactly one certificate at 0 index, but it must
+        // have the `undefined` value.
+        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+            || matches!(
+                metadata.c509_certs.first(),
+                Some(C509Cert::C509Certificate(_))
+            )
+        {
+            report.other("Only role 0 can contain a certificate at 0 index", context);
+        }
+        if matches!(metadata.x509_certs.first(), Some(X509DerCert::Deleted))
+            || matches!(metadata.c509_certs.first(), Some(C509Cert::Deleted))
+        {
+            report.other("Only role 0 can delete a certificate at 0 index", context);
+        }
     }
-    // Only role 0 can contain certificates at 0 index.
-    if !metadata.role_data.contains_key(&RoleNumber::ROLE_0) && (has_x_0_cert || has_c_0_cert) {
-        report.other("Only role 0 can contain certificates at index 0", context);
+
+    // It isn't allowed for any role to use a public key at 0 index.
+    if !matches!(
+        metadata.pub_keys.first(),
+        None | Some(SimplePublicKeyType::Undefined)
+    ) {
+        report.other(
+            "The public key cannot be used for the role 0, only a certificate",
+            context,
+        );
+    }
+    // It isn't allowed for the role 0 to have a certificate in the
+    // `C509CertInMetadatumReference` form and other roles must not contain certificate at 0
+    // index.
+    if matches!(
+        metadata.c509_certs.first(),
+        Some(C509Cert::C509CertInMetadatumReference(_))
+    ) {
+        report.other(
+            "C509 certificate at 0 index cannot be in metadatum reference",
+            context,
+        );
     }
 
     for (number, data) in &metadata.role_data {
@@ -226,6 +258,15 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
 fn validate_role_0(
     role: &RoleData, metadata: &Cip509RbacMetadata, context: &str, report: &ProblemReport,
 ) {
+    if let Some(key) = role.encryption_key() {
+        report.invalid_value(
+            "Role 0 encryption key",
+            &format!("{key:?}"),
+            "The role 0 shouldn't have the encryption key",
+            context,
+        );
+    }
+
     let Some(signing_key) = role.signing_key() else {
         report.missing_field("(Role 0) RoleData::signing_key", context);
         return;

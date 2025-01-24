@@ -4,10 +4,9 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use catalyst_types::hashes::Blake2b256Hash;
+use catalyst_types::{hashes::Blake2b256Hash, uuid::UuidV4};
 use ed25519_dalek::VerifyingKey;
 use tracing::{error, warn};
-use uuid::Uuid;
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
@@ -43,8 +42,6 @@ impl RegistrationChain {
     /// Update the registration chain.
     ///
     /// # Arguments
-    /// - `point` - The point (slot) of the transaction.
-    /// - `tx_idx` - The transaction index.
     /// - `cip509` - The CIP509.
     ///
     /// # Errors
@@ -66,7 +63,7 @@ impl RegistrationChain {
 
     /// Get a list of purpose for this registration chain.
     #[must_use]
-    pub fn purpose(&self) -> &[Uuid] {
+    pub fn purpose(&self) -> &[UuidV4] {
         &self.inner.purpose
     }
 
@@ -113,7 +110,7 @@ struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: Blake2b256Hash,
     /// List of purpose for this registration chain
-    purpose: Vec<Uuid>,
+    purpose: Vec<UuidV4>,
 
     // RBAC
     /// Map of index in array to point, transaction index, and x509 certificate.
@@ -185,9 +182,6 @@ impl RegistrationChainInner {
     /// Update the registration chain.
     ///
     /// # Arguments
-    /// - `point` - The point (slot) of the transaction.
-    /// - `tx_idx` - The transaction index.
-    /// - `txn` - The transaction.
     /// - `cip509` - The CIP509.
     ///
     /// # Errors

@@ -5,10 +5,11 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MultiEraBlock, TxnIndex};
+use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TxnIndex};
 use catalyst_types::{
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
     problem_report::ProblemReport,
+    uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
@@ -28,26 +29,19 @@ use tracing::warn;
 use uuid::Uuid;
 
 use crate::{
-    cardano::{
-        cip509::{
-            decode_context::DecodeContext,
-            rbac::Cip509RbacMetadata,
-            types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
-            utils::Cip0134UriSet,
-            validation::{
-                validate_aux, validate_role_data, validate_stake_public_key,
-                validate_txn_inputs_hash,
-            },
-            x509_chunks::X509Chunks,
-            Payment, PointTxnIdx, RoleData,
+    cardano::cip509::{
+        decode_context::DecodeContext,
+        rbac::Cip509RbacMetadata,
+        types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
+        utils::Cip0134UriSet,
+        validation::{
+            validate_aux, validate_role_data, validate_stake_public_key, validate_txn_inputs_hash,
         },
-        transaction::raw_aux_data::RawAuxData,
+        x509_chunks::X509Chunks,
+        Payment, PointTxnIdx, RoleData,
     },
     utils::decode_helper::{report_duplicated_key, report_missing_keys},
 };
-
-/// CIP509 label.
-pub const LABEL: u64 = 509;
 
 /// A x509 metadata envelope.
 ///
@@ -61,7 +55,7 @@ pub struct Cip509 {
     /// A registration purpose (`UUIDv4`).
     ///
     /// The purpose is defined by the consuming dApp.
-    purpose: Option<Uuid>,
+    purpose: Option<UuidV4>,
     /// Transaction inputs hash.
     txn_inputs_hash: Option<TxInputHash>,
     /// An optional hash of the previous transaction.
@@ -129,17 +123,15 @@ impl Cip509 {
         let MultiEraTx::Conway(txn) = txn else {
             return Ok(None);
         };
-
-        let auxiliary_data = match &txn.auxiliary_data {
+        let raw_aux_data = match &txn.auxiliary_data {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
-        let raw_auxiliary_data = RawAuxData::new(auxiliary_data);
-        let Some(metadata) = raw_auxiliary_data.get_metadata(LABEL) else {
+        let Some(metadata) = block.txn_metadata(index, MetadatumLabel::CIP509_RBAC) else {
             return Ok(None);
         };
 
-        let mut decoder = Decoder::new(metadata.as_slice());
+        let mut decoder = Decoder::new(metadata.as_ref());
         let mut report = ProblemReport::new("Decoding and validating Cip509");
         let origin = PointTxnIdx::from_block(block, index);
         let payment_history = payment_history(txn, track_payment_addresses, &origin, &report);
@@ -157,7 +149,7 @@ impl Cip509 {
             validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
         };
         validate_aux(
-            auxiliary_data,
+            raw_aux_data,
             txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
@@ -255,7 +247,7 @@ impl Cip509 {
     /// # Errors
     ///
     /// - `Err(ProblemReport)`
-    pub fn consume(self) -> Result<(Uuid, Cip509RbacMetadata, PaymentHistory), ProblemReport> {
+    pub fn consume(self) -> Result<(UuidV4, Cip509RbacMetadata, PaymentHistory), ProblemReport> {
         match (
             self.purpose,
             self.txn_inputs_hash,
@@ -444,7 +436,7 @@ fn payment_history(
 /// Decodes purpose.
 fn decode_purpose(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Result<Option<Uuid>, ()> {
+) -> Result<Option<UuidV4>, ()> {
     let bytes = match decode_bytes(d, "Cip509 purpose") {
         Ok(v) => v,
         Err(e) => {
@@ -454,16 +446,21 @@ fn decode_purpose(
     };
 
     let len = bytes.len();
-    if let Ok(v) = Uuid::try_from(bytes) {
-        Ok(Some(v))
-    } else {
+    let Ok(uuid) = Uuid::try_from(bytes) else {
         report.invalid_value(
             "purpose",
             &format!("{len} bytes"),
             "must be 16 bytes long",
             context,
         );
-        Ok(None)
+        return Ok(None);
+    };
+    match UuidV4::try_from(uuid) {
+        Ok(v) => Ok(Some(v)),
+        Err(e) => {
+            report.other(&format!("Invalid purpose UUID: {e:?}"), context);
+            Ok(None)
+        },
     }
 }
 

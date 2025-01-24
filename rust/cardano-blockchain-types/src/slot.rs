@@ -11,7 +11,7 @@ use serde::Serialize;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default, Serialize)]
 
-/// Slot on the blockchain, typically one slot equals one second.  However chain
+/// Slot on the blockchain, typically one slot equals one second. However chain
 /// parameters can alter how long a slot is.
 pub struct Slot(u64);
 
