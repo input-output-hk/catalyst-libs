@@ -209,7 +209,7 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
         None | Some(SimplePublicKeyType::Undefined)
     ) {
         report.other(
-            "The public key cannot be used for the role 0, only a certificate",
+            "The public key cannot be used at 0 index. Role 0 requires a certificate and other roles must set 0 public key to undefined if needed.",
             context,
         );
     }
