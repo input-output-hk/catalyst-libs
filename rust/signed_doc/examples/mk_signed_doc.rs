@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, Decode, Decoder, KidUri, Metadata};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, KidUri, Metadata};
 use clap::Parser;
 use coset::CborSerializable;
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
@@ -107,7 +107,8 @@ fn decode_signed_doc(cose_bytes: &[u8]) {
         cose_bytes.len(),
         hex::encode(cose_bytes)
     );
-    match CatalystSignedDocument::decode(&mut Decoder::new(cose_bytes), &mut ()) {
+
+    match CatalystSignedDocument::new(cose_bytes) {
         Ok(cat_signed_doc) => {
             println!("This is a valid Catalyst Document.");
             println!("{cat_signed_doc}");
