@@ -21,6 +21,23 @@ pub enum KeyRotationError {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct KeyRotation(u16);
 
+impl KeyRotation {
+    /// Default Key Rotation
+    pub const DEFAULT: KeyRotation = KeyRotation(0);
+
+    /// Is the `KeyRotation` the default value
+    #[must_use]
+    pub fn is_default(self) -> bool {
+        self == Self::DEFAULT
+    }
+}
+
+impl Default for KeyRotation {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
 impl From<u16> for KeyRotation {
     fn from(value: u16) -> Self {
         Self(value)

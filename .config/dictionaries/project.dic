@@ -169,6 +169,7 @@ nextest
 nolfs
 notadb
 nsec
+nsecs
 OCSP
 Oleksandr
 oneshot
@@ -239,8 +240,8 @@ slotno
 smac
 stevenj
 stringzilla
-subsec
 subnetwork
+subsec
 symlinkat
 syscall
 tacho
