@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250122-00" }
+catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250124-00" }
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
