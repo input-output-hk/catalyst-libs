@@ -31,31 +31,31 @@ const CATEGORY_ID_KEY: &str = "category_id";
 pub struct ExtraFields {
     /// Reference to the latest document.
     #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
-    pub(super) doc_ref: Option<DocumentRef>,
+    doc_ref: Option<DocumentRef>,
     /// Reference to the document template.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) template: Option<DocumentRef>,
+    template: Option<DocumentRef>,
     /// Reference to the document reply.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) reply: Option<DocumentRef>,
+    reply: Option<DocumentRef>,
     /// Reference to the document section.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) section: Option<String>,
+    section: Option<String>,
     /// Reference to the document collaborators. Collaborator type is TBD.
     #[serde(default = "Vec::new", skip_serializing_if = "Vec::is_empty")]
-    pub(super) collabs: Vec<String>,
+    collabs: Vec<String>,
     /// Unique identifier for the brand that is running the voting.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) brand_id: Option<UuidV4>,
+    brand_id: Option<UuidV4>,
     /// Unique identifier for the campaign of voting.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) campaign_id: Option<UuidV4>,
+    campaign_id: Option<UuidV4>,
     /// Unique identifier for the election.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) election_id: Option<UuidV4>,
+    election_id: Option<UuidV4>,
     /// Unique identifier for the voting category as a collection of proposals.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub(super) category_id: Option<UuidV4>,
+    category_id: Option<UuidV4>,
 }
 
 impl ExtraFields {
