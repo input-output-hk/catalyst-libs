@@ -210,9 +210,12 @@ impl IdUri {
     /// use catalyst_types::id_uri::IdUri;
     /// use chrono::Utc;
     ///
-    /// let id_uri = IdUri::default();
+    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<IdUri>()
+    ///     .unwrap();
+    /// assert!(id_uri.nonce().is_none());
     /// let id_uri_with_nonce = id_uri.with_nonce();
-    /// assert!(id_uri_with_nonce.nonce.is_some());
+    /// assert!(id_uri_with_nonce.nonce().is_some());
     /// ```
     #[must_use]
     pub fn with_nonce(self) -> Self {
