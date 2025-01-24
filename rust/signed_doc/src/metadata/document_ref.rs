@@ -9,6 +9,7 @@ pub struct DocumentRef {
     /// Reference to the Document Id
     pub id: UuidV7,
     /// Reference to the Document Ver, if not specified the latest document is meant
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub ver: Option<UuidV7>,
 }
 
