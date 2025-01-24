@@ -47,13 +47,13 @@ impl BlockTestData {
     }
 }
 
-/// Returns the decoded `conway_1.block` block that contains 6 transaction
-/// Slot number: `81_440_954`, Block number: `3_096_080`
-/// Tx hash: 0x22469cb214ad2c95265630f5c26b96166ea618722b38401d55ecf68a1fd893ec
+/// Returns the decoded `conway_1.block` block that contains 1 transaction
+/// Slot number: `82_004_293`, Block number: `3_118_387`
+/// Tx hash: 0x1bf8eb4da8fe5910cc890025deb9740ba5fa4fd2ac418ccbebfd6a09ed10e88b
 ///
 /// CIP509 details (valid data):
 /// Role: 0
-/// Tx index: 2
+/// Tx index: 0
 /// prv hash: None
 /// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
@@ -61,10 +61,10 @@ pub fn block_1() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_1.block")).unwrap();
     BlockTestData {
         block: block(data),
-        slot: 81_440_954.into(),
+        slot: 82_004_293.into(),
         role: 0.into(),
-        txn_index: 2.into(),
-        txn_hash: "22469cb214ad2c95265630f5c26b96166ea618722b38401d55ecf68a1fd893ec"
+        txn_index: 0.into(),
+        txn_hash: "1bf8eb4da8fe5910cc890025deb9740ba5fa4fd2ac418ccbebfd6a09ed10e88b"
             .parse()
             .unwrap(),
         prv_hash: None,
@@ -153,9 +153,9 @@ pub fn block_3() -> BlockTestData {
     }
 }
 
-/// Returns the decoded `conway_4.block` block that contains 10 transactions.
-/// Slot number: `81_845_364`, Block number: `3_112_041`
-/// Tx hash: 0x98cf12dc6187626de50b5562ebf1753f1b39e1e568e99d83bfdcfb1713c8f4a4
+/// Returns the decoded `conway_4.block` block that contains 2 transactions.
+/// Slot number: `82_004_569`, Block number: `3_118_395`
+/// Tx hash: 0xeef40a97a4ed1e40c3febd05a84b3ffaa191141b60806c2bba85d9c6879fb378
 ///
 /// CIP509 details (valid data, signing key ref to x509 cert index 1):
 /// Role: 4
@@ -167,10 +167,10 @@ pub fn block_4() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_4.block")).unwrap();
     BlockTestData {
         block: block(data),
-        slot: 81_845_364.into(),
+        slot: 82_004_569.into(),
         role: 4.into(),
         txn_index: 1.into(),
-        txn_hash: "98cf12dc6187626de50b5562ebf1753f1b39e1e568e99d83bfdcfb1713c8f4a4"
+        txn_hash: "eef40a97a4ed1e40c3febd05a84b3ffaa191141b60806c2bba85d9c6879fb378"
             .parse()
             .unwrap(),
         prv_hash: Some(block_1().txn_hash),
