@@ -80,7 +80,7 @@ impl ProtectedLiveChainBlockList {
             chain.get(point)?
         } else if advance < 0 {
             // This is a fuzzy lookup backwards.
-            advance += 1;
+            advance = advance.saturating_add(1);
             chain.upper_bound(Bound::Excluded(point))?
         } else {
             // This is a fuzzy lookup forwards.
@@ -89,13 +89,13 @@ impl ProtectedLiveChainBlockList {
 
         // If we are stepping backwards, look backwards.
         while advance < 0 {
-            advance += 1;
+            advance = advance.saturating_add(1);
             this = this.prev()?;
         }
 
         // If we are stepping forwards, look forwards.
         while advance > 0 {
-            advance -= 1;
+            advance = advance.saturating_sub(1);
             this = this.next()?;
         }
 
@@ -234,7 +234,7 @@ impl ProtectedLiveChainBlockList {
                 // We search backwards because a rollback is more likely in the newest blocks than
                 // the oldest.
                 while let Some(popped) = live_chain.pop_back() {
-                    rollback_size += 1;
+                    rollback_size = rollback_size.saturating_add(1);
                     if previous_point.strict_eq(&popped.value().previous()) {
                         // We are now contiguous, so stop purging.
                         break;
@@ -352,6 +352,8 @@ impl ProtectedLiveChainBlockList {
         let mut previous_point = entry.value().point();
 
         // Loop until we exhaust probe slots, OR we would step past genesis.
+        // It is ok because slot implement saturating subtraction.
+        #[allow(clippy::arithmetic_side_effects)]
         while slot_age < reference_slot {
             let ref_point = Point::fuzzy(reference_slot - slot_age);
             let Some(entry) = chain.lower_bound(Bound::Included(&ref_point)) else {
@@ -391,7 +393,7 @@ impl ProtectedLiveChainBlockList {
 
         // Search backwards for a fork smaller than or equal to the one we know.
         while this_block.fork() > fork {
-            rollback_depth += 1;
+            rollback_depth = rollback_depth.saturating_add(1);
             entry = match entry.prev() {
                 Some(entry) => entry,
                 None => return None,

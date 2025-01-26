@@ -487,8 +487,10 @@ pub(crate) mod tests {
             let pallas_block =
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
-            let previous_point =
-                Point::new((pallas_block.slot() - 1).into(), vec![0; 32].try_into()?);
+            let previous_point = Point::new(
+                (pallas_block.slot().checked_sub(1).unwrap()).into(),
+                vec![0; 32].try_into()?,
+            );
 
             let block = MultiEraBlock::new(
                 Network::Preprod,
@@ -511,7 +513,7 @@ pub(crate) mod tests {
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
-                (pallas_block.slot() - 1).into(),
+                (pallas_block.slot().checked_sub(1).unwrap()).into(),
                 pallas_block
                     .header()
                     .previous_hash()
@@ -540,7 +542,7 @@ pub(crate) mod tests {
                 let prev_point = pallas::ledger::traverse::MultiEraBlock::decode(block.as_slice())
                     .map(|block| {
                         Point::new(
-                            (block.slot() - 1).into(),
+                            (block.slot().saturating_sub(1)).into(),
                             block
                                 .header()
                                 .previous_hash()

@@ -247,7 +247,7 @@ mod tests {
         let mut reader = bytes.as_slice();
 
         let size = read_be_u32(&mut reader).unwrap();
-        assert_eq!(size as usize, bytes.len() - 4);
+        assert_eq!(size as usize, bytes.len().checked_sub(4).unwrap());
 
         let padding_tag = read_be_u8(&mut reader).unwrap();
         assert_eq!(padding_tag, PADDING_TAG);
@@ -324,7 +324,7 @@ mod tests {
         let mut reader = bytes.as_slice();
 
         let size = read_be_u32(&mut reader).unwrap();
-        assert_eq!(size as usize, bytes.len() - 4);
+        assert_eq!(size as usize, bytes.len().checked_sub(4).unwrap());
 
         let padding_tag = read_be_u8(&mut reader).unwrap();
         assert_eq!(padding_tag, PADDING_TAG);

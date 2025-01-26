@@ -62,7 +62,12 @@ impl Encode<()> for Attributes {
             ));
         }
         // The attribute type should be included in array too
-        encode_array_len(e, "Attributes", self.0.len() as u64 * 2)?;
+        let Some(len) = (self.0.len() as u64).checked_mul(2) else {
+            return Err(minicbor::encode::Error::message(
+                "Attributes length overflow",
+            ));
+        };
+        encode_array_len(e, "Attributes", len)?;
         for attribute in &self.0 {
             attribute.encode(e, ctx)?;
         }

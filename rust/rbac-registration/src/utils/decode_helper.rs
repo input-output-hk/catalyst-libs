@@ -12,7 +12,11 @@ pub fn report_duplicated_key<T: Debug + PartialEq>(
     if found_keys.contains(key) {
         report.duplicate_field(
             format!("{key:?}").as_str(),
-            format!("Redundant key found in item {} in RBAC map", index + 1).as_str(),
+            format!(
+                "Redundant key found in item {} in RBAC map",
+                index.saturating_add(1)
+            )
+            .as_str(),
             context,
         );
         return true;

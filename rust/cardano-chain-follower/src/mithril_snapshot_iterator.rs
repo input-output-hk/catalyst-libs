@@ -56,6 +56,7 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
     const STEP_BACK_ORIGIN: u64 = 0;
     // Now that we have the tip, step back about 4 block intervals from tip, and do a fuzzy
     // iteration to find the exact two blocks at the end of the immutable chain.
+    #[allow(clippy::arithmetic_side_effects)]
     let step_back_search = point.slot_or_default() - distance.into();
 
     // We stepped back to the origin, so just return Origin
@@ -143,7 +144,7 @@ impl MithrilSnapshotIterator {
                 return iterator;
             }
 
-            backwards_search *= 2;
+            backwards_search = backwards_search.saturating_mul(2);
         }
     }
 

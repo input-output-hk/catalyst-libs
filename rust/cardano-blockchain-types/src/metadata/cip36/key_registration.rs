@@ -150,7 +150,11 @@ fn check_is_key_exist(
     if found_keys.contains(key) {
         err_report.duplicate_field(
             format!("{key:?}").as_str(),
-            format!("Redundant key found in item {} in RBAC map", index + 1).as_str(),
+            format!(
+                "Redundant key found in item {} in RBAC map",
+                index.saturating_add(1)
+            )
+            .as_str(),
             format!("CIP36 Key Registration {key:?}").as_str(),
         );
         return true;

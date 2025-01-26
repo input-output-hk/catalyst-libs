@@ -71,7 +71,7 @@ impl fmt::Display for Fork {
             0 => write!(f, "IMMUTABLE"),
             1 => write!(f, "BACKFILL"),
             // For live forks: 2 maps to LIVE:1, 3 maps to LIVE:2 etc.
-            2..=u64::MAX => write!(f, "LIVE:{}", self.0 - 1),
+            2..=u64::MAX => write!(f, "LIVE:{}", self.0.saturating_sub(1)),
         }
     }
 }

@@ -106,14 +106,24 @@ impl Encode<()> for NameValue {
 
                         encode_cn_value(e, cn_value)?;
                     } else {
-                        encode_array_len(e, "Attributes", attrs.len() as u64 * 2)?;
+                        let Some(len) = (attrs.len() as u64).checked_mul(2) else {
+                            return Err(minicbor::encode::Error::message(
+                                "Attribute length overflow",
+                            ));
+                        };
+                        encode_array_len(e, "Attributes", len)?;
                         for attribute in attrs {
                             attribute.encode(e, ctx)?;
                         }
                     }
                 } else {
                     // If is okay if the attributes is empty
-                    encode_array_len(e, "Attributes", attrs.len() as u64 * 2)?;
+                    let Some(len) = (attrs.len() as u64).checked_mul(2) else {
+                        return Err(minicbor::encode::Error::message(
+                            "Attribute length overflow",
+                        ));
+                    };
+                    encode_array_len(e, "Attributes", len)?;
                     for attribute in attrs {
                         attribute.encode(e, ctx)?;
                     }

@@ -110,7 +110,11 @@ impl Encode<()> for Extension {
         {
             // Determine encoded OID value based on critical flag
             let encoded_oid = if self.critical {
-                -mapped_oid
+                mapped_oid.checked_neg().ok_or_else(|| {
+                    minicbor::encode::Error::message(format!(
+                        "Invalid OID value (will overflow during negation): {mapped_oid}"
+                    ))
+                })?
             } else {
                 mapped_oid
             };

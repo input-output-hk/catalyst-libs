@@ -153,9 +153,9 @@ pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
     };
 
     if immutable {
-        chain_stats.mithril.invalid_blocks += 1;
+        chain_stats.mithril.invalid_blocks = chain_stats.mithril.invalid_blocks.saturating_sub(1);
     } else {
-        chain_stats.live.invalid_blocks += 1;
+        chain_stats.live.invalid_blocks = chain_stats.live.invalid_blocks.saturating_sub(1);
     }
 }
 
@@ -174,7 +174,7 @@ pub(crate) fn new_live_block(
         return;
     };
 
-    chain_stats.live.new_blocks += 1;
+    chain_stats.live.new_blocks = chain_stats.live.new_blocks.saturating_add(1);
     chain_stats.live.blocks = total_live_blocks;
     chain_stats.live.head_slot = head_slot;
     chain_stats.live.tip = tip_slot;
@@ -195,7 +195,7 @@ pub(crate) fn new_mithril_update(
         return;
     };
 
-    chain_stats.mithril.updates += 1;
+    chain_stats.mithril.updates = chain_stats.mithril.updates.saturating_add(1);
     chain_stats.mithril.tip = mithril_tip;
     chain_stats.live.blocks = total_live_blocks;
     chain_stats.live.tip = tip_slot;
@@ -217,7 +217,7 @@ pub(crate) fn backfill_started(chain: Network) {
     // If we start another backfill, then that means the previous backfill failed, so record
     // it.
     if chain_stats.live.backfill_start.is_some() {
-        chain_stats.live.backfill_failures += 1;
+        chain_stats.live.backfill_failures = chain_stats.live.backfill_failures.saturating_add(1);
         chain_stats.live.backfill_failure_time = chain_stats.live.backfill_start;
     }
 
@@ -255,7 +255,7 @@ pub(crate) fn peer_connected(chain: Network, active: bool, peer_address: &str) {
     };
 
     if active {
-        chain_stats.live.reconnects += 1;
+        chain_stats.live.reconnects = chain_stats.live.reconnects.saturating_add(1);
         chain_stats.live.last_connect = Utc::now();
         chain_stats.live.last_connected_peer = peer_address.to_string();
     } else {
@@ -335,11 +335,14 @@ pub(crate) fn mithril_dl_finished(chain: Network, dl_size: Option<u64>) {
     if let Some(dl_size) = dl_size {
         chain_stats.mithril.dl_end = Utc::now();
         chain_stats.mithril.dl_size = dl_size;
-        let last_dl_duration = chain_stats.mithril.dl_end - chain_stats.mithril.dl_start;
+        let last_dl_duration = chain_stats
+            .mithril
+            .dl_end
+            .signed_duration_since(chain_stats.mithril.dl_start);
         chain_stats.mithril.last_dl_duration =
             last_dl_duration.num_seconds().clamp(0, i64::MAX) as u64;
     } else {
-        chain_stats.mithril.dl_failures += 1;
+        chain_stats.mithril.dl_failures = chain_stats.mithril.dl_failures.saturating_add(1);
     }
 }
 
@@ -384,7 +387,8 @@ pub(crate) fn mithril_extract_finished(
         chain_stats.mithril.changed = changed_files;
         chain_stats.mithril.new = new_files;
     } else {
-        chain_stats.mithril.extract_failures += 1;
+        chain_stats.mithril.extract_failures =
+            chain_stats.mithril.extract_failures.saturating_add(1);
     }
 }
 
@@ -414,7 +418,10 @@ pub(crate) fn mithril_validation_state(chain: Network, mithril_state: MithrilVal
 
     match mithril_state {
         MithrilValidationState::Start => chain_stats.mithril.validate_start = Utc::now(),
-        MithrilValidationState::Failed => chain_stats.mithril.validate_failures += 1,
+        MithrilValidationState::Failed => {
+            chain_stats.mithril.validate_failures =
+                chain_stats.mithril.validate_failures.saturating_add(1);
+        },
         MithrilValidationState::Finish => chain_stats.mithril.validate_end = Utc::now(),
     }
 }
@@ -449,15 +456,30 @@ pub(crate) fn mithril_sync_failure(chain: Network, failure: MithrilSyncFailures)
 
     match failure {
         MithrilSyncFailures::DownloadOrValidation => {
-            chain_stats.mithril.download_or_validation_failed += 1;
+            chain_stats.mithril.download_or_validation_failed = chain_stats
+                .mithril
+                .download_or_validation_failed
+                .saturating_add(1);
         },
-        MithrilSyncFailures::FailedToGetTip => chain_stats.mithril.failed_to_get_tip += 1,
-        MithrilSyncFailures::TipDidNotAdvance => chain_stats.mithril.tip_did_not_advance += 1,
+        MithrilSyncFailures::FailedToGetTip => {
+            chain_stats.mithril.failed_to_get_tip =
+                chain_stats.mithril.failed_to_get_tip.saturating_add(1);
+        },
+        MithrilSyncFailures::TipDidNotAdvance => {
+            chain_stats.mithril.tip_did_not_advance =
+                chain_stats.mithril.tip_did_not_advance.saturating_add(1);
+        },
         MithrilSyncFailures::TipFailedToSendToUpdater => {
-            chain_stats.mithril.tip_failed_to_send_to_updater += 1;
+            chain_stats.mithril.tip_failed_to_send_to_updater = chain_stats
+                .mithril
+                .tip_failed_to_send_to_updater
+                .saturating_add(1);
         },
         MithrilSyncFailures::FailedToActivateNewSnapshot => {
-            chain_stats.mithril.failed_to_activate_new_snapshot += 1;
+            chain_stats.mithril.failed_to_activate_new_snapshot = chain_stats
+                .mithril
+                .failed_to_activate_new_snapshot
+                .saturating_add(1);
         },
     }
 }
