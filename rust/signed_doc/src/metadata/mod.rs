@@ -156,11 +156,6 @@ impl Metadata {
                     );
                 },
             }
-        } else {
-            error_report.missing_field(
-                "content encoding",
-                "Missing content encoding field in COSE protected header",
-            );
         }
 
         let mut doc_type: Option<UuidV4> = None;
