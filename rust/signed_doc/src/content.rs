@@ -41,11 +41,22 @@ impl Content {
     ///
     /// # Errors
     /// Returns an error if content is not correctly encoded
-    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn from_decoded(
         data: Vec<u8>, content_type: ContentType, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
         // TODO add content_type verification
+        match content_type {
+            ContentType::Json => {
+                if let Err(e) = serde_json::from_slice::<serde_json::Value>(&data) {
+                    anyhow::bail!("Invalid {content_type} content: {e}")
+                }
+            },
+            ContentType::Cbor => {
+                if let Err(e) = minicbor::decode::<minicbor::data::Token>(&data) {
+                    anyhow::bail!("Invalid {content_type} content: {e}")
+                }
+            },
+        }
         Ok(Self {
             data,
             content_type,
