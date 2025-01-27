@@ -2,15 +2,15 @@
 
 use std::collections::HashMap;
 
-use catalyst_types::problem_report::ProblemReport;
+use catalyst_types::{
+    cbor_utils::{report_duplicated_key, report_missing_keys},
+    problem_report::ProblemReport,
+};
 use cbork_utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len};
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
-use crate::{
-    cardano::cip509::{KeyLocalRef, RoleNumber},
-    utils::decode_helper::{report_duplicated_key, report_missing_keys},
-};
+use crate::cardano::cip509::{KeyLocalRef, RoleNumber};
 
 /// Role data as encoded in CBOR.
 #[allow(clippy::module_name_repetitions)]
@@ -61,7 +61,7 @@ impl Decode<'_, ProblemReport> for CborRoleData {
         for index in 0..map_len {
             let key: u8 = decode_helper(d, "key in RoleData", &mut ())?;
             if let Some(key) = RoleDataInt::from_repr(key) {
-                if report_duplicated_key(&found_keys, &key, index, context, report) {
+                if report_duplicated_key(&found_keys, &key, index, "RoleData", report) {
                     continue;
                 }
                 found_keys.push(key);

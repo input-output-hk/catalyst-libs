@@ -7,6 +7,7 @@ use std::{borrow::Cow, collections::HashMap};
 use anyhow::{anyhow, Context};
 use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TxnIndex};
 use catalyst_types::{
+    cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
     problem_report::ProblemReport,
     uuid::UuidV4,
@@ -28,19 +29,16 @@ use strum_macros::FromRepr;
 use tracing::warn;
 use uuid::Uuid;
 
-use crate::{
-    cardano::cip509::{
-        decode_context::DecodeContext,
-        rbac::Cip509RbacMetadata,
-        types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
-        utils::Cip0134UriSet,
-        validation::{
-            validate_aux, validate_role_data, validate_stake_public_key, validate_txn_inputs_hash,
-        },
-        x509_chunks::X509Chunks,
-        Payment, PointTxnIdx, RoleData,
+use crate::cardano::cip509::{
+    decode_context::DecodeContext,
+    rbac::Cip509RbacMetadata,
+    types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
+    utils::Cip0134UriSet,
+    validation::{
+        validate_aux, validate_role_data, validate_stake_public_key, validate_txn_inputs_hash,
     },
-    utils::decode_helper::{report_duplicated_key, report_missing_keys},
+    x509_chunks::X509Chunks,
+    Payment, PointTxnIdx, RoleData,
 };
 
 /// A x509 metadata envelope.
@@ -300,7 +298,8 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 // Consume the key. This should never fail because we used `probe` above.
                 let _: u8 = decode_helper(d, context, &mut ())?;
 
-                if report_duplicated_key(&found_keys, &key, index, context, decode_context.report) {
+                if report_duplicated_key(&found_keys, &key, index, "Cip509", decode_context.report)
+                {
                     continue;
                 }
                 found_keys.push(key);
