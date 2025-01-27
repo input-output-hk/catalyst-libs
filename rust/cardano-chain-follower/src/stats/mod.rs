@@ -153,9 +153,9 @@ pub(crate) fn stats_invalid_block(chain: Network, immutable: bool) {
     };
 
     if immutable {
-        chain_stats.mithril.invalid_blocks = chain_stats.mithril.invalid_blocks.saturating_sub(1);
+        chain_stats.mithril.invalid_blocks = chain_stats.mithril.invalid_blocks.saturating_add(1);
     } else {
-        chain_stats.live.invalid_blocks = chain_stats.live.invalid_blocks.saturating_sub(1);
+        chain_stats.live.invalid_blocks = chain_stats.live.invalid_blocks.saturating_add(1);
     }
 }
 
