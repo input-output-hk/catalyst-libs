@@ -1,4 +1,6 @@
-//! TODO: FIXME
+//! A bunch of specific hashes.
+
+// cspell: attrss
 
 use std::str::FromStr;
 
