@@ -23,6 +23,23 @@ pub enum RoleIndexError {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct RoleIndex(u16);
 
+impl RoleIndex {
+    /// Default Role Index
+    pub const DEFAULT: RoleIndex = RoleIndex(0);
+
+    /// Is the `RoleIndex` the default value
+    #[must_use]
+    pub fn is_default(self) -> bool {
+        self == Self::DEFAULT
+    }
+}
+
+impl Default for RoleIndex {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
 impl From<u16> for RoleIndex {
     fn from(value: u16) -> Self {
         Self(value)

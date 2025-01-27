@@ -1,37 +1,33 @@
 //! Transaction input hash type
 
-/// Transaction input hash representing in 16 bytes.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct TxInputHash([u8; 16]);
+use anyhow::Context;
+use catalyst_types::hashes::Blake2b128Hash;
+
+/// A 16-byte hash of the transaction inputs field.
+///
+/// This type is described [here].
+///
+/// [here]: https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/README.md#key-1-txn-inputs-hash
+#[derive(Debug, PartialEq, Clone)]
+pub struct TxInputHash(Blake2b128Hash);
 
 impl From<[u8; 16]> for TxInputHash {
     fn from(bytes: [u8; 16]) -> Self {
-        TxInputHash(bytes)
+        Self(Blake2b128Hash::from(bytes))
     }
 }
 
-impl TryFrom<Vec<u8>> for TxInputHash {
-    type Error = &'static str;
+impl TryFrom<&[u8]> for TxInputHash {
+    type Error = anyhow::Error;
 
-    fn try_from(vec: Vec<u8>) -> Result<Self, Self::Error> {
-        if vec.len() == 16 {
-            let mut array = [0u8; 16];
-            array.copy_from_slice(&vec);
-            Ok(TxInputHash(array))
-        } else {
-            Err("Input Vec must be exactly 16 bytes")
-        }
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let hash = Blake2b128Hash::try_from(value).context("Invalid transaction input hash")?;
+        Ok(Self(hash))
     }
 }
 
-impl From<TxInputHash> for Vec<u8> {
-    fn from(val: TxInputHash) -> Self {
-        val.0.to_vec()
-    }
-}
-
-impl From<TxInputHash> for [u8; 16] {
-    fn from(val: TxInputHash) -> Self {
-        val.0
+impl From<Blake2b128Hash> for TxInputHash {
+    fn from(value: Blake2b128Hash) -> Self {
+        Self(value)
     }
 }
