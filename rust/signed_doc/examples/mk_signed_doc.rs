@@ -108,7 +108,7 @@ fn decode_signed_doc(cose_bytes: &[u8]) {
         hex::encode(cose_bytes)
     );
 
-    match CatalystSignedDocument::new(cose_bytes) {
+    match CatalystSignedDocument::try_from(cose_bytes) {
         Ok(cat_signed_doc) => {
             println!("This is a valid Catalyst Document.");
             println!("{cat_signed_doc}");

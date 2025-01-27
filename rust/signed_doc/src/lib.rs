@@ -2,13 +2,14 @@
 
 mod builder;
 mod content;
+pub mod error;
 mod metadata;
 mod signature;
 mod utils;
 
 use std::{
     convert::TryFrom,
-    fmt::{self, Display, Formatter},
+    fmt::{Display, Formatter},
     sync::Arc,
 };
 
@@ -16,6 +17,7 @@ pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
 pub use content::Content;
 use coset::{CborSerializable, Header};
+use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{KidUri, Signatures};
@@ -65,55 +67,7 @@ impl From<InnerCatalystSignedDocument> for CatalystSignedDocument {
     }
 }
 
-/// Catalyst Signed Document Error
-#[derive(Debug)]
-pub struct CatalystSignedDocError {
-    /// List of errors during processing.
-    report: ProblemReport,
-    /// Actual error.
-    error: anyhow::Error,
-}
-
-impl fmt::Display for CatalystSignedDocError {
-    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let report_json = serde_json::to_string(&self.report)
-            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"));
-
-        write!(
-            fmt,
-            "CatalystSignedDocError {{ error: {}, report: {} }}",
-            self.error, report_json
-        )
-    }
-}
-
 impl CatalystSignedDocument {
-    /// Create a new Catalyst Signed Document from a COSE Sign document bytes.
-    ///
-    /// # Arguments
-    ///
-    /// * `cose_bytes` - COSE Sign document bytes.
-    ///
-    /// # Returns
-    ///
-    /// A new Catalyst Signed Document.
-    ///
-    /// # Errors
-    ///
-    /// Returns an error if the COSE Sign document bytes are invalid or decode error.
-    pub fn new(cose_bytes: &[u8]) -> anyhow::Result<Self, CatalystSignedDocError> {
-        let error_report = ProblemReport::new("Catalyst Signed Document");
-        let mut ctx = SignDocContext { error_report };
-        let decoded: CatalystSignedDocument =
-            minicbor::decode_with(cose_bytes, &mut ctx).map_err(|e| {
-                CatalystSignedDocError {
-                    report: ctx.error_report,
-                    error: e.into(),
-                }
-            })?;
-        Ok(decoded)
-    }
-
     // A bunch of getters to access the contents, or reason through the document, such as.
 
     /// Return Document Type `UUIDv4`.
@@ -150,6 +104,18 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn signatures(&self) -> &Signatures {
         &self.inner.signatures
+    }
+}
+
+impl TryFrom<&[u8]> for CatalystSignedDocument {
+    type Error = CatalystSignedDocError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let error_report = ProblemReport::new("Catalyst Signed Document");
+        let mut ctx = SignDocContext { error_report };
+        let decoded: CatalystSignedDocument = minicbor::decode_with(value, &mut ctx)
+            .map_err(|e| CatalystSignedDocError::new(ctx.error_report, e.into()))?;
+        Ok(decoded)
     }
 }
 
@@ -319,7 +285,7 @@ mod tests {
         let mut bytes = Vec::new();
         minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();
 
-        let decoded = CatalystSignedDocument::new(&bytes).unwrap();
+        let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
 
         assert_eq!(decoded.doc_type(), uuid_v4);
         assert_eq!(decoded.doc_id(), uuid_v7);
