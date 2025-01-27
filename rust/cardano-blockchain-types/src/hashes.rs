@@ -1,6 +1,6 @@
 //! A bunch of specific hashes.
 
-// cspell: attrss
+// cspell: words attrss
 
 use std::str::FromStr;
 
