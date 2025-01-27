@@ -1,7 +1,7 @@
 //! Catalyst Signed Document Extra Fields.
 
-use anyhow::anyhow;
-use catalyst_types::uuid::UuidV4;
+use anyhow::bail;
+use catalyst_types::{problem_report::ProblemReport, uuid::UuidV4};
 use coset::{cbor::Value, Label, ProtectedHeader};
 
 use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef};
@@ -158,15 +158,16 @@ impl ExtraFields {
         }
         Ok(builder)
     }
-}
 
-impl TryFrom<&ProtectedHeader> for ExtraFields {
-    type Error = crate::error::Error;
-
+    /// Converting COSE Protected Header to `ExtraFields`.
     #[allow(clippy::too_many_lines)]
-    fn try_from(protected: &ProtectedHeader) -> Result<Self, Self::Error> {
+    pub(crate) fn from_protected_header(
+        protected: &ProtectedHeader, error_report: &ProblemReport,
+    ) -> anyhow::Result<Self> {
+        /// Context for error messages.
+        const CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
+
         let mut extra = ExtraFields::default();
-        let mut errors = Vec::new();
 
         if let Some(cbor_doc_ref) =
             cose_protected_header_find(protected, |key| key == &Label::Text(REF_KEY.to_string()))
@@ -176,9 +177,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.doc_ref = Some(doc_ref);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `ref` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header doc ref",
+                        &format!("{cbor_doc_ref:?}"),
+                        &format!("Expected DocumentRef: {e}"),
+                        &format!("{CONTEXT}, DocumentRef"),
+                    );
                 },
             }
         }
@@ -191,9 +195,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.template = Some(doc_template);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `template` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header document template",
+                        &format!("{cbor_doc_template:?}"),
+                        &format!("Expected DocumentRef: {e}"),
+                        &format!("{CONTEXT}, DocumentRef"),
+                    );
                 },
             }
         }
@@ -206,9 +213,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.reply = Some(doc_reply);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `reply` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header document reply",
+                        &format!("{cbor_doc_reply:?}"),
+                        &format!("Expected DocumentRef: {e}"),
+                        &format!("{CONTEXT}, DocumentRef"),
+                    );
                 },
             }
         }
@@ -221,9 +231,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.section = Some(doc_section);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `section` field, err: {e:?}"
-                    ));
+                    error_report.conversion_error(
+                        "COSE protected header document section",
+                        &format!("{cbor_doc_section:?}"),
+                        &format!("Expected String: {e:?}"),
+                        &format!("{CONTEXT}, converting document section to String"),
+                    );
                 },
             }
         }
@@ -235,23 +248,29 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                 Ok(collabs) => {
                     let mut c = Vec::new();
                     for (ids, collaborator) in collabs.iter().cloned().enumerate() {
-                        match collaborator.into_text() {
+                        match collaborator.clone().into_text() {
                             Ok(collaborator) => {
                                 c.push(collaborator);
                             },
                             Err(e) => {
-                                errors.push(anyhow!(
-                                    "Invalid Collaborator at index {ids} of COSE protected header `collabs` field, err: {e:?}"
-                                ));
+                                error_report.conversion_error(
+                                    &format!("COSE protected header collaborator index {ids}"),
+                                    &format!("{collaborator:?}"),
+                                    &format!("Expected String: {e:?}"),
+                                    &format!("{CONTEXT}, converting collaborator to String"),
+                                );
                             },
                         }
                     }
                     extra.collabs = c;
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `collabs` field, err: {e:?}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header collaborators",
+                        &format!("{cbor_doc_collabs:?}"),
+                        &format!("Expected Array: {e:?}"),
+                        &format!("{CONTEXT}, converting collaborators to Array"),
+                    );
                 },
             }
         }
@@ -264,9 +283,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.brand_id = Some(brand_id);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `brand_id` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header brand ID",
+                        &format!("{cbor_doc_brand_id:?}"),
+                        &format!("Expected UUID: {e:?}"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for brand ID"),
+                    );
                 },
             }
         }
@@ -279,9 +301,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.campaign_id = Some(campaign_id);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `campaign_id` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header campaign ID",
+                        &format!("{cbor_doc_campaign_id:?}"),
+                        &format!("Expected UUID: {e:?}"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for campaign ID"),
+                    );
                 },
             }
         }
@@ -294,9 +319,12 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.election_id = Some(election_id);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `election_id` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header election ID",
+                        &format!("{cbor_doc_election_id:?}"),
+                        &format!("Expected UUID: {e:?}"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for election ID"),
+                    );
                 },
             }
         }
@@ -309,18 +337,20 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
                     extra.category_id = Some(category_id);
                 },
                 Err(e) => {
-                    errors.push(anyhow!(
-                        "Invalid COSE protected header `category_id` field, err: {e}"
-                    ));
+                    error_report.conversion_error(
+                        "CBOR COSE protected header category ID",
+                        &format!("{cbor_doc_category_id:?}"),
+                        &format!("Expected UUID: {e:?}"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for category ID"),
+                    );
                 },
             }
         }
 
-        if errors.is_empty() {
-            Ok(extra)
-        } else {
-            Err(errors.into())
+        if error_report.is_problematic() {
+            bail!("Failed to convert COSE ProtectedHeader to ExtraFields");
         }
+        Ok(extra)
     }
 }
 
