@@ -7,6 +7,7 @@ use std::str::FromStr;
 use catalyst_types::hashes::{Blake2b224Hash, Blake2b256Hash, Blake2bHashError};
 use pallas_crypto::hash::Hash;
 
+/// Defines a new type wrapper for the given hash type.
 macro_rules! define_hashes {
     ($($(#[$($attrss:tt)*])* ($name:ident, $inner:ty)),+) => {
         $(
