@@ -2,12 +2,18 @@
 use std::fmt::{Display, Formatter};
 
 use minicbor::{Decode, Decoder, Encode};
+use scylla::_macro_internal::{
+    CellWriter, ColumnType, DeserializationError, DeserializeValue, FrameSlice, SerializationError,
+    SerializeValue, TypeCheckError, WrittenCellProof,
+};
+use serde::Deserialize;
+use uuid::Uuid;
 
 use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
 
 /// Type representing a `UUIDv7`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]
-pub struct UuidV7(uuid::Uuid);
+pub struct UuidV7(Uuid);
 
 impl UuidV7 {
     /// Version for `UUIDv7`.
@@ -17,7 +23,7 @@ impl UuidV7 {
     #[must_use]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Self(uuid::Uuid::now_v7())
+        Self(Uuid::now_v7())
     }
 
     /// Generates a zeroed out `UUIDv7` that can never be valid.
@@ -34,13 +40,13 @@ impl UuidV7 {
 
     /// Returns the `uuid::Uuid` type.
     #[must_use]
-    pub fn uuid(&self) -> uuid::Uuid {
+    pub fn uuid(&self) -> Uuid {
         self.0
     }
 }
 
 /// Check if this is a valid `UUIDv7`.
-fn is_valid(uuid: &uuid::Uuid) -> bool {
+fn is_valid(uuid: &Uuid) -> bool {
     uuid != &INVALID_UUID && uuid.get_version_num() == UuidV7::UUID_VERSION_NUMBER
 }
 
@@ -72,10 +78,10 @@ impl Encode<CborContext> for UuidV7 {
 }
 
 /// Returns a `UUIDv7` from `uuid::Uuid`.
-impl TryFrom<uuid::Uuid> for UuidV7 {
+impl TryFrom<Uuid> for UuidV7 {
     type Error = UuidError;
 
-    fn try_from(uuid: uuid::Uuid) -> Result<Self, Self::Error> {
+    fn try_from(uuid: Uuid) -> Result<Self, Self::Error> {
         if is_valid(&uuid) {
             Ok(Self(uuid))
         } else {
@@ -87,7 +93,7 @@ impl TryFrom<uuid::Uuid> for UuidV7 {
 /// Returns a `uuid::Uuid` from `UUIDv7`.
 ///
 /// NOTE: This does not guarantee that the `UUID` is valid.
-impl From<UuidV7> for uuid::Uuid {
+impl From<UuidV7> for Uuid {
     fn from(value: UuidV7) -> Self {
         value.0
     }
@@ -96,11 +102,36 @@ impl From<UuidV7> for uuid::Uuid {
 impl<'de> serde::Deserialize<'de> for UuidV7 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
-        let uuid = uuid::Uuid::deserialize(deserializer)?;
+        let uuid = <Uuid as Deserialize>::deserialize(deserializer)?;
         if is_valid(&uuid) {
             Ok(Self(uuid))
         } else {
             Err(serde::de::Error::custom(UuidError::InvalidUuidV7(uuid)))
+        }
+    }
+}
+
+impl SerializeValue for UuidV7 {
+    fn serialize<'b>(
+        &self, typ: &ColumnType, writer: CellWriter<'b>,
+    ) -> Result<WrittenCellProof<'b>, SerializationError> {
+        self.0.serialize(typ, writer)
+    }
+}
+
+impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for UuidV7 {
+    fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
+        Uuid::type_check(typ)
+    }
+
+    fn deserialize(
+        typ: &'metadata ColumnType<'metadata>, v: Option<FrameSlice<'frame>>,
+    ) -> Result<Self, DeserializationError> {
+        let uuid = <Uuid as DeserializeValue>::deserialize(typ, v)?;
+        if is_valid(&uuid) {
+            Ok(Self(uuid))
+        } else {
+            Err(DeserializationError::new(UuidError::InvalidUuidV4(uuid)))
         }
     }
 }
