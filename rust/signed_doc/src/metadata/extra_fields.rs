@@ -164,7 +164,8 @@ impl ExtraFields {
     pub(crate) fn from_protected_header(
         protected: &ProtectedHeader, error_report: &ProblemReport,
     ) -> anyhow::Result<Self> {
-        let context = "COSE ProtectedHeader to ExtraFields";
+        /// Context for error messages.
+        const CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
 
         let mut extra = ExtraFields::default();
 
@@ -180,7 +181,7 @@ impl ExtraFields {
                         "CBOR COSE protected header doc ref",
                         &format!("{cbor_doc_ref:?}"),
                         &format!("Expected DocumentRef: {e}"),
-                        &format!("{context}, DocumentRef"),
+                        &format!("{CONTEXT}, DocumentRef"),
                     );
                 },
             }
@@ -198,7 +199,7 @@ impl ExtraFields {
                         "CBOR COSE protected header document template",
                         &format!("{cbor_doc_template:?}"),
                         &format!("Expected DocumentRef: {e}"),
-                        &format!("{context}, DocumentRef"),
+                        &format!("{CONTEXT}, DocumentRef"),
                     );
                 },
             }
@@ -216,7 +217,7 @@ impl ExtraFields {
                         "CBOR COSE protected header document reply",
                         &format!("{cbor_doc_reply:?}"),
                         &format!("Expected DocumentRef: {e}"),
-                        &format!("{context}, DocumentRef"),
+                        &format!("{CONTEXT}, DocumentRef"),
                     );
                 },
             }
@@ -234,7 +235,7 @@ impl ExtraFields {
                         "COSE protected header document section",
                         &format!("{cbor_doc_section:?}"),
                         &format!("Expected String: {e:?}"),
-                        &format!("{context}, converting document section to String"),
+                        &format!("{CONTEXT}, converting document section to String"),
                     );
                 },
             }
@@ -256,7 +257,7 @@ impl ExtraFields {
                                     &format!("COSE protected header collaborator index {ids}"),
                                     &format!("{collaborator:?}"),
                                     &format!("Expected String: {e:?}"),
-                                    &format!("{context}, converting collaborator to String"),
+                                    &format!("{CONTEXT}, converting collaborator to String"),
                                 );
                             },
                         }
@@ -268,7 +269,7 @@ impl ExtraFields {
                         "CBOR COSE protected header collaborators",
                         &format!("{cbor_doc_collabs:?}"),
                         &format!("Expected Array: {e:?}"),
-                        &format!("{context}, converting collaborators to Array"),
+                        &format!("{CONTEXT}, converting collaborators to Array"),
                     );
                 },
             }
@@ -286,7 +287,7 @@ impl ExtraFields {
                         "CBOR COSE protected header brand ID",
                         &format!("{cbor_doc_brand_id:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for brand ID"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for brand ID"),
                     );
                 },
             }
@@ -304,7 +305,7 @@ impl ExtraFields {
                         "CBOR COSE protected header campaign ID",
                         &format!("{cbor_doc_campaign_id:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for campaign ID"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for campaign ID"),
                     );
                 },
             }
@@ -322,7 +323,7 @@ impl ExtraFields {
                         "CBOR COSE protected header election ID",
                         &format!("{cbor_doc_election_id:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for election ID"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for election ID"),
                     );
                 },
             }
@@ -340,7 +341,7 @@ impl ExtraFields {
                         "CBOR COSE protected header category ID",
                         &format!("{cbor_doc_category_id:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for category ID"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for category ID"),
                     );
                 },
             }

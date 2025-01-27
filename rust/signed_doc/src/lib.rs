@@ -21,7 +21,7 @@ use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{KidUri, Signatures};
-use utils::context::SignDocContext;
+use utils::context::DecodeSignDocCtx;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Debug, Clone)]
@@ -112,15 +112,15 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let error_report = ProblemReport::new("Catalyst Signed Document");
-        let mut ctx = SignDocContext { error_report };
+        let mut ctx = DecodeSignDocCtx { error_report };
         let decoded: CatalystSignedDocument = minicbor::decode_with(value, &mut ctx)
             .map_err(|e| CatalystSignedDocError::new(ctx.error_report, e.into()))?;
         Ok(decoded)
     }
 }
 
-impl Decode<'_, SignDocContext> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut SignDocContext) -> Result<Self, decode::Error> {
+impl Decode<'_, DecodeSignDocCtx> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut DecodeSignDocCtx) -> Result<Self, decode::Error> {
         let start = d.position();
         d.skip()?;
         let end = d.position();
