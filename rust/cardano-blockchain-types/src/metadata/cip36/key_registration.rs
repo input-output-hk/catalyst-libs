@@ -146,10 +146,6 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
         Ok(cip36_key_registration)
     }
 }
-                "Redundant key found in item {} in RBAC map",
-                index.saturating_add(1)
-            )
-            .as_str(),
 
 /// Helper function for decoding the voting key.
 ///
