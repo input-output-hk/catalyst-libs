@@ -7,7 +7,7 @@ additional_fields = {
   ? "collabs" => [+any],
   ? "brand_id" => ref_type,
   ? "campaign_id" => ref_type,
-  ? "election_id" => ref_type,
+  ? "election_id" => UUID, ; UUID v4
   ? "category_id" => ref_type,
 }
 
