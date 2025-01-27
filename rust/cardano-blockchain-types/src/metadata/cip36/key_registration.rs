@@ -5,7 +5,10 @@
 //! <https://cips.cardano.org/cip/CIP-36>
 //! <https://github.com/cardano-foundation/CIPs/blob/master/CIP-0036/schema.cddl>
 
-use catalyst_types::problem_report::ProblemReport;
+use catalyst_types::{
+    cbor_utils::{report_duplicated_key, report_missing_keys},
+    problem_report::ProblemReport,
+};
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
@@ -88,7 +91,13 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
             let key: u16 = decode_helper(d, "key in CIP36 Key Registration", err_report)?;
 
             if let Some(key) = Cip36KeyRegistrationKeys::from_repr(key) {
-                if check_is_key_exist(&found_keys, &key, index, err_report) {
+                if report_duplicated_key(
+                    &found_keys,
+                    &key,
+                    index,
+                    "CIP36 Key Registration",
+                    err_report,
+                ) {
                     continue;
                 }
                 match key {
@@ -127,40 +136,20 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
             Cip36KeyRegistrationKeys::PaymentAddr,
             Cip36KeyRegistrationKeys::Nonce,
         ];
-
-        for key in &required_keys {
-            if !found_keys.contains(key) {
-                err_report.missing_field(
-                    &format!("{key:?}"),
-                    "Missing required key in CIP36 Key Registration",
-                );
-            }
-        }
+        report_missing_keys(
+            &found_keys,
+            &required_keys,
+            "CIP36 Key Registration",
+            err_report,
+        );
 
         Ok(cip36_key_registration)
     }
 }
-
-/// Helper function for checking whether the key is already in the `found_keys` or not.
-/// True if exist, false if not.
-fn check_is_key_exist(
-    found_keys: &[Cip36KeyRegistrationKeys], key: &Cip36KeyRegistrationKeys, index: u64,
-    err_report: &ProblemReport,
-) -> bool {
-    if found_keys.contains(key) {
-        err_report.duplicate_field(
-            format!("{key:?}").as_str(),
-            format!(
                 "Redundant key found in item {} in RBAC map",
                 index.saturating_add(1)
             )
             .as_str(),
-            format!("CIP36 Key Registration {key:?}").as_str(),
-        );
-        return true;
-    }
-    false
-}
 
 /// Helper function for decoding the voting key.
 ///

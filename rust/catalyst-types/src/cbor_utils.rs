@@ -1,8 +1,9 @@
-//! CBOR decoding helper functions.
+//! CBOR utilities that are highly tied to Catalyst types, so they don't belong to the
+//! `cbork-utils` crate.
 
 use std::fmt::Debug;
 
-use catalyst_types::problem_report::ProblemReport;
+use crate::problem_report::ProblemReport;
 
 /// Adds a "duplicated field" entry to the report and returns true if the field is already
 /// present in the given found keys list.
@@ -12,7 +13,7 @@ pub fn report_duplicated_key<T: Debug + PartialEq>(
     if found_keys.contains(key) {
         report.duplicate_field(
             format!("{key:?}").as_str(),
-            format!(
+            format!("Redundant key found in item {}", index + 1).as_str(),
                 "Redundant key found in item {} in RBAC map",
                 index.saturating_add(1)
             )
