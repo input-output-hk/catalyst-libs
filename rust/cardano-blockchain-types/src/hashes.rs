@@ -9,9 +9,9 @@ use pallas_crypto::hash::Hash;
 
 /// Defines a new type wrapper for the given hash type.
 macro_rules! define_hashes {
-    ($($(#[$($attrss:tt)*])* ($name:ident, $inner:ty)),+) => {
+    ($($(#[$docs:meta])* ($name:ident, $inner:ty)),+) => {
         $(
-            $(#[$($attrss)*])*
+            $(#[$docs])*
             #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
             pub struct $name($inner);
 
