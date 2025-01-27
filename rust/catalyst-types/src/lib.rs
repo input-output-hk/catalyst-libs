@@ -1,5 +1,6 @@
 //! Catalyst Generic Types
 
+pub mod cbor_utils;
 pub mod conversion;
 pub mod hashes;
 pub mod id_uri;
