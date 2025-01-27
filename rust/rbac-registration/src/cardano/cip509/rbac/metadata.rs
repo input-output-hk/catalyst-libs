@@ -2,21 +2,18 @@
 
 use std::collections::{HashMap, HashSet};
 
-use catalyst_types::problem_report::ProblemReport;
+use catalyst_types::{cbor_utils::report_duplicated_key, problem_report::ProblemReport};
 use cbork_utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
-use crate::{
-    cardano::cip509::{
-        decode_context::DecodeContext,
-        rbac::{role_data::CborRoleData, C509Cert, SimplePublicKeyType, X509DerCert},
-        utils::Cip0134UriSet,
-        CertKeyHash, RoleData, RoleNumber,
-    },
-    utils::decode_helper::report_duplicated_key,
+use crate::cardano::cip509::{
+    decode_context::DecodeContext,
+    rbac::{role_data::CborRoleData, C509Cert, SimplePublicKeyType, X509DerCert},
+    utils::Cip0134UriSet,
+    CertKeyHash, RoleData, RoleNumber,
 };
 
 /// Cip509 RBAC metadata.
@@ -94,7 +91,13 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
         for index in 0..map_len {
             let key: u16 = decode_helper(d, "key in Cip509RbacMetadata", &mut ())?;
             if let Some(key) = Cip509RbacMetadataInt::from_repr(key) {
-                if report_duplicated_key(&found_keys, &key, index, context, decode_context.report) {
+                if report_duplicated_key(
+                    &found_keys,
+                    &key,
+                    index,
+                    "Cip509RbacMetadata",
+                    decode_context.report,
+                ) {
                     continue;
                 }
                 found_keys.push(key);
