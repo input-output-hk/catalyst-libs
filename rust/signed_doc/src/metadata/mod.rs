@@ -100,7 +100,8 @@ impl Metadata {
     pub(crate) fn from_protected_header(
         protected: &coset::ProtectedHeader, error_report: &ProblemReport,
     ) -> anyhow::Result<Self> {
-        let context = "COSE Protected Header to Metadata";
+        /// Context for error messages.
+        const CONTEXT: &str = "COSE Protected Header to Metadata";
 
         let mut algorithm = Algorithm::default();
         if let Some(coset::RegisteredLabelWithPrivate::Assigned(alg)) = protected.header.alg {
@@ -111,7 +112,7 @@ impl Metadata {
                         "COSE protected header algorithm",
                         &format!("{alg:?}"),
                         &format!("Expected Algorithm: {e}"),
-                        &format!("{context}, Algorithm"),
+                        &format!("{CONTEXT}, Algorithm"),
                     );
                 },
             }
@@ -128,7 +129,7 @@ impl Metadata {
                         "COSE protected header content type",
                         &format!("{value:?}"),
                         &format!("Expected ContentType: {e}"),
-                        &format!("{context}, ContentType"),
+                        &format!("{CONTEXT}, ContentType"),
                     );
                 },
             }
@@ -151,7 +152,7 @@ impl Metadata {
                         "COSE protected header content encoding",
                         &format!("{value:?}"),
                         &format!("Expected ContentEncoding: {e}"),
-                        &format!("{context}, ContentEncoding"),
+                        &format!("{CONTEXT}, ContentEncoding"),
                     );
                 },
             }
@@ -173,7 +174,7 @@ impl Metadata {
                         "COSE protected header type",
                         &format!("{value:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for type"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for type"),
                     );
                 },
             }
@@ -192,7 +193,7 @@ impl Metadata {
                         "COSE protected header ID",
                         &format!("{value:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for ID"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for ID"),
                     );
                 },
             }
@@ -211,7 +212,7 @@ impl Metadata {
                         "COSE protected header ver",
                         &format!("{value:?}"),
                         &format!("Expected UUID: {e:?}"),
-                        &format!("{context}, decoding CBOR UUID for version"),
+                        &format!("{CONTEXT}, decoding CBOR UUID for version"),
                     );
                 },
             }
@@ -225,7 +226,7 @@ impl Metadata {
                     "COSE protected header",
                     &format!("{protected:?}"),
                     &format!("Expected ExtraField: {e}"),
-                    &format!("{context}, ExtraFields"),
+                    &format!("{CONTEXT}, ExtraFields"),
                 );
                 None
             },
@@ -246,7 +247,7 @@ impl Metadata {
                         "ver",
                         &ver.to_string(),
                         "ver < id",
-                        &format!("{context}, Document Version {ver} cannot be smaller than Document ID {id}"),
+                        &format!("{CONTEXT}, Document Version {ver} cannot be smaller than Document ID {id}"),
                     );
 
                     bail!("Failed to convert COSE Protected Header to Metadata: document version is smaller than document ID");
