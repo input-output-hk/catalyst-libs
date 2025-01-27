@@ -7,9 +7,10 @@ use std::{
 
 use coset::iana::CoapContentFormat;
 use serde::{de, Deserialize, Deserializer};
+use strum::VariantArray;
 
 /// Payload Content Type.
-#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray)]
 pub enum ContentType {
     /// 'application/cbor'
     Cbor,
@@ -33,7 +34,12 @@ impl FromStr for ContentType {
         match s {
             "cbor" => Ok(Self::Cbor),
             "json" => Ok(Self::Json),
-            _ => anyhow::bail!("Unsupported Content Type: {s:?}"),
+            _ => {
+                anyhow::bail!(
+                    "Unsupported Content Type: {s:?}, Supported only: {:?}",
+                    ContentType::VARIANTS
+                )
+            },
         }
     }
 }
@@ -62,7 +68,12 @@ impl TryFrom<&coset::ContentType> for ContentType {
         let content_type = match value {
             coset::ContentType::Assigned(CoapContentFormat::Json) => ContentType::Json,
             coset::ContentType::Assigned(CoapContentFormat::Cbor) => ContentType::Cbor,
-            _ => anyhow::bail!("Unsupported Content Type {value:?}"),
+            _ => {
+                anyhow::bail!(
+                    "Unsupported Content Type {value:?}, Supported only: {:?}",
+                    ContentType::VARIANTS
+                )
+            },
         };
         Ok(content_type)
     }
