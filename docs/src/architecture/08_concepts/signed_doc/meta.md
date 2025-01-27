@@ -95,15 +95,15 @@ The format is the same as the [CBOR] Array form of [`ref`](#ref-document-referen
 
 ## `campaign_id`
 
-Unique identifier [UUID] v4, which defines an election,
-e.g. "Catalyst Fund 1", "Catalyst Fund 2".
-
-## `election_id`
-
 This is a reply to another document.
 The format is the same as the [CBOR] Array form of [`ref`](#ref-document-reference).
 
-`campaign_id` defines an election, e.g. "Catalyst Fund 1", "Catalyst Fund 2".
+`campaign_id` defines a "campaign" of voting, e.g. "treasury campaign".
+
+## `election_id`
+
+Unique identifier [UUID] v4, which defines an election,
+e.g. "Catalyst Fund 1", "Catalyst Fund 2".
 
 ## `category_id`
 
