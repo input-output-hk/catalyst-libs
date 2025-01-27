@@ -2,9 +2,10 @@
 
 mod builder;
 mod content;
-mod error;
+pub mod error;
 mod metadata;
 mod signature;
+mod utils;
 
 use std::{
     convert::TryFrom,
@@ -12,13 +13,15 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::anyhow;
 pub use builder::Builder;
+use catalyst_types::problem_report::ProblemReport;
 pub use content::Content;
 use coset::{CborSerializable, Header};
+use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{KidUri, Signatures};
+use utils::context::DecodeSignDocCtx;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Debug, Clone)]
@@ -104,8 +107,20 @@ impl CatalystSignedDocument {
     }
 }
 
-impl Decode<'_, ()> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, decode::Error> {
+impl TryFrom<&[u8]> for CatalystSignedDocument {
+    type Error = CatalystSignedDocError;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let error_report = ProblemReport::new("Catalyst Signed Document");
+        let mut ctx = DecodeSignDocCtx { error_report };
+        let decoded: CatalystSignedDocument = minicbor::decode_with(value, &mut ctx)
+            .map_err(|e| CatalystSignedDocError::new(ctx.error_report, e.into()))?;
+        Ok(decoded)
+    }
+}
+
+impl Decode<'_, DecodeSignDocCtx> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut DecodeSignDocCtx) -> Result<Self, decode::Error> {
         let start = d.position();
         d.skip()?;
         let end = d.position();
@@ -115,40 +130,67 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             .ok_or(minicbor::decode::Error::end_of_input())?;
 
         let cose_sign = coset::CoseSign::from_slice(cose_bytes).map_err(|e| {
+            ctx.error_report.invalid_value(
+                "COSE sign document bytes",
+                &format!("{:?}", &cose_bytes),
+                &format!("Cannot convert bytes to CoseSign {e:?}"),
+                "Creating COSE Sign document",
+            );
             minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
         })?;
 
-        let mut errors = Vec::new();
-
-        let metadata = Metadata::try_from(&cose_sign.protected).map_or_else(
-            |e| {
-                errors.extend(e.0 .0);
-                None
-            },
-            Some,
-        );
-        let signatures = Signatures::try_from(&cose_sign.signatures).map_or_else(
-            |e| {
-                errors.extend(e.0 .0);
-                None
-            },
-            Some,
-        );
+        let metadata = Metadata::from_protected_header(&cose_sign.protected, &ctx.error_report)
+            .map_or_else(
+                |e| {
+                    ctx.error_report.conversion_error(
+                        "COSE sign protected header",
+                        &format!("{:?}", &cose_sign.protected),
+                        &format!("Expected Metadata: {e:?}"),
+                        "Converting COSE Sign protected header to Metadata",
+                    );
+                    None
+                },
+                Some,
+            );
+        let signatures = Signatures::from_cose_sig(&cose_sign.signatures, &ctx.error_report)
+            .map_or_else(
+                |e| {
+                    ctx.error_report.conversion_error(
+                        "COSE sign signatures",
+                        &format!("{:?}", &cose_sign.signatures),
+                        &format!("Expected Signatures {e:?}"),
+                        "Converting COSE Sign signatures to Signatures",
+                    );
+                    None
+                },
+                Some,
+            );
 
         if cose_sign.payload.is_none() {
-            errors.push(anyhow!("Document Content is missing"));
+            ctx.error_report
+                .missing_field("COSE Sign Payload", "Missing document content (payload)");
         }
 
         match (cose_sign.payload, metadata, signatures) {
             (Some(payload), Some(metadata), Some(signatures)) => {
                 let content = Content::from_encoded(
-                    payload,
+                    payload.clone(),
                     metadata.content_type(),
                     metadata.content_encoding(),
                 )
                 .map_err(|e| {
-                    errors.push(anyhow!("Invalid Document Content: {e}"));
-                    minicbor::decode::Error::message(error::Error::from(errors))
+                    ctx.error_report.invalid_value(
+                        "Document Content",
+                        &format!(
+                            "Given value {:?}, {:?}, {:?}",
+                            payload,
+                            metadata.content_type(),
+                            metadata.content_encoding()
+                        ),
+                        &format!("{e:?}"),
+                        "Creating document content",
+                    );
+                    minicbor::decode::Error::message("Failed to create Document Content")
                 })?;
 
                 Ok(InnerCatalystSignedDocument {
@@ -158,7 +200,11 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 }
                 .into())
             },
-            _ => Err(minicbor::decode::Error::message(error::Error::from(errors))),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Failed to decode Catalyst Signed Document",
+                ))
+            },
         }
     }
 }
@@ -238,8 +284,8 @@ mod tests {
 
         let mut bytes = Vec::new();
         minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();
-        let decoded: CatalystSignedDocument =
-            minicbor::decode_with(bytes.as_slice(), &mut ()).unwrap();
+
+        let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
 
         assert_eq!(decoded.doc_type(), uuid_v4);
         assert_eq!(decoded.doc_id(), uuid_v7);

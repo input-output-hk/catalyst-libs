@@ -1,29 +1,48 @@
-//! Catalyst Signed Document errors.
+//! Catalyst Signed Document Error
 
-/// Catalyst Signed Document error.
-#[derive(thiserror::Error, Debug)]
-#[error("Catalyst Signed Document Error: {0:?}")]
-pub struct Error(pub(crate) List);
+use std::fmt;
 
-/// List of errors.
+use catalyst_types::problem_report::ProblemReport;
+
+/// Catalyst Signed Document Error
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug)]
-pub(crate) struct List(pub(crate) Vec<anyhow::Error>);
+pub struct CatalystSignedDocError {
+    /// List of errors during processing.
+    report: ProblemReport,
+    /// Actual error.
+    error: anyhow::Error,
+}
 
-impl From<Vec<anyhow::Error>> for List {
-    fn from(e: Vec<anyhow::Error>) -> Self {
-        Self(e)
+impl CatalystSignedDocError {
+    /// Create a new `CatalystSignedDocError`.
+    #[must_use]
+    pub fn new(report: ProblemReport, error: anyhow::Error) -> Self {
+        Self { report, error }
+    }
+
+    /// Get the error report.
+    #[must_use]
+    pub fn report(&self) -> &ProblemReport {
+        &self.report
+    }
+
+    /// Get the actual error.
+    #[must_use]
+    pub fn error(&self) -> &anyhow::Error {
+        &self.error
     }
 }
 
-impl From<Vec<anyhow::Error>> for Error {
-    fn from(e: Vec<anyhow::Error>) -> Self {
-        Self(e.into())
-    }
-}
+impl fmt::Display for CatalystSignedDocError {
+    fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let report_json = serde_json::to_string(&self.report)
+            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"));
 
-impl Error {
-    /// List of errors.
-    pub fn errors(&self) -> &Vec<anyhow::Error> {
-        &self.0 .0
+        write!(
+            fmt,
+            "CatalystSignedDocError {{ error: {}, report: {} }}",
+            self.error, report_json
+        )
     }
 }
