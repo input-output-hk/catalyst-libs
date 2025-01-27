@@ -1,9 +1,10 @@
 //! Catalyst Signed Document Extra Fields.
 
 use anyhow::anyhow;
+use catalyst_types::uuid::UuidV4;
 use coset::{cbor::Value, Label, ProtectedHeader};
 
-use super::{cose_protected_header_find, DocumentRef};
+use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef};
 
 /// `ref` field COSE key value
 const REF_KEY: &str = "ref";
@@ -52,7 +53,7 @@ pub struct ExtraFields {
     campaign_id: Option<DocumentRef>,
     /// Unique identifier for the election.
     #[serde(skip_serializing_if = "Option::is_none")]
-    election_id: Option<DocumentRef>,
+    election_id: Option<UuidV4>,
     /// Unique identifier for the voting category as a collection of proposals.
     #[serde(skip_serializing_if = "Option::is_none")]
     category_id: Option<DocumentRef>,
@@ -103,7 +104,7 @@ impl ExtraFields {
 
     /// Return `election_id` field.
     #[must_use]
-    pub fn election_id(&self) -> Option<DocumentRef> {
+    pub fn election_id(&self) -> Option<UuidV4> {
         self.election_id
     }
 
@@ -148,7 +149,7 @@ impl ExtraFields {
 
         if let Some(election_id) = &self.election_id {
             builder =
-                builder.text_value(ELECTION_ID_KEY.to_string(), Value::try_from(*election_id)?);
+                builder.text_value(ELECTION_ID_KEY.to_string(), encode_cbor_uuid(election_id)?);
         }
 
         if let Some(category_id) = &self.category_id {
@@ -288,7 +289,7 @@ impl TryFrom<&ProtectedHeader> for ExtraFields {
         if let Some(cbor_doc_election_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text(ELECTION_ID_KEY.to_string())
         }) {
-            match DocumentRef::try_from(cbor_doc_election_id) {
+            match decode_cbor_uuid(cbor_doc_election_id.clone()) {
                 Ok(election_id) => {
                     extra.election_id = Some(election_id);
                 },

@@ -223,7 +223,7 @@ mod tests {
             "section": section,
             "collabs": collabs,
             "campaign_id": {"id": uuid_v7.to_string()},
-            "election_id":  {"id": uuid_v7.to_string()},
+            "election_id":  uuid_v4.to_string(),
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
         }))
