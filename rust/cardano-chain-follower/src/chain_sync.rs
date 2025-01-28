@@ -63,7 +63,7 @@ async fn retry_connect(
                 match peer {
                     Ok(peer) => return Ok(peer),
                     Err(err) => {
-                        retries -= 1;
+                        retries = retries.saturating_sub(1);
                         if retries == 0 {
                             return Err(err);
                         }
@@ -72,7 +72,7 @@ async fn retry_connect(
                 }
             },
             Err(error) => {
-                retries -= 1;
+                retries = retries.saturating_sub(1);
                 if retries == 0 {
                     return Err(pallas::network::facades::Error::ConnectFailure(
                         tokio::io::Error::new(
@@ -193,6 +193,8 @@ async fn process_rollback(
     let head_slot = previous_point.slot_or_default();
     debug!("Head slot: {head_slot:?}");
     debug!("Rollback slot: {rollback_slot:?}");
+    // It is ok because slot implement saturating subtraction.
+    #[allow(clippy::arithmetic_side_effects)]
     let slot_rollback_size = head_slot - rollback_slot;
 
     // We actually do the work here...

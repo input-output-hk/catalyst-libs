@@ -359,7 +359,9 @@ impl SnapshotDownloader for MithrilTurboDownloader {
             self.inner.cfg.chain,
             Some(self.inner.ext_size.load(Ordering::SeqCst)),
             self.inner.dedup_size.load(Ordering::SeqCst),
-            tot_files - (chg_files + new_files),
+            tot_files
+                .saturating_sub(chg_files)
+                .saturating_sub(new_files),
             chg_files,
             new_files,
         );

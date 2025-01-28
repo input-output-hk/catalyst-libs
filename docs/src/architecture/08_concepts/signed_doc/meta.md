@@ -88,13 +88,17 @@ This list can impact actions that can be performed by the `Proposal Action Docum
 
 ## `brand_id`
 
-Unique identifier [UUID] v4, which represents a "brand" who is running the voting,
-e.g. Catalyst, Midnight.
+This is a reply to another document.
+The format is the same as the [CBOR] Array form of [`ref`](#ref-document-reference).
+
+`brand_id` represents a "brand" who is running the voting, e.g. Catalyst, Midnight.
 
 ## `campaign_id`
 
-Unique identifier [UUID] v4, which defines a "campaign" of voting,
-e.g. "treasury campaign".
+This is a reply to another document.
+The format is the same as the [CBOR] Array form of [`ref`](#ref-document-reference).
+
+`campaign_id` defines a "campaign" of voting, e.g. "treasury campaign".
 
 ## `election_id`
 
@@ -103,7 +107,10 @@ e.g. "Catalyst Fund 1", "Catalyst Fund 2".
 
 ## `category_id`
 
-Unique identifier [UUID] v4 which defines a voting category as a collection of proposals,
+This is a reply to another document.
+The format is the same as the [CBOR] Array form of [`ref`](#ref-document-reference).
+
+`campaign_id` defines a voting category as a collection of proposals,
 e.g. "Development & Infrastructure", "Products & Integrations".
 
 [UUID]: https://www.rfc-editor.org/rfc/rfc9562.html

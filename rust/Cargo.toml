@@ -10,7 +10,7 @@ members = [
     "cbork-cddl-parser",
     "cbork-utils",
     "catalyst-voting",
-    "catalyst-types", 
+    "catalyst-types",
     "immutable-ledger",
     "vote-tx-v1",
     "vote-tx-v2",
@@ -60,3 +60,4 @@ string_slice = "deny"
 unchecked_duration_subtraction = "deny"
 unreachable = "deny"
 missing_docs_in_private_items = "deny"
+arithmetic_side_effects = "deny"

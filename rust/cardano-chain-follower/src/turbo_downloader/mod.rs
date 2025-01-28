@@ -18,7 +18,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{bail, Context, Result};
+use anyhow::{anyhow, bail, Context, Result};
 use cardano_blockchain_types::Network;
 use catalyst_types::conversion::from_saturating;
 use crossbeam_channel::{Receiver, RecvError};
@@ -77,7 +77,7 @@ impl BalancingResolver {
     }
 
     /// Resolve the given URL with the configured resolver.
-    fn resolve(&self, url: &str, worker: usize) -> std::io::Result<Vec<std::net::SocketAddr>> {
+    fn resolve(&self, url: &str, worker: usize) -> std::io::Result<Vec<SocketAddr>> {
         // debug!("Resolving: {url} for {worker}");
         let addresses = if let Some(addresses) = self.cache.get(url) {
             addresses
@@ -96,16 +96,25 @@ impl BalancingResolver {
                 )
             })?;
 
-            let mut all_addresses: Vec<std::net::SocketAddr> = Vec::new();
+            let mut all_addresses: Vec<SocketAddr> = Vec::new();
             for addr in self.resolver.lookup_ip(host.to_string())?.iter() {
-                all_addresses.push(std::net::SocketAddr::new(addr, port));
+                all_addresses.push(SocketAddr::new(addr, port));
             }
 
             let addresses = Arc::new(all_addresses);
             self.cache.insert(url.to_string(), addresses.clone());
             addresses
         };
-        let worker_addresses = worker % addresses.len();
+        let worker_addresses = worker.checked_rem(addresses.len()).ok_or_else(|| {
+            std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!(
+                    "Unexpected index: worker = {}, addresses len = {}",
+                    worker,
+                    addresses.len()
+                ),
+            )
+        })?;
         // Safe because we bound the index with the length of `addresses`.
         #[allow(clippy::indexing_slicing)]
         Ok(vec![addresses[worker_addresses]])
@@ -180,7 +189,7 @@ impl DlConfig {
     }
 
     /// Resolve DNS addresses using Hickory Resolver
-    fn resolve(url: &str, worker: usize) -> std::io::Result<Vec<std::net::SocketAddr>> {
+    fn resolve(url: &str, worker: usize) -> std::io::Result<Vec<SocketAddr>> {
         let Some(resolver) = RESOLVER.get() else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -298,21 +307,21 @@ impl ParallelDownloadProcessorInner {
 
     /// Get start offset of a chunk.
     fn chunk_start(&self, chunk: usize) -> usize {
-        self.cfg.chunk_size * chunk
+        self.cfg.chunk_size.saturating_mul(chunk)
     }
 
     /// Get inclusive end offset of a chunk.
     fn chunk_end(&self, chunk: usize) -> usize {
         let start = self.chunk_start(chunk);
-        if start + self.cfg.chunk_size >= self.file_size {
-            self.file_size - 1
+        if start.saturating_add(self.cfg.chunk_size) >= self.file_size {
+            self.file_size.saturating_sub(1)
         } else {
-            start + self.cfg.chunk_size - 1
+            start.saturating_add(self.cfg.chunk_size).saturating_sub(1)
         }
     }
 
     /// Sends a GET request to download a chunk of the file at the specified range
-    fn get_range(&self, agent: &ureq::Agent, chunk: usize) -> anyhow::Result<Arc<Vec<u8>>> {
+    fn get_range(&self, agent: &ureq::Agent, chunk: usize) -> Result<Arc<Vec<u8>>> {
         let range_start = self.chunk_start(chunk);
         let range_end_inclusive = self.chunk_end(chunk);
         let range_header = format!("bytes={range_start}-{range_end_inclusive}");
@@ -331,7 +340,9 @@ impl ParallelDownloadProcessorInner {
             )
         }
 
-        let range_size = range_end_inclusive - range_start + 1;
+        let range_size = range_end_inclusive
+            .saturating_sub(range_start)
+            .saturating_add(1);
         let mut bytes: Vec<u8> = Vec::with_capacity(range_size);
 
         let bytes_read = get_range_response
@@ -349,7 +360,7 @@ impl ParallelDownloadProcessorInner {
     /// Queue Chunk to processor.
     ///
     /// Reorders chunks and sends to the consumer.
-    fn reorder_queue(&self, chunk: DlChunk) -> anyhow::Result<()> {
+    fn reorder_queue(&self, chunk: DlChunk) -> Result<()> {
         self.reorder_queue.insert(chunk.chunk_num, chunk);
         self.new_chunk_queue_tx.send(Some(()))?;
         Ok(())
@@ -368,7 +379,7 @@ impl ParallelDownloadProcessor {
     ///
     /// Can Fail IF there is no HTTP client provided or the URL does not support getting
     /// the content length.
-    pub(crate) async fn new(url: &str, mut cfg: DlConfig, chain: Network) -> anyhow::Result<Self> {
+    pub(crate) async fn new(url: &str, mut cfg: DlConfig, chain: Network) -> Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
             bail!(
                 "Download chunk size must be at least {} bytes",
@@ -396,8 +407,12 @@ impl ParallelDownloadProcessor {
             cfg: cfg.clone(),
             file_size,
             last_chunk,
-            reorder_queue: DashMap::with_capacity((cfg.workers * cfg.queue_ahead) + 1),
-            work_queue: DashMap::with_capacity(cfg.workers + 1),
+            reorder_queue: DashMap::with_capacity(
+                cfg.workers
+                    .saturating_mul(cfg.queue_ahead)
+                    .saturating_add(1),
+            ),
+            work_queue: DashMap::with_capacity(cfg.workers.saturating_add(1)),
             new_chunk_queue_rx: new_chunk_queue.1,
             new_chunk_queue_tx: new_chunk_queue.0,
             bytes_downloaded,
@@ -413,7 +428,7 @@ impl ParallelDownloadProcessor {
 
     /// Starts the worker tasks, they will not start doing any work until `download` is
     /// called, which happens immediately after they are started.
-    fn start_workers(&self, chain: Network) -> anyhow::Result<()> {
+    fn start_workers(&self, chain: Network) -> Result<()> {
         for worker in 0..self.0.cfg.workers {
             // The channel is unbounded, because work distribution is controlled to be at most
             // `work_queue` deep per worker. And we don't want anything unexpected to
@@ -467,10 +482,14 @@ impl ParallelDownloadProcessor {
             // Add a small delay to the first chunks for each worker.
             // So that the leading chunks are more likely to finish downloading first.
             if next_chunk > 0 && next_chunk < params.cfg.workers {
-                let delay = Duration::from_millis(next_chunk as u64 * 2);
-                thread::sleep(delay);
+                if let Some(delay) = (next_chunk as u64).checked_mul(2) {
+                    thread::sleep(Duration::from_millis(delay));
+                } else {
+                    // This should never happen.
+                    error!("Next chunk delay overflow");
+                }
             }
-            let mut retries = 0;
+            let mut retries = 0u8;
             let mut block;
             // debug!("Worker {worker_id} DL chunk {next_chunk}");
             loop {
@@ -486,15 +505,15 @@ impl ParallelDownloadProcessor {
                 if block.is_some() || retries > 3 {
                     break;
                 }
-                retries += 1;
+                retries = retries.saturating_add(1);
             }
             // debug!("Worker {worker_id} DL chunk done {next_chunk}: {retries}");
 
             if let Some(ref block) = block {
                 if let Some(dl_stat) = params.bytes_downloaded.get(worker_id) {
                     let this_bytes_downloaded = from_saturating(block.len());
-                    let _last_bytes_downloaded = dl_stat
-                        .fetch_add(this_bytes_downloaded, std::sync::atomic::Ordering::SeqCst);
+                    let _last_bytes_downloaded =
+                        dl_stat.fetch_add(this_bytes_downloaded, Ordering::SeqCst);
                     // debug!("Worker {worker_id} DL chunk {next_chunk}:
                     // {last_bytes_downloaded} + {this_bytes_downloaded} = {}",
                     // last_bytes_downloaded+this_bytes_downloaded);
@@ -518,7 +537,10 @@ impl ParallelDownloadProcessor {
 
     /// Send a work order to a worker.
     fn send_work_order(&self, this_worker: usize, order: DlWorkOrder) -> Result<usize> {
-        let next_worker = (this_worker + 1) % self.0.cfg.workers;
+        let next_worker = this_worker
+            .checked_add(1)
+            .and_then(|w| w.checked_rem(self.0.cfg.workers))
+            .ok_or_else(|| anyhow!("Unable to calculate next worker: this_worker = {this_worker}, num workers = {}", self.0.cfg.workers))?;
         if order < self.0.last_chunk {
             // let params = self.0.clone();
             if let Some(worker_queue) = self.0.work_queue.get(&this_worker) {
@@ -540,10 +562,10 @@ impl ParallelDownloadProcessor {
     /// Starts Downloading the file using parallel connections.
     ///
     /// Should only be called once on self.
-    fn download(&self) -> anyhow::Result<()> {
+    fn download(&self) -> Result<()> {
         let params = self.0.clone();
         // Pre fill the work queue with orders.
-        let max_pre_orders = params.cfg.queue_ahead * params.cfg.workers;
+        let max_pre_orders = params.cfg.queue_ahead.saturating_mul(params.cfg.workers);
         let pre_orders = max_pre_orders.min(params.last_chunk);
 
         let mut this_worker: usize = 0;
@@ -634,15 +656,23 @@ impl ParallelDownloadProcessor {
             };
 
         // Send whats leftover or new.
-        let bytes_left = left_over_bytes.len() - offset;
-        let bytes_to_copy = bytes_left.min(buf.len());
-        let Some(sub_buf) = left_over_bytes.get(offset..offset + bytes_to_copy) else {
-            error!("Slicing Sub Buffer failed");
-            return Err(std::io::Error::new(
+        let bytes_left = left_over_bytes.len().checked_sub(offset).ok_or_else(|| {
+            std::io::Error::new(
                 std::io::ErrorKind::Other,
-                "Slicing Sub Buffer failed",
-            ));
-        };
+                format!(
+                    "Invalid left over bytes value: {}, offset = {}",
+                    left_over_bytes.len(),
+                    offset
+                ),
+            )
+        })?;
+        let bytes_to_copy = bytes_left.min(buf.len());
+        let sub_buf = offset
+            .checked_add(bytes_to_copy)
+            .and_then(|upper_bound| left_over_bytes.get(offset..upper_bound))
+            .ok_or_else(|| {
+                std::io::Error::new(std::io::ErrorKind::Other, "Slicing Sub Buffer failed")
+            })?;
         if let Err(error) = memx::memcpy(buf, sub_buf) {
             error!(error=?error, "memx::memcpy failed");
             return Err(std::io::Error::new(
@@ -652,8 +682,8 @@ impl ParallelDownloadProcessor {
         }
 
         // Save whats leftover back inside the mutex, if there is anything.
-        if offset + bytes_to_copy != left_over_bytes.len() {
-            *left_over_buffer = Some((left_over_bytes, offset + bytes_to_copy));
+        if offset.saturating_add(bytes_to_copy) != left_over_bytes.len() {
+            *left_over_buffer = Some((left_over_bytes, offset.saturating_add(bytes_to_copy)));
         }
 
         Ok(bytes_to_copy)
@@ -679,7 +709,7 @@ impl Drop for ParallelDownloadProcessor {
     }
 }
 
-impl std::io::Read for ParallelDownloadProcessor {
+impl Read for ParallelDownloadProcessor {
     fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let result = self.inner_read(buf);
         match result {
@@ -699,7 +729,7 @@ impl std::io::Read for ParallelDownloadProcessor {
 ///
 /// This exists because the `Probe` call made by Mithril is Async, and this makes
 /// interfacing to that easier.
-async fn get_content_length_async(url: &str) -> anyhow::Result<usize> {
+async fn get_content_length_async(url: &str) -> Result<usize> {
     let url = url.to_owned();
     match tokio::task::spawn_blocking(move || get_content_length(&url)).await {
         Ok(result) => result,
@@ -712,7 +742,7 @@ async fn get_content_length_async(url: &str) -> anyhow::Result<usize> {
 
 /// Send a HEAD request to obtain the length of the file we want to download (necessary
 /// for calculating the offsets of the chunks)
-fn get_content_length(url: &str) -> anyhow::Result<usize> {
+fn get_content_length(url: &str) -> Result<usize> {
     let response = ureq::head(url).call()?;
 
     if response.status() != StatusCode::OK {
