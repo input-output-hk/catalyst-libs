@@ -129,7 +129,9 @@ fn calculate_sleep_duration(
     let mut next_sleep = MINIMUM_MITHRIL_UPDATE_CHECK_INTERVAL;
 
     // How long between snapshots,
-    let mut snapshot_interval = (latest_snapshot.created_at - previous_snapshot.created_at)
+    let mut snapshot_interval = latest_snapshot
+        .created_at
+        .signed_duration_since(previous_snapshot.created_at)
         .max(MAXIMUM_MITHRIL_UPDATE_CHECK_INTERVAL);
 
     // We should never be negative, but we CAN be zero if there was no chronologically
@@ -139,11 +141,18 @@ fn calculate_sleep_duration(
         snapshot_interval = EXPECTED_MITHRIL_UPDATE_CHECK_INTERVAL;
     }
 
-    let next_expected_snapshot = latest_snapshot.created_at + snapshot_interval;
+    let next_expected_snapshot = latest_snapshot
+        .created_at
+        .checked_add_signed(snapshot_interval)
+        .unwrap_or_else(|| {
+            // Realistically this should never happen.
+            error!("latest_snapshot.created_at + snapshot_interval overflow");
+            latest_snapshot.created_at
+        });
 
     if next_expected_snapshot > now {
         // We are behind schedule.  Sleep until the next expected snapshot should be published.
-        next_sleep = next_expected_snapshot - now;
+        next_sleep = next_expected_snapshot.signed_duration_since(now);
     }
 
     next_sleep
@@ -359,7 +368,7 @@ async fn get_latest_validated_mithril_snapshot(
 
     // IF the mithril data we have is NOT the current latest (or the immediately previous), it
     // may as well be invalid.
-    if latest_mithril < actual_latest.beacon.immutable_file_number - 1 {
+    if latest_mithril < actual_latest.beacon.immutable_file_number.saturating_sub(1) {
         return None;
     }
 

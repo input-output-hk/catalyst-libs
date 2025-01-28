@@ -100,7 +100,7 @@ impl TryFrom<u64> for ScriptType {
         match value {
             0 => Err(anyhow!("Invalid script type: {}", value)),
             1 => Ok(Self::Native),
-            _ => Ok(Self::Plutus(value - 1)),
+            _ => Ok(Self::Plutus(value.saturating_sub(1))),
         }
     }
 }

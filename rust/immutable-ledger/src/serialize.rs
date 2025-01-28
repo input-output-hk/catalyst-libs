@@ -2,7 +2,7 @@
 
 //! Block structure
 
-use anyhow::{bail, Ok};
+use anyhow::{anyhow, bail, Ok};
 use blake2b_simd::{self, Params};
 use uuid::Uuid;
 
@@ -204,9 +204,16 @@ impl Block {
             // genesis and final block). Genesis block MUST have 0 value. Final block MUST hash be
             // incremented by 1 from the previous block height and changed the sign to negative.
             // E.g. previous block height is 9 and the Final block height is -10.
-            if self.block_header.height != previous_block.block_header.height + 1 {
-                return Err(anyhow::anyhow!(
-                    "Module: Immutable ledger,  Message: height validation failed: {:?} {:?}",
+            let Some(block_height) = previous_block.block_header.height.checked_add(1) else {
+                return Err(anyhow!(
+                    "Module: Immutable ledger, Message: block height overflow: {}",
+                    previous_block.block_header.height
+                ));
+            };
+
+            if self.block_header.height != block_height {
+                return Err(anyhow!(
+                    "Module: Immutable ledger, Message: height validation failed: {:?} {:?}",
                     self.block_header,
                     previous_block.block_header
                 ));

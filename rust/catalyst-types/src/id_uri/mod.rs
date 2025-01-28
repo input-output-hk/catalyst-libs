@@ -414,8 +414,12 @@ impl IdUri {
     pub fn is_nonce_in_range(&self, past: Duration, future: Duration) -> bool {
         if let Some(nonce) = self.nonce {
             let now = Utc::now();
-            let start_time = now - past;
-            let end_time = now + future;
+            let Some(start_time) = now.checked_sub_signed(past) else {
+                return false;
+            };
+            let Some(end_time) = now.checked_add_signed(future) else {
+                return false;
+            };
             (start_time..=end_time).contains(&nonce)
         } else {
             // No nonce defined, so we say that this fails.

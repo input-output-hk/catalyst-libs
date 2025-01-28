@@ -1,10 +1,10 @@
 //! Catalyst Signed Document Extra Fields.
 
 use anyhow::bail;
-use catalyst_types::problem_report::ProblemReport;
+use catalyst_types::{problem_report::ProblemReport, uuid::UuidV4};
 use coset::{cbor::Value, Label, ProtectedHeader};
 
-use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef, UuidV4};
+use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef};
 
 /// `ref` field COSE key value
 const REF_KEY: &str = "ref";
@@ -47,16 +47,16 @@ pub struct ExtraFields {
     collabs: Vec<String>,
     /// Unique identifier for the brand that is running the voting.
     #[serde(skip_serializing_if = "Option::is_none")]
-    brand_id: Option<UuidV4>,
+    brand_id: Option<DocumentRef>,
     /// Unique identifier for the campaign of voting.
     #[serde(skip_serializing_if = "Option::is_none")]
-    campaign_id: Option<UuidV4>,
+    campaign_id: Option<DocumentRef>,
     /// Unique identifier for the election.
     #[serde(skip_serializing_if = "Option::is_none")]
     election_id: Option<UuidV4>,
     /// Unique identifier for the voting category as a collection of proposals.
     #[serde(skip_serializing_if = "Option::is_none")]
-    category_id: Option<UuidV4>,
+    category_id: Option<DocumentRef>,
 }
 
 impl ExtraFields {
@@ -92,13 +92,13 @@ impl ExtraFields {
 
     /// Return `brand_id` field.
     #[must_use]
-    pub fn brand_id(&self) -> Option<UuidV4> {
+    pub fn brand_id(&self) -> Option<DocumentRef> {
         self.brand_id
     }
 
     /// Return `campaign_id` field.
     #[must_use]
-    pub fn campaign_id(&self) -> Option<UuidV4> {
+    pub fn campaign_id(&self) -> Option<DocumentRef> {
         self.campaign_id
     }
 
@@ -110,7 +110,7 @@ impl ExtraFields {
 
     /// Return `category_id` field.
     #[must_use]
-    pub fn category_id(&self) -> Option<UuidV4> {
+    pub fn category_id(&self) -> Option<DocumentRef> {
         self.category_id
     }
 
@@ -139,12 +139,12 @@ impl ExtraFields {
             );
         }
         if let Some(brand_id) = &self.brand_id {
-            builder = builder.text_value(BRAND_ID_KEY.to_string(), encode_cbor_uuid(brand_id)?);
+            builder = builder.text_value(BRAND_ID_KEY.to_string(), Value::try_from(*brand_id)?);
         }
 
         if let Some(campaign_id) = &self.campaign_id {
             builder =
-                builder.text_value(CAMPAIGN_ID_KEY.to_string(), encode_cbor_uuid(campaign_id)?);
+                builder.text_value(CAMPAIGN_ID_KEY.to_string(), Value::try_from(*campaign_id)?);
         }
 
         if let Some(election_id) = &self.election_id {
@@ -154,7 +154,7 @@ impl ExtraFields {
 
         if let Some(category_id) = &self.category_id {
             builder =
-                builder.text_value(CATEGORY_ID_KEY.to_string(), encode_cbor_uuid(*category_id)?);
+                builder.text_value(CATEGORY_ID_KEY.to_string(), Value::try_from(*category_id)?);
         }
         Ok(builder)
     }
@@ -278,7 +278,7 @@ impl ExtraFields {
         if let Some(cbor_doc_brand_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text(BRAND_ID_KEY.to_string())
         }) {
-            match decode_cbor_uuid(cbor_doc_brand_id.clone()) {
+            match DocumentRef::try_from(cbor_doc_brand_id) {
                 Ok(brand_id) => {
                     extra.brand_id = Some(brand_id);
                 },
@@ -296,7 +296,7 @@ impl ExtraFields {
         if let Some(cbor_doc_campaign_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text(CAMPAIGN_ID_KEY.to_string())
         }) {
-            match decode_cbor_uuid(cbor_doc_campaign_id.clone()) {
+            match DocumentRef::try_from(cbor_doc_campaign_id) {
                 Ok(campaign_id) => {
                     extra.campaign_id = Some(campaign_id);
                 },
@@ -332,7 +332,7 @@ impl ExtraFields {
         if let Some(cbor_doc_category_id) = cose_protected_header_find(protected, |key| {
             key == &Label::Text(CATEGORY_ID_KEY.to_string())
         }) {
-            match decode_cbor_uuid(cbor_doc_category_id.clone()) {
+            match DocumentRef::try_from(cbor_doc_category_id) {
                 Ok(category_id) => {
                     extra.category_id = Some(category_id);
                 },
