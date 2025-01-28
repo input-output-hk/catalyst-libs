@@ -2,13 +2,6 @@
 use std::fmt::{Display, Formatter};
 
 use minicbor::{Decode, Decoder, Encode};
-use scylla::{
-    _macro_internal::{
-        CellWriter, ColumnType, DeserializationError, FrameSlice, SerializationError,
-        SerializeValue, TypeCheckError, WrittenCellProof,
-    },
-    deserialize::DeserializeValue,
-};
 use serde::Deserialize;
 use uuid::Uuid;
 
@@ -110,31 +103,6 @@ impl<'de> serde::Deserialize<'de> for UuidV4 {
             Ok(Self(uuid))
         } else {
             Err(serde::de::Error::custom(UuidError::InvalidUuidV4(uuid)))
-        }
-    }
-}
-
-impl SerializeValue for UuidV4 {
-    fn serialize<'b>(
-        &self, typ: &ColumnType, writer: CellWriter<'b>,
-    ) -> Result<WrittenCellProof<'b>, SerializationError> {
-        self.0.serialize(typ, writer)
-    }
-}
-
-impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for UuidV4 {
-    fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
-        Uuid::type_check(typ)
-    }
-
-    fn deserialize(
-        typ: &'metadata ColumnType<'metadata>, v: Option<FrameSlice<'frame>>,
-    ) -> Result<Self, DeserializationError> {
-        let uuid = <Uuid as DeserializeValue>::deserialize(typ, v)?;
-        if is_valid(&uuid) {
-            Ok(Self(uuid))
-        } else {
-            Err(DeserializationError::new(UuidError::InvalidUuidV4(uuid)))
         }
     }
 }

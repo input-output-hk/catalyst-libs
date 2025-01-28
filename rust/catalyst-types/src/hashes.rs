@@ -5,10 +5,6 @@ use std::{fmt, str::FromStr};
 use blake2b_simd::Params;
 use displaydoc::Display;
 use pallas_crypto::hash::Hash;
-use scylla::_macro_internal::{
-    CellWriter, ColumnType, DeserializationError, DeserializeValue, FrameSlice, SerializationError,
-    SerializeValue, TypeCheckError, WrittenCellProof,
-};
 use thiserror::Error;
 
 /// Number of bytes in a blake2b 224 hash.
@@ -166,29 +162,6 @@ impl<'a, C, const BYTES: usize> minicbor::Decode<'a, C> for Blake2bHash<BYTES> {
         bytes.try_into().map_err(|_| {
             minicbor::decode::Error::message("Invalid hash size for Blake2bHash cbor decode")
         })
-    }
-}
-
-impl<const BYTES: usize> SerializeValue for Blake2bHash<BYTES> {
-    fn serialize<'b>(
-        &self, typ: &ColumnType, writer: CellWriter<'b>,
-    ) -> Result<WrittenCellProof<'b>, SerializationError> {
-        self.0.as_ref().serialize(typ, writer)
-    }
-}
-
-impl<'frame, 'metadata, const BYTES: usize> DeserializeValue<'frame, 'metadata>
-    for Blake2bHash<BYTES>
-{
-    fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
-        <Vec<u8>>::type_check(typ)
-    }
-
-    fn deserialize(
-        typ: &'metadata ColumnType<'metadata>, v: Option<FrameSlice<'frame>>,
-    ) -> Result<Self, DeserializationError> {
-        let bytes = <Vec<u8>>::deserialize(typ, v)?;
-        Self::try_from(bytes).map_err(DeserializationError::new)
     }
 }
 

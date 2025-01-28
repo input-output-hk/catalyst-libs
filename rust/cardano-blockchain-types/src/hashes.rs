@@ -74,29 +74,6 @@ macro_rules! define_hashes {
                     Ok(Self(hash))
                 }
             }
-
-            // TODO: Uncomment when the changes to Blake2bHash are merged.
-            // impl SerializeValue for $name {
-            //     fn serialize<'b>(
-            //         &self, typ: &ColumnType, writer: CellWriter<'b>,
-            //     ) -> Result<WrittenCellProof<'b>, SerializationError> {
-            //         self.0.serialize(typ, writer)
-            //     }
-            // }
-            //
-            // impl<'frame, 'metadata> DeserializeValue<'frame, 'metadata> for $name
-            // {
-            //     fn type_check(typ: &ColumnType) -> Result<(), TypeCheckError> {
-            //         <$inner>::type_check(typ)
-            //     }
-            //
-            //     fn deserialize(
-            //         typ: &'metadata ColumnType<'metadata>, v: Option<FrameSlice<'frame>>,
-            //     ) -> Result<Self, DeserializationError> {
-            //         let hash = <$inner>::deserialize(typ, v)?;
-            //         Ok(Self(hash))
-            //     }
-            // }
         )+
     };
 }
