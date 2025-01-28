@@ -2,7 +2,6 @@
 use std::fmt::{Display, Formatter};
 
 use minicbor::{Decode, Decoder, Encode};
-use serde::Deserialize;
 use uuid::Uuid;
 
 use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
@@ -98,7 +97,7 @@ impl From<UuidV4> for Uuid {
 impl<'de> serde::Deserialize<'de> for UuidV4 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
-        let uuid = <Uuid as Deserialize>::deserialize(deserializer)?;
+        let uuid = Uuid::deserialize(deserializer)?;
         if is_valid(&uuid) {
             Ok(Self(uuid))
         } else {
