@@ -25,6 +25,12 @@ impl From<TxnIndex> for i16 {
     }
 }
 
+impl From<TxnIndex> for u16 {
+    fn from(val: TxnIndex) -> Self {
+        val.0
+    }
+}
+
 impl From<TxnIndex> for usize {
     fn from(value: TxnIndex) -> Self {
         value.0.into()
