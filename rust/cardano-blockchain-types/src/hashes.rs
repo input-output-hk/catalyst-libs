@@ -1,3 +1,5 @@
+//! Cardano blockchain specific hash types.
+
 use catalyst_types::{
     define_hashes,
     hashes::{Blake2b224Hash, Blake2b256Hash},
