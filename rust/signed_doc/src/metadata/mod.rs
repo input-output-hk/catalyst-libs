@@ -59,6 +59,12 @@ pub struct Metadata {
 }
 
 impl Metadata {
+    /// Return Document Cryptographic Algorithm
+    #[must_use]
+    pub fn algorithm(&self) -> Algorithm {
+        self.alg
+    }
+
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> UuidV4 {
