@@ -17,6 +17,7 @@ pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
 pub use content::Content;
 use coset::{CborSerializable, Header};
+use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
@@ -104,6 +105,72 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn signatures(&self) -> &Signatures {
         &self.inner.signatures
+    }
+
+    /// Verify document signatures and `UUID`s.
+    ///
+    /// # Errors
+    ///
+    /// Returns a report of verification failures and the source error.
+    #[allow(clippy::indexing_slicing)]
+    pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
+    where P: Fn(&KidUri) -> VerifyingKey {
+        let error_report = ProblemReport::new("Catalyst Signed Document Verification");
+
+        match self.as_cose_sign() {
+            Ok(cose_sign) => {
+                let signatures = self.signatures().cose_signatures();
+                for (idx, kid) in self.signatures().kids().iter().enumerate() {
+                    let pk = pk_getter(kid);
+                    let signature = &signatures[idx];
+                    let tbs_data = cose_sign.tbs_data(&[], signature);
+                    match signature.signature.as_slice().try_into() {
+                        Ok(signature_bytes) => {
+                            let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+                            if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
+                                error_report.functional_validation(
+                                    &format!(
+                                        "Verification failed for signature with Key ID {kid}: {e}"
+                                    ),
+                                    "During signature validation with verifying key",
+                                );
+                            }
+                        },
+                        Err(_) => {
+                            error_report.invalid_value(
+                                "cose signature",
+                                &format!("{}", signature.signature.len()),
+                                &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+                                "During encoding cose signature to bytes",
+                            );
+                        },
+                    }
+                }
+            },
+            Err(e) => {
+                error_report.other(
+                    &format!("{e}"),
+                    "During encoding signed document as COSE SIGN",
+                );
+            },
+        }
+
+        if error_report.is_problematic() {
+            return Err(CatalystSignedDocError::new(
+                error_report,
+                anyhow::anyhow!("Verification failed for Catalyst Signed Document"),
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Convert Catalyst Signed Document into `coset::CoseSign`
+    fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
+        let mut cose_bytes: Vec<u8> = Vec::new();
+        minicbor::encode(self, &mut cose_bytes)?;
+        coset::CoseSign::from_slice(&cose_bytes)
+            .map_err(|e| anyhow::anyhow!("encoding COSE SIGN failed: {e}"))
     }
 }
 
