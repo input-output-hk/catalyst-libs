@@ -112,7 +112,7 @@ impl CatalystSignedDocument {
     /// # Errors
     ///
     /// Returns a report of verification failures and the source error.
-    #[allow(clippy::indexing_slicing)]
+    #[allow(clippy::indexing_slicing, clippy::too_many_lines)]
     pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
     where P: Fn(&KidUri) -> VerifyingKey {
         let error_report = ProblemReport::new("Catalyst Signed Document Verification");
@@ -145,6 +145,70 @@ impl CatalystSignedDocument {
                 &format!("Document Version {doc_ver} is smaller than Document Id {doc_id}"),
                 "During Document Version UUID verification",
             );
+        }
+
+        let extra = self.doc_meta();
+        if let Some(doc_ref) = extra.doc_ref() {
+            if !doc_ref.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Reference {doc_ref:?} is invalid"),
+                    "During Document Reference UUID verification",
+                );
+            }
+        }
+
+        if let Some(template) = extra.template() {
+            if !template.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Template {template:?} is invalid"),
+                    "During Document Template UUID verification",
+                );
+            }
+        }
+
+        if let Some(reply) = extra.reply() {
+            if !reply.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Reply {reply:?} is invalid"),
+                    "During Document Reply UUID verification",
+                );
+            }
+        }
+
+        if let Some(brand_id) = extra.brand_id() {
+            if !brand_id.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Brand ID {brand_id:?} is invalid"),
+                    "During Document Brand ID UUID verification",
+                );
+            }
+        }
+
+        if let Some(campaign_id) = extra.campaign_id() {
+            if !campaign_id.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Campaign ID {campaign_id:?} is invalid"),
+                    "During Document Campaign ID UUID verification",
+                );
+            }
+        }
+
+        if let Some(election_id) = extra.election_id() {
+            if !election_id.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Election ID {election_id:?} is invalid"),
+                    "During Document Election ID UUID verification",
+                );
+            }
+        }
+
+        if let Some(category_id) = extra.category_id() {
+            if !category_id.is_valid() {
+                error_report.functional_validation(
+                    &format!("Document Category ID {category_id:?} is invalid"),
+                    "During Document Category ID UUID verification",
+                );
+            }
         }
 
         match self.as_cose_sign() {
