@@ -268,10 +268,10 @@ mod tests {
             "template": {"id": uuid_v7.to_string()},
             "section": section,
             "collabs": collabs,
-            "campaign_id": uuid_v4.to_string(),
+            "campaign_id": {"id": uuid_v7.to_string()},
             "election_id":  uuid_v4.to_string(),
-            "brand_id":  uuid_v4.to_string(),
-            "category_id": uuid_v4.to_string(),
+            "brand_id":  {"id": uuid_v7.to_string()},
+            "category_id": {"id": uuid_v7.to_string()},
         }))
         .unwrap();
         let content = vec![1, 2, 4, 5, 6, 7, 8, 9];

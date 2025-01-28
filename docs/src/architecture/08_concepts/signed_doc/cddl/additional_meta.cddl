@@ -5,10 +5,10 @@ additional_fields = {
   ? "reply" => ref_type,
   ? "section" => text,
   ? "collabs" => [+any],
-  ? "brand_id" => UUID, ; UUID v4
-  ? "campaign_id" => UUID, ; UUID v4
+  ? "brand_id" => ref_type,
+  ? "campaign_id" => ref_type,
   ? "election_id" => UUID, ; UUID v4
-  ? "category_id" => UUID, ; UUID v4
+  ? "category_id" => ref_type,
 }
 
 ref_type = UUID / [UUID, UUID] ; UUIDs v7
