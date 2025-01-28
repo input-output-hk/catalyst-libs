@@ -44,10 +44,9 @@ impl Content {
     pub(crate) fn from_decoded(
         data: Vec<u8>, content_type: ContentType, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
-        // TODO add content_type verification
         match content_type {
             ContentType::Json => {
-                if let Err(e) = serde_json::from_slice::<serde_json::Value>(&data) {
+                if let Err(e) = serde_json::to_value(&data) {
                     anyhow::bail!("Invalid {content_type} content: {e}")
                 }
             },
