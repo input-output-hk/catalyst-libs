@@ -278,6 +278,14 @@ impl MultiEraBlock {
         self.decode().txs()
     }
 
+    /// Returns an iterator over `(TxnIndex, MultiEraTx)` pair.
+    pub fn enumerate_txs(&self) -> impl Iterator<Item = (TxnIndex, MultiEraTx)> {
+        self.txs()
+            .into_iter()
+            .enumerate()
+            .map(|(i, t)| (i.into(), t))
+    }
+
     /// Get the auxiliary data of the block.
     #[must_use]
     pub fn aux_data(&self) -> &BlockAuxData {
