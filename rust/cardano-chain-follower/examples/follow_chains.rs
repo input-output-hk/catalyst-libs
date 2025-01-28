@@ -97,8 +97,8 @@ async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Bo
 
     if let Some(chunk_size) = matches.get_one::<u16>("mithril-sync-chunk-size") {
         let chunk_size = (*chunk_size as usize)
-            .checked_mul(1024)
-            .and_then(|v| v.checked_mul(1024))
+            // 1024 * 1024
+            .checked_mul(1_048_576)
             .ok_or("Chunk size overflow")?;
         dl_config = dl_config.with_chunk_size(chunk_size);
     }

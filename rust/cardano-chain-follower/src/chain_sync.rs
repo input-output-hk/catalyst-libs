@@ -193,6 +193,7 @@ async fn process_rollback(
     let head_slot = previous_point.slot_or_default();
     debug!("Head slot: {head_slot:?}");
     debug!("Rollback slot: {rollback_slot:?}");
+    // It is ok because slot implement saturating subtraction.
     #[allow(clippy::arithmetic_side_effects)]
     let slot_rollback_size = head_slot - rollback_slot;
 

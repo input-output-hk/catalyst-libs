@@ -59,11 +59,9 @@ impl Encode<()> for GeneralNames {
             ));
         }
         // The general name type should be included in array too
-        let Some(len) = (self.0.len() as u64).checked_mul(2) else {
-            return Err(minicbor::encode::Error::message(
-                "General Names length overflow",
-            ));
-        };
+        let len = (self.0.len() as u64)
+            .checked_mul(2)
+            .ok_or_else(|| minicbor::encode::Error::message("General Names length overflow"))?;
         encode_array_len(e, "General Names", len)?;
         for gn in &self.0 {
             gn.encode(e, ctx)?;
