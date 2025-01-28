@@ -16,6 +16,7 @@ use serde::{
     ser::{SerializeStruct, Serializer},
     Serialize,
 };
+use tracing::error;
 
 /// Thread statistics.
 #[derive(Debug, Default, Clone, Serialize)]
@@ -89,15 +90,14 @@ impl InnerThreadStat {
 
         if let Ok(latest_cpu_time) = self.latest_cpu_time.lock() {
             // Calculate elapsed time (current - previous)
-            let elapsed = if current_time > *latest_cpu_time {
-                current_time - *latest_cpu_time
-            } else {
-                Duration::ZERO
-            };
-            // If the elapsed time is non-negative, update total_cpu_time
-            if elapsed > Duration::ZERO {
+            if let Some(elapsed) = current_time.checked_sub(*latest_cpu_time) {
+                // If the elapsed time is non-negative, update total_cpu_time
                 if let Ok(mut total_cpu_time) = self.total_cpu_time.lock() {
-                    *total_cpu_time += elapsed;
+                    if let Some(sum) = total_cpu_time.checked_add(elapsed) {
+                        *total_cpu_time = sum;
+                    } else {
+                        error!("Total CPU time overflow");
+                    }
                 }
             }
         }

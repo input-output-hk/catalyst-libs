@@ -70,7 +70,13 @@ impl Encode<()> for Extensions {
             if self.0.len() == 1 && extension.registered_oid().c509_oid().oid() == &KEY_USAGE_OID {
                 match extension.value() {
                     ExtensionValue::Int(value) => {
-                        let ku_value = if extension.critical() { -value } else { *value };
+                        let ku_value = if extension.critical() {
+                            value
+                                .checked_neg()
+                                .ok_or_else(|| minicbor::encode::Error::message(format!("Invalid key usage value (will overflow during negation): {value}")))?
+                        } else {
+                            *value
+                        };
                         encode_helper(e, "Extensions KeyUsage", ctx, &ku_value)?;
                         return Ok(());
                     },

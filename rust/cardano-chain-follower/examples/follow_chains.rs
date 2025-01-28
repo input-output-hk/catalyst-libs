@@ -96,7 +96,11 @@ async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Bo
     let mithril_dl_workers = format!("{}", dl_config.workers);
 
     if let Some(chunk_size) = matches.get_one::<u16>("mithril-sync-chunk-size") {
-        dl_config = dl_config.with_chunk_size(*chunk_size as usize * 1024 * 1024);
+        let chunk_size = (*chunk_size as usize)
+            // 1024 * 1024
+            .checked_mul(1_048_576)
+            .ok_or("Chunk size overflow")?;
+        dl_config = dl_config.with_chunk_size(chunk_size);
     }
     let mithril_dl_chunk_size = format!("{} MBytes", dl_config.chunk_size / (1024 * 1024));
 
@@ -176,7 +180,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let mut largest_aux_size: usize = 0;
 
     while let Some(chain_update) = follower.next().await {
-        updates += 1;
+        updates = updates.saturating_add(1);
 
         if chain_update.tip {
             reached_tip = true;
@@ -196,7 +200,7 @@ async fn follow_for(network: Network, matches: ArgMatches) {
                 info!(
                     chain = network.to_string(),
                     "Chain Update {}:{}",
-                    updates - 1,
+                    updates.saturating_sub(1),
                     last_update
                 );
             }
