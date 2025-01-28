@@ -1,13 +1,25 @@
-//! A bunch of specific hashes.
+//! A macro for defining a new type wrappers for the given hash types.
 
-use std::str::FromStr;
-
-use catalyst_types::hashes::{Blake2b224Hash, Blake2b256Hash, Blake2bHashError};
-use pallas_crypto::hash::Hash;
-
-/// Defines a new type wrapper for the given hash type.
+/// Defines a new type wrapper for the given hash types.
+///
+/// # Examples
+///
+/// ```
+/// use catalyst_types::{define_hashes, hashes::Blake2b128Hash};
+///
+/// define_hashes!(
+///     /// You can document the declared types...
+///     (SomeHash, Blake2b128Hash),
+///     // ...or not.
+///     (AnotherHash, Blake2b128Hash),
+/// );
+///
+/// let hash = SomeHash::new(&[1, 2, 3]);
+/// println!("{hash:?}");
+/// ```
+#[macro_export]
 macro_rules! define_hashes {
-    ($($(#[$docs:meta])* ($name:ident, $inner:ty)),+) => {
+    ($($(#[$docs:meta])* ($name:ident, $inner:ty)),+ $(,)?) => {
         $(
             $(#[$docs])*
             #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -34,7 +46,7 @@ macro_rules! define_hashes {
             }
 
             impl TryFrom<&[u8]> for $name {
-                type Error = Blake2bHashError;
+                type Error = $crate::hashes::Blake2bHashError;
 
                 fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
                     Ok(Self(<$inner>::try_from(value)?))
@@ -42,18 +54,18 @@ macro_rules! define_hashes {
             }
 
             impl TryFrom<Vec<u8>> for $name {
-                type Error = Blake2bHashError;
+                type Error = $crate::hashes::Blake2bHashError;
 
                 fn try_from(value: Vec<u8>) -> Result<Self, Self::Error> {
                     value.as_slice().try_into()
                 }
             }
 
-            impl FromStr for $name {
-                type Err = Blake2bHashError;
+            impl std::str::FromStr for $name {
+                type Err = $crate::hashes::Blake2bHashError;
 
                 fn from_str(s: &str) -> Result<Self, Self::Err> {
-                    let hash: $inner = s.parse().map_err(Blake2bHashError::from)?;
+                    let hash: $inner = s.parse().map_err($crate::hashes::Blake2bHashError::from)?;
                     Ok(Self(hash))
                 }
             }
@@ -78,40 +90,38 @@ macro_rules! define_hashes {
     };
 }
 
-define_hashes!(
-    /// A transaction hash - Blake2b-256 hash of a transaction.
-    (TransactionHash, Blake2b256Hash),
-    /// A public key hash - raw Blake2b-224 hash of an Ed25519 public key (has no discriminator, just the hash).
-    (PubKeyHash, Blake2b224Hash)
-);
-
-impl From<Hash<32>> for TransactionHash {
-    fn from(hash: Hash<32>) -> Self {
-        Self(Blake2b256Hash::from(hash))
-    }
-}
-
-impl From<Hash<28>> for PubKeyHash {
-    fn from(hash: Hash<28>) -> Self {
-        Self(Blake2b224Hash::from(hash))
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use crate::hashes::Blake2b128Hash;
+
+    // Define one type without a trailing comma.
+    define_hashes!((H1, Blake2b128Hash));
+    // Define one type with a trailing comma and a doc-comment.
+    define_hashes!(
+        /// Some documentation.
+        (H2, Blake2b128Hash),
+    );
+    // Define multiple types at once.
+    define_hashes!(
+        /// Documentation.
+        (H3, Blake2b128Hash),
+        // No documentation.
+        (H4, Blake2b128Hash),
+        /// More documentation.
+        (H5, Blake2b128Hash),
+    );
 
     // There is little reason to check the conversion itself, it is mostly a demonstration
     // that the methods defined by the macro are working.
     #[test]
-    fn roundtrip() {
-        let hash = TransactionHash::new(&[]);
+    fn hash_wrapper() {
+        let hash = H1::new(&[1, 2, 3, 4, 5]);
 
         let v = Vec::from(hash);
-        let from_slice = TransactionHash::try_from(v.as_slice()).unwrap();
+        let from_slice = H1::try_from(v.as_slice()).unwrap();
         assert_eq!(hash, from_slice);
 
-        let from_vec = TransactionHash::try_from(v).unwrap();
+        let from_vec = H1::try_from(v).unwrap();
         assert_eq!(hash, from_vec);
     }
 }

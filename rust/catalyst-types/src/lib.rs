@@ -2,6 +2,7 @@
 
 pub mod cbor_utils;
 pub mod conversion;
+pub mod hash_wrapper;
 pub mod hashes;
 pub mod id_uri;
 pub mod mmap_file;
