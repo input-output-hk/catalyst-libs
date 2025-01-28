@@ -117,6 +117,36 @@ impl CatalystSignedDocument {
     where P: Fn(&KidUri) -> VerifyingKey {
         let error_report = ProblemReport::new("Catalyst Signed Document Verification");
 
+        if !self.doc_type().is_valid() {
+            error_report.functional_validation(
+                &format!("{} is invalid UUIDv4", self.doc_type()),
+                "During Document Type UUID verification",
+            );
+        }
+
+        let doc_id = self.doc_id();
+        if !doc_id.is_valid() {
+            error_report.functional_validation(
+                &format!("{doc_id} is invalid UUIDv7"),
+                "During Document ID UUID verification",
+            );
+        }
+
+        let doc_ver = self.doc_ver();
+        if !doc_ver.is_valid() {
+            error_report.functional_validation(
+                &format!("{doc_ver} is invalid UUIDv7"),
+                "During Document Version UUID verification",
+            );
+        }
+
+        if doc_id.is_valid() && doc_ver.is_valid() && doc_ver < doc_id {
+            error_report.functional_validation(
+                &format!("Document Version {doc_ver} is smaller than Document Id {doc_id}"),
+                "During Document Version UUID verification",
+            );
+        }
+
         match self.as_cose_sign() {
             Ok(cose_sign) => {
                 let signatures = self.signatures().cose_signatures();
