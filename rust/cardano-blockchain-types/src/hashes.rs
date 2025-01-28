@@ -1,7 +1,5 @@
 //! A bunch of specific hashes.
 
-// cspell: words attrss
-
 use std::str::FromStr;
 
 use catalyst_types::hashes::{Blake2b224Hash, Blake2b256Hash, Blake2bHashError};
