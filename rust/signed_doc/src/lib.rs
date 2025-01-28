@@ -20,7 +20,7 @@ use coset::{CborSerializable, Header};
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
-pub use signature::{KidUri, Signatures};
+pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.

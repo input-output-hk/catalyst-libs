@@ -5,7 +5,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TxnIndex};
+use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionHash, TxnIndex};
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
@@ -59,7 +59,7 @@ pub struct Cip509 {
     /// An optional hash of the previous transaction.
     ///
     /// The hash must always be present except for the first registration transaction.
-    prv_tx_id: Option<Blake2b256Hash>,
+    prv_tx_id: Option<TransactionHash>,
     /// Metadata.
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
@@ -72,7 +72,7 @@ pub struct Cip509 {
     /// constructors.
     payment_history: PaymentHistory,
     /// A hash of the transaction from which this registration is extracted.
-    txn_hash: Blake2b256Hash,
+    txn_hash: TransactionHash,
     /// A point (slot) and a transaction index identifying the block and the transaction
     /// that this `Cip509` was extracted from.
     origin: PointTxnIdx,
@@ -210,7 +210,7 @@ impl Cip509 {
 
     /// Returns a hash of the previous transaction.
     #[must_use]
-    pub fn previous_transaction(&self) -> Option<Blake2b256Hash> {
+    pub fn previous_transaction(&self) -> Option<TransactionHash> {
         self.prv_tx_id
     }
 
@@ -228,7 +228,7 @@ impl Cip509 {
 
     /// Returns a hash of the transaction where this data is originating from.
     #[must_use]
-    pub fn txn_hash(&self) -> Blake2b256Hash {
+    pub fn txn_hash(&self) -> TransactionHash {
         self.txn_hash
     }
 
@@ -370,9 +370,10 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 .missing_field("metadata (10, 11 or 12 chunks)", context);
         }
 
-        let txn_hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(decode_context.txn)))
-            .hash()
-            .into();
+        let txn_hash = Blake2b256Hash::from(
+            MultiEraTx::Conway(Box::new(Cow::Borrowed(decode_context.txn))).hash(),
+        )
+        .into();
         Ok(Self {
             purpose,
             txn_inputs_hash,
@@ -501,7 +502,7 @@ fn decode_input_hash(
 /// Decodes previous transaction id.
 fn decode_previous_transaction_id(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Result<Option<Blake2b256Hash>, ()> {
+) -> Result<Option<TransactionHash>, ()> {
     let bytes = match decode_bytes(d, "Cip509 previous transaction id") {
         Ok(v) => v,
         Err(e) => {
@@ -515,7 +516,7 @@ fn decode_previous_transaction_id(
 
     let len = bytes.len();
     if let Ok(v) = Blake2b256Hash::try_from(bytes) {
-        Ok(Some(v))
+        Ok(Some(v.into()))
     } else {
         report.invalid_value(
             "previous transaction hash",

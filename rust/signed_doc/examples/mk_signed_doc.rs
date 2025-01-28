@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, KidUri, Metadata};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata};
 use clap::Parser;
 use coset::CborSerializable;
 use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
@@ -40,7 +40,7 @@ enum Cli {
         /// Path to the secret key in PEM format
         sk: PathBuf,
         /// Signer kid
-        kid: KidUri,
+        kid: IdUri,
     },
     /// Inspects Catalyst Signed Document
     Inspect {
