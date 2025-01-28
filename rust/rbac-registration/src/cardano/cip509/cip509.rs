@@ -202,6 +202,12 @@ impl Cip509 {
         self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
     }
 
+    /// Returns a purpose of this registration.
+    #[must_use]
+    pub fn purpose(&self) -> Option<UuidV4> {
+        self.purpose
+    }
+
     /// Returns a hash of the previous transaction.
     #[must_use]
     pub fn previous_transaction(&self) -> Option<Blake2b256Hash> {
