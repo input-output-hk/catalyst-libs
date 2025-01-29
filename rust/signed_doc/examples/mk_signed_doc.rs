@@ -51,7 +51,7 @@ enum Cli {
         /// Hex-formatted COSE SIGN Bytes
         cose_sign_hex: String,
     },
-    /// Validates a signature by Key ID and verifiying key
+    /// Validates a signature by Key ID and verifying key
     Verify {
         /// Path to the formed (could be empty, without any signatures) COSE document
         /// This exact file would be modified and new signature would be added
