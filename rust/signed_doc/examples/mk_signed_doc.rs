@@ -10,8 +10,7 @@ use std::{
 
 use catalyst_signed_doc::{Builder, CatalystSignedDocument, KidUri, Metadata};
 use clap::Parser;
-use coset::CborSerializable;
-use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
+use ed25519_dalek::pkcs8::{DecodePrivateKey, DecodePublicKey};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -52,6 +51,16 @@ enum Cli {
         /// Hex-formatted COSE SIGN Bytes
         cose_sign_hex: String,
     },
+    /// Validates a signature by Key ID and verifiying key
+    Verify {
+        /// Path to the formed (could be empty, without any signatures) COSE document
+        /// This exact file would be modified and new signature would be added
+        path: PathBuf,
+        /// Path to the verifying key in PEM format
+        pk: PathBuf,
+        /// Signer kid
+        kid: KidUri,
+    },
 }
 
 impl Cli {
@@ -88,6 +97,22 @@ impl Cli {
             Self::InspectBytes { cose_sign_hex } => {
                 let cose_bytes = hex::decode(&cose_sign_hex)?;
                 inspect_signed_doc(&cose_bytes)?;
+            },
+            Self::Verify { path, pk, kid } => {
+                let pk = load_public_key_from_file(&pk)
+                    .map_err(|e| anyhow::anyhow!("Failed to load PK FILE {pk:?}: {e}"))?;
+                let cose_bytes = read_bytes_from_file(&path)?;
+                let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
+                signed_doc
+                    .verify(|k| {
+                        if k.to_string() == kid.to_string() {
+                            pk
+                        } else {
+                            k.role0_pk()
+                        }
+                    })
+                    .map_err(|e| anyhow::anyhow!("Catalyst Document Verification failed: {e}"))?;
+                println!("Catalyst Signed Document is Verified.");
             },
         }
         println!("Done");
