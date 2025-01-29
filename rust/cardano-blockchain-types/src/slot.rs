@@ -1,18 +1,14 @@
 //! Block Slot
 
-use std::{
-    cmp::Ordering,
-    ops::{MulAssign, Sub},
-};
+use std::ops::{MulAssign, Sub};
 
 use catalyst_types::conversion::from_saturating;
 use num_bigint::{BigInt, Sign};
 use serde::Serialize;
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, Default, Serialize)]
-
 /// Slot on the blockchain, typically one slot equals one second. However chain
 /// parameters can alter how long a slot is.
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Default, Serialize)]
 pub struct Slot(u64);
 
 impl Slot {
@@ -42,12 +38,6 @@ impl From<Slot> for u64 {
 impl MulAssign<u64> for Slot {
     fn mul_assign(&mut self, rhs: u64) {
         self.0 = self.0.saturating_mul(rhs);
-    }
-}
-
-impl PartialOrd for Slot {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.0.partial_cmp(&other.0)
     }
 }
 
