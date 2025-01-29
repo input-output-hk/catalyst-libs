@@ -17,7 +17,7 @@ pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
 pub use content::Content;
 use coset::{CborSerializable, Header};
-use ed25519_dalek::{ed25519::signature::Signer, SecretKey, VerifyingKey};
+use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
@@ -259,42 +259,15 @@ impl CatalystSignedDocument {
         Ok(())
     }
 
-    /// Add a signature to the Catalyst Signed Document.
-    ///
-    /// # Returns
-    ///
-    /// A new Catalyst Signed Document with the added signature.
-    ///
-    /// # Errors
-    ///
-    /// Fails if the current signed document cannot be encoded as COSE SIGN,
-    /// or if the Arc inner value cannot be obtained.
-    pub fn sign(self, sk: SecretKey, kid: KidUri) -> anyhow::Result<Self> {
-        let cose_sign = self.as_cose_sign()?;
-        let Some(InnerCatalystSignedDocument {
-            metadata,
-            content,
-            mut signatures,
-        }) = Arc::into_inner(self.inner)
-        else {
-            anyhow::bail!("Failed to extract inner signed document");
-        };
-        let sk = ed25519_dalek::SigningKey::from_bytes(&sk);
-        let protected_header = coset::HeaderBuilder::new()
-            .key_id(kid.to_string().into_bytes())
-            .algorithm(metadata.algorithm().into());
-        let mut signature = coset::CoseSignatureBuilder::new()
-            .protected(protected_header.build())
-            .build();
-        let data_to_sign = cose_sign.tbs_data(&[], &signature);
-        signature.signature = sk.sign(&data_to_sign).to_vec();
-        signatures.push(kid, signature);
-        Ok(InnerCatalystSignedDocument {
-            metadata,
-            content,
-            signatures,
+    /// Returns a signed document `Builder` pre-loaded with the current signed document's
+    /// data.
+    #[must_use]
+    pub fn as_signed_doc_builder(&self) -> Builder {
+        Builder {
+            metadata: Some(self.inner.metadata.clone()),
+            content: Some(self.inner.content.decoded_bytes().to_vec()),
+            signatures: self.inner.signatures.clone(),
         }
-        .into())
     }
 
     /// Convert Catalyst Signed Document into `coset::CoseSign`
@@ -302,7 +275,7 @@ impl CatalystSignedDocument {
         let mut cose_bytes: Vec<u8> = Vec::new();
         minicbor::encode(self, &mut cose_bytes)?;
         coset::CoseSign::from_slice(&cose_bytes)
-            .map_err(|e| anyhow::anyhow!("encoding COSE SIGN failed: {e}"))
+            .map_err(|e| anyhow::anyhow!("encoding as COSE SIGN failed: {e}"))
     }
 }
 
@@ -477,7 +450,7 @@ mod tests {
 
         let doc = Builder::new()
             .with_metadata(metadata.clone())
-            .with_content(content.clone())
+            .with_decoded_content(content.clone())
             .build()
             .unwrap();
 

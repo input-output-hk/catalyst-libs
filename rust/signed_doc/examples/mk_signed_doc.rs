@@ -77,7 +77,7 @@ impl Cli {
                 let payload = serde_json::to_vec(&json_doc)?;
                 // Start with no signatures.
                 let signed_doc = Builder::new()
-                    .with_content(payload)
+                    .with_decoded_content(payload)
                     .with_metadata(metadata)
                     .build()?;
                 save_signed_doc(signed_doc, &output)?;
@@ -87,7 +87,8 @@ impl Cli {
                     .map_err(|e| anyhow::anyhow!("Failed to load SK FILE: {e}"))?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
-                let new_signed_doc = signed_doc.sign(sk.to_bytes(), kid)?;
+                let builder = signed_doc.as_signed_doc_builder();
+                let new_signed_doc = builder.add_signature(sk.to_bytes(), kid)?.build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {
