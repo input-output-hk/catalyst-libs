@@ -8,11 +8,11 @@ use crate::{CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metada
 #[derive(Debug, Default, Clone)]
 pub struct Builder {
     /// Document Metadata
-    pub(crate) metadata: Option<Metadata>,
+    metadata: Option<Metadata>,
     /// Document Content
-    pub(crate) content: Option<Vec<u8>>,
+    content: Option<Vec<u8>>,
     /// Signatures
-    pub(crate) signatures: Signatures,
+    signatures: Signatures,
 }
 
 impl Builder {

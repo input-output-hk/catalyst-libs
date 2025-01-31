@@ -107,7 +107,7 @@ impl CatalystSignedDocument {
         &self.inner.signatures
     }
 
-    /// Verify document signatures and `UUID`s.
+    /// Verify document signatures.
     ///
     /// # Errors
     ///
@@ -116,100 +116,6 @@ impl CatalystSignedDocument {
     pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
     where P: Fn(&KidUri) -> VerifyingKey {
         let error_report = ProblemReport::new("Catalyst Signed Document Verification");
-
-        if !self.doc_type().is_valid() {
-            error_report.functional_validation(
-                &format!("{} is invalid UUIDv4", self.doc_type()),
-                "During Document Type UUID verification",
-            );
-        }
-
-        let doc_id = self.doc_id();
-        if !doc_id.is_valid() {
-            error_report.functional_validation(
-                &format!("{doc_id} is invalid UUIDv7"),
-                "During Document ID UUID verification",
-            );
-        }
-
-        let doc_ver = self.doc_ver();
-        if !doc_ver.is_valid() {
-            error_report.functional_validation(
-                &format!("{doc_ver} is invalid UUIDv7"),
-                "During Document Version UUID verification",
-            );
-        }
-
-        if doc_id.is_valid() && doc_ver.is_valid() && doc_ver < doc_id {
-            error_report.functional_validation(
-                &format!("Document Version {doc_ver} is smaller than Document Id {doc_id}"),
-                "During Document Version UUID verification",
-            );
-        }
-
-        let extra = self.doc_meta();
-        if let Some(doc_ref) = extra.doc_ref() {
-            if !doc_ref.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Reference {doc_ref:?} is invalid"),
-                    "During Document Reference UUID verification",
-                );
-            }
-        }
-
-        if let Some(template) = extra.template() {
-            if !template.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Template {template:?} is invalid"),
-                    "During Document Template UUID verification",
-                );
-            }
-        }
-
-        if let Some(reply) = extra.reply() {
-            if !reply.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Reply {reply:?} is invalid"),
-                    "During Document Reply UUID verification",
-                );
-            }
-        }
-
-        if let Some(brand_id) = extra.brand_id() {
-            if !brand_id.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Brand ID {brand_id:?} is invalid"),
-                    "During Document Brand ID UUID verification",
-                );
-            }
-        }
-
-        if let Some(campaign_id) = extra.campaign_id() {
-            if !campaign_id.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Campaign ID {campaign_id:?} is invalid"),
-                    "During Document Campaign ID UUID verification",
-                );
-            }
-        }
-
-        if let Some(election_id) = extra.election_id() {
-            if !election_id.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Election ID {election_id:?} is invalid"),
-                    "During Document Election ID UUID verification",
-                );
-            }
-        }
-
-        if let Some(category_id) = extra.category_id() {
-            if !category_id.is_valid() {
-                error_report.functional_validation(
-                    &format!("Document Category ID {category_id:?} is invalid"),
-                    "During Document Category ID UUID verification",
-                );
-            }
-        }
 
         match self.as_cose_sign() {
             Ok(cose_sign) => {
@@ -262,12 +168,11 @@ impl CatalystSignedDocument {
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
     #[must_use]
-    pub fn as_signed_doc_builder(&self) -> Builder {
-        Builder {
-            metadata: Some(self.inner.metadata.clone()),
-            content: Some(self.inner.content.decoded_bytes().to_vec()),
-            signatures: self.inner.signatures.clone(),
-        }
+    pub fn into_builder(self) -> Builder {
+        Builder::new()
+            .with_metadata(self.inner.metadata.clone())
+            .with_decoded_content(self.inner.content.decoded_bytes().to_vec())
+            .with_signatures(self.inner.signatures.clone())
     }
 
     /// Convert Catalyst Signed Document into `coset::CoseSign`
