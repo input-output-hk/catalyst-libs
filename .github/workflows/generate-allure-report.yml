@@ -35,7 +35,7 @@ jobs:
         uses: input-output-hk/catalyst-forge/actions/setup@ci/v1.5.1
 
       - name: Get catalyst libs unit test report
-        uses: input-output-hk/catalyst-forge/actions/run@ci/v1.5.1
+        uses: input-output-hk/catalyst-forge/actions/run@ci/v1.7.1
         if: always()
         continue-on-error: true
         with:
