@@ -9,8 +9,10 @@ mod extra_fields;
 
 use algorithm::Algorithm;
 use anyhow::{anyhow, bail};
-use catalyst_types::problem_report::ProblemReport;
-pub use catalyst_types::uuid::{CborContext, UuidV4, UuidV7};
+use catalyst_types::{
+    problem_report::ProblemReport,
+    uuid::{CborContext, UuidV4, UuidV7},
+};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::{iana::CoapContentFormat, CborSerializable};
@@ -331,9 +333,7 @@ pub(crate) fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
 /// Decode `From<uuid::Uuid>` type from `coset::cbor::Value`.
 ///
 /// This is used to decode `UuidV4` and `UuidV7` types.
-pub(crate) fn decode_cbor_uuid<
-    T: for<'a> minicbor::decode::Decode<'a, CborContext> + TryFrom<uuid::Uuid>,
->(
+pub(crate) fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborContext>>(
     value: coset::cbor::Value,
 ) -> anyhow::Result<T> {
     match value.to_vec() {
