@@ -352,7 +352,7 @@ mod tests {
             "category_id": {"id": uuid_v7.to_string()},
         }))
         .unwrap();
-        let content = vec![1, 2, 4, 5, 6, 7, 8, 9];
+        let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
         let doc = Builder::new()
             .with_metadata(metadata.clone())
@@ -360,9 +360,7 @@ mod tests {
             .build()
             .unwrap();
 
-        let mut bytes = Vec::new();
-        minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();
-
+        let bytes = minicbor::to_vec(doc).unwrap();
         let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
 
         assert_eq!(decoded.doc_type(), uuid_v4);
