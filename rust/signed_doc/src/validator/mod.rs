@@ -8,12 +8,16 @@ use crate::{
     CatalystSignedDocument,
 };
 
-/// `CatalystSignedDocument` type based specific validation
+/// A comprehensive validation of the `CatalystSignedDocument`,
+/// including a signature verification and document type based validation.
 ///
 /// # Errors
 ///
 /// Returns a report of validation failures and the source error.
-pub fn validate(doc: &CatalystSignedDocument) -> Result<(), CatalystSignedDocError> {
+pub fn validate<F>(
+    doc: &CatalystSignedDocument, _doc_getter: F,
+) -> Result<(), CatalystSignedDocError>
+where F: FnMut() -> Option<CatalystSignedDocument> {
     let error_report = ProblemReport::new("Catalyst Signed Document Validation");
 
     let doc_type: DocumentType = match doc.doc_type().try_into() {
