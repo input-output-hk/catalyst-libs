@@ -110,7 +110,7 @@ impl TryFrom<UuidV4> for DocumentType {
             PUBLIC_VOTE_TX_V2_UUID_TYPE => Ok(DocumentType::PublicVoteTxV2),
             PRIVATE_VOTE_TX_V2_UUID_TYPE => Ok(DocumentType::PrivateVoteTxV2),
             IMMUTABLE_LEDGER_BLOCK_UUID_TYPE => Ok(DocumentType::ImmutableLedgerBlock),
-            uuid => anyhow::bail!("Unsupported document type {uuid}"),
+            _ => anyhow::bail!("Unsupported document type"),
         }
     }
 }

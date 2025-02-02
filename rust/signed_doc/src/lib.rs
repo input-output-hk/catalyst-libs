@@ -7,6 +7,7 @@ pub mod error;
 mod metadata;
 mod signature;
 mod utils;
+pub mod validator;
 
 use std::{
     convert::TryFrom,
