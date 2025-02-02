@@ -47,7 +47,7 @@ pub struct CatalystSignedDocument {
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
-        writeln!(f, "Payload Size: {} bytes", self.inner.content.len())?;
+        writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;

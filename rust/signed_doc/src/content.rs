@@ -28,6 +28,7 @@ impl Content {
                 .decode(&data)
                 .map_err(|e| anyhow::anyhow!("Failed to decode {encoding} content: {e}"))?;
         }
+        content_type.validate(&data)?;
 
         Ok(Self {
             data,
@@ -44,18 +45,7 @@ impl Content {
     pub(crate) fn from_decoded(
         data: Vec<u8>, content_type: ContentType, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
-        match content_type {
-            ContentType::Json => {
-                if let Err(e) = serde_json::to_value(&data) {
-                    anyhow::bail!("Invalid {content_type} content: {e}")
-                }
-            },
-            ContentType::Cbor => {
-                if let Err(e) = minicbor::decode::<minicbor::data::Token>(&data) {
-                    anyhow::bail!("Invalid {content_type} content: {e}")
-                }
-            },
-        }
+        content_type.validate(&data)?;
         Ok(Self {
             data,
             content_type,
@@ -97,13 +87,7 @@ impl Content {
 
     /// Return content byte size
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.data.len()
-    }
-
-    /// Return `true` if content is empty
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.data.is_empty()
     }
 }
