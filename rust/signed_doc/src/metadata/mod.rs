@@ -220,18 +220,7 @@ impl Metadata {
             error_report.missing_field("ver", "Missing ver field in COSE protected header");
         }
 
-        let extra = ExtraFields::from_protected_header(protected, error_report).map_or_else(
-            |e| {
-                error_report.conversion_error(
-                    "COSE protected header",
-                    &format!("{protected:?}"),
-                    &format!("Expected ExtraField: {e}"),
-                    &format!("{CONTEXT}, ExtraFields"),
-                );
-                None
-            },
-            Some,
-        );
+        let extra = ExtraFields::from_protected_header(protected, error_report);
 
         match (content_type, content_encoding, id, doc_type, ver, extra) {
             (
