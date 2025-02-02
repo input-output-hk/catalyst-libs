@@ -18,7 +18,8 @@ pub struct ProposalDocument {
 }
 
 impl ProposalDocument {
-    /// Try to build `ProposalDocument` from `CatalystSignedDoc` collecting report
+    /// Try to build `ProposalDocument` from `CatalystSignedDoc` doing all necessary
+    /// stateless verifications,
     #[allow(dead_code)]
     pub(crate) fn from_signed_doc(
         doc: &CatalystSignedDocument, error_report: &ProblemReport,
@@ -45,6 +46,13 @@ impl ProposalDocument {
 
         let content = doc.doc_content().decoded_bytes().to_vec();
         Ok(Self { content })
+    }
+
+    /// A comprehensive validation of the `ProposalDocument` content.
+    #[allow(clippy::unused_self)]
+    pub(crate) fn validate_with_report<F>(&self, _doc_getter: F, _error_report: &ProblemReport)
+    where F: FnMut() -> Option<CatalystSignedDocument> {
+        // TODO: implement the rest of the validation
     }
 }
 

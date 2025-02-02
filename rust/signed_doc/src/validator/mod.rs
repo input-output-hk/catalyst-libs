@@ -15,7 +15,7 @@ use crate::{
 ///
 /// Returns a report of validation failures and the source error.
 pub fn validate<F>(
-    doc: &CatalystSignedDocument, _doc_getter: F,
+    doc: &CatalystSignedDocument, doc_getter: F,
 ) -> Result<(), CatalystSignedDocError>
 where F: FnMut() -> Option<CatalystSignedDocument> {
     let error_report = ProblemReport::new("Catalyst Signed Document Validation");
@@ -39,7 +39,9 @@ where F: FnMut() -> Option<CatalystSignedDocument> {
     #[allow(clippy::match_same_arms)]
     match doc_type {
         DocumentType::ProposalDocument => {
-            drop(ProposalDocument::from_signed_doc(doc, &error_report));
+            if let Ok(proposal_doc) = ProposalDocument::from_signed_doc(doc, &error_report) {
+                proposal_doc.validate_with_report(doc_getter, &error_report);
+            }
         },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {},
