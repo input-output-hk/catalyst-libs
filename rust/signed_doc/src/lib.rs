@@ -112,7 +112,7 @@ impl CatalystSignedDocument {
     /// # Errors
     ///
     /// Returns a report of verification failures and the source error.
-    #[allow(clippy::indexing_slicing, clippy::too_many_lines)]
+    #[allow(clippy::indexing_slicing)]
     pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
     where P: Fn(&KidUri) -> VerifyingKey {
         let error_report = ProblemReport::new("Catalyst Signed Document Verification");
