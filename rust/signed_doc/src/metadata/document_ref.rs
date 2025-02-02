@@ -13,17 +13,6 @@ pub struct DocumentRef {
     pub ver: Option<UuidV7>,
 }
 
-impl DocumentRef {
-    /// Determine if internal `UUID`s are valid.
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        match self.ver {
-            Some(ver) => self.id.is_valid() && ver.is_valid() && ver >= self.id,
-            None => self.id.is_valid(),
-        }
-    }
-}
-
 impl TryFrom<DocumentRef> for Value {
     type Error = anyhow::Error;
 

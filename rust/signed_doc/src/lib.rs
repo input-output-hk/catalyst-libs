@@ -321,12 +321,15 @@ impl Encode<()> for CatalystSignedDocument {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use ed25519_dalek::SigningKey;
     use metadata::{ContentEncoding, ContentType};
+    use rand::rngs::OsRng;
 
     use super::*;
 
-    #[test]
-    fn catalyst_signed_doc_cbor_roundtrip_test() {
+    fn test_metadata() -> anyhow::Result<(UuidV7, UuidV4, Metadata)> {
         let uuid_v7 = UuidV7::new();
         let uuid_v4 = UuidV4::new();
         let section = "some section".to_string();
@@ -350,7 +353,13 @@ mod tests {
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
         }))
-        .unwrap();
+        .map_err(|_| anyhow::anyhow!("Invalid example metadata. This should not happen."))?;
+        Ok((uuid_v7, uuid_v4, metadata))
+    }
+
+    #[test]
+    fn catalyst_signed_doc_cbor_roundtrip_test() {
+        let (uuid_v7, uuid_v4, metadata) = test_metadata().unwrap();
         let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
         let doc = Builder::new()
@@ -367,5 +376,38 @@ mod tests {
         assert_eq!(decoded.doc_ver(), uuid_v7);
         assert_eq!(decoded.doc_content().decoded_bytes(), &content);
         assert_eq!(decoded.doc_meta(), metadata.extra());
+    }
+
+    #[test]
+    fn signature_verification_test() {
+        let mut csprng = OsRng;
+        let sk: SigningKey = SigningKey::generate(&mut csprng);
+        let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+        let pk = sk.verifying_key();
+
+        let kid_str = format!(
+            "kid.catalyst-rbac://cardano/{}/0/0",
+            base64_url::encode(pk.as_bytes())
+        );
+
+        let kid = KidUri::from_str(&kid_str).unwrap();
+        let (_, _, metadata) = test_metadata().unwrap();
+        let signed_doc = Builder::new()
+            .with_decoded_content(content)
+            .with_metadata(metadata)
+            .add_signature(sk.to_bytes(), kid.clone())
+            .unwrap()
+            .build()
+            .unwrap();
+
+        assert!(signed_doc
+            .verify(|k| {
+                if k.to_string() == kid.to_string() {
+                    pk
+                } else {
+                    k.role0_pk()
+                }
+            })
+            .is_ok());
     }
 }
