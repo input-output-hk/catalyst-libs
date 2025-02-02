@@ -2,7 +2,11 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-use crate::{doc_types::DocumentType, error::CatalystSignedDocError, CatalystSignedDocument};
+use crate::{
+    doc_types::{DocumentType, ProposalDocument},
+    error::CatalystSignedDocError,
+    CatalystSignedDocument,
+};
 
 /// `CatalystSignedDocument` type based specific validation
 ///
@@ -16,7 +20,7 @@ pub fn validate(doc: &CatalystSignedDocument) -> Result<(), CatalystSignedDocErr
         Ok(doc_type) => doc_type,
         Err(e) => {
             error_report.invalid_value(
-                "document `type`",
+                "`type`",
                 &doc.doc_type().to_string(),
                 &e.to_string(),
                 "verifying document type",
@@ -30,7 +34,9 @@ pub fn validate(doc: &CatalystSignedDocument) -> Result<(), CatalystSignedDocErr
 
     #[allow(clippy::match_same_arms)]
     match doc_type {
-        DocumentType::ProposalDocument => {},
+        DocumentType::ProposalDocument => {
+            drop(ProposalDocument::from_signed_doc(doc, &error_report));
+        },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {},
         DocumentType::CommentTemplate => {},

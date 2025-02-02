@@ -1,7 +1,10 @@
 //! An implmenetation of different defined document types
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
 
+mod proposal_document;
+
 use catalyst_types::uuid::UuidV4;
+pub use proposal_document::ProposalDocument;
 
 /// Represents different types of documents.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
