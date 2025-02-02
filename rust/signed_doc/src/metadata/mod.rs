@@ -4,10 +4,7 @@ use std::fmt::{Display, Formatter};
 mod algorithm;
 mod content_encoding;
 mod content_type;
-mod document_id;
 mod document_ref;
-mod document_type;
-mod document_version;
 mod extra_fields;
 
 use algorithm::Algorithm;
@@ -17,10 +14,7 @@ pub use catalyst_types::uuid::{CborContext, UuidV4, UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::{iana::CoapContentFormat, CborSerializable};
-pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
-pub use document_type::DocumentType;
-pub use document_version::DocumentVersion;
 pub use extra_fields::ExtraFields;
 
 /// `content_encoding` field COSE key value
@@ -42,11 +36,11 @@ pub struct Metadata {
     alg: Algorithm,
     /// Document Type `UUIDv4`.
     #[serde(rename = "type")]
-    doc_type: DocumentType,
+    doc_type: UuidV4,
     /// Document ID `UUIDv7`.
-    id: DocumentId,
+    id: UuidV7,
     /// Document Version `UUIDv7`.
-    ver: DocumentVersion,
+    ver: UuidV7,
     /// Document Payload Content Type.
     #[serde(rename = "content-type")]
     content_type: ContentType,
@@ -68,19 +62,19 @@ impl Metadata {
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> UuidV4 {
-        self.doc_type.into()
+        self.doc_type
     }
 
     /// Return Document ID `UUIDv7`.
     #[must_use]
     pub fn doc_id(&self) -> UuidV7 {
-        self.id.into()
+        self.id
     }
 
     /// Return Document Version `UUIDv7`.
     #[must_use]
     pub fn doc_ver(&self) -> UuidV7 {
-        self.ver.into()
+        self.ver
     }
 
     /// Returns the Document Content Type, if any.
@@ -255,9 +249,9 @@ impl Metadata {
                 }
 
                 Ok(Self {
-                    doc_type: doc_type.into(),
-                    id: id.into(),
-                    ver: ver.into(),
+                    doc_type,
+                    id,
+                    ver,
                     alg: algorithm,
                     content_encoding,
                     content_type,
@@ -299,9 +293,9 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type.try_into()?)
-            .text_value(ID_KEY.to_string(), meta.id.try_into()?)
-            .text_value(VER_KEY.to_string(), meta.ver.try_into()?);
+            .text_value(TYPE_KEY.to_string(), encode_cbor_uuid(meta.doc_type)?)
+            .text_value(ID_KEY.to_string(), encode_cbor_uuid(meta.id)?)
+            .text_value(VER_KEY.to_string(), encode_cbor_uuid(meta.ver)?);
 
         builder = meta.extra.fill_cose_header_fields(builder)?;
 

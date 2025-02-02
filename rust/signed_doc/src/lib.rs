@@ -2,6 +2,7 @@
 
 mod builder;
 mod content;
+pub mod doc_types;
 pub mod error;
 mod metadata;
 mod signature;
