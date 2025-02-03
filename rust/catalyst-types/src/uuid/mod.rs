@@ -1,5 +1,6 @@
 //! `UUID` types.
 
+pub use uuid::Uuid;
 #[allow(clippy::module_name_repetitions)]
 pub use uuid_v4::UuidV4;
 #[allow(clippy::module_name_repetitions)]
