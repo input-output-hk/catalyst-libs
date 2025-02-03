@@ -4,7 +4,7 @@
 mod proposal_document;
 
 use catalyst_types::uuid::UuidV4;
-pub use proposal_document::ProposalDocument;
+pub use proposal_document::{ProposalDocument, PROPOSAL_DOCUMENT_UUID_TYPE};
 
 /// Represents different types of documents.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -43,9 +43,6 @@ pub enum DocumentType {
     ImmutableLedgerBlock,
 }
 
-/// Proposal document `UuidV4` type.
-const PROPOSAL_DOCUMENT_UUID_TYPE: uuid::Uuid =
-    uuid::Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
 /// Proposal template `UuidV4` type.
 const PROPOSAL_TEMPLATE_UUID_TYPE: uuid::Uuid =
     uuid::Uuid::from_u128(0x0CE8_AB38_9258_4FBC_A62E_7FAA_6E58_318F);

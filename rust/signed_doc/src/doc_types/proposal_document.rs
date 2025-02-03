@@ -6,7 +6,7 @@ use catalyst_types::problem_report::ProblemReport;
 use crate::{error::CatalystSignedDocError, CatalystSignedDocument};
 
 /// Proposal document `UuidV4` type.
-const PROPOSAL_DOCUMENT_UUID_TYPE: uuid::Uuid =
+pub const PROPOSAL_DOCUMENT_UUID_TYPE: uuid::Uuid =
     uuid::Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
 
 /// Proposal Document struct
