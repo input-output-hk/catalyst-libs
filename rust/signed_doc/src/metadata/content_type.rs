@@ -18,6 +18,25 @@ pub enum ContentType {
     Json,
 }
 
+impl ContentType {
+    /// Validates the provided `content` bytes to be a defined `ContentType`.
+    pub fn validate(self, content: &[u8]) -> anyhow::Result<()> {
+        match self {
+            Self::Json => {
+                if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
+                    anyhow::bail!("Invalid {self} content: {e}")
+                }
+            },
+            Self::Cbor => {
+                if let Err(e) = minicbor::decode::<minicbor::data::Token>(content) {
+                    anyhow::bail!("Invalid {self} content: {e}")
+                }
+            },
+        }
+        Ok(())
+    }
+}
+
 impl Display for ContentType {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
@@ -76,5 +95,21 @@ impl TryFrom<&coset::ContentType> for ContentType {
             },
         };
         Ok(content_type)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn content_type_validate_test() {
+        let json_bytes = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+        assert!(ContentType::Json.validate(&json_bytes).is_ok());
+        assert!(ContentType::Cbor.validate(&json_bytes).is_err());
+
+        let cbor_bytes = minicbor::to_vec(minicbor::data::Token::Null).unwrap();
+        assert!(ContentType::Json.validate(&cbor_bytes).is_err());
+        assert!(ContentType::Cbor.validate(&cbor_bytes).is_ok());
     }
 }

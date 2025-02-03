@@ -2,10 +2,12 @@
 
 mod builder;
 mod content;
+pub mod doc_types;
 pub mod error;
 mod metadata;
 mod signature;
 mod utils;
+pub mod validator;
 
 use std::{
     convert::TryFrom,
@@ -15,10 +17,12 @@ use std::{
 
 pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
+pub use catalyst_types::uuid::{UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
+use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
-pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
+pub use metadata::{DocumentRef, ExtraFields, Metadata};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{KidUri, Signatures};
 use utils::context::DecodeSignDocCtx;
@@ -46,7 +50,7 @@ pub struct CatalystSignedDocument {
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
-        writeln!(f, "Payload Size: {} bytes", self.inner.content.len())?;
+        writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
@@ -104,6 +108,82 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn signatures(&self) -> &Signatures {
         &self.inner.signatures
+    }
+
+    /// Verify document signatures.
+    ///
+    /// # Errors
+    ///
+    /// Returns a report of verification failures and the source error.
+    #[allow(clippy::indexing_slicing)]
+    pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
+    where P: Fn(&KidUri) -> VerifyingKey {
+        let error_report = ProblemReport::new("Catalyst Signed Document Verification");
+
+        match self.as_cose_sign() {
+            Ok(cose_sign) => {
+                let signatures = self.signatures().cose_signatures();
+                for (idx, kid) in self.signatures().kids().iter().enumerate() {
+                    let pk = pk_getter(kid);
+                    let signature = &signatures[idx];
+                    let tbs_data = cose_sign.tbs_data(&[], signature);
+                    match signature.signature.as_slice().try_into() {
+                        Ok(signature_bytes) => {
+                            let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+                            if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
+                                error_report.functional_validation(
+                                    &format!(
+                                        "Verification failed for signature with Key ID {kid}: {e}"
+                                    ),
+                                    "During signature validation with verifying key",
+                                );
+                            }
+                        },
+                        Err(_) => {
+                            error_report.invalid_value(
+                                "cose signature",
+                                &format!("{}", signature.signature.len()),
+                                &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+                                "During encoding cose signature to bytes",
+                            );
+                        },
+                    }
+                }
+            },
+            Err(e) => {
+                error_report.other(
+                    &format!("{e}"),
+                    "During encoding signed document as COSE SIGN",
+                );
+            },
+        }
+
+        if error_report.is_problematic() {
+            return Err(CatalystSignedDocError::new(
+                error_report,
+                anyhow::anyhow!("Verification failed for Catalyst Signed Document"),
+            ));
+        }
+
+        Ok(())
+    }
+
+    /// Returns a signed document `Builder` pre-loaded with the current signed document's
+    /// data.
+    #[must_use]
+    pub fn into_builder(self) -> Builder {
+        Builder::new()
+            .with_metadata(self.inner.metadata.clone())
+            .with_decoded_content(self.inner.content.decoded_bytes().to_vec())
+            .with_signatures(self.inner.signatures.clone())
+    }
+
+    /// Convert Catalyst Signed Document into `coset::CoseSign`
+    fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
+        let mut cose_bytes: Vec<u8> = Vec::new();
+        minicbor::encode(self, &mut cose_bytes)?;
+        coset::CoseSign::from_slice(&cose_bytes)
+            .map_err(|e| anyhow::anyhow!("encoding as COSE SIGN failed: {e}"))
     }
 }
 
@@ -244,12 +324,15 @@ impl Encode<()> for CatalystSignedDocument {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use ed25519_dalek::SigningKey;
     use metadata::{ContentEncoding, ContentType};
+    use rand::rngs::OsRng;
 
     use super::*;
 
-    #[test]
-    fn catalyst_signed_doc_cbor_roundtrip_test() {
+    fn test_metadata() -> anyhow::Result<(UuidV7, UuidV4, Metadata)> {
         let uuid_v7 = UuidV7::new();
         let uuid_v4 = UuidV4::new();
         let section = "some section".to_string();
@@ -273,18 +356,22 @@ mod tests {
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
         }))
-        .unwrap();
-        let content = vec![1, 2, 4, 5, 6, 7, 8, 9];
+        .map_err(|_| anyhow::anyhow!("Invalid example metadata. This should not happen."))?;
+        Ok((uuid_v7, uuid_v4, metadata))
+    }
+
+    #[test]
+    fn catalyst_signed_doc_cbor_roundtrip_test() {
+        let (uuid_v7, uuid_v4, metadata) = test_metadata().unwrap();
+        let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
         let doc = Builder::new()
             .with_metadata(metadata.clone())
-            .with_content(content.clone())
+            .with_decoded_content(content.clone())
             .build()
             .unwrap();
 
-        let mut bytes = Vec::new();
-        minicbor::encode_with(doc, &mut bytes, &mut ()).unwrap();
-
+        let bytes = minicbor::to_vec(doc).unwrap();
         let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
 
         assert_eq!(decoded.doc_type(), uuid_v4);
@@ -292,5 +379,38 @@ mod tests {
         assert_eq!(decoded.doc_ver(), uuid_v7);
         assert_eq!(decoded.doc_content().decoded_bytes(), &content);
         assert_eq!(decoded.doc_meta(), metadata.extra());
+    }
+
+    #[test]
+    fn signature_verification_test() {
+        let mut csprng = OsRng;
+        let sk: SigningKey = SigningKey::generate(&mut csprng);
+        let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+        let pk = sk.verifying_key();
+
+        let kid_str = format!(
+            "kid.catalyst-rbac://cardano/{}/0/0",
+            base64_url::encode(pk.as_bytes())
+        );
+
+        let kid = KidUri::from_str(&kid_str).unwrap();
+        let (_, _, metadata) = test_metadata().unwrap();
+        let signed_doc = Builder::new()
+            .with_decoded_content(content)
+            .with_metadata(metadata)
+            .add_signature(sk.to_bytes(), kid.clone())
+            .unwrap()
+            .build()
+            .unwrap();
+
+        assert!(signed_doc
+            .verify(|k| {
+                if k.to_string() == kid.to_string() {
+                    pk
+                } else {
+                    k.role0_pk()
+                }
+            })
+            .is_ok());
     }
 }
