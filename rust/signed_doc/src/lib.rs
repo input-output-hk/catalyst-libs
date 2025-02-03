@@ -137,7 +137,7 @@ impl CatalystSignedDocument {
         match self.as_cose_sign() {
             Ok(cose_sign) => {
                 let signatures = self.signatures().cose_signatures();
-                for (idx, kid) in self.signatures().kids().iter().enumerate() {
+                for (idx, kid) in self.kids().iter().enumerate() {
                     match pk_getter(kid) {
                         SimplePublicKeyType::Ed25519(pk) => {
                             let signature = &signatures[idx];
@@ -436,5 +436,13 @@ mod tests {
         assert!(signed_doc
             .verify(|_| { SimplePublicKeyType::Ed25519(pk) })
             .is_ok());
+
+        assert!(signed_doc
+            .verify(|_| { SimplePublicKeyType::Undefined })
+            .is_err());
+
+        assert!(signed_doc
+            .verify(|_| { SimplePublicKeyType::Deleted })
+            .is_err());
     }
 }
