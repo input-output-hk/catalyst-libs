@@ -17,10 +17,10 @@ pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
 pub use content::Content;
 use coset::{CborSerializable, Header};
-use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
+pub use rbac_registration::cardano::cip509::SimplePublicKeyType;
 pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
 
@@ -131,34 +131,50 @@ impl CatalystSignedDocument {
     /// Returns a report of verification failures and the source error.
     #[allow(clippy::indexing_slicing)]
     pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
-    where P: Fn(&IdUri) -> VerifyingKey {
+    where P: Fn(&IdUri) -> SimplePublicKeyType {
         let error_report = ProblemReport::new("Catalyst Signed Document Verification");
 
         match self.as_cose_sign() {
             Ok(cose_sign) => {
                 let signatures = self.signatures().cose_signatures();
                 for (idx, kid) in self.signatures().kids().iter().enumerate() {
-                    let pk = pk_getter(kid);
-                    let signature = &signatures[idx];
-                    let tbs_data = cose_sign.tbs_data(&[], signature);
-                    match signature.signature.as_slice().try_into() {
-                        Ok(signature_bytes) => {
-                            let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
-                            if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
-                                error_report.functional_validation(
-                                    &format!(
-                                        "Verification failed for signature with Key ID {kid}: {e}"
-                                    ),
-                                    "During signature validation with verifying key",
-                                );
+                    match pk_getter(kid) {
+                        SimplePublicKeyType::Ed25519(pk) => {
+                            let signature = &signatures[idx];
+                            let tbs_data = cose_sign.tbs_data(&[], signature);
+                            match signature.signature.as_slice().try_into() {
+                                Ok(signature_bytes) => {
+                                    let signature =
+                                        ed25519_dalek::Signature::from_bytes(signature_bytes);
+                                    if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
+                                        error_report.functional_validation(
+                                            &format!(
+                                                "Verification failed for signature with Key ID {kid}: {e}"
+                                            ),
+                                            "During signature validation with verifying key",
+                                        );
+                                    }
+                                },
+                                Err(_) => {
+                                    error_report.invalid_value(
+                                        "cose signature",
+                                        &format!("{}", signature.signature.len()),
+                                        &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+                                        "During encoding cose signature to bytes",
+                                    );
+                                },
                             }
                         },
-                        Err(_) => {
-                            error_report.invalid_value(
-                                "cose signature",
-                                &format!("{}", signature.signature.len()),
-                                &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
-                                "During encoding cose signature to bytes",
+                        SimplePublicKeyType::Deleted => {
+                            error_report.other(
+                                &format!("Public key for {kid} has been deleted."),
+                                "During public key extraction",
+                            );
+                        },
+                        SimplePublicKeyType::Undefined => {
+                            error_report.other(
+                                &format!("Public key for {kid} is undefined."),
+                                "During public key extraction",
                             );
                         },
                     }
@@ -417,6 +433,8 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc.verify(|_| { pk }).is_ok());
+        assert!(signed_doc
+            .verify(|_| { SimplePublicKeyType::Ed25519(pk) })
+            .is_ok());
     }
 }

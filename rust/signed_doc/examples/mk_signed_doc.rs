@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata, SimplePublicKeyType};
 use clap::Parser;
 use ed25519_dalek::pkcs8::{DecodePrivateKey, DecodePublicKey};
 
@@ -107,9 +107,9 @@ impl Cli {
                 signed_doc
                     .verify(|k| {
                         if k.to_string() == kid.to_string() {
-                            pk
+                            SimplePublicKeyType::Ed25519(pk)
                         } else {
-                            k.role0_pk()
+                            SimplePublicKeyType::Undefined
                         }
                     })
                     .map_err(|e| anyhow::anyhow!("Catalyst Document Verification failed: {e}"))?;
