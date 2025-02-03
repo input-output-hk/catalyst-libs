@@ -37,6 +37,11 @@ impl Signatures {
         self.0.iter().map(|sig| sig.signature.clone()).collect()
     }
 
+    /// Add a new signature
+    pub fn push(&mut self, kid: KidUri, signature: CoseSignature) {
+        self.0.push(Signature { kid, signature });
+    }
+
     /// Number of signatures.
     #[must_use]
     pub fn len(&self) -> usize {
