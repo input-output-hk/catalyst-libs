@@ -17,7 +17,6 @@ pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
 pub use content::Content;
 use coset::{CborSerializable, Header};
-use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
