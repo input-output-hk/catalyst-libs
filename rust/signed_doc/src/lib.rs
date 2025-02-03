@@ -107,6 +107,23 @@ impl CatalystSignedDocument {
         &self.inner.signatures
     }
 
+    /// Return a list of Document's Catalyst IDs.
+    #[must_use]
+    pub fn kids(&self) -> Vec<IdUri> {
+        self.inner.signatures.kids()
+    }
+
+    /// Return a list of Document's author IDs (short form of Catalyst IDs).
+    #[must_use]
+    pub fn authors(&self) -> Vec<IdUri> {
+        self.inner
+            .signatures
+            .kids()
+            .into_iter()
+            .map(|k| k.as_short_id())
+            .collect()
+    }
+
     /// Verify document signatures.
     ///
     /// # Errors
