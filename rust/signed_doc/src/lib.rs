@@ -400,14 +400,6 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc
-            .verify(|k| {
-                if k.to_string() == kid.to_string() {
-                    pk
-                } else {
-                    k.role0_pk()
-                }
-            })
-            .is_ok());
+        assert!(signed_doc.verify(|_| { pk }).is_ok());
     }
 }
