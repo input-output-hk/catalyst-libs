@@ -166,7 +166,7 @@ impl ExtraFields {
     ) -> Option<Self> {
         /// Context for error messages.
         const CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
-        let mut valid = false;
+        let mut valid = true;
 
         let mut extra = ExtraFields::default();
 
