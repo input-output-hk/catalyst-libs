@@ -28,6 +28,7 @@ impl Content {
                 .decode(&data)
                 .map_err(|e| anyhow::anyhow!("Failed to decode {encoding} content: {e}"))?;
         }
+        content_type.validate(&data)?;
 
         Ok(Self {
             data,
@@ -41,11 +42,10 @@ impl Content {
     ///
     /// # Errors
     /// Returns an error if content is not correctly encoded
-    #[allow(clippy::unnecessary_wraps)]
     pub(crate) fn from_decoded(
         data: Vec<u8>, content_type: ContentType, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Self> {
-        // TODO add content_type verification
+        content_type.validate(&data)?;
         Ok(Self {
             data,
             content_type,
@@ -87,13 +87,7 @@ impl Content {
 
     /// Return content byte size
     #[must_use]
-    pub fn len(&self) -> usize {
+    pub fn size(&self) -> usize {
         self.data.len()
-    }
-
-    /// Return `true` if content is empty
-    #[must_use]
-    pub fn is_empty(&self) -> bool {
-        self.data.is_empty()
     }
 }
