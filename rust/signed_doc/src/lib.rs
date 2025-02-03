@@ -21,7 +21,7 @@ use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
-pub use signature::{KidUri, Signatures};
+pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
@@ -114,7 +114,7 @@ impl CatalystSignedDocument {
     /// Returns a report of verification failures and the source error.
     #[allow(clippy::indexing_slicing)]
     pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
-    where P: Fn(&KidUri) -> VerifyingKey {
+    where P: Fn(&IdUri) -> VerifyingKey {
         let error_report = ProblemReport::new("Catalyst Signed Document Verification");
 
         match self.as_cose_sign() {
@@ -386,11 +386,11 @@ mod tests {
         let pk = sk.verifying_key();
 
         let kid_str = format!(
-            "kid.catalyst-rbac://cardano/{}/0/0",
+            "id.catalyst://cardano/{}/0/0",
             base64_url::encode(pk.as_bytes())
         );
 
-        let kid = KidUri::from_str(&kid_str).unwrap();
+        let kid = IdUri::from_str(&kid_str).unwrap();
         let (_, _, metadata) = test_metadata().unwrap();
         let signed_doc = Builder::new()
             .with_decoded_content(content)
