@@ -13,7 +13,8 @@ Catalyst signed document crate implementation based on this
 openssl genpkey -algorithm=ED25519 -out=private.pem -outpubkey=public.pem
 ```
 
-### Prepare non-signed document,
+### Prepare non-signed document
+
 `meta.json` file should follow the [`meta.schema.json`](./meta.schema.json).
 
 ```shell
@@ -21,6 +22,7 @@ cargo run -p catalyst-signed-doc --example mk_signed_doc build signed_doc/doc.js
 ```
 
 ### Sign document
+
 `KID` is a valid Catalyst ID URI.
 
 ```shell
