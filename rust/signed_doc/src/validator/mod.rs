@@ -3,7 +3,7 @@
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    doc_types::{DocumentType, ProposalDocument},
+    doc_types::{CommentDocument, DocumentType, ProposalDocument},
     error::CatalystSignedDocError,
     CatalystSignedDocument,
 };
@@ -44,7 +44,11 @@ where F: FnMut() -> Option<CatalystSignedDocument> {
             }
         },
         DocumentType::ProposalTemplate => {},
-        DocumentType::CommentDocument => {},
+        DocumentType::CommentDocument => {
+            if let Ok(comment_doc) = CommentDocument::from_signed_doc(doc, &error_report) {
+                comment_doc.validate_with_report(doc_getter, &error_report);
+            }
+        },
         DocumentType::CommentTemplate => {},
         DocumentType::ReviewDocument => {},
         DocumentType::ReviewTemplate => {},

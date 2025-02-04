@@ -1,9 +1,11 @@
 //! An implementation of different defined document types
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
 
+mod comment_document;
 mod proposal_document;
 
 use catalyst_types::uuid::UuidV4;
+pub use comment_document::{CommentDocument, COMMENT_DOCUMENT_UUID_TYPE};
 pub use proposal_document::{ProposalDocument, PROPOSAL_DOCUMENT_UUID_TYPE};
 
 /// Represents different types of documents.
@@ -46,9 +48,6 @@ pub enum DocumentType {
 /// Proposal template `UuidV4` type.
 const PROPOSAL_TEMPLATE_UUID_TYPE: uuid::Uuid =
     uuid::Uuid::from_u128(0x0CE8_AB38_9258_4FBC_A62E_7FAA_6E58_318F);
-/// Comment document `UuidV4` type.
-const COMMENT_DOCUMENT_UUID_TYPE: uuid::Uuid =
-    uuid::Uuid::from_u128(0xB679_DED3_0E7C_41BA_89F8_DA62_A178_98EA);
 /// Comment template `UuidV4` type.
 const COMMENT_TEMPLATE_UUID_TYPE: uuid::Uuid =
     uuid::Uuid::from_u128(0x0B84_24D4_EBFD_46E3_9577_1775_A69D_290C);
