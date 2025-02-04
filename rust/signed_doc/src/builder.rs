@@ -1,5 +1,5 @@
 //! Catalyst Signed Document Builder.
-use catalyst_types::kid_uri::KidUri;
+use catalyst_types::id_uri::IdUri;
 use ed25519_dalek::{ed25519::signature::Signer, SecretKey};
 
 use crate::{CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures};
@@ -50,7 +50,7 @@ impl Builder {
     /// Fails if a `CatalystSignedDocument` cannot be created due to missing metadata or
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
-    pub fn add_signature(self, sk: SecretKey, kid: KidUri) -> anyhow::Result<Self> {
+    pub fn add_signature(self, sk: SecretKey, kid: IdUri) -> anyhow::Result<Self> {
         let cose_sign = self
             .clone()
             .build()

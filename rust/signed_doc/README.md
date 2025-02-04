@@ -7,20 +7,29 @@ Catalyst signed document crate implementation based on this
 
 ## Example
 
-Generate a `ed25519` private and public keys
+### Generate a `ed25519` private and public keys
 
 ```shell
 openssl genpkey -algorithm=ED25519 -out=private.pem -outpubkey=public.pem
 ```
 
-Prepare non-signed document,
+### Prepare non-signed document
+
 `meta.json` file should follow the [`meta.schema.json`](./meta.schema.json).
 
 ```shell
 cargo run -p catalyst-signed-doc --example mk_signed_doc build signed_doc/doc.json signed_doc/doc.cose signed_doc/meta.json
 ```
 
-Inspect document
+### Sign document
+
+`KID` is a valid Catalyst ID URI.
+
+```shell
+cargo run -p catalyst-signed-doc --example mk_signed_doc sign signed_doc/doc.cose signed_doc/meta.json <KID>
+```
+
+### Inspect document
 
 ```shell
 cargo run -p catalyst-signed-doc --example mk_signed_doc inspect signed_doc/doc.cose

@@ -1,7 +1,7 @@
 //! Catalyst Signed Document COSE Signature information.
 
 use anyhow::bail;
-pub use catalyst_types::kid_uri::KidUri;
+pub use catalyst_types::id_uri::IdUri;
 use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
 
@@ -9,7 +9,7 @@ use coset::CoseSignature;
 #[derive(Debug, Clone)]
 pub struct Signature {
     /// Key ID
-    kid: KidUri,
+    kid: IdUri,
     /// COSE Signature
     signature: CoseSignature,
 }
@@ -27,7 +27,7 @@ impl Signatures {
 
     /// List of signature Key IDs.
     #[must_use]
-    pub fn kids(&self) -> Vec<KidUri> {
+    pub fn kids(&self) -> Vec<IdUri> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
     }
 
@@ -38,7 +38,7 @@ impl Signatures {
     }
 
     /// Add a new signature
-    pub fn push(&mut self, kid: KidUri, signature: CoseSignature) {
+    pub fn push(&mut self, kid: IdUri, signature: CoseSignature) {
         self.0.push(Signature { kid, signature });
     }
 
@@ -65,14 +65,14 @@ impl Signatures {
             .cloned()
             .enumerate()
             .for_each(|(idx, signature)| {
-                match KidUri::try_from(signature.protected.header.key_id.as_ref()) {
+                match IdUri::try_from(signature.protected.header.key_id.as_ref()) {
                     Ok(kid) => signatures.push(Signature { kid, signature }),
                     Err(e) => {
                         error_report.conversion_error(
                             &format!("COSE signature protected header key ID at id {idx}"),
                             &format!("{:?}", &signature.protected.header.key_id),
                             &format!("{e:?}"),
-                            "Converting COSE signature header key ID to KidUri",
+                            "Converting COSE signature header key ID to IdUri",
                         );
                     },
                 }
