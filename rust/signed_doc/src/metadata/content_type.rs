@@ -112,4 +112,24 @@ mod tests {
         assert!(ContentType::Json.validate(&cbor_bytes).is_err());
         assert!(ContentType::Cbor.validate(&cbor_bytes).is_ok());
     }
+
+    #[test]
+    fn content_type_string_test() {
+        assert_eq!(
+            ContentType::from_str("application/cbor").unwrap(),
+            ContentType::Cbor
+        );
+        assert_eq!(
+            ContentType::from_str("application/json").unwrap(),
+            ContentType::Json
+        );
+        assert_eq!(
+            "application/cbor".parse::<ContentType>().unwrap(),
+            ContentType::Cbor
+        );
+        assert_eq!(
+            "application/json".parse::<ContentType>().unwrap(),
+            ContentType::Json
+        );
+    }
 }
