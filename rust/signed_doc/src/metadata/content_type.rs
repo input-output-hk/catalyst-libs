@@ -57,6 +57,9 @@ impl FromStr for ContentType {
                 anyhow::bail!(
                     "Unsupported Content Type: {s:?}, Supported only: {:?}",
                     ContentType::VARIANTS
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
                 )
             },
         }
@@ -91,6 +94,9 @@ impl TryFrom<&coset::ContentType> for ContentType {
                 anyhow::bail!(
                     "Unsupported Content Type {value:?}, Supported only: {:?}",
                     ContentType::VARIANTS
+                        .iter()
+                        .map(ToString::to_string)
+                        .collect::<Vec<_>>()
                 )
             },
         };
