@@ -40,8 +40,8 @@ impl ContentType {
 impl Display for ContentType {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
-            Self::Cbor => write!(f, "cbor"),
-            Self::Json => write!(f, "json"),
+            Self::Cbor => write!(f, "application/cbor"),
+            Self::Json => write!(f, "application/json"),
         }
     }
 }
@@ -51,8 +51,8 @@ impl FromStr for ContentType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "cbor" => Ok(Self::Cbor),
-            "json" => Ok(Self::Json),
+            "application/cbor" => Ok(Self::Cbor),
+            "application/json" => Ok(Self::Json),
             _ => {
                 anyhow::bail!(
                     "Unsupported Content Type: {s:?}, Supported only: {:?}",
