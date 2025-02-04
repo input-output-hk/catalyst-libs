@@ -2,10 +2,12 @@
 
 mod builder;
 mod content;
+pub mod doc_types;
 pub mod error;
 mod metadata;
 mod signature;
 mod utils;
+pub mod validator;
 
 use std::{
     convert::TryFrom,
@@ -15,10 +17,11 @@ use std::{
 
 pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
+pub use catalyst_types::uuid::{UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
 use error::CatalystSignedDocError;
-pub use metadata::{DocumentRef, ExtraFields, Metadata, UuidV4, UuidV7};
+pub use metadata::{DocumentRef, ExtraFields, Metadata};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use rbac_registration::cardano::cip509::SimplePublicKeyType;
 pub use signature::{IdUri, Signatures};
