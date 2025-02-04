@@ -40,8 +40,8 @@ impl ContentType {
 impl Display for ContentType {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
-            Self::Cbor => write!(f, "cbor"),
-            Self::Json => write!(f, "json"),
+            Self::Cbor => write!(f, "application/cbor"),
+            Self::Json => write!(f, "application/json"),
         }
     }
 }
@@ -51,8 +51,8 @@ impl FromStr for ContentType {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
-            "cbor" => Ok(Self::Cbor),
-            "json" => Ok(Self::Json),
+            "application/cbor" => Ok(Self::Cbor),
+            "application/json" => Ok(Self::Json),
             _ => {
                 anyhow::bail!(
                     "Unsupported Content Type: {s:?}, Supported only: {:?}",
@@ -111,5 +111,25 @@ mod tests {
         let cbor_bytes = minicbor::to_vec(minicbor::data::Token::Null).unwrap();
         assert!(ContentType::Json.validate(&cbor_bytes).is_err());
         assert!(ContentType::Cbor.validate(&cbor_bytes).is_ok());
+    }
+
+    #[test]
+    fn content_type_string_test() {
+        assert_eq!(
+            ContentType::from_str("application/cbor").unwrap(),
+            ContentType::Cbor
+        );
+        assert_eq!(
+            ContentType::from_str("application/json").unwrap(),
+            ContentType::Json
+        );
+        assert_eq!(
+            "application/cbor".parse::<ContentType>().unwrap(),
+            ContentType::Cbor
+        );
+        assert_eq!(
+            "application/json".parse::<ContentType>().unwrap(),
+            ContentType::Json
+        );
     }
 }
