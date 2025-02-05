@@ -9,6 +9,7 @@ use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionHash, T
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
+    id_uri::IdUri,
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
@@ -76,6 +77,10 @@ pub struct Cip509 {
     /// A point (slot) and a transaction index identifying the block and the transaction
     /// that this `Cip509` was extracted from.
     origin: PointTxnIdx,
+    /// A catalyst ID.
+    ///
+    /// This field is only present in role 0 registrations.
+    catalyst_id: Option<IdUri>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -139,7 +144,7 @@ impl Cip509 {
             payment_history,
             report: &mut report,
         };
-        let cip509 =
+        let mut cip509 =
             Cip509::decode(&mut decoder, &mut decode_context).context("Failed to decode Cip509")?;
 
         // Perform the validation.
@@ -156,7 +161,7 @@ impl Cip509 {
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
         }
         if let Some(metadata) = &cip509.metadata {
-            validate_role_data(metadata, &cip509.report);
+            cip509.catalyst_id = validate_role_data(metadata, &cip509.report);
         }
 
         Ok(Some(cip509))
@@ -383,6 +388,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             payment_history: HashMap::new(),
             txn_hash,
             origin: decode_context.origin.clone(),
+            catalyst_id: None,
             report: decode_context.report.clone(),
         })
     }
