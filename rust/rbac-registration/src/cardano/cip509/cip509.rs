@@ -249,6 +249,12 @@ impl Cip509 {
         self.txn_inputs_hash.as_ref()
     }
 
+    /// Returns a Catalyst ID of this registration if role 0 is present.
+    #[must_use]
+    pub fn catalyst_id(&self) -> Option<&IdUri> {
+        self.catalyst_id.as_ref()
+    }
+
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
     /// validated otherwise return the problem report that contains all the encountered
     /// issues.
