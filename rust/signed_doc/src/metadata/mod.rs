@@ -4,23 +4,19 @@ use std::fmt::{Display, Formatter};
 mod algorithm;
 mod content_encoding;
 mod content_type;
-mod document_id;
 mod document_ref;
-mod document_type;
-mod document_version;
 mod extra_fields;
 
 use algorithm::Algorithm;
 use anyhow::{anyhow, bail};
-use catalyst_types::problem_report::ProblemReport;
-pub use catalyst_types::uuid::{CborContext, UuidV4, UuidV7};
+use catalyst_types::{
+    problem_report::ProblemReport,
+    uuid::{CborContext, UuidV4, UuidV7},
+};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::{iana::CoapContentFormat, CborSerializable};
-pub use document_id::DocumentId;
 pub use document_ref::DocumentRef;
-pub use document_type::DocumentType;
-pub use document_version::DocumentVersion;
 pub use extra_fields::ExtraFields;
 
 /// `content_encoding` field COSE key value
@@ -42,11 +38,11 @@ pub struct Metadata {
     alg: Algorithm,
     /// Document Type `UUIDv4`.
     #[serde(rename = "type")]
-    doc_type: DocumentType,
+    doc_type: UuidV4,
     /// Document ID `UUIDv7`.
-    id: DocumentId,
+    id: UuidV7,
     /// Document Version `UUIDv7`.
-    ver: DocumentVersion,
+    ver: UuidV7,
     /// Document Payload Content Type.
     #[serde(rename = "content-type")]
     content_type: ContentType,
@@ -59,22 +55,28 @@ pub struct Metadata {
 }
 
 impl Metadata {
+    /// Return Document Cryptographic Algorithm
+    #[must_use]
+    pub fn algorithm(&self) -> Algorithm {
+        self.alg
+    }
+
     /// Return Document Type `UUIDv4`.
     #[must_use]
     pub fn doc_type(&self) -> UuidV4 {
-        self.doc_type.into()
+        self.doc_type
     }
 
     /// Return Document ID `UUIDv7`.
     #[must_use]
     pub fn doc_id(&self) -> UuidV7 {
-        self.id.into()
+        self.id
     }
 
     /// Return Document Version `UUIDv7`.
     #[must_use]
     pub fn doc_ver(&self) -> UuidV7 {
-        self.ver.into()
+        self.ver
     }
 
     /// Returns the Document Content Type, if any.
@@ -156,11 +158,6 @@ impl Metadata {
                     );
                 },
             }
-        } else {
-            error_report.missing_field(
-                "content encoding",
-                "Missing content encoding field in COSE protected header",
-            );
         }
 
         let mut doc_type: Option<UuidV4> = None;
@@ -220,18 +217,7 @@ impl Metadata {
             error_report.missing_field("ver", "Missing ver field in COSE protected header");
         }
 
-        let extra = ExtraFields::from_protected_header(protected, error_report).map_or_else(
-            |e| {
-                error_report.conversion_error(
-                    "COSE protected header",
-                    &format!("{protected:?}"),
-                    &format!("Expected ExtraField: {e}"),
-                    &format!("{CONTEXT}, ExtraFields"),
-                );
-                None
-            },
-            Some,
-        );
+        let extra = ExtraFields::from_protected_header(protected, error_report);
 
         match (content_type, content_encoding, id, doc_type, ver, extra) {
             (
@@ -254,9 +240,9 @@ impl Metadata {
                 }
 
                 Ok(Self {
-                    doc_type: doc_type.into(),
-                    id: id.into(),
-                    ver: ver.into(),
+                    doc_type,
+                    id,
+                    ver,
                     alg: algorithm,
                     content_encoding,
                     content_type,
@@ -298,9 +284,9 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type.try_into()?)
-            .text_value(ID_KEY.to_string(), meta.id.try_into()?)
-            .text_value(VER_KEY.to_string(), meta.ver.try_into()?);
+            .text_value(TYPE_KEY.to_string(), encode_cbor_uuid(meta.doc_type)?)
+            .text_value(ID_KEY.to_string(), encode_cbor_uuid(meta.id)?)
+            .text_value(VER_KEY.to_string(), encode_cbor_uuid(meta.ver)?);
 
         builder = meta.extra.fill_cose_header_fields(builder)?;
 
@@ -336,9 +322,7 @@ pub(crate) fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
 /// Decode `From<uuid::Uuid>` type from `coset::cbor::Value`.
 ///
 /// This is used to decode `UuidV4` and `UuidV7` types.
-pub(crate) fn decode_cbor_uuid<
-    T: for<'a> minicbor::decode::Decode<'a, CborContext> + TryFrom<uuid::Uuid>,
->(
+pub(crate) fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborContext>>(
     value: coset::cbor::Value,
 ) -> anyhow::Result<T> {
     match value.to_vec() {
