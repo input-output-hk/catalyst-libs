@@ -60,7 +60,6 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   which [`type`](./../signed_doc/spec.md#type) must be equal to
   `48c20109-362a-4d32-9bba-e0a9cf8b45be` value.
 
-
 #### Content format
 
 TODO
