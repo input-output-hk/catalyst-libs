@@ -61,7 +61,6 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   where the comment is in reply to the referenced comment.
   The [`type`](./../signed_doc/spec.md#type) of the replied document
   must be equal to comment document `type` field value.
-
   Comments may only reply to a single other comment document.
   The referenced `comment` must be for the same proposal [`id`](./../signed_doc/spec.md#id),
   but can be for a different proposal [`ver`](./../signed_doc/spec.md#ver).
