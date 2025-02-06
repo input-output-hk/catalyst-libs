@@ -47,17 +47,21 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   ```
 
 * [`ref`](./../signed_doc/meta.md#ref-document-reference).
-  Reference to a related [Proposal Document].
-* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0b8424d4-ebfd-46e3-9577-1775a69d290c` value,
-  [comment template type](#comment-template).
+  Reference to a related [Proposal Document],
+  which [`type`](./../signed_doc/spec.md#type) must be equal to
+  [proposal document `type`][Proposal Document] field value.
 
-  ```CDDL
-  "template" => 37(h'0b8424d4ebfd46e395771775a69d290c')
-  ```
+* [`template`](./../signed_doc/meta.md#ref-document-reference).
+  A reference to the comment template document,
+  which [`type`](./../signed_doc/spec.md#type) must be equal to
+  [comment template `type`](#comment-template) field value.
 
 * [`reply`](./../signed_doc/meta.md#reply-reply-reference) (optional).
-  A reference to another comment,
+  A reference to another comment document,
   where the comment is in reply to the referenced comment.
+  The [`type`](./../signed_doc/spec.md#type) of the replied document
+  must be equal to comment document `type` field value.
+
   Comments may only reply to a single other comment document.
   The referenced `comment` must be for the same proposal [`id`](./../signed_doc/spec.md#id),
   but can be for a different proposal [`ver`](./../signed_doc/spec.md#ver).
