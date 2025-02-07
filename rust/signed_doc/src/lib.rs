@@ -17,12 +17,12 @@ use std::{
 
 pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
-pub use catalyst_types::uuid::{UuidV4, UuidV7};
+pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
 use error::CatalystSignedDocError;
 pub use metadata::{DocumentRef, ExtraFields, Metadata};
-pub use minicbor::{decode, encode, Decode, Decoder, Encode};
+pub use minicbor::{decode, encode, Decode, Decoder, Encode, Encoder};
 pub use rbac_registration::cardano::cip509::SimplePublicKeyType;
 pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
@@ -106,7 +106,7 @@ impl CatalystSignedDocument {
 
     /// Return a Document's signatures
     #[must_use]
-    pub fn signatures(&self) -> &Signatures {
+    pub(crate) fn signatures(&self) -> &Signatures {
         &self.inner.signatures
     }
 
@@ -119,12 +119,7 @@ impl CatalystSignedDocument {
     /// Return a list of Document's author IDs (short form of Catalyst IDs).
     #[must_use]
     pub fn authors(&self) -> Vec<IdUri> {
-        self.inner
-            .signatures
-            .kids()
-            .into_iter()
-            .map(|k| k.as_short_id())
-            .collect()
+        self.inner.signatures.authors()
     }
 
     /// Verify document signatures.
