@@ -10,6 +10,4 @@ define_hashes!(
     (TransactionHash, Blake2b256Hash),
     /// A public key hash - raw Blake2b-224 hash of an Ed25519 public key (has no discriminator, just the hash).
     (PubKeyHash, Blake2b224Hash),
-    /// A stake address hash.
-    (StakeAddress, Blake2b256Hash),
 );
