@@ -43,7 +43,7 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
-  "content-type" => "br"
+  "content-encoding" => "br"
   ```
 
 * [`ref`](./../signed_doc/meta.md#ref-document-reference).
@@ -103,7 +103,7 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
-  "content-type" => "br"
+  "content-encoding" => "br"
   ```
 
 #### Content format
