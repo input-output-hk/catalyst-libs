@@ -67,6 +67,7 @@ impl fmt::Display for Cip36 {
 
 /// CIP-36 Catalyst registration error
 #[allow(dead_code, clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub struct Cip36Error {
     /// The decoding error that make the code not able to process.
     error: anyhow::Error,
@@ -343,5 +344,34 @@ impl Cip36 {
     #[must_use]
     pub fn err_report(&self) -> &ProblemReport {
         &self.err_report
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Cip36, MultiEraBlock, Network, Point};
+
+    // CIP36 in transaction 1
+    // <https://preprod.cardanoscan.io/transaction/5c7cf7bff543447fc1e46c2598380fa08b8d882de2191ef5bc80078b71724217?tab=metadata>
+    fn block_1() -> MultiEraBlock {
+        let data = hex::decode(include_str!("./test_data/block_1.block")).unwrap();
+        let previous = Point::fuzzy(0.into());
+        MultiEraBlock::new(Network::Preprod, data, &previous, 0.into()).unwrap()
+    }
+
+    #[test]
+    fn new() {
+        let res = Cip36::new(&block_1(), 1.into(), true).unwrap().unwrap();
+        assert!(!res.err_report().is_problematic());
+        assert!(res.is_valid());
+        assert!(res.network() == Network::Preprod);
+        assert!(res.raw_nonce() == Some(55_076_993));
+        assert!(res.nonce() == Some(55_076_993));
+    }
+
+    #[test]
+    fn from_block() {
+        let res = Cip36::cip36_from_block(&block_1(), true).unwrap();
+        assert_eq!(res.len(), 1);
     }
 }
