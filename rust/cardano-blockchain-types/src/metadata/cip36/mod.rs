@@ -17,7 +17,7 @@ use voting_pk::VotingPubKey;
 use crate::{MetadatumLabel, MultiEraBlock, Network, Slot, TxnIndex};
 
 /// CIP-36 Catalyst registration
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cip36 {
     /// Key registration - 61284
