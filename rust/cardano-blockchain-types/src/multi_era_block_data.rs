@@ -294,6 +294,7 @@ impl MultiEraBlock {
     }
 
     /// Returns a slot of the block.
+    #[must_use]
     pub fn slot(&self) -> Slot {
         self.decode().slot().into()
     }
