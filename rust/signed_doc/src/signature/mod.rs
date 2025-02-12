@@ -25,7 +25,13 @@ impl Signatures {
         Self(Vec::new())
     }
 
-    /// List of signature Key IDs.
+    /// Return a list of author IDs (short form of Catalyst IDs).
+    #[must_use]
+    pub fn authors(&self) -> Vec<IdUri> {
+        self.kids().into_iter().map(|k| k.as_short_id()).collect()
+    }
+
+    /// Return a list of Document's Catalyst IDs.
     #[must_use]
     pub fn kids(&self) -> Vec<IdUri> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
