@@ -1,0 +1,53 @@
+{
+    "docs": {
+        "Template": {
+            "type": "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
+            "id": {
+                "format": "UUIDv7",
+                "required": "yes"
+            },
+            "ver": {
+                "format": "UUIDv7",
+                "required": "yes"
+            },
+            "alg": {
+                "format": "COSE Algorithm",
+                "required": "optional"
+            },
+            "content type": [
+                "application/schema+json",
+                "application/cddl"
+            ],
+            "ref": {
+                "format": "Document Reference",
+                "required": "optional",
+                "ref type": "Proposal"
+            },
+            "content encoding": [
+                "br"
+            ]
+        },
+        "Proposal": {
+            "description": "# This is my description.\n\n* Its markdown",
+            "type": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+            "id": {
+                "format": "UUIDv7",
+                "required": "yes"
+            },
+            "ver": {
+                "format": "UUIDv7",
+                "required": "yes"
+            },
+            "alg": {
+                "format": "COSE Algorithm",
+                "required": "optional"
+            },
+            "content type": [
+                "application/json"
+            ],
+            "content encoding": [
+                "br"
+            ]
+        }
+    }
+}

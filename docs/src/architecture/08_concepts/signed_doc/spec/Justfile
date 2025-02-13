@@ -1,0 +1,22 @@
+# use with https://github.com/casey/just
+#
+# Developer convenience functions
+
+default:
+    @just --list --unsorted
+
+# Fiz (where possible) and format cue files
+format:
+    cue fix signed_docs
+    cue fmt .
+
+# Check the signed document cue files are valid.
+check: format
+    cue vet -p signed_docs -c
+
+# Fix and Check Markdown files
+regenerate: check
+    cue export -f -s -p signed_docs --out yaml --outfile signed_doc.yaml
+
+# Pre Push Checks - intended to be run by a git pre-push hook.
+pre-push: regenerate

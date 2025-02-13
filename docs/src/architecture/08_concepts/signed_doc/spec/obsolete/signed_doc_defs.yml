@@ -1,0 +1,115 @@
+# yaml-language-server: $schema=./signed_doc_defs.schema.json
+
+# Default values applied to all documents unless otherwise re-defined.
+default:
+  contentType: application/json
+  contentEncodings:
+    - br
+  metadata:
+    id:
+      format: UUIDv7
+      required: yes
+      description: |
+        [Document ID].
+    ver:
+      format: UUIDv7
+      required: yes
+      description: |
+        [Document Version].
+    alg:
+      format: COSE Algorithm
+      required: yes
+      description: |
+        [COSE Algorithm].
+    content type:
+      format: HTTP Content Type
+      required: yes
+      description: |
+        [HTTP Content Type].
+    content encoding:
+      format: HTTP Content Encoding
+      required: optional
+      description: |
+        [HTTP Content Encoding].
+    ref:
+      format: Document Reference
+      description: |
+        This is a reference to another document.
+        The purpose of the `ref` will vary depending on the [Document Type].
+
+        The `ref` can be either a single [UUIDv7] or a [CBOR] Array of Two [UUIDv7].
+
+        If the `ref` is a single [UUID] v7, it is a reference to the document of that [Document Id].
+        If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
+
+        * `<id>` - the [UUIDv7] of the referenced documents [Document Id].
+        * `<ver>` - the [UUIDv7] of the referenced documents [Document Ver].
+      validation: |
+        For any document type, `ref` can refer to only 1 other document type.
+        The referenced document type *MUST* be different than the type of document `ref` appears in.
+        For example `ref` for a Proposal Comment Document, is always a Proposal type document.
+
+    ref hash:
+      format: Document Hash
+      description: |
+        This is a cryptographically secured reference to another document.
+
+        It consists of a single field:
+
+        * `hash` - the [CBOR] tagged hash of the signed document.  
+          All data within the signed document is hashed, excluding the signatures.
+
+        This field is not used every time a [Document Reference] is used, 
+        however if it is defined to be used then the [Document Reference] *MUST* also be used.
+      validation: |
+        The hash must match the hash of th document referenced by the [Document Reference].
+    template:
+      format: Document Reference
+      description: |
+        This is a reference to another documen
+      validation: |
+        The referenced document must be a [Template Document].
+
+docs:
+  Proposal Template:
+    type: 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+    metadata:
+      ref:
+        required: no
+      ref hash:
+        required: no
+      template:
+        required: no
+        ref type: Proposal Template Template
+
+  Proposal:
+    type: 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+    metadata:
+      template:
+        
+        template type: json schema
+        required: yes
+        ref type: Proposal Template
+        category: required
+  
+  Proposal Action:
+    type: 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  Proposal Comment Template:
+    type: 0b8424d4-ebfd-46e3-9577-1775a69d290c
+  Proposal Comment:
+    type: b679ded3-0e7c-41ba-89f8-da62a17898ea
+  Category Parameters:
+    type: 48c20109-362a-4d32-9bba-e0a9cf8b45be
+  Campaign Parameters:
+    type: 0110ea96-a555-47ce-8408-36efe6ed6f7c
+  Brand Parameters:
+    type: 3e4808cc-c86e-467b-9702-d60baa9d1fca
+  Public Vote Tx V2:
+    type: 8de5586c-e998-4b95-8742-7be3c8592803
+    contentType: application/cbor
+  Private Vote Tx V2:
+    type: e78ee18d-f380-44c1-a852-80aa6ecb07fe
+    contentType: application/cbor
+  Immutable Ledger Block:
+    type: d9e7e6ce-2401-4d7d-9492-f4f7c64241c3
+    contentType: application/cbor
