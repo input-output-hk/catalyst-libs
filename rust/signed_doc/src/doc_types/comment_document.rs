@@ -126,7 +126,7 @@ impl TryFrom<CatalystSignedDocument> for CommentDocument {
     }
 }
 
-/// Stateles validation rules for Comment Document
+/// Stateless validation rules for Comment Document
 fn comment_document_validation_rules() -> Vec<ValidationRule<CatalystSignedDocument>> {
     vec![
         ValidationRule {
