@@ -43,6 +43,7 @@ struct InnerCatalystSignedDocument {
 /// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
 /// manage the Arc anywhere else. These are likely to be large, best to have the Arc be
 /// non-optional.
+#[derive(Clone)]
 pub struct CatalystSignedDocument {
     /// Catalyst Signed Document metadata, raw doc, with content errors.
     inner: Arc<InnerCatalystSignedDocument>,
