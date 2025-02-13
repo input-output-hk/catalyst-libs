@@ -47,15 +47,18 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
-  "content-type" => "br"
+  "content-encoding" => "br"
   ```
 
-* [`template`](./../signed_doc/meta.md#ref-document-reference) must be equal to `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` value,
-  [proposal template type](#proposal-template).
+* [`template`](./../signed_doc/meta.md#ref-document-reference).
+  A reference to the proposal template document,
+  which [`type`](./../signed_doc/spec.md#type) must be equal to
+  [proposal template `type`](#proposal-template) field value.
 
-  ```CDDL
-  "template" => 37(h'0ce8ab3892584fbca62e7faa6e58318f')
-  ```
+* [`category_id`](./../signed_doc/meta.md#category_id) (optional).
+  A reference to the category document,
+  which [`type`](./../signed_doc/spec.md#type) must be equal to
+  `48c20109-362a-4d32-9bba-e0a9cf8b45be` value.
 
 #### Content format
 
@@ -91,7 +94,7 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
-  "content-type" => "br"
+  "content-encoding" => "br"
   ```
 
 #### Content format

@@ -122,4 +122,5 @@ e.g. "Development & Infrastructure", "Products & Integrations".
 
 [UUID]: https://www.rfc-editor.org/rfc/rfc9562.html
 [CBOR]: https://datatracker.ietf.org/doc/rfc8949/
+[JSON]: https://datatracker.ietf.org/doc/html/rfc7159
 [JSON Path]: https://datatracker.ietf.org/doc/html/rfc9535

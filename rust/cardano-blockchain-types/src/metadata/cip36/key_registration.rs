@@ -116,9 +116,10 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                             .as_ref()
                             .map(|addr| !addr.payment().is_script())
                             .or(None);
+                        cip36_key_registration.payment_addr = shelley_addr;
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
-                        cip36_key_registration.nonce = Some(decode_nonce(d)?);
+                        cip36_key_registration.raw_nonce = Some(decode_nonce(d)?);
                     },
                     Cip36KeyRegistrationKeys::Purpose => {
                         cip36_key_registration.purpose = decode_purpose(d)?;

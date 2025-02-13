@@ -33,6 +33,12 @@ macro_rules! define_hashes {
                 }
             }
 
+            impl std::fmt::Display for $name {
+                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    f.write_str(&format!("0x{}", self.0))
+                }
+            }
+
             impl From<$name> for Vec<u8> {
                 fn from(value: $name) -> Self {
                     value.0.into()
@@ -123,5 +129,15 @@ mod tests {
 
         let from_vec = H1::try_from(v).unwrap();
         assert_eq!(hash, from_vec);
+    }
+
+    // The display implementation is used to get user-friendly representation and must be
+    // equal to `hex::encode(<underlying bytes>)`.
+    #[test]
+    fn display() {
+        let hash = H1::new(&[1, 2, 3, 4, 5]);
+        let display = format!("{hash}");
+        let expected = "0x2a6ad53c3c6986406e1d6c7cfd06b69a";
+        assert_eq!(expected, display);
     }
 }
