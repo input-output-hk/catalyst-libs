@@ -23,6 +23,8 @@ ed25519-dalek = { version = "2.1.1", features = ["pem", "rand_core"] }
 hex = "0.4.3"
 strum = { version = "0.26.3", features = ["derive"] }
 clap = { version = "4.5.23",  features = ["derive", "env"] }
+jsonschema = "0.28.3"
+jsonpath-rust = "0.7.5"
 
 
 [dev-dependencies]

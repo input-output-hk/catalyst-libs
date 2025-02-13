@@ -21,6 +21,7 @@ pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
 use error::CatalystSignedDocError;
+use metadata::{ContentEncoding, ContentType};
 pub use metadata::{DocumentRef, ExtraFields, Metadata};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode, Encoder};
 pub use rbac_registration::cardano::cip509::SimplePublicKeyType;
@@ -96,6 +97,18 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn doc_content(&self) -> &Content {
         &self.inner.content
+    }
+
+    /// Return document `ContentType`.
+    #[must_use]
+    pub fn doc_content_type(&self) -> ContentType {
+        self.inner.metadata.content_type()
+    }
+
+    /// Return document `ContentEncoding`.
+    #[must_use]
+    pub fn doc_content_encoding(&self) -> Option<ContentEncoding> {
+        self.inner.metadata.content_encoding()
     }
 
     /// Return document metadata content.

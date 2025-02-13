@@ -3,19 +3,19 @@
 
 use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
 
-use crate::{error::CatalystSignedDocError, CatalystSignedDocument};
+use crate::{
+    doc_types::PROPOSAL_TEMPLATE_UUID_TYPE,
+    error::CatalystSignedDocError,
+    validator::{ValidationRule, Validator},
+    CatalystSignedDocument,
+};
 
 /// Proposal document `UuidV4` type.
 pub const PROPOSAL_DOCUMENT_UUID_TYPE: Uuid =
     Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
 
 /// Proposal Document struct
-pub struct ProposalDocument {
-    /// Proposal document content data
-    /// TODO: change it to `serde_json::Value` type
-    #[allow(dead_code)]
-    content: Vec<u8>,
-}
+pub struct ProposalDocument;
 
 impl ProposalDocument {
     /// Try to build `ProposalDocument` from `CatalystSignedDoc` doing all necessary
@@ -28,14 +28,31 @@ impl ProposalDocument {
         const CONTEXT: &str = "Catalyst Signed Document to Proposal Document";
         let mut failed = false;
 
-        if doc.doc_type().uuid() != PROPOSAL_DOCUMENT_UUID_TYPE {
-            error_report.invalid_value(
-                "`type`",
-                &doc.doc_type().to_string(),
-                &format!("Proposal Document type UUID value is {PROPOSAL_DOCUMENT_UUID_TYPE}"),
-                CONTEXT,
-            );
-            failed = true;
+        let rules = vec![
+            ValidationRule {
+                field: "type".to_string(),
+                description: format!(
+                    "Proposal Document type UUID value is {PROPOSAL_DOCUMENT_UUID_TYPE}"
+                ),
+                validator: |doc: &CatalystSignedDocument, _| {
+                    doc.doc_type().uuid() != PROPOSAL_DOCUMENT_UUID_TYPE
+                },
+            },
+            ValidationRule {
+                field: "template".to_string(),
+                description: format!(
+                    "Proposal Document template UUID value is {PROPOSAL_TEMPLATE_UUID_TYPE}"
+                ),
+                validator: |doc: &CatalystSignedDocument, _| {
+                    doc.doc_type().uuid() != PROPOSAL_TEMPLATE_UUID_TYPE
+                },
+            },
+        ];
+        for rule in rules {
+            if !(rule.validator)(doc, error_report) {
+                error_report.functional_validation(&rule.description, "");
+                failed = true;
+            }
         }
 
         // TODO add other validation
@@ -44,14 +61,14 @@ impl ProposalDocument {
             anyhow::bail!("Failed to build `ProposalDocument` from `CatalystSignedDoc`");
         }
 
-        let content = doc.doc_content().decoded_bytes().to_vec();
-        Ok(Self { content })
+        Ok(Self)
     }
 
     /// A comprehensive validation of the `ProposalDocument` content.
     #[allow(clippy::unused_self)]
-    pub(crate) fn validate_with_report<F>(&self, _doc_getter: F, _error_report: &ProblemReport)
-    where F: FnMut() -> Option<CatalystSignedDocument> {
+    pub(crate) fn validate_with_report(
+        &self, _validator: impl Validator, _error_report: &ProblemReport,
+    ) {
         // TODO: implement the rest of the validation
     }
 }
