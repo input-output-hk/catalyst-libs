@@ -106,6 +106,21 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   "content-encoding" => "br"
   ```
 
+#### Fund 14 defined templates ids
+
+- id: `0194d494-4402-7e0e-b8d6-171f8fea18b0`, ver: `0194d494-4402-7e0e-b8d6-171f8fea18b0`
+- id: `0194d494-4402-7444-9058-9030815eb029`, ver: `0194d494-4402-7444-9058-9030815eb029`
+- id: `0194d494-4402-7351-b4f7-24938dc2c12e`, ver: `0194d494-4402-7351-b4f7-24938dc2c12e`
+- id: `0194d494-4402-79ad-93ba-4d7a0b65d563`, ver: `0194d494-4402-79ad-93ba-4d7a0b65d563`
+- id: `0194d494-4402-7cee-a5a6-5739839b3b8a`, ver: `0194d494-4402-7cee-a5a6-5739839b3b8a`
+- id: `0194d494-4402-7aee-8b24-b5300c976846`, ver: `0194d494-4402-7aee-8b24-b5300c976846`
+- id: `0194d494-4402-7d75-be7f-1c4f3471a53c`, ver: `0194d494-4402-7d75-be7f-1c4f3471a53c`
+- id: `0194d494-4402-7a2c-8971-1b4c255c826d`, ver: `0194d494-4402-7a2c-8971-1b4c255c826d`
+- id: `0194d494-4402-7074-86ac-3efd097ba9b0`, ver: `0194d494-4402-7074-86ac-3efd097ba9b0`
+- id: `0194d494-4402-7202-8ebb-8c4c47c286d8`, ver: `0194d494-4402-7202-8ebb-8c4c47c286d8`
+- id: `0194d494-4402-7fb5-b680-c23fe4beb088`, ver: `0194d494-4402-7fb5-b680-c23fe4beb088`
+- id: `0194d494-4402-7aa5-9dbc-5fe886e60ebc`, ver: `0194d494-4402-7aa5-9dbc-5fe886e60ebc`
+
 #### Content format
 
 TODO
