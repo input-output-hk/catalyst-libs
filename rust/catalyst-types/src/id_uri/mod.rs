@@ -714,4 +714,14 @@ mod tests {
         let encoded_vk = base64_url::encode(vk.as_bytes());
         assert_eq!(encoded_vk, "1234");
     }
+
+    #[test]
+    fn fixme_remove() {
+        // example: Some("cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE".into()),
+        let id: IdUri = "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+            .parse()
+            .unwrap();
+        println!("{:?}", id.role0_pk.as_bytes());
+        todo!();
+    }
 }
