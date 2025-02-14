@@ -6,11 +6,14 @@
 
 use std::borrow::Cow;
 
+use c509_certificate::c509::C509;
 use cardano_blockchain_types::{TxnWitness, VKeyHash};
 use catalyst_types::{
     hashes::{Blake2b128Hash, Blake2b256Hash},
+    id_uri::IdUri,
     problem_report::ProblemReport,
 };
+use ed25519_dalek::{VerifyingKey, PUBLIC_KEY_LENGTH};
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -18,6 +21,7 @@ use pallas::{
     },
     ledger::{addresses::Address, primitives::conway, traverse::MultiEraTx},
 };
+use x509_cert::Certificate;
 
 use super::utils::cip19::compare_key_hash;
 use crate::cardano::cip509::{
@@ -158,9 +162,9 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
         .collect()
 }
 
-/// Checks that only role 0 uses certificates with zero index.
+/// Checks the role data.
 #[allow(clippy::similar_names)]
-pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
+pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) -> Option<IdUri> {
     let context = "Role data validation";
 
     if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
@@ -226,9 +230,10 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
         );
     }
 
+    let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
         if number == &RoleNumber::ROLE_0 {
-            validate_role_0(data, metadata, context, report);
+            catalyst_id = validate_role_0(data, metadata, context, report);
         } else {
             if let Some(signing_key) = data.signing_key() {
                 if signing_key.key_offset == 0 {
@@ -252,12 +257,13 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
             }
         }
     }
+    catalyst_id
 }
 
 /// Checks that the role 0 data is correct.
 fn validate_role_0(
     role: &RoleData, metadata: &Cip509RbacMetadata, context: &str, report: &ProblemReport,
-) {
+) -> Option<IdUri> {
     if let Some(key) = role.encryption_key() {
         report.invalid_value(
             "Role 0 encryption key",
@@ -269,7 +275,7 @@ fn validate_role_0(
 
     let Some(signing_key) = role.signing_key() else {
         report.missing_field("(Role 0) RoleData::signing_key", context);
-        return;
+        return None;
     };
 
     if signing_key.key_offset != 0 {
@@ -277,14 +283,18 @@ fn validate_role_0(
             &format!("The role 0 must reference a certificate with 0 index ({role:?})"),
             context,
         );
-        return;
+        return None;
     }
+
+    let mut catalyst_id = None;
+    let network = "cardano";
 
     match signing_key.local_ref {
         LocalRefInt::X509Certs => {
             match metadata.x509_certs.first() {
-                Some(X509DerCert::X509Cert(_)) => {
+                Some(X509DerCert::X509Cert(cert)) => {
                     // All good: role 0 references a valid X509 certificate.
+                    catalyst_id = x509_cert_key(cert, context, report).map(|k| IdUri::new(network, None, k));
                 }
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
@@ -292,8 +302,9 @@ fn validate_role_0(
         },
         LocalRefInt::C509Certs => {
             match metadata.c509_certs.first() {
-                Some(C509Cert::C509Certificate(_)) => {
+                Some(C509Cert::C509Certificate(cert)) => {
                     // All good: role 0 references a valid C509 certificate.
+                    catalyst_id = c509_cert_key(cert, context, report).map(|k| IdUri::new(network, None, k));
                 }
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),
@@ -306,6 +317,59 @@ fn validate_role_0(
                 "Role signing key should reference certificate, not public key",
                 context,
             );
+        },
+    }
+    catalyst_id
+}
+
+/// Extracts `VerifyingKey` from the given `X509` certificate.
+fn x509_cert_key(
+    cert: &Certificate, context: &str, report: &ProblemReport,
+) -> Option<VerifyingKey> {
+    let Some(bytes) = cert
+        .tbs_certificate
+        .subject_public_key_info
+        .subject_public_key
+        .as_bytes()
+    else {
+        report.invalid_value(
+            "subject_public_key",
+            "is not octet aligned",
+            "Must not have unused bits",
+            context,
+        );
+        return None;
+    };
+    verifying_key(bytes, context, report)
+}
+
+/// Extracts `VerifyingKey` from the given `C509` certificate.
+fn c509_cert_key(cert: &C509, context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
+    verifying_key(cert.tbs_cert().subject_public_key(), context, report)
+}
+
+/// Creates `VerifyingKey` from the given byte slice.
+fn verifying_key(bytes: &[u8], context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
+    println!("FIXME: bytes len = {}", bytes.len());
+    println!("FIXME: PUBLIC_KEY_LENGTH len = {PUBLIC_KEY_LENGTH}");
+    let bytes: &[u8; PUBLIC_KEY_LENGTH] = match bytes.try_into() {
+        Ok(v) => v,
+        Err(e) => {
+            report.other(
+                &format!("Invalid public key length in X509 certificate: {e:?}"),
+                context,
+            );
+            return None;
+        },
+    };
+    match VerifyingKey::from_bytes(bytes) {
+        Ok(k) => Some(k),
+        Err(e) => {
+            report.other(
+                &format!("Invalid public key in C509 certificate: {e:?}"),
+                context,
+            );
+            None
         },
     }
 }
