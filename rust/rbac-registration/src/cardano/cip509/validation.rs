@@ -326,7 +326,7 @@ fn validate_role_0(
 fn x509_cert_key(
     cert: &Certificate, context: &str, report: &ProblemReport,
 ) -> Option<VerifyingKey> {
-    let Some(bytes) = cert
+    let Some(extended_public_key) = cert
         .tbs_certificate
         .subject_public_key_info
         .subject_public_key
@@ -340,7 +340,7 @@ fn x509_cert_key(
         );
         return None;
     };
-    verifying_key(bytes, context, report)
+    verifying_key(extended_public_key, context, report)
 }
 
 /// Extracts `VerifyingKey` from the given `C509` certificate.
@@ -348,11 +348,28 @@ fn c509_cert_key(cert: &C509, context: &str, report: &ProblemReport) -> Option<V
     verifying_key(cert.tbs_cert().subject_public_key(), context, report)
 }
 
-/// Creates `VerifyingKey` from the given byte slice.
-fn verifying_key(bytes: &[u8], context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
-    println!("FIXME: bytes len = {}", bytes.len());
-    println!("FIXME: PUBLIC_KEY_LENGTH len = {PUBLIC_KEY_LENGTH}");
-    let bytes: &[u8; PUBLIC_KEY_LENGTH] = match bytes.try_into() {
+/// Creates `VerifyingKey` from the given extended public key.
+fn verifying_key(
+    extended_public_key: &[u8], context: &str, report: &ProblemReport,
+) -> Option<VerifyingKey> {
+    const EXTENDED_PUBLIC_KEY_LENGTH: usize = 64;
+
+    if extended_public_key.len() != EXTENDED_PUBLIC_KEY_LENGTH {
+        report.other(
+            &format!("Unexpected extended public key length in certificate: {}, expected {EXTENDED_PUBLIC_KEY_LENGTH}",
+                extended_public_key.len()),
+            context,
+        );
+        return None;
+    }
+
+    // This should never fail because of the check above.
+    let Some(public_key) = extended_public_key.get(0..PUBLIC_KEY_LENGTH) else {
+        report.other("Unable to get public key part", context);
+        return None;
+    };
+
+    let bytes: &[u8; PUBLIC_KEY_LENGTH] = match public_key.try_into() {
         Ok(v) => v,
         Err(e) => {
             report.other(
