@@ -105,6 +105,7 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   ```CDDL
   "content-encoding" => "br"
   ```
+
 * [`category_id`](./../signed_doc/meta.md#category_id) (optional).
   A reference to the category document,
   which [`type`](./../signed_doc/spec.md#type) must be equal to
