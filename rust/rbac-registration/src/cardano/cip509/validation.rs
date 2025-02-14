@@ -352,6 +352,7 @@ fn c509_cert_key(cert: &C509, context: &str, report: &ProblemReport) -> Option<V
 fn verifying_key(
     extended_public_key: &[u8], context: &str, report: &ProblemReport,
 ) -> Option<VerifyingKey> {
+    /// An extender public key length in bytes.
     const EXTENDED_PUBLIC_KEY_LENGTH: usize = 64;
 
     if extended_public_key.len() != EXTENDED_PUBLIC_KEY_LENGTH {
