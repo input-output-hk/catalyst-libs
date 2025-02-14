@@ -112,6 +112,11 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   "content-encoding" => "br"
   ```
 
+* [`category_id`](./../signed_doc/meta.md#category_id) (optional).
+  A reference to the category document,
+  which [`type`](./../signed_doc/spec.md#type) must be equal to
+  `48c20109-362a-4d32-9bba-e0a9cf8b45be` value.
+
 #### Fund 14 defined templates ids
 
 * id: `0194d492-1daa-75b5-b4a4-5cf331cd8d1a`, ver: `0194d492-1daa-75b5-b4a4-5cf331cd8d1a`,
