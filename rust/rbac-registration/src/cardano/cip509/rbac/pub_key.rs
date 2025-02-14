@@ -1,10 +1,11 @@
 //! Public key type for RBAC metadata
 
+use catalyst_types::problem_report::ProblemReport;
+use cbork_utils::decode_helper::{decode_bytes, decode_tag};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
 
 use super::tag::KeyTag;
-use crate::utils::decode_helper::{decode_bytes, decode_tag};
 
 /// Enum of possible public key type.
 #[derive(Debug, PartialEq, Clone, Default)]
@@ -18,8 +19,8 @@ pub enum SimplePublicKeyType {
     Ed25519(VerifyingKey),
 }
 
-impl Decode<'_, ()> for SimplePublicKeyType {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for SimplePublicKeyType {
+    fn decode(d: &mut Decoder, _report: &mut ProblemReport) -> Result<Self, decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "SimplePublicKeyType")?;
@@ -44,7 +45,10 @@ impl Decode<'_, ()> for SimplePublicKeyType {
                     _ => Err(decode::Error::message("Unknown tag for Self")),
                 }
             },
-            minicbor::data::Type::Undefined => Ok(Self::Undefined),
+            minicbor::data::Type::Undefined => {
+                d.undefined()?;
+                Ok(Self::Undefined)
+            },
             _ => {
                 Err(decode::Error::message(
                     "Invalid datatype for SimplePublicKeyType",

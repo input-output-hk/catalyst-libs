@@ -2,11 +2,12 @@
 
 use std::io::Read;
 
+use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper};
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
 use super::rbac::Cip509RbacMetadata;
-use crate::utils::decode_helper::{decode_array_len, decode_bytes, decode_helper};
+use crate::cardano::cip509::decode_context::DecodeContext;
 
 /// Enum of compression algorithms used to compress chunks.
 #[derive(FromRepr, Debug, PartialEq, Clone, Default)]
@@ -21,35 +22,64 @@ pub enum CompressionAlgorithm {
     Zstd = 12,
 }
 
-/// x509 chunks.
-#[derive(Debug, PartialEq, Clone, Default)]
-pub struct X509Chunks(pub Cip509RbacMetadata);
+/// A helper for decoding [`Cip509RbacMetadata`].
+///
+/// Due to encoding restrictions the [`Cip509`](crate::cardano::cip509::Cip509) metadata
+/// is encoded in chunks:
+/// ```text
+/// chunk_type => [ + x509_chunk ]
+/// ```
+/// This helper is used to decode them into the actual structure.
+#[derive(Debug, PartialEq, Clone)]
+pub struct X509Chunks(Option<Cip509RbacMetadata>);
 
-#[allow(dead_code)]
-impl X509Chunks {
-    /// Create new instance of `X509Chunks`.
-    fn new(chunk_data: Cip509RbacMetadata) -> Self {
-        Self(chunk_data)
+impl From<X509Chunks> for Option<Cip509RbacMetadata> {
+    fn from(value: X509Chunks) -> Self {
+        value.0
     }
 }
 
-impl Decode<'_, ()> for X509Chunks {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, DecodeContext<'_, '_>> for X509Chunks {
+    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
         // Determine the algorithm
-        let algo: u8 = decode_helper(d, "algorithm in X509Chunks", ctx)?;
-        let algorithm = CompressionAlgorithm::from_repr(algo)
-            .ok_or(decode::Error::message("Invalid chunk data type"))?;
+        let algorithm: u8 = decode_helper(d, "algorithm in X509Chunks", &mut ())?;
+        let Some(algorithm) = CompressionAlgorithm::from_repr(algorithm) else {
+            decode_context.report.invalid_value(
+                "compression algorithm",
+                &format!("{algorithm}"),
+                "Allowed values: 10, 11, 12",
+                "Cip509 chunked metadata",
+            );
+            return Ok(Self(None));
+        };
 
-        // Decompress the data
-        let decompressed = decompress(d, &algorithm)
-            .map_err(|e| decode::Error::message(format!("Failed to decompress {e}")))?;
+        let decompressed = match decompress(d, &algorithm) {
+            Ok(v) => v,
+            Err(e) => {
+                decode_context.report.invalid_value(
+                    "Chunked metadata",
+                    &format!("{algorithm:?}"),
+                    "Must contain properly compressed or raw metadata",
+                    &format!("Cip509 chunks decompression error: {e:?}"),
+                );
+                return Ok(Self(None));
+            },
+        };
 
         // Decode the decompressed data.
         let mut decoder = Decoder::new(&decompressed);
-        let chunk_data = Cip509RbacMetadata::decode(&mut decoder, &mut ())
-            .map_err(|e| decode::Error::message(format!("Failed to decode {e}")))?;
+        let chunk_data = match Cip509RbacMetadata::decode(&mut decoder, decode_context) {
+            Ok(d) => d,
+            Err(e) => {
+                decode_context.report.other(
+                    &format!("Failed to decode: {e:?}"),
+                    "Cip509 chunked metadata",
+                );
+                return Ok(Self(None));
+            },
+        };
 
-        Ok(X509Chunks(chunk_data))
+        Ok(X509Chunks(Some(chunk_data)))
     }
 }
 
@@ -84,7 +114,14 @@ fn decompress(d: &mut Decoder, algorithm: &CompressionAlgorithm) -> anyhow::Resu
 
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
+    use cardano_blockchain_types::Point;
+    use catalyst_types::problem_report::ProblemReport;
+    use pallas::ledger::traverse::MultiEraTx;
+
     use super::*;
+    use crate::{cardano::cip509::PointTxnIdx, utils::test};
 
     // RAW data: 10
     const RAW: &str = "0a8c5840a30a815902ae308202aa3082025ca00302010202147735a70599e68b49554b1cb3a6cf5e34583b3c2f300506032b6570307c310b300906035504061302555331584013301106035504080c0a43616c69666f726e69613116301406035504070c0d53616e204672616e636973636f31123010060355040a0c094d79436f6d70616e79584031153013060355040b0c0c4d794465706172746d656e743115301306035504030c0c6d79646f6d61696e2e636f6d301e170d3234313132393034333134305a1758400d3235313132393034333134305a307c310b30090603550406130255533113301106035504080c0a43616c69666f726e69613116301406035504070c0d53616e5840204672616e636973636f31123010060355040a0c094d79436f6d70616e7931153013060355040b0c0c4d794465706172746d656e743115301306035504030c0c58406d79646f6d61696e2e636f6d302a300506032b65700321007e082c662a8d4d3271d797067f36caf25d6472b83901620a2eac193331a7f871a381ef3081ec308158409e0603551d11048196308193820c6d79646f6d61696e2e636f6d82107777772e6d79646f6d61696e2e636f6d820b6578616d706c652e636f6d820f7777772e65584078616d706c652e636f6d86537765622b63617264616e6f3a2f2f616464722f7374616b655f7465737431757165686b636b306c616a713867723238743975786e5840757667637172633630373078336b3972383034387a3879356773737274766e300b0603551d0f0404030205e0301d0603551d250416301406082b06010505070358400106082b06010505070302301d0603551d0e04160414251ddd56123655faa9348ff93c1e92ce3bc15a29300506032b6570034100b11c80d36fdcba650b950f06584087e448b3bcbeb2caa5249b24aff83d16ebbb71249e44bd0ecfab8b40fb772b6f977f98ac9122e13954439d0120980b347e3f9707181e81d9800558206e42f8e5582e89a76ebb13ef279df7841efce978f106bee196f0e3cfd347bb31a2e8186481a4000001820a0003010a6454657374";
@@ -97,26 +134,98 @@ mod tests {
     fn test_decode_x509_chunks_raw() {
         let raw_bytes = hex::decode(RAW).unwrap();
         let mut decoder = Decoder::new(raw_bytes.as_slice());
-        let x509_chunks = X509Chunks::decode(&mut decoder, &mut ());
-        // Decode the decompressed data should success.
-        assert!(x509_chunks.is_ok());
+        let mut report = ProblemReport::new("X509Chunks");
+        // We don't care about actual values in the context, all we want is to check the decoding
+        // of differently compressed data.
+        let data = test::block_3();
+        let transactions = data.block.txs();
+        let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
+            panic!("Unexpected transaction type");
+        };
+        let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
+        let mut context = DecodeContext {
+            origin,
+            txn,
+            payment_history: HashMap::new(),
+            report: &mut report,
+        };
+        let x509_chunks = X509Chunks::decode(&mut decoder, &mut context).unwrap();
+        // We don't want to check `report.is_problematic()` because there will be errors because
+        // of the context. Instead we check that the fields are decoded.
+        let metadata = x509_chunks.0.unwrap();
+        assert_eq!(1, metadata.x509_certs.len());
+        assert!(metadata.c509_certs.is_empty());
+        assert_eq!(1, metadata.certificate_uris.x_uris().len());
+        assert!(metadata.certificate_uris.c_uris().is_empty());
+        assert_eq!(1, metadata.pub_keys.len());
+        assert!(metadata.revocation_list.is_empty());
+        assert_eq!(1, metadata.role_data.len());
+        assert!(metadata.purpose_key_data.is_empty());
     }
 
     #[test]
-    fn test_decode_x509_chunks_brotli() {
+    fn decode_x509_chunks_brotli() {
         let brotli_bytes = hex::decode(BROTLI).unwrap();
         let mut decoder = Decoder::new(brotli_bytes.as_slice());
-        let x509_chunks = X509Chunks::decode(&mut decoder, &mut ());
-        // Decode the decompressed data should success.
-        assert!(x509_chunks.is_ok());
+        let mut report = ProblemReport::new("X509Chunks");
+        // We don't care about actual values in the context, all we want is to check the decoding
+        // of differently compressed data.
+        let data = test::block_3();
+        let transactions = data.block.txs();
+        let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
+            panic!("Unexpected transaction type");
+        };
+        let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
+        let mut context = DecodeContext {
+            origin,
+            txn,
+            payment_history: HashMap::new(),
+            report: &mut report,
+        };
+        let x509_chunks = X509Chunks::decode(&mut decoder, &mut context).unwrap();
+        // We don't want to check `report.is_problematic()` because there will be errors because
+        // of the context. Instead we check that the fields are decoded.
+        let metadata = x509_chunks.0.unwrap();
+        assert_eq!(1, metadata.x509_certs.len());
+        assert!(metadata.c509_certs.is_empty());
+        assert_eq!(1, metadata.certificate_uris.x_uris().len());
+        assert!(metadata.certificate_uris.c_uris().is_empty());
+        assert_eq!(1, metadata.pub_keys.len());
+        assert!(metadata.revocation_list.is_empty());
+        assert_eq!(1, metadata.role_data.len());
+        assert!(metadata.purpose_key_data.is_empty());
     }
 
     #[test]
-    fn test_decode_x509_chunks_zstd() {
+    fn decode_x509_chunks_zstd() {
         let zstd_bytes = hex::decode(ZSTD).unwrap();
         let mut decoder = Decoder::new(zstd_bytes.as_slice());
-        let x509_chunks = X509Chunks::decode(&mut decoder, &mut ());
-        // Decode the decompressed data should success.
-        assert!(x509_chunks.is_ok());
+        let mut report = ProblemReport::new("X509Chunks");
+        // We don't care about actual values in the context, all we want is to check the decoding
+        // of differently compressed data.
+        let data = test::block_3();
+        let transactions = data.block.txs();
+        let MultiEraTx::Conway(txn) = transactions.first().unwrap() else {
+            panic!("Unexpected transaction type");
+        };
+        let origin = PointTxnIdx::new(Point::fuzzy(0.into()), 0.into());
+        let mut context = DecodeContext {
+            origin,
+            txn,
+            payment_history: HashMap::new(),
+            report: &mut report,
+        };
+        let x509_chunks = X509Chunks::decode(&mut decoder, &mut context).unwrap();
+        // We don't want to check `report.is_problematic()` because there will be errors because
+        // of the context. Instead we check that the fields are decoded.
+        let metadata = x509_chunks.0.unwrap();
+        assert_eq!(1, metadata.x509_certs.len());
+        assert!(metadata.c509_certs.is_empty());
+        assert_eq!(1, metadata.certificate_uris.x_uris().len());
+        assert!(metadata.certificate_uris.c_uris().is_empty());
+        assert_eq!(1, metadata.pub_keys.len());
+        assert!(metadata.revocation_list.is_empty());
+        assert_eq!(1, metadata.role_data.len());
+        assert!(metadata.purpose_key_data.is_empty());
     }
 }

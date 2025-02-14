@@ -135,7 +135,7 @@ pub(crate) fn rollback(chain: Network, rollback: RollbackType, depth: u64) {
         None => Rollback { depth, count: 0 },
     };
 
-    value.count += 1;
+    value.count = value.count.saturating_add(1);
 
     let _unused = rollbacks.insert(depth, value);
 }

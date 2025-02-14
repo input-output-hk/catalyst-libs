@@ -82,8 +82,8 @@ impl MemMapFileStat {
     /// Update the global stats when a file is created.
     fn update_create_stat(size: u64) {
         if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
-            stat.file_count += 1;
-            stat.total_size += size;
+            stat.file_count = stat.file_count.saturating_add(1);
+            stat.total_size = stat.total_size.saturating_add(size);
         } else {
             error!(
                 "RwLock write poisoned, failed to update created memory-mapped file statistics."
@@ -94,8 +94,8 @@ impl MemMapFileStat {
     /// Update the global stats when a file is dropped.
     fn update_drop_stat(size: u64) {
         if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
-            stat.drop_count += 1;
-            stat.drop_size += size;
+            stat.drop_count = stat.drop_count.saturating_add(1);
+            stat.drop_size = stat.drop_size.saturating_add(size);
         } else {
             error!(
                 "RwLock write poisoned, failed to update dropped memory-mapped file statistics."
@@ -106,7 +106,7 @@ impl MemMapFileStat {
     /// Update the global error count when an error occurs.
     fn update_err_stat() {
         if let Ok(mut stat) = MEMMAP_FILE_STATS.write() {
-            stat.error_count += 1;
+            stat.error_count = stat.error_count.saturating_add(1);
         } else {
             error!("RwLock write poisoned, failed to update error memory-mapped file statistics.");
         }

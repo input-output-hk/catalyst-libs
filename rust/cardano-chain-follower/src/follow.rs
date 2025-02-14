@@ -374,7 +374,7 @@ mod tests {
             .expect("cannot decode block");
 
         let previous_point = Point::new(
-            (pallas_block.slot() - 1).into(),
+            (pallas_block.slot().checked_sub(1).unwrap()).into(),
             pallas_block
                 .header()
                 .previous_hash()

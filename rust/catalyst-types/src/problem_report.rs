@@ -7,10 +7,10 @@
 use std::sync::Arc;
 
 use orx_concurrent_vec::ConcurrentVec;
-use serde::{ser::SerializeSeq, Serialize};
+use serde::Serialize;
 
 /// The kind of problem being reported
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 #[serde(tag = "type")]
 enum Kind {
     /// Expected and Required field is missing
@@ -73,7 +73,7 @@ enum Kind {
 }
 
 /// Problem Report Entry
-#[derive(Serialize, Clone)]
+#[derive(Debug, Serialize, Clone)]
 struct Entry {
     /// The kind of problem we are recording.
     kind: Kind,
@@ -82,22 +82,11 @@ struct Entry {
 }
 
 /// The Problem Report list
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize)]
 struct Report(ConcurrentVec<Entry>);
 
-impl Serialize for Report {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
-        let mut seq = serializer.serialize_seq(Some(self.0.len()))?;
-        for e in self.0.iter_cloned() {
-            seq.serialize_element(&e)?;
-        }
-        seq.end()
-    }
-}
-
 /// An inner state of the report.
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 struct State {
     /// What context does the whole report have
     context: String,
@@ -108,7 +97,7 @@ struct State {
 /// Problem Report.
 ///
 /// This structure allows making a cheap copies that share the same state.
-#[derive(Clone, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 pub struct ProblemReport(Arc<State>);
 
 impl ProblemReport {

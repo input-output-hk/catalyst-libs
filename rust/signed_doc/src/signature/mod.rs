@@ -1,54 +1,91 @@
 //! Catalyst Signed Document COSE Signature information.
 
-pub use catalyst_types::kid_uri::KidUri;
+use anyhow::bail;
+pub use catalyst_types::id_uri::IdUri;
+use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
 
 /// Catalyst Signed Document COSE Signature.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Signature {
     /// Key ID
-    kid: KidUri,
+    kid: IdUri,
     /// COSE Signature
-    #[allow(dead_code)]
     signature: CoseSignature,
 }
 
 /// List of Signatures.
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
-    /// List of signature Key IDs.
-    pub fn kids(&self) -> Vec<KidUri> {
+    /// Creates an empty signatures list.
+    #[must_use]
+    pub fn new() -> Self {
+        Self(Vec::new())
+    }
+
+    /// Return a list of author IDs (short form of Catalyst IDs).
+    #[must_use]
+    pub fn authors(&self) -> Vec<IdUri> {
+        self.kids().into_iter().map(|k| k.as_short_id()).collect()
+    }
+
+    /// Return a list of Document's Catalyst IDs.
+    #[must_use]
+    pub fn kids(&self) -> Vec<IdUri> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
     }
-}
 
-impl TryFrom<&Vec<CoseSignature>> for Signatures {
-    type Error = crate::error::Error;
+    /// List of signatures.
+    #[must_use]
+    pub fn cose_signatures(&self) -> Vec<CoseSignature> {
+        self.0.iter().map(|sig| sig.signature.clone()).collect()
+    }
 
-    fn try_from(value: &Vec<CoseSignature>) -> Result<Self, Self::Error> {
+    /// Add a new signature
+    pub fn push(&mut self, kid: IdUri, signature: CoseSignature) {
+        self.0.push(Signature { kid, signature });
+    }
+
+    /// Number of signatures.
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.0.len()
+    }
+
+    /// True if the document has no signatures.
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.0.is_empty()
+    }
+
+    /// Convert list of COSE Signature to `Signatures`.
+    pub(crate) fn from_cose_sig(
+        cose_sigs: &[CoseSignature], error_report: &ProblemReport,
+    ) -> anyhow::Result<Self> {
         let mut signatures = Vec::new();
-        let mut errors = Vec::new();
-        value
+
+        cose_sigs
             .iter()
             .cloned()
             .enumerate()
             .for_each(|(idx, signature)| {
-                match KidUri::try_from(signature.protected.header.key_id.as_ref()) {
+                match IdUri::try_from(signature.protected.header.key_id.as_ref()) {
                     Ok(kid) => signatures.push(Signature { kid, signature }),
                     Err(e) => {
-                        errors.push(anyhow::anyhow!(
-                            "Signature at index {idx} has valid Catalyst Key Id: {e}"
-                        ));
+                        error_report.conversion_error(
+                            &format!("COSE signature protected header key ID at id {idx}"),
+                            &format!("{:?}", &signature.protected.header.key_id),
+                            &format!("{e:?}"),
+                            "Converting COSE signature header key ID to IdUri",
+                        );
                     },
                 }
             });
-
-        if errors.is_empty() {
-            Ok(Signatures(signatures))
-        } else {
-            Err(errors.into())
+        if error_report.is_problematic() {
+            bail!("Failed to convert COSE Signatures to Signatures");
         }
+        Ok(Signatures(signatures))
     }
 }

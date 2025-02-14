@@ -1,11 +1,15 @@
 //! `UUID` types.
 
+pub use uuid::Uuid;
+#[allow(clippy::module_name_repetitions)]
+pub use uuid_v4::UuidV4;
+#[allow(clippy::module_name_repetitions)]
+pub use uuid_v7::UuidV7;
+
 mod uuid_v4;
 mod uuid_v7;
 
 use minicbor::data::Tag;
-pub use uuid_v4::UuidV4 as V4;
-pub use uuid_v7::UuidV7 as V7;
 
 /// Invalid Doc Type UUID
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
@@ -90,12 +94,12 @@ fn encode_cbor_uuid<W: minicbor::encode::Write>(
 #[cfg(test)]
 mod tests {
 
-    use super::{V4, V7};
+    use super::*;
     use crate::uuid::CborContext;
 
     #[test]
     fn test_cbor_uuid_v4_roundtrip() {
-        let uuid = V4::new();
+        let uuid = UuidV4::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
@@ -104,17 +108,18 @@ mod tests {
 
     #[test]
     fn test_cbor_uuid_v4_invalid_decoding() {
-        let uuid_v7 = V7::new();
+        let uuid_v7 = UuidV7::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid_v7, &mut bytes, &mut CborContext::Untagged).unwrap();
         assert!(
-            minicbor::decode_with::<_, V4>(bytes.as_slice(), &mut CborContext::Untagged).is_err()
+            minicbor::decode_with::<_, UuidV4>(bytes.as_slice(), &mut CborContext::Untagged)
+                .is_err()
         );
     }
 
     #[test]
     fn test_cbor_uuid_v7_roundtrip() {
-        let uuid = V7::new();
+        let uuid = UuidV7::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Untagged).unwrap();
@@ -123,17 +128,18 @@ mod tests {
 
     #[test]
     fn test_cbor_uuid_v7_invalid_decoding() {
-        let uuid_v4 = V4::new();
+        let uuid_v4 = UuidV4::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid_v4, &mut bytes, &mut CborContext::Untagged).unwrap();
         assert!(
-            minicbor::decode_with::<_, V7>(bytes.as_slice(), &mut CborContext::Untagged).is_err()
+            minicbor::decode_with::<_, UuidV7>(bytes.as_slice(), &mut CborContext::Untagged)
+                .is_err()
         );
     }
 
     #[test]
     fn test_tagged_cbor_uuid_v4_roundtrip() {
-        let uuid = V4::new();
+        let uuid = UuidV4::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Tagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Tagged).unwrap();
@@ -142,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_tagged_cbor_uuid_v7_roundtrip() {
-        let uuid = V7::new();
+        let uuid = UuidV7::new();
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Tagged).unwrap();
         let decoded = minicbor::decode_with(bytes.as_slice(), &mut CborContext::Tagged).unwrap();
@@ -151,7 +157,7 @@ mod tests {
 
     #[test]
     fn test_optional_cbor_uuid_v4_roundtrip() {
-        let uuid = V4::new();
+        let uuid = UuidV4::new();
 
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();
@@ -166,7 +172,7 @@ mod tests {
 
     #[test]
     fn test_optional_cbor_uuid_v7_roundtrip() {
-        let uuid = V7::new();
+        let uuid = UuidV7::new();
 
         let mut bytes = Vec::new();
         minicbor::encode_with(uuid, &mut bytes, &mut CborContext::Untagged).unwrap();

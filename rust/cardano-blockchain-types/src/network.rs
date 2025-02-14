@@ -190,23 +190,23 @@ impl Network {
 
         let (elapsed_slots, era_known_slot) = if time < shelley_start_time {
             // Byron era
-            let time_diff = time - byron_start_time;
-            (
-                time_diff.num_seconds() / i64::from(genesis.byron_slot_length),
-                genesis.byron_known_slot,
-            )
+            let time_diff = time.signed_duration_since(byron_start_time);
+            let elapsed_slots = time_diff
+                .num_seconds()
+                .checked_div(i64::from(genesis.byron_slot_length))?;
+            (elapsed_slots, genesis.byron_known_slot)
         } else {
             // Shelley era
-            let time_diff = time - shelley_start_time;
-            (
-                time_diff.num_seconds() / i64::from(genesis.shelley_slot_length),
-                genesis.shelley_known_slot,
-            )
+            let time_diff = time.signed_duration_since(shelley_start_time);
+            let elapsed_slots = time_diff
+                .num_seconds()
+                .checked_div(i64::from(genesis.shelley_slot_length))?;
+            (elapsed_slots, genesis.shelley_known_slot)
         };
 
         let era_known_slot = i64::try_from(era_known_slot).ok()?;
-
-        Some(Slot::from_saturating(elapsed_slots + era_known_slot))
+        let slot = elapsed_slots.checked_add(era_known_slot)?;
+        Some(Slot::from_saturating(slot))
     }
 }
 

@@ -8,10 +8,9 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{CatalystSignedDocument, Decode, Decoder, KidUri, Metadata};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata, SimplePublicKeyType};
 use clap::Parser;
-use coset::{iana::CoapContentFormat, CborSerializable};
-use ed25519_dalek::{ed25519::signature::Signer, pkcs8::DecodePrivateKey};
+use ed25519_dalek::pkcs8::{DecodePrivateKey, DecodePublicKey};
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -19,15 +18,14 @@ fn main() {
     }
 }
 
-/// Hermes cli commands
+/// Catalyst Sign Document CLI Commands
 #[derive(clap::Parser)]
+#[allow(clippy::large_enum_variant)]
 enum Cli {
     /// Builds a COSE document without signatures
     Build {
         /// Path to the document in the json format
         doc: PathBuf,
-        /// Path to the json schema (Draft 7) to validate document against it
-        schema: PathBuf,
         /// Path to the output COSE file to store.
         output: PathBuf,
         /// Document metadata, must be in JSON format
@@ -35,13 +33,13 @@ enum Cli {
     },
     /// Adds a signature to already formed COSE document
     Sign {
-        /// Path to the secret key in PEM format
-        sk: PathBuf,
         /// Path to the formed (could be empty, without any signatures) COSE document
         /// This exact file would be modified and new signature would be added
         doc: PathBuf,
+        /// Path to the secret key in PEM format
+        sk: PathBuf,
         /// Signer kid
-        kid: KidUri,
+        kid: IdUri,
     },
     /// Inspects Catalyst Signed Document
     Inspect {
@@ -53,54 +51,69 @@ enum Cli {
         /// Hex-formatted COSE SIGN Bytes
         cose_sign_hex: String,
     },
-}
-
-const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
-const UUID_CBOR_TAG: u64 = 37;
-
-fn encode_cbor_uuid(uuid: &uuid::Uuid) -> coset::cbor::Value {
-    coset::cbor::Value::Tag(
-        UUID_CBOR_TAG,
-        coset::cbor::Value::Bytes(uuid.as_bytes().to_vec()).into(),
-    )
+    /// Validates a signature by Key ID and verifying key
+    Verify {
+        /// Path to the formed (could be empty, without any signatures) COSE document
+        /// This exact file would be modified and new signature would be added
+        path: PathBuf,
+        /// Path to the verifying key in PEM format
+        pk: PathBuf,
+        /// Signer kid
+        kid: IdUri,
+    },
 }
 
 impl Cli {
     fn exec(self) -> anyhow::Result<()> {
         match self {
-            Self::Build {
-                doc,
-                schema,
-                output,
-                meta,
-            } => {
-                let doc_schema = load_schema_from_file(&schema)?;
-                let json_doc = load_json_from_file(&doc)?;
-                let json_meta = load_json_from_file(&meta)
+            Self::Build { doc, output, meta } => {
+                // Load Metadata from JSON file
+                let metadata: Metadata = load_json_from_file(&meta)
                     .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
-                println!("{json_meta}");
-                validate_json(&json_doc, &doc_schema)?;
-                let compressed_doc = brotli_compress_json(&json_doc)?;
-                let empty_cose_sign = build_empty_cose_doc(compressed_doc, &json_meta);
-                store_cose_file(empty_cose_sign, &output)?;
+                println!("{metadata}");
+                // Load Document from JSON file
+                let json_doc: serde_json::Value = load_json_from_file(&doc)?;
+                // Possibly encode if Metadata has an encoding set.
+                let payload = serde_json::to_vec(&json_doc)?;
+                // Start with no signatures.
+                let signed_doc = Builder::new()
+                    .with_decoded_content(payload)
+                    .with_metadata(metadata)
+                    .build()?;
+                save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
                 let sk = load_secret_key_from_file(&sk)
                     .map_err(|e| anyhow::anyhow!("Failed to load SK FILE: {e}"))?;
-                let mut cose = load_cose_from_file(&doc)
-                    .map_err(|e| anyhow::anyhow!("Failed to load COSE FROM FILE: {e}"))?;
-                add_signature_to_cose(&mut cose, &sk, kid.to_string());
-                store_cose_file(cose, &doc)?;
+                let cose_bytes = read_bytes_from_file(&doc)?;
+                let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
+                let builder = signed_doc.into_builder();
+                let new_signed_doc = builder.add_signature(sk.to_bytes(), kid)?.build()?;
+                save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {
-                let mut cose_file = File::open(path)?;
-                let mut cose_bytes = Vec::new();
-                cose_file.read_to_end(&mut cose_bytes)?;
-                decode_signed_doc(&cose_bytes);
+                let cose_bytes = read_bytes_from_file(&path)?;
+                inspect_signed_doc(&cose_bytes)?;
             },
             Self::InspectBytes { cose_sign_hex } => {
                 let cose_bytes = hex::decode(&cose_sign_hex)?;
-                decode_signed_doc(&cose_bytes);
+                inspect_signed_doc(&cose_bytes)?;
+            },
+            Self::Verify { path, pk, kid } => {
+                let pk = load_public_key_from_file(&pk)
+                    .map_err(|e| anyhow::anyhow!("Failed to load PK FILE {pk:?}: {e}"))?;
+                let cose_bytes = read_bytes_from_file(&path)?;
+                let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
+                signed_doc
+                    .verify(|k| {
+                        if k.to_string() == kid.to_string() {
+                            SimplePublicKeyType::Ed25519(pk)
+                        } else {
+                            SimplePublicKeyType::Undefined
+                        }
+                    })
+                    .map_err(|e| anyhow::anyhow!("Catalyst Document Verification failed: {e}"))?;
+                println!("Catalyst Signed Document is Verified.");
             },
         }
         println!("Done");
@@ -108,29 +121,36 @@ impl Cli {
     }
 }
 
-fn decode_signed_doc(cose_bytes: &[u8]) {
+fn read_bytes_from_file(path: &PathBuf) -> anyhow::Result<Vec<u8>> {
+    let mut cose_file = File::open(path)?;
+    let mut cose_bytes = Vec::new();
+    cose_file.read_to_end(&mut cose_bytes)?;
+    Ok(cose_bytes)
+}
+
+fn inspect_signed_doc(cose_bytes: &[u8]) -> anyhow::Result<()> {
     println!(
-        "Decoding {} bytes: {}",
+        "Decoding {} bytes:\n{}",
         cose_bytes.len(),
         hex::encode(cose_bytes)
     );
-    match CatalystSignedDocument::decode(&mut Decoder::new(cose_bytes), &mut ()) {
-        Ok(cat_signed_doc) => {
-            println!("This is a valid Catalyst Signed Document.");
-            println!("{cat_signed_doc}");
-        },
-        Err(e) => eprintln!("Invalid Catalyst Signed Document, err: {e}"),
-    }
+    let cat_signed_doc = signed_doc_from_bytes(cose_bytes)?;
+    println!("This is a valid Catalyst Document.");
+    println!("{cat_signed_doc}");
+    Ok(())
 }
 
-fn load_schema_from_file(schema_path: &PathBuf) -> anyhow::Result<jsonschema::JSONSchema> {
-    let schema_file = File::open(schema_path)?;
-    let schema_json = serde_json::from_reader(schema_file)?;
-    let schema = jsonschema::JSONSchema::options()
-        .with_draft(jsonschema::Draft::Draft7)
-        .compile(&schema_json)
-        .map_err(|e| anyhow::anyhow!("{e}"))?;
-    Ok(schema)
+fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow::Result<()> {
+    let mut bytes: Vec<u8> = Vec::new();
+    minicbor::encode(signed_doc, &mut bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to encode document: {e}"))?;
+
+    write_bytes_to_file(&bytes, path)
+}
+
+fn signed_doc_from_bytes(cose_bytes: &[u8]) -> anyhow::Result<CatalystSignedDocument> {
+    CatalystSignedDocument::try_from(cose_bytes)
+        .map_err(|e| anyhow::anyhow!("Invalid Catalyst Document: {e}"))
 }
 
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>
@@ -140,75 +160,10 @@ where T: for<'de> serde::Deserialize<'de> {
     Ok(json)
 }
 
-fn validate_json(doc: &serde_json::Value, schema: &jsonschema::JSONSchema) -> anyhow::Result<()> {
-    schema.validate(doc).map_err(|err| {
-        let mut validation_error = String::new();
-        for e in err {
-            validation_error.push_str(&format!("\n - {e}"));
-        }
-        anyhow::anyhow!("{validation_error}")
-    })?;
-    Ok(())
-}
-
-fn brotli_compress_json(doc: &serde_json::Value) -> anyhow::Result<Vec<u8>> {
-    let brotli_params = brotli::enc::BrotliEncoderParams::default();
-    let doc_bytes = serde_json::to_vec(&doc)?;
-    let mut buf = Vec::new();
-    brotli::BrotliCompress(&mut doc_bytes.as_slice(), &mut buf, &brotli_params)?;
-    Ok(buf)
-}
-
-fn build_empty_cose_doc(doc_bytes: Vec<u8>, meta: &Metadata) -> coset::CoseSign {
-    let mut builder =
-        coset::HeaderBuilder::new().content_format(CoapContentFormat::from(meta.content_type()));
-
-    if let Some(content_encoding) = meta.content_encoding() {
-        builder = builder.text_value(
-            CONTENT_ENCODING_KEY.to_string(),
-            format!("{content_encoding}").into(),
-        );
-    }
-    let mut protected_header = builder.build();
-
-    protected_header.rest.push((
-        coset::Label::Text("type".to_string()),
-        encode_cbor_uuid(&meta.doc_type()),
-    ));
-    protected_header.rest.push((
-        coset::Label::Text("id".to_string()),
-        encode_cbor_uuid(&meta.doc_id()),
-    ));
-    protected_header.rest.push((
-        coset::Label::Text("ver".to_string()),
-        encode_cbor_uuid(&meta.doc_ver()),
-    ));
-    let meta_rest = meta.extra().header_rest().unwrap_or_default();
-
-    if !meta_rest.is_empty() {
-        protected_header.rest.extend(meta_rest);
-    }
-    coset::CoseSignBuilder::new()
-        .protected(protected_header)
-        .payload(doc_bytes)
-        .build()
-}
-
-fn load_cose_from_file(cose_path: &PathBuf) -> anyhow::Result<coset::CoseSign> {
-    let mut cose_file = File::open(cose_path)?;
-    let mut cose_file_bytes = Vec::new();
-    cose_file.read_to_end(&mut cose_file_bytes)?;
-    let cose = coset::CoseSign::from_slice(&cose_file_bytes).map_err(|e| anyhow::anyhow!("{e}"))?;
-    Ok(cose)
-}
-
-fn store_cose_file(cose: coset::CoseSign, output: &PathBuf) -> anyhow::Result<()> {
-    let mut cose_file = File::create(output)?;
-    let cose_bytes = cose
-        .to_vec()
-        .map_err(|e| anyhow::anyhow!("Failed to Store COSE SIGN: {e}"))?;
-    cose_file.write_all(&cose_bytes)?;
-    Ok(())
+fn write_bytes_to_file(bytes: &[u8], output: &PathBuf) -> anyhow::Result<()> {
+    File::create(output)?
+        .write_all(bytes)
+        .map_err(|e| anyhow::anyhow!("Failed to write to file {output:?}: {e}"))
 }
 
 fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::SigningKey> {
@@ -217,14 +172,8 @@ fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek:
     Ok(sk)
 }
 
-fn add_signature_to_cose(cose: &mut coset::CoseSign, sk: &ed25519_dalek::SigningKey, kid: String) {
-    let protected_header = coset::HeaderBuilder::new()
-        .key_id(kid.into_bytes())
-        .algorithm(coset::iana::Algorithm::EdDSA);
-    let mut signature = coset::CoseSignatureBuilder::new()
-        .protected(protected_header.build())
-        .build();
-    let data_to_sign = cose.tbs_data(&[], &signature);
-    signature.signature = sk.sign(&data_to_sign).to_vec();
-    cose.signatures.push(signature);
+fn load_public_key_from_file(pk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::VerifyingKey> {
+    let pk_str = read_to_string(pk_path)?;
+    let pk = ed25519_dalek::VerifyingKey::from_public_key_pem(&pk_str)?;
+    Ok(pk)
 }

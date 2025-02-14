@@ -2,26 +2,31 @@
 
 use std::collections::HashMap;
 
+use catalyst_types::{
+    cbor_utils::{report_duplicated_key, report_missing_keys},
+    problem_report::ProblemReport,
+};
+use cbork_utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len};
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
-use super::{decode_any, decode_map_len, Cip509RbacMetadataInt};
-use crate::utils::decode_helper::{decode_array_len, decode_helper};
+use crate::cardano::cip509::{KeyLocalRef, RoleNumber};
 
-/// Role data.
+/// Role data as encoded in CBOR.
+#[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Clone, Default)]
-pub struct RoleData {
-    /// Role number.
-    pub role_number: u8,
+pub struct CborRoleData {
+    /// A role number.
+    pub number: Option<RoleNumber>,
     /// Optional role signing key.
-    pub role_signing_key: Option<KeyLocalRef>,
+    pub signing_key: Option<KeyLocalRef>,
     /// Optional role encryption key.
-    pub role_encryption_key: Option<KeyLocalRef>,
+    pub encryption_key: Option<KeyLocalRef>,
     /// Optional payment key.
-    pub payment_key: Option<i16>,
+    pub payment_key: Option<u16>,
     /// Optional role extended data keys.
     /// Empty map if no role extended data keys.
-    pub role_extended_data_keys: HashMap<u8, Vec<u8>>,
+    pub extended_data: HashMap<u8, Vec<u8>>,
 }
 
 /// The first valid role extended data key.
@@ -31,7 +36,7 @@ const LAST_ROLE_EXT_KEY: u8 = 99;
 
 /// Enum of role data with its associated unsigned integer value.
 #[allow(clippy::module_name_repetitions)]
-#[derive(FromRepr, Debug, PartialEq)]
+#[derive(FromRepr, Debug, PartialEq, Copy, Clone)]
 #[repr(u8)]
 pub enum RoleDataInt {
     /// Role number.
@@ -44,71 +49,130 @@ pub enum RoleDataInt {
     PaymentKey = 3,
 }
 
-impl Decode<'_, ()> for RoleData {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, ProblemReport> for CborRoleData {
+    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+        let context = "Decoding role data";
         let map_len = decode_map_len(d, "RoleData")?;
-        let mut role_data = RoleData::default();
-        for _ in 0..map_len {
-            let key: u8 = decode_helper(d, "key in RoleData", ctx)?;
+
+        let mut found_keys = Vec::new();
+
+        let mut data = CborRoleData::default();
+
+        for index in 0..map_len {
+            let key: u8 = decode_helper(d, "key in RoleData", &mut ())?;
             if let Some(key) = RoleDataInt::from_repr(key) {
+                if report_duplicated_key(&found_keys, &key, index, "RoleData", report) {
+                    continue;
+                }
+                found_keys.push(key);
+
                 match key {
                     RoleDataInt::RoleNumber => {
-                        role_data.role_number = decode_helper(d, "RoleNumber in RoleData", ctx)?;
+                        match decode_helper::<u8, _>(d, "RoleNumber in RoleData", &mut ()) {
+                            Ok(v) => data.number = Some(v.into()),
+                            Err(e) => {
+                                report.other(
+                                    &format!("Unable to decode role number: {e:?}"),
+                                    context,
+                                );
+                                break;
+                            },
+                        }
                     },
                     RoleDataInt::RoleSigningKey => {
-                        decode_array_len(d, "RoleSigningKey")?;
-                        role_data.role_signing_key = Some(KeyLocalRef::decode(d, ctx)?);
+                        match decode_signing_key(d, context, report) {
+                            Ok(v) => data.signing_key = v,
+                            Err(()) => break,
+                        }
                     },
                     RoleDataInt::RoleEncryptionKey => {
-                        decode_array_len(d, "RoleEncryptionKey")?;
-                        role_data.role_encryption_key = Some(KeyLocalRef::decode(d, ctx)?);
+                        match decode_encryption_key(d, context, report) {
+                            Ok(v) => data.encryption_key = v,
+                            Err(()) => break,
+                        }
                     },
                     RoleDataInt::PaymentKey => {
-                        role_data.payment_key =
-                            Some(decode_helper(d, "PaymentKey in RoleData", ctx)?);
+                        match decode_helper(d, "PaymentKey in RoleData", &mut ()) {
+                            Ok(v) => data.payment_key = Some(v),
+                            Err(e) => {
+                                report.other(
+                                    &format!("Unable to decode role payment key: {e:?}"),
+                                    context,
+                                );
+                                break;
+                            },
+                        }
                     },
                 }
             } else {
                 if !(FIRST_ROLE_EXT_KEY..=LAST_ROLE_EXT_KEY).contains(&key) {
-                    return Err(decode::Error::message(format!("Invalid role extended data key, should be with the range {FIRST_ROLE_EXT_KEY} - {LAST_ROLE_EXT_KEY}")));
+                    report.other(&format!("Invalid role extended data key ({key}), should be with the range {FIRST_ROLE_EXT_KEY} - {LAST_ROLE_EXT_KEY}"), context);
+                    continue;
                 }
-                role_data
-                    .role_extended_data_keys
-                    .insert(key, decode_any(d, "Role extended data keys")?);
+                let value = match decode_any(d, "Role extended data keys") {
+                    Ok(v) => v,
+                    Err(e) => {
+                        report.other(
+                            &format!("Unable to decode role extended data for {key} key: {e:?}"),
+                            context,
+                        );
+                        continue;
+                    },
+                };
+                if data.extended_data.insert(key, value.to_vec()).is_some() {
+                    report.other(
+                        &format!("Duplicated {key} key in the role extended data"),
+                        context,
+                    );
+                }
             }
         }
-        Ok(role_data)
+
+        let required_keys = [RoleDataInt::RoleNumber];
+        report_missing_keys(&found_keys, &required_keys, context, report);
+
+        Ok(data)
     }
 }
-/// Local key reference.
-#[derive(Debug, PartialEq, Clone)]
-pub struct KeyLocalRef {
-    /// Local reference.
-    pub local_ref: LocalRefInt,
-    /// Key offset.
-    pub key_offset: u64,
+
+/// Decodes a signing key.
+fn decode_signing_key(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<KeyLocalRef>, ()> {
+    if let Err(e) = decode_array_len(d, "RoleSigningKey") {
+        report.other(&format!("{e:?}"), context);
+        return Err(());
+    }
+
+    match KeyLocalRef::decode(d, &mut ()) {
+        Ok(v) => Ok(Some(v)),
+        Err(e) => {
+            report.other(
+                &format!("Unable to decode role signing key: {e:?}"),
+                context,
+            );
+            Ok(None)
+        },
+    }
 }
 
-/// Enum of local reference with its associated unsigned integer value.
-#[derive(FromRepr, Debug, PartialEq, Clone, Eq, Hash)]
-#[repr(u8)]
-pub enum LocalRefInt {
-    /// x509 certificates.
-    X509Certs = Cip509RbacMetadataInt::X509Certs as u8, // 10
-    /// c509 certificates.
-    C509Certs = Cip509RbacMetadataInt::C509Certs as u8, // 20
-    /// Public keys.
-    PubKeys = Cip509RbacMetadataInt::PubKeys as u8, // 30
-}
+/// Decodes an encryption key.
+fn decode_encryption_key(
+    d: &mut Decoder, context: &str, report: &ProblemReport,
+) -> Result<Option<KeyLocalRef>, ()> {
+    if let Err(e) = decode_array_len(d, "RoleEncryptionKey") {
+        report.other(&format!("{e:?}"), context);
+        return Err(());
+    }
 
-impl Decode<'_, ()> for KeyLocalRef {
-    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
-        let local_ref = LocalRefInt::from_repr(decode_helper(d, "LocalRef in KeyLocalRef", ctx)?)
-            .ok_or(decode::Error::message("Invalid local reference"))?;
-        let key_offset: u64 = decode_helper(d, "KeyOffset in KeyLocalRef", ctx)?;
-        Ok(Self {
-            local_ref,
-            key_offset,
-        })
+    match KeyLocalRef::decode(d, &mut ()) {
+        Ok(v) => Ok(Some(v)),
+        Err(e) => {
+            report.other(
+                &format!("Unable to decode role encryption key: {e:?}"),
+                context,
+            );
+            Ok(None)
+        },
     }
 }

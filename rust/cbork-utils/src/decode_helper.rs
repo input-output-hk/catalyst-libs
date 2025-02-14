@@ -95,11 +95,11 @@ pub fn decode_any<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decod
 #[cfg(test)]
 mod tests {
     use minicbor::Encoder;
-    use test_strategy::proptest;
+    use proptest::property_test;
 
     use super::*;
 
-    #[proptest]
+    #[property_test]
     fn test_decode_any_bytes(random_bytes: Vec<u8>) {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
@@ -112,7 +112,7 @@ mod tests {
         assert_eq!(result, random_bytes);
     }
 
-    #[proptest]
+    #[property_test]
     fn test_decode_any_string(random_string: String) {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
@@ -126,7 +126,7 @@ mod tests {
         assert_eq!(result, random_string);
     }
 
-    #[proptest]
+    #[property_test]
     fn test_decode_any_array(random_array: Vec<u8>) {
         // The array should contain a supported type
         let mut buf = Vec::new();
@@ -143,7 +143,7 @@ mod tests {
         assert_eq!(result, random_array.len() as u64);
     }
 
-    #[proptest]
+    #[property_test]
     fn test_decode_any_u32(random_u32: u32) {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
@@ -157,7 +157,7 @@ mod tests {
         assert_eq!(result, random_u32);
     }
 
-    #[proptest]
+    #[property_test]
     fn test_decode_any_i32(random_i32: i32) {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);

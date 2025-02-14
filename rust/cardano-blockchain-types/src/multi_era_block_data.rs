@@ -12,6 +12,7 @@ use std::{cmp::Ordering, fmt::Display, sync::Arc};
 use anyhow::bail;
 use ed25519_dalek::VerifyingKey;
 use ouroboros::self_referencing;
+use pallas::ledger::traverse::MultiEraTx;
 use tracing::debug;
 
 use crate::{
@@ -23,6 +24,7 @@ use crate::{
     point::Point,
     txn_index::TxnIndex,
     txn_witness::{TxnWitness, VKeyHash},
+    Slot,
 };
 
 /// Self-referencing CBOR encoded data of a multi-era block.
@@ -91,7 +93,7 @@ impl MultiEraBlock {
     /// # Errors
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
-    fn new_block(
+    pub fn new(
         network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
@@ -147,17 +149,6 @@ impl MultiEraBlock {
                 witness_map,
             }),
         })
-    }
-
-    /// Creates a new `MultiEraBlockData` from the given bytes.
-    ///
-    /// # Errors
-    ///
-    /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
-    pub fn new(
-        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
-    ) -> anyhow::Result<Self> {
-        MultiEraBlock::new_block(network, raw_data, previous, fork)
     }
 
     /// Remake the block on a new fork.
@@ -282,10 +273,30 @@ impl MultiEraBlock {
         None
     }
 
+    /// Returns a list of transactions withing this block.
+    #[must_use]
+    pub fn txs(&self) -> Vec<MultiEraTx> {
+        self.decode().txs()
+    }
+
+    /// Returns an iterator over `(TxnIndex, MultiEraTx)` pair.
+    pub fn enumerate_txs(&self) -> impl Iterator<Item = (TxnIndex, MultiEraTx)> {
+        self.txs()
+            .into_iter()
+            .enumerate()
+            .map(|(i, t)| (i.into(), t))
+    }
+
     /// Get the auxiliary data of the block.
     #[must_use]
     pub fn aux_data(&self) -> &BlockAuxData {
         &self.inner.aux_data
+    }
+
+    /// Returns a slot of the block.
+    #[must_use]
+    pub fn slot(&self) -> Slot {
+        self.decode().slot().into()
     }
 }
 
@@ -491,8 +502,10 @@ pub(crate) mod tests {
             let pallas_block =
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
-            let previous_point =
-                Point::new((pallas_block.slot() - 1).into(), vec![0; 32].try_into()?);
+            let previous_point = Point::new(
+                (pallas_block.slot().checked_sub(1).unwrap()).into(),
+                vec![0; 32].try_into()?,
+            );
 
             let block = MultiEraBlock::new(
                 Network::Preprod,
@@ -515,7 +528,7 @@ pub(crate) mod tests {
                 pallas::ledger::traverse::MultiEraBlock::decode(test_block.raw.as_slice())?;
 
             let previous_point = Point::new(
-                (pallas_block.slot() - 1).into(),
+                (pallas_block.slot().checked_sub(1).unwrap()).into(),
                 pallas_block
                     .header()
                     .previous_hash()
@@ -544,7 +557,7 @@ pub(crate) mod tests {
                 let prev_point = pallas::ledger::traverse::MultiEraBlock::decode(block.as_slice())
                     .map(|block| {
                         Point::new(
-                            (block.slot() - 1).into(),
+                            (block.slot().saturating_sub(1)).into(),
                             block
                                 .header()
                                 .previous_hash()

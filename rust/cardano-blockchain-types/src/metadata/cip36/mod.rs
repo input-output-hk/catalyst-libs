@@ -67,6 +67,7 @@ impl fmt::Display for Cip36 {
 
 /// CIP-36 Catalyst registration error
 #[allow(dead_code, clippy::module_name_repetitions)]
+#[derive(Debug)]
 pub struct Cip36Error {
     /// The decoding error that make the code not able to process.
     error: anyhow::Error,
@@ -227,71 +228,85 @@ impl Cip36 {
 
     /// Get the `is_cip36` flag from the registration.
     /// True if it is CIP-36 format, false if CIP-15 format.
+    #[must_use]
     pub fn is_cip36(&self) -> Option<bool> {
         self.key_registration.is_cip36
     }
 
     /// Get the voting public keys from the registration.
+    #[must_use]
     pub fn voting_pks(&self) -> &Vec<VotingPubKey> {
         &self.key_registration.voting_pks
     }
 
     /// Get the stake public key from the registration.
+    #[must_use]
     pub fn stake_pk(&self) -> Option<&VerifyingKey> {
         self.key_registration.stake_pk.as_ref()
     }
 
     /// Get the payment address from the registration.
+    #[must_use]
     pub fn payment_address(&self) -> Option<&ShelleyAddress> {
         self.key_registration.payment_addr.as_ref()
     }
 
     /// Get the nonce from the registration.
+    #[must_use]
     pub fn nonce(&self) -> Option<u64> {
         self.key_registration.nonce
     }
 
     /// Get the purpose from the registration.
+    #[must_use]
     pub fn purpose(&self) -> u64 {
         self.key_registration.purpose
     }
 
     /// Get the raw nonce from the registration.
+    #[must_use]
     pub fn raw_nonce(&self) -> Option<u64> {
         self.key_registration.raw_nonce
     }
 
     /// Is the payment address in the registration payable?
+    #[must_use]
     pub fn is_payable(&self) -> Option<bool> {
         self.key_registration.is_payable
     }
 
     /// Get the signature from the registration witness.
+    #[must_use]
     pub fn signature(&self) -> Option<ed25519_dalek::Signature> {
         self.registration_witness.signature
     }
 
     /// Get the slot number of this CIP-36 registration.
+    #[must_use]
     pub fn slot(&self) -> Slot {
         self.slot
     }
 
     /// Get the network of this CIP-36 registration.
+    #[must_use]
     pub fn network(&self) -> Network {
         self.network
     }
 
     /// Get the transaction index of this CIP-36 registration.
+    #[must_use]
     pub fn txn_idx(&self) -> TxnIndex {
         self.txn_idx
     }
 
     /// Get the Catalyst strict flag.
+    #[must_use]
     pub fn is_strict_catalyst(&self) -> bool {
         self.is_catalyst_strict
     }
 
     /// Is the CIP-36 registration valid?
+    #[must_use]
     pub fn is_valid(&self) -> bool {
         // Check everything
         self.is_valid_signature
@@ -302,27 +317,61 @@ impl Cip36 {
     }
 
     /// Is the signature valid?
+    #[must_use]
     pub fn is_valid_signature(&self) -> bool {
         self.is_valid_signature
     }
 
     /// Is the payment address network tag match the provided network?
+    #[must_use]
     pub fn is_valid_payment_address_network(&self) -> bool {
         self.is_valid_payment_address_network
     }
 
     /// Is the voting keys valid?
+    #[must_use]
     pub fn is_valid_voting_keys(&self) -> bool {
         self.is_valid_voting_keys
     }
 
     /// Is the purpose valid?
+    #[must_use]
     pub fn is_valid_purpose(&self) -> bool {
         self.is_valid_purpose
     }
 
     /// Get the error report.
+    #[must_use]
     pub fn err_report(&self) -> &ProblemReport {
         &self.err_report
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{Cip36, MultiEraBlock, Network, Point};
+
+    // CIP36 in transaction 1
+    // <https://preprod.cardanoscan.io/transaction/5c7cf7bff543447fc1e46c2598380fa08b8d882de2191ef5bc80078b71724217?tab=metadata>
+    fn block_1() -> MultiEraBlock {
+        let data = hex::decode(include_str!("./test_data/block_1.block")).unwrap();
+        let previous = Point::fuzzy(0.into());
+        MultiEraBlock::new(Network::Preprod, data, &previous, 0.into()).unwrap()
+    }
+
+    #[test]
+    fn new() {
+        let res = Cip36::new(&block_1(), 1.into(), true).unwrap().unwrap();
+        assert!(!res.err_report().is_problematic());
+        assert!(res.is_valid());
+        assert!(res.network() == Network::Preprod);
+        assert!(res.raw_nonce() == Some(55_076_993));
+        assert!(res.nonce() == Some(55_076_993));
+    }
+
+    #[test]
+    fn from_block() {
+        let res = Cip36::cip36_from_block(&block_1(), true).unwrap();
+        assert_eq!(res.len(), 1);
     }
 }

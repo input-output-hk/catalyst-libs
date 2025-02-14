@@ -23,12 +23,13 @@ fluent-uri = "0.3.2"
 hex = "0.4.3"
 minicbor = { version = "0.25.1", features = ["std"] }
 num-traits = "0.2.19"
-orx-concurrent-vec = "3.1.0"
+orx-concurrent-vec = { version = "3.2.0", features = ["serde"] }
 pallas-crypto = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9b5183c8b90b90fe2cc319d986e933e9518957b3" }
 serde = { version = "1.0.217", features = ["derive", "rc"] }
-thiserror = "2.0.9"
+thiserror = "2.0.11"
 base64-url = "3.0.0"
-uuid = { version = "1.11.0", features = ["v4", "v7", "serde"] }
+uuid = { version = "1.12.0", features = ["v4", "v7", "serde"] }
+chrono = "0.4.39"
 fmmap = { version = "0.3.3", features = ["sync", "tokio-async"] }
 once_cell = "1.20.2"
 tracing = "0.1.41"
