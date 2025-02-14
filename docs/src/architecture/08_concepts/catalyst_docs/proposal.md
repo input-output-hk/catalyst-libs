@@ -114,18 +114,30 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
 
 #### Fund 14 defined templates ids
 
-* id: `0194d492-1daa-75b5-b4a4-5cf331cd8d1a`, ver: `0194d492-1daa-75b5-b4a4-5cf331cd8d1a`
-* id: `0194d492-1daa-7371-8bd3-c15811b2b063`, ver: `0194d492-1daa-7371-8bd3-c15811b2b063`
-* id: `0194d492-1daa-79c7-a222-2c3b581443a8`, ver: `0194d492-1daa-79c7-a222-2c3b581443a8`
-* id: `0194d492-1daa-716f-a04e-f422f08a99dc`, ver: `0194d492-1daa-716f-a04e-f422f08a99dc`
-* id: `0194d492-1daa-78fc-818a-bf20fc3e9b87`, ver: `0194d492-1daa-78fc-818a-bf20fc3e9b87`
-* id: `0194d492-1daa-7d98-a3aa-c57d99121f78`, ver: `0194d492-1daa-7d98-a3aa-c57d99121f78`
-* id: `0194d492-1daa-77be-a1a5-c238fe25fe4f`, ver: `0194d492-1daa-77be-a1a5-c238fe25fe4f`
-* id: `0194d492-1daa-7254-a512-30a4cdecfb90`, ver: `0194d492-1daa-7254-a512-30a4cdecfb90`
-* id: `0194d492-1daa-7de9-b535-1a0b0474ed4e`, ver: `0194d492-1daa-7de9-b535-1a0b0474ed4e`
-* id: `0194d492-1daa-7fce-84ee-b872a4661075`, ver: `0194d492-1daa-7fce-84ee-b872a4661075`
-* id: `0194d492-1daa-7878-9bcc-2c79fef0fc13`, ver: `0194d492-1daa-7878-9bcc-2c79fef0fc13`
-* id: `0194d492-1daa-722f-94f4-687f2c068a5d`, ver: `0194d492-1daa-722f-94f4-687f2c068a5d`
+* id: `0194d492-1daa-75b5-b4a4-5cf331cd8d1a`, ver: `0194d492-1daa-75b5-b4a4-5cf331cd8d1a`,
+  category: `0194d490-30bf-7473-81c8-a0eaef369619`
+* id: `0194d492-1daa-7371-8bd3-c15811b2b063`, ver: `0194d492-1daa-7371-8bd3-c15811b2b063`,
+  category: `0194d490-30bf-7043-8c5c-f0e09f8a6d8c`
+* id: `0194d492-1daa-79c7-a222-2c3b581443a8`, ver: `0194d492-1daa-79c7-a222-2c3b581443a8`,
+  category: `0194d490-30bf-7e75-95c1-a6cf0e8086d9`
+* id: `0194d492-1daa-716f-a04e-f422f08a99dc`, ver: `0194d492-1daa-716f-a04e-f422f08a99dc`,
+  category: `0194d490-30bf-7703-a1c0-83a916b001e7`
+* id: `0194d492-1daa-78fc-818a-bf20fc3e9b87`, ver: `0194d492-1daa-78fc-818a-bf20fc3e9b87`,
+  category: `0194d490-30bf-79d1-9a0f-84943123ef38`
+* id: `0194d492-1daa-7d98-a3aa-c57d99121f78`, ver: `0194d492-1daa-7d98-a3aa-c57d99121f78`,
+  category: `0194d490-30bf-706d-91c6-0d4707f74cdf`
+* id: `0194d492-1daa-77be-a1a5-c238fe25fe4f`, ver: `0194d492-1daa-77be-a1a5-c238fe25fe4f`,
+  category: `0194d490-30bf-759e-b729-304306fbaa5e`
+* id: `0194d492-1daa-7254-a512-30a4cdecfb90`, ver: `0194d492-1daa-7254-a512-30a4cdecfb90`,
+  category: `0194d490-30bf-7e27-b5fd-de3133b54bf6`
+* id: `0194d492-1daa-7de9-b535-1a0b0474ed4e`, ver: `0194d492-1daa-7de9-b535-1a0b0474ed4e`,
+  category: `0194d490-30bf-7f9e-8a5d-91fb67c078f2`
+* id: `0194d492-1daa-7fce-84ee-b872a4661075`, ver: `0194d492-1daa-7fce-84ee-b872a4661075`,
+  category: `0194d490-30bf-7676-9658-36c0b67e656e`
+* id: `0194d492-1daa-7878-9bcc-2c79fef0fc13`, ver: `0194d492-1daa-7878-9bcc-2c79fef0fc13`,
+  category: `0194d490-30bf-7978-b031-7aa2ccc5e3fd`
+* id: `0194d492-1daa-722f-94f4-687f2c068a5d`, ver: `0194d492-1daa-722f-94f4-687f2c068a5d`,
+  category: `0194d490-30bf-7d34-bba9-8498094bd627`
 
 #### Content format
 
