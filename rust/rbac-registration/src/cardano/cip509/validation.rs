@@ -348,8 +348,28 @@ fn c509_cert_key(cert: &C509, context: &str, report: &ProblemReport) -> Option<V
 }
 
 /// Creates `VerifyingKey` from the given byte slice.
-fn verifying_key(bytes: &[u8], context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
-    let bytes: &[u8; PUBLIC_KEY_LENGTH] = match bytes.try_into() {
+fn verifying_key(
+    extended_public_key: &[u8], context: &str, report: &ProblemReport,
+) -> Option<VerifyingKey> {
+    /// An extender public key length in bytes.
+    const EXTENDED_PUBLIC_KEY_LENGTH: usize = 64;
+
+    if extended_public_key.len() != EXTENDED_PUBLIC_KEY_LENGTH {
+        report.other(
+            &format!("Unexpected extended public key length in certificate: {}, expected {EXTENDED_PUBLIC_KEY_LENGTH}",
+                     extended_public_key.len()),
+            context,
+        );
+        return None;
+    }
+
+    // This should never fail because of the check above.
+    let Some(public_key) = extended_public_key.get(0..PUBLIC_KEY_LENGTH) else {
+        report.other("Unable to get public key part", context);
+        return None;
+    };
+
+    let bytes: &[u8; PUBLIC_KEY_LENGTH] = match public_key.try_into() {
         Ok(v) => v,
         Err(e) => {
             report.other(
