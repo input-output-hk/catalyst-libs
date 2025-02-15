@@ -24,6 +24,7 @@ use crate::{
     point::Point,
     txn_index::TxnIndex,
     txn_witness::{TxnWitness, VKeyHash},
+    Slot,
 };
 
 /// Self-referencing CBOR encoded data of a multi-era block.
@@ -278,10 +279,24 @@ impl MultiEraBlock {
         self.decode().txs()
     }
 
+    /// Returns an iterator over `(TxnIndex, MultiEraTx)` pair.
+    pub fn enumerate_txs(&self) -> impl Iterator<Item = (TxnIndex, MultiEraTx)> {
+        self.txs()
+            .into_iter()
+            .enumerate()
+            .map(|(i, t)| (i.into(), t))
+    }
+
     /// Get the auxiliary data of the block.
     #[must_use]
     pub fn aux_data(&self) -> &BlockAuxData {
         &self.inner.aux_data
+    }
+
+    /// Returns a slot of the block.
+    #[must_use]
+    pub fn slot(&self) -> Slot {
+        self.decode().slot().into()
     }
 }
 

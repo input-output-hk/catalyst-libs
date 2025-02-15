@@ -10,6 +10,7 @@ mod network;
 mod point;
 mod slot;
 mod txn_index;
+mod txn_output_offset;
 mod txn_witness;
 
 pub use auxdata::{
@@ -29,4 +30,5 @@ pub use network::Network;
 pub use point::Point;
 pub use slot::Slot;
 pub use txn_index::TxnIndex;
+pub use txn_output_offset::TxnOutputOffset;
 pub use txn_witness::{TxnWitness, VKeyHash};
