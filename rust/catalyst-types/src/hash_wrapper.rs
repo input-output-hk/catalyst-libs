@@ -136,7 +136,7 @@ mod tests {
     #[test]
     fn display() {
         let hash = H1::new(&[1, 2, 3, 4, 5]);
-        let display = format!("{}", hash);
+        let display = format!("{hash}");
         let expected = "0x2a6ad53c3c6986406e1d6c7cfd06b69a";
         assert_eq!(expected, display);
     }
