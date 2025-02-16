@@ -16,6 +16,22 @@ pub(crate) type StatelessRule = fn(&CatalystSignedDocument, &ProblemReport) -> b
 pub(crate) type StatefullRule<DocType, DocProvider> =
     fn(&DocType, &DocProvider, &ProblemReport) -> bool;
 
+/// Trait for defining a stateless validation rules.
+pub trait StatelessValidation
+where Self: 'static
+{
+    /// Stateless validation rules
+    const STATELESS_RULES: &[StatelessRule];
+
+    /// Perform a stateless validation, collecting a problem report
+    fn validate(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+        Self::STATELESS_RULES
+            .iter()
+            .map(|rule| rule(doc, report))
+            .all(|res| res)
+    }
+}
+
 /// Trait for defining a statefull validation rules.
 pub trait StatefullValidation<DocProvider>
 where
@@ -30,22 +46,6 @@ where
         Self::STATEFULL_RULES
             .iter()
             .map(|rule| rule(self, provider, report))
-            .all(|res| res)
-    }
-}
-
-/// Trait for defining a stateless validation rules.
-pub trait StatelessValidation
-where Self: 'static
-{
-    /// Stateless validation rules
-    const STATELESS_RULES: &[StatelessRule];
-
-    /// Perform a stateless validation, collecting a problem report
-    fn validate(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
-        Self::STATELESS_RULES
-            .iter()
-            .map(|rule| rule(doc, report))
             .all(|res| res)
     }
 }

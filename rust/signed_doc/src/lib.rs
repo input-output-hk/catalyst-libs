@@ -12,7 +12,6 @@ pub mod validator;
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter},
-    future::Future,
     sync::Arc,
 };
 
@@ -142,11 +141,8 @@ impl CatalystSignedDocument {
     /// # Errors
     ///
     /// Returns a report of verification failures and the source error.
-    pub async fn verify<P, T>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
-    where
-        P: Fn(&IdUri) -> T,
-        T: Future<Output = Option<VerifyingKey>>,
-    {
+    pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
+    where P: Fn(&IdUri) -> Option<VerifyingKey> {
         let report = ProblemReport::new("Catalyst Signed Document Verification");
 
         let cose_sign = match self.as_cose_sign() {
@@ -161,7 +157,7 @@ impl CatalystSignedDocument {
         };
 
         for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            match pk_getter(kid).await {
+            match pk_getter(kid) {
                 Some(pk) => {
                     let tbs_data = cose_sign.tbs_data(&[], signature);
                     match signature.signature.as_slice().try_into() {
@@ -408,8 +404,8 @@ mod tests {
         assert_eq!(decoded.doc_meta(), metadata.extra());
     }
 
-    #[tokio::test]
-    async fn signature_verification_test() {
+    #[test]
+    fn signature_verification_test() {
         let mut csprng = OsRng;
         let sk: SigningKey = SigningKey::generate(&mut csprng);
         let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
@@ -430,8 +426,8 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc.verify(|_| async { Some(pk) }).await.is_ok());
+        assert!(signed_doc.verify(|_| Some(pk)).is_ok());
 
-        assert!(signed_doc.verify(|_| async { None }).await.is_err());
+        assert!(signed_doc.verify(|_| None).is_err());
     }
 }

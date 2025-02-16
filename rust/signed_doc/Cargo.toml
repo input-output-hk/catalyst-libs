@@ -29,7 +29,6 @@ jsonpath-rust = "0.7.5"
 [dev-dependencies]
 base64-url = "3.0.0"
 rand = "0.8.5"
-tokio = "1.42.0"
 
 
 [[bin]]
