@@ -12,6 +12,7 @@ pub mod validator;
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter},
+    future::Future,
     sync::Arc,
 };
 
@@ -20,11 +21,11 @@ use catalyst_types::problem_report::ProblemReport;
 pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
+use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 use metadata::{ContentEncoding, ContentType};
 pub use metadata::{DocumentRef, ExtraFields, Metadata};
 pub use minicbor::{decode, encode, Decode, Decoder, Encode, Encoder};
-pub use rbac_registration::cardano::cip509::SimplePublicKeyType;
 pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
 
@@ -141,68 +142,62 @@ impl CatalystSignedDocument {
     /// # Errors
     ///
     /// Returns a report of verification failures and the source error.
-    #[allow(clippy::indexing_slicing)]
-    pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
-    where P: Fn(&IdUri) -> SimplePublicKeyType {
-        let error_report = ProblemReport::new("Catalyst Signed Document Verification");
+    pub async fn verify<P, T>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
+    where
+        P: Fn(&IdUri) -> T,
+        T: Future<Output = Option<VerifyingKey>>,
+    {
+        let report = ProblemReport::new("Catalyst Signed Document Verification");
 
-        match self.as_cose_sign() {
-            Ok(cose_sign) => {
-                let signatures = self.signatures().cose_signatures();
-                for (idx, kid) in self.kids().iter().enumerate() {
-                    match pk_getter(kid) {
-                        SimplePublicKeyType::Ed25519(pk) => {
-                            let signature = &signatures[idx];
-                            let tbs_data = cose_sign.tbs_data(&[], signature);
-                            match signature.signature.as_slice().try_into() {
-                                Ok(signature_bytes) => {
-                                    let signature =
-                                        ed25519_dalek::Signature::from_bytes(signature_bytes);
-                                    if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
-                                        error_report.functional_validation(
-                                            &format!(
-                                                "Verification failed for signature with Key ID {kid}: {e}"
-                                            ),
-                                            "During signature validation with verifying key",
-                                        );
-                                    }
-                                },
-                                Err(_) => {
-                                    error_report.invalid_value(
-                                        "cose signature",
-                                        &format!("{}", signature.signature.len()),
-                                        &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
-                                        "During encoding cose signature to bytes",
-                                    );
-                                },
+        let cose_sign = match self.as_cose_sign() {
+            Ok(cose_sign) => cose_sign,
+            Err(e) => {
+                report.other(
+                    "Cannot build a COSE sign object",
+                    "During encoding signed document as COSE SIGN",
+                );
+                return Err(CatalystSignedDocError::new(report, e));
+            },
+        };
+
+        for (signature, kid) in self.signatures().cose_signatures_with_kids() {
+            match pk_getter(kid).await {
+                Some(pk) => {
+                    let tbs_data = cose_sign.tbs_data(&[], signature);
+                    match signature.signature.as_slice().try_into() {
+                        Ok(signature_bytes) => {
+                            let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+                            if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
+                                report.functional_validation(
+                                    &format!(
+                                        "Verification failed for signature with Key ID {kid}: {e}"
+                                    ),
+                                    "During signature validation with verifying key",
+                                );
                             }
                         },
-                        SimplePublicKeyType::Deleted => {
-                            error_report.other(
-                                &format!("Public key for {kid} has been deleted."),
-                                "During public key extraction",
-                            );
-                        },
-                        SimplePublicKeyType::Undefined => {
-                            error_report.other(
-                                &format!("Public key for {kid} is undefined."),
-                                "During public key extraction",
+                        Err(_) => {
+                            report.invalid_value(
+                                "cose signature",
+                                &format!("{}", signature.signature.len()),
+                                &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+                                "During encoding cose signature to bytes",
                             );
                         },
                     }
-                }
-            },
-            Err(e) => {
-                error_report.other(
-                    &format!("{e}"),
-                    "During encoding signed document as COSE SIGN",
-                );
-            },
+                },
+                None => {
+                    report.other(
+                        &format!("Missing public key for {kid}."),
+                        "During public key extraction",
+                    );
+                },
+            }
         }
 
-        if error_report.is_problematic() {
+        if report.is_problematic() {
             return Err(CatalystSignedDocError::new(
-                error_report,
+                report,
                 anyhow::anyhow!("Verification failed for Catalyst Signed Document"),
             ));
         }
@@ -222,10 +217,17 @@ impl CatalystSignedDocument {
 
     /// Convert Catalyst Signed Document into `coset::CoseSign`
     fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        let mut cose_bytes: Vec<u8> = Vec::new();
-        minicbor::encode(self, &mut cose_bytes)?;
-        coset::CoseSign::from_slice(&cose_bytes)
-            .map_err(|e| anyhow::anyhow!("encoding as COSE SIGN failed: {e}"))
+        let protected_header = Header::try_from(&self.inner.metadata)
+            .map_err(|e| anyhow::anyhow!("Failed to encode Document Metadata: {e}"))?;
+
+        let mut builder = coset::CoseSignBuilder::new()
+            .protected(protected_header)
+            .payload(self.inner.content.encoded_bytes()?);
+
+        for signature in self.signatures().cose_signatures() {
+            builder = builder.add_signature(signature);
+        }
+        Ok(builder.build())
     }
 }
 
@@ -335,24 +337,7 @@ impl Encode<()> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
-        let protected_header = Header::try_from(&self.inner.metadata).map_err(|e| {
-            minicbor::encode::Error::message(format!("Failed to encode Document Metadata: {e}"))
-        })?;
-
-        let mut builder = coset::CoseSignBuilder::new()
-            .protected(protected_header)
-            .payload(
-                self.inner
-                    .content
-                    .encoded_bytes()
-                    .map_err(encode::Error::message)?,
-            );
-
-        for signature in self.signatures().cose_signatures() {
-            builder = builder.add_signature(signature);
-        }
-
-        let cose_sign = builder.build();
+        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
 
         let cose_bytes = cose_sign.to_vec().map_err(|e| {
             minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
@@ -423,8 +408,8 @@ mod tests {
         assert_eq!(decoded.doc_meta(), metadata.extra());
     }
 
-    #[test]
-    fn signature_verification_test() {
+    #[tokio::test]
+    async fn signature_verification_test() {
         let mut csprng = OsRng;
         let sk: SigningKey = SigningKey::generate(&mut csprng);
         let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
@@ -445,16 +430,8 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc
-            .verify(|_| { SimplePublicKeyType::Ed25519(pk) })
-            .is_ok());
+        assert!(signed_doc.verify(|_| async { Some(pk) }).await.is_ok());
 
-        assert!(signed_doc
-            .verify(|_| { SimplePublicKeyType::Undefined })
-            .is_err());
-
-        assert!(signed_doc
-            .verify(|_| { SimplePublicKeyType::Deleted })
-            .is_err());
+        assert!(signed_doc.verify(|_| async { None }).await.is_err());
     }
 }

@@ -19,32 +19,32 @@ pub struct Signature {
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
-    /// Creates an empty signatures list.
-    #[must_use]
-    pub fn new() -> Self {
-        Self(Vec::new())
-    }
-
     /// Return a list of author IDs (short form of Catalyst IDs).
     #[must_use]
-    pub fn authors(&self) -> Vec<IdUri> {
+    pub(crate) fn authors(&self) -> Vec<IdUri> {
         self.kids().into_iter().map(|k| k.as_short_id()).collect()
     }
 
     /// Return a list of Document's Catalyst IDs.
     #[must_use]
-    pub fn kids(&self) -> Vec<IdUri> {
+    pub(crate) fn kids(&self) -> Vec<IdUri> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
     }
 
-    /// List of signatures.
-    #[must_use]
-    pub fn cose_signatures(&self) -> Vec<CoseSignature> {
-        self.0.iter().map(|sig| sig.signature.clone()).collect()
+    /// Iterator of COSE signatures object with kids.
+    pub(crate) fn cose_signatures_with_kids(
+        &self,
+    ) -> impl Iterator<Item = (&CoseSignature, &IdUri)> + use<'_> {
+        self.0.iter().map(|sig| (&sig.signature, &sig.kid))
+    }
+
+    /// List of COSE signatures object.
+    pub(crate) fn cose_signatures(&self) -> impl Iterator<Item = CoseSignature> + use<'_> {
+        self.0.iter().map(|sig| sig.signature.clone())
     }
 
     /// Add a new signature
-    pub fn push(&mut self, kid: IdUri, signature: CoseSignature) {
+    pub(crate) fn push(&mut self, kid: IdUri, signature: CoseSignature) {
         self.0.push(Signature { kid, signature });
     }
 

@@ -16,7 +16,7 @@ pub trait ValidationDataProvider {
     /// Get public keys
     fn get_public_key(&self, kid: &IdUri) -> Option<SimplePublicKeyType>;
     /// Get signed document by document reference
-    fn get_doc_ref(&self, doc_ref: &DocumentRef) -> Option<CatalystSignedDocument>;
+    fn get_doc(&self, doc_ref: &DocumentRef) -> Option<CatalystSignedDocument>;
 }
 
 /// Stateless validation function rule type
@@ -59,7 +59,7 @@ where Self: 'static
 ///
 /// Returns a report of validation failures and the source error.
 pub fn validate(
-    doc: &CatalystSignedDocument, provider: &impl ValidationDataProvider,
+    doc: &CatalystSignedDocument, doc_provider: &impl ValidationDataProvider,
 ) -> Result<(), CatalystSignedDocError> {
     let report = ProblemReport::new("Catalyst Signed Document Validation");
 
@@ -83,13 +83,13 @@ pub fn validate(
     match doc_type {
         DocumentType::ProposalDocument => {
             if let Ok(proposal_doc) = ProposalDocument::from_signed_doc(doc, &report) {
-                proposal_doc.statefull_validation(provider, &report);
+                proposal_doc.statefull_validation(doc_provider, &report);
             }
         },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
             if let Ok(comment_doc) = CommentDocument::from_signed_doc(doc, &report) {
-                comment_doc.statefull_validation(provider, &report);
+                comment_doc.statefull_validation(doc_provider, &report);
             }
         },
         DocumentType::CommentTemplate => {},

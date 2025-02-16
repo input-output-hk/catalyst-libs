@@ -11,7 +11,7 @@ pub(crate) fn validate_provided_doc(
     doc_ref: &DocumentRef, doc_name: &str, provider: &dyn ValidationDataProvider,
     report: &ProblemReport, validator: impl Fn(CatalystSignedDocument) -> bool,
 ) -> bool {
-    if let Some(doc) = provider.get_doc_ref(doc_ref) {
+    if let Some(doc) = provider.get_doc(doc_ref) {
         validator(doc)
     } else {
         report.functional_validation(
