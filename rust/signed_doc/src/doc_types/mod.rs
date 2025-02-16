@@ -23,10 +23,10 @@ pub enum DocumentType {
     ReviewDocument,
     /// A template for review documents, defining the expected structure.
     ReviewTemplate,
-    /// A document defining parameters for a specific category.
-    CategoryParametersDocument,
-    /// A template for category parameter documents, defining the expected structure.
-    CategoryParametersTemplate,
+    /// A document defining for a specific category.
+    CategoryDocument,
+    /// A template for category documents, defining the expected structure.
+    CategoryTemplate,
     /// A document containing parameters for a specific campaign.
     CampaignParametersDocument,
     /// A template for campaign parameter documents, defining the expected structure.
@@ -56,11 +56,11 @@ const COMMENT_TEMPLATE_UUID_TYPE: Uuid = Uuid::from_u128(0x0B84_24D4_EBFD_46E3_9
 const REVIEW_DOCUMENT_UUID_TYPE: Uuid = Uuid::from_u128(0xE4CA_F5F0_098B_45FD_94F3_0702_A457_3DB5);
 /// Review template `UuidV4` type.
 const REVIEW_TEMPLATE_UUID_TYPE: Uuid = Uuid::from_u128(0xEBE5_D0BF_5D86_4577_AF4D_008F_DDBE_2EDC);
-/// Category parameters document `UuidV4` type.
-const CATEGORY_PARAMETERS_DOCUMENT_UUID_TYPE: Uuid =
+/// Category document `UuidV4` type.
+pub const CATEGORY_DOCUMENT_UUID_TYPE: Uuid =
     Uuid::from_u128(0x48C2_0109_362A_4D32_9BBA_E0A9_CF8B_45BE);
-/// Category parameters template `UuidV4` type.
-const CATEGORY_PARAMETERS_TEMPLATE_UUID_TYPE: Uuid =
+/// Category template `UuidV4` type.
+const CATEGORY_TEMPLATE_UUID_TYPE: Uuid =
     Uuid::from_u128(0x65B1_E8B0_51F1_46A5_9970_72CD_F268_84BE);
 /// Campaign parameters document `UuidV4` type.
 const CAMPAIGN_PARAMETERS_DOCUMENT_UUID_TYPE: Uuid =
@@ -98,8 +98,8 @@ impl TryFrom<UuidV4> for DocumentType {
             COMMENT_TEMPLATE_UUID_TYPE => Ok(DocumentType::CommentTemplate),
             REVIEW_DOCUMENT_UUID_TYPE => Ok(DocumentType::ReviewDocument),
             REVIEW_TEMPLATE_UUID_TYPE => Ok(DocumentType::ReviewTemplate),
-            CATEGORY_PARAMETERS_DOCUMENT_UUID_TYPE => Ok(DocumentType::CategoryParametersDocument),
-            CATEGORY_PARAMETERS_TEMPLATE_UUID_TYPE => Ok(DocumentType::CategoryParametersTemplate),
+            CATEGORY_DOCUMENT_UUID_TYPE => Ok(DocumentType::CategoryDocument),
+            CATEGORY_TEMPLATE_UUID_TYPE => Ok(DocumentType::CategoryTemplate),
             CAMPAIGN_PARAMETERS_DOCUMENT_UUID_TYPE => Ok(DocumentType::CampaignParametersDocument),
             CAMPAIGN_PARAMETERS_TEMPLATE_UUID_TYPE => Ok(DocumentType::CampaignParametersTemplate),
             BRAND_PARAMETERS_DOCUMENT_UUID_TYPE => Ok(DocumentType::BrandParametersDocument),

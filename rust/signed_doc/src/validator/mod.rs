@@ -1,5 +1,7 @@
 //! Catalyst Signed Documents validation
 
+pub(crate) mod utils;
+
 use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
 use rbac_registration::cardano::cip509::SimplePublicKeyType;
 
@@ -9,11 +11,11 @@ use crate::{
     CatalystSignedDocument, DocumentRef,
 };
 
-/// Trait for validating Catalyst Signed Documents.
-pub trait Validator {
+/// Trait for getting a necessary data needed during the validation process.
+pub trait ValidationDataProvider {
     /// Get public keys
     fn get_public_key(&self, kid: &IdUri) -> Option<SimplePublicKeyType>;
-    /// Get signed document reference
+    /// Get signed document by document reference
     fn get_doc_ref(&self, doc_ref: &DocumentRef) -> Option<CatalystSignedDocument>;
 }
 
@@ -35,7 +37,7 @@ pub struct ValidationRule<T> {
 ///
 /// Returns a report of validation failures and the source error.
 pub fn validate<F>(
-    doc: &CatalystSignedDocument, doc_getter: impl Validator,
+    doc: &CatalystSignedDocument, doc_getter: &impl ValidationDataProvider,
 ) -> Result<(), CatalystSignedDocError> {
     let error_report = ProblemReport::new("Catalyst Signed Document Validation");
 
@@ -65,14 +67,14 @@ pub fn validate<F>(
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
             if let Ok(comment_doc) = CommentDocument::from_signed_doc(doc, &error_report) {
-                comment_doc.validate_with_report(&doc_getter, &error_report);
+                comment_doc.validate_with_report(doc_getter, &error_report);
             }
         },
         DocumentType::CommentTemplate => {},
         DocumentType::ReviewDocument => {},
         DocumentType::ReviewTemplate => {},
-        DocumentType::CategoryParametersDocument => {},
-        DocumentType::CategoryParametersTemplate => {},
+        DocumentType::CategoryDocument => {},
+        DocumentType::CategoryTemplate => {},
         DocumentType::CampaignParametersDocument => {},
         DocumentType::CampaignParametersTemplate => {},
         DocumentType::BrandParametersDocument => {},

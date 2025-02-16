@@ -10,7 +10,7 @@ use crate::{
     },
     error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
-    validator::{ValidationRule, Validator},
+    validator::{ValidationDataProvider, ValidationRule},
     CatalystSignedDocument,
 };
 
@@ -43,7 +43,7 @@ impl CommentDocument {
 
     /// A comprehensive validation of the `CommentDocument` content.
     pub(crate) fn validate_with_report(
-        &self, validator: &impl Validator, error_report: &ProblemReport,
+        &self, validator: &impl ValidationDataProvider, error_report: &ProblemReport,
     ) {
         let context = "Comment Document Comprehensive Validation";
         let doc_ref = self.0.doc_meta().doc_ref();
