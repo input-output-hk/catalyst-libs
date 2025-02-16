@@ -8,8 +8,8 @@ use crate::{
     error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
     validator::{
-        utils::validate_provided_doc, StatefullRule, StatelessRule, ValidationDataProvider,
-        Validator,
+        utils::validate_provided_doc, StatefullRule, StatefullValidation, StatelessRule,
+        StatelessValidation,
     },
     CatalystSignedDocument, DocumentRef,
 };
@@ -28,14 +28,20 @@ pub struct ProposalDocument {
     content: serde_json::Value,
 }
 
-impl Validator for ProposalDocument {
-    const STATEFULL_RULES: &[StatefullRule<Self>] = &[template_full_check, category_full_check];
+impl StatelessValidation for ProposalDocument {
     const STATELESS_RULES: &[StatelessRule] = &[
         type_check,
         content_type_check,
         content_encoding_check,
         template_check,
     ];
+}
+
+impl<DocProvider> StatefullValidation<DocProvider> for ProposalDocument
+where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>
+{
+    const STATEFULL_RULES: &[StatefullRule<Self, DocProvider>] =
+        &[template_full_check, category_full_check];
 }
 
 /// `type` field validation
@@ -98,9 +104,10 @@ fn template_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool 
 }
 
 /// `template` statefull validation
-fn template_full_check(
-    doc: &ProposalDocument, provider: &dyn ValidationDataProvider, report: &ProblemReport,
-) -> bool {
+fn template_full_check<DocProvider>(
+    doc: &ProposalDocument, provider: &DocProvider, report: &ProblemReport,
+) -> bool
+where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
     let template_validator = |template_doc: CatalystSignedDocument| {
         if template_doc.doc_type().uuid() != PROPOSAL_TEMPLATE_UUID_TYPE {
             report.invalid_value(
@@ -150,9 +157,10 @@ fn template_full_check(
 }
 
 /// `category_id` statefull validation
-fn category_full_check(
-    doc: &ProposalDocument, provider: &dyn ValidationDataProvider, report: &ProblemReport,
-) -> bool {
+fn category_full_check<DocProvider>(
+    doc: &ProposalDocument, provider: &DocProvider, report: &ProblemReport,
+) -> bool
+where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
     if let Some(category) = &doc.category {
         let category_validator = |category_doc: CatalystSignedDocument| -> bool {
             if category_doc.doc_type().uuid() != CATEGORY_DOCUMENT_UUID_TYPE {
@@ -177,7 +185,7 @@ impl ProposalDocument {
     pub(crate) fn from_signed_doc(
         doc: &CatalystSignedDocument, report: &ProblemReport,
     ) -> anyhow::Result<Self> {
-        if Self::stateless_validation(doc, report) {
+        if <Self as StatelessValidation>::validate(doc, report) {
             anyhow::bail!("Failed to build `ProposalDocument` from `CatalystSignedDoc`");
         }
 

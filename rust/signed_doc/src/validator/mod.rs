@@ -2,8 +2,7 @@
 
 pub(crate) mod utils;
 
-use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
-use rbac_registration::cardano::cip509::SimplePublicKeyType;
+use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
     doc_types::{CommentDocument, DocumentType, ProposalDocument},
@@ -11,43 +10,42 @@ use crate::{
     CatalystSignedDocument, DocumentRef,
 };
 
-/// Trait for getting a necessary data needed during the validation process.
-pub trait ValidationDataProvider {
-    /// Get public keys
-    fn get_public_key(&self, kid: &IdUri) -> Option<SimplePublicKeyType>;
-    /// Get signed document by document reference
-    fn get_doc(&self, doc_ref: &DocumentRef) -> Option<CatalystSignedDocument>;
-}
-
 /// Stateless validation function rule type
 pub(crate) type StatelessRule = fn(&CatalystSignedDocument, &ProblemReport) -> bool;
 /// Statefull validation function rule type
-pub(crate) type StatefullRule<T> = fn(&T, &dyn ValidationDataProvider, &ProblemReport) -> bool;
+pub(crate) type StatefullRule<DocType, DocProvider> =
+    fn(&DocType, &DocProvider, &ProblemReport) -> bool;
 
-/// Trait for defining a validation rules.
-pub trait Validator
+/// Trait for defining a statefull validation rules.
+pub trait StatefullValidation<DocProvider>
+where
+    Self: 'static,
+    DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>,
+{
+    /// Statefull validation rules
+    const STATEFULL_RULES: &[StatefullRule<Self, DocProvider>];
+
+    /// Perform a statefull validation, collecting a problem report
+    fn validate(&self, provider: &DocProvider, report: &ProblemReport) -> bool {
+        Self::STATEFULL_RULES
+            .iter()
+            .map(|rule| rule(self, provider, report))
+            .all(|res| res)
+    }
+}
+
+/// Trait for defining a stateless validation rules.
+pub trait StatelessValidation
 where Self: 'static
 {
     /// Stateless validation rules
     const STATELESS_RULES: &[StatelessRule];
-    /// Statefull validation rules
-    const STATEFULL_RULES: &[StatefullRule<Self>];
 
     /// Perform a stateless validation, collecting a problem report
-    fn stateless_validation(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+    fn validate(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
         Self::STATELESS_RULES
             .iter()
             .map(|rule| rule(doc, report))
-            .all(|res| res)
-    }
-
-    /// Perform a statefull validation, collecting a problem report
-    fn statefull_validation(
-        &self, provider: &impl ValidationDataProvider, report: &ProblemReport,
-    ) -> bool {
-        Self::STATEFULL_RULES
-            .iter()
-            .map(|rule| rule(self, provider, report))
             .all(|res| res)
     }
 }
@@ -58,9 +56,10 @@ where Self: 'static
 /// # Errors
 ///
 /// Returns a report of validation failures and the source error.
-pub fn validate(
-    doc: &CatalystSignedDocument, doc_provider: &impl ValidationDataProvider,
-) -> Result<(), CatalystSignedDocError> {
+pub fn validate<DocProvider>(
+    doc: &CatalystSignedDocument, provider: &DocProvider,
+) -> Result<(), CatalystSignedDocError>
+where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
     let report = ProblemReport::new("Catalyst Signed Document Validation");
 
     let doc_type: DocumentType = match doc.doc_type().try_into() {
@@ -83,13 +82,13 @@ pub fn validate(
     match doc_type {
         DocumentType::ProposalDocument => {
             if let Ok(proposal_doc) = ProposalDocument::from_signed_doc(doc, &report) {
-                proposal_doc.statefull_validation(doc_provider, &report);
+                proposal_doc.validate(provider, &report);
             }
         },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
             if let Ok(comment_doc) = CommentDocument::from_signed_doc(doc, &report) {
-                comment_doc.statefull_validation(doc_provider, &report);
+                comment_doc.validate(provider, &report);
             }
         },
         DocumentType::CommentTemplate => {},

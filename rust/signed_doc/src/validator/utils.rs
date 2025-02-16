@@ -2,16 +2,19 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-use super::ValidationDataProvider;
 use crate::{CatalystSignedDocument, DocumentRef};
 
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.
-pub(crate) fn validate_provided_doc(
-    doc_ref: &DocumentRef, doc_name: &str, provider: &dyn ValidationDataProvider,
-    report: &ProblemReport, validator: impl Fn(CatalystSignedDocument) -> bool,
-) -> bool {
-    if let Some(doc) = provider.get_doc(doc_ref) {
+pub(crate) fn validate_provided_doc<DocProvider, Validator>(
+    doc_ref: &DocumentRef, doc_name: &str, provider: &DocProvider, report: &ProblemReport,
+    validator: Validator,
+) -> bool
+where
+    DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument>,
+    Validator: Fn(CatalystSignedDocument) -> bool,
+{
+    if let Some(doc) = provider(doc_ref) {
         validator(doc)
     } else {
         report.functional_validation(

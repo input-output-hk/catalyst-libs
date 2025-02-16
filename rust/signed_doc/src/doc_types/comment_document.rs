@@ -7,7 +7,7 @@ use crate::{
     doc_types::{COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE},
     error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
-    validator::{utils::validate_provided_doc, ValidationDataProvider, Validator},
+    validator::{utils::validate_provided_doc, StatefullValidation, StatelessValidation},
     CatalystSignedDocument, DocumentRef,
 };
 
@@ -30,9 +30,7 @@ pub struct CommentDocument {
     content: serde_json::Value,
 }
 
-impl Validator for CommentDocument {
-    const STATEFULL_RULES: &[crate::validator::StatefullRule<Self>] =
-        &[template_full_check, ref_full_check, reply_full_check];
+impl StatelessValidation for CommentDocument {
     const STATELESS_RULES: &[crate::validator::StatelessRule] = &[
         type_check,
         content_type_check,
@@ -40,6 +38,13 @@ impl Validator for CommentDocument {
         template_check,
         reply_check,
     ];
+}
+
+impl<DocProvider> StatefullValidation<DocProvider> for CommentDocument
+where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>
+{
+    const STATEFULL_RULES: &[crate::validator::StatefullRule<Self, DocProvider>] =
+        &[template_full_check, ref_full_check, reply_full_check];
 }
 
 /// `type` field validation
@@ -111,9 +116,10 @@ fn reply_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
 }
 
 /// `template` statefull validation
-fn template_full_check(
-    doc: &CommentDocument, provider: &dyn ValidationDataProvider, report: &ProblemReport,
-) -> bool {
+fn template_full_check<DocProvider>(
+    doc: &CommentDocument, provider: &DocProvider, report: &ProblemReport,
+) -> bool
+where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
     let template_validator = |template_doc: CatalystSignedDocument| {
         if template_doc.doc_type().uuid() != COMMENT_TEMPLATE_UUID_TYPE {
             report.invalid_value(
@@ -164,9 +170,10 @@ fn template_full_check(
 }
 
 /// `ref` statefull validation
-fn ref_full_check(
-    doc: &CommentDocument, provider: &dyn ValidationDataProvider, report: &ProblemReport,
-) -> bool {
+fn ref_full_check<DocProvider>(
+    doc: &CommentDocument, provider: &DocProvider, report: &ProblemReport,
+) -> bool
+where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
     let ref_validator = |proposal_doc: CatalystSignedDocument| -> bool {
         if proposal_doc.doc_type().uuid() != PROPOSAL_DOCUMENT_UUID_TYPE {
             report.invalid_value(
@@ -183,9 +190,10 @@ fn ref_full_check(
 }
 
 /// `reply` statefull validation
-fn reply_full_check(
-    doc: &CommentDocument, provider: &dyn ValidationDataProvider, report: &ProblemReport,
-) -> bool {
+fn reply_full_check<DocProvider>(
+    doc: &CommentDocument, provider: &DocProvider, report: &ProblemReport,
+) -> bool
+where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
     if let Some(reply) = &doc.reply {
         let reply_validator = |comment_doc: CatalystSignedDocument| -> bool {
             if comment_doc.doc_type().uuid() != COMMENT_DOCUMENT_UUID_TYPE {
@@ -225,7 +233,7 @@ impl CommentDocument {
     pub(crate) fn from_signed_doc(
         doc: &CatalystSignedDocument, report: &ProblemReport,
     ) -> anyhow::Result<Self> {
-        if Self::stateless_validation(doc, report) {
+        if <Self as StatelessValidation>::validate(doc, report) {
             anyhow::bail!("Failed to build `CommentDocument` from `CatalystSignedDoc`");
         }
 
