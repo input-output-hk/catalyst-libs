@@ -16,7 +16,7 @@ check: format
 
 # Fix and Check Markdown files
 regenerate: check
-    cue export -f -s -p signed_docs --out yaml --outfile signed_doc.yaml
+    cue export -f -s -p signed_docs --out json --outfile signed_doc.json
 
 # Pre Push Checks - intended to be run by a git pre-push hook.
 pre-push: regenerate

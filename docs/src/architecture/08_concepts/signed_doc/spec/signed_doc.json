@@ -2,52 +2,201 @@
     "docs": {
         "Template": {
             "type": "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
-            "id": {
-                "format": "UUIDv7",
-                "required": "yes"
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "required": "optional",
+                    "format": "COSE Algorithm",
+                    "description": "Default cryptographic signature algorithm"
+                },
+                "content type": {
+                    "value": [
+                        "application/schema+json",
+                        "application/cddl"
+                    ],
+                    "coseLabel": 3,
+                    "format": "IANA Media Type",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "format": "HTTP Content Encoding",
+                    "required": "optional",
+                    "description": "Supported HTTP Encodings of the Payload"
+                }
             },
-            "ver": {
-                "format": "UUIDv7",
-                "required": "yes"
-            },
-            "alg": {
-                "format": "COSE Algorithm",
-                "required": "optional"
-            },
-            "content type": [
-                "application/schema+json",
-                "application/cddl"
-            ],
-            "ref": {
-                "format": "Document Reference",
-                "required": "optional",
-                "ref type": "Proposal"
-            },
-            "content encoding": [
-                "br"
-            ]
+            "metadata": {
+                "id": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "template": {
+                    "format": "Document Reference",
+                    "required": "optional",
+                    "description": "Reference to the template used to create and/or validate this document.",
+                    "validation": "The document payload is not valid if it does not validate completely against the referenced template.",
+                    "ref": {
+                        "type": [
+                            "Template"
+                        ],
+                        "template_ref": "Template",
+                        "template_media_type": "application/schema+json"
+                    }
+                },
+                "template_doc": {
+                    "format": "Document Reference",
+                    "required": "yes",
+                    "description": "Metadata only in Template documents.\nDefines what type of document may use this template.",
+                    "ref": {
+                        "type": [
+                            "Template",
+                            "Proposal",
+                            "Comment",
+                            "Action"
+                        ],
+                        "template_ref": "Template",
+                        "template_media_type": "application/schema+json"
+                    }
+                }
+            }
         },
         "Proposal": {
-            "description": "# This is my description.\n\n* Its markdown",
             "type": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
-            "id": {
-                "format": "UUIDv7",
-                "required": "yes"
+            "description": "# This is my description.\n\n* Its markdown",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "required": "optional",
+                    "format": "COSE Algorithm",
+                    "description": "Default cryptographic signature algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": [
+                        "application/json"
+                    ],
+                    "format": "IANA Media Type",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "format": "HTTP Content Encoding",
+                    "required": "optional",
+                    "description": "Supported HTTP Encodings of the Payload"
+                }
             },
-            "ver": {
-                "format": "UUIDv7",
-                "required": "yes"
+            "metadata": {
+                "id": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                }
+            }
+        },
+        "Comment": {
+            "type": "b679ded3-0e7c-41ba-89f8-da62a17898ea",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "required": "optional",
+                    "format": "COSE Algorithm",
+                    "description": "Default cryptographic signature algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": [
+                        "application/json"
+                    ],
+                    "format": "IANA Media Type",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "format": "HTTP Content Encoding",
+                    "required": "optional",
+                    "description": "Supported HTTP Encodings of the Payload"
+                }
             },
-            "alg": {
-                "format": "COSE Algorithm",
-                "required": "optional"
+            "metadata": {
+                "id": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                }
+            }
+        },
+        "Action": {
+            "type": "5e60e623-ad02-4a1b-a1ac-406db978ee48",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "required": "optional",
+                    "format": "COSE Algorithm",
+                    "description": "Default cryptographic signature algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": [
+                        "application/json"
+                    ],
+                    "format": "IANA Media Type",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "format": "HTTP Content Encoding",
+                    "required": "optional",
+                    "description": "Supported HTTP Encodings of the Payload"
+                }
             },
-            "content type": [
-                "application/json"
-            ],
-            "content encoding": [
-                "br"
-            ]
+            "metadata": {
+                "id": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "format": "UUIDv7",
+                    "required": "yes",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                }
+            }
         }
     }
 }
