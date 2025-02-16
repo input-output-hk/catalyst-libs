@@ -19,12 +19,13 @@ pub const PROPOSAL_DOCUMENT_UUID_TYPE: Uuid =
     Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
 
 /// Proposal Document struct
-#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 pub struct ProposalDocument {
     /// `template` field
     template: DocumentRef,
     /// `category_id` field
     category: Option<DocumentRef>,
+    /// Proposal content
+    content: serde_json::Value,
 }
 
 impl Validator for ProposalDocument {
@@ -110,6 +111,33 @@ fn template_full_check(
             );
             return false;
         }
+        let Ok(template_json_schema) =
+            serde_json::from_slice(template_doc.doc_content().decoded_bytes())
+        else {
+            report.functional_validation(
+                "Template document content must be json encoded",
+                "Invalid referenced template document content",
+            );
+            return false;
+        };
+        let Ok(schema_validator) = jsonschema::options()
+            .with_draft(jsonschema::Draft::Draft7)
+            .build(&template_json_schema)
+        else {
+            report.functional_validation(
+                "Template document content must be Draft 7 JSON schema",
+                "Invalid referenced template document content",
+            );
+            return false;
+        };
+
+        if schema_validator.validate(&doc.content).is_err() {
+            report.functional_validation(
+                "Proposal document content does not compliant with the template json schema",
+                "Invalid Proposal document content",
+            );
+            return false;
+        }
         true
     };
     validate_provided_doc(
@@ -158,8 +186,13 @@ impl ProposalDocument {
             .doc_meta()
             .template()
             .ok_or(anyhow::anyhow!("missing `template` field"))?;
+        let content = serde_json::from_slice(doc.doc_content().decoded_bytes())?;
 
-        Ok(Self { template, category })
+        Ok(Self {
+            template,
+            category,
+            content,
+        })
     }
 }
 

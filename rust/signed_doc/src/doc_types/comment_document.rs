@@ -26,6 +26,8 @@ pub struct CommentDocument {
     /// `section` field
     #[allow(dead_code)]
     section: Option<String>,
+    /// Comment content
+    content: serde_json::Value,
 }
 
 impl Validator for CommentDocument {
@@ -122,6 +124,34 @@ fn template_full_check(
             );
             return false;
         }
+        let Ok(template_json_schema) =
+            serde_json::from_slice(template_doc.doc_content().decoded_bytes())
+        else {
+            report.functional_validation(
+                "Template document content must be json encoded",
+                "Invalid referenced template document content",
+            );
+            return false;
+        };
+        let Ok(schema_validator) = jsonschema::options()
+            .with_draft(jsonschema::Draft::Draft7)
+            .build(&template_json_schema)
+        else {
+            report.functional_validation(
+                "Template document content must be Draft 7 JSON schema",
+                "Invalid referenced template document content",
+            );
+            return false;
+        };
+
+        if schema_validator.validate(&doc.content).is_err() {
+            report.functional_validation(
+                "Comment document content does not compliant with the template json schema",
+                "Invalid Comment document content",
+            );
+            return false;
+        }
+
         true
     };
     validate_provided_doc(
@@ -209,12 +239,14 @@ impl CommentDocument {
             .ok_or(anyhow::anyhow!("missing `ref` field"))?;
         let reply = doc.doc_meta().reply();
         let section = doc.doc_meta().section().cloned();
+        let content = serde_json::from_slice(doc.doc_content().decoded_bytes())?;
 
         Ok(Self {
             template,
             doc_ref,
             reply,
             section,
+            content,
         })
     }
 }
