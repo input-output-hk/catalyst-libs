@@ -52,25 +52,14 @@ where Self: 'static
     }
 }
 
-/// Validation rule
-pub struct ValidationRule<T> {
-    /// Name of field that is being validated
-    #[allow(dead_code)]
-    pub(crate) field: String,
-    /// Description of what is being validated
-    pub(crate) description: String,
-    /// Validator function
-    pub(crate) validator: fn(&T, &ProblemReport) -> bool,
-}
-
 /// A comprehensive validation of the `CatalystSignedDocument`,
 /// including a signature verification and document type based validation.
 ///
 /// # Errors
 ///
 /// Returns a report of validation failures and the source error.
-pub fn validate<F>(
-    doc: &CatalystSignedDocument, doc_getter: &impl ValidationDataProvider,
+pub fn validate(
+    doc: &CatalystSignedDocument, provider: &impl ValidationDataProvider,
 ) -> Result<(), CatalystSignedDocError> {
     let report = ProblemReport::new("Catalyst Signed Document Validation");
 
@@ -94,13 +83,13 @@ pub fn validate<F>(
     match doc_type {
         DocumentType::ProposalDocument => {
             if let Ok(proposal_doc) = ProposalDocument::from_signed_doc(doc, &report) {
-                proposal_doc.statefull_validation(doc_getter, &report);
+                proposal_doc.statefull_validation(provider, &report);
             }
         },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
             if let Ok(comment_doc) = CommentDocument::from_signed_doc(doc, &report) {
-                comment_doc.validate_with_report(doc_getter, &report);
+                comment_doc.statefull_validation(provider, &report);
             }
         },
         DocumentType::CommentTemplate => {},

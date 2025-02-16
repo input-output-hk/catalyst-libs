@@ -19,10 +19,11 @@ pub const PROPOSAL_DOCUMENT_UUID_TYPE: Uuid =
     Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
 
 /// Proposal Document struct
+#[allow(missing_docs, clippy::missing_docs_in_private_items)]
 pub struct ProposalDocument {
-    /// `template` doc ref
+    /// `template` field
     template: DocumentRef,
-    /// `category` doc ref
+    /// `category_id` field
     category: Option<DocumentRef>,
 }
 
