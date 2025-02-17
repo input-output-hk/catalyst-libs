@@ -42,11 +42,15 @@ where
     const STATEFULL_RULES: &[StatefullRule<Self, DocProvider>];
 
     /// Perform a statefull validation, collecting a problem report
-    fn validate(&self, provider: &DocProvider, report: &ProblemReport) -> bool {
-        Self::STATEFULL_RULES
+    ///
+    /// # Errors
+    /// Returns an error if `provider` will return an error, fails fast in this case.
+    fn validate(&self, provider: &DocProvider, report: &ProblemReport) -> anyhow::Result<bool> {
+        let res = Self::STATEFULL_RULES
             .iter()
             .map(|rule| rule(self, provider, report))
-            .all(|res| res)
+            .all(|res| res);
+        Ok(res)
     }
 }
 
@@ -56,6 +60,8 @@ where
 /// # Errors
 ///
 /// Returns a report of validation failures and the source error.
+/// If `provider` returns error, fails fast and placed this error into
+/// `CatalystSignedDocError::error`.
 pub fn validate<DocProvider>(
     doc: &CatalystSignedDocument, provider: &DocProvider,
 ) -> Result<(), CatalystSignedDocError>
@@ -73,23 +79,47 @@ where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument> 
             );
             return Err(CatalystSignedDocError::new(
                 report,
-                anyhow::anyhow!("Validation of the Catalyst Signed Document failed"),
+                anyhow::anyhow!("Validation of the Catalyst Signed Document failed, {e}"),
             ));
         },
     };
 
+    match validate_inner(doc_type, doc, provider, &report) {
+        Ok(()) if report.is_problematic() => {
+            Err(CatalystSignedDocError::new(
+                report,
+                anyhow::anyhow!("Validation of the Catalyst Signed Document failed"),
+            ))
+        },
+        Err(e) => Err(CatalystSignedDocError::new(report, e)),
+        Ok(()) => Ok(()),
+    }
+}
+
+/// A comprehensive type based validation of the `CatalystSignedDocument`, collecting a
+/// `report`.
+///
+/// # Errors
+///
+/// If `provider` returns error, fails fast and placed this error into
+/// `CatalystSignedDocError::error`.
+fn validate_inner<DocProvider>(
+    doc_type: DocumentType, doc: &CatalystSignedDocument, provider: &DocProvider,
+    report: &ProblemReport,
+) -> anyhow::Result<()>
+where
+    DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>,
+{
     #[allow(clippy::match_same_arms)]
     match doc_type {
         DocumentType::ProposalDocument => {
-            if let Ok(proposal_doc) = ProposalDocument::from_signed_doc(doc, &report) {
-                proposal_doc.validate(provider, &report);
-            }
+            let doc = ProposalDocument::from_signed_doc(doc, report)?;
+            doc.validate(provider, report)?;
         },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
-            if let Ok(comment_doc) = CommentDocument::from_signed_doc(doc, &report) {
-                comment_doc.validate(provider, &report);
-            }
+            let doc = CommentDocument::from_signed_doc(doc, report)?;
+            doc.validate(provider, report)?;
         },
         DocumentType::CommentTemplate => {},
         DocumentType::ReviewDocument => {},
@@ -105,13 +135,5 @@ where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument> 
         DocumentType::PrivateVoteTxV2 => {},
         DocumentType::ImmutableLedgerBlock => {},
     }
-
-    if report.is_problematic() {
-        return Err(CatalystSignedDocError::new(
-            report,
-            anyhow::anyhow!("Validation of the Catalyst Signed Document failed"),
-        ));
-    }
-
     Ok(())
 }

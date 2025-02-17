@@ -141,8 +141,10 @@ impl CatalystSignedDocument {
     /// # Errors
     ///
     /// Returns a report of verification failures and the source error.
-    pub fn verify<P>(&self, pk_getter: P) -> Result<(), CatalystSignedDocError>
-    where P: Fn(&IdUri) -> Option<VerifyingKey> {
+    /// If `provider` returns error, fails fast and placed this error into
+    /// `CatalystSignedDocError::error`.
+    pub fn verify<P>(&self, provider: P) -> Result<(), CatalystSignedDocError>
+    where P: Fn(&IdUri) -> anyhow::Result<Option<VerifyingKey>> {
         let report = ProblemReport::new("Catalyst Signed Document Verification");
 
         let cose_sign = match self.as_cose_sign() {
@@ -157,8 +159,8 @@ impl CatalystSignedDocument {
         };
 
         for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            match pk_getter(kid) {
-                Some(pk) => {
+            match provider(kid) {
+                Ok(Some(pk)) => {
                     let tbs_data = cose_sign.tbs_data(&[], signature);
                     match signature.signature.as_slice().try_into() {
                         Ok(signature_bytes) => {
@@ -182,11 +184,14 @@ impl CatalystSignedDocument {
                         },
                     }
                 },
-                None => {
+                Ok(None) => {
                     report.other(
                         &format!("Missing public key for {kid}."),
                         "During public key extraction",
                     );
+                },
+                Err(e) => {
+                    return Err(CatalystSignedDocError::new(report, e));
                 },
             }
         }
@@ -194,7 +199,7 @@ impl CatalystSignedDocument {
         if report.is_problematic() {
             return Err(CatalystSignedDocError::new(
                 report,
-                anyhow::anyhow!("Verification failed for Catalyst Signed Document"),
+                anyhow::anyhow!("Signature validation for Catalyst Signed Document fails"),
             ));
         }
 
@@ -426,8 +431,10 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc.verify(|_| Some(pk)).is_ok());
-
-        assert!(signed_doc.verify(|_| None).is_err());
+        assert!(signed_doc.verify(|_| Ok(Some(pk))).is_ok());
+        assert!(signed_doc.verify(|_| Ok(None)).is_err());
+        assert!(signed_doc
+            .verify(|_| Err(anyhow::anyhow!("some error")))
+            .is_err());
     }
 }

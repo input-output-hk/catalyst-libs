@@ -32,11 +32,11 @@ pub struct CommentDocument {
 
 impl StatelessValidation for CommentDocument {
     const STATELESS_RULES: &[crate::validator::StatelessRule] = &[
-        type_check,
-        content_type_check,
-        content_encoding_check,
-        template_check,
-        reply_check,
+        type_stateless_check,
+        content_type_stateless_check,
+        content_encoding_stateless_check,
+        template_stateless_check,
+        reply_stateless_check,
     ];
 }
 
@@ -48,7 +48,7 @@ where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>
 }
 
 /// `type` field validation
-fn type_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+fn type_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
     if doc.doc_type().uuid() != COMMENT_DOCUMENT_UUID_TYPE {
         report.invalid_value(
             "type",
@@ -62,7 +62,7 @@ fn type_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
 }
 
 /// `content-type` validation
-fn content_type_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+fn content_type_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
     if doc.doc_content_type() != ContentType::Json {
         report.invalid_value(
             "content-type",
@@ -76,7 +76,7 @@ fn content_type_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> b
 }
 
 /// `content-encoding` validation
-fn content_encoding_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+fn content_encoding_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
     if let Some(content_encoding) = doc.doc_content_encoding() {
         if content_encoding != ContentEncoding::Brotli {
             report.invalid_value(
@@ -98,7 +98,7 @@ fn content_encoding_check(doc: &CatalystSignedDocument, report: &ProblemReport) 
 }
 
 /// `template` validation
-fn template_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+fn template_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
     if doc.doc_meta().template().is_none() {
         report.missing_field("template", "Comment Document must have a template field");
         return false;
@@ -107,7 +107,7 @@ fn template_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool 
 }
 
 /// `reply` validation
-fn reply_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
+fn reply_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
     if doc.doc_meta().doc_ref().is_none() {
         report.missing_field("ref", "Comment Document must have a ref field");
         return false;
