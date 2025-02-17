@@ -161,7 +161,7 @@ impl CatalystSignedDocument {
         };
 
         for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            match provider.try_get_vk(kid).await {
+            match provider.try_get_key(kid).await {
                 Ok(Some(pk)) => {
                     let tbs_data = cose_sign.tbs_data(&[], signature);
                     match signature.signature.as_slice().try_into() {
@@ -413,7 +413,7 @@ mod tests {
 
     struct Provider(anyhow::Result<Option<VerifyingKey>>);
     impl VerifyingKeyProvider for Provider {
-        async fn try_get_vk(
+        async fn try_get_key(
             &self, _kid: &IdUri,
         ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
             let res = self.0.as_ref().map_err(|e| anyhow::anyhow!("{e}"))?;

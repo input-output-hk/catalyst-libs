@@ -2,19 +2,20 @@
 
 pub(crate) mod utils;
 
+use std::future::Future;
+
 use catalyst_types::problem_report::ProblemReport;
+use futures::future::BoxFuture;
 
 use crate::{
     doc_types::{CommentDocument, DocumentType, ProposalDocument},
     error::CatalystSignedDocError,
-    CatalystSignedDocument, DocumentRef,
+    providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument,
 };
 
 /// Stateless validation function rule type
-pub(crate) type StatelessRule = fn(&CatalystSignedDocument, &ProblemReport) -> bool;
-/// Statefull validation function rule type
-pub(crate) type StatefullRule<DocType, DocProvider> =
-    fn(&DocType, &DocProvider, &ProblemReport) -> bool;
+pub type StatelessRule = fn(&CatalystSignedDocument, &ProblemReport) -> bool;
 
 /// Trait for defining a stateless validation rules.
 pub trait StatelessValidation
@@ -33,24 +34,31 @@ where Self: 'static
 }
 
 /// Trait for defining a statefull validation rules.
-pub trait StatefullValidation<DocProvider>
+pub trait StatefullValidation<Provider>
 where
     Self: 'static,
-    DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>,
+    Provider: 'static + CatalystSignedDocumentProvider,
 {
-    /// Statefull validation rules
-    const STATEFULL_RULES: &[StatefullRule<Self, DocProvider>];
+    /// Statefull validation rules list
+    fn rules<'a>(
+        &'a self, provider: &'a Provider, report: &'a ProblemReport,
+    ) -> Vec<BoxFuture<'a, anyhow::Result<bool>>>;
 
     /// Perform a statefull validation, collecting a problem report
     ///
     /// # Errors
-    /// Returns an error if `provider` will return an error, fails fast in this case.
-    fn validate(&self, provider: &DocProvider, report: &ProblemReport) -> anyhow::Result<bool> {
-        let res = Self::STATEFULL_RULES
-            .iter()
-            .map(|rule| rule(self, provider, report))
-            .all(|res| res);
-        Ok(res)
+    /// Returns an error if `provider` return an error.
+    fn validate(
+        &self, provider: &Provider, report: &ProblemReport,
+    ) -> impl Future<Output = anyhow::Result<bool>> {
+        async {
+            for res in futures::future::join_all(self.rules(provider, report)).await {
+                if !(res?) {
+                    return Ok(false);
+                }
+            }
+            Ok(true)
+        }
     }
 }
 
@@ -62,10 +70,10 @@ where
 /// Returns a report of validation failures and the source error.
 /// If `provider` returns error, fails fast and placed this error into
 /// `CatalystSignedDocError::error`.
-pub fn validate<DocProvider>(
-    doc: &CatalystSignedDocument, provider: &DocProvider,
+pub async fn validate<Provider>(
+    doc: &CatalystSignedDocument, provider: &Provider,
 ) -> Result<(), CatalystSignedDocError>
-where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
+where Provider: 'static + CatalystSignedDocumentProvider {
     let report = ProblemReport::new("Catalyst Signed Document Validation");
 
     let doc_type: DocumentType = match doc.doc_type().try_into() {
@@ -84,7 +92,7 @@ where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument> 
         },
     };
 
-    match validate_inner(doc_type, doc, provider, &report) {
+    match validate_inner(doc_type, doc, provider, &report).await {
         Ok(()) if report.is_problematic() => {
             Err(CatalystSignedDocError::new(
                 report,
@@ -103,23 +111,23 @@ where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument> 
 ///
 /// If `provider` returns error, fails fast and placed this error into
 /// `CatalystSignedDocError::error`.
-fn validate_inner<DocProvider>(
-    doc_type: DocumentType, doc: &CatalystSignedDocument, provider: &DocProvider,
+async fn validate_inner<Provider>(
+    doc_type: DocumentType, doc: &CatalystSignedDocument, provider: &Provider,
     report: &ProblemReport,
 ) -> anyhow::Result<()>
 where
-    DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>,
+    Provider: 'static + CatalystSignedDocumentProvider,
 {
     #[allow(clippy::match_same_arms)]
     match doc_type {
         DocumentType::ProposalDocument => {
             let doc = ProposalDocument::from_signed_doc(doc, report)?;
-            doc.validate(provider, report)?;
+            doc.validate(provider, report).await?;
         },
         DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
             let doc = CommentDocument::from_signed_doc(doc, report)?;
-            doc.validate(provider, report)?;
+            doc.validate(provider, report).await?;
         },
         DocumentType::CommentTemplate => {},
         DocumentType::ReviewDocument => {},

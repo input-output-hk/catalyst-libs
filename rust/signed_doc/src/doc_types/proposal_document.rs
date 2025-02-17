@@ -1,15 +1,17 @@
 //! Proposal Document object implementation
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_docs/proposal/#proposal-document>
 
+#![allow(dead_code)]
+
 use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
 
 use super::{CATEGORY_DOCUMENT_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE};
 use crate::{
     error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
+    providers::CatalystSignedDocumentProvider,
     validator::{
-        utils::validate_provided_doc, StatefullRule, StatefullValidation, StatelessRule,
-        StatelessValidation,
+        utils::validate_provided_doc, StatefullValidation, StatelessRule, StatelessValidation,
     },
     CatalystSignedDocument, DocumentRef,
 };
@@ -37,11 +39,15 @@ impl StatelessValidation for ProposalDocument {
     ];
 }
 
-impl<DocProvider> StatefullValidation<DocProvider> for ProposalDocument
-where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>
+impl<Provider> StatefullValidation<Provider> for ProposalDocument
+where Provider: 'static + CatalystSignedDocumentProvider
 {
-    const STATEFULL_RULES: &[StatefullRule<Self, DocProvider>] =
-        &[template_full_check, category_full_check];
+    fn rules(
+        &self, _provider: &Provider, _report: &ProblemReport,
+    ) -> Vec<std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<bool>> + Send>>>
+    {
+        vec![]
+    }
 }
 
 /// `type` field validation
@@ -104,10 +110,10 @@ fn template_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport
 }
 
 /// `template` statefull validation
-fn template_full_check<DocProvider>(
-    doc: &ProposalDocument, provider: &DocProvider, report: &ProblemReport,
-) -> bool
-where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
+async fn template_statefull_check<Provider>(
+    doc: &ProposalDocument, provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where Provider: 'static + CatalystSignedDocumentProvider {
     let template_validator = |template_doc: CatalystSignedDocument| {
         if template_doc.doc_type().uuid() != PROPOSAL_TEMPLATE_UUID_TYPE {
             report.invalid_value(
@@ -154,13 +160,14 @@ where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
         report,
         template_validator,
     )
+    .await
 }
 
 /// `category_id` statefull validation
-fn category_full_check<DocProvider>(
-    doc: &ProposalDocument, provider: &DocProvider, report: &ProblemReport,
-) -> bool
-where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
+async fn category_statefull_check<Provider>(
+    doc: &ProposalDocument, provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where Provider: 'static + CatalystSignedDocumentProvider {
     if let Some(category) = &doc.category {
         let category_validator = |category_doc: CatalystSignedDocument| -> bool {
             if category_doc.doc_type().uuid() != CATEGORY_DOCUMENT_UUID_TYPE {
@@ -174,9 +181,10 @@ where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
             }
             true
         };
-        return validate_provided_doc(category, "Category", provider, report, category_validator);
+        return validate_provided_doc(category, "Category", provider, report, category_validator)
+            .await;
     }
-    true
+    Ok(true)
 }
 
 impl ProposalDocument {

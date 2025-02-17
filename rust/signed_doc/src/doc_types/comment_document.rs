@@ -2,11 +2,13 @@
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_docs/comment/#comment-document>
 
 use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
+use futures::{future::BoxFuture, FutureExt};
 
 use crate::{
     doc_types::{COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE},
     error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
+    providers::CatalystSignedDocumentProvider,
     validator::{utils::validate_provided_doc, StatefullValidation, StatelessValidation},
     CatalystSignedDocument, DocumentRef,
 };
@@ -40,11 +42,18 @@ impl StatelessValidation for CommentDocument {
     ];
 }
 
-impl<DocProvider> StatefullValidation<DocProvider> for CommentDocument
-where DocProvider: 'static + Fn(&DocumentRef) -> Option<CatalystSignedDocument>
+impl<Provider> StatefullValidation<Provider> for CommentDocument
+where Provider: 'static + CatalystSignedDocumentProvider
 {
-    const STATEFULL_RULES: &[crate::validator::StatefullRule<Self, DocProvider>] =
-        &[template_full_check, ref_full_check, reply_full_check];
+    fn rules<'a>(
+        &'a self, provider: &'a Provider, report: &'a ProblemReport,
+    ) -> Vec<BoxFuture<'a, anyhow::Result<bool>>> {
+        vec![
+            template_statefull_check(self, provider, report).boxed(),
+            ref_statefull_check(self, provider, report).boxed(),
+            reply_statefull_check(self, provider, report).boxed(),
+        ]
+    }
 }
 
 /// `type` field validation
@@ -116,10 +125,10 @@ fn reply_stateless_check(doc: &CatalystSignedDocument, report: &ProblemReport) -
 }
 
 /// `template` statefull validation
-fn template_full_check<DocProvider>(
-    doc: &CommentDocument, provider: &DocProvider, report: &ProblemReport,
-) -> bool
-where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
+async fn template_statefull_check<Provider>(
+    doc: &CommentDocument, provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where Provider: 'static + CatalystSignedDocumentProvider {
     let template_validator = |template_doc: CatalystSignedDocument| {
         if template_doc.doc_type().uuid() != COMMENT_TEMPLATE_UUID_TYPE {
             report.invalid_value(
@@ -167,13 +176,14 @@ where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
         report,
         template_validator,
     )
+    .await
 }
 
 /// `ref` statefull validation
-fn ref_full_check<DocProvider>(
-    doc: &CommentDocument, provider: &DocProvider, report: &ProblemReport,
-) -> bool
-where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
+async fn ref_statefull_check<Provider>(
+    doc: &CommentDocument, provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where Provider: 'static + CatalystSignedDocumentProvider {
     let ref_validator = |proposal_doc: CatalystSignedDocument| -> bool {
         if proposal_doc.doc_type().uuid() != PROPOSAL_DOCUMENT_UUID_TYPE {
             report.invalid_value(
@@ -186,14 +196,14 @@ where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
         }
         true
     };
-    validate_provided_doc(&doc.doc_ref, "Proposal", provider, report, ref_validator)
+    validate_provided_doc(&doc.doc_ref, "Proposal", provider, report, ref_validator).await
 }
 
 /// `reply` statefull validation
-fn reply_full_check<DocProvider>(
-    doc: &CommentDocument, provider: &DocProvider, report: &ProblemReport,
-) -> bool
-where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
+async fn reply_statefull_check<Provider>(
+    doc: &CommentDocument, provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where Provider: 'static + CatalystSignedDocumentProvider {
     if let Some(reply) = &doc.reply {
         let reply_validator = |comment_doc: CatalystSignedDocument| -> bool {
             if comment_doc.doc_type().uuid() != COMMENT_DOCUMENT_UUID_TYPE {
@@ -222,9 +232,9 @@ where DocProvider: Fn(&DocumentRef) -> Option<CatalystSignedDocument> {
 
             true
         };
-        return validate_provided_doc(reply, "Comment", provider, report, reply_validator);
+        return validate_provided_doc(reply, "Comment", provider, report, reply_validator).await;
     }
-    true
+    Ok(true)
 }
 
 impl CommentDocument {
