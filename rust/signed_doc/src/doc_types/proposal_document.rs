@@ -1,9 +1,8 @@
 //! Proposal Document object implementation
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_docs/proposal/#proposal-document>
 
-#![allow(dead_code)]
-
 use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
+use futures::{future::BoxFuture, FutureExt};
 
 use super::{CATEGORY_DOCUMENT_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE};
 use crate::{
@@ -42,11 +41,13 @@ impl StatelessValidation for ProposalDocument {
 impl<Provider> StatefullValidation<Provider> for ProposalDocument
 where Provider: 'static + CatalystSignedDocumentProvider
 {
-    fn rules(
-        &self, _provider: &Provider, _report: &ProblemReport,
-    ) -> Vec<std::pin::Pin<Box<dyn std::future::Future<Output = anyhow::Result<bool>> + Send>>>
-    {
-        vec![]
+    fn rules<'a>(
+        &'a self, provider: &'a Provider, report: &'a ProblemReport,
+    ) -> Vec<BoxFuture<'a, anyhow::Result<bool>>> {
+        vec![
+            template_statefull_check(self, provider, report).boxed(),
+            category_statefull_check(self, provider, report).boxed(),
+        ]
     }
 }
 
