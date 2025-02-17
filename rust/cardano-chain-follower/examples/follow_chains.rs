@@ -463,7 +463,7 @@ fn log_bad_cip509_info(block: &MultiEraBlock, network: Network) {
         if cip509.report().is_problematic() {
             info!(
                 network = network.to_string(),
-                "CIP509 valid decoded, but have problem: {:?}", cip509
+                "CIP509 invalid: {:?}", cip509
             );
         }
     }
