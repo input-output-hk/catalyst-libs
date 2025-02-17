@@ -32,6 +32,18 @@ impl CatalystSignedDocError {
     pub fn error(&self) -> &anyhow::Error {
         &self.error
     }
+
+    /// Get the actual error.
+    #[must_use]
+    pub fn owned_error(self) -> anyhow::Error {
+        self.error
+    }
+
+    /// Get the actual error.
+    #[must_use]
+    pub fn owned_report(self) -> ProblemReport {
+        self.report
+    }
 }
 
 impl fmt::Display for CatalystSignedDocError {

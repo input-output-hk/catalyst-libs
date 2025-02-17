@@ -24,7 +24,7 @@ use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 use metadata::{ContentEncoding, ContentType};
 pub use metadata::{DocumentRef, ExtraFields, Metadata};
-pub use minicbor::{decode, encode, Decode, Decoder, Encode, Encoder};
+use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
 
