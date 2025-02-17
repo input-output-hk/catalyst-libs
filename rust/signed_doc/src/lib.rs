@@ -5,6 +5,7 @@ mod content;
 pub mod doc_types;
 pub mod error;
 mod metadata;
+pub mod providers;
 mod signature;
 mod utils;
 pub mod validator;
@@ -12,7 +13,6 @@ pub mod validator;
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter},
-    future::Future,
     sync::Arc,
 };
 
@@ -21,11 +21,11 @@ use catalyst_types::problem_report::ProblemReport;
 pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
-use ed25519_dalek::VerifyingKey;
 use error::CatalystSignedDocError;
 use metadata::{ContentEncoding, ContentType};
 pub use metadata::{DocumentRef, ExtraFields, Metadata};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
+use providers::VerifyingKeyProvider;
 pub use signature::{IdUri, Signatures};
 use utils::context::DecodeSignDocCtx;
 
@@ -144,11 +144,9 @@ impl CatalystSignedDocument {
     /// Returns a report of verification failures and the source error.
     /// If `provider` returns error, fails fast and placed this error into
     /// `CatalystSignedDocError::error`.
-    pub async fn verify<P, PF>(&self, provider: P) -> Result<(), CatalystSignedDocError>
-    where
-        P: Fn(&IdUri) -> PF,
-        PF: Future<Output = anyhow::Result<Option<VerifyingKey>>>,
-    {
+    pub async fn verify(
+        &self, provider: &impl VerifyingKeyProvider,
+    ) -> Result<(), CatalystSignedDocError> {
         let report = ProblemReport::new("Catalyst Signed Document Verification");
 
         let cose_sign = match self.as_cose_sign() {
@@ -163,7 +161,7 @@ impl CatalystSignedDocument {
         };
 
         for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            match provider(kid).await {
+            match provider.try_get_vk(kid).await {
                 Ok(Some(pk)) => {
                     let tbs_data = cose_sign.tbs_data(&[], signature);
                     match signature.signature.as_slice().try_into() {
@@ -358,7 +356,7 @@ impl Encode<()> for CatalystSignedDocument {
 mod tests {
     use std::str::FromStr;
 
-    use ed25519_dalek::SigningKey;
+    use ed25519_dalek::{SigningKey, VerifyingKey};
     use metadata::{ContentEncoding, ContentType};
     use rand::rngs::OsRng;
 
@@ -413,6 +411,16 @@ mod tests {
         assert_eq!(decoded.doc_meta(), metadata.extra());
     }
 
+    struct Provider(anyhow::Result<Option<VerifyingKey>>);
+    impl VerifyingKeyProvider for Provider {
+        async fn try_get_vk(
+            &self, _kid: &IdUri,
+        ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
+            let res = self.0.as_ref().map_err(|e| anyhow::anyhow!("{e}"))?;
+            Ok(*res)
+        }
+    }
+
     #[tokio::test]
     async fn signature_verification_test() {
         let mut csprng = OsRng;
@@ -435,10 +443,10 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc.verify(|_| async { Ok(Some(pk)) }).await.is_ok());
-        assert!(signed_doc.verify(|_| async { Ok(None) }).await.is_err());
+        assert!(signed_doc.verify(&Provider(Ok(Some(pk)))).await.is_ok());
+        assert!(signed_doc.verify(&Provider(Ok(None))).await.is_err());
         assert!(signed_doc
-            .verify(|_| async { Err(anyhow::anyhow!("some error")) })
+            .verify(&Provider(Err(anyhow::anyhow!("some error"))))
             .await
             .is_err());
     }
