@@ -12,6 +12,7 @@ pub mod validator;
 use std::{
     convert::TryFrom,
     fmt::{Display, Formatter},
+    future::Future,
     sync::Arc,
 };
 
@@ -143,8 +144,11 @@ impl CatalystSignedDocument {
     /// Returns a report of verification failures and the source error.
     /// If `provider` returns error, fails fast and placed this error into
     /// `CatalystSignedDocError::error`.
-    pub fn verify<P>(&self, provider: P) -> Result<(), CatalystSignedDocError>
-    where P: Fn(&IdUri) -> anyhow::Result<Option<VerifyingKey>> {
+    pub async fn verify<P, PF>(&self, provider: P) -> Result<(), CatalystSignedDocError>
+    where
+        P: Fn(&IdUri) -> PF,
+        PF: Future<Output = anyhow::Result<Option<VerifyingKey>>>,
+    {
         let report = ProblemReport::new("Catalyst Signed Document Verification");
 
         let cose_sign = match self.as_cose_sign() {
@@ -159,7 +163,7 @@ impl CatalystSignedDocument {
         };
 
         for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            match provider(kid) {
+            match provider(kid).await {
                 Ok(Some(pk)) => {
                     let tbs_data = cose_sign.tbs_data(&[], signature);
                     match signature.signature.as_slice().try_into() {
@@ -409,8 +413,8 @@ mod tests {
         assert_eq!(decoded.doc_meta(), metadata.extra());
     }
 
-    #[test]
-    fn signature_verification_test() {
+    #[tokio::test]
+    async fn signature_verification_test() {
         let mut csprng = OsRng;
         let sk: SigningKey = SigningKey::generate(&mut csprng);
         let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
@@ -431,10 +435,11 @@ mod tests {
             .build()
             .unwrap();
 
-        assert!(signed_doc.verify(|_| Ok(Some(pk))).is_ok());
-        assert!(signed_doc.verify(|_| Ok(None)).is_err());
+        assert!(signed_doc.verify(|_| async { Ok(Some(pk)) }).await.is_ok());
+        assert!(signed_doc.verify(|_| async { Ok(None) }).await.is_err());
         assert!(signed_doc
-            .verify(|_| Err(anyhow::anyhow!("some error")))
+            .verify(|_| async { Err(anyhow::anyhow!("some error")) })
+            .await
             .is_err());
     }
 }
