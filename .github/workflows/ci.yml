@@ -2,12 +2,11 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: **
   pull_request:
     types:
       - synchronize
       - ready_for_review
-    
 
 permissions:
   id-token: write
