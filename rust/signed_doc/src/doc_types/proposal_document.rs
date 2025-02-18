@@ -1,17 +1,15 @@
 //! Proposal Document object implementation
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_docs/proposal/#proposal-document>
 
+#![allow(dead_code)]
+
 use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
-use futures::{future::BoxFuture, FutureExt};
 
 use super::{CATEGORY_DOCUMENT_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE};
 use crate::{
-    error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
     providers::CatalystSignedDocumentProvider,
-    validator::{
-        utils::validate_provided_doc, StatefullValidation, StatelessRule, StatelessValidation,
-    },
+    validator::utils::validate_provided_doc,
     CatalystSignedDocument, DocumentRef,
 };
 
@@ -27,28 +25,6 @@ pub struct ProposalDocument {
     category: Option<DocumentRef>,
     /// Proposal content
     content: serde_json::Value,
-}
-
-impl StatelessValidation for ProposalDocument {
-    const STATELESS_RULES: &[StatelessRule] = &[
-        type_stateless_check,
-        content_type_stateless_check,
-        content_encoding_stateless_check,
-        template_stateless_check,
-    ];
-}
-
-impl<Provider> StatefullValidation<Provider> for ProposalDocument
-where Provider: 'static + CatalystSignedDocumentProvider
-{
-    fn rules<'a>(
-        &'a self, provider: &'a Provider, report: &'a ProblemReport,
-    ) -> Vec<BoxFuture<'a, anyhow::Result<bool>>> {
-        vec![
-            template_statefull_check(self, provider, report).boxed(),
-            category_statefull_check(self, provider, report).boxed(),
-        ]
-    }
 }
 
 /// `type` field validation
@@ -186,40 +162,4 @@ where Provider: 'static + CatalystSignedDocumentProvider {
             .await;
     }
     Ok(true)
-}
-
-impl ProposalDocument {
-    /// Try to build `ProposalDocument` from `CatalystSignedDoc` doing all necessary
-    /// stateless verifications,
-    pub(crate) fn from_signed_doc(
-        doc: &CatalystSignedDocument, report: &ProblemReport,
-    ) -> anyhow::Result<Self> {
-        if <Self as StatelessValidation>::validate(doc, report) {
-            anyhow::bail!("Failed to build `ProposalDocument` from `CatalystSignedDoc`");
-        }
-
-        let category = doc.doc_meta().category_id();
-        let template = doc
-            .doc_meta()
-            .template()
-            .ok_or(anyhow::anyhow!("missing `template` field"))?;
-        let content = serde_json::from_slice(doc.doc_content().decoded_bytes())?;
-
-        Ok(Self {
-            template,
-            category,
-            content,
-        })
-    }
-}
-
-impl TryFrom<CatalystSignedDocument> for ProposalDocument {
-    type Error = CatalystSignedDocError;
-
-    fn try_from(doc: CatalystSignedDocument) -> Result<Self, Self::Error> {
-        let error_report = ProblemReport::new("Catalyst Signed Document to Proposal Document");
-        let res = Self::from_signed_doc(&doc, &error_report)
-            .map_err(|e| CatalystSignedDocError::new(error_report, e))?;
-        Ok(res)
-    }
 }

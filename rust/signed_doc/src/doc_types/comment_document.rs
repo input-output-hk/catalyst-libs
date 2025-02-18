@@ -1,15 +1,15 @@
 //! Comment Document object implementation
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_docs/comment/#comment-document>
 
+#![allow(dead_code)]
+
 use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
-use futures::{future::BoxFuture, FutureExt};
 
 use crate::{
     doc_types::{COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE},
-    error::CatalystSignedDocError,
     metadata::{ContentEncoding, ContentType},
     providers::CatalystSignedDocumentProvider,
-    validator::{utils::validate_provided_doc, StatefullValidation, StatelessValidation},
+    validator::utils::validate_provided_doc,
     CatalystSignedDocument, DocumentRef,
 };
 
@@ -30,30 +30,6 @@ pub struct CommentDocument {
     section: Option<String>,
     /// Comment content
     content: serde_json::Value,
-}
-
-impl StatelessValidation for CommentDocument {
-    const STATELESS_RULES: &[crate::validator::StatelessRule] = &[
-        type_stateless_check,
-        content_type_stateless_check,
-        content_encoding_stateless_check,
-        template_stateless_check,
-        reply_stateless_check,
-    ];
-}
-
-impl<Provider> StatefullValidation<Provider> for CommentDocument
-where Provider: 'static + CatalystSignedDocumentProvider
-{
-    fn rules<'a>(
-        &'a self, provider: &'a Provider, report: &'a ProblemReport,
-    ) -> Vec<BoxFuture<'a, anyhow::Result<bool>>> {
-        vec![
-            template_statefull_check(self, provider, report).boxed(),
-            ref_statefull_check(self, provider, report).boxed(),
-            reply_statefull_check(self, provider, report).boxed(),
-        ]
-    }
 }
 
 /// `type` field validation
@@ -235,47 +211,4 @@ where Provider: 'static + CatalystSignedDocumentProvider {
         return validate_provided_doc(reply, "Comment", provider, report, reply_validator).await;
     }
     Ok(true)
-}
-
-impl CommentDocument {
-    /// Try to build `CommentDocument` from `CatalystSignedDoc` doing all necessary
-    /// stateless verifications,
-    pub(crate) fn from_signed_doc(
-        doc: &CatalystSignedDocument, report: &ProblemReport,
-    ) -> anyhow::Result<Self> {
-        if <Self as StatelessValidation>::validate(doc, report) {
-            anyhow::bail!("Failed to build `CommentDocument` from `CatalystSignedDoc`");
-        }
-
-        let template = doc
-            .doc_meta()
-            .template()
-            .ok_or(anyhow::anyhow!("missing `template` field"))?;
-        let doc_ref = doc
-            .doc_meta()
-            .doc_ref()
-            .ok_or(anyhow::anyhow!("missing `ref` field"))?;
-        let reply = doc.doc_meta().reply();
-        let section = doc.doc_meta().section().cloned();
-        let content = serde_json::from_slice(doc.doc_content().decoded_bytes())?;
-
-        Ok(Self {
-            template,
-            doc_ref,
-            reply,
-            section,
-            content,
-        })
-    }
-}
-
-impl TryFrom<CatalystSignedDocument> for CommentDocument {
-    type Error = CatalystSignedDocError;
-
-    fn try_from(doc: CatalystSignedDocument) -> Result<Self, Self::Error> {
-        let error_report = ProblemReport::new("Catalyst Signed Document to Comment Document");
-        let res = Self::from_signed_doc(&doc, &error_report)
-            .map_err(|e| CatalystSignedDocError::new(error_report, e))?;
-        Ok(res)
-    }
 }

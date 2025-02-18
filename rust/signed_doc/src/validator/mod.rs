@@ -1,65 +1,33 @@
 //! Catalyst Signed Documents validation
 
+pub(crate) mod rules;
 pub(crate) mod utils;
-
-use std::future::Future;
 
 use catalyst_types::problem_report::ProblemReport;
 use futures::future::BoxFuture;
+use rules::{ContentEncodingRule, ContentTypeRule};
+use utils::boxed_rule;
 
 use crate::{
-    doc_types::{CommentDocument, DocumentType, ProposalDocument},
+    doc_types::DocumentType,
     error::CatalystSignedDocError,
+    metadata::{ContentEncoding, ContentType},
     providers::CatalystSignedDocumentProvider,
     CatalystSignedDocument,
 };
 
-/// Stateless validation function rule type
-pub type StatelessRule = fn(&CatalystSignedDocument, &ProblemReport) -> bool;
-
-/// Trait for defining a stateless validation rules.
-pub trait StatelessValidation
-where Self: 'static
+/// Trait for defining a single validation rule.
+trait ValidationRule<Provider>
+where Provider: 'static + CatalystSignedDocumentProvider
 {
-    /// Stateless validation rules
-    const STATELESS_RULES: &[StatelessRule];
-
-    /// Perform a stateless validation, collecting a problem report
-    fn validate(doc: &CatalystSignedDocument, report: &ProblemReport) -> bool {
-        Self::STATELESS_RULES
-            .iter()
-            .map(|rule| rule(doc, report))
-            .all(|res| res)
-    }
-}
-
-/// Trait for defining a statefull validation rules.
-pub trait StatefullValidation<Provider>
-where
-    Self: 'static,
-    Provider: 'static + CatalystSignedDocumentProvider,
-{
-    /// Statefull validation rules list
-    fn rules<'a>(
-        &'a self, provider: &'a Provider, report: &'a ProblemReport,
-    ) -> Vec<BoxFuture<'a, anyhow::Result<bool>>>;
-
-    /// Perform a statefull validation, collecting a problem report
+    /// Perform a validation rule, collecting a problem report
     ///
     /// # Errors
     /// Returns an error if `provider` return an error.
-    fn validate(
-        &self, provider: &Provider, report: &ProblemReport,
-    ) -> impl Future<Output = anyhow::Result<bool>> {
-        async {
-            for res in futures::future::join_all(self.rules(provider, report)).await {
-                if !(res?) {
-                    return Ok(false);
-                }
-            }
-            Ok(true)
-        }
-    }
+    fn check<'a>(
+        &'a self, doc: &'a CatalystSignedDocument, provider: &'a Provider,
+        report: &'a ProblemReport,
+    ) -> BoxFuture<'a, anyhow::Result<bool>>;
 }
 
 /// A comprehensive validation of the `CatalystSignedDocument`,
@@ -118,30 +86,63 @@ async fn validate_inner<Provider>(
 where
     Provider: 'static + CatalystSignedDocumentProvider,
 {
-    #[allow(clippy::match_same_arms)]
-    match doc_type {
+    let rules = match doc_type {
         DocumentType::ProposalDocument => {
-            let doc = ProposalDocument::from_signed_doc(doc, report)?;
-            doc.validate(provider, report).await?;
+            vec![
+                boxed_rule(ContentTypeRule {
+                    exp: ContentType::Json,
+                }),
+                boxed_rule(ContentEncodingRule {
+                    exp: ContentEncoding::Brotli,
+                    optional: false,
+                }),
+            ]
         },
-        DocumentType::ProposalTemplate => {},
         DocumentType::CommentDocument => {
-            let doc = CommentDocument::from_signed_doc(doc, report)?;
-            doc.validate(provider, report).await?;
+            vec![
+                boxed_rule(ContentTypeRule {
+                    exp: ContentType::Json,
+                }),
+                boxed_rule(ContentEncodingRule {
+                    exp: ContentEncoding::Brotli,
+                    optional: false,
+                }),
+            ]
         },
-        DocumentType::CommentTemplate => {},
-        DocumentType::ReviewDocument => {},
-        DocumentType::ReviewTemplate => {},
-        DocumentType::CategoryDocument => {},
-        DocumentType::CategoryTemplate => {},
-        DocumentType::CampaignParametersDocument => {},
-        DocumentType::CampaignParametersTemplate => {},
-        DocumentType::BrandParametersDocument => {},
-        DocumentType::BrandParametersTemplate => {},
-        DocumentType::ProposalActionDocument => {},
-        DocumentType::PublicVoteTxV2 => {},
-        DocumentType::PrivateVoteTxV2 => {},
-        DocumentType::ImmutableLedgerBlock => {},
-    }
+        DocumentType::ProposalTemplate
+        | DocumentType::CommentTemplate
+        | DocumentType::ReviewDocument
+        | DocumentType::ReviewTemplate
+        | DocumentType::CategoryDocument
+        | DocumentType::CategoryTemplate
+        | DocumentType::CampaignParametersDocument
+        | DocumentType::CampaignParametersTemplate
+        | DocumentType::BrandParametersDocument
+        | DocumentType::BrandParametersTemplate
+        | DocumentType::ProposalActionDocument
+        | DocumentType::PublicVoteTxV2
+        | DocumentType::PrivateVoteTxV2
+        | DocumentType::ImmutableLedgerBlock => {
+            vec![]
+        },
+    };
+    validate_rules(rules, doc, provider, report).await?;
     Ok(())
+}
+
+/// Something
+async fn validate_rules<Provider>(
+    rules: Vec<Box<dyn ValidationRule<Provider>>>, doc: &CatalystSignedDocument,
+    provider: &Provider, report: &ProblemReport,
+) -> anyhow::Result<bool>
+where
+    Provider: 'static + CatalystSignedDocumentProvider,
+{
+    let checks = rules.iter().map(|rule| rule.check(doc, provider, report));
+    for res in futures::future::join_all(checks).await {
+        if !(res?) {
+            return Ok(false);
+        }
+    }
+    Ok(true)
 }
