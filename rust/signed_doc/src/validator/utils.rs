@@ -6,7 +6,7 @@ use super::ValidationRule;
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef};
 
 /// Wrap a provider `rule` into the `Box<dyn ValidationRule>`
-pub(super) fn boxed_rule<T, Provider>(rule: T) -> Box<dyn ValidationRule<Provider>>
+pub(crate) fn boxed_rule<T, Provider>(rule: T) -> Box<dyn ValidationRule<Provider>>
 where
     Provider: 'static + CatalystSignedDocumentProvider,
     T: 'static + ValidationRule<Provider>,
@@ -16,7 +16,7 @@ where
 
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.
-pub(super) async fn validate_provided_doc<Provider, Validator>(
+pub(crate) async fn validate_provided_doc<Provider, Validator>(
     doc_ref: &DocumentRef, provider: &Provider, report: &ProblemReport, validator: Validator,
 ) -> anyhow::Result<bool>
 where

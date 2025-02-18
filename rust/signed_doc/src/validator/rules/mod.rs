@@ -9,65 +9,10 @@ mod reply;
 mod section;
 mod template;
 
-use category::CategoryRule;
-use content_encoding::ContentEncodingRule;
-use content_type::ContentTypeRule;
-use doc_ref::RefRule;
-use reply::ReplyRule;
-use section::SectionRule;
-use template::TemplateRule;
-
-use super::ValidationRule;
-use crate::{
-    doc_types::{
-        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
-        PROPOSAL_TEMPLATE_UUID_TYPE,
-    },
-    metadata::{ContentEncoding, ContentType},
-    providers::CatalystSignedDocumentProvider,
-    validator::boxed_rule,
-};
-
-/// A list of rules for the Proposal Document
-pub(crate) fn proposal_document_rules<Provider>() -> Vec<Box<dyn ValidationRule<Provider>>>
-where Provider: 'static + CatalystSignedDocumentProvider {
-    vec![
-        boxed_rule(ContentTypeRule {
-            exp: ContentType::Json,
-        }),
-        boxed_rule(ContentEncodingRule {
-            exp: ContentEncoding::Brotli,
-            optional: false,
-        }),
-        boxed_rule(TemplateRule {
-            template_type: PROPOSAL_TEMPLATE_UUID_TYPE,
-        }),
-        boxed_rule(CategoryRule { optional: true }),
-    ]
-}
-
-/// A list of rules for the Comment Document
-pub(crate) fn comment_document_rules<Provider>() -> Vec<Box<dyn ValidationRule<Provider>>>
-where Provider: 'static + CatalystSignedDocumentProvider {
-    vec![
-        boxed_rule(ContentTypeRule {
-            exp: ContentType::Json,
-        }),
-        boxed_rule(ContentEncodingRule {
-            exp: ContentEncoding::Brotli,
-            optional: false,
-        }),
-        boxed_rule(TemplateRule {
-            template_type: COMMENT_TEMPLATE_UUID_TYPE,
-        }),
-        boxed_rule(RefRule {
-            ref_type: PROPOSAL_DOCUMENT_UUID_TYPE,
-            optional: false,
-        }),
-        boxed_rule(ReplyRule {
-            reply_type: COMMENT_DOCUMENT_UUID_TYPE,
-            optional: true,
-        }),
-        boxed_rule(SectionRule { optional: true }),
-    ]
-}
+pub(crate) use category::CategoryRule;
+pub(crate) use content_encoding::ContentEncodingRule;
+pub(crate) use content_type::ContentTypeRule;
+pub(crate) use doc_ref::RefRule;
+pub(crate) use reply::ReplyRule;
+pub(crate) use section::SectionRule;
+pub(crate) use template::TemplateRule;
