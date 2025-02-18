@@ -5,19 +5,16 @@ pub(crate) mod utils;
 
 use catalyst_types::problem_report::ProblemReport;
 use futures::future::BoxFuture;
-use rules::{ContentEncodingRule, ContentTypeRule};
+use rules::{comment_document_rules, proposal_document_rules};
 use utils::boxed_rule;
 
 use crate::{
-    doc_types::DocumentType,
-    error::CatalystSignedDocError,
-    metadata::{ContentEncoding, ContentType},
-    providers::CatalystSignedDocumentProvider,
-    CatalystSignedDocument,
+    doc_types::DocumentType, error::CatalystSignedDocError,
+    providers::CatalystSignedDocumentProvider, CatalystSignedDocument,
 };
 
 /// Trait for defining a single validation rule.
-trait ValidationRule<Provider>
+pub(crate) trait ValidationRule<Provider>
 where Provider: 'static + CatalystSignedDocumentProvider
 {
     /// Perform a validation rule, collecting a problem report
@@ -87,28 +84,8 @@ where
     Provider: 'static + CatalystSignedDocumentProvider,
 {
     let rules = match doc_type {
-        DocumentType::ProposalDocument => {
-            vec![
-                boxed_rule(ContentTypeRule {
-                    exp: ContentType::Json,
-                }),
-                boxed_rule(ContentEncodingRule {
-                    exp: ContentEncoding::Brotli,
-                    optional: false,
-                }),
-            ]
-        },
-        DocumentType::CommentDocument => {
-            vec![
-                boxed_rule(ContentTypeRule {
-                    exp: ContentType::Json,
-                }),
-                boxed_rule(ContentEncodingRule {
-                    exp: ContentEncoding::Brotli,
-                    optional: false,
-                }),
-            ]
-        },
+        DocumentType::ProposalDocument => proposal_document_rules(),
+        DocumentType::CommentDocument => comment_document_rules(),
         DocumentType::ProposalTemplate
         | DocumentType::CommentTemplate
         | DocumentType::ReviewDocument

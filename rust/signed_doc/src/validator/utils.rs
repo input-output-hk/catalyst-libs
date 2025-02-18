@@ -17,8 +17,7 @@ where
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.
 pub(super) async fn validate_provided_doc<Provider, Validator>(
-    doc_ref: &DocumentRef, doc_name: &str, provider: &Provider, report: &ProblemReport,
-    validator: Validator,
+    doc_ref: &DocumentRef, provider: &Provider, report: &ProblemReport, validator: Validator,
 ) -> anyhow::Result<bool>
 where
     Provider: 'static + CatalystSignedDocumentProvider,
@@ -28,7 +27,7 @@ where
         Ok(validator(doc))
     } else {
         report.functional_validation(
-            format!("Cannot retrieve a {doc_name} document {doc_ref}").as_str(),
+            format!("Cannot retrieve a document {doc_ref}").as_str(),
             "Validation data provider could not return a corresponding {doc_name}.",
         );
         Ok(false)

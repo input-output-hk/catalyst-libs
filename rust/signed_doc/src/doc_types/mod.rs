@@ -5,8 +5,8 @@ mod comment_document;
 mod proposal_document;
 
 use catalyst_types::uuid::{Uuid, UuidV4};
-pub use comment_document::{CommentDocument, COMMENT_DOCUMENT_UUID_TYPE};
-pub use proposal_document::{ProposalDocument, PROPOSAL_DOCUMENT_UUID_TYPE};
+pub use comment_document::COMMENT_DOCUMENT_UUID_TYPE;
+pub use proposal_document::PROPOSAL_DOCUMENT_UUID_TYPE;
 
 /// Represents different types of documents.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,7 +49,8 @@ pub enum DocumentType {
 pub const PROPOSAL_TEMPLATE_UUID_TYPE: Uuid =
     Uuid::from_u128(0x0CE8_AB38_9258_4FBC_A62E_7FAA_6E58_318F);
 /// Comment template `UuidV4` type.
-const COMMENT_TEMPLATE_UUID_TYPE: Uuid = Uuid::from_u128(0x0B84_24D4_EBFD_46E3_9577_1775_A69D_290C);
+pub const COMMENT_TEMPLATE_UUID_TYPE: Uuid =
+    Uuid::from_u128(0x0B84_24D4_EBFD_46E3_9577_1775_A69D_290C);
 /// Review document `UuidV4` type.
 const REVIEW_DOCUMENT_UUID_TYPE: Uuid = Uuid::from_u128(0xE4CA_F5F0_098B_45FD_94F3_0702_A457_3DB5);
 /// Review template `UuidV4` type.
