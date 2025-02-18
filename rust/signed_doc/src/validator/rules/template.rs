@@ -40,7 +40,10 @@ where Provider: 'static + CatalystSignedDocumentProvider
                 }
                 match doc.doc_content_type() {
                     ContentType::Json => json_schema_check(doc, &template_doc, report),
-                    _ => true,
+                    ContentType::Cbor => {
+                        // TODO: not implemented yet
+                        true
+                    },
                 }
             };
             validate_provided_doc(&template_ref, provider, report, template_validator).await

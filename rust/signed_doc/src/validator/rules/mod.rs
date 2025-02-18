@@ -6,6 +6,7 @@ mod content_encoding;
 mod content_type;
 mod doc_ref;
 mod reply;
+mod section;
 mod template;
 
 use category::CategoryRule;
@@ -13,6 +14,7 @@ use content_encoding::ContentEncodingRule;
 use content_type::ContentTypeRule;
 use doc_ref::RefRule;
 use reply::ReplyRule;
+use section::SectionRule;
 use template::TemplateRule;
 
 use super::ValidationRule;
@@ -66,5 +68,6 @@ where Provider: 'static + CatalystSignedDocumentProvider {
             reply_type: COMMENT_DOCUMENT_UUID_TYPE,
             optional: true,
         }),
+        boxed_rule(SectionRule { optional: true }),
     ]
 }
