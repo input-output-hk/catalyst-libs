@@ -15,10 +15,10 @@ workspace = true
 [dependencies]
 # Always used a versioned dependency, so that changes to dependent libraries do not cause cascading 
 # breakage inside the repo.
-cbork-cddl-parser = {version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "v0.0.3" }
+cbork-cddl-parser = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", rev = "r20250204-00" }
 # Only use this for testing - do not change dependency to this in checked in code.
 #cbork-cddl-parser = { path = "../cbork-cddl-parser", version = "0.1.0" }
-clap = { version = "4.5.19",  features = ["derive", "env"] }
+clap = { version = "4.5.19", features = ["derive", "env"] }
 anyhow = "1.0.89"
 console = "0.15.8"
 
