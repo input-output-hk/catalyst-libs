@@ -1,6 +1,5 @@
 //! `content-type` rule type impl.
 
-use catalyst_types::problem_report::ProblemReport;
 use futures::{future::BoxFuture, FutureExt};
 
 use crate::{
@@ -18,13 +17,12 @@ where Provider: 'static + CatalystSignedDocumentProvider
 {
     fn check<'a>(
         &'a self, doc: &'a CatalystSignedDocument, _provider: &'a Provider,
-        report: &'a ProblemReport,
     ) -> BoxFuture<'a, anyhow::Result<bool>> {
         async {
-            if doc.doc_content_type() != self.exp {
-                report.invalid_value(
+            if doc.doc_content_type()? != self.exp {
+                doc.report().invalid_value(
                     "content-type",
-                    doc.doc_content_type().to_string().as_str(),
+                    doc.doc_content_type()?.to_string().as_str(),
                     self.exp.to_string().as_str(),
                     "Invalid Document content-type value",
                 );

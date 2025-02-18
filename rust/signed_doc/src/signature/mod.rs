@@ -1,6 +1,5 @@
 //! Catalyst Signed Document COSE Signature information.
 
-use anyhow::bail;
 pub use catalyst_types::id_uri::IdUri;
 use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
@@ -61,9 +60,7 @@ impl Signatures {
     }
 
     /// Convert list of COSE Signature to `Signatures`.
-    pub(crate) fn from_cose_sig(
-        cose_sigs: &[CoseSignature], error_report: &ProblemReport,
-    ) -> anyhow::Result<Self> {
+    pub(crate) fn from_cose_sig(cose_sigs: &[CoseSignature], error_report: &ProblemReport) -> Self {
         let mut signatures = Vec::new();
 
         cose_sigs
@@ -83,9 +80,7 @@ impl Signatures {
                     },
                 }
             });
-        if error_report.is_problematic() {
-            bail!("Failed to convert COSE Signatures to Signatures");
-        }
-        Ok(Signatures(signatures))
+
+        Self(signatures)
     }
 }

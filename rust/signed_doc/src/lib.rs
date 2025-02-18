@@ -3,11 +3,9 @@
 mod builder;
 mod content;
 pub mod doc_types;
-pub mod error;
 mod metadata;
 pub mod providers;
 mod signature;
-mod utils;
 pub mod validator;
 
 use std::{
@@ -21,13 +19,14 @@ use catalyst_types::problem_report::ProblemReport;
 pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
-use error::CatalystSignedDocError;
 use metadata::{ContentEncoding, ContentType};
 pub use metadata::{DocumentRef, ExtraFields, Metadata};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 use providers::VerifyingKeyProvider;
 pub use signature::{IdUri, Signatures};
-use utils::context::DecodeSignDocCtx;
+
+/// A problem report content string
+const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Debug, Clone)]
@@ -38,6 +37,9 @@ struct InnerCatalystSignedDocument {
     content: Content,
     /// Signatures
     signatures: Signatures,
+    /// A comprehensive problem report, which could include a decoding errors along with
+    /// the other validation errors
+    report: ProblemReport,
 }
 
 /// Keep all the contents private.
@@ -78,20 +80,29 @@ impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
 
     /// Return Document Type `UUIDv4`.
+    ///
+    /// # Errros
+    /// - Missing 'type' field.
     #[must_use]
-    pub fn doc_type(&self) -> UuidV4 {
+    pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
         self.inner.metadata.doc_type()
     }
 
     /// Return Document ID `UUIDv7`.
+    ///
+    /// # Errros
+    /// - Missing 'id' field.
     #[must_use]
-    pub fn doc_id(&self) -> UuidV7 {
+    pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
         self.inner.metadata.doc_id()
     }
 
     /// Return Document Version `UUIDv7`.
+    ///
+    /// # Errros
+    /// - Missing 'ver' field.
     #[must_use]
-    pub fn doc_ver(&self) -> UuidV7 {
+    pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
         self.inner.metadata.doc_ver()
     }
 
@@ -102,8 +113,11 @@ impl CatalystSignedDocument {
     }
 
     /// Return document `ContentType`.
+    ///
+    /// # Errros
+    /// - Missing 'content-type' field.
     #[must_use]
-    pub fn doc_content_type(&self) -> ContentType {
+    pub fn doc_content_type(&self) -> anyhow::Result<ContentType> {
         self.inner.metadata.content_type()
     }
 
@@ -137,95 +151,108 @@ impl CatalystSignedDocument {
         self.inner.signatures.authors()
     }
 
+    /// Returns a collected problem report for the document.
+    /// It accumulates all kind of errors, collected during the decoding, type based
+    /// validation and signature verification.
+    ///
+    /// This is method is only for the public API usage, do not use it internally inside
+    /// this crate.
+    #[must_use]
+    pub fn problem_report(&self) -> ProblemReport {
+        self.report().clone()
+    }
+
+    /// Returns an internal problem report
+    #[must_use]
+    pub(crate) fn report(&self) -> &ProblemReport {
+        &self.inner.report
+    }
+
     /// Verify document signatures.
+    /// Return true if all signatures are valid, otherwise return false.
+    /// Also it imediatly return false, if document is already invalid.
+    ///
     ///
     /// # Errors
-    ///
-    /// Returns a report of verification failures and the source error.
-    /// If `provider` returns error, fails fast and placed this error into
-    /// `CatalystSignedDocError::error`.
-    pub async fn verify(
-        &self, provider: &impl VerifyingKeyProvider,
-    ) -> Result<(), CatalystSignedDocError> {
-        let report = ProblemReport::new("Catalyst Signed Document Verification");
+    /// If `provider` returns error, fails fast throwing that error.
+    pub async fn verify(&self, provider: &impl VerifyingKeyProvider) -> anyhow::Result<bool> {
+        if self.report().is_problematic() {
+            return Ok(false);
+        }
 
-        let cose_sign = match self.as_cose_sign() {
-            Ok(cose_sign) => cose_sign,
-            Err(e) => {
-                report.other(
-                    "Cannot build a COSE sign object",
-                    "During encoding signed document as COSE SIGN",
-                );
-                return Err(CatalystSignedDocError::new(report, e));
-            },
+        let Ok(cose_sign) = self.as_cose_sign() else {
+            self.report().other(
+                "Cannot build a COSE sign object",
+                "During encoding signed document as COSE SIGN",
+            );
+            return Ok(false);
         };
 
         for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            match provider.try_get_key(kid).await {
-                Ok(Some(pk)) => {
-                    let tbs_data = cose_sign.tbs_data(&[], signature);
-                    match signature.signature.as_slice().try_into() {
-                        Ok(signature_bytes) => {
-                            let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
-                            if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
-                                report.functional_validation(
-                                    &format!(
-                                        "Verification failed for signature with Key ID {kid}: {e}"
-                                    ),
-                                    "During signature validation with verifying key",
-                                );
-                            }
-                        },
-                        Err(_) => {
-                            report.invalid_value(
-                                "cose signature",
-                                &format!("{}", signature.signature.len()),
-                                &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
-                                "During encoding cose signature to bytes",
+            if let Some(pk) = provider.try_get_key(kid).await? {
+                let tbs_data = cose_sign.tbs_data(&[], signature);
+                match signature.signature.as_slice().try_into() {
+                    Ok(signature_bytes) => {
+                        let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+                        if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
+                            self.report().functional_validation(
+                                &format!(
+                                    "Verification failed for signature with Key ID {kid}: {e}"
+                                ),
+                                "During signature validation with verifying key",
                             );
-                        },
-                    }
-                },
-                Ok(None) => {
-                    report.other(
-                        &format!("Missing public key for {kid}."),
-                        "During public key extraction",
-                    );
-                },
-                Err(e) => {
-                    return Err(CatalystSignedDocError::new(report, e));
-                },
+                        }
+                    },
+                    Err(_) => {
+                        self.report().invalid_value(
+                            "cose signature",
+                            &format!("{}", signature.signature.len()),
+                            &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+                            "During encoding cose signature to bytes",
+                        );
+                    },
+                }
+            } else {
+                self.report().other(
+                    &format!("Missing public key for {kid}."),
+                    "During public key extraction",
+                );
             }
         }
 
-        if report.is_problematic() {
-            return Err(CatalystSignedDocError::new(
-                report,
-                anyhow::anyhow!("Signature validation for Catalyst Signed Document fails"),
-            ));
-        }
-
-        Ok(())
+        Ok(!self.report().is_problematic())
     }
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
+    ///
+    /// # Errors
+    /// Could fails if the `CatalystSignedDocument` object is not valid.
     #[must_use]
-    pub fn into_builder(self) -> Builder {
-        Builder::new()
+    pub fn into_builder(self) -> anyhow::Result<Builder> {
+        Ok(Builder::new()
             .with_metadata(self.inner.metadata.clone())
-            .with_decoded_content(self.inner.content.decoded_bytes().to_vec())
-            .with_signatures(self.inner.signatures.clone())
+            .with_decoded_content(self.doc_content().decoded_bytes()?.to_vec())
+            .with_signatures(self.signatures().clone()))
     }
 
     /// Convert Catalyst Signed Document into `coset::CoseSign`
+    ///
+    /// # Errors
+    /// Could fails if the `CatalystSignedDocument` object is not valid.
     fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
         let protected_header = Header::try_from(&self.inner.metadata)
             .map_err(|e| anyhow::anyhow!("Failed to encode Document Metadata: {e}"))?;
 
+        let content = if let Some(content_encoding) = self.doc_content_encoding() {
+            self.doc_content().encoded_bytes(content_encoding)?
+        } else {
+            self.doc_content().decoded_bytes()?.to_vec()
+        };
+
         let mut builder = coset::CoseSignBuilder::new()
             .protected(protected_header)
-            .payload(self.inner.content.encoded_bytes()?);
+            .payload(content);
 
         for signature in self.signatures().cose_signatures() {
             builder = builder.add_signature(signature);
@@ -234,20 +261,8 @@ impl CatalystSignedDocument {
     }
 }
 
-impl TryFrom<&[u8]> for CatalystSignedDocument {
-    type Error = CatalystSignedDocError;
-
-    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        let error_report = ProblemReport::new("Catalyst Signed Document");
-        let mut ctx = DecodeSignDocCtx { error_report };
-        let decoded: CatalystSignedDocument = minicbor::decode_with(value, &mut ctx)
-            .map_err(|e| CatalystSignedDocError::new(ctx.error_report, e.into()))?;
-        Ok(decoded)
-    }
-}
-
-impl Decode<'_, DecodeSignDocCtx> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut DecodeSignDocCtx) -> Result<Self, decode::Error> {
+impl Decode<'_, ()> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, decode::Error> {
         let start = d.position();
         d.skip()?;
         let end = d.position();
@@ -257,82 +272,32 @@ impl Decode<'_, DecodeSignDocCtx> for CatalystSignedDocument {
             .ok_or(minicbor::decode::Error::end_of_input())?;
 
         let cose_sign = coset::CoseSign::from_slice(cose_bytes).map_err(|e| {
-            ctx.error_report.invalid_value(
-                "COSE sign document bytes",
-                &format!("{:?}", &cose_bytes),
-                &format!("Cannot convert bytes to CoseSign {e:?}"),
-                "Creating COSE Sign document",
-            );
             minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
         })?;
 
-        let metadata = Metadata::from_protected_header(&cose_sign.protected, &ctx.error_report)
-            .map_or_else(
-                |e| {
-                    ctx.error_report.conversion_error(
-                        "COSE sign protected header",
-                        &format!("{:?}", &cose_sign.protected),
-                        &format!("Expected Metadata: {e:?}"),
-                        "Converting COSE Sign protected header to Metadata",
-                    );
-                    None
-                },
-                Some,
-            );
-        let signatures = Signatures::from_cose_sig(&cose_sign.signatures, &ctx.error_report)
-            .map_or_else(
-                |e| {
-                    ctx.error_report.conversion_error(
-                        "COSE sign signatures",
-                        &format!("{:?}", &cose_sign.signatures),
-                        &format!("Expected Signatures {e:?}"),
-                        "Converting COSE Sign signatures to Signatures",
-                    );
-                    None
-                },
-                Some,
-            );
+        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
+        let metadata = Metadata::from_protected_header(&cose_sign.protected, &report);
+        let signatures = Signatures::from_cose_sig(&cose_sign.signatures, &report);
 
-        if cose_sign.payload.is_none() {
-            ctx.error_report
-                .missing_field("COSE Sign Payload", "Missing document content (payload)");
+        let content = if let Some(payload) = cose_sign.payload {
+            Content::from_encoded(
+                payload,
+                metadata.content_type().ok(),
+                metadata.content_encoding(),
+                &report,
+            )
+        } else {
+            report.missing_field("COSE Sign Payload", "Missing document content (payload)");
+            Content::default()
+        };
+
+        Ok(InnerCatalystSignedDocument {
+            metadata,
+            content,
+            signatures,
+            report,
         }
-
-        match (cose_sign.payload, metadata, signatures) {
-            (Some(payload), Some(metadata), Some(signatures)) => {
-                let content = Content::from_encoded(
-                    payload.clone(),
-                    metadata.content_type(),
-                    metadata.content_encoding(),
-                )
-                .map_err(|e| {
-                    ctx.error_report.invalid_value(
-                        "Document Content",
-                        &format!(
-                            "Given value {:?}, {:?}, {:?}",
-                            payload,
-                            metadata.content_type(),
-                            metadata.content_encoding()
-                        ),
-                        &format!("{e:?}"),
-                        "Creating document content",
-                    );
-                    minicbor::decode::Error::message("Failed to create Document Content")
-                })?;
-
-                Ok(InnerCatalystSignedDocument {
-                    metadata,
-                    content,
-                    signatures,
-                }
-                .into())
-            },
-            _ => {
-                Err(minicbor::decode::Error::message(
-                    "Failed to decode Catalyst Signed Document",
-                ))
-            },
-        }
+        .into())
     }
 }
 
@@ -402,12 +367,12 @@ mod tests {
             .unwrap();
 
         let bytes = minicbor::to_vec(doc).unwrap();
-        let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
+        let decoded: CatalystSignedDocument = minicbor::decode(bytes.as_slice()).unwrap();
 
-        assert_eq!(decoded.doc_type(), uuid_v4);
-        assert_eq!(decoded.doc_id(), uuid_v7);
-        assert_eq!(decoded.doc_ver(), uuid_v7);
-        assert_eq!(decoded.doc_content().decoded_bytes(), &content);
+        assert_eq!(decoded.doc_type().unwrap(), uuid_v4);
+        assert_eq!(decoded.doc_id().unwrap(), uuid_v7);
+        assert_eq!(decoded.doc_ver().unwrap(), uuid_v7);
+        assert_eq!(decoded.doc_content().decoded_bytes().unwrap(), &content);
         assert_eq!(decoded.doc_meta(), metadata.extra());
     }
 

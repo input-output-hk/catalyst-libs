@@ -2,7 +2,6 @@
 
 use std::str::FromStr;
 
-use catalyst_types::problem_report::ProblemReport;
 use futures::{future::BoxFuture, FutureExt};
 
 use crate::{
@@ -19,12 +18,11 @@ where Provider: 'static + CatalystSignedDocumentProvider
 {
     fn check<'a>(
         &'a self, doc: &'a CatalystSignedDocument, _provider: &'a Provider,
-        report: &'a ProblemReport,
     ) -> BoxFuture<'a, anyhow::Result<bool>> {
         async {
             if let Some(section) = doc.doc_meta().section() {
                 if jsonpath_rust::JsonPath::<serde_json::Value>::from_str(section).is_err() {
-                    report.invalid_value(
+                    doc.report().invalid_value(
                         "template",
                         section,
                         "Must be a valid JSON Path",
@@ -33,7 +31,8 @@ where Provider: 'static + CatalystSignedDocumentProvider
                     return Ok(false);
                 }
             } else if !self.optional {
-                report.missing_field("section", "Document must have a section field");
+                doc.report()
+                    .missing_field("section", "Document must have a section field");
                 return Ok(false);
             }
             Ok(true)

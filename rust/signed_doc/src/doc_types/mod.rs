@@ -1,7 +1,7 @@
 //! An implementation of different defined document types
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
 
-use catalyst_types::{problem_report::ProblemReport, uuid::Uuid};
+use catalyst_types::uuid::Uuid;
 
 use crate::{
     metadata::{ContentEncoding, ContentType},
@@ -68,10 +68,10 @@ pub const IMMUTABLE_LEDGER_BLOCK_UUID_TYPE: Uuid =
 
 /// Return a list of validation rules for the document, based on the document type
 pub(crate) fn validation_rules<Provider>(
-    doc: &CatalystSignedDocument, report: &ProblemReport,
-) -> Vec<Box<dyn ValidationRule<Provider>>>
+    doc: &CatalystSignedDocument,
+) -> anyhow::Result<Vec<Box<dyn ValidationRule<Provider>>>>
 where Provider: 'static + CatalystSignedDocumentProvider {
-    match doc.doc_type().uuid() {
+    let res = match doc.doc_type()?.uuid() {
         PROPOSAL_DOCUMENT_UUID_TYPE => {
             vec![
                 boxed_rule(ContentTypeRule {
@@ -111,13 +111,14 @@ where Provider: 'static + CatalystSignedDocumentProvider {
             ]
         },
         _ => {
-            report.invalid_value(
+            doc.report().invalid_value(
                 "`type`",
-                &doc.doc_type().to_string(),
+                &doc.doc_type()?.to_string(),
                 "Must be a known document type value",
                 "Unsupported document type",
             );
             vec![]
         },
-    }
+    };
+    Ok(res)
 }

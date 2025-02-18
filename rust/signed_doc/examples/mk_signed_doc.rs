@@ -77,7 +77,7 @@ impl Cli {
                     .map_err(|e| anyhow::anyhow!("Failed to load SK FILE: {e}"))?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
-                let builder = signed_doc.into_builder();
+                let builder = signed_doc.into_builder()?;
                 let new_signed_doc = builder.add_signature(sk.to_bytes(), kid)?.build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
@@ -123,8 +123,7 @@ fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow
 }
 
 fn signed_doc_from_bytes(cose_bytes: &[u8]) -> anyhow::Result<CatalystSignedDocument> {
-    CatalystSignedDocument::try_from(cose_bytes)
-        .map_err(|e| anyhow::anyhow!("Invalid Catalyst Document: {e}"))
+    minicbor::decode(cose_bytes).map_err(|e| anyhow::anyhow!("Invalid Catalyst Document: {e}"))
 }
 
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>

@@ -8,7 +8,6 @@ mod document_ref;
 mod extra_fields;
 
 use algorithm::Algorithm;
-use anyhow::{anyhow, bail};
 use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{CborContext, UuidV4, UuidV7},
@@ -31,21 +30,23 @@ const VER_KEY: &str = "ver";
 /// Document Metadata.
 ///
 /// These values are extracted from the COSE Sign protected header.
-#[derive(Clone, Debug, PartialEq, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Deserialize, Default)]
 pub struct Metadata {
     /// Cryptographic Algorithm
-    #[serde(default = "Algorithm::default")]
-    alg: Algorithm,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    alg: Option<Algorithm>,
     /// Document Type `UUIDv4`.
-    #[serde(rename = "type")]
-    doc_type: UuidV4,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    doc_type: Option<UuidV4>,
     /// Document ID `UUIDv7`.
-    id: UuidV7,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    id: Option<UuidV7>,
     /// Document Version `UUIDv7`.
-    ver: UuidV7,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ver: Option<UuidV7>,
     /// Document Payload Content Type.
     #[serde(rename = "content-type")]
-    content_type: ContentType,
+    content_type: Option<ContentType>,
     /// Document Payload Content Encoding.
     #[serde(rename = "content-encoding", skip_serializing_if = "Option::is_none")]
     content_encoding: Option<ContentEncoding>,
@@ -56,33 +57,49 @@ pub struct Metadata {
 
 impl Metadata {
     /// Return Document Cryptographic Algorithm
+    ///
+    /// # Errros
+    /// - Missing 'alg' field.
     #[must_use]
-    pub fn algorithm(&self) -> Algorithm {
-        self.alg
+    pub fn algorithm(&self) -> anyhow::Result<Algorithm> {
+        self.alg.ok_or(anyhow::anyhow!("Missing 'alg' field"))
     }
 
     /// Return Document Type `UUIDv4`.
+    ///
+    /// # Errros
+    /// - Missing 'type' field.
     #[must_use]
-    pub fn doc_type(&self) -> UuidV4 {
-        self.doc_type
+    pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
+        self.doc_type.ok_or(anyhow::anyhow!("Missing 'type' field"))
     }
 
     /// Return Document ID `UUIDv7`.
+    ///
+    /// # Errros
+    /// - Missing 'id' field.
     #[must_use]
-    pub fn doc_id(&self) -> UuidV7 {
-        self.id
+    pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
+        self.id.ok_or(anyhow::anyhow!("Missing 'id' field"))
     }
 
     /// Return Document Version `UUIDv7`.
+    ///
+    /// # Errros
+    /// - Missing 'ver' field.
     #[must_use]
-    pub fn doc_ver(&self) -> UuidV7 {
-        self.ver
+    pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
+        self.ver.ok_or(anyhow::anyhow!("Missing 'ver' field"))
     }
 
     /// Returns the Document Content Type, if any.
+    ///
+    /// # Errros
+    /// - Missing 'content-type' field.
     #[must_use]
-    pub fn content_type(&self) -> ContentType {
+    pub fn content_type(&self) -> anyhow::Result<ContentType> {
         self.content_type
+            .ok_or(anyhow::anyhow!("Missing 'content-type' field"))
     }
 
     /// Returns the Document Content Encoding, if any.
@@ -101,14 +118,19 @@ impl Metadata {
     #[allow(clippy::too_many_lines)]
     pub(crate) fn from_protected_header(
         protected: &coset::ProtectedHeader, error_report: &ProblemReport,
-    ) -> anyhow::Result<Self> {
+    ) -> Self {
         /// Context for error messages.
         const CONTEXT: &str = "COSE Protected Header to Metadata";
 
-        let mut algorithm = Algorithm::default();
+        let extra = ExtraFields::from_protected_header(protected, error_report);
+        let mut metadata = Metadata {
+            extra,
+            ..Metadata::default()
+        };
+
         if let Some(coset::RegisteredLabelWithPrivate::Assigned(alg)) = protected.header.alg {
             match Algorithm::try_from(alg) {
-                Ok(alg) => algorithm = alg,
+                Ok(alg) => metadata.alg = Some(alg),
                 Err(e) => {
                     error_report.conversion_error(
                         "COSE protected header algorithm",
@@ -122,10 +144,9 @@ impl Metadata {
             error_report.missing_field("alg", "Missing alg field in COSE protected header");
         }
 
-        let mut content_type = None;
         if let Some(value) = protected.header.content_type.as_ref() {
             match ContentType::try_from(value) {
-                Ok(ct) => content_type = Some(ct),
+                Ok(ct) => metadata.content_type = Some(ct),
                 Err(e) => {
                     error_report.conversion_error(
                         "COSE protected header content type",
@@ -142,13 +163,12 @@ impl Metadata {
             );
         }
 
-        let mut content_encoding = None;
         if let Some(value) = cose_protected_header_find(
             protected,
             |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)),
         ) {
             match ContentEncoding::try_from(value) {
-                Ok(ce) => content_encoding = Some(ce),
+                Ok(ce) => metadata.content_encoding = Some(ce),
                 Err(e) => {
                     error_report.conversion_error(
                         "COSE protected header content encoding",
@@ -160,12 +180,11 @@ impl Metadata {
             }
         }
 
-        let mut doc_type: Option<UuidV4> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text(TYPE_KEY.to_string())
         }) {
             match decode_cbor_uuid(value.clone()) {
-                Ok(uuid) => doc_type = Some(uuid),
+                Ok(uuid) => metadata.doc_type = Some(uuid),
                 Err(e) => {
                     error_report.conversion_error(
                         "COSE protected header type",
@@ -179,12 +198,11 @@ impl Metadata {
             error_report.missing_field("type", "Missing type field in COSE protected header");
         }
 
-        let mut id: Option<UuidV7> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text(ID_KEY.to_string())
         }) {
             match decode_cbor_uuid(value.clone()) {
-                Ok(uuid) => id = Some(uuid),
+                Ok(uuid) => metadata.id = Some(uuid),
                 Err(e) => {
                     error_report.conversion_error(
                         "COSE protected header ID",
@@ -198,12 +216,11 @@ impl Metadata {
             error_report.missing_field("id", "Missing id field in COSE protected header");
         }
 
-        let mut ver: Option<UuidV7> = None;
         if let Some(value) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text(VER_KEY.to_string())
         }) {
             match decode_cbor_uuid(value.clone()) {
-                Ok(uuid) => ver = Some(uuid),
+                Ok(uuid) => metadata.ver = Some(uuid),
                 Err(e) => {
                     error_report.conversion_error(
                         "COSE protected header ver",
@@ -217,51 +234,33 @@ impl Metadata {
             error_report.missing_field("ver", "Missing ver field in COSE protected header");
         }
 
-        let extra = ExtraFields::from_protected_header(protected, error_report);
-
-        match (content_type, content_encoding, id, doc_type, ver, extra) {
-            (
-                Some(content_type),
-                content_encoding,
-                Some(id),
-                Some(doc_type),
-                Some(ver),
-                Some(extra),
-            ) => {
+        if let Some(id) = metadata.id {
+            if let Some(ver) = metadata.ver {
                 if ver < id {
                     error_report.invalid_value(
                         "ver",
                         &ver.to_string(),
                         "ver < id",
-                        &format!("{CONTEXT}, Document Version {ver} cannot be smaller than Document ID {id}"),
+                        &format!(
+                            "{CONTEXT}, Document Version {ver} cannot be smaller than Document ID {id}"
+                        ),
                     );
-
-                    bail!("Failed to convert COSE Protected Header to Metadata: document version is smaller than document ID");
                 }
-
-                Ok(Self {
-                    doc_type,
-                    id,
-                    ver,
-                    alg: algorithm,
-                    content_encoding,
-                    content_type,
-                    extra,
-                })
-            },
-            _ => bail!("Failed to convert COSE Protected Header to Metadata"),
+            }
         }
+
+        metadata
     }
 }
 
 impl Display for Metadata {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         writeln!(f, "Metadata {{")?;
-        writeln!(f, "  type: {},", self.doc_type)?;
-        writeln!(f, "  id: {},", self.id)?;
-        writeln!(f, "  ver: {},", self.ver)?;
+        writeln!(f, "  type: {:?},", self.doc_type)?;
+        writeln!(f, "  id: {:?},", self.id)?;
+        writeln!(f, "  ver: {:?},", self.ver)?;
         writeln!(f, "  alg: {:?},", self.alg)?;
-        writeln!(f, "  content_type: {}", self.content_type)?;
+        writeln!(f, "  content_type: {:?}", self.content_type)?;
         writeln!(f, "  content_encoding: {:?}", self.content_encoding)?;
         writeln!(f, "  additional_fields: {:?},", self.extra)?;
         writeln!(f, "}}")
@@ -273,8 +272,12 @@ impl TryFrom<&Metadata> for coset::Header {
 
     fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
         let mut builder = coset::HeaderBuilder::new()
-            .algorithm(meta.alg.into())
-            .content_format(CoapContentFormat::from(meta.content_type()));
+            .algorithm(
+                meta.alg
+                    .ok_or(anyhow::anyhow!("missing `alg` field"))?
+                    .into(),
+            )
+            .content_format(CoapContentFormat::from(meta.content_type()?));
 
         if let Some(content_encoding) = meta.content_encoding() {
             builder = builder.text_value(
@@ -284,9 +287,9 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         builder = builder
-            .text_value(TYPE_KEY.to_string(), encode_cbor_uuid(meta.doc_type)?)
-            .text_value(ID_KEY.to_string(), encode_cbor_uuid(meta.id)?)
-            .text_value(VER_KEY.to_string(), encode_cbor_uuid(meta.ver)?);
+            .text_value(TYPE_KEY.to_string(), encode_cbor_uuid(meta.doc_type()?)?)
+            .text_value(ID_KEY.to_string(), encode_cbor_uuid(meta.doc_id()?)?)
+            .text_value(VER_KEY.to_string(), encode_cbor_uuid(meta.doc_ver()?)?);
 
         builder = meta.extra.fill_cose_header_fields(builder)?;
 
@@ -328,7 +331,7 @@ pub(crate) fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborConte
     match value.to_vec() {
         Ok(cbor_value) => {
             minicbor::decode_with(&cbor_value, &mut CborContext::Tagged)
-                .map_err(|e| anyhow!("Invalid UUID, err: {e}"))
+                .map_err(|e| anyhow::anyhow!("Invalid UUID, err: {e}"))
         },
         Err(e) => anyhow::bail!("Invalid CBOR value, err: {e}"),
     }

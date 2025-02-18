@@ -163,11 +163,9 @@ impl ExtraFields {
     #[allow(clippy::too_many_lines)]
     pub(crate) fn from_protected_header(
         protected: &ProtectedHeader, error_report: &ProblemReport,
-    ) -> Option<Self> {
+    ) -> Self {
         /// Context for error messages.
         const CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
-        let mut valid = true;
-
         let mut extra = ExtraFields::default();
 
         if let Some(cbor_doc_ref) =
@@ -178,7 +176,6 @@ impl ExtraFields {
                     extra.doc_ref = Some(doc_ref);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header doc ref",
                         &format!("{cbor_doc_ref:?}"),
@@ -197,7 +194,6 @@ impl ExtraFields {
                     extra.template = Some(doc_template);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header document template",
                         &format!("{cbor_doc_template:?}"),
@@ -216,7 +212,6 @@ impl ExtraFields {
                     extra.reply = Some(doc_reply);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header document reply",
                         &format!("{cbor_doc_reply:?}"),
@@ -235,7 +230,6 @@ impl ExtraFields {
                     extra.section = Some(doc_section);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "COSE protected header document section",
                         &format!("{cbor_doc_section:?}"),
@@ -258,7 +252,6 @@ impl ExtraFields {
                                 c.push(collaborator);
                             },
                             Err(e) => {
-                                valid = false;
                                 error_report.conversion_error(
                                     &format!("COSE protected header collaborator index {ids}"),
                                     &format!("{collaborator:?}"),
@@ -271,7 +264,6 @@ impl ExtraFields {
                     extra.collabs = c;
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header collaborators",
                         &format!("{cbor_doc_collabs:?}"),
@@ -290,7 +282,6 @@ impl ExtraFields {
                     extra.brand_id = Some(brand_id);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header brand ID",
                         &format!("{cbor_doc_brand_id:?}"),
@@ -309,7 +300,6 @@ impl ExtraFields {
                     extra.campaign_id = Some(campaign_id);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header campaign ID",
                         &format!("{cbor_doc_campaign_id:?}"),
@@ -328,7 +318,6 @@ impl ExtraFields {
                     extra.election_id = Some(election_id);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header election ID",
                         &format!("{cbor_doc_election_id:?}"),
@@ -347,7 +336,6 @@ impl ExtraFields {
                     extra.category_id = Some(category_id);
                 },
                 Err(e) => {
-                    valid = false;
                     error_report.conversion_error(
                         "CBOR COSE protected header category ID",
                         &format!("{cbor_doc_category_id:?}"),
@@ -358,7 +346,7 @@ impl ExtraFields {
             }
         }
 
-        valid.then_some(extra)
+        extra
     }
 }
 

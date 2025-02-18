@@ -9,12 +9,6 @@ pub enum Algorithm {
     EdDSA,
 }
 
-impl Default for Algorithm {
-    fn default() -> Self {
-        Self::EdDSA
-    }
-}
-
 impl From<Algorithm> for coset::iana::Algorithm {
     fn from(_: Algorithm) -> Self {
         coset::iana::Algorithm::EdDSA
