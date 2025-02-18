@@ -31,7 +31,7 @@ ed25519-dalek = "2.1.1"
 uuid = "1.11.0"
 pallas = "0.32.0"
 
-c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "update-pallas-version" }
-cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "update-pallas-version" }
-cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "update-pallas-version" }
-catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "update-pallas-version" }
+c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250218-00" }
+cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250218-00" }
+cardano-blockchain-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250218-00" }
+catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250218-00" }

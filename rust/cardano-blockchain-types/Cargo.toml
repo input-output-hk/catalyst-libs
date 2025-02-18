@@ -20,8 +20,8 @@ workspace = true
 [dependencies]
 pallas = "0.32.0"
 # pallas-hardano = { version = "0.30.1", git = "https://github.com/input-output-hk/catalyst-pallas.git", rev = "9b5183c8b90b90fe2cc319d986e933e9518957b3" }
-cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "update-pallas-version" }
-catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "update-pallas-version" }
+cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250218-00" }
+catalyst-types = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250218-00" }
 
 ouroboros = "0.18.4"
 tracing = "0.1.41"
