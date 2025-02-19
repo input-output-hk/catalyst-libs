@@ -7,10 +7,16 @@ use crate::{
     validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
-/// `content-type` field validation rule
-pub(crate) struct TemplateRule {
-    /// expected `type` field of the template
-    pub(crate) template_type: Uuid,
+/// `template` field validation rule
+pub(crate) enum TemplateRule {
+    /// Is 'template' specified
+    Specified {
+        /// expected `type` field of the template
+        exp_template_type: Uuid,
+    },
+    /// 'template' is not specified
+    #[allow(dead_code)]
+    NotSpecified,
 }
 
 impl TemplateRule {
@@ -19,31 +25,51 @@ impl TemplateRule {
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: 'static + CatalystSignedDocumentProvider {
-        let Some(template_ref) = doc.doc_meta().template() else {
-            doc.report()
-                .missing_field("template", "Document must have a template field");
-            return Ok(false);
-        };
+        if let Self::Specified { exp_template_type } = self {
+            let Some(template_ref) = doc.doc_meta().template() else {
+                doc.report()
+                    .missing_field("template", "Document must have a template field");
+                return Ok(false);
+            };
 
-        let template_validator = |template_doc: CatalystSignedDocument| {
-            if template_doc.doc_type()?.uuid() != self.template_type {
-                doc.report().invalid_value(
+            let template_validator = |template_doc: CatalystSignedDocument| {
+                if &template_doc.doc_type()?.uuid() != exp_template_type {
+                    doc.report().invalid_value(
+                        "template",
+                        template_doc.doc_type()?.to_string().as_str(),
+                        exp_template_type.to_string().as_str(),
+                        "Invalid referenced template document type",
+                    );
+                    return Ok(false);
+                }
+                match doc.doc_content_type()? {
+                    ContentType::Json => json_schema_check(doc, &template_doc),
+                    ContentType::Cbor => {
+                        // TODO: not implemented yet
+                        Ok(true)
+                    },
+                }
+            };
+            return validate_provided_doc(
+                &template_ref,
+                provider,
+                doc.report(),
+                template_validator,
+            )
+            .await;
+        }
+        if let Self::NotSpecified = self {
+            if let Some(template) = doc.doc_meta().template() {
+                doc.report().unknown_field(
                     "template",
-                    template_doc.doc_type()?.to_string().as_str(),
-                    self.template_type.to_string().as_str(),
-                    "Invalid referenced template document type",
+                    &template.to_string(),
+                    "Document does not expect to have a template field",
                 );
                 return Ok(false);
             }
-            match doc.doc_content_type()? {
-                ContentType::Json => json_schema_check(doc, &template_doc),
-                ContentType::Cbor => {
-                    // TODO: not implemented yet
-                    Ok(true)
-                },
-            }
-        };
-        validate_provided_doc(&template_ref, provider, doc.report(), template_validator).await
+        }
+
+        Ok(true)
     }
 }
 

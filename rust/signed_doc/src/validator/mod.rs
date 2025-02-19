@@ -1,17 +1,21 @@
 //! Catalyst Signed Documents validation
 
-#![allow(dead_code)]
-
 pub(crate) mod rules;
 pub(crate) mod utils;
 
 use std::{collections::HashMap, sync::LazyLock};
 
 use catalyst_types::uuid::Uuid;
-use rules::{ContentEncodingRule, ContentTypeRule, Rules};
+use rules::{
+    CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, Rules, SectionRule,
+    TemplateRule,
+};
 
 use crate::{
-    doc_types::{COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE},
+    doc_types::{
+        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
+        PROPOSAL_TEMPLATE_UUID_TYPE,
+    },
     providers::CatalystSignedDocumentProvider,
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
@@ -22,7 +26,7 @@ static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_r
 /// `DOCUMENT_RULES` initialization function
 fn document_rules_init() -> HashMap<Uuid, Rules> {
     let mut document_rules_map = HashMap::new();
-    
+
     let proposal_document_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
@@ -31,6 +35,13 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
+        template: TemplateRule::Specified {
+            exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE,
+        },
+        category: CategoryRule::Specified { optional: false },
+        doc_ref: RefRule::NotSpecified,
+        reply: ReplyRule::NotSpecified,
+        section: SectionRule::NotSpecified,
     };
     document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
 
@@ -42,6 +53,19 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
+        template: TemplateRule::Specified {
+            exp_template_type: COMMENT_TEMPLATE_UUID_TYPE,
+        },
+        doc_ref: RefRule::Specified {
+            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE,
+            optional: false,
+        },
+        reply: ReplyRule::Specified {
+            exp_reply_type: COMMENT_DOCUMENT_UUID_TYPE,
+            optional: true,
+        },
+        section: SectionRule::Specified { optional: true },
+        category: CategoryRule::NotSpecified,
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
 
