@@ -19,8 +19,8 @@ mithril-client = { version = "0.10.4", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
-cardano-blockchain-types = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "rename-transaction-hash-and-add-stake-address-type" }
-catalyst-types = { version = "0.0.2", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "rename-transaction-hash-and-add-stake-address-type" }
+cardano-blockchain-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "rename-transaction-hash-and-add-stake-address-type" }
+catalyst-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "rename-transaction-hash-and-add-stake-address-type" }
 
 thiserror = "1.0.69"
 tokio = { version = "1.42.0", features = [
@@ -63,7 +63,7 @@ test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "rename-transaction-hash-and-add-stake-address-type" }
+rbac-registration = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", branch = "rename-transaction-hash-and-add-stake-address-type" }
 
 # Note, these features are for support of features exposed by dependencies.
 [features]
