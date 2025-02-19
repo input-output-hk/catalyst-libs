@@ -6,6 +6,7 @@ mod content_encoding;
 mod content_type;
 mod document_ref;
 mod extra_fields;
+mod section;
 
 use algorithm::Algorithm;
 use catalyst_types::{
@@ -17,6 +18,7 @@ pub use content_type::ContentType;
 use coset::{iana::CoapContentFormat, CborSerializable};
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
+pub use section::Section;
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";

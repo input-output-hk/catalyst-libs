@@ -19,10 +19,11 @@ where Provider: 'static + CatalystSignedDocumentProvider
         &'a self, doc: &'a CatalystSignedDocument, _provider: &'a Provider,
     ) -> BoxFuture<'a, anyhow::Result<bool>> {
         async {
-            if doc.doc_content_type()? != self.exp {
+            let content_type = doc.doc_content_type()?;
+            if content_type != self.exp {
                 doc.report().invalid_value(
                     "content-type",
-                    doc.doc_content_type()?.to_string().as_str(),
+                    content_type.to_string().as_str(),
                     self.exp.to_string().as_str(),
                     "Invalid Document content-type value",
                 );
