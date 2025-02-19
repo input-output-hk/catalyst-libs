@@ -50,7 +50,6 @@ where Provider: 'static + CatalystSignedDocumentProvider
                             return Ok(false);
                         }
                     }
-        
                     Ok(true)
                 };
                 return validate_provided_doc(&reply, provider, doc.report(), reply_validator).await;
