@@ -2,7 +2,7 @@
 name = "rbac-registration"
 description = "Role Based Access Control Registration"
 keywords = ["cardano", "catalyst", "rbac registration"]
-version = "0.0.3"
+version = "0.0.4"
 authors = [
     "Arissara Chotivichit <arissara.chotivichit@iohk.io>"
 ]
