@@ -3,20 +3,6 @@
 
 use catalyst_types::uuid::Uuid;
 
-use crate::{
-    metadata::{ContentEncoding, ContentType},
-    providers::CatalystSignedDocumentProvider,
-    validator::{
-        rules::{
-            CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, SectionRule,
-            TemplateRule,
-        },
-        utils::boxed_rule,
-        ValidationRule,
-    },
-    CatalystSignedDocument,
-};
-
 /// Proposal document `UuidV4` type.
 pub const PROPOSAL_DOCUMENT_UUID_TYPE: Uuid =
     Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
@@ -65,60 +51,3 @@ pub const PRIVATE_VOTE_TX_V2_UUID_TYPE: Uuid =
 /// Immutable ledger block `UuidV4` type.
 pub const IMMUTABLE_LEDGER_BLOCK_UUID_TYPE: Uuid =
     Uuid::from_u128(0xD9E7_E6CE_2401_4D7D_9492_F4F7_C642_41C3);
-
-/// Return a list of validation rules for the document, based on the document type
-pub(crate) fn validation_rules<Provider>(
-    doc: &CatalystSignedDocument,
-) -> anyhow::Result<Vec<Box<dyn ValidationRule<Provider>>>>
-where Provider: 'static + CatalystSignedDocumentProvider {
-    let res = match doc.doc_type()?.uuid() {
-        PROPOSAL_DOCUMENT_UUID_TYPE => {
-            vec![
-                boxed_rule(ContentTypeRule {
-                    exp: ContentType::Json,
-                }),
-                boxed_rule(ContentEncodingRule {
-                    exp: ContentEncoding::Brotli,
-                    optional: false,
-                }),
-                boxed_rule(TemplateRule {
-                    template_type: PROPOSAL_TEMPLATE_UUID_TYPE,
-                }),
-                boxed_rule(CategoryRule { optional: true }),
-            ]
-        },
-        COMMENT_DOCUMENT_UUID_TYPE => {
-            vec![
-                boxed_rule(ContentTypeRule {
-                    exp: ContentType::Json,
-                }),
-                boxed_rule(ContentEncodingRule {
-                    exp: ContentEncoding::Brotli,
-                    optional: false,
-                }),
-                boxed_rule(TemplateRule {
-                    template_type: COMMENT_TEMPLATE_UUID_TYPE,
-                }),
-                boxed_rule(RefRule {
-                    ref_type: PROPOSAL_DOCUMENT_UUID_TYPE,
-                    optional: false,
-                }),
-                boxed_rule(ReplyRule {
-                    reply_type: COMMENT_DOCUMENT_UUID_TYPE,
-                    optional: true,
-                }),
-                boxed_rule(SectionRule { optional: true }),
-            ]
-        },
-        _ => {
-            doc.report().invalid_value(
-                "`type`",
-                &doc.doc_type()?.to_string(),
-                "Must be a known document type value",
-                "Unsupported document type",
-            );
-            vec![]
-        },
-    };
-    Ok(res)
-}

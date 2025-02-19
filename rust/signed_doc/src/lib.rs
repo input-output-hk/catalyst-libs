@@ -357,7 +357,9 @@ mod tests {
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
         }))
-        .map_err(|e| anyhow::anyhow!("Invalid example metadata. This should not happen. Err: {e}"))?;
+        .map_err(|e| {
+            anyhow::anyhow!("Invalid example metadata. This should not happen. Err: {e}")
+        })?;
         Ok((uuid_v7, uuid_v4, metadata))
     }
 

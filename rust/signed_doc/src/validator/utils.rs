@@ -2,17 +2,7 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-use super::ValidationRule;
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef};
-
-/// Wrap a provider `rule` into the `Box<dyn ValidationRule>`
-pub(crate) fn boxed_rule<T, Provider>(rule: T) -> Box<dyn ValidationRule<Provider>>
-where
-    Provider: 'static + CatalystSignedDocumentProvider,
-    T: 'static + ValidationRule<Provider>,
-{
-    Box::new(rule)
-}
 
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.

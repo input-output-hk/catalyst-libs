@@ -1,11 +1,6 @@
 //! `content-encoding` rule type impl.
 
-use futures::{future::BoxFuture, FutureExt};
-
-use crate::{
-    metadata::ContentEncoding, providers::CatalystSignedDocumentProvider,
-    validator::ValidationRule, CatalystSignedDocument,
-};
+use crate::{metadata::ContentEncoding, CatalystSignedDocument};
 
 /// `content-encoding` field validation rule
 pub(crate) struct ContentEncodingRule {
@@ -14,32 +9,27 @@ pub(crate) struct ContentEncodingRule {
     /// optional flag for the `content-encoding` field
     pub(crate) optional: bool,
 }
-impl<Provider> ValidationRule<Provider> for ContentEncodingRule
-where Provider: 'static + CatalystSignedDocumentProvider
-{
-    fn check<'a>(
-        &'a self, doc: &'a CatalystSignedDocument, _provider: &'a Provider,
-    ) -> BoxFuture<'a, anyhow::Result<bool>> {
-        async {
-            if let Some(content_encoding) = doc.doc_content_encoding() {
-                if content_encoding != self.exp {
-                    doc.report().invalid_value(
-                        "content-encoding",
-                        content_encoding.to_string().as_str(),
-                        self.exp.to_string().as_str(),
-                        "Invalid Document content-encoding value",
-                    );
-                    return Ok(false);
-                }
-            } else if !self.optional {
-                doc.report().missing_field(
+
+impl ContentEncodingRule {
+    /// Field validation rule
+    pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
+        if let Some(content_encoding) = doc.doc_content_encoding() {
+            if content_encoding != self.exp {
+                doc.report().invalid_value(
                     "content-encoding",
-                    "Document must have a content-encoding field",
+                    content_encoding.to_string().as_str(),
+                    self.exp.to_string().as_str(),
+                    "Invalid Document content-encoding value",
                 );
                 return Ok(false);
             }
-            Ok(true)
+        } else if !self.optional {
+            doc.report().missing_field(
+                "content-encoding",
+                "Document must have a content-encoding field",
+            );
+            return Ok(false);
         }
-        .boxed()
+        Ok(true)
     }
 }

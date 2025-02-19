@@ -1,25 +1,51 @@
 //! Catalyst Signed Documents validation
 
+#![allow(dead_code)]
+
 pub(crate) mod rules;
 pub(crate) mod utils;
 
-use futures::future::BoxFuture;
+use std::{collections::HashMap, sync::LazyLock};
+
+use catalyst_types::uuid::Uuid;
+use rules::{ContentEncodingRule, ContentTypeRule, Rules};
 
 use crate::{
-    doc_types::validation_rules, providers::CatalystSignedDocumentProvider, CatalystSignedDocument,
+    doc_types::{COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE},
+    providers::CatalystSignedDocumentProvider,
+    CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
-/// Trait for defining a single validation rule.
-pub(crate) trait ValidationRule<Provider>
-where Provider: 'static + CatalystSignedDocumentProvider
-{
-    /// Perform a  validation rule, collecting a problem report
-    ///
-    /// # Errors
-    /// Returns an error if `provider` return an error.
-    fn check<'a>(
-        &'a self, doc: &'a CatalystSignedDocument, provider: &'a Provider,
-    ) -> BoxFuture<'a, anyhow::Result<bool>>;
+/// A table representing a full set or validation rules per document id.
+static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
+
+/// `DOCUMENT_RULES` initialization function
+fn document_rules_init() -> HashMap<Uuid, Rules> {
+    let mut document_rules_map = HashMap::new();
+    
+    let proposal_document_rules = Rules {
+        content_type: ContentTypeRule {
+            exp: ContentType::Json,
+        },
+        content_encoding: ContentEncodingRule {
+            exp: ContentEncoding::Brotli,
+            optional: false,
+        },
+    };
+    document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
+
+    let comment_document_rules = Rules {
+        content_type: ContentTypeRule {
+            exp: ContentType::Json,
+        },
+        content_encoding: ContentEncodingRule {
+            exp: ContentEncoding::Brotli,
+            optional: false,
+        },
+    };
+    document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
+
+    document_rules_map
 }
 
 /// A comprehensive validation of the `CatalystSignedDocument`,
@@ -33,32 +59,22 @@ pub async fn validate<Provider>(
     doc: &CatalystSignedDocument, provider: &Provider,
 ) -> anyhow::Result<bool>
 where Provider: 'static + CatalystSignedDocumentProvider {
-    if doc.report().is_problematic() {
+    let Ok(doc_type) = doc.doc_type() else {
+        doc.report().missing_field(
+            "type",
+            "Can't get a document type during the validation process",
+        );
         return Ok(false);
-    }
+    };
 
-    let rules = validation_rules(doc)?;
-
-    validate_rules(rules, doc, provider).await
-}
-
-/// Running a validation by the provided list of rules.
-///
-/// # Errors
-///
-/// If `provider` returns error, fails fast throwing that error.
-async fn validate_rules<Provider>(
-    rules: Vec<Box<dyn ValidationRule<Provider>>>, doc: &CatalystSignedDocument,
-    provider: &Provider,
-) -> anyhow::Result<bool>
-where
-    Provider: 'static + CatalystSignedDocumentProvider,
-{
-    let checks = rules.iter().map(|rule| rule.check(doc, provider));
-    for res in futures::future::join_all(checks).await {
-        if !(res?) {
-            return Ok(false);
-        }
-    }
-    Ok(true)
+    let Some(rules) = DOCUMENT_RULES.get(&doc_type.uuid()) else {
+        doc.report().invalid_value(
+            "`type`",
+            &doc.doc_type()?.to_string(),
+            "Must be a known document type value",
+            "Unsupported document type",
+        );
+        return Ok(false);
+    };
+    rules.check(doc, provider).await
 }

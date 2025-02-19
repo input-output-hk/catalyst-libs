@@ -1,36 +1,31 @@
 //! `content-type` rule type impl.
 
-use futures::{future::BoxFuture, FutureExt};
-
-use crate::{
-    metadata::ContentType, providers::CatalystSignedDocumentProvider, validator::ValidationRule,
-    CatalystSignedDocument,
-};
+use crate::{metadata::ContentType, CatalystSignedDocument};
 
 /// `content-type` field validation rule
 pub(crate) struct ContentTypeRule {
     /// expected `content-type` field
     pub(crate) exp: ContentType,
 }
-impl<Provider> ValidationRule<Provider> for ContentTypeRule
-where Provider: 'static + CatalystSignedDocumentProvider
-{
-    fn check<'a>(
-        &'a self, doc: &'a CatalystSignedDocument, _provider: &'a Provider,
-    ) -> BoxFuture<'a, anyhow::Result<bool>> {
-        async {
-            let content_type = doc.doc_content_type()?;
-            if content_type != self.exp {
-                doc.report().invalid_value(
-                    "content-type",
-                    content_type.to_string().as_str(),
-                    self.exp.to_string().as_str(),
-                    "Invalid Document content-type value",
-                );
-                return Ok(false);
-            }
-            Ok(true)
+
+impl ContentTypeRule {
+    /// Field validation rule
+    pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
+        let content_type = doc.doc_content_type()?;
+        if content_type != self.exp {
+            doc.report().invalid_value(
+                "content-type",
+                content_type.to_string().as_str(),
+                self.exp.to_string().as_str(),
+                "Invalid Document content-type value",
+            );
+            return Ok(false);
         }
-        .boxed()
+        Ok(true)
     }
+}
+
+#[cfg(test)]
+mod tests {
+
 }
