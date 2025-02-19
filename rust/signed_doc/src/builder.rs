@@ -26,10 +26,23 @@ impl Builder {
     }
 
     /// Set document metadata
+    ///
+    /// # Errors
+    /// - Fails if it is invalid metadata JSON object.
     #[must_use]
     pub fn with_metadata(mut self, metadata: Metadata) -> Self {
         self.metadata = Some(metadata);
         self
+    }
+
+    /// Set document metadata in JSON format
+    ///
+    /// # Errors
+    /// - Fails if it is invalid metadata JSON object.
+    #[must_use]
+    pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+        self.metadata = Some(serde_json::from_value(json)?);
+        Ok(self)
     }
 
     /// Set decoded (original) document content bytes

@@ -19,7 +19,9 @@ use catalyst_types::problem_report::ProblemReport;
 pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
 pub use content::Content;
 use coset::{CborSerializable, Header};
-pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
+pub use metadata::{
+    Algorithm, ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section,
+};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 use providers::VerifyingKeyProvider;
 pub use signature::{IdUri, Signatures};
@@ -226,9 +228,12 @@ impl CatalystSignedDocument {
     /// data.
     ///
     /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
+    /// Fails if the `CatalystSignedDocument` object is not valid.
     #[must_use]
     pub fn into_builder(self) -> anyhow::Result<Builder> {
+        if self.report().is_problematic() {
+            anyhow::bail!("Invalid Document");
+        }
         Ok(Builder::new()
             .with_metadata(self.inner.metadata.clone())
             .with_decoded_content(self.doc_content().decoded_bytes()?.to_vec())
@@ -327,14 +332,16 @@ mod tests {
     use super::*;
 
     fn test_metadata() -> anyhow::Result<(UuidV7, UuidV4, Metadata)> {
+        let alg = Algorithm::EdDSA;
         let uuid_v7 = UuidV7::new();
         let uuid_v4 = UuidV4::new();
-        let section = "some section".to_string();
+        let section = "$".to_string();
         let collabs = vec!["Alex1".to_string(), "Alex2".to_string()];
         let content_type = ContentType::Json;
         let content_encoding = ContentEncoding::Brotli;
 
         let metadata: Metadata = serde_json::from_value(serde_json::json!({
+            "alg": alg.to_string(),
             "content-type": content_type.to_string(),
             "content-encoding": content_encoding.to_string(),
             "type": uuid_v4.to_string(),
@@ -350,7 +357,7 @@ mod tests {
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
         }))
-        .map_err(|_| anyhow::anyhow!("Invalid example metadata. This should not happen."))?;
+        .map_err(|e| anyhow::anyhow!("Invalid example metadata. This should not happen. Err: {e}"))?;
         Ok((uuid_v7, uuid_v4, metadata))
     }
 

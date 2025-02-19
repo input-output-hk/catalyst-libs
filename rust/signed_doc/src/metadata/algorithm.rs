@@ -1,5 +1,7 @@
 //! Cryptographic Algorithm in COSE SIGN protected header.
 
+use std::fmt::{Display, Formatter};
+
 use strum::VariantArray;
 
 /// Cryptography Algorithm.
@@ -7,6 +9,20 @@ use strum::VariantArray;
 pub enum Algorithm {
     /// `EdDSA`
     EdDSA,
+}
+
+impl Default for Algorithm {
+    fn default() -> Self {
+        Self::EdDSA
+    }
+}
+
+impl Display for Algorithm {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+        match self {
+            Self::EdDSA => write!(f, "EdDSA"),
+        }
+    }
 }
 
 impl From<Algorithm> for coset::iana::Algorithm {

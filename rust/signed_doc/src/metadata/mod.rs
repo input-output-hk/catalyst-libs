@@ -9,7 +9,7 @@ mod extra_fields;
 mod section;
 pub(crate) mod utils;
 
-use algorithm::Algorithm;
+pub use algorithm::Algorithm;
 use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{UuidV4, UuidV7},
@@ -20,7 +20,7 @@ use coset::iana::CoapContentFormat;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
 pub use section::Section;
-use utils::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid};
+use utils::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, validate_option};
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -37,22 +37,22 @@ const VER_KEY: &str = "ver";
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, Default)]
 pub struct Metadata {
     /// Cryptographic Algorithm
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(deserialize_with = "validate_option")]
     alg: Option<Algorithm>,
     /// Document Type `UUIDv4`.
-    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "type", deserialize_with = "validate_option")]
     doc_type: Option<UuidV4>,
     /// Document ID `UUIDv7`.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(deserialize_with = "validate_option")]
     id: Option<UuidV7>,
     /// Document Version `UUIDv7`.
-    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(deserialize_with = "validate_option")]
     ver: Option<UuidV7>,
     /// Document Payload Content Type.
-    #[serde(rename = "content-type")]
+    #[serde(rename = "content-type", deserialize_with = "validate_option")]
     content_type: Option<ContentType>,
     /// Document Payload Content Encoding.
-    #[serde(rename = "content-encoding", skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "content-encoding")]
     content_encoding: Option<ContentEncoding>,
     /// Additional Metadata Fields.
     #[serde(flatten)]
@@ -298,5 +298,71 @@ impl TryFrom<&Metadata> for coset::Header {
         builder = meta.extra.fill_cose_header_fields(builder)?;
 
         Ok(builder.build())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn metadata_serde_test() {
+        let alg = Algorithm::EdDSA;
+        let uuid_v7 = UuidV7::new();
+        let uuid_v4 = UuidV4::new();
+        let content_type = ContentType::Json;
+
+        let valid = serde_json::json!({
+            "alg": alg.to_string(),
+            "content-type": content_type.to_string(),
+            "type": uuid_v4.to_string(),
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+
+        });
+        assert!(serde_json::from_value::<Metadata>(valid).is_ok());
+
+        let missing_alg = serde_json::json!({
+            "content-type": content_type.to_string(),
+            "type": uuid_v4.to_string(),
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+
+        });
+        assert!(serde_json::from_value::<Metadata>(missing_alg).is_err());
+
+        let missing_content_type = serde_json::json!({
+            "alg": alg.to_string(),
+            "type": uuid_v4.to_string(),
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+        });
+        assert!(serde_json::from_value::<Metadata>(missing_content_type).is_err());
+
+        let missing_type = serde_json::json!({
+            "alg": alg.to_string(),
+            "content-type": content_type.to_string(),
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+
+        });
+        assert!(serde_json::from_value::<Metadata>(missing_type).is_err());
+
+        let missing_id = serde_json::json!({
+            "alg": alg.to_string(),
+            "content-type": content_type.to_string(),
+            "type": uuid_v4.to_string(),
+            "ver": uuid_v7.to_string(),
+
+        });
+        assert!(serde_json::from_value::<Metadata>(missing_id).is_err());
+
+        let missing_ver = serde_json::json!({
+            "alg": alg.to_string(),
+            "content-type": content_type.to_string(),
+            "type": uuid_v4.to_string(),
+            "id": uuid_v7.to_string(),
+        });
+        assert!(serde_json::from_value::<Metadata>(missing_ver).is_err());
     }
 }

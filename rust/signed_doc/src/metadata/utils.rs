@@ -2,6 +2,22 @@
 
 use catalyst_types::uuid::CborContext;
 use coset::CborSerializable;
+use serde::{Deserialize, Deserializer};
+
+/// Custom serde deserialization function that fails if the field is `None`
+pub(crate) fn validate_option<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
+where
+    T: Deserialize<'de>,
+    D: Deserializer<'de>,
+{
+    let value = Option::deserialize(deserializer)?;
+    if value.is_none() {
+        return Err(serde::de::Error::custom(
+            "Field is required but was missing or null",
+        ));
+    }
+    Ok(value)
+}
 
 /// Find a value for a predicate in the protected header.
 pub(crate) fn cose_protected_header_find(
