@@ -6,11 +6,12 @@ use pallas::ledger::addresses::StakeAddress as PallasStakeAddress;
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Hash)]
 pub struct StakeAddress(PallasStakeAddress);
 
-impl StakeAddress {
-    pub fn new() -> Self {
-        todo!()
-    }
-}
+// TODO: FIXME
+// impl StakeAddress {
+//     pub fn new() -> Self {
+//         todo!()
+//     }
+// }
 
 impl From<PallasStakeAddress> for StakeAddress {
     fn from(value: PallasStakeAddress) -> Self {
