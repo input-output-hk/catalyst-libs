@@ -1,7 +1,5 @@
 //! `section` rule type impl.
 
-use std::str::FromStr;
-
 use futures::{future::BoxFuture, FutureExt};
 
 use crate::{
@@ -20,17 +18,7 @@ where Provider: 'static + CatalystSignedDocumentProvider
         &'a self, doc: &'a CatalystSignedDocument, _provider: &'a Provider,
     ) -> BoxFuture<'a, anyhow::Result<bool>> {
         async {
-            if let Some(section) = doc.doc_meta().section() {
-                if jsonpath_rust::JsonPath::<serde_json::Value>::from_str(section).is_err() {
-                    doc.report().invalid_value(
-                        "template",
-                        section,
-                        "Must be a valid JSON Path",
-                        "Invalid referenced template document type",
-                    );
-                    return Ok(false);
-                }
-            } else if !self.optional {
+            if doc.doc_meta().section().is_none() && !self.optional {
                 doc.report()
                     .missing_field("section", "Document must have a section field");
                 return Ok(false);
