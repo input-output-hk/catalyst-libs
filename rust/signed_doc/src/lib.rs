@@ -413,12 +413,13 @@ mod tests {
             .unwrap()
             .build()
             .unwrap();
+        assert!(!signed_doc.problem_report().is_problematic());
 
-        assert!(signed_doc.verify(&Provider(Ok(Some(pk)))).await.is_ok());
-        assert!(signed_doc.verify(&Provider(Ok(None))).await.is_err());
         assert!(signed_doc
             .verify(&Provider(Err(anyhow::anyhow!("some error"))))
             .await
             .is_err());
+        assert!(signed_doc.verify(&Provider(Ok(Some(pk)))).await.unwrap());
+        assert!(!signed_doc.verify(&Provider(Ok(None))).await.unwrap());
     }
 }
