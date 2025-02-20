@@ -171,32 +171,68 @@ impl ExtraFields {
         /// Context for problem report messages during decoding from COSE protected
         /// header.
         const COSE_DECODING_CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
-        let mut extra = ExtraFields::default();
 
-        extra.doc_ref = decode_document_field_from_protected_header(
+        let doc_ref = decode_document_field_from_protected_header(
             protected,
             REF_KEY,
             COSE_DECODING_CONTEXT,
             error_report,
         );
-        extra.template = decode_document_field_from_protected_header(
+        let template = decode_document_field_from_protected_header(
             protected,
             TEMPLATE_KEY,
             COSE_DECODING_CONTEXT,
             error_report,
         );
-        extra.reply = decode_document_field_from_protected_header(
+        let reply = decode_document_field_from_protected_header(
             protected,
             REPLY_KEY,
             COSE_DECODING_CONTEXT,
             error_report,
         );
-        extra.section = decode_document_field_from_protected_header(
+        let section = decode_document_field_from_protected_header(
             protected,
             SECTION_KEY,
             COSE_DECODING_CONTEXT,
             error_report,
         );
+        let brand_id = decode_document_field_from_protected_header(
+            protected,
+            BRAND_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let campaign_id = decode_document_field_from_protected_header(
+            protected,
+            CAMPAIGN_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let election_id = decode_document_field_from_protected_header::<CborUuidV4>(
+            protected,
+            ELECTION_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        )
+        .map(|v| v.0);
+        let category_id = decode_document_field_from_protected_header(
+            protected,
+            CATEGORY_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+
+        let mut extra = ExtraFields {
+            doc_ref,
+            template,
+            reply,
+            section,
+            brand_id,
+            campaign_id,
+            election_id,
+            category_id,
+            ..Default::default()
+        };
 
         if let Some(cbor_doc_collabs) = cose_protected_header_find(protected, |key| {
             key == &Label::Text(COLLABS_KEY.to_string())
@@ -230,32 +266,6 @@ impl ExtraFields {
                 );
             };
         }
-
-        extra.brand_id = decode_document_field_from_protected_header(
-            protected,
-            BRAND_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        );
-        extra.campaign_id = decode_document_field_from_protected_header(
-            protected,
-            CAMPAIGN_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        );
-        extra.election_id = decode_document_field_from_protected_header::<CborUuidV4>(
-            protected,
-            ELECTION_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        )
-        .map(|v| v.0);
-        extra.category_id = decode_document_field_from_protected_header(
-            protected,
-            CATEGORY_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        );
 
         extra
     }

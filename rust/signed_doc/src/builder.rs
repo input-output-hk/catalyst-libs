@@ -3,12 +3,19 @@ use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
 use ed25519_dalek::{ed25519::signature::Signer, SecretKey};
 
 use crate::{
-    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, PROBLEM_REPORT_CTX,
+    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
+    PROBLEM_REPORT_CTX,
 };
 
 /// Catalyst Signed Document Builder.
 #[derive(Debug)]
 pub struct Builder(InnerCatalystSignedDocument);
+
+impl Default for Builder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 impl Builder {
     /// Start building a signed document
@@ -17,9 +24,9 @@ impl Builder {
         let report = ProblemReport::new(PROBLEM_REPORT_CTX);
         Self(InnerCatalystSignedDocument {
             report,
-            metadata: Default::default(),
-            content: Default::default(),
-            signatures: Default::default(),
+            metadata: Metadata::default(),
+            content: Content::default(),
+            signatures: Signatures::default(),
         })
     }
 
@@ -70,6 +77,7 @@ impl Builder {
 
     /// Build a signed document with the collected error report.
     /// Could provide an invalid document.
+    #[must_use]
     pub fn build(self) -> CatalystSignedDocument {
         self.0.into()
     }

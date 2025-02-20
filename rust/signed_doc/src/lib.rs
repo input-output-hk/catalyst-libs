@@ -168,13 +168,13 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// Could fails if the `CatalystSignedDocument` object is not valid.
-    #[must_use]
     pub(crate) fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
         self.inner.as_cose_sign()
     }
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
+    #[must_use]
     pub fn into_builder(&self) -> Builder {
         self.into()
     }
@@ -266,7 +266,7 @@ mod tests {
     use super::*;
     use crate::{providers::VerifyingKeyProvider, validator::validate_signatures};
 
-    fn test_metadata() -> anyhow::Result<(UuidV7, UuidV4, serde_json::Value)> {
+    fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
         let alg = Algorithm::EdDSA;
         let uuid_v7 = UuidV7::new();
         let uuid_v4 = UuidV4::new();
@@ -292,12 +292,12 @@ mod tests {
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
         });
-        Ok((uuid_v7, uuid_v4, metadata_fields))
+        (uuid_v7, uuid_v4, metadata_fields)
     }
 
     #[test]
     fn catalyst_signed_doc_cbor_roundtrip_test() {
-        let (uuid_v7, uuid_v4, metadata_fields) = test_metadata().unwrap();
+        let (uuid_v7, uuid_v4, metadata_fields) = test_metadata();
         let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
         let doc = Builder::new()
@@ -315,7 +315,8 @@ mod tests {
         assert_eq!(decoded.doc_id().unwrap(), uuid_v7);
         assert_eq!(decoded.doc_ver().unwrap(), uuid_v7);
         assert_eq!(decoded.doc_content().decoded_bytes().unwrap(), &content);
-        // assert_eq!(decoded.doc_meta(), metadata_fields.extra());
+        // TODO: after this test will be moved as a crate integration test, enable this
+        // assertion assert_eq!(decoded.doc_meta(), metadata_fields.extra());
     }
 
     struct Provider(anyhow::Result<Option<VerifyingKey>>);
@@ -341,7 +342,7 @@ mod tests {
         );
 
         let kid = IdUri::from_str(&kid_str).unwrap();
-        let (_, _, metadata) = test_metadata().unwrap();
+        let (_, _, metadata) = test_metadata();
         let signed_doc = Builder::new()
             .with_decoded_content(content)
             .with_json_metadata(metadata)

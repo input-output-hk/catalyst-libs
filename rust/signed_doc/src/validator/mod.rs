@@ -135,6 +135,7 @@ pub async fn validate_signatures(
     Ok(res)
 }
 
+/// A signle signature validation function
 async fn validate_singature<Provider>(
     cose_sign: &CoseSign, signature: &CoseSignature, kid: &IdUri, provider: &Provider,
     report: &ProblemReport,
