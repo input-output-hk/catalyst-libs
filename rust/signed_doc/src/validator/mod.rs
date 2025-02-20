@@ -1,11 +1,12 @@
-//! Catalyst Signed Documents validation
+//! Catalyst Signed Documents validation logic
 
 pub(crate) mod rules;
 pub(crate) mod utils;
 
 use std::{collections::HashMap, sync::LazyLock};
 
-use catalyst_types::uuid::Uuid;
+use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport, uuid::Uuid};
+use coset::{CoseSign, CoseSignature};
 use rules::{
     CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, Rules, SectionRule,
     TemplateRule,
@@ -16,7 +17,7 @@ use crate::{
         COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
         PROPOSAL_TEMPLATE_UUID_TYPE,
     },
-    providers::CatalystSignedDocumentProvider,
+    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -99,4 +100,75 @@ where Provider: 'static + CatalystSignedDocumentProvider {
         return Ok(false);
     };
     rules.check(doc, provider).await
+}
+
+/// Verify document signatures.
+/// Return true if all signatures are valid, otherwise return false.
+///
+/// # Errors
+/// If `provider` returns error, fails fast throwing that error.
+pub async fn validate_signatures(
+    doc: &CatalystSignedDocument, provider: &impl VerifyingKeyProvider,
+) -> anyhow::Result<bool> {
+    let Ok(cose_sign) = doc.as_cose_sign() else {
+        doc.report().other(
+            "Cannot build a COSE sign object",
+            "During encoding signed document as COSE SIGN",
+        );
+        return Ok(false);
+    };
+
+    let sign_rules = doc
+        .signatures()
+        .cose_signatures_with_kids()
+        .map(|(signature, kid)| {
+            validate_singature(&cose_sign, signature, kid, provider, doc.report())
+        });
+
+    let res = futures::future::join_all(sign_rules)
+        .await
+        .into_iter()
+        .collect::<anyhow::Result<Vec<_>>>()?
+        .iter()
+        .all(|res| *res);
+
+    Ok(res)
+}
+
+async fn validate_singature<Provider>(
+    cose_sign: &CoseSign, signature: &CoseSignature, kid: &IdUri, provider: &Provider,
+    report: &ProblemReport,
+) -> anyhow::Result<bool>
+where
+    Provider: VerifyingKeyProvider,
+{
+    let Some(pk) = provider.try_get_key(kid).await? else {
+        report.other(
+            &format!("Missing public key for {kid}."),
+            "During public key extraction",
+        );
+        return Ok(false);
+    };
+
+    let tbs_data = cose_sign.tbs_data(&[], signature);
+    let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
+        report.invalid_value(
+            "cose signature",
+            &format!("{}", signature.signature.len()),
+            &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+            "During encoding cose signature to bytes",
+        );
+        return Ok(false);
+    };
+
+    let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+    if pk.verify_strict(&tbs_data, &signature).is_err() {
+        report.functional_validation(
+            &format!("Verification failed for signature with Key ID {kid}"),
+            "During signature validation with verifying key",
+        );
+        return Ok(false);
+    }
+
+    Ok(true)
 }

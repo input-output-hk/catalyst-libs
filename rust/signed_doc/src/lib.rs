@@ -165,53 +165,13 @@ impl CatalystSignedDocument {
         &self.inner.report
     }
 
-    /// Verify document signatures.
-    /// Return true if all signatures are valid, otherwise return false.
+    /// Convert Catalyst Signed Document into `coset::CoseSign`
     ///
     /// # Errors
-    /// If `provider` returns error, fails fast throwing that error.
-    pub async fn verify(&self, provider: &impl VerifyingKeyProvider) -> anyhow::Result<bool> {
-        let Ok(cose_sign) = self.inner.as_cose_sign() else {
-            self.report().other(
-                "Cannot build a COSE sign object",
-                "During encoding signed document as COSE SIGN",
-            );
-            return Ok(false);
-        };
-
-        for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            if let Some(pk) = provider.try_get_key(kid).await? {
-                let tbs_data = cose_sign.tbs_data(&[], signature);
-                match signature.signature.as_slice().try_into() {
-                    Ok(signature_bytes) => {
-                        let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
-                        if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
-                            self.report().functional_validation(
-                                &format!(
-                                    "Verification failed for signature with Key ID {kid}: {e}"
-                                ),
-                                "During signature validation with verifying key",
-                            );
-                        }
-                    },
-                    Err(_) => {
-                        self.report().invalid_value(
-                            "cose signature",
-                            &format!("{}", signature.signature.len()),
-                            &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
-                            "During encoding cose signature to bytes",
-                        );
-                    },
-                }
-            } else {
-                self.report().other(
-                    &format!("Missing public key for {kid}."),
-                    "During public key extraction",
-                );
-            }
-        }
-
-        Ok(!self.report().is_problematic())
+    /// Could fails if the `CatalystSignedDocument` object is not valid.
+    #[must_use]
+    pub(crate) fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
+        self.inner.as_cose_sign()
     }
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
