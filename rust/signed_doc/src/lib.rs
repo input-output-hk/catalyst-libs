@@ -23,7 +23,6 @@ pub use metadata::{
     Algorithm, ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section,
 };
 use minicbor::{decode, encode, Decode, Decoder, Encode};
-use providers::VerifyingKeyProvider;
 pub use signature::{IdUri, Signatures};
 
 /// A problem report content string
@@ -265,6 +264,7 @@ mod tests {
     use rand::rngs::OsRng;
 
     use super::*;
+    use crate::{providers::VerifyingKeyProvider, validator::validate_signatures};
 
     fn test_metadata() -> anyhow::Result<(UuidV7, UuidV4, serde_json::Value)> {
         let alg = Algorithm::EdDSA;
@@ -351,11 +351,16 @@ mod tests {
             .build();
         assert!(!signed_doc.problem_report().is_problematic());
 
-        assert!(signed_doc
-            .verify(&Provider(Err(anyhow::anyhow!("some error"))))
+        assert!(
+            validate_signatures(&signed_doc, &Provider(Err(anyhow::anyhow!("some error"))))
+                .await
+                .is_err()
+        );
+        assert!(validate_signatures(&signed_doc, &Provider(Ok(Some(pk))))
             .await
-            .is_err());
-        assert!(signed_doc.verify(&Provider(Ok(Some(pk)))).await.unwrap());
-        assert!(!signed_doc.verify(&Provider(Ok(None))).await.unwrap());
+            .unwrap());
+        assert!(!validate_signatures(&signed_doc, &Provider(Ok(None)))
+            .await
+            .unwrap());
     }
 }
