@@ -5,22 +5,6 @@ use catalyst_types::{
     uuid::{CborContext, UuidV4, UuidV7},
 };
 use coset::{CborSerializable, Label, ProtectedHeader};
-use serde::{Deserialize, Deserializer};
-
-/// Custom serde deserialization function that fails if the field is `None`
-pub(crate) fn validate_option<'de, T, D>(deserializer: D) -> Result<Option<T>, D::Error>
-where
-    T: Deserialize<'de>,
-    D: Deserializer<'de>,
-{
-    let value = Option::deserialize(deserializer)?;
-    if value.is_none() {
-        return Err(serde::de::Error::custom(
-            "Field is required but was missing or null",
-        ));
-    }
-    Ok(value)
-}
 
 /// Find a value for a predicate in the protected header.
 pub(crate) fn cose_protected_header_find(
@@ -44,14 +28,13 @@ where T: for<'a> TryFrom<&'a coset::cbor::Value> {
     {
         if let Ok(field) = T::try_from(cbor_doc_field) {
             return Some(field);
-        } else {
-            report.conversion_error(
-                &format!("CBOR COSE protected header {field_name}"),
-                &format!("{cbor_doc_field:?}"),
-                "Expected a CBOR UUID",
-                &format!("{report_content}, decoding CBOR UUID for {field_name}",),
-            );
         }
+        report.conversion_error(
+            &format!("CBOR COSE protected header {field_name}"),
+            &format!("{cbor_doc_field:?}"),
+            "Expected a CBOR UUID",
+            &format!("{report_content}, decoding CBOR UUID for {field_name}",),
+        );
     }
     None
 }

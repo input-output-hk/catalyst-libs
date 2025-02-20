@@ -30,7 +30,7 @@ futures = "0.3.31"
 base64-url = "3.0.0"
 rand = "0.8.5"
 tokio = { version = "1.42.0", features = [ "macros" ] }
-ed25519-dalek = { version = "2.1.1", features = ["rand_core"] }
+ed25519-dalek = { version = "2.1.1", features = ["rand_core", "pem"] }
 
 [[bin]]
 name = "signed-docs"

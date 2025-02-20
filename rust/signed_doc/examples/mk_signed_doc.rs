@@ -8,7 +8,7 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri};
 use clap::Parser;
 use ed25519_dalek::pkcs8::DecodePrivateKey;
 
@@ -58,7 +58,7 @@ impl Cli {
         match self {
             Self::Build { doc, output, meta } => {
                 // Load Metadata from JSON file
-                let metadata: Metadata = load_json_from_file(&meta)
+                let metadata: serde_json::Value = load_json_from_file(&meta)
                     .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
                 println!("{metadata}");
                 // Load Document from JSON file
@@ -68,8 +68,8 @@ impl Cli {
                 // Start with no signatures.
                 let signed_doc = Builder::new()
                     .with_decoded_content(payload)
-                    .with_metadata(metadata)
-                    .build()?;
+                    .with_json_metadata(metadata)?
+                    .build();
                 save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
@@ -77,8 +77,10 @@ impl Cli {
                     .map_err(|e| anyhow::anyhow!("Failed to load SK FILE: {e}"))?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
-                let builder = signed_doc.into_builder()?;
-                let new_signed_doc = builder.add_signature(sk.to_bytes(), kid)?.build()?;
+                let new_signed_doc = signed_doc
+                    .into_builder()
+                    .add_signature(sk.to_bytes(), kid)?
+                    .build();
                 save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {

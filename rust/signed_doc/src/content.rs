@@ -32,6 +32,14 @@ impl Content {
                 return Self::default();
             }
         }
+        Self::from_decoded(data, content_type, report)
+    }
+
+    /// Creates a new `Content` value, from the decoded (original) data.
+    /// verifies that it corresponds and parsed to the specified type.
+    pub(crate) fn from_decoded(
+        data: Vec<u8>, content_type: Option<ContentType>, report: &ProblemReport,
+    ) -> Self {
         if let Some(content_type) = content_type {
             if content_type.validate(&data).is_err() {
                 report.invalid_value(
@@ -45,16 +53,6 @@ impl Content {
         }
 
         Self { data: Some(data) }
-    }
-
-    /// Creates a new `Content` value, from the decoded (original) data.
-    /// verifies that it corresponds and parsed to the specified type.
-    ///
-    /// # Errors
-    /// Returns an error if content is not correctly encoded
-    pub(crate) fn from_decoded(data: Vec<u8>, content_type: ContentType) -> anyhow::Result<Self> {
-        content_type.validate(&data)?;
-        Ok(Self { data: Some(data) })
     }
 
     /// Return an decoded (original) content bytes.
@@ -74,13 +72,16 @@ impl Content {
     ///  - Missing Document content
     ///  - Failed to encode content.
     pub(crate) fn encoded_bytes(
-        &self, content_encoding: ContentEncoding,
+        &self, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Vec<u8>> {
         let content = self.decoded_bytes()?;
-        let data = content_encoding
-            .encode(content)
-            .map_err(|e| anyhow::anyhow!("Failed to encode {content_encoding} content: {e}"))?;
-        Ok(data)
+        if let Some(content_encoding) = content_encoding {
+            content_encoding
+                .encode(content)
+                .map_err(|e| anyhow::anyhow!("Failed to encode {content_encoding} content: {e}"))
+        } else {
+            Ok(content.to_vec())
+        }
     }
 
     /// Return content byte size.
