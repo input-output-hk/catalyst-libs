@@ -82,7 +82,7 @@ impl CatalystSignedDocument {
 
     /// Return Document Type `UUIDv4`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'type' field.
     #[must_use]
     pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
@@ -91,7 +91,7 @@ impl CatalystSignedDocument {
 
     /// Return Document ID `UUIDv7`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'id' field.
     #[must_use]
     pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
@@ -100,7 +100,7 @@ impl CatalystSignedDocument {
 
     /// Return Document Version `UUIDv7`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'ver' field.
     #[must_use]
     pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
@@ -115,7 +115,7 @@ impl CatalystSignedDocument {
 
     /// Return document `ContentType`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'content-type' field.
     #[must_use]
     pub fn doc_content_type(&self) -> anyhow::Result<ContentType> {
@@ -171,7 +171,6 @@ impl CatalystSignedDocument {
 
     /// Verify document signatures.
     /// Return true if all signatures are valid, otherwise return false.
-    /// Also it imediatly return false, if document is already invalid.
     ///
     ///
     /// # Errors

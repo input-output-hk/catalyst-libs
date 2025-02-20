@@ -1,4 +1,4 @@
-//! Utitlity functions for metadata decoding fields
+//! Utility functions for metadata decoding fields
 
 use catalyst_types::uuid::CborContext;
 use coset::CborSerializable;

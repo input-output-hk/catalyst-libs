@@ -62,7 +62,7 @@ pub struct Metadata {
 impl Metadata {
     /// Return Document Cryptographic Algorithm
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'alg' field.
     #[must_use]
     pub fn algorithm(&self) -> anyhow::Result<Algorithm> {
@@ -71,7 +71,7 @@ impl Metadata {
 
     /// Return Document Type `UUIDv4`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'type' field.
     #[must_use]
     pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
@@ -80,7 +80,7 @@ impl Metadata {
 
     /// Return Document ID `UUIDv7`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'id' field.
     #[must_use]
     pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
@@ -89,7 +89,7 @@ impl Metadata {
 
     /// Return Document Version `UUIDv7`.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'ver' field.
     #[must_use]
     pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
@@ -98,7 +98,7 @@ impl Metadata {
 
     /// Returns the Document Content Type, if any.
     ///
-    /// # Errros
+    /// # Errors
     /// - Missing 'content-type' field.
     #[must_use]
     pub fn content_type(&self) -> anyhow::Result<ContentType> {

@@ -27,7 +27,7 @@ pub(crate) struct Rules {
     pub(crate) content_type: ContentTypeRule,
     /// 'content-encoding' field validation rule
     pub(crate) content_encoding: ContentEncodingRule,
-    /// 'ref' field validation tule
+    /// 'ref' field validation rule
     pub(crate) doc_ref: RefRule,
     /// 'template' field validation rule
     pub(crate) template: TemplateRule,

@@ -1,11 +1,11 @@
-//! Catalyst Signed Document `section` field type defition.
+//! Catalyst Signed Document `section` field type definition.
 
 use std::{fmt::Display, str::FromStr};
 
 use coset::cbor::Value;
 use serde::{Deserialize, Serialize};
 
-/// 'section' field type defition, which is a JSON path string
+/// 'section' field type definition, which is a JSON path string
 #[derive(Clone, Debug, PartialEq)]
 pub struct Section(jsonpath_rust::JsonPath<serde_json::Value>);
 

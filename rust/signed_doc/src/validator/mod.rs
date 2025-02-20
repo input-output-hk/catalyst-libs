@@ -72,10 +72,8 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
     document_rules_map
 }
 
-/// A comprehensive validation of the `CatalystSignedDocument`,
-/// including a signature verification and document type based validation.
+/// A comprehensive document type based validation of the `CatalystSignedDocument`.
 /// Return true if all signatures are valid, otherwise return false.
-/// Also it imediatly return false, if document is already invalid.
 ///
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
