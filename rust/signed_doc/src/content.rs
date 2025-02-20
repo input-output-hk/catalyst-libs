@@ -2,7 +2,7 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-use crate::metadata::{ContentEncoding, ContentType};
+use crate::metadata::ContentEncoding;
 
 /// Decompressed Document Content type bytes.
 #[derive(Debug, Clone, PartialEq, Default)]
@@ -16,8 +16,7 @@ impl Content {
     /// verifies a Document's content, that it is correctly encoded and it corresponds and
     /// parsed to the specified type
     pub(crate) fn from_encoded(
-        mut data: Vec<u8>, content_type: Option<ContentType>,
-        content_encoding: Option<ContentEncoding>, report: &ProblemReport,
+        mut data: Vec<u8>, content_encoding: Option<ContentEncoding>, report: &ProblemReport,
     ) -> Self {
         if let Some(content_encoding) = content_encoding {
             if let Ok(decoded_data) = content_encoding.decode(&data) {
@@ -32,26 +31,11 @@ impl Content {
                 return Self::default();
             }
         }
-        Self::from_decoded(data, content_type, report)
+        Self::from_decoded(data)
     }
 
     /// Creates a new `Content` value, from the decoded (original) data.
-    /// verifies that it corresponds and parsed to the specified type.
-    pub(crate) fn from_decoded(
-        data: Vec<u8>, content_type: Option<ContentType>, report: &ProblemReport,
-    ) -> Self {
-        if let Some(content_type) = content_type {
-            if content_type.validate(&data).is_err() {
-                report.invalid_value(
-                    "payload",
-                    &hex::encode(&data),
-                    &format!("Invalid Document content type, should {content_type} encodable"),
-                    "Invalid Document content type.",
-                );
-                return Self::default();
-            }
-        }
-
+    pub(crate) fn from_decoded(data: Vec<u8>) -> Self {
         Self { data: Some(data) }
     }
 

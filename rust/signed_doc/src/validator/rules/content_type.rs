@@ -13,7 +13,13 @@ impl ContentTypeRule {
     /// Field validation rule
     #[allow(clippy::unused_async)]
     pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
-        let content_type = doc.doc_content_type()?;
+        let Ok(content_type) = doc.doc_content_type() else {
+            doc.report().missing_field(
+                "content-type",
+                "Cannot get a content type field during the field validation",
+            );
+            return Ok(false);
+        };
         if content_type != self.exp {
             doc.report().invalid_value(
                 "content-type",
@@ -23,6 +29,23 @@ impl ContentTypeRule {
             );
             return Ok(false);
         }
+        let Ok(content) = doc.doc_content().decoded_bytes() else {
+            doc.report().missing_field(
+                "payload",
+                "Cannot get a document content during the content type field validation",
+            );
+            return Ok(false);
+        };
+        if content_type.validate(content).is_err() {
+            doc.report().invalid_value(
+                "payload",
+                &hex::encode(content),
+                &format!("Invalid Document content, should {content_type} encodable"),
+                "Invalid Document content",
+            );
+            return Ok(false);
+        }
+
         Ok(true)
     }
 }

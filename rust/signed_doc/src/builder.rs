@@ -38,8 +38,7 @@ impl Builder {
     /// Collects a problem report if content is invalid.
     #[must_use]
     pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
-        let content_type = self.0.metadata.content_type().ok();
-        self.0.content = Content::from_decoded(content, content_type, &self.0.report);
+        self.0.content = Content::from_decoded(content);
         self
     }
 
