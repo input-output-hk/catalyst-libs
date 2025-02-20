@@ -16,11 +16,14 @@ use catalyst_types::{
 };
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::iana::CoapContentFormat;
+use coset::{cbor::Value, iana::CoapContentFormat};
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
 pub use section::Section;
-use utils::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, validate_option};
+use utils::{
+    cose_protected_header_find, decode_document_field_from_protected_header, validate_option,
+    CborUuidV4, CborUuidV7,
+};
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -116,12 +119,13 @@ impl Metadata {
     /// Converting COSE Protected Header to Metadata.
     #[allow(clippy::too_many_lines)]
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, error_report: &ProblemReport,
+        protected: &coset::ProtectedHeader, report: &ProblemReport,
     ) -> Self {
-        /// Context for error messages.
-        const CONTEXT: &str = "COSE Protected Header to Metadata";
+        /// Context for problem report messages during decoding from COSE protected
+        /// header.
+        const COSE_DECODING_CONTEXT: &str = "COSE Protected Header to Metadata";
 
-        let extra = ExtraFields::from_protected_header(protected, error_report);
+        let extra = ExtraFields::from_protected_header(protected, report);
         let mut metadata = Metadata {
             extra,
             ..Metadata::default()
@@ -131,32 +135,32 @@ impl Metadata {
             match Algorithm::try_from(alg) {
                 Ok(alg) => metadata.alg = Some(alg),
                 Err(e) => {
-                    error_report.conversion_error(
+                    report.conversion_error(
                         "COSE protected header algorithm",
                         &format!("{alg:?}"),
                         &format!("Expected Algorithm: {e}"),
-                        &format!("{CONTEXT}, Algorithm"),
+                        &format!("{COSE_DECODING_CONTEXT}, Algorithm"),
                     );
                 },
             }
         } else {
-            error_report.missing_field("alg", "Missing alg field in COSE protected header");
+            report.missing_field("alg", "Missing alg field in COSE protected header");
         }
 
         if let Some(value) = protected.header.content_type.as_ref() {
             match ContentType::try_from(value) {
                 Ok(ct) => metadata.content_type = Some(ct),
                 Err(e) => {
-                    error_report.conversion_error(
+                    report.conversion_error(
                         "COSE protected header content type",
                         &format!("{value:?}"),
                         &format!("Expected ContentType: {e}"),
-                        &format!("{CONTEXT}, ContentType"),
+                        &format!("{COSE_DECODING_CONTEXT}, ContentType"),
                     );
                 },
             }
         } else {
-            error_report.missing_field(
+            report.missing_field(
                 "content type",
                 "Missing content_type field in COSE protected header",
             );
@@ -169,79 +173,58 @@ impl Metadata {
             match ContentEncoding::try_from(value) {
                 Ok(ce) => metadata.content_encoding = Some(ce),
                 Err(e) => {
-                    error_report.conversion_error(
+                    report.conversion_error(
                         "COSE protected header content encoding",
                         &format!("{value:?}"),
                         &format!("Expected ContentEncoding: {e}"),
-                        &format!("{CONTEXT}, ContentEncoding"),
+                        &format!("{COSE_DECODING_CONTEXT}, ContentEncoding"),
                     );
                 },
             }
         }
 
-        if let Some(value) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text(TYPE_KEY.to_string())
-        }) {
-            match decode_cbor_uuid(value.clone()) {
-                Ok(uuid) => metadata.doc_type = Some(uuid),
-                Err(e) => {
-                    error_report.conversion_error(
-                        "COSE protected header type",
-                        &format!("{value:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for type"),
-                    );
-                },
-            }
-        } else {
-            error_report.missing_field("type", "Missing type field in COSE protected header");
+        metadata.doc_type = decode_document_field_from_protected_header::<CborUuidV4>(
+            protected,
+            TYPE_KEY,
+            COSE_DECODING_CONTEXT,
+            report,
+        )
+        .map(|v| v.0);
+        if metadata.doc_type.is_none() {
+            report.missing_field("type", "Missing type field in COSE protected header");
         }
 
-        if let Some(value) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text(ID_KEY.to_string())
-        }) {
-            match decode_cbor_uuid(value.clone()) {
-                Ok(uuid) => metadata.id = Some(uuid),
-                Err(e) => {
-                    error_report.conversion_error(
-                        "COSE protected header ID",
-                        &format!("{value:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for ID"),
-                    );
-                },
-            }
-        } else {
-            error_report.missing_field("id", "Missing id field in COSE protected header");
+        metadata.id = decode_document_field_from_protected_header::<CborUuidV7>(
+            protected,
+            ID_KEY,
+            COSE_DECODING_CONTEXT,
+            report,
+        )
+        .map(|v| v.0);
+        if metadata.id.is_none() {
+            report.missing_field("id", "Missing id field in COSE protected header");
         }
 
-        if let Some(value) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text(VER_KEY.to_string())
-        }) {
-            match decode_cbor_uuid(value.clone()) {
-                Ok(uuid) => metadata.ver = Some(uuid),
-                Err(e) => {
-                    error_report.conversion_error(
-                        "COSE protected header ver",
-                        &format!("{value:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for version"),
-                    );
-                },
-            }
-        } else {
-            error_report.missing_field("ver", "Missing ver field in COSE protected header");
+        metadata.ver = decode_document_field_from_protected_header::<CborUuidV7>(
+            protected,
+            VER_KEY,
+            COSE_DECODING_CONTEXT,
+            report,
+        )
+        .map(|v| v.0);
+        if metadata.ver.is_none() {
+            report.missing_field("ver", "Missing ver field in COSE protected header");
         }
 
         if let Some(id) = metadata.id {
             if let Some(ver) = metadata.ver {
                 if ver < id {
-                    error_report.invalid_value(
+                    report.invalid_value(
                         "ver",
                         &ver.to_string(),
                         "ver < id",
                         &format!(
-                            "{CONTEXT}, Document Version {ver} cannot be smaller than Document ID {id}"
+                            "{COSE_DECODING_CONTEXT}, Document Version {ver} cannot be smaller than Document ID {id}"
                         ),
                     );
                 }
@@ -286,9 +269,18 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         builder = builder
-            .text_value(TYPE_KEY.to_string(), encode_cbor_uuid(meta.doc_type()?)?)
-            .text_value(ID_KEY.to_string(), encode_cbor_uuid(meta.doc_id()?)?)
-            .text_value(VER_KEY.to_string(), encode_cbor_uuid(meta.doc_ver()?)?);
+            .text_value(
+                TYPE_KEY.to_string(),
+                Value::try_from(CborUuidV4(meta.doc_type()?))?,
+            )
+            .text_value(
+                ID_KEY.to_string(),
+                Value::try_from(CborUuidV7(meta.doc_id()?))?,
+            )
+            .text_value(
+                VER_KEY.to_string(),
+                Value::try_from(CborUuidV7(meta.doc_ver()?))?,
+            );
 
         builder = meta.extra.fill_cose_header_fields(builder)?;
 
