@@ -24,7 +24,6 @@ pub struct StakeAddress(PallasStakeAddress);
 
 impl StakeAddress {
     /// Creates a new instance from the given parameters.
-    // The panic can only occur if the implementation is incorrect.
     #[allow(clippy::expect_used, clippy::missing_panics_doc)]
     #[must_use]
     pub fn new(network: Network, is_script: bool, hash: Hash<28>) -> Self {
