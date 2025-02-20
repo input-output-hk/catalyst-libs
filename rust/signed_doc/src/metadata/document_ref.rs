@@ -1,4 +1,7 @@
 //! Catalyst Signed Document Metadata.
+
+use std::fmt::Display;
+
 use coset::cbor::Value;
 
 use super::{decode_cbor_uuid, encode_cbor_uuid, UuidV7};
@@ -13,13 +16,12 @@ pub struct DocumentRef {
     pub ver: Option<UuidV7>,
 }
 
-impl DocumentRef {
-    /// Determine if internal `UUID`s are valid.
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        match self.ver {
-            Some(ver) => self.id.is_valid() && ver.is_valid() && ver >= self.id,
-            None => self.id.is_valid(),
+impl Display for DocumentRef {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        if let Some(ver) = self.ver {
+            write!(f, "id: {}, ver: {}", self.id, ver)
+        } else {
+            write!(f, "id: {}", self.id)
         }
     }
 }

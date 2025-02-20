@@ -8,9 +8,9 @@ use std::{
     path::PathBuf,
 };
 
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata, SimplePublicKeyType};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata};
 use clap::Parser;
-use ed25519_dalek::pkcs8::{DecodePrivateKey, DecodePublicKey};
+use ed25519_dalek::pkcs8::DecodePrivateKey;
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -51,16 +51,6 @@ enum Cli {
         /// Hex-formatted COSE SIGN Bytes
         cose_sign_hex: String,
     },
-    /// Validates a signature by Key ID and verifying key
-    Verify {
-        /// Path to the formed (could be empty, without any signatures) COSE document
-        /// This exact file would be modified and new signature would be added
-        path: PathBuf,
-        /// Path to the verifying key in PEM format
-        pk: PathBuf,
-        /// Signer kid
-        kid: IdUri,
-    },
 }
 
 impl Cli {
@@ -87,7 +77,7 @@ impl Cli {
                     .map_err(|e| anyhow::anyhow!("Failed to load SK FILE: {e}"))?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
-                let builder = signed_doc.into_builder();
+                let builder = signed_doc.into_builder()?;
                 let new_signed_doc = builder.add_signature(sk.to_bytes(), kid)?.build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
@@ -98,22 +88,6 @@ impl Cli {
             Self::InspectBytes { cose_sign_hex } => {
                 let cose_bytes = hex::decode(&cose_sign_hex)?;
                 inspect_signed_doc(&cose_bytes)?;
-            },
-            Self::Verify { path, pk, kid } => {
-                let pk = load_public_key_from_file(&pk)
-                    .map_err(|e| anyhow::anyhow!("Failed to load PK FILE {pk:?}: {e}"))?;
-                let cose_bytes = read_bytes_from_file(&path)?;
-                let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
-                signed_doc
-                    .verify(|k| {
-                        if k.to_string() == kid.to_string() {
-                            SimplePublicKeyType::Ed25519(pk)
-                        } else {
-                            SimplePublicKeyType::Undefined
-                        }
-                    })
-                    .map_err(|e| anyhow::anyhow!("Catalyst Document Verification failed: {e}"))?;
-                println!("Catalyst Signed Document is Verified.");
             },
         }
         println!("Done");
@@ -149,8 +123,7 @@ fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow
 }
 
 fn signed_doc_from_bytes(cose_bytes: &[u8]) -> anyhow::Result<CatalystSignedDocument> {
-    CatalystSignedDocument::try_from(cose_bytes)
-        .map_err(|e| anyhow::anyhow!("Invalid Catalyst Document: {e}"))
+    minicbor::decode(cose_bytes).map_err(|e| anyhow::anyhow!("Invalid Catalyst Document: {e}"))
 }
 
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>
@@ -170,10 +143,4 @@ fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek:
     let sk_str = read_to_string(sk_path)?;
     let sk = ed25519_dalek::SigningKey::from_pkcs8_pem(&sk_str)?;
     Ok(sk)
-}
-
-fn load_public_key_from_file(pk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::VerifyingKey> {
-    let pk_str = read_to_string(pk_path)?;
-    let pk = ed25519_dalek::VerifyingKey::from_public_key_pem(&pk_str)?;
-    Ok(pk)
 }
