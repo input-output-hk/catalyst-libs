@@ -61,11 +61,9 @@ impl Content {
     ///
     /// # Errors
     ///  - Missing Document content
-    #[must_use]
     pub fn decoded_bytes(&self) -> anyhow::Result<&[u8]> {
         self.data
-            .as_ref()
-            .map(|v| v.as_slice())
+            .as_deref()
             .ok_or(anyhow::anyhow!("Missing Document content"))
     }
 
@@ -89,6 +87,6 @@ impl Content {
     /// If content is empty returns `0`.
     #[must_use]
     pub fn size(&self) -> usize {
-        self.data.as_ref().map(|v| v.len()).unwrap_or_default()
+        self.data.as_ref().map(Vec::len).unwrap_or_default()
     }
 }

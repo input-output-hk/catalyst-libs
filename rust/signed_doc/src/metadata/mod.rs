@@ -64,7 +64,6 @@ impl Metadata {
     ///
     /// # Errors
     /// - Missing 'alg' field.
-    #[must_use]
     pub fn algorithm(&self) -> anyhow::Result<Algorithm> {
         self.alg.ok_or(anyhow::anyhow!("Missing 'alg' field"))
     }
@@ -73,7 +72,6 @@ impl Metadata {
     ///
     /// # Errors
     /// - Missing 'type' field.
-    #[must_use]
     pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
         self.doc_type.ok_or(anyhow::anyhow!("Missing 'type' field"))
     }
@@ -82,7 +80,6 @@ impl Metadata {
     ///
     /// # Errors
     /// - Missing 'id' field.
-    #[must_use]
     pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
         self.id.ok_or(anyhow::anyhow!("Missing 'id' field"))
     }
@@ -91,7 +88,6 @@ impl Metadata {
     ///
     /// # Errors
     /// - Missing 'ver' field.
-    #[must_use]
     pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
         self.ver.ok_or(anyhow::anyhow!("Missing 'ver' field"))
     }
@@ -100,7 +96,6 @@ impl Metadata {
     ///
     /// # Errors
     /// - Missing 'content-type' field.
-    #[must_use]
     pub fn content_type(&self) -> anyhow::Result<ContentType> {
         self.content_type
             .ok_or(anyhow::anyhow!("Missing 'content-type' field"))

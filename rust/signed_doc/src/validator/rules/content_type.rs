@@ -11,6 +11,7 @@ pub(crate) struct ContentTypeRule {
 
 impl ContentTypeRule {
     /// Field validation rule
+    #[allow(clippy::unused_async)]
     pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
         let content_type = doc.doc_content_type()?;
         if content_type != self.exp {

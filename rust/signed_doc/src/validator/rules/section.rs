@@ -15,6 +15,7 @@ pub(crate) enum SectionRule {
 
 impl SectionRule {
     /// Field validation rule
+    #[allow(clippy::unused_async)]
     pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
         if let Self::Specified { optional } = self {
             if doc.doc_meta().section().is_none() && !optional {

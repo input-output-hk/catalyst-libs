@@ -8,12 +8,12 @@ use crate::{
 /// `category_id` field validation rule
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum CategoryRule {
-    /// Is 'category_id' specified
+    /// Is `category_id` specified
     Specified {
         /// optional flag for the `category_id` field
         optional: bool,
     },
-    /// 'category_id' is not specified
+    /// `category_id` is not specified
     NotSpecified,
 }
 

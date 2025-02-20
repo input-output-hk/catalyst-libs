@@ -84,7 +84,6 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'type' field.
-    #[must_use]
     pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
         self.inner.metadata.doc_type()
     }
@@ -93,7 +92,6 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'id' field.
-    #[must_use]
     pub fn doc_id(&self) -> anyhow::Result<UuidV7> {
         self.inner.metadata.doc_id()
     }
@@ -102,7 +100,6 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'ver' field.
-    #[must_use]
     pub fn doc_ver(&self) -> anyhow::Result<UuidV7> {
         self.inner.metadata.doc_ver()
     }
@@ -117,7 +114,6 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'content-type' field.
-    #[must_use]
     pub fn doc_content_type(&self) -> anyhow::Result<ContentType> {
         self.inner.metadata.content_type()
     }
@@ -228,7 +224,6 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// Fails if the `CatalystSignedDocument` object is not valid.
-    #[must_use]
     pub fn into_builder(self) -> anyhow::Result<Builder> {
         if self.report().is_problematic() {
             anyhow::bail!("Invalid Document");

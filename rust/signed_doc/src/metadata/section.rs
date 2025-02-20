@@ -26,7 +26,7 @@ impl<'de> Deserialize<'de> for Section {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         let str = String::deserialize(deserializer)?;
-        Ok(Self::from_str(&str).map_err(|e| serde::de::Error::custom(e))?)
+        Self::from_str(&str).map_err(serde::de::Error::custom)
     }
 }
 
@@ -35,7 +35,7 @@ impl FromStr for Section {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Ok(Self(
-            jsonpath_rust::JsonPath::<serde_json::Value>::from_str(&s)?,
+            jsonpath_rust::JsonPath::<serde_json::Value>::from_str(s)?,
         ))
     }
 }
@@ -53,6 +53,6 @@ impl TryFrom<&Value> for Section {
         let str = val
             .as_text()
             .ok_or(anyhow::anyhow!("Not a cbor string type"))?;
-        Ok(Self::from_str(str)?)
+        Self::from_str(str)
     }
 }

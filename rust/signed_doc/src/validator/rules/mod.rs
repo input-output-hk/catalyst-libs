@@ -40,6 +40,7 @@ pub(crate) struct Rules {
 }
 
 impl Rules {
+    /// All field validation rules check
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>

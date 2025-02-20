@@ -177,7 +177,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header doc ref",
                     &format!("{cbor_doc_ref:?}"),
-                    &format!("Expected a CBOR DocumentRef"),
+                    "Expected a CBOR DocumentRef",
                     &format!("{CONTEXT}, DocumentRef"),
                 );
             };
@@ -192,7 +192,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header document template",
                     &format!("{cbor_doc_template:?}"),
-                    &format!("Expected a CBOR DocumentRef"),
+                    "Expected a CBOR DocumentRef",
                     &format!("{CONTEXT}, DocumentRef"),
                 );
             }
@@ -207,7 +207,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header document reply",
                     &format!("{cbor_doc_reply:?}"),
-                    &format!("Expected a CBOR DocumentRef"),
+                    "Expected a CBOR DocumentRef",
                     &format!("{CONTEXT}, DocumentRef"),
                 );
             }
@@ -222,7 +222,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "COSE protected header document section",
                     &format!("{cbor_doc_section:?}"),
-                    &format!("Must be a valid CBOR encoded String JSON Path"),
+                    "Must be a valid CBOR encoded String JSON Path",
                     &format!("{CONTEXT}, converting document section to String JSON Path"),
                 );
             }
@@ -242,7 +242,7 @@ impl ExtraFields {
                             error_report.conversion_error(
                                 &format!("COSE protected header collaborator index {ids}"),
                                 &format!("{collaborator:?}"),
-                                &format!("Expected a CBOR String"),
+                                "Expected a CBOR String",
                                 &format!("{CONTEXT}, converting collaborator to String"),
                             );
                         },
@@ -253,7 +253,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header collaborators",
                     &format!("{cbor_doc_collabs:?}"),
-                    &format!("Expected a CBOR Array"),
+                    "Expected a CBOR Array",
                     &format!("{CONTEXT}, converting collaborators to Array"),
                 );
             };
@@ -268,7 +268,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header brand ID",
                     &format!("{cbor_doc_brand_id:?}"),
-                    &format!("Expected a CBOR UUID"),
+                    "Expected a CBOR UUID",
                     &format!("{CONTEXT}, decoding CBOR UUID for brand ID"),
                 );
             }
@@ -283,7 +283,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header campaign ID",
                     &format!("{cbor_doc_campaign_id:?}"),
-                    &format!("Expected a CBOR UUID"),
+                    "Expected a CBOR UUID",
                     &format!("{CONTEXT}, decoding CBOR UUID for campaign ID"),
                 );
             }
@@ -298,7 +298,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header election ID",
                     &format!("{cbor_doc_election_id:?}"),
-                    &format!("Expected a CBOR UUID"),
+                    "Expected a CBOR UUID",
                     &format!("{CONTEXT}, decoding CBOR UUID for election ID"),
                 );
             }
@@ -313,7 +313,7 @@ impl ExtraFields {
                 error_report.conversion_error(
                     "CBOR COSE protected header category ID",
                     &format!("{cbor_doc_category_id:?}"),
-                    &format!("Expected a CBOR UUID"),
+                    "Expected a CBOR UUID",
                     &format!("{CONTEXT}, decoding CBOR UUID for category ID"),
                 );
             }
