@@ -2,14 +2,13 @@
 
 use std::{ffi::OsStr, path::PathBuf};
 
+use anyhow::anyhow;
 use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
 use pallas::{
-    ledger::traverse::wellknown::GenesisValues,
+    ledger::{addresses::Network as PallasNetwork, traverse::wellknown::GenesisValues},
     network::miniprotocols::{MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC},
 };
-// use strum::IntoEnumIterator;
-// use strum_macros;
 use tracing::debug;
 
 use crate::Slot;
@@ -216,6 +215,27 @@ impl From<Network> for u64 {
             Network::Mainnet => MAINNET_MAGIC,
             Network::Preprod => PRE_PRODUCTION_MAGIC,
             Network::Preview => PREVIEW_MAGIC,
+        }
+    }
+}
+
+impl From<Network> for PallasNetwork {
+    fn from(value: Network) -> Self {
+        match value {
+            Network::Mainnet => PallasNetwork::Mainnet,
+            Network::Preprod | Network::Preview => PallasNetwork::Testnet,
+        }
+    }
+}
+
+impl TryFrom<PallasNetwork> for Network {
+    type Error = anyhow::Error;
+
+    fn try_from(value: PallasNetwork) -> Result<Self, Self::Error> {
+        match value {
+            PallasNetwork::Mainnet => Ok(Network::Mainnet),
+            PallasNetwork::Testnet => Ok(Network::Preprod),
+            n @ PallasNetwork::Other(_) => Err(anyhow!("Unsupported network: {n:?}")),
         }
     }
 }
