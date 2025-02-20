@@ -1,5 +1,7 @@
 //! A stake address.
 
+// cspell: words Scripthash, Keyhash
+
 use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Context};
@@ -184,6 +186,7 @@ mod tests {
             .parse()
             .unwrap();
 
+        // cSpell:disable
         let test_data = [
             (
                 Network::Mainnet,
@@ -222,6 +225,7 @@ mod tests {
                 "stake_test1uqnkl5v8zxf3utqwy9psrykmatqwgkqf8nvarlxhyy8kfvc0yw2n3",
             ),
         ];
+        // cSpell:enable
 
         for (network, is_script, hash, expected) in test_data {
             let address = StakeAddress::new(network, is_script, hash);
