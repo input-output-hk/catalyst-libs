@@ -24,7 +24,7 @@ impl TemplateRule {
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: 'static + CatalystSignedDocumentProvider {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Specified { exp_template_type } = self {
             let Some(template_ref) = doc.doc_meta().template() else {
                 doc.report()

@@ -22,7 +22,7 @@ impl CategoryRule {
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: 'static + CatalystSignedDocumentProvider {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Specified { optional } = self {
             if let Some(category) = &doc.doc_meta().category_id() {
                 let category_validator = |category_doc: CatalystSignedDocument| {

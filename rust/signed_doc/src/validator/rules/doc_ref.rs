@@ -25,7 +25,7 @@ impl RefRule {
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: 'static + CatalystSignedDocumentProvider {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Specified {
             exp_ref_type,
             optional,

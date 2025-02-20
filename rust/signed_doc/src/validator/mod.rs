@@ -81,7 +81,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 pub async fn validate<Provider>(
     doc: &CatalystSignedDocument, provider: &Provider,
 ) -> anyhow::Result<bool>
-where Provider: 'static + CatalystSignedDocumentProvider {
+where Provider: CatalystSignedDocumentProvider {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
