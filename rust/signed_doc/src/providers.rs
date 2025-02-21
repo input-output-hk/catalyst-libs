@@ -22,3 +22,21 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
         &self, doc_ref: &DocumentRef,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 }
+
+#[cfg(test)]
+pub(crate) mod tests {
+    use super::*;
+
+    pub(crate) struct TestCatalystSignedDocumentProvider<F>(pub(crate) F)
+    where F: Fn(&DocumentRef) -> anyhow::Result<Option<CatalystSignedDocument>> + Send + Sync;
+
+    impl<F> CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider<F>
+    where F: Fn(&DocumentRef) -> anyhow::Result<Option<CatalystSignedDocument>> + Send + Sync
+    {
+        async fn try_get_doc(
+            &self, doc_ref: &DocumentRef,
+        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+            self.0(doc_ref)
+        }
+    }
+}
