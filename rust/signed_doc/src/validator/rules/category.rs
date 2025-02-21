@@ -105,7 +105,7 @@ mod tests {
         }
 
         // all correct
-        let rule = CategoryRule::Specified { optional: true };
+        let rule = CategoryRule::Specified { optional: false };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "category_id": {"id": valid_category_doc_id.to_string() }

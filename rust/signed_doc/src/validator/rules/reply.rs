@@ -156,7 +156,7 @@ mod tests {
         // all correct
         let rule = ReplyRule::Specified {
             exp_reply_type,
-            optional: true,
+            optional: false,
         };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({

@@ -137,7 +137,7 @@ mod tests {
         // all correct
         let rule = RefRule::Specified {
             exp_ref_type,
-            optional: true,
+            optional: false,
         };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
