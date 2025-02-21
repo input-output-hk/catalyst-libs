@@ -25,10 +25,25 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use std::collections::HashMap;
+
+    use catalyst_types::uuid::Uuid;
+
     use super::*;
 
     pub(crate) struct TestCatalystSignedDocumentProvider<F>(pub(crate) F)
     where F: Fn(&DocumentRef) -> anyhow::Result<Option<CatalystSignedDocument>> + Send + Sync;
+
+    /// Index documents only by `id` field
+    #[derive(Default)]
+    pub(crate) struct TestCatalystSignedDocumentProvider2(HashMap<Uuid, CatalystSignedDocument>);
+
+    impl TestCatalystSignedDocumentProvider2 {
+        pub(crate) fn add_document(&mut self, doc: CatalystSignedDocument) -> anyhow::Result<()> {
+            self.0.insert(doc.doc_id()?.uuid(), doc);
+            Ok(())
+        }
+    }
 
     impl<F> CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider<F>
     where F: Fn(&DocumentRef) -> anyhow::Result<Option<CatalystSignedDocument>> + Send + Sync
@@ -37,6 +52,14 @@ pub(crate) mod tests {
             &self, doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             self.0(doc_ref)
+        }
+    }
+
+    impl CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider2 {
+        async fn try_get_doc(
+            &self, doc_ref: &DocumentRef,
+        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+            Ok(self.0.get(&doc_ref.id.uuid()).cloned())
         }
     }
 }

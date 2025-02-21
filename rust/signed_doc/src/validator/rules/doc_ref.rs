@@ -91,37 +91,39 @@ mod tests {
     use catalyst_types::uuid::UuidV7;
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider2, Builder};
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
-        let doc_type = UuidV4::new();
+        let mut provider = TestCatalystSignedDocumentProvider2::default();
 
-        let rule = RefRule::Specified {
-            exp_ref_type: doc_type,
-            optional: true,
-        };
-
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({"type": doc_type.to_string()}))
-                    .unwrap()
-                    .build(),
-            ))
-        });
+        let ref_doc_type = UuidV4::new();
+        let ref_id = UuidV7::new();
+        let ref_doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": ref_id.to_string(),
+                "type": ref_doc_type.to_string()
+            }))
+            .unwrap()
+            .build();
+        provider.add_document(ref_doc).unwrap();
 
         // all correct
-        let ref_id = UuidV7::new();
+        let rule = RefRule::Specified {
+            exp_ref_type: ref_doc_type,
+            optional: true,
+        };
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({
+                "ref": {"id": ref_id.to_string() }
+            }))
             .unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // all correct, `ref` field is missing, but its optional
         let rule = RefRule::Specified {
-            exp_ref_type: doc_type,
+            exp_ref_type: ref_doc_type,
             optional: true,
         };
         let doc = Builder::new().build();
@@ -129,54 +131,65 @@ mod tests {
 
         // missing `ref` field, but its required
         let rule = RefRule::Specified {
-            exp_ref_type: doc_type,
+            exp_ref_type: ref_doc_type,
             optional: false,
         };
         let doc = Builder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
-        let ref_id = UuidV7::new();
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
+        let another_ref_doc_type = UuidV4::new();
+        let new_ref_id = UuidV7::new();
+        let ref_doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": new_ref_id.to_string(),
+                "type": another_ref_doc_type.to_string()
+            }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            let another_doc_type = UuidV4::new();
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({"type": another_doc_type.to_string()}))
-                    .unwrap()
-                    .build(),
-            ))
-        });
+        provider.add_document(ref_doc).unwrap();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "ref": {"id": new_ref_id.to_string() }
+            }))
+            .unwrap()
+            .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
-        let ref_id = UuidV7::new();
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
+        let new_ref_id = UuidV7::new();
+        let ref_doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": new_ref_id.to_string(),
+            }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| Ok(Some(Builder::new().build())));
+        provider.add_document(ref_doc).unwrap();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "ref": {"id": new_ref_id.to_string() }
+            }))
+            .unwrap()
+            .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
-        let ref_id = UuidV7::new();
+        let new_ref_id = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({
+                "ref": {"id": new_ref_id.to_string() }
+            }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| Ok(None));
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 
     #[tokio::test]
     async fn ref_rule_not_specified_test() {
         let rule = RefRule::NotSpecified;
+        let provider = TestCatalystSignedDocumentProvider2::default();
 
         let doc = Builder::new().build();
-        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
@@ -184,7 +197,6 @@ mod tests {
             .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 }
