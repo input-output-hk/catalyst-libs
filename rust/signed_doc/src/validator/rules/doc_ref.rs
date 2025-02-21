@@ -177,15 +177,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            let another_doc_type = UuidV4::new();
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({"type": another_doc_type.to_string()}))
-                    .unwrap()
-                    .build(),
-            ))
-        });
+        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 }
