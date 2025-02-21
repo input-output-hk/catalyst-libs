@@ -26,9 +26,6 @@ impl Builder {
     }
 
     /// Set document metadata
-    ///
-    /// # Errors
-    /// - Fails if it is invalid metadata JSON object.
     #[must_use]
     pub fn with_metadata(mut self, metadata: Metadata) -> Self {
         self.metadata = Some(metadata);

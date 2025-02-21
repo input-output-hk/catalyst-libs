@@ -8,6 +8,7 @@ use std::{
     path::PathBuf,
 };
 
+use anyhow::Context;
 use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata};
 use clap::Parser;
 use ed25519_dalek::pkcs8::DecodePrivateKey;
@@ -116,14 +117,13 @@ fn inspect_signed_doc(cose_bytes: &[u8]) -> anyhow::Result<()> {
 
 fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow::Result<()> {
     let mut bytes: Vec<u8> = Vec::new();
-    minicbor::encode(signed_doc, &mut bytes)
-        .map_err(|e| anyhow::anyhow!("Failed to encode document: {e}"))?;
+    minicbor::encode(signed_doc, &mut bytes).context("Failed to encode document")?;
 
     write_bytes_to_file(&bytes, path)
 }
 
 fn signed_doc_from_bytes(cose_bytes: &[u8]) -> anyhow::Result<CatalystSignedDocument> {
-    minicbor::decode(cose_bytes).map_err(|e| anyhow::anyhow!("Invalid Catalyst Document: {e}"))
+    minicbor::decode(cose_bytes).context("Invalid Catalyst Document")
 }
 
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>
@@ -136,7 +136,7 @@ where T: for<'de> serde::Deserialize<'de> {
 fn write_bytes_to_file(bytes: &[u8], output: &PathBuf) -> anyhow::Result<()> {
     File::create(output)?
         .write_all(bytes)
-        .map_err(|e| anyhow::anyhow!("Failed to write to file {output:?}: {e}"))
+        .context(format!("Failed to write to file {output:?}"))
 }
 
 fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::SigningKey> {
