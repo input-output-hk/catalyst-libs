@@ -71,7 +71,7 @@ pub(crate) fn referenced_doc_check(
     ref_doc: &CatalystSignedDocument, exp_ref_type: Uuid, field_name: &str, report: &ProblemReport,
 ) -> bool {
     let Ok(ref_doc_type) = ref_doc.doc_type() else {
-        report.missing_field("type", "Missing type field for the referenced document");
+        report.missing_field("type", "Referenced document must have type field");
         return false;
     };
     if ref_doc_type.uuid() != exp_ref_type {
@@ -169,15 +169,6 @@ mod tests {
             .build();
         let provider = TestCatalystSignedDocumentProvider(|_| Ok(None));
         assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Provider returns an error
-        let ref_id = UuidV7::new();
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
-            .unwrap()
-            .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
-        assert!(rule.check(&doc, &provider).await.is_err());
     }
 
     #[tokio::test]

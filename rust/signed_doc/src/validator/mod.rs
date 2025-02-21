@@ -25,7 +25,7 @@ use crate::{
 static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
 
 /// `DOCUMENT_RULES` initialization function
-#[allow(clippy::unwrap_used)]
+#[allow(clippy::expect_used)]
 fn document_rules_init() -> HashMap<Uuid, Rules> {
     let mut document_rules_map = HashMap::new();
 
@@ -59,11 +59,15 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp_template_type: COMMENT_TEMPLATE_UUID_TYPE,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap(),
+            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: COMMENT_DOCUMENT_UUID_TYPE,
+            exp_reply_type: COMMENT_DOCUMENT_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },

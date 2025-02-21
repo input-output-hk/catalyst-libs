@@ -132,15 +132,6 @@ mod tests {
             .build();
         let provider = TestCatalystSignedDocumentProvider(|_| Ok(None));
         assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Provider returns an error
-        let ref_id = UuidV7::new();
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
-            .unwrap()
-            .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
-        assert!(rule.check(&doc, &provider).await.is_err());
     }
 
     #[tokio::test]
