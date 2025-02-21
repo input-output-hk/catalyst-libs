@@ -1,8 +1,11 @@
 //! Catalyst Signed Document Builder.
-use catalyst_types::id_uri::IdUri;
+use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
 use ed25519_dalek::{ed25519::signature::Signer, SecretKey};
 
-use crate::{CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures};
+use crate::{
+    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
+    PROBLEM_REPORT_CTX,
+};
 
 /// Catalyst Signed Document Builder.
 #[derive(Debug, Default, Clone)]
@@ -27,6 +30,15 @@ impl Builder {
     pub fn with_metadata(mut self, metadata: Metadata) -> Self {
         self.metadata = Some(metadata);
         self
+    }
+
+    /// Set document metadata in JSON format
+    ///
+    /// # Errors
+    /// - Fails if it is invalid metadata JSON object.
+    pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+        self.metadata = Some(serde_json::from_value(json)?);
+        Ok(self)
     }
 
     /// Set decoded (original) document content bytes
@@ -68,7 +80,7 @@ impl Builder {
         let sk = ed25519_dalek::SigningKey::from_bytes(&sk);
         let protected_header = coset::HeaderBuilder::new()
             .key_id(kid.to_string().into_bytes())
-            .algorithm(metadata.algorithm().into());
+            .algorithm(metadata.algorithm()?.into());
         let mut signature = coset::CoseSignatureBuilder::new()
             .protected(protected_header.build())
             .build();
@@ -94,17 +106,14 @@ impl Builder {
             anyhow::bail!("Failed to build Catalyst Signed Document, missing document's content");
         };
         let signatures = self.signatures;
+        let content = Content::from_decoded(content, metadata.content_type()?)?;
 
-        let content = Content::from_decoded(
-            content,
-            metadata.content_type(),
-            metadata.content_encoding(),
-        )?;
-
+        let empty_report = ProblemReport::new(PROBLEM_REPORT_CTX);
         Ok(InnerCatalystSignedDocument {
             metadata,
             content,
             signatures,
+            report: empty_report,
         }
         .into())
     }

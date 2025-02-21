@@ -20,7 +20,7 @@ pub enum ContentType {
 
 impl ContentType {
     /// Validates the provided `content` bytes to be a defined `ContentType`.
-    pub fn validate(self, content: &[u8]) -> anyhow::Result<()> {
+    pub(crate) fn validate(self, content: &[u8]) -> anyhow::Result<()> {
         match self {
             Self::Json => {
                 if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
