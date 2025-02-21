@@ -95,16 +95,11 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{
-        providers::tests::{
-            TestCatalystSignedDocumentProvider, TestCatalystSignedDocumentProvider2,
-        },
-        Builder,
-    };
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
-        let mut provider = TestCatalystSignedDocumentProvider2::default();
+        let mut provider = TestCatalystSignedDocumentProvider::default();
 
         let exp_reply_type = UuidV4::new();
         let common_ref_id = UuidV7::new();
@@ -225,7 +220,6 @@ mod tests {
             }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| Ok(Some(Builder::new().build())));
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // `ref` field does not allign with the referenced document
@@ -246,14 +240,13 @@ mod tests {
             }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| Ok(None));
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 
     #[tokio::test]
     async fn reply_rule_not_specified_test() {
         let rule = ReplyRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider2::default();
+        let provider = TestCatalystSignedDocumentProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());

@@ -63,27 +63,52 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider2, Builder};
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
     #[tokio::test]
     async fn category_rule_specified_test() {
-        let mut provider = TestCatalystSignedDocumentProvider2::default();
+        let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        let ref_id = UuidV7::new();
-        let ref_doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": ref_id.to_string(),
-                "type": CATEGORY_DOCUMENT_UUID_TYPE.to_string()
-            }))
-            .unwrap()
-            .build();
-        provider.add_document(ref_doc).unwrap();
+        let valid_category_doc_id = UuidV7::new();
+        let another_type_category_doc_id = UuidV7::new();
+        let missing_type_category_doc_id = UuidV7::new();
+
+        // prepare replied documents
+        {
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": valid_category_doc_id.to_string(),
+                    "type": CATEGORY_DOCUMENT_UUID_TYPE.to_string()
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // reply doc with other `type` field
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": another_type_category_doc_id.to_string(),
+                    "type": UuidV4::new().to_string()
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // missing `type` field in the referenced document
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_type_category_doc_id.to_string(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+        }
 
         // all correct
         let rule = CategoryRule::Specified { optional: true };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": ref_id.to_string() }
+                "category_id": {"id": valid_category_doc_id.to_string() }
             }))
             .unwrap()
             .build();
@@ -100,46 +125,27 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
-        let new_ref_id = UuidV7::new();
-        let another_doc_type = UuidV4::new();
-        let ref_doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": new_ref_id.to_string(),
-                "type": another_doc_type.to_string()
-            }))
-            .unwrap()
-            .build();
-        provider.add_document(ref_doc).unwrap();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": new_ref_id.to_string() }
+                "category_id": {"id": another_type_category_doc_id.to_string() }
             }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
-        let new_ref_id = UuidV7::new();
-        let ref_doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": new_ref_id.to_string(),
-            }))
-            .unwrap()
-            .build();
-        provider.add_document(ref_doc).unwrap();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": new_ref_id.to_string() }
+                "category_id": {"id": missing_type_category_doc_id.to_string() }
             }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
-        let new_ref_id = UuidV7::new();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": new_ref_id.to_string() }
+                "category_id": {"id": UuidV7::new().to_string() }
             }))
             .unwrap()
             .build();
@@ -148,7 +154,7 @@ mod tests {
 
     #[tokio::test]
     async fn category_rule_not_specified_test() {
-        let provider = TestCatalystSignedDocumentProvider2::default();
+        let provider = TestCatalystSignedDocumentProvider::default();
 
         let rule = CategoryRule::NotSpecified;
 

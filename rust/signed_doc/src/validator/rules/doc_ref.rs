@@ -91,11 +91,11 @@ mod tests {
     use catalyst_types::uuid::UuidV7;
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider2, Builder};
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
-        let mut provider = TestCatalystSignedDocumentProvider2::default();
+        let mut provider = TestCatalystSignedDocumentProvider::default();
 
         let exp_ref_type = UuidV4::new();
 
@@ -194,7 +194,7 @@ mod tests {
     #[tokio::test]
     async fn ref_rule_not_specified_test() {
         let rule = RefRule::NotSpecified;
-        let provider = TestCatalystSignedDocumentProvider2::default();
+        let provider = TestCatalystSignedDocumentProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());

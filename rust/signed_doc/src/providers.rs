@@ -31,31 +31,18 @@ pub(crate) mod tests {
 
     use super::*;
 
-    pub(crate) struct TestCatalystSignedDocumentProvider<F>(pub(crate) F)
-    where F: Fn(&DocumentRef) -> anyhow::Result<Option<CatalystSignedDocument>> + Send + Sync;
-
     /// Index documents only by `id` field
     #[derive(Default)]
-    pub(crate) struct TestCatalystSignedDocumentProvider2(HashMap<Uuid, CatalystSignedDocument>);
+    pub(crate) struct TestCatalystSignedDocumentProvider(HashMap<Uuid, CatalystSignedDocument>);
 
-    impl TestCatalystSignedDocumentProvider2 {
+    impl TestCatalystSignedDocumentProvider {
         pub(crate) fn add_document(&mut self, doc: CatalystSignedDocument) -> anyhow::Result<()> {
             self.0.insert(doc.doc_id()?.uuid(), doc);
             Ok(())
         }
     }
 
-    impl<F> CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider<F>
-    where F: Fn(&DocumentRef) -> anyhow::Result<Option<CatalystSignedDocument>> + Send + Sync
-    {
-        async fn try_get_doc(
-            &self, doc_ref: &DocumentRef,
-        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
-            self.0(doc_ref)
-        }
-    }
-
-    impl CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider2 {
+    impl CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider {
         async fn try_get_doc(
             &self, doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
