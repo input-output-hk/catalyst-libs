@@ -4,7 +4,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::TransactionHash;
+use cardano_blockchain_types::TransactionId;
 use catalyst_types::uuid::UuidV4;
 use ed25519_dalek::VerifyingKey;
 use tracing::{error, warn};
@@ -58,7 +58,7 @@ impl RegistrationChain {
 
     /// Get the current transaction ID hash.
     #[must_use]
-    pub fn current_tx_id_hash(&self) -> TransactionHash {
+    pub fn current_tx_id_hash(&self) -> TransactionId {
         self.inner.current_tx_id_hash
     }
 
@@ -109,7 +109,7 @@ impl RegistrationChain {
 #[derive(Debug, Clone)]
 struct RegistrationChainInner {
     /// The current transaction ID hash (32 bytes)
-    current_tx_id_hash: TransactionHash,
+    current_tx_id_hash: TransactionId,
     /// List of purpose for this registration chain
     purpose: Vec<UuidV4>,
 

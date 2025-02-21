@@ -5,7 +5,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionHash, TxnIndex};
+use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionId, TxnIndex};
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
@@ -60,7 +60,7 @@ pub struct Cip509 {
     /// An optional hash of the previous transaction.
     ///
     /// The hash must always be present except for the first registration transaction.
-    prv_tx_id: Option<TransactionHash>,
+    prv_tx_id: Option<TransactionId>,
     /// Metadata.
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
@@ -73,7 +73,7 @@ pub struct Cip509 {
     /// constructors.
     payment_history: PaymentHistory,
     /// A hash of the transaction from which this registration is extracted.
-    txn_hash: TransactionHash,
+    txn_hash: TransactionId,
     /// A point (slot) and a transaction index identifying the block and the transaction
     /// that this `Cip509` was extracted from.
     origin: PointTxnIdx,
@@ -215,7 +215,7 @@ impl Cip509 {
 
     /// Returns a hash of the previous transaction.
     #[must_use]
-    pub fn previous_transaction(&self) -> Option<TransactionHash> {
+    pub fn previous_transaction(&self) -> Option<TransactionId> {
         self.prv_tx_id
     }
 
@@ -233,7 +233,7 @@ impl Cip509 {
 
     /// Returns a hash of the transaction where this data is originating from.
     #[must_use]
-    pub fn txn_hash(&self) -> TransactionHash {
+    pub fn txn_hash(&self) -> TransactionId {
         self.txn_hash
     }
 
@@ -514,7 +514,7 @@ fn decode_input_hash(
 /// Decodes previous transaction id.
 fn decode_previous_transaction_id(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Result<Option<TransactionHash>, ()> {
+) -> Result<Option<TransactionId>, ()> {
     let bytes = match decode_bytes(d, "Cip509 previous transaction id") {
         Ok(v) => v,
         Err(e) => {

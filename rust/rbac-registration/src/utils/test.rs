@@ -2,7 +2,7 @@
 
 // cspell: words stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr
 
-use cardano_blockchain_types::{MultiEraBlock, Network, Point, Slot, TransactionHash, TxnIndex};
+use cardano_blockchain_types::{MultiEraBlock, Network, Point, Slot, TransactionId, TxnIndex};
 use catalyst_types::uuid::UuidV4;
 use uuid::Uuid;
 
@@ -20,9 +20,9 @@ pub struct BlockTestData {
     /// Transaction index.
     pub txn_index: TxnIndex,
     /// Transaction hash.
-    pub txn_hash: TransactionHash,
+    pub txn_hash: TransactionId,
     /// Previous hash.
-    pub prv_hash: Option<TransactionHash>,
+    pub prv_hash: Option<TransactionId>,
     /// Purpose.
     pub purpose: UuidV4,
     /// Stake address.
