@@ -41,8 +41,16 @@ impl Builder {
         Ok(self)
     }
 
-    /// Set decoded (original) document content bytes.
-    /// Collects a problem report if content is invalid.
+    /// Set document metadata in JSON format
+    ///
+    /// # Errors
+    /// - Fails if it is invalid metadata JSON object.
+    pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+        self.metadata = Some(serde_json::from_value(json)?);
+        Ok(self)
+    }
+
+    /// Set decoded (original) document content bytes
     #[must_use]
     pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
         self.0.content = Content::from_decoded(content);
