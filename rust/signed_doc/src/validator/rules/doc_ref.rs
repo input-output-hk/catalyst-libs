@@ -1,6 +1,9 @@
 //! `ref` rule type impl.
 
-use catalyst_types::uuid::UuidV4;
+use catalyst_types::{
+    problem_report::ProblemReport,
+    uuid::{Uuid, UuidV4},
+};
 
 use crate::{
     providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
@@ -33,23 +36,12 @@ impl RefRule {
         {
             if let Some(doc_ref) = doc.doc_meta().doc_ref() {
                 let ref_validator = |ref_doc: CatalystSignedDocument| {
-                    let Ok(ref_doc_type) = ref_doc.doc_type() else {
-                        doc.report().missing_field(
-                            "type",
-                            "Missing type field for the referenced document",
-                        );
-                        return Ok(false);
-                    };
-                    if &ref_doc_type != exp_ref_type {
-                        doc.report().invalid_value(
-                            "ref",
-                            ref_doc_type.to_string().as_str(),
-                            exp_ref_type.to_string().as_str(),
-                            "Invalid referenced document type",
-                        );
-                        return Ok(false);
-                    }
-                    Ok(true)
+                    Ok(referenced_doc_check(
+                        &ref_doc,
+                        exp_ref_type.uuid(),
+                        "ref",
+                        doc.report(),
+                    ))
                 };
                 return validate_provided_doc(&doc_ref, provider, doc.report(), ref_validator)
                     .await;
@@ -72,6 +64,26 @@ impl RefRule {
 
         Ok(true)
     }
+}
+
+/// A generic implementation of the referenced document validation.
+pub(crate) fn referenced_doc_check(
+    ref_doc: &CatalystSignedDocument, exp_ref_type: Uuid, field_name: &str, report: &ProblemReport,
+) -> bool {
+    let Ok(ref_doc_type) = ref_doc.doc_type() else {
+        report.missing_field("type", "Missing type field for the referenced document");
+        return false;
+    };
+    if ref_doc_type.uuid() != exp_ref_type {
+        report.invalid_value(
+            field_name,
+            ref_doc_type.to_string().as_str(),
+            exp_ref_type.to_string().as_str(),
+            "Invalid referenced document type",
+        );
+        return false;
+    }
+    true
 }
 
 #[cfg(test)]
