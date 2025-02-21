@@ -172,6 +172,10 @@ mod tests {
     async fn ref_rule_not_specified_test() {
         let rule = RefRule::NotSpecified;
 
+        let doc = Builder::new().build();
+        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
         let ref_id = UuidV7::new();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))

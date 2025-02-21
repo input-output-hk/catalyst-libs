@@ -59,3 +59,107 @@ impl CategoryRule {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use catalyst_types::uuid::{UuidV4, UuidV7};
+
+    use super::*;
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+
+    #[tokio::test]
+    async fn category_rule_specified_test() {
+        let rule = CategoryRule::Specified { optional: true };
+
+        let provider = TestCatalystSignedDocumentProvider(|_| {
+            Ok(Some(
+                Builder::new()
+                    .with_json_metadata(
+                        serde_json::json!({"type": CATEGORY_DOCUMENT_UUID_TYPE.to_string()}),
+                    )
+                    .unwrap()
+                    .build(),
+            ))
+        });
+
+        // all correct
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // all correct, `category_id` field is missing, but its optional
+        let rule = CategoryRule::Specified { optional: true };
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // missing `category_id` field, but its required
+        let rule = CategoryRule::Specified { optional: false };
+        let doc = Builder::new().build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // reference to the document with another `type` field
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        let provider = TestCatalystSignedDocumentProvider(|_| {
+            let another_doc_type = UuidV4::new();
+            Ok(Some(
+                Builder::new()
+                    .with_json_metadata(serde_json::json!({"type":
+    another_doc_type.to_string()}))
+                    .unwrap()
+                    .build(),
+            ))
+        });
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // missing `type` field in the referenced document
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        let provider = TestCatalystSignedDocumentProvider(|_| Ok(Some(Builder::new().build())));
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // cannot find a referenced document
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        let provider = TestCatalystSignedDocumentProvider(|_| Ok(None));
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // Provider returns an error
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
+        assert!(rule.check(&doc, &provider).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn category_rule_not_specified_test() {
+        let rule = CategoryRule::NotSpecified;
+
+        let doc = Builder::new().build();
+        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+    }
+}
