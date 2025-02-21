@@ -1,7 +1,8 @@
 //! `template` rule type impl.
 
-use catalyst_types::uuid::Uuid;
+use catalyst_types::uuid::UuidV4;
 
+use super::doc_ref::referenced_doc_check;
 use crate::{
     metadata::ContentType, providers::CatalystSignedDocumentProvider,
     validator::utils::validate_provided_doc, CatalystSignedDocument,
@@ -12,7 +13,7 @@ pub(crate) enum TemplateRule {
     /// Is 'template' specified
     Specified {
         /// expected `type` field of the template
-        exp_template_type: Uuid,
+        exp_template_type: UuidV4,
     },
     /// 'template' is not specified
     #[allow(dead_code)]
@@ -33,20 +34,25 @@ impl TemplateRule {
             };
 
             let template_validator = |template_doc: CatalystSignedDocument| {
-                if &template_doc.doc_type()?.uuid() != exp_template_type {
-                    doc.report().invalid_value(
-                        "template",
-                        template_doc.doc_type()?.to_string().as_str(),
-                        exp_template_type.to_string().as_str(),
-                        "Invalid referenced template document type",
-                    );
-                    return Ok(false);
+                if !referenced_doc_check(
+                    &template_doc,
+                    exp_template_type.uuid(),
+                    "template",
+                    doc.report(),
+                ) {
+                    return false;
                 }
-                match doc.doc_content_type()? {
+
+                let Ok(doc_content_type) = doc.doc_content_type() else {
+                    doc.report()
+                        .missing_field("content-type", "Document must have a content-type field");
+                    return false;
+                };
+                match doc_content_type {
                     ContentType::Json => json_schema_check(doc, &template_doc),
                     ContentType::Cbor => {
                         // TODO: not implemented yet
-                        Ok(true)
+                        true
                     },
                 }
             };
@@ -75,17 +81,20 @@ impl TemplateRule {
 
 /// Validate a provided `doc` against the `template` content's Json schema, assuming that
 /// the `doc` content is JSON.
-fn json_schema_check(
-    doc: &CatalystSignedDocument, template_doc: &CatalystSignedDocument,
-) -> anyhow::Result<bool> {
-    let Ok(template_json_schema) =
-        serde_json::from_slice(template_doc.doc_content().decoded_bytes()?)
-    else {
+fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSignedDocument) -> bool {
+    let Ok(template_content) = template_doc.doc_content().decoded_bytes() else {
+        doc.report().missing_field(
+            "payload",
+            "Referenced template document must have a content",
+        );
+        return false;
+    };
+    let Ok(template_json_schema) = serde_json::from_slice(template_content) else {
         doc.report().functional_validation(
             "Template document content must be json encoded",
             "Invalid referenced template document content",
         );
-        return Ok(false);
+        return false;
     };
     let Ok(schema_validator) = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft7)
@@ -95,15 +104,20 @@ fn json_schema_check(
             "Template document content must be Draft 7 JSON schema",
             "Invalid referenced template document content",
         );
-        return Ok(false);
+        return false;
     };
 
-    let Ok(doc_json) = serde_json::from_slice(doc.doc_content().decoded_bytes()?) else {
+    let Ok(doc_content) = doc.doc_content().decoded_bytes() else {
+        doc.report()
+            .missing_field("payload", "Document must have a content");
+        return false;
+    };
+    let Ok(doc_json) = serde_json::from_slice(doc_content) else {
         doc.report().functional_validation(
             "Document content must be json encoded",
             "Invalid referenced template document content",
         );
-        return Ok(false);
+        return false;
     };
 
     if schema_validator.validate(&doc_json).is_err() {
@@ -111,7 +125,7 @@ fn json_schema_check(
             "Proposal document content does not compliant with the template json schema",
             "Invalid Proposal document content",
         );
-        return Ok(false);
+        return false;
     }
-    Ok(true)
+    true
 }

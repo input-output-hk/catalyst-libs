@@ -38,7 +38,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         template: TemplateRule::Specified {
-            exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE,
+            exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
         },
         category: CategoryRule::Specified { optional: false },
         doc_ref: RefRule::NotSpecified,
@@ -56,7 +58,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         template: TemplateRule::Specified {
-            exp_template_type: COMMENT_TEMPLATE_UUID_TYPE,
+            exp_template_type: COMMENT_TEMPLATE_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
         },
         doc_ref: RefRule::Specified {
             exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE

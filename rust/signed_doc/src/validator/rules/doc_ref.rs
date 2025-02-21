@@ -36,12 +36,7 @@ impl RefRule {
         {
             if let Some(doc_ref) = doc.doc_meta().doc_ref() {
                 let ref_validator = |ref_doc: CatalystSignedDocument| {
-                    Ok(referenced_doc_check(
-                        &ref_doc,
-                        exp_ref_type.uuid(),
-                        "ref",
-                        doc.report(),
-                    ))
+                    referenced_doc_check(&ref_doc, exp_ref_type.uuid(), "ref", doc.report())
                 };
                 return validate_provided_doc(&doc_ref, provider, doc.report(), ref_validator)
                     .await;

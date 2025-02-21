@@ -27,12 +27,12 @@ impl CategoryRule {
         if let Self::Specified { optional } = self {
             if let Some(category) = &doc.doc_meta().category_id() {
                 let category_validator = |category_doc: CatalystSignedDocument| {
-                    Ok(referenced_doc_check(
+                    referenced_doc_check(
                         &category_doc,
                         CATEGORY_DOCUMENT_UUID_TYPE,
                         "category_id",
                         doc.report(),
-                    ))
+                    )
                 };
 
                 return validate_provided_doc(category, provider, doc.report(), category_validator)

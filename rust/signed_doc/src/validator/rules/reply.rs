@@ -41,18 +41,18 @@ impl ReplyRule {
                         "reply",
                         doc.report(),
                     ) {
-                        return Ok(false);
+                        return false;
                     }
                     let Some(doc_ref) = doc.doc_meta().doc_ref() else {
                         doc.report()
                             .missing_field("ref", "Document must have a ref field");
-                        return Ok(false);
+                        return false;
                     };
 
                     let Some(replied_doc_ref) = replied_doc.doc_meta().doc_ref() else {
                         doc.report()
                             .missing_field("ref", "Referenced document must have ref field");
-                        return Ok(false);
+                        return false;
                     };
 
                     if replied_doc_ref.id != doc_ref.id {
@@ -62,10 +62,10 @@ impl ReplyRule {
                                 replied_doc_ref.id.to_string().as_str(),
                                 "Invalid referenced document. Document ID should aligned with the replied document.",
                             );
-                        return Ok(false);
+                        return false;
                     }
 
-                    Ok(true)
+                    true
                 };
                 return validate_provided_doc(&reply, provider, doc.report(), reply_validator)
                     .await;
