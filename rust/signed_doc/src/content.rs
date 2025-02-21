@@ -1,5 +1,6 @@
 //! Catalyst Signed Document Content Payload
 
+use anyhow::Context;
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::metadata::ContentEncoding;
@@ -62,7 +63,7 @@ impl Content {
         if let Some(content_encoding) = content_encoding {
             content_encoding
                 .encode(content)
-                .map_err(|e| anyhow::anyhow!("Failed to encode {content_encoding} content: {e}"))
+                .context(format!("Failed to encode {content_encoding} content"))
         } else {
             Ok(content.to_vec())
         }

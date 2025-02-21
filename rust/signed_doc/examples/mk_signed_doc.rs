@@ -9,7 +9,7 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri, Metadata};
+use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri};
 use clap::Parser;
 use ed25519_dalek::pkcs8::DecodePrivateKey;
 
@@ -59,8 +59,8 @@ impl Cli {
         match self {
             Self::Build { doc, output, meta } => {
                 // Load Metadata from JSON file
-                let metadata: serde_json::Value = load_json_from_file(&meta)
-                    .map_err(|e| anyhow::anyhow!("Failed to load metadata from file: {e}"))?;
+                let metadata: serde_json::Value =
+                    load_json_from_file(&meta).context("Failed to load metadata from file")?;
                 println!("{metadata}");
                 // Load Document from JSON file
                 let json_doc: serde_json::Value = load_json_from_file(&doc)?;
@@ -74,8 +74,7 @@ impl Cli {
                 save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
-                let sk = load_secret_key_from_file(&sk)
-                    .map_err(|e| anyhow::anyhow!("Failed to load SK FILE: {e}"))?;
+                let sk = load_secret_key_from_file(&sk).context("Failed to load SK FILE")?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
                 let new_signed_doc = signed_doc

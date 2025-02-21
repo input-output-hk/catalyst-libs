@@ -14,6 +14,7 @@ use std::{
     sync::Arc,
 };
 
+use anyhow::Context;
 pub use builder::Builder;
 use catalyst_types::problem_report::ProblemReport;
 pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
@@ -186,8 +187,8 @@ impl InnerCatalystSignedDocument {
     /// # Errors
     /// Could fails if the `CatalystSignedDocument` object is not valid.
     fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        let protected_header = Header::try_from(&self.metadata)
-            .map_err(|e| anyhow::anyhow!("Failed to encode Document Metadata: {e}"))?;
+        let protected_header =
+            Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
 
         let content = self
             .content
