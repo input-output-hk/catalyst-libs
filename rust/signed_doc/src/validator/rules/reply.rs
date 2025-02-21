@@ -95,36 +95,78 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{
+        providers::tests::{
+            TestCatalystSignedDocumentProvider, TestCatalystSignedDocumentProvider2,
+        },
+        Builder,
+    };
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
-        let doc_type = UuidV4::new();
+        let mut provider = TestCatalystSignedDocumentProvider2::default();
+
+        let exp_reply_type = UuidV4::new();
         let common_ref_id = UuidV7::new();
 
-        let rule = ReplyRule::Specified {
-            exp_reply_type: doc_type,
-            optional: true,
-        };
+        let valid_replied_doc_id = UuidV7::new();
+        let another_type_replied_doc_id = UuidV7::new();
+        let missing_ref_replied_doc_id = UuidV7::new();
+        let missing_type_replied_doc_id = UuidV7::new();
 
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({
-                            "ref": { "id": common_ref_id.to_string() },
-                            "type": doc_type.to_string()
-                    }))
-                    .unwrap()
-                    .build(),
-            ))
-        });
+        // prepare replied documents
+        {
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": { "id": common_ref_id.to_string() },
+                    "id": valid_replied_doc_id.to_string(),
+                    "type": exp_reply_type.to_string()
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // reply doc with other `type` field
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": { "id": common_ref_id.to_string() },
+                    "id": another_type_replied_doc_id.to_string(),
+                    "type": UuidV4::new().to_string()
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // missing `ref` field in the referenced document
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_ref_replied_doc_id.to_string(),
+                    "type": exp_reply_type.to_string()
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // missing `type` field in the referenced document
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "ref": { "id": common_ref_id.to_string() },
+                    "id": missing_type_replied_doc_id.to_string(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+        }
 
         // all correct
-        let ref_id = UuidV7::new();
+        let rule = ReplyRule::Specified {
+            exp_reply_type,
+            optional: true,
+        };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string() },
-                "reply": { "id": ref_id.to_string() }
+                "reply": { "id": valid_replied_doc_id.to_string() }
             }))
             .unwrap()
             .build();
@@ -132,7 +174,7 @@ mod tests {
 
         // all correct, `reply` field is missing, but its optional
         let rule = ReplyRule::Specified {
-            exp_reply_type: doc_type,
+            exp_reply_type,
             optional: true,
         };
         let doc = Builder::new().build();
@@ -140,101 +182,68 @@ mod tests {
 
         // missing `reply` field, but its required
         let rule = ReplyRule::Specified {
-            exp_reply_type: doc_type,
+            exp_reply_type,
             optional: false,
         };
         let doc = Builder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field
-        let ref_id = UuidV7::new();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "reply": { "id": ref_id.to_string() }
+                "reply": { "id": valid_replied_doc_id.to_string() }
             }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
-        let ref_id = UuidV7::new();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string() },
-                "reply": { "id": ref_id.to_string() }
+                "reply": { "id": another_type_replied_doc_id.to_string() }
             }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            let another_doc_type = UuidV4::new();
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({
-                        "ref": { "id": common_ref_id.to_string() },
-                        "type": another_doc_type.to_string()
-                    }))
-                    .unwrap()
-                    .build(),
-            ))
-        });
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field in the referenced document
-        let ref_id = UuidV7::new();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string() },
-                "reply": { "id": ref_id.to_string() }
+                "reply": { "id": missing_ref_replied_doc_id.to_string() }
             }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            let another_doc_type = UuidV4::new();
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({"type": another_doc_type.to_string()}))
-                    .unwrap()
-                    .build(),
-            ))
-        });
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
-        let ref_id = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({
+                "ref": {"id": common_ref_id.to_string() },
+                "reply": { "id": missing_type_replied_doc_id.to_string() }
+            }))
             .unwrap()
             .build();
         let provider = TestCatalystSignedDocumentProvider(|_| Ok(Some(Builder::new().build())));
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // `ref` field does not allign with the referenced document
-        let ref_id = UuidV7::new();
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string() },
-                "reply": { "id": ref_id.to_string() }
+                "ref": { "id": UuidV7::new().to_string() },
+                "reply": { "id": valid_replied_doc_id.to_string() }
             }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| {
-            let another_ref_id = UuidV7::new();
-            Ok(Some(
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({
-                        "ref": { "id": another_ref_id.to_string() },
-                        "type": doc_type.to_string()
-                    }))
-                    .unwrap()
-                    .build(),
-            ))
-        });
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
-        let ref_id = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"reply": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string() },
+                "reply": {"id": UuidV7::new().to_string() }
+            }))
             .unwrap()
             .build();
         let provider = TestCatalystSignedDocumentProvider(|_| Ok(None));
@@ -244,9 +253,9 @@ mod tests {
     #[tokio::test]
     async fn reply_rule_not_specified_test() {
         let rule = ReplyRule::NotSpecified;
+        let provider = TestCatalystSignedDocumentProvider2::default();
 
         let doc = Builder::new().build();
-        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
@@ -254,7 +263,6 @@ mod tests {
             .with_json_metadata(serde_json::json!({"reply": {"id": ref_id.to_string() } }))
             .unwrap()
             .build();
-        let provider = TestCatalystSignedDocumentProvider(|_| anyhow::bail!("some error"));
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 }
