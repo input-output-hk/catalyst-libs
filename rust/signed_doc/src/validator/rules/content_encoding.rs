@@ -34,3 +34,36 @@ impl ContentEncodingRule {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Builder;
+
+    #[tokio::test]
+    async fn content_encoding_rule_test() {
+        let content_encoding = ContentEncoding::Brotli;
+
+        let mut rule = ContentEncodingRule {
+            exp: content_encoding,
+            optional: true,
+        };
+
+        let doc = Builder::new()
+            .with_json_metadata(
+                serde_json::json!({"content-encoding": content_encoding.to_string() }),
+            )
+            .unwrap()
+            .build();
+        assert!(rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({}))
+            .unwrap()
+            .build();
+        assert!(rule.check(&doc).await.unwrap());
+
+        rule.optional = false;
+        assert!(!rule.check(&doc).await.unwrap());
+    }
+}

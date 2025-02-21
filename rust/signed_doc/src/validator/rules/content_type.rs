@@ -49,3 +49,46 @@ impl ContentTypeRule {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Builder;
+
+    #[tokio::test]
+    async fn content_type_rule_test() {
+        let content_type = ContentType::Json;
+
+        let rule = ContentTypeRule { exp: content_type };
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
+            .unwrap()
+            .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
+            .build();
+        assert!(rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": ContentType::Cbor.to_string() }))
+            .unwrap()
+            .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
+            .unwrap()
+            .with_decoded_content(vec![])
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new().build();
+        assert!(!rule.check(&doc).await.unwrap());
+    }
+}
