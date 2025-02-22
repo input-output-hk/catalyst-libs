@@ -1,6 +1,7 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.37 AS rust-ci
+# TODO: FIXME: Use release instead of branch
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:2024-edition  AS rust-ci
 
 COPY_SRC:
     FUNCTION
