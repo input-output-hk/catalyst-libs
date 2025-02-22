@@ -105,7 +105,6 @@ impl Tx {
     ///   - Invalid voter proof.
     ///   - Invalid vote tag value.
     ///   - Invalid public key.
-    #[allow(clippy::indexing_slicing)]
     pub fn from_bytes<R: Read>(reader: &mut R) -> anyhow::Result<Self> {
         // Skip tx size field
         read_be_u32(reader).map_err(|_| anyhow!("Missing tx size field."))?;

@@ -263,7 +263,6 @@ pub(crate) const MITHRIL_IMMUTABLE_SUB_DIRECTORY: &str = "immutable";
 ///
 /// This function returns the tip block point, and the block point immediately proceeding
 /// it in a tuple.
-#[allow(clippy::indexing_slicing)]
 #[logcall(ok = "debug", err = "error")]
 pub(crate) async fn get_mithril_tip(chain: Network, path: &Path) -> Result<MultiEraBlock> {
     let mut path = path.to_path_buf();

@@ -139,7 +139,6 @@ impl Display for StakeAddress {
 mod tests {
     use super::*;
 
-    #[allow(clippy::indexing_slicing)]
     #[test]
     fn roundtrip() {
         let hash: Hash<28> = "276fd18711931e2c0e21430192dbeac0e458093cd9d1fcd7210f64b3"

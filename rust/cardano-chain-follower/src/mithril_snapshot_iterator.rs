@@ -134,7 +134,6 @@ impl MithrilSnapshotIterator {
 
     /// Do a fuzzy search to establish the iterator.
     /// We use this when we don't know the previous point, and need to find it.
-    #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
     async fn fuzzy_iterator(chain: Network, path: &Path, from: &Point) -> MithrilSnapshotIterator {
         let mut backwards_search = BACKWARD_SEARCH_SLOT_INTERVAL;
@@ -158,7 +157,6 @@ impl MithrilSnapshotIterator {
     /// hash, the iteration start is fuzzy. `previous`: The previous point we are
     /// iterating, if known.    If the previous is NOT known, then the first block
     /// yielded by the iterator is discarded and becomes the known previous.
-    #[allow(clippy::indexing_slicing)]
     #[logcall(ok = "debug", err = "error")]
     pub(crate) async fn new(
         chain: Network, path: &Path, from: &Point, previous_point: Option<Point>,

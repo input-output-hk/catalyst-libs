@@ -56,7 +56,6 @@ impl MithrilSnapshot {
     ///
     /// Returns None if its not possible to iterate a mithril snapshot from the requested
     /// point for ANY reason.
-    #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
     pub(crate) async fn try_read_blocks_from_point(
         &self, point: &Point,
@@ -76,7 +75,6 @@ impl MithrilSnapshot {
     }
 
     /// Read a single block from a known point.
-    #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
     pub(crate) async fn read_block_at(&self, point: &Point) -> Option<MultiEraBlock> {
         if let Some(iterator) = self.try_read_blocks_from_point(point).await {
