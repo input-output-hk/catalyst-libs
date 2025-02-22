@@ -39,7 +39,7 @@ where T: for<'a> TryFrom<&'a coset::cbor::Value> {
     None
 }
 
-/// A convinient wrapper over the `UuidV4` type, to implement
+/// A convenient wrapper over the `UuidV4` type, to implement
 /// `TryFrom<coset::cbor::Value>` and `TryFrom<Self> for coset::cbor::Value` traits.
 pub(crate) struct CborUuidV4(pub(crate) UuidV4);
 impl TryFrom<&coset::cbor::Value> for CborUuidV4 {
@@ -57,7 +57,7 @@ impl TryFrom<CborUuidV4> for coset::cbor::Value {
     }
 }
 
-/// A convinient wrapper over the `UuidV7` type, to implement
+/// A convenient wrapper over the `UuidV7` type, to implement
 /// `TryFrom<coset::cbor::Value>` and `TryFrom<Self> for coset::cbor::Value` traits.
 pub(crate) struct CborUuidV7(pub(crate) UuidV7);
 impl TryFrom<&coset::cbor::Value> for CborUuidV7 {

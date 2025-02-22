@@ -39,7 +39,7 @@ const VER_KEY: &str = "ver";
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Metadata(InnerMetadata);
 
-/// An actuall representation of all metadata fields.
+/// An actual representation of all metadata fields.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, Default)]
 pub(crate) struct InnerMetadata {
     /// Cryptographic Algorithm

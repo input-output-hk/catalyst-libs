@@ -131,7 +131,7 @@ pub async fn validate_signatures(
         .signatures()
         .cose_signatures_with_kids()
         .map(|(signature, kid)| {
-            validate_singature(&cose_sign, signature, kid, provider, doc.report())
+            validate_signature(&cose_sign, signature, kid, provider, doc.report())
         });
 
     let res = futures::future::join_all(sign_rules)
@@ -144,8 +144,8 @@ pub async fn validate_signatures(
     Ok(res)
 }
 
-/// A signle signature validation function
-async fn validate_singature<Provider>(
+/// A single signature validation function
+async fn validate_signature<Provider>(
     cose_sign: &CoseSign, signature: &CoseSignature, kid: &IdUri, provider: &Provider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
