@@ -129,3 +129,209 @@ fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSigned
     }
     true
 }
+
+#[cfg(test)]
+mod tests {
+    use catalyst_types::uuid::UuidV7;
+
+    use super::*;
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+
+    #[tokio::test]
+    async fn ref_rule_specified_test() {
+        let mut provider = TestCatalystSignedDocumentProvider::default();
+
+        let exp_template_type = UuidV4::new();
+        let content_type = ContentType::Json;
+        let json_schema = serde_json::to_vec(&serde_json::json!({})).unwrap();
+        let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
+
+        let valid_template_doc_id = UuidV7::new();
+        let another_type_template_doc_id = UuidV7::new();
+        let missing_type_template_doc_id = UuidV7::new();
+        let missing_content_template_doc_id = UuidV7::new();
+        let invalid_content_template_doc_id = UuidV7::new();
+
+        // prepare replied documents
+        {
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": valid_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string()
+                }))
+                .unwrap()
+                .with_decoded_content(json_schema.clone())
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // reply doc with other `type` field
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": another_type_template_doc_id.to_string(),
+                    "type": UuidV4::new().to_string()
+                }))
+                .unwrap()
+                .with_decoded_content(json_schema.clone())
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // missing `type` field in the referenced document
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_type_template_doc_id.to_string(),
+                }))
+                .unwrap()
+                .with_decoded_content(json_schema.clone())
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // missing content
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_content_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string()
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(ref_doc).unwrap();
+
+            // invalid content, must be json encoded
+            let ref_doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": invalid_content_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string()
+                }))
+                .unwrap()
+                .with_decoded_content(vec![])
+                .build();
+            provider.add_document(ref_doc).unwrap();
+        }
+
+        // all correct
+        let rule = TemplateRule::Specified { exp_template_type };
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": valid_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // missing `template` field, but its required
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // missing `content-type` field
+        let rule = TemplateRule::Specified { exp_template_type };
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": valid_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // missing content
+        let rule = TemplateRule::Specified { exp_template_type };
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": valid_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // content not a json encoded
+        let rule = TemplateRule::Specified { exp_template_type };
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": valid_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(vec![])
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // reference to the document with another `type` field
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": another_type_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // missing `type` field in the referenced document
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": missing_type_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // missing content in the referenced document
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": missing_content_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // content not a json encoded in the referenced document
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": missing_content_template_doc_id.to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // cannot find a referenced document
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "content-type": content_type.to_string(),
+                "template": {"id": UuidV7::new().to_string() }
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn template_rule_not_specified_test() {
+        let rule: TemplateRule = TemplateRule::NotSpecified;
+        let provider = TestCatalystSignedDocumentProvider::default();
+
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        let ref_id = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string() } }))
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+    }
+}

@@ -180,7 +180,12 @@ mod tests {
             exp_reply_type,
             optional: false,
         };
-        let doc = Builder::new().build();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string() },
+            }))
+            .unwrap()
+            .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field
