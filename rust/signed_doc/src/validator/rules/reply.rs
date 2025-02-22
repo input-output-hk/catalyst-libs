@@ -227,7 +227,7 @@ mod tests {
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
-        // `ref` field does not allign with the referenced document
+        // `ref` field does not align with the referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": UuidV7::new().to_string() },
