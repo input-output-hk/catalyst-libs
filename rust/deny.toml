@@ -58,13 +58,12 @@ allow-git = [
     "https://github.com/txpipe/kes",
     "https://github.com/txpipe/curve25519-dalek",
     "https://github.com/input-output-hk/mithril",
-    "https://github.com/orxfun/orx-pseudo-default",
 ]
 
 [licenses]
 version = 2
 # Don't warn if a listed license isn't found
-unused-allowed-license="allow"
+unused-allowed-license = "allow"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.93
 allow = [
