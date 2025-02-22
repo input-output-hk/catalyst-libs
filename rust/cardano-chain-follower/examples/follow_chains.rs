@@ -378,7 +378,7 @@ fn update_largest_aux(
     largest_metadata_size: &mut usize,
 ) {
     match block {
-        pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(ref b, _) => {
+        pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),
@@ -389,7 +389,7 @@ fn update_largest_aux(
                 );
             });
         },
-        pallas::ledger::traverse::MultiEraBlock::Babbage(ref b) => {
+        pallas::ledger::traverse::MultiEraBlock::Babbage(b) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),
@@ -400,7 +400,7 @@ fn update_largest_aux(
                 );
             });
         },
-        pallas::ledger::traverse::MultiEraBlock::Conway(ref b) => {
+        pallas::ledger::traverse::MultiEraBlock::Conway(b) => {
             b.auxiliary_data_set.iter().for_each(|(txn_idx, aux_data)| {
                 compare_and_log_aux(
                     aux_data.raw_cbor().len(),

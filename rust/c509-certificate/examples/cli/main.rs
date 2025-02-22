@@ -277,7 +277,7 @@ fn parse_or_default_date(date_option: Option<String>, default: u64) -> Result<u6
 
 /// Generate random serial number if not provided
 fn parse_serial_number(serial_number: Option<UnwrappedBigUint>) -> UnwrappedBigUint {
-    let random_number: u64 = rand::thread_rng().gen();
+    let random_number: u64 = rand::rng().random();
     serial_number.unwrap_or(UnwrappedBigUint::new(random_number))
 }
 

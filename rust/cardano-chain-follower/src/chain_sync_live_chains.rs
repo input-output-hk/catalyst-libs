@@ -277,8 +277,8 @@ impl ProtectedLiveChainBlockList {
             let latest_mithril_tip = latest_mithril_snapshot_id(chain).tip();
             if !point.strict_eq(&latest_mithril_tip) {
                 return Err(Error::LiveSync(format!(
-                "First Block of Live Purge {point} MUST be last block of Mithril Snapshot {latest_mithril_tip}."
-            )));
+                    "First Block of Live Purge {point} MUST be last block of Mithril Snapshot {latest_mithril_tip}."
+                )));
             }
         }
 
@@ -299,8 +299,8 @@ impl ProtectedLiveChainBlockList {
             // Make sure the block that IS present, is the actual block, by strict equality.
             if !purge_start_block_entry.value().point().strict_eq(point) {
                 return Err(Error::LiveSync(format!(
-                "The block to purge to {point} slot is in the live chain, but its hashes do not match."
-            )));
+                    "The block to purge to {point} slot is in the live chain, but its hashes do not match."
+                )));
             }
 
             // Purge every block prior to the purge point.
@@ -394,10 +394,7 @@ impl ProtectedLiveChainBlockList {
         // Search backwards for a fork smaller than or equal to the one we know.
         while this_block.fork() > fork {
             rollback_depth = rollback_depth.saturating_add(1);
-            entry = match entry.prev() {
-                Some(entry) => entry,
-                None => return None,
-            };
+            entry = entry.prev()?;
 
             this_block = entry.value().clone();
         }
