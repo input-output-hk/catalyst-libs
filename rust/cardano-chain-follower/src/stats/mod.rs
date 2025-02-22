@@ -11,7 +11,7 @@ use std::sync::{Arc, LazyLock, RwLock};
 use cardano_blockchain_types::{Network, Slot};
 use chrono::Utc;
 use dashmap::DashMap;
-use rollback::{rollbacks, rollbacks_reset, RollbackType};
+use rollback::{RollbackType, rollbacks, rollbacks_reset};
 use serde::Serialize;
 use strum::IntoEnumIterator;
 use thread::ThreadStat;

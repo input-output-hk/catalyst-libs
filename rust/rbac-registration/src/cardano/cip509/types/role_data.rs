@@ -11,9 +11,9 @@ use pallas::ledger::{
 };
 
 use crate::cardano::cip509::{
+    KeyLocalRef, RoleNumber,
     rbac::role_data::CborRoleData,
     utils::cip19::{compare_key_hash, extract_key_hash},
-    KeyLocalRef, RoleNumber,
 };
 
 /// A role data.

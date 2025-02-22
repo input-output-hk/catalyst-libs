@@ -3,8 +3,8 @@
 use catalyst_types::uuid::Uuid;
 
 use crate::{
-    metadata::ContentType, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument,
+    CatalystSignedDocument, metadata::ContentType, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc,
 };
 
 /// `template` field validation rule

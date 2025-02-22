@@ -7,8 +7,8 @@ use std::{
     path::{Path, PathBuf},
     // process::Stdio,
     sync::{
-        atomic::{AtomicU64, Ordering},
         Arc, OnceLock,
+        atomic::{AtomicU64, Ordering},
     },
 };
 
@@ -18,7 +18,7 @@ use catalyst_types::{conversion::from_saturating, mmap_file::MemoryMapFile};
 use dashmap::DashSet;
 use memx::memcmp;
 use mithril_client::{
-    common::CompressionAlgorithm, snapshot_downloader::SnapshotDownloader, MithrilResult,
+    MithrilResult, common::CompressionAlgorithm, snapshot_downloader::SnapshotDownloader,
 };
 use tar::{Archive, EntryType};
 use tokio::{fs::create_dir_all, task::spawn_blocking};

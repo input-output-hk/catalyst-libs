@@ -6,14 +6,14 @@ use catalyst_types::{cbor_utils::report_duplicated_key, problem_report::ProblemR
 use cbork_utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 use strum_macros::FromRepr;
 
 use crate::cardano::cip509::{
-    decode_context::DecodeContext,
-    rbac::{role_data::CborRoleData, C509Cert, SimplePublicKeyType, X509DerCert},
-    utils::Cip0134UriSet,
     CertKeyHash, RoleData, RoleNumber,
+    decode_context::DecodeContext,
+    rbac::{C509Cert, SimplePublicKeyType, X509DerCert, role_data::CborRoleData},
+    utils::Cip0134UriSet,
 };
 
 /// Cip509 RBAC metadata.

@@ -5,7 +5,7 @@ use std::{
     str::FromStr,
 };
 
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 
 /// IANA `CoAP` Content Encoding.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]

@@ -7,7 +7,7 @@ use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
 use pallas::{
     ledger::{addresses::Network as PallasNetwork, traverse::wellknown::GenesisValues},
-    network::miniprotocols::{MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC},
+    network::miniprotocols::{MAINNET_MAGIC, PRE_PRODUCTION_MAGIC, PREVIEW_MAGIC},
 };
 use tracing::debug;
 

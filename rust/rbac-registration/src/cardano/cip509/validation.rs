@@ -13,7 +13,7 @@ use catalyst_types::{
     id_uri::IdUri,
     problem_report::ProblemReport,
 };
-use ed25519_dalek::{VerifyingKey, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{PUBLIC_KEY_LENGTH, VerifyingKey};
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -25,8 +25,8 @@ use x509_cert::Certificate;
 
 use super::utils::cip19::compare_key_hash;
 use crate::cardano::cip509::{
-    rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    RoleNumber, SimplePublicKeyType, X509DerCert,
+    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, RoleNumber, SimplePublicKeyType, X509DerCert,
+    rbac::Cip509RbacMetadata, types::TxInputHash,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -448,8 +448,11 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report
-            .contains("Role payment key reference index (1) is not found in transaction outputs"));
+        assert!(
+            report.contains(
+                "Role payment key reference index (1) is not found in transaction outputs"
+            )
+        );
     }
 
     #[test]

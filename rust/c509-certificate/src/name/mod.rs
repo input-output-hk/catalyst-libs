@@ -12,8 +12,8 @@
 //! For more information about Name,
 //! visit [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 
-use asn1_rs::{oid, Oid};
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use asn1_rs::{Oid, oid};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 
@@ -25,7 +25,7 @@ use crate::{
     },
 };
 /// OID of `CommonName` attribute.
-const COMMON_NAME_OID: Oid<'static> = oid!(2.5.4 .3);
+const COMMON_NAME_OID: Oid<'static> = oid!(2.5.4.3);
 /// EUI-64 prefix.
 const EUI64_PREFIX: u8 = 0x01;
 /// Hex prefix.
@@ -325,7 +325,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("RFC test CA".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![attr]));
@@ -345,7 +345,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("000123abcd".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![attr]));
@@ -367,7 +367,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("000123ABCD".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![attr]));
@@ -388,7 +388,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("01-23-45-FF-FE-67-89-AB".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![attr]));
@@ -409,7 +409,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("01-23-45-ff-fe-67-89-AB".to_string()));
         let name = Name::new(NameValue::Attribute(vec![attr]));
 
@@ -433,7 +433,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-AB-00-01".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![attr]));
@@ -454,7 +454,7 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr = Attribute::new(oid!(2.5.4 .3));
+        let mut attr = Attribute::new(oid!(2.5.4.3));
         attr.add_value(AttributeValue::Text("01-23-45-67-89-ab-00-01".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![attr]));
@@ -482,15 +482,15 @@ mod test_name {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let mut attr1 = Attribute::new(oid!(2.5.4 .6));
+        let mut attr1 = Attribute::new(oid!(2.5.4.6));
         attr1.add_value(AttributeValue::Text("US".to_string()));
-        let mut attr2 = Attribute::new(oid!(2.5.4 .8));
+        let mut attr2 = Attribute::new(oid!(2.5.4.8));
         attr2.add_value(AttributeValue::Text("CA".to_string()));
-        let mut attr3 = Attribute::new(oid!(2.5.4 .10));
+        let mut attr3 = Attribute::new(oid!(2.5.4.10));
         attr3.add_value(AttributeValue::Text("Example Inc".to_string()));
-        let mut attr4 = Attribute::new(oid!(2.5.4 .11));
+        let mut attr4 = Attribute::new(oid!(2.5.4.11));
         attr4.add_value(AttributeValue::Text("certification".to_string()));
-        let mut attr5 = Attribute::new(oid!(2.5.4 .3));
+        let mut attr5 = Attribute::new(oid!(2.5.4.3));
         attr5.add_value(AttributeValue::Text("802.1AR CA".to_string()));
 
         let name = Name::new(NameValue::Attribute(vec![
@@ -499,7 +499,10 @@ mod test_name {
 
         name.encode(&mut encoder, &mut ())
             .expect("Failed to encode Name");
-        assert_eq!(hex::encode(buffer.clone()), "8a0462555306624341086b4578616d706c6520496e63096d63657274696669636174696f6e016a3830322e314152204341");
+        assert_eq!(
+            hex::encode(buffer.clone()),
+            "8a0462555306624341086b4578616d706c6520496e63096d63657274696669636174696f6e016a3830322e314152204341"
+        );
 
         let mut decoder = Decoder::new(&buffer);
         let name_decoded = Name::decode(&mut decoder, &mut ()).expect("Failed to decode Name");

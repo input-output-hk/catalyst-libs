@@ -14,12 +14,12 @@ use std::{
 use chrono::{DateTime, Duration, Utc};
 use ed25519_dalek::VerifyingKey;
 use fluent_uri::{
+    Uri,
     component::Scheme,
     encoding::{
-        encoder::{Fragment, Path},
         EStr,
+        encoder::{Fragment, Path},
     },
-    Uri,
 };
 use key_rotation::KeyRotation;
 use role_index::RoleIndex;
@@ -321,7 +321,7 @@ impl IdUri {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::id_uri::{role_index::RoleIndex, IdUri};
+    /// use catalyst_types::id_uri::{IdUri, role_index::RoleIndex};
     ///
     /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<IdUri>()
@@ -350,7 +350,7 @@ impl IdUri {
     ///
     /// # Examples
     /// ```rust
-    /// use catalyst_types::id_uri::{key_rotation::KeyRotation, IdUri};
+    /// use catalyst_types::id_uri::{IdUri, key_rotation::KeyRotation};
     ///
     /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<IdUri>()
@@ -441,7 +441,7 @@ impl IdUri {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::id_uri::{key_rotation::KeyRotation, role_index::RoleIndex, IdUri};
+    /// use catalyst_types::id_uri::{IdUri, key_rotation::KeyRotation, role_index::RoleIndex};
     ///
     /// let id_uri =
     ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"

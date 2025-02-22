@@ -7,7 +7,7 @@ use cardano_blockchain_types::Network;
 use dashmap::DashMap;
 use strum::IntoEnumIterator;
 use tokio::{
-    sync::{broadcast, oneshot, RwLock},
+    sync::{RwLock, broadcast, oneshot},
     time::sleep,
 };
 use tracing::error;

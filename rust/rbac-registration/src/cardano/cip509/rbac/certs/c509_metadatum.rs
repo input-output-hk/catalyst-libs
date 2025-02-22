@@ -1,7 +1,7 @@
 //! C509 certificate in metadatum reference.
 
 use cbork_utils::decode_helper::{decode_array_len, decode_helper};
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 
 /// C509 certificate in metadatum reference.
 #[derive(Debug, PartialEq, Clone)]

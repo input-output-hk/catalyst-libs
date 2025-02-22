@@ -22,7 +22,7 @@ use coset::{CborSerializable, Header};
 pub use metadata::{
     Algorithm, ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section,
 };
-use minicbor::{decode, encode, Decode, Decoder, Encode};
+use minicbor::{Decode, Decoder, Encode, decode, encode};
 use providers::VerifyingKeyProvider;
 pub use signature::{IdUri, Signatures};
 
@@ -411,10 +411,12 @@ mod tests {
             .unwrap();
         assert!(!signed_doc.problem_report().is_problematic());
 
-        assert!(signed_doc
-            .verify(&Provider(Err(anyhow::anyhow!("some error"))))
-            .await
-            .is_err());
+        assert!(
+            signed_doc
+                .verify(&Provider(Err(anyhow::anyhow!("some error"))))
+                .await
+                .is_err()
+        );
         assert!(signed_doc.verify(&Provider(Ok(Some(pk)))).await.unwrap());
         assert!(!signed_doc.verify(&Provider(Ok(None))).await.unwrap());
     }

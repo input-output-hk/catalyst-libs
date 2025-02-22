@@ -4,19 +4,19 @@
 
 use std::{borrow::Cow, collections::HashMap};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionId, TxnIndex};
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
-    hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
+    hashes::{BLAKE_2B256_SIZE, Blake2b256Hash},
     id_uri::IdUri,
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
 use cbork_utils::decode_helper::{decode_bytes, decode_helper, decode_map_len};
 use minicbor::{
-    decode::{self},
     Decode, Decoder,
+    decode::{self},
 };
 use pallas::{
     codec::utils::Nullable,
@@ -31,6 +31,7 @@ use tracing::warn;
 use uuid::Uuid;
 
 use crate::cardano::cip509::{
+    Payment, PointTxnIdx, RoleData,
     decode_context::DecodeContext,
     rbac::Cip509RbacMetadata,
     types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
@@ -39,7 +40,6 @@ use crate::cardano::cip509::{
         validate_aux, validate_role_data, validate_stake_public_key, validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
-    Payment, PointTxnIdx, RoleData,
 };
 
 /// A x509 metadata envelope.

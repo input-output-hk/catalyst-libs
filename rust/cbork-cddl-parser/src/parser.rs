@@ -1,7 +1,7 @@
 //! A parser for CDDL using the [pest](https://github.com/pest-parser/pest).
 //! Utilized for parsing in accordance with RFC-8610, RFC-9165.
 
-use pest::{iterators::Pair, Parser};
+use pest::{Parser, iterators::Pair};
 
 use crate::Extension;
 

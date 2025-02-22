@@ -3,7 +3,7 @@
 use c509_certificate::c509::C509;
 use catalyst_types::problem_report::ProblemReport;
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_tag};
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 
 use crate::cardano::cip509::rbac::{certs::C509CertInMetadatumReference, tag::KeyTag};
 

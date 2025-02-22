@@ -1,6 +1,6 @@
 //! An encoded CBOR (tag 24) struct
 
-use minicbor::{data::Tag, Decode, Decoder, Encode};
+use minicbor::{Decode, Decoder, Encode, data::Tag};
 
 use crate::Cbor;
 

@@ -3,9 +3,9 @@
 use std::{collections::HashMap, sync::Arc};
 
 use c509_certificate::{
+    C509ExtensionType,
     extensions::{alt_name::GeneralNamesOrText, extension::ExtensionValue},
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
-    C509ExtensionType,
 };
 use cardano_blockchain_types::Cip0134Uri;
 use catalyst_types::problem_report::ProblemReport;

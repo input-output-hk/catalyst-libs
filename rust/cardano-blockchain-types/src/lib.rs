@@ -25,7 +25,7 @@ pub use auxdata::{
 pub use cip134_uri::Cip0134Uri;
 pub use fork::Fork;
 pub use hashes::{PubKeyHash, TransactionId};
-pub use metadata::cip36::{voting_pk::VotingPubKey, Cip36};
+pub use metadata::cip36::{Cip36, voting_pk::VotingPubKey};
 pub use multi_era_block_data::MultiEraBlock;
 pub use network::Network;
 pub use point::Point;

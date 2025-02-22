@@ -14,8 +14,8 @@ mod data;
 use std::str::FromStr;
 
 use asn1_rs::Oid;
-use data::{get_oid_from_int, SUBJECT_PUB_KEY_ALGO_LOOKUP};
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use data::{SUBJECT_PUB_KEY_ALGO_LOOKUP, get_oid_from_int};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Deserializer, Serialize};
 
 use crate::{
@@ -141,7 +141,7 @@ mod test_subject_public_key_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let spka = SubjectPubKeyAlgorithm::new(oid!(1.3.101 .112), None);
+        let spka = SubjectPubKeyAlgorithm::new(oid!(1.3.101.112), None);
         spka.encode(&mut encoder, &mut ())
             .expect("Failed to encode SubjectPubKeyAlgorithm");
 
@@ -159,7 +159,7 @@ mod test_subject_public_key_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let spka = SubjectPubKeyAlgorithm::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1), None);
+        let spka = SubjectPubKeyAlgorithm::new(oid!(2.16.840.1.101.3.4.2.1), None);
         spka.encode(&mut encoder, &mut ())
             .expect("Failed to encode SubjectPubKeyAlgorithm");
 
@@ -177,10 +177,8 @@ mod test_subject_public_key_algorithm {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let spka = SubjectPubKeyAlgorithm::new(
-            oid!(2.16.840 .1 .101 .3 .4 .2 .1),
-            Some("example".to_string()),
-        );
+        let spka =
+            SubjectPubKeyAlgorithm::new(oid!(2.16.840.1.101.3.4.2.1), Some("example".to_string()));
         spka.encode(&mut encoder, &mut ())
             .expect("Failed to encode SubjectPubKeyAlgorithm");
         // Array of 2 items: 0x82

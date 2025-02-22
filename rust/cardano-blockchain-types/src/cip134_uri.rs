@@ -5,7 +5,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use anyhow::{anyhow, Context, Error, Result};
+use anyhow::{Context, Error, Result, anyhow};
 use pallas::ledger::addresses::Address;
 
 /// A URI in the CIP-0134 format.
@@ -148,7 +148,7 @@ mod tests {
                 "web+cardano://addr/drep_vk17axh4sc9zwkpsft3tlgpjemfwc0u5mnld80r85zw7zdqcst6w54sdv4a4e",
                 Network::Other(7),
                 "4d7ac30513ac1825715fd0196769761fca6e7f69de33d04ef09a0c41",
-            )
+            ),
         ];
 
         for (uri, network, payload) in test_data {
@@ -175,7 +175,7 @@ mod tests {
             (
                 "web+cardano://addr/cc_hot_vk10y48lq72hypxraew74lwjjn9e2dscuwphckglh2nrrpkgweqk5hschnzv5",
                 Network::Other(9),
-            )
+            ),
         ];
 
         for (uri, network) in test_data {

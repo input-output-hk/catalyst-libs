@@ -16,7 +16,7 @@ use mithril_client::{Client, MessageBuilder, MithrilCertificate, Snapshot, Snaps
 use tokio::{
     fs::remove_dir_all,
     sync::mpsc::Sender,
-    time::{sleep, Duration},
+    time::{Duration, sleep},
 };
 use tracing::{debug, error};
 use tracing_log::log;
@@ -57,14 +57,20 @@ async fn get_latest_snapshots(
     let snapshots = match client.snapshot().list().await {
         Ok(s) => s,
         Err(e) => {
-            error!("Unexpected Error [{}]: Unable to get Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping.", network, e);
+            error!(
+                "Unexpected Error [{}]: Unable to get Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping.",
+                network, e
+            );
             return None;
         },
     };
 
     // Get the current latest snapshot.
     let Some(latest_snapshot) = snapshots.first() else {
-        error!("Unexpected Error: Empty Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping", network);
+        error!(
+            "Unexpected Error: Empty Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping",
+            network
+        );
         return None;
     };
 
@@ -80,7 +86,10 @@ async fn get_snapshot_by_id(
     let snapshots = match client.snapshot().list().await {
         Ok(s) => s,
         Err(e) => {
-            error!("Unexpected Error [{}]: Unable to get Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping.", network, e);
+            error!(
+                "Unexpected Error [{}]: Unable to get Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping.",
+                network, e
+            );
             return None;
         },
     };
@@ -112,7 +121,11 @@ fn create_client(cfg: &MithrilSnapshotConfig) -> Option<(Client, Arc<MithrilTurb
     {
         Ok(c) => c,
         Err(err) => {
-            error!(chain=cfg.chain.to_string(),"Unexpected Error [{}]: Unable to create Mithril Client.  Mithril Snapshots can not update.", err);
+            error!(
+                chain = cfg.chain.to_string(),
+                "Unexpected Error [{}]: Unable to create Mithril Client.  Mithril Snapshots can not update.",
+                err
+            );
             return None;
         },
     };
@@ -352,7 +365,9 @@ async fn get_latest_validated_mithril_snapshot(
         debug!("Purging Bad Mithril Snapshot: {latest_mithril}");
         if let Err(error) = remove_dir_all(&latest_mithril).await {
             // This should NOT happen because we already checked the Mithril path is fully writable.
-            error!("Mithril Snapshot background updater for: {chain}: Failed to remove old snapshot {latest_mithril}: {error}");
+            error!(
+                "Mithril Snapshot background updater for: {chain}: Failed to remove old snapshot {latest_mithril}: {error}"
+            );
         }
     }
 
@@ -374,7 +389,9 @@ async fn get_latest_validated_mithril_snapshot(
 
     let Some(snapshot) = get_snapshot_by_id(client, chain, &latest_mithril).await else {
         // We have a latest snapshot, but the Aggregator does not know it.
-        error!("Mithril Snapshot background updater for: {chain}: Latest snapshot {latest_mithril} does not exist on the Aggregator.");
+        error!(
+            "Mithril Snapshot background updater for: {chain}: Latest snapshot {latest_mithril} does not exist on the Aggregator."
+        );
         purge_bad_mithril_snapshot(chain, &latest_mithril).await;
         return None;
     };
@@ -454,7 +471,10 @@ async fn recover_existing_snapshot(
                 }
             },
             Err(error) => {
-                error!("Mithril snapshot validation failed for: {}.  Could not read the TIP Block : {}.", cfg.chain, error);
+                error!(
+                    "Mithril snapshot validation failed for: {}.  Could not read the TIP Block : {}.",
+                    cfg.chain, error
+                );
             },
         }
     } else {
@@ -496,14 +516,20 @@ async fn check_snapshot_to_download(
         return SnapshotStatus::Sleep(DOWNLOAD_ERROR_RETRY_DURATION);
     };
 
-    debug!("Mithril Snapshot background updater for: {chain} : Checking if we are up-to-date {current_snapshot:?}.");
+    debug!(
+        "Mithril Snapshot background updater for: {chain} : Checking if we are up-to-date {current_snapshot:?}."
+    );
 
     // Check if the latest snapshot is different from our actual previous one.
     if let Some(current_mithril_snapshot) = current_snapshot {
         let latest_immutable_file_number = latest_snapshot.beacon.immutable_file_number;
-        debug!("We have a current snapshot: {current_mithril_snapshot} == {latest_immutable_file_number} ??");
+        debug!(
+            "We have a current snapshot: {current_mithril_snapshot} == {latest_immutable_file_number} ??"
+        );
         if *current_mithril_snapshot == latest_immutable_file_number {
-            debug!("Current Snapshot and latest are the same, so wait for it to likely to have changed.");
+            debug!(
+                "Current Snapshot and latest are the same, so wait for it to likely to have changed."
+            );
             let next_sleep =
                 calculate_sleep_duration(&latest_snapshot, &chronologically_previous_snapshot);
             return SnapshotStatus::Sleep(next_sleep);

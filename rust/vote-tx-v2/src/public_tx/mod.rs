@@ -8,7 +8,7 @@ use std::ops::{Deref, DerefMut};
 use minicbor::{Decode, Encode};
 pub use vote::{Choice, Proof, PropId};
 
-use crate::{gen_tx::GeneralizedTx, Cbor};
+use crate::{Cbor, gen_tx::GeneralizedTx};
 
 /// A public vote tx struct.
 #[derive(Debug, Clone, PartialEq)]

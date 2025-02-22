@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 use minicbor::{Decode, Decoder, Encode};
 use uuid::Uuid;
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
+use super::{CborContext, INVALID_UUID, UuidError, decode_cbor_uuid, encode_cbor_uuid};
 
 /// Type representing a `UUIDv4`.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]

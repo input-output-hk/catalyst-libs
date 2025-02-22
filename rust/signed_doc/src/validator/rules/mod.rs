@@ -3,7 +3,7 @@
 
 use futures::FutureExt;
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, providers::CatalystSignedDocumentProvider};
 
 mod category;
 mod content_encoding;

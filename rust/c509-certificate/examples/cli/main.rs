@@ -6,7 +6,7 @@ use std::{
     path::PathBuf,
 };
 
-use asn1_rs::{oid, Oid};
+use asn1_rs::{Oid, oid};
 use c509_certificate::{
     attributes::attribute::Attribute,
     big_uint::UnwrappedBigUint,
@@ -131,7 +131,7 @@ struct C509Json {
 }
 
 /// Ed25519 oid and parameter - default algorithm.
-const ED25519: (Oid, Option<String>) = (oid!(1.3.101 .112), None);
+const ED25519: (Oid, Option<String>) = (oid!(1.3.101.112), None);
 
 /// Integer indicate that certificate is self-signed.
 /// 2 for Natively Signed C509 Certificate following X.509 v3

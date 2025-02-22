@@ -14,7 +14,7 @@ use tracing_log::log;
 
 use crate::{
     error::{Error, Result},
-    mithril_query::{make_mithril_iterator, ImmutableBlockIterator},
+    mithril_query::{ImmutableBlockIterator, make_mithril_iterator},
 };
 
 /// Search backwards by 60 slots (seconds) looking for a previous block.

@@ -3,18 +3,17 @@
 use catalyst_voting::vote_protocol::{
     committee::ElectionSecretKey,
     tally::{
-        decrypt_tally,
+        DecryptionTallySetup, decrypt_tally,
         proof::{generate_tally_proof_with_default_rng, verify_tally_proof},
-        tally, DecryptionTallySetup,
+        tally,
     },
     voter::{
-        decrypt_vote, encrypt_vote_with_default_rng,
-        proof::{generate_voter_proof_with_default_rng, verify_voter_proof, VoterProofCommitment},
-        Vote,
+        Vote, decrypt_vote, encrypt_vote_with_default_rng,
+        proof::{VoterProofCommitment, generate_voter_proof_with_default_rng, verify_voter_proof},
     },
 };
 use proptest::prelude::ProptestConfig;
-use test_strategy::{proptest, Arbitrary};
+use test_strategy::{Arbitrary, proptest};
 
 const VOTING_OPTIONS: usize = 3;
 const VOTERS_NUMBER: usize = 100;

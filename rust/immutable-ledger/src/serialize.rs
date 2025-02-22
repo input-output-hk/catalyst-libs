@@ -2,7 +2,7 @@
 
 //! Block structure
 
-use anyhow::{anyhow, bail, Ok};
+use anyhow::{Ok, anyhow, bail};
 use blake2b_simd::{self, Params};
 use uuid::Uuid;
 
@@ -194,10 +194,10 @@ impl Block {
             // chain_id MUST be the same as for the previous block (except for genesis).
             if self.block_header.chain_id != previous_block.block_header.chain_id {
                 return Err(anyhow::anyhow!(
-                "Module: Immutable ledger,  Message: Chain_id MUST be the same as for the previous block {:?} {:?}",
-                self.block_header,
-                previous_block.block_header
-            ));
+                    "Module: Immutable ledger,  Message: Chain_id MUST be the same as for the previous block {:?} {:?}",
+                    self.block_header,
+                    previous_block.block_header
+                ));
             };
 
             // height MUST be incremented by 1 from the previous block height value (except for
@@ -280,9 +280,9 @@ impl Block {
 
                 if self.block_header.previous_block_hash.1 != genesis_to_prev_hash {
                     return Err(anyhow::anyhow!(
-                    "Module: Immutable ledger,  Message: Genesis block prev hash is invalid {:?}",
-                    self.block_header,
-                ));
+                        "Module: Immutable ledger,  Message: Genesis block prev hash is invalid {:?}",
+                        self.block_header,
+                    ));
                 }
             }
         }
@@ -587,13 +587,13 @@ impl GenesisPreviousHash {
 #[allow(clippy::items_after_statements)]
 mod tests {
 
-    use ed25519_dalek::{Signature, Signer, SigningKey, SECRET_KEY_LENGTH};
+    use ed25519_dalek::{SECRET_KEY_LENGTH, Signature, Signer, SigningKey};
     use test_strategy::proptest;
     use uuid::Uuid;
 
     use super::{BlockHeader, Kid};
     use crate::serialize::{
-        blake2b_512, Block, BlockData, GenesisPreviousHash, HashFunction::Blake2b, Signatures,
+        Block, BlockData, GenesisPreviousHash, HashFunction::Blake2b, Signatures, blake2b_512,
     };
 
     #[proptest]

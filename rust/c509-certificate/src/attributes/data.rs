@@ -3,7 +3,7 @@
 //! Section 9.3 C509 Attributes Registry for more information.
 
 use anyhow::Error;
-use asn1_rs::{oid, Oid};
+use asn1_rs::{Oid, oid};
 use once_cell::sync::Lazy;
 
 use crate::tables::IntegerToOidTable;

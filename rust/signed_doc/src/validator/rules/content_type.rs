@@ -1,6 +1,6 @@
 //! `content-type` rule type impl.
 
-use crate::{metadata::ContentType, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, metadata::ContentType};
 
 /// `content-type` field validation rule
 #[derive(Clone, Debug, PartialEq)]

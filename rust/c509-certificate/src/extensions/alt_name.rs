@@ -1,13 +1,13 @@
 //! C509 Alternative Name uses for Subject Alternative Name extension and
 //! Issuer Alternative Name extension.
 
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::{
     general_names::{
-        general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
         GeneralNames,
+        general_name::{GeneralName, GeneralNameTypeRegistry, GeneralNameValue},
     },
     helper::{
         decode::{decode_datatype, decode_helper},

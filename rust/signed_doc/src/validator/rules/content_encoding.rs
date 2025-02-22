@@ -1,6 +1,6 @@
 //! `content-encoding` rule type impl.
 
-use crate::{metadata::ContentEncoding, CatalystSignedDocument};
+use crate::{CatalystSignedDocument, metadata::ContentEncoding};
 
 /// `content-encoding` field validation rule
 pub(crate) struct ContentEncodingRule {

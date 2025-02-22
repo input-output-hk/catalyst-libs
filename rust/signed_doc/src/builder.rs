@@ -1,10 +1,10 @@
 //! Catalyst Signed Document Builder.
 use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
-use ed25519_dalek::{ed25519::signature::Signer, SecretKey};
+use ed25519_dalek::{SecretKey, ed25519::signature::Signer};
 
 use crate::{
-    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
-    PROBLEM_REPORT_CTX,
+    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, PROBLEM_REPORT_CTX,
+    Signatures,
 };
 
 /// Catalyst Signed Document Builder.

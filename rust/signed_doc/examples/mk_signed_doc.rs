@@ -3,7 +3,7 @@
 #![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
 use std::{
-    fs::{read_to_string, File},
+    fs::{File, read_to_string},
     io::{Read, Write},
     path::PathBuf,
 };

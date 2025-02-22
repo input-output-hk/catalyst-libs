@@ -10,7 +10,7 @@ use std::{
 use cardano_blockchain_types::{Network, Point};
 use tracing::debug;
 
-use crate::mithril_snapshot_sync::{get_mithril_tip, MITHRIL_IMMUTABLE_SUB_DIRECTORY};
+use crate::mithril_snapshot_sync::{MITHRIL_IMMUTABLE_SUB_DIRECTORY, get_mithril_tip};
 /// A representation of a Snapshot Path and its represented immutable file number.
 #[derive(Clone, Debug)]
 pub(crate) struct SnapshotId {

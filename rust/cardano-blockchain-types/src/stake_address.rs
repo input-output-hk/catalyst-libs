@@ -4,7 +4,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use anyhow::{anyhow, Context};
+use anyhow::{Context, anyhow};
 use pallas::{
     crypto::hash::Hash,
     ledger::{

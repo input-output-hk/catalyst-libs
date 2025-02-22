@@ -4,7 +4,7 @@ use std::fmt::Display;
 
 use coset::cbor::Value;
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, UuidV7};
+use super::{UuidV7, decode_cbor_uuid, encode_cbor_uuid};
 
 /// Reference to a Document.
 #[derive(Copy, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]

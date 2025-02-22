@@ -1,6 +1,6 @@
 //! A validation signature wrapper.
 
-use anyhow::{anyhow, Error};
+use anyhow::{Error, anyhow};
 
 /// A validation signature.
 ///

@@ -6,9 +6,9 @@
 //!   into the final expression list
 
 use anyhow::{anyhow, ensure};
-use pest::{iterators::Pair, RuleType};
+use pest::{RuleType, iterators::Pair};
 
-use crate::parser::{cddl, rfc_8610, rfc_9165, Ast};
+use crate::parser::{Ast, cddl, rfc_8610, rfc_9165};
 
 /// Processes the AST.
 pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<Ast> {

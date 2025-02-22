@@ -22,19 +22,19 @@ use tokio::{
 use tracing::{debug, error};
 
 use crate::{
+    ChainSyncConfig,
     chain_sync_live_chains::{
         get_fill_to_point, get_intersect_points, get_live_block, get_live_head_point, get_peer_tip,
         live_chain_add_block_to_tip, live_chain_backfill, live_chain_length, purge_live_chain,
     },
     chain_sync_ready::{
-        get_chain_update_tx_queue, notify_follower, wait_for_sync_ready, SyncReadyWaiter,
+        SyncReadyWaiter, get_chain_update_tx_queue, notify_follower, wait_for_sync_ready,
     },
     chain_update,
     error::{Error, Result},
     mithril_snapshot_config::MithrilUpdateMessage,
     mithril_snapshot_data::latest_mithril_snapshot_id,
     stats::{self},
-    ChainSyncConfig,
 };
 
 /// The maximum number of seconds we wait for a node to connect.

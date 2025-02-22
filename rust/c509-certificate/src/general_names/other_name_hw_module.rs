@@ -4,7 +4,7 @@
 //! [RFC4108](https://datatracker.ietf.org/doc/rfc4108/)
 
 use asn1_rs::Oid;
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::{

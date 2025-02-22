@@ -9,9 +9,9 @@ use super::{EncryptedVote, EncryptionRandomness, Vote};
 use crate::{
     crypto::{
         group::{GroupElement, Scalar},
-        hash::digest::{consts::U64, Digest},
+        hash::digest::{Digest, consts::U64},
         rng::{default_rng, rand_core::CryptoRngCore},
-        zk_unit_vector::{generate_unit_vector_proof, verify_unit_vector_proof, UnitVectorProof},
+        zk_unit_vector::{UnitVectorProof, generate_unit_vector_proof, verify_unit_vector_proof},
     },
     vote_protocol::committee::ElectionPublicKey,
 };
@@ -109,7 +109,7 @@ pub fn verify_voter_proof(
 
 #[cfg(test)]
 mod arbitrary_impl {
-    use proptest::prelude::{any_with, Arbitrary, BoxedStrategy, Strategy};
+    use proptest::prelude::{Arbitrary, BoxedStrategy, Strategy, any_with};
 
     use super::{UnitVectorProof, VoterProof};
 

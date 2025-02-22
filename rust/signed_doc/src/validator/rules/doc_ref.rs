@@ -3,8 +3,8 @@
 use catalyst_types::uuid::Uuid;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
-    CatalystSignedDocument,
+    CatalystSignedDocument, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc,
 };
 
 /// `ref` field validation rule

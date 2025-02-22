@@ -6,6 +6,7 @@ use tokio::sync::broadcast::{self};
 use tracing::{debug, error};
 
 use crate::{
+    Statistics,
     chain_sync::point_at_tip,
     chain_sync_live_chains::{find_best_fork_block, get_live_block, live_chain_length},
     chain_sync_ready::{block_until_sync_ready, get_chain_update_rx_queue},
@@ -14,7 +15,6 @@ use crate::{
     mithril_snapshot_data::latest_mithril_snapshot_id,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
     stats::{self},
-    Statistics,
 };
 
 /// The Chain Follower

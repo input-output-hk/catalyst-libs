@@ -2,7 +2,7 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef};
+use crate::{CatalystSignedDocument, DocumentRef, providers::CatalystSignedDocumentProvider};
 
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.

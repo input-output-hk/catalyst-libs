@@ -15,13 +15,13 @@ mod utils;
 use std::ops::Mul;
 
 use challenges::{calculate_first_challenge_hash, calculate_second_challenge_hash};
-use polynomial::{calculate_polynomial_val, generate_polynomial, Polynomial};
+use polynomial::{Polynomial, calculate_polynomial_val, generate_polynomial};
 use randomness_announcements::{Announcement, BlindingRandomness, ResponseRandomness};
 use rayon::iter::{IndexedParallelIterator, IntoParallelRefIterator, ParallelIterator};
 use utils::get_bit;
 
 use crate::crypto::{
-    elgamal::{encrypt, Ciphertext},
+    elgamal::{Ciphertext, encrypt},
     group::{GroupElement, Scalar},
     rng::rand_core::CryptoRngCore,
 };
@@ -238,7 +238,7 @@ fn check_2(
 #[cfg(test)]
 mod arbitrary_impl {
     use proptest::{
-        prelude::{any_with, Arbitrary, BoxedStrategy, Strategy},
+        prelude::{Arbitrary, BoxedStrategy, Strategy, any_with},
         sample::size_range,
     };
 

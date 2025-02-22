@@ -3,7 +3,7 @@
 use std::ops::Deref;
 
 mod common;
-use common::{byte_sequences::*, literal_values::*, text_sequences::*, Rule};
+use common::{Rule, byte_sequences::*, literal_values::*, text_sequences::*};
 
 #[test]
 /// Test if the `uint` rule passes properly.

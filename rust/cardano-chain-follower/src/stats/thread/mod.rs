@@ -5,16 +5,16 @@ pub(crate) mod name;
 use std::{
     fmt,
     sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc, Mutex,
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Duration,
 };
 
 use cpu_time::ThreadTime;
 use serde::{
-    ser::{SerializeStruct, Serializer},
     Serialize,
+    ser::{SerializeStruct, Serializer},
 };
 use tracing::error;
 

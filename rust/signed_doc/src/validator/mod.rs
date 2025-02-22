@@ -12,12 +12,12 @@ use rules::{
 };
 
 use crate::{
+    CatalystSignedDocument, ContentEncoding, ContentType,
     doc_types::{
         COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
         PROPOSAL_TEMPLATE_UUID_TYPE,
     },
     providers::CatalystSignedDocumentProvider,
-    CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.

@@ -16,6 +16,7 @@ use pallas::ledger::traverse::MultiEraTx;
 use tracing::debug;
 
 use crate::{
+    Slot,
     auxdata::{
         block::BlockAuxData, metadatum_label::MetadatumLabel, metadatum_value::MetadatumValue,
     },
@@ -24,7 +25,6 @@ use crate::{
     point::Point,
     txn_index::TxnIndex,
     txn_witness::{TxnWitness, VKeyHash},
-    Slot,
 };
 
 /// Self-referencing CBOR encoded data of a multi-era block.
@@ -329,8 +329,12 @@ impl Display for MultiEraBlock {
             pallas::ledger::traverse::MultiEraBlock::Conway(_) => "Conway".to_string(),
             _ => "Unknown".to_string(),
         };
-        write!(f, "{block_era} block : {}, Previous {} : Slot# {slot} : {fork} : Block# {block_number} : Size {size} : Txns {txns} : AuxData? {aux_data}",
-    self.point(), self.previous())?;
+        write!(
+            f,
+            "{block_era} block : {}, Previous {} : Slot# {slot} : {fork} : Block# {block_number} : Size {size} : Txns {txns} : AuxData? {aux_data}",
+            self.point(),
+            self.previous()
+        )?;
         Ok(())
     }
 }
@@ -486,10 +490,12 @@ pub(crate) mod tests {
             );
 
             assert!(block.is_err());
-            assert!(block
-                .unwrap_err()
-                .to_string()
-                .contains("Previous slot is not less than current slot"));
+            assert!(
+                block
+                    .unwrap_err()
+                    .to_string()
+                    .contains("Previous slot is not less than current slot")
+            );
         }
 
         Ok(())

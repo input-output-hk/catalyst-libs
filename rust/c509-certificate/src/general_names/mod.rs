@@ -11,7 +11,7 @@ mod data;
 pub mod general_name;
 pub mod other_name_hw_module;
 use general_name::GeneralName;
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Serialize};
 
 use crate::helper::{decode::decode_array_len, encode::encode_array_len};
@@ -108,7 +108,7 @@ mod test_general_names {
         gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::OtherNameHardwareModuleName,
             GeneralNameValue::OtherNameHWModuleName(OtherNameHardwareModuleName::new(
-                oid!(2.16.840 .1 .101 .3 .4 .2 .1),
+                oid!(2.16.840.1.101.3.4.2.1),
                 vec![0x01, 0x02, 0x03, 0x04],
             )),
         ));
@@ -118,7 +118,7 @@ mod test_general_names {
         ));
         gns.add_general_name(GeneralName::new(
             GeneralNameTypeRegistry::RegisteredID,
-            GeneralNameValue::Oid(C509oid::new(oid!(2.16.840 .1 .101 .3 .4 .2 .1))),
+            GeneralNameValue::Oid(C509oid::new(oid!(2.16.840.1.101.3.4.2.1))),
         ));
         gns.encode(&mut encoder, &mut ())
             .expect("Failed to encode GeneralNames");
@@ -133,7 +133,10 @@ mod test_general_names {
         // IPAddress Value in bytes string 192, 168, 1, 1: 0x44c0a80101
         // RegisteredID: 0x08
         // OID 2.16.840 .1 .101 .3 .4 .2 .1: 0x49608648016503040201
-        assert_eq!(hex::encode(buffer.clone()), "88026b6578616d706c652e636f6d20824960864801650304020144010203040744c0a801010849608648016503040201");
+        assert_eq!(
+            hex::encode(buffer.clone()),
+            "88026b6578616d706c652e636f6d20824960864801650304020144010203040744c0a801010849608648016503040201"
+        );
 
         let mut decoder = Decoder::new(&buffer);
         let gns_decoded =

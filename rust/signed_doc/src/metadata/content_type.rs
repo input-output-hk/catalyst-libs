@@ -6,7 +6,7 @@ use std::{
 };
 
 use coset::iana::CoapContentFormat;
-use serde::{de, Deserialize, Deserializer};
+use serde::{Deserialize, Deserializer, de};
 use strum::VariantArray;
 
 /// Payload Content Type.

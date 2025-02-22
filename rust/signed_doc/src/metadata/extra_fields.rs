@@ -1,9 +1,9 @@
 //! Catalyst Signed Document Extra Fields.
 
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV4};
-use coset::{cbor::Value, Label, ProtectedHeader};
+use coset::{Label, ProtectedHeader, cbor::Value};
 
-use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef, Section};
+use super::{DocumentRef, Section, cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid};
 
 /// `ref` field COSE key value
 const REF_KEY: &str = "ref";

@@ -14,14 +14,14 @@ use strum::IntoEnumIterator;
 use tokio::{
     fs::{self},
     io::{self},
-    sync::{mpsc, Mutex},
+    sync::{Mutex, mpsc},
     task::JoinHandle,
 };
 use tracing::{debug, error};
 
 use crate::{
     error::{Error, Result},
-    mithril_snapshot_data::{latest_mithril_snapshot_id, SnapshotData},
+    mithril_snapshot_data::{SnapshotData, latest_mithril_snapshot_id},
     mithril_snapshot_sync::background_mithril_update,
     snapshot_id::SnapshotId,
     stats,

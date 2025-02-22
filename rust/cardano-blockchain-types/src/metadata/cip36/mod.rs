@@ -60,7 +60,7 @@ impl fmt::Display for Cip36 {
             is_valid_voting_keys = self.is_valid_voting_keys,
             is_valid_purpose = self.is_valid_purpose,
             err_report = serde_json::to_string(&self.err_report)
-            .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"))
+                .unwrap_or_else(|_| String::from("Failed to serialize ProblemReport"))
         )
     }
 }

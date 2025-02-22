@@ -4,8 +4,8 @@ pub mod data;
 use std::{fmt::Debug, str::FromStr};
 
 use asn1_rs::Oid;
-use data::{get_extension_type_from_int, get_oid_from_int, EXTENSIONS_LOOKUP};
-use minicbor::{encode::Write, Decode, Decoder, Encode, Encoder};
+use data::{EXTENSIONS_LOOKUP, get_extension_type_from_int, get_oid_from_int};
+use minicbor::{Decode, Decoder, Encode, Encoder, encode::Write};
 use serde::{Deserialize, Deserializer, Serialize};
 use strum_macros::EnumDiscriminants;
 
@@ -275,7 +275,7 @@ mod test_extension {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let ext = Extension::new(oid!(2.5.29 .54), ExtensionValue::Int(2), false);
+        let ext = Extension::new(oid!(2.5.29.54), ExtensionValue::Int(2), false);
         ext.encode(&mut encoder, &mut ())
             .expect("Failed to encode Extension");
         // Inhibit anyPolicy : 0x181e
@@ -293,7 +293,7 @@ mod test_extension {
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
 
-        let ext = Extension::new(oid!(2.5.29 .15), ExtensionValue::Int(-1), true);
+        let ext = Extension::new(oid!(2.5.29.15), ExtensionValue::Int(-1), true);
         ext.encode(&mut encoder, &mut ())
             .expect("Failed to encode Extension");
         // Key Usage with critical true: 0x21
@@ -314,7 +314,7 @@ mod test_extension {
         // Not in the registry table
         // Value should be bytes
         let ext = Extension::new(
-            oid!(2.16.840 .1 .101 .3 .4 .2 .1),
+            oid!(2.16.840.1.101.3.4.2.1),
             ExtensionValue::Bytes("test".as_bytes().to_vec()),
             false,
         );
@@ -339,7 +339,7 @@ mod test_extension {
         let mut encoder = Encoder::new(&mut buffer);
 
         // Subject Key Identifier should be bytes
-        let ext = Extension::new(oid!(2.5.29 .14), ExtensionValue::Int(2), false);
+        let ext = Extension::new(oid!(2.5.29.14), ExtensionValue::Int(2), false);
         ext.encode(&mut encoder, &mut ())
             .expect("Failed to encode Extension");
         // SubjectKeyIdentifier : 0x01

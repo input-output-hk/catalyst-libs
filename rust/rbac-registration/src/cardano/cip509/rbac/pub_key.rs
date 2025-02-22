@@ -3,7 +3,7 @@
 use catalyst_types::problem_report::ProblemReport;
 use cbork_utils::decode_helper::{decode_bytes, decode_tag};
 use ed25519_dalek::VerifyingKey;
-use minicbor::{decode, Decode, Decoder};
+use minicbor::{Decode, Decoder, decode};
 
 use super::tag::KeyTag;
 

@@ -7,12 +7,8 @@ use catalyst_types::conversion::from_saturating;
 pub struct TxnIndex(u16);
 
 impl<
-        T: Copy
-            + TryInto<u16>
-            + std::ops::Sub<Output = T>
-            + PartialOrd<T>
-            + num_traits::identities::Zero,
-    > From<T> for TxnIndex
+    T: Copy + TryInto<u16> + std::ops::Sub<Output = T> + PartialOrd<T> + num_traits::identities::Zero,
+> From<T> for TxnIndex
 {
     fn from(value: T) -> Self {
         Self(from_saturating(value))

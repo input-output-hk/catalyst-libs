@@ -11,21 +11,21 @@ use std::{
     io::Read,
     net::SocketAddr,
     sync::{
-        atomic::{AtomicU64, AtomicUsize, Ordering},
         Arc, Mutex, OnceLock,
+        atomic::{AtomicU64, AtomicUsize, Ordering},
     },
     thread,
     time::Duration,
 };
 
-use anyhow::{anyhow, bail, Context, Result};
+use anyhow::{Context, Result, anyhow, bail};
 use cardano_blockchain_types::Network;
 use catalyst_types::conversion::from_saturating;
 use crossbeam_channel::{Receiver, RecvError};
 use dashmap::DashMap;
 use http::{
-    header::{ACCEPT_RANGES, CONTENT_LENGTH, RANGE},
     StatusCode,
+    header::{ACCEPT_RANGES, CONTENT_LENGTH, RANGE},
 };
 use tracing::{debug, error};
 
@@ -52,7 +52,10 @@ impl BalancingResolver {
             let resolver = match hickory_resolver::Resolver::from_system_conf() {
                 Ok(r) => r,
                 Err(e) => {
-                    error!("Failed to initialize DNS Balancing Resolver from system configuration, using Google DNS as fallback: {}", e);
+                    error!(
+                        "Failed to initialize DNS Balancing Resolver from system configuration, using Google DNS as fallback: {}",
+                        e
+                    );
                     hickory_resolver::Resolver::new(
                         hickory_resolver::config::ResolverConfig::default(),
                         hickory_resolver::config::ResolverOpts::default(),

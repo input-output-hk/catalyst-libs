@@ -1,6 +1,6 @@
 //! A CBOR encoded/decoded UUID struct.
 
-use minicbor::{data::Tag, Decode, Decoder, Encode};
+use minicbor::{Decode, Decoder, Encode, data::Tag};
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 const UUID_TAG: u64 = 37;

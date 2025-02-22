@@ -1,8 +1,8 @@
 //! `content-type` rule type impl.
 
 use crate::{
-    doc_types::CATEGORY_DOCUMENT_UUID_TYPE, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument,
+    CatalystSignedDocument, doc_types::CATEGORY_DOCUMENT_UUID_TYPE,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
 };
 
 /// `category_id` field validation rule

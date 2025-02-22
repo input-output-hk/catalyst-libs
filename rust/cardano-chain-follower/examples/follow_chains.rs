@@ -20,7 +20,7 @@ static GLOBAL: MiMalloc = MiMalloc;
 use std::{error::Error, time::Duration};
 
 use cardano_chain_follower::{ChainFollower, ChainSyncConfig, ChainUpdate, Kind, Statistics};
-use clap::{arg, ArgAction, ArgMatches, Command};
+use clap::{ArgAction, ArgMatches, Command, arg};
 use tokio::time::Instant;
 use tracing::{error, info, level_filters::LevelFilter, warn};
 use tracing_subscriber::EnvFilter;
