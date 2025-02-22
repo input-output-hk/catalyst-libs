@@ -97,6 +97,7 @@ mod tests {
     use super::*;
     use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
+    #[allow(clippy::too_many_lines)]
     #[tokio::test]
     async fn ref_rule_specified_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
