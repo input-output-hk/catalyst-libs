@@ -16,8 +16,10 @@ use std::{
 
 use anyhow::Context;
 pub use builder::Builder;
-use catalyst_types::problem_report::ProblemReport;
-pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
+pub use catalyst_types::{
+    problem_report::ProblemReport,
+    uuid::{Uuid, UuidV4, UuidV7},
+};
 pub use content::Content;
 use coset::{CborSerializable, Header};
 pub use metadata::{
