@@ -73,7 +73,7 @@ impl Cli {
                     .build();
                 println!(
                     "report {}",
-                    serde_json::to_string(&signed_doc.problem_report()).unwrap()
+                    serde_json::to_string(&signed_doc.problem_report())?
                 );
                 save_signed_doc(signed_doc, &output)?;
             },
