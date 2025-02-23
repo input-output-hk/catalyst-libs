@@ -120,9 +120,11 @@ fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSigned
         return false;
     };
 
-    if schema_validator.validate(&doc_json).is_err() {
+    if let Err(e) = schema_validator.validate(&doc_json) {
         doc.report().functional_validation(
-            "Proposal document content does not compliant with the template json schema",
+            &format!(
+                "Proposal document content does not compliant with the template json schema. {e}"
+            ),
             "Invalid Proposal document content",
         );
         return false;

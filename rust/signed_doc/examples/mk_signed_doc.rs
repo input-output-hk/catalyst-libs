@@ -71,6 +71,10 @@ impl Cli {
                     .with_decoded_content(payload)
                     .with_json_metadata(metadata)?
                     .build();
+                println!(
+                    "report {}",
+                    serde_json::to_string(&signed_doc.problem_report()).unwrap()
+                );
                 save_signed_doc(signed_doc, &output)?;
             },
             Self::Sign { sk, doc, kid } => {
