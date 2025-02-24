@@ -1,5 +1,7 @@
 //! `template` rule type impl.
 
+use std::fmt::Write;
+
 use catalyst_types::uuid::UuidV4;
 
 use super::doc_ref::referenced_doc_check;
@@ -120,10 +122,13 @@ fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSigned
         return false;
     };
 
-    let schema_validation_errors = schema_validator
-        .iter_errors(&doc_json)
-        .map(|e| format!("{{ {e} }}, "))
-        .collect::<String>();
+    let schema_validation_errors =
+        schema_validator
+            .iter_errors(&doc_json)
+            .fold(String::new(), |mut str, e| {
+                let _ = write!(str, "{{ {e} }}, ");
+                str
+            });
 
     if !schema_validation_errors.is_empty() {
         doc.report().functional_validation(
