@@ -38,3 +38,45 @@ impl SectionRule {
         Ok(true)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::Builder;
+
+    #[tokio::test]
+    async fn section_rule_specified_test() {
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "section": "$".to_string()
+            }))
+            .unwrap()
+            .build();
+        let rule = SectionRule::Specified { optional: false };
+        assert!(rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new().build();
+        let rule = SectionRule::Specified { optional: true };
+        assert!(rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new().build();
+        let rule = SectionRule::Specified { optional: false };
+        assert!(!rule.check(&doc).await.unwrap());
+    }
+
+    #[tokio::test]
+    async fn section_rule_not_specified_test() {
+        let rule = SectionRule::NotSpecified;
+
+        let doc = Builder::new().build();
+        assert!(rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "section": "$".to_string()
+            }))
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+    }
+}

@@ -1,11 +1,12 @@
-//! Catalyst Signed Documents validation
+//! Catalyst Signed Documents validation logic
 
 pub(crate) mod rules;
 pub(crate) mod utils;
 
 use std::{collections::HashMap, sync::LazyLock};
 
-use catalyst_types::uuid::Uuid;
+use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport, uuid::Uuid};
+use coset::{CoseSign, CoseSignature};
 use rules::{
     CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, Rules, SectionRule,
     TemplateRule,
@@ -16,7 +17,7 @@ use crate::{
         COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
         PROPOSAL_TEMPLATE_UUID_TYPE,
     },
-    providers::CatalystSignedDocumentProvider,
+    providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -24,6 +25,7 @@ use crate::{
 static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
 
 /// `DOCUMENT_RULES` initialization function
+#[allow(clippy::expect_used)]
 fn document_rules_init() -> HashMap<Uuid, Rules> {
     let mut document_rules_map = HashMap::new();
 
@@ -36,7 +38,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         template: TemplateRule::Specified {
-            exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE,
+            exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
         },
         category: CategoryRule::Specified { optional: false },
         doc_ref: RefRule::NotSpecified,
@@ -54,14 +58,20 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         template: TemplateRule::Specified {
-            exp_template_type: COMMENT_TEMPLATE_UUID_TYPE,
+            exp_template_type: COMMENT_TEMPLATE_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE,
+            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: COMMENT_DOCUMENT_UUID_TYPE,
+            exp_reply_type: COMMENT_DOCUMENT_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },
@@ -80,7 +90,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 pub async fn validate<Provider>(
     doc: &CatalystSignedDocument, provider: &Provider,
 ) -> anyhow::Result<bool>
-where Provider: 'static + CatalystSignedDocumentProvider {
+where Provider: CatalystSignedDocumentProvider {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
@@ -99,4 +109,86 @@ where Provider: 'static + CatalystSignedDocumentProvider {
         return Ok(false);
     };
     rules.check(doc, provider).await
+}
+
+/// Verify document signatures.
+/// Return true if all signatures are valid, otherwise return false.
+///
+/// # Errors
+/// If `provider` returns error, fails fast throwing that error.
+pub async fn validate_signatures(
+    doc: &CatalystSignedDocument, provider: &impl VerifyingKeyProvider,
+) -> anyhow::Result<bool> {
+    let Ok(cose_sign) = doc.as_cose_sign() else {
+        doc.report().other(
+            "Cannot build a COSE sign object",
+            "During encoding signed document as COSE SIGN",
+        );
+        return Ok(false);
+    };
+
+    let sign_rules = doc
+        .signatures()
+        .cose_signatures_with_kids()
+        .map(|(signature, kid)| {
+            validate_signature(&cose_sign, signature, kid, provider, doc.report())
+        });
+
+    let res = futures::future::join_all(sign_rules)
+        .await
+        .into_iter()
+        .collect::<anyhow::Result<Vec<_>>>()?
+        .iter()
+        .all(|res| *res);
+
+    Ok(res)
+}
+
+/// A single signature validation function
+async fn validate_signature<Provider>(
+    cose_sign: &CoseSign, signature: &CoseSignature, kid: &IdUri, provider: &Provider,
+    report: &ProblemReport,
+) -> anyhow::Result<bool>
+where
+    Provider: VerifyingKeyProvider,
+{
+    let Some(pk) = provider.try_get_key(kid).await? else {
+        report.other(
+            &format!("Missing public key for {kid}."),
+            "During public key extraction",
+        );
+        return Ok(false);
+    };
+
+    let tbs_data = cose_sign.tbs_data(&[], signature);
+    let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
+        report.invalid_value(
+            "cose signature",
+            &format!("{}", signature.signature.len()),
+            &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
+            "During encoding cose signature to bytes",
+        );
+        return Ok(false);
+    };
+
+    let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
+    if pk.verify_strict(&tbs_data, &signature).is_err() {
+        report.functional_validation(
+            &format!("Verification failed for signature with Key ID {kid}"),
+            "During signature validation with verifying key",
+        );
+        return Ok(false);
+    }
+
+    Ok(true)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn document_rules_init_test() {
+        document_rules_init();
+    }
 }

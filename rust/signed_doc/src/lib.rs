@@ -14,23 +14,25 @@ use std::{
     sync::Arc,
 };
 
+use anyhow::Context;
 pub use builder::Builder;
-use catalyst_types::problem_report::ProblemReport;
-pub use catalyst_types::uuid::{Uuid, UuidV4, UuidV7};
+pub use catalyst_types::{
+    problem_report::ProblemReport,
+    uuid::{Uuid, UuidV4, UuidV7},
+};
 pub use content::Content;
 use coset::{CborSerializable, Header};
 pub use metadata::{
     Algorithm, ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section,
 };
 use minicbor::{decode, encode, Decode, Decoder, Encode};
-use providers::VerifyingKeyProvider;
 pub use signature::{IdUri, Signatures};
 
 /// A problem report content string
 const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 struct InnerCatalystSignedDocument {
     /// Document Metadata
     metadata: Metadata,
@@ -47,7 +49,7 @@ struct InnerCatalystSignedDocument {
 /// Better even to use a structure like this.  Wrapping in an Arc means we don't have to
 /// manage the Arc anywhere else. These are likely to be large, best to have the Arc be
 /// non-optional.
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CatalystSignedDocument {
     /// Catalyst Signed Document metadata, raw doc, with content errors.
     inner: Arc<InnerCatalystSignedDocument>,
@@ -165,94 +167,40 @@ impl CatalystSignedDocument {
         &self.inner.report
     }
 
-    /// Verify document signatures.
-    /// Return true if all signatures are valid, otherwise return false.
-    ///
+    /// Convert Catalyst Signed Document into `coset::CoseSign`
     ///
     /// # Errors
-    /// If `provider` returns error, fails fast throwing that error.
-    pub async fn verify(&self, provider: &impl VerifyingKeyProvider) -> anyhow::Result<bool> {
-        if self.report().is_problematic() {
-            return Ok(false);
-        }
-
-        let Ok(cose_sign) = self.as_cose_sign() else {
-            self.report().other(
-                "Cannot build a COSE sign object",
-                "During encoding signed document as COSE SIGN",
-            );
-            return Ok(false);
-        };
-
-        for (signature, kid) in self.signatures().cose_signatures_with_kids() {
-            if let Some(pk) = provider.try_get_key(kid).await? {
-                let tbs_data = cose_sign.tbs_data(&[], signature);
-                match signature.signature.as_slice().try_into() {
-                    Ok(signature_bytes) => {
-                        let signature = ed25519_dalek::Signature::from_bytes(signature_bytes);
-                        if let Err(e) = pk.verify_strict(&tbs_data, &signature) {
-                            self.report().functional_validation(
-                                &format!(
-                                    "Verification failed for signature with Key ID {kid}: {e}"
-                                ),
-                                "During signature validation with verifying key",
-                            );
-                        }
-                    },
-                    Err(_) => {
-                        self.report().invalid_value(
-                            "cose signature",
-                            &format!("{}", signature.signature.len()),
-                            &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
-                            "During encoding cose signature to bytes",
-                        );
-                    },
-                }
-            } else {
-                self.report().other(
-                    &format!("Missing public key for {kid}."),
-                    "During public key extraction",
-                );
-            }
-        }
-
-        Ok(!self.report().is_problematic())
+    /// Could fails if the `CatalystSignedDocument` object is not valid.
+    pub(crate) fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
+        self.inner.as_cose_sign()
     }
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
-    ///
-    /// # Errors
-    /// Fails if the `CatalystSignedDocument` object is not valid.
-    pub fn into_builder(self) -> anyhow::Result<Builder> {
-        if self.report().is_problematic() {
-            anyhow::bail!("Invalid Document");
-        }
-        Ok(Builder::new()
-            .with_metadata(self.inner.metadata.clone())
-            .with_decoded_content(self.doc_content().decoded_bytes()?.to_vec())
-            .with_signatures(self.signatures().clone()))
+    #[must_use]
+    pub fn into_builder(&self) -> Builder {
+        self.into()
     }
+}
 
+impl InnerCatalystSignedDocument {
     /// Convert Catalyst Signed Document into `coset::CoseSign`
     ///
     /// # Errors
     /// Could fails if the `CatalystSignedDocument` object is not valid.
     fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        let protected_header = Header::try_from(&self.inner.metadata)
-            .map_err(|e| anyhow::anyhow!("Failed to encode Document Metadata: {e}"))?;
+        let protected_header =
+            Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
 
-        let content = if let Some(content_encoding) = self.doc_content_encoding() {
-            self.doc_content().encoded_bytes(content_encoding)?
-        } else {
-            self.doc_content().decoded_bytes()?.to_vec()
-        };
+        let content = self
+            .content
+            .encoded_bytes(self.metadata.content_encoding())?;
 
         let mut builder = coset::CoseSignBuilder::new()
             .protected(protected_header)
             .payload(content);
 
-        for signature in self.signatures().cose_signatures() {
+        for signature in self.signatures.cose_signatures() {
             builder = builder.add_signature(signature);
         }
         Ok(builder.build())
@@ -278,12 +226,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let signatures = Signatures::from_cose_sig(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(
-                payload,
-                metadata.content_type().ok(),
-                metadata.content_encoding(),
-                &report,
-            )
+            Content::from_encoded(payload, metadata.content_encoding(), &report)
         } else {
             report.missing_field("COSE Sign Payload", "Missing document content (payload)");
             Content::default()
@@ -324,8 +267,9 @@ mod tests {
     use rand::rngs::OsRng;
 
     use super::*;
+    use crate::{providers::VerifyingKeyProvider, validator::validate_signatures};
 
-    fn test_metadata() -> anyhow::Result<(UuidV7, UuidV4, Metadata)> {
+    fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
         let alg = Algorithm::EdDSA;
         let uuid_v7 = UuidV7::new();
         let uuid_v4 = UuidV4::new();
@@ -334,7 +278,7 @@ mod tests {
         let content_type = ContentType::Json;
         let content_encoding = ContentEncoding::Brotli;
 
-        let metadata: Metadata = serde_json::from_value(serde_json::json!({
+        let metadata_fields = serde_json::json!({
             "alg": alg.to_string(),
             "content-type": content_type.to_string(),
             "content-encoding": content_encoding.to_string(),
@@ -350,23 +294,22 @@ mod tests {
             "election_id":  uuid_v4.to_string(),
             "brand_id":  {"id": uuid_v7.to_string()},
             "category_id": {"id": uuid_v7.to_string()},
-        }))
-        .map_err(|e| {
-            anyhow::anyhow!("Invalid example metadata. This should not happen. Err: {e}")
-        })?;
-        Ok((uuid_v7, uuid_v4, metadata))
+        });
+        (uuid_v7, uuid_v4, metadata_fields)
     }
 
     #[test]
     fn catalyst_signed_doc_cbor_roundtrip_test() {
-        let (uuid_v7, uuid_v4, metadata) = test_metadata().unwrap();
+        let (uuid_v7, uuid_v4, metadata_fields) = test_metadata();
         let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
         let doc = Builder::new()
-            .with_metadata(metadata.clone())
+            .with_json_metadata(metadata_fields.clone())
+            .unwrap()
             .with_decoded_content(content.clone())
-            .build()
-            .unwrap();
+            .build();
+
+        assert!(!doc.problem_report().is_problematic());
 
         let bytes = minicbor::to_vec(doc).unwrap();
         let decoded: CatalystSignedDocument = minicbor::decode(bytes.as_slice()).unwrap();
@@ -375,7 +318,8 @@ mod tests {
         assert_eq!(decoded.doc_id().unwrap(), uuid_v7);
         assert_eq!(decoded.doc_ver().unwrap(), uuid_v7);
         assert_eq!(decoded.doc_content().decoded_bytes().unwrap(), &content);
-        assert_eq!(decoded.doc_meta(), metadata.extra());
+        // TODO: after this test will be moved as a crate integration test, enable this
+        // assertion assert_eq!(decoded.doc_meta(), metadata_fields.extra());
     }
 
     struct Provider(anyhow::Result<Option<VerifyingKey>>);
@@ -401,21 +345,26 @@ mod tests {
         );
 
         let kid = IdUri::from_str(&kid_str).unwrap();
-        let (_, _, metadata) = test_metadata().unwrap();
+        let (_, _, metadata) = test_metadata();
         let signed_doc = Builder::new()
             .with_decoded_content(content)
-            .with_metadata(metadata)
+            .with_json_metadata(metadata)
+            .unwrap()
             .add_signature(sk.to_bytes(), kid.clone())
             .unwrap()
-            .build()
-            .unwrap();
+            .build();
         assert!(!signed_doc.problem_report().is_problematic());
 
-        assert!(signed_doc
-            .verify(&Provider(Err(anyhow::anyhow!("some error"))))
+        assert!(
+            validate_signatures(&signed_doc, &Provider(Err(anyhow::anyhow!("some error"))))
+                .await
+                .is_err()
+        );
+        assert!(validate_signatures(&signed_doc, &Provider(Ok(Some(pk))))
             .await
-            .is_err());
-        assert!(signed_doc.verify(&Provider(Ok(Some(pk)))).await.unwrap());
-        assert!(!signed_doc.verify(&Provider(Ok(None))).await.unwrap());
+            .unwrap());
+        assert!(!validate_signatures(&signed_doc, &Provider(Ok(None)))
+            .await
+            .unwrap());
     }
 }

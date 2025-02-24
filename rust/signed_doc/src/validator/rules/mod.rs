@@ -44,7 +44,7 @@ impl Rules {
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: 'static + CatalystSignedDocumentProvider {
+    where Provider: CatalystSignedDocumentProvider {
         let rules = [
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),

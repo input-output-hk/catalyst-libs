@@ -10,11 +10,11 @@ pub(crate) async fn validate_provided_doc<Provider, Validator>(
     doc_ref: &DocumentRef, provider: &Provider, report: &ProblemReport, validator: Validator,
 ) -> anyhow::Result<bool>
 where
-    Provider: 'static + CatalystSignedDocumentProvider,
-    Validator: Fn(CatalystSignedDocument) -> anyhow::Result<bool>,
+    Provider: CatalystSignedDocumentProvider,
+    Validator: Fn(CatalystSignedDocument) -> bool,
 {
     if let Some(doc) = provider.try_get_doc(doc_ref).await? {
-        validator(doc)
+        Ok(validator(doc))
     } else {
         report.functional_validation(
             format!("Cannot retrieve a document {doc_ref}").as_str(),
