@@ -64,7 +64,6 @@ build:
         --junit="cat-libs.junit-report.xml" \
         --coverage="cat-libs.coverage.info" \
         --docs="true"
-    DO rust-ci+COPY_OUTPUT --output="release/examples/[.*]+"
 
     RUN ls target/release
     SAVE ARTIFACT target/doc doc
