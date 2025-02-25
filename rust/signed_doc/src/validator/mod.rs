@@ -42,7 +42,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
                 .try_into()
                 .expect("Must be a valid UUID V4"),
         },
-        category: CategoryRule::Specified { optional: false },
+        category: CategoryRule::Specified { optional: true },
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,

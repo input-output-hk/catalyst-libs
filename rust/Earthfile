@@ -70,7 +70,7 @@ build:
     # Catalyst Signed Documents cli tool
     SAVE ARTIFACT target/release/examples/mk_signed_doc mk_signed_doc
 
-check-mk-signed-doc:
+build-mk-signed-doc:
     FROM scratch
 
     COPY +build/mk_signed_doc .
