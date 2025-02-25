@@ -65,12 +65,15 @@ build:
         --coverage="cat-libs.coverage.info" \
         --docs="true"
 
+    RUN ls
+    RUN ls target
+    RUN ls target/release
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
     # Catalyst Signed Documents cli tool
     SAVE ARTIFACT target/release/examples/mk_signed_doc mk_signed_doc
 
-build-mk-signed-doc:
+test-mk-signed-doc:
     FROM scratch
 
     COPY +build/mk_signed_doc .
