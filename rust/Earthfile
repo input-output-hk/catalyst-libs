@@ -70,6 +70,12 @@ build:
     # Catalyst Signed Documents cli tool
     SAVE ARTIFACT target/release/examples/mk_signed_doc mk_signed_doc
 
+check-mk-signed-doc:
+    FROM scratch
+
+    COPY +build/mk_signed_doc .
+
+
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:
     FROM +builder
