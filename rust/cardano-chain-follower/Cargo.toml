@@ -67,7 +67,9 @@ test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250220-00" }
+# TODO: fix this after make a proper release
+# rbac-registration = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250220-00" }
+rbac-registration = { version = "0.0.4", path = "../rbac-registration" }
 
 # Note, these features are for support of features exposed by dependencies.
 [features]

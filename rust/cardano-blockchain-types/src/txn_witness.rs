@@ -81,7 +81,7 @@ impl TxnWitness {
     pub fn check_witness_in_tx(&self, vkey_hash: &VKeyHash, tx_num: TxnIndex) -> bool {
         self.0
             .get(vkey_hash)
-            .map_or(false, |entry| entry.1.contains(&tx_num))
+            .is_some_and(|entry| entry.1.contains(&tx_num))
     }
 
     /// Get the actual verifying key from the given public key hash.
