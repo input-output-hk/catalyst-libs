@@ -20,7 +20,9 @@ mithril-client = { version = "0.10.4", default-features = false, features = [
     "num-integer-backend",
 ] }
 cardano-blockchain-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250220-00" }
-catalyst-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250220-00" }
+# TODO: fix this after make a proper release
+# catalyst-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250220-00" }
+catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
 
 thiserror = "1.0.69"
 tokio = { version = "1.42.0", features = [
