@@ -18,7 +18,7 @@ where
     } else {
         report.functional_validation(
             format!("Cannot retrieve a document {doc_ref}").as_str(),
-            "Validation data provider could not return a corresponding.",
+            "Validation data provider could not return a corresponding document.",
         );
         Ok(false)
     }
