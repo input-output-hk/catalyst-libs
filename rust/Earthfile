@@ -68,7 +68,7 @@ build:
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
     # Catalyst Signed Documents cli tool
-    SAVE ARTIFACT target/release/examples/mk_signed_doc mk_signed_doc
+    SAVE ARTIFACT target/release/mk_signed_doc mk_signed_doc
 
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:

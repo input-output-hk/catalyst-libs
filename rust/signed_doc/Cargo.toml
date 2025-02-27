@@ -11,14 +11,15 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250220-00" }
+catalyst-types = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250226-00" }
+
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = "1.0.134"
 coset = "0.3.8"
 minicbor = { version = "0.25.1", features = ["half"] }
 brotli = "7.0.0"
-ed25519-dalek = { version = "2.1.1" }
+ed25519-dalek = { version = "2.1.1", features = ["rand_core", "pem"] }
 hex = "0.4.3"
 strum = { version = "0.26.3", features = ["derive"] }
 clap = { version = "4.5.23",  features = ["derive", "env"] }
@@ -30,4 +31,7 @@ futures = "0.3.31"
 base64-url = "3.0.0"
 rand = "0.8.5"
 tokio = { version = "1.42.0", features = [ "macros" ] }
-ed25519-dalek = { version = "2.1.1", features = ["rand_core", "pem"] }
+
+[[bin]]
+name = "mk_signed_doc"
+path = "bins/mk_signed_doc.rs"
