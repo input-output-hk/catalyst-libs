@@ -20,9 +20,8 @@ _metadataNames: [
 	"ver",
 	"ref",
 	"ref_hash",
-	"ref_type",
+	"collation",
 	"template",
-	"template_doc",
 	"reply",
 	"section",
 	"collaborators",
@@ -37,22 +36,14 @@ _allMetadataNames: or([
 ])
 // Definition of a metadata field.
 #metadataField: {
+	// Is the field required to be present.
+	required: #optionalField
+
 	// Format of the field.
 	format: #metadataFormat
 	if format == "Document Reference" {
-		ref: {
-			type: [#DocumentName, ...#DocumentName]
-			if list.Contains(type, "Template") {
-				// What the template_ref must point to in the template for it to be valid.
-				template_ref?: #DocumentName
-				// What media type must the template be
-				template_media_type?: #contentType
-			}
-		}
+		type: #DocumentName
 	}
-
-	// Is the field required to be present.
-	required: #optionalField
 
 	// Markdown description of the field.
 	description: string
@@ -71,7 +62,7 @@ _metadata: #metadataStruct & {
 		description: "Document ID, created the first time the document is created."
 	}
 	// Document Version
-	ver: {
+	ver: #metadataField & {
 		required: "yes"
 		description: """
 			## Document Version
@@ -85,43 +76,30 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	ref?: {
-		format: "Document Reference"
+	ref?: #metadataField & {
+		format:      "Document Reference"
+		description: "Reference to a Linked Document.  This is the primary hierarchial reference to a related document."
 	}
 
+	// IF we have a ref, we can optionally have a `ref_hash`
 	if ref != _|_ {
-		ref_hash?: {
+		ref_hash?: #metadataField & {
 			format: "Document Hash"
 		}
 	}
 
-	//	"ref_hash"?: string``
-	template?: {
+	collation?: #metadataField & {
+		format:      "Document Collation Reference"
+		description: "Array of Collated Document References"
+	}
+
+	template?: #metadataField & {
 		format:      "Document Reference"
 		description: "Reference to the template used to create and/or validate this document."
 		validation:  "The document payload is not valid if it does not validate completely against the referenced template."
-		ref: {
-			type: ["Template"]
-			template_ref:        "Template"
-			template_media_type: "application/schema+json"
-		}
 	}
 
-	template_doc?: {
-		format:   "Document Reference"
-		required: "yes"
-		description: """
-			Metadata only in Template documents.
-			Defines what type of document may use this template.
-			"""
-		ref: {
-			type:                _allDocNamesList
-			template_ref:        "Template"
-			template_media_type: "application/schema+json"
-		}
-	}
-
-	reply?: {
+	reply?: #metadataField & {
 		format:   "Document Reference"
 		required: "optional"
 		description: """
@@ -133,7 +111,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	section?: {
+	section?: #metadataField & {
 		format:   "Section Reference"
 		required: "optional"
 		description: """
@@ -145,38 +123,44 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	collaborators?: {
+	collaborators?: #metadataField & {
 		format:   "Collaborators Reference List"
 		required: "optional"
 		description: """
 			A list of collaborators who may also publish updates to versions of this document.
 			This should include all parties who have not signed this document directly.
+
+			Every subsequent version can amend the collaborators list.
+			However, the initial Author can never be removed from being able to
+			publish new version of the document.
 			"""
 		validation: """
 			This list does not imply these collaborators have consented to collaborate, only that the author/s
 			are permitting these potential collaborators to participate in the drafting and submission process.
+			However any document submission referencing a proposal MUST be signed by all collaborators in
+			addition to the author.
 			"""
 	}
 
-	brand_id?: {
+	brand_id?: #metadataField & {
 		format:      "Document Reference"
 		required:    "optional"
 		description: "A reference to the Brand Parameters Document this document lies under."
 	}
 
-	campaign_id?: {
+	campaign_id?: #metadataField & {
 		format:      "Document Reference"
 		required:    "optional"
 		description: "A reference to the Campaign Parameters Document this document lies under."
 	}
 
-	election_id?: {
+	election_id?: #metadataField & {
 		format:      "Document Reference"
 		required:    "optional"
 		description: "A reference to the Election Parameters Document this document lies under."
 	}
 
-	category_id?: {
+	category_id?: #metadataField & {
 		format:      "Document Reference"
 		required:    "optional"
 		description: "A reference to the Category Parameters Document this document lies under."

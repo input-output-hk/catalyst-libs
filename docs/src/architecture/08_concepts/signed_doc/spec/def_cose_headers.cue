@@ -47,8 +47,7 @@ _allCoseHeaderNames: or([
 	required:    #optionalField | *"yes"
 	format:      #coseHeaderFormat
 	if format == "IANA Media Type" {
-		"value": {
-			*[#contentType] | [...#contentType]}
+		"value": #contentType
 	}
 
 	if format == "HTTP Content Encoding" {
@@ -62,7 +61,7 @@ _allCoseHeaderNames: or([
 }
 _coseHeaders: #coseHeaders & {
 	// Default Signature Algorithm
-	alg: {
+	alg: #coseField & {
 		coseLabel:   1
 		required:    "optional"
 		format:      "COSE Algorithm"
@@ -70,13 +69,13 @@ _coseHeaders: #coseHeaders & {
 	}
 
 	// Documents content type
-	"content type": {
+	"content type": #coseField & {
 		coseLabel:   3
 		format:      "IANA Media Type"
 		description: "IANA Media Type/s allowed in the Payload"
 	}
 	// Allowed content encodings
-	"content-encoding": {
+	"content-encoding": #coseField & {
 		coseLabel:   "content-encoding"
 		format:      "HTTP Content Encoding"
 		required:    "optional"

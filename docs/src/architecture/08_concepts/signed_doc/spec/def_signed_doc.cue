@@ -15,35 +15,10 @@ package signed_docs
 #uuidv7: =~"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{7}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
 
 // Document Type must be a valid UUIDv4
-#docType: #uuidv4
+#docType: [#uuidv4] | [#uuidv4, #uuidv4] | [#uuidv4, #uuidv4, #uuidv4]
 
 // Document ID or Version must be a valid UUIDv7
 #docIdOrVer: #uuidv7
-
-#templateMetadata: {
-	[_metadataNames]: #metadataField
-}
-#templateMetadata: {
-	"template doc": {
-		format:   "Document Reference"
-		required: "yes"
-		description: """
-			Metadata only in Template documents.
-			Defines what type of document may use this template.
-			"""
-	}
-
-	"template ref": {
-		format:   "Document Reference"
-		required: "yes"
-		description: """
-			Metadata only in Template documents.
-			Defines what the `ref` field of the document using the template must be.
-			Prevents a Document using the wrong kind of template.
-			"""
-	}
-
-}
 
 // Individual Signed Document Definition
 #signedDocument: {
@@ -52,6 +27,9 @@ package signed_docs
 
 	// The description of this document.  Markdown Supported.
 	description?: string
+
+	// The description of this document.  Markdown Supported.
+	validation?: string
 
 	// Fixed headers in every document
 	headers: _coseHeaders
