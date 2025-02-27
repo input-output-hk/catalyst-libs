@@ -327,8 +327,8 @@ mod tests {
 
         assert!(!doc.problem_report().is_problematic());
 
-        let bytes = minicbor::to_vec(doc).unwrap();
-        let decoded: CatalystSignedDocument = minicbor::decode(bytes.as_slice()).unwrap();
+        let bytes: Vec<u8> = doc.try_into().unwrap();
+        let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
 
         assert_eq!(decoded.doc_type().unwrap(), uuid_v4);
         assert_eq!(decoded.doc_id().unwrap(), uuid_v7);
