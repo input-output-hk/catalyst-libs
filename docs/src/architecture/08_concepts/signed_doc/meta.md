@@ -10,6 +10,7 @@
 
 * [Metadata Fields List](#metadata-fields-list)
   * [`ref` Document Reference](#ref-document-reference)
+    * [Validation](#validation)
   * [`ref_hash` Secured Document Reference](#ref_hash-secured-document-reference)
   * [`template` Template Reference](#template-template-reference)
   * [`reply` Reply Reference](#reply-reply-reference)
@@ -32,6 +33,12 @@ If the `ref` is a [CBOR] array, it has the form `[<id>,<ver>]` where:
 
 * `<id>` - the [UUID] v7 of the referenced documents [`id`](./spec.md#id).
 * `<ver>` - the [UUID] v7 of the referenced documents [`ver`](./spec.md#ver).
+
+### Validation
+
+For any document type, `ref` can refer to only 1 other document type which must be different than
+the type of document `ref` appears in.
+For example `ref` for a Proposal Comment Document, is always a Proposal type document.
 
 ## `ref_hash` Secured Document Reference
 

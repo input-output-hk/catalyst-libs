@@ -1,0 +1,34 @@
+VERSION 0.8
+
+# cspell: words cuelang
+
+# Get cue binary
+cue-bin:
+    FROM cuelang/cue:0.12.0
+    SAVE ARTIFACT /usr/bin/cue
+
+
+# builder - debian plus cue binary
+builder:
+    FROM debian:stable-20250203-slim
+    COPY +cue-bin/cue /usr/bin/cue
+
+# Copy all the source we need to build the docs
+src:
+    FROM +builder
+
+    WORKDIR /src
+
+    COPY signed_doc_defs.* .
+
+check:
+    FROM +src
+    RUN cue --help
+    RUN ls -al
+    RUN cue vet signed_doc_defs.schema.cue -d '#SignedDoc' signed_doc_defs.yml
+
+#  Regenerate 
+regen:
+    FROM src
+
+    RUN ls -al
