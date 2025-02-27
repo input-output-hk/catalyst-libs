@@ -140,17 +140,3 @@ jobs:
           allow-empty: true
           debug: true
           flag-name: rust-unit-test
-          base-path: "${{ env.REPO_BASE_PATH }}"
-          parallel: true
-
-  upload-coverage-report:
-    name: Upload coverage report
-    needs: [generate-coverage-report]
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Coveralls Finished
-        uses: coverallsapp/github-action@v2
-        with:
-          parallel-finished: true
-          carryforward: "rust-unit-test"
