@@ -258,6 +258,22 @@ impl Encode<()> for CatalystSignedDocument {
     }
 }
 
+impl TryFrom<&[u8]> for CatalystSignedDocument {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        Ok(minicbor::decode(value)?)
+    }
+}
+
+impl TryFrom<CatalystSignedDocument> for Vec<u8> {
+    type Error = anyhow::Error;
+
+    fn try_from(value: CatalystSignedDocument) -> Result<Self, Self::Error> {
+        Ok(minicbor::to_vec(value)?)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::str::FromStr;

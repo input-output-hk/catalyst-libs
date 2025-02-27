@@ -17,7 +17,7 @@ src:
 # Build the docs here.
 docs:
     FROM +src
-    RUN ls
+
     DO docs-ci+BUILD
 
 # local : Create a local image of the document.
