@@ -34,6 +34,8 @@ docs: #DocumentDefinitions & {
 				This ensures that payloads can be reliably interpreted by business logic processes, 
 				while allowing for flexibility to capture extended information.
 				"""
+
+			schema: "https://json-schema.org/draft-07/schema"
 		}
 
 		"signers": {

@@ -220,7 +220,8 @@
                 }
             },
             "payload": {
-                "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Comment Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information."
+                "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Comment Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
+                "schema": "https://json-schema.org/draft-07/schema"
             },
             "signers": {
                 "roles": {
@@ -361,7 +362,8 @@
                 }
             },
             "payload": {
-                "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information."
+                "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
+                "schema": "https://json-schema.org/draft-07/schema"
             },
             "signers": {
                 "roles": {
