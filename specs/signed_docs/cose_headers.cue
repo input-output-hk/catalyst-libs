@@ -3,7 +3,11 @@
 // COSE Headers and Constraints
 package signed_docs
 
-import "list"
+import (
+	"list"
+	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
+
+)
 
 // Supported Content Types (list of values)
 #contentType:
@@ -44,7 +48,7 @@ _allCoseHeaderNames: or([
 #coseField: {
 	coseLabel:   int | string
 	description: string
-	required:    #optionalField | *"yes"
+	required:    optional.#field | *"yes"
 	format:      #coseHeaderFormat
 	if format == "IANA Media Type" {
 		"value": #contentType

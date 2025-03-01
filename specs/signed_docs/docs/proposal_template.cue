@@ -33,5 +33,25 @@ docs: #DocumentDefinitions & {
 				type:     "Category Parameters"
 			}
 		}
+
+		payload: {
+			description: """
+				JSON Schema document which defines the valid contents of a proposal document.
+				"""
+		}
+
+		signers: {
+			roles: {
+				// No User Role may publish this document.
+				user: []
+
+				// Brand Admin and Lower may publish this document.
+				admin: [
+					"BrandAdmin",
+					"CampaignAdmin",
+				]
+			}
+		}
+
 	}
 }

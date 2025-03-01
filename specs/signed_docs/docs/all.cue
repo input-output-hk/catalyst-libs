@@ -1,8 +1,6 @@
 // Master list of all document types.
 package signed_docs
 
-import "list"
-
 // Named Type UUIDs for easier definitions/references
 _allDocTypes: {
 	"Template":         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
@@ -13,13 +11,6 @@ _allDocTypes: {
 	"ModerationAction": "a5d232b8-5e03-4117-9afd-be32b878fcdd"
 	"Category":         "818938c3-3139-4daa-afe6-974c78488e95"
 }
-
-// Ensure that all Document Type IDs are Unique.
-// See: all_docs.cue for a list of all known document types.
-_allDocTypeIDs: list.UniqueItems
-_allDocTypeIDs: [...#uuidv4] & [
-	for _, v in _allDocTypes {v},
-]
 
 // Source of truth for ALL Document Types and their matching UUID's.
 // Format is : <name> : <Document Type UUID>
@@ -35,6 +26,12 @@ _allDocs: {
 	]
 	"Proposal": [
 		_allDocTypes["Proposal"],
+	]
+	"Proposal Comment Meta Template": [
+		_allDocTypes["Template"], // Template
+		_allDocTypes["Template"], // For Templates
+		_allDocTypes["Comment"],  // On Comment
+		_allDocTypes["Proposal"], // On Proposals
 	]
 	"Proposal Comment Template": [
 		_allDocTypes["Template"], // Template
@@ -67,20 +64,3 @@ _allDocs: {
 	]
 
 }
-
-// Ensure that all Document IDs are Unique.
-// See: all_docs.cue for a list of all known document types.
-_allTypes: list.UniqueItems
-_allTypes: [...#docType] & [
-	for _, v in _allDocs {v},
-]
-
-_allDocNamesList: [...string] & [
-	for k, _ in _allDocs {k},
-]
-
-// List of all the document names we have defined.
-_allDocNames: or(_allDocNamesList)
-
-// Individual Valid Document Name constraint.
-#DocumentName: _allDocNames

@@ -3,22 +3,16 @@
 // Base Types and Constraints
 package signed_docs
 
-#optionalField:
-	"yes" |
-	"optional" |
-	*"excluded"
-
-// A UUIDv4 formatted string regex
-#uuidv4: =~"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
-
-// A uuidv7 formatted string regex
-#uuidv7: =~"^[0-9A-Fa-f]{8}-[0-9A-Fa-f]{7}-4[0-9A-Fa-f]{3}-[89ABab][0-9A-Fa-f]{3}-[0-9A-Fa-f]{12}$"
+import (
+	"list"
+	"github.com/input-output-hk/catalyst-libs/specs/generic:uuid"
+)
 
 // Document Type must be a valid UUIDv4
-#docType: [#uuidv4] | [#uuidv4, #uuidv4] | [#uuidv4, #uuidv4, #uuidv4]
+#docType: [...uuid.#v4]
 
 // Document ID or Version must be a valid UUIDv7
-#docIdOrVer: #uuidv7
+#docIdOrVer: uuid.#v7
 
 // Individual Signed Document Definition
 #signedDocument: {
@@ -36,6 +30,12 @@ package signed_docs
 
 	// The Metadata fields in this document (non cose standard)
 	metadata: _metadata
+
+	// Requirements for the document payload.
+	payload?: _payload
+
+	// Required/Allowed Signers of a document
+	signers: _allowedSigners
 }
 
 // We can only define known documents in the document definitions object
@@ -52,3 +52,27 @@ docs: #DocumentDefinitions & {
 		}
 	}
 }
+
+// Ensure that all Document Type IDs are Unique.
+// See: all_docs.cue for a list of all known document types.
+_allDocTypeIDs: list.UniqueItems
+_allDocTypeIDs: [...uuid.#uuidv4] & [
+	for _, v in _allDocTypes {v},
+]
+
+// Ensure that all Document IDs are Unique.
+// See: all_docs.cue for a list of all known document types.
+_allTypes: list.UniqueItems
+_allTypes: [...#docType] & [
+	for _, v in _allDocs {v},
+]
+
+_allDocNamesList: [...string] & [
+	for k, _ in _allDocs {k},
+]
+
+// List of all the document names we have defined.
+_allDocNames: or(_allDocNamesList)
+
+// Individual Valid Document Name constraint.
+#DocumentName: _allDocNames

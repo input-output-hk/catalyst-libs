@@ -25,5 +25,29 @@ docs: #DocumentDefinitions & {
 				type:     "Category Parameters"
 			}
 		}
+
+		payload: {
+			description: """
+				JSON Schema document which ensures the minimum required functional requirements
+				of the Proposal Template are met.
+
+				This ensures that payloads can be reliably interpreted by business logic processes, 
+				while allowing for flexibility to capture extended information.
+				"""
+		}
+
+		"signers": {
+			roles: {
+				// No User Role may publish this document.
+				user: []
+
+				// Root Admin and brand Admin may publish this document.
+				admin: [
+					"RootAdmin",
+					"BrandAdmin",
+				]
+			}
+		}
+
 	}
 }

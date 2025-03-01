@@ -1,0 +1,721 @@
+{
+    "docs": {
+        "Proposal": {
+            "type": [
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+            ],
+            "description": "## Proposal Document\n\nA Proposal is a document which describes a proposed solution or project to\naddress the criteria of a category within a campaign.\n\nThe proposal itself is a draft document, it is not submitted for consideration\nunless a `Proposal Submission Action` is submitted which references it.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": "application/json",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "template": {
+                    "required": "yes",
+                    "format": "Document Reference",
+                    "description": "Reference to the template used to create and/or validate this document.",
+                    "type": "Proposal Template",
+                    "validation": "The document payload is not valid if it does not validate completely against the referenced template."
+                },
+                "collaborators": {
+                    "required": "optional",
+                    "format": "Collaborators Reference List",
+                    "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+                    "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+                },
+                "category_id": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "Proposal Document drafted for submission to a category of a campaign.\n\nMust be valid according to the schema of the referenced Template."
+            },
+            "signers": {
+                "roles": {
+                    "user": [
+                        "Proposer"
+                    ]
+                },
+                "update": {
+                    "collaborators": true,
+                    "author": true
+                }
+            }
+        },
+        "Proposal Comment": {
+            "type": [
+                "b679ded3-0e7c-41ba-89f8-da62a17898ea",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+            ],
+            "description": "## Proposal Comment Document\n\nA Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": "application/json",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "ref": {
+                    "required": "yes",
+                    "format": "Document Reference",
+                    "type": "Proposal",
+                    "description": "Reference to a Linked Document.  \nThis is the primary hierarchial reference to a related document."
+                },
+                "reply": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "Reference to a Comment document type being referred to.",
+                    "type": "Proposal Comment",
+                    "validation": "The `ref` of the `reply` document must be the same as\nthe original comment document."
+                },
+                "section": {
+                    "required": "optional",
+                    "format": "Section Reference",
+                    "description": "A Reference to the original document, or the comment being replied to.",
+                    "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+                },
+                "template": {
+                    "required": "yes",
+                    "format": "Document Reference",
+                    "description": "Reference to the template used to create and/or validate this document.",
+                    "type": "Proposal Comment Template",
+                    "validation": "The document payload is not valid if it does not validate completely against the referenced template."
+                },
+                "category_id": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "JSON Document which must validate against the referenced template."
+            },
+            "signers": {
+                "roles": {
+                    "user": [
+                        "Registered"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Proposal Comment Meta Template": {
+            "type": [
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+                "b679ded3-0e7c-41ba-89f8-da62a17898ea",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+            ],
+            "description": "## Proposal Comment Meta Template Document\n\nA Proposal Comment Meta Template is used to enforce functional requirements\nare met in any Proposal Comment Template.\n\nThe payload of a proposal comment template is controlled by its meta template.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "value": "application/schema+json",
+                    "coseLabel": 3,
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "category_id": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Comment Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information."
+            },
+            "signers": {
+                "roles": {
+                    "user": [],
+                    "admin": [
+                        "RootAdmin",
+                        "BrandAdmin"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Proposal Comment Template": {
+            "type": [
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+                "b679ded3-0e7c-41ba-89f8-da62a17898ea",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+            ],
+            "description": "## Proposal Comment Template Document\n\nA Proposal Comment Template defines the allowed payload contents of a\nlinked proposal comment.\n\nProposal comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "value": "application/schema+json",
+                    "coseLabel": 3,
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "template": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "Reference to the template used to create and/or validate this document.",
+                    "type": "Proposal Comment Meta Template",
+                    "validation": "The document payload is not valid if it does not validate completely against the referenced template."
+                },
+                "category_id": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "JSON Schema document which defines the content of the Proposal Comments."
+            },
+            "signers": {
+                "roles": {
+                    "user": [],
+                    "admin": [
+                        "BrandAdmin",
+                        "CampaignAdmin"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Proposal Meta Template": {
+            "type": [
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+            ],
+            "description": "## Proposal Meta Template Document\n\nA Proposal Meta Template is used to enforce functional requirements\nare met in any Proposal Template.\n\nThe payload of a proposal template is controlled by its meta template.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "value": "application/schema+json",
+                    "coseLabel": 3,
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "category_id": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information."
+            },
+            "signers": {
+                "roles": {
+                    "user": [],
+                    "admin": [
+                        "RootAdmin",
+                        "BrandAdmin"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Proposal Submission Action": {
+            "type": [
+                "5e60e623-ad02-4a1b-a1ac-406db978ee48",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
+                "78927329-cfd9-4ea1-9c71-0e019b126a65"
+            ],
+            "description": "## Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  Unless they all submit or withdraw the same version of the proposal\nthe proposal will not be seen as submitted or withdrawn.\n\nThe payload is a fixed format.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": "application/json",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "collation": {
+                    "required": "yes",
+                    "format": "Document Collation Reference",
+                    "description": "Array of Collated Document References\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\nIt is equivalent to `ref` plus `ref_hash` but allows multiple documents to be \nreferenced simultaneously.  \nWhen a `collation` is used, Version and Hash are required.\n\nWhen `collation` and `ref` appear in the same document, \nthe first document in the collation list must be identical to the `ref` and `ref_hash` \nmust be present."
+                },
+                "category_id": {
+                    "required": "yes",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.",
+                "schema": {
+                    "$schema": "http://json-schema.org/draft-07/schema#",
+                    "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
+                    "title": "Proposal Submission Action Payload Schema",
+                    "description": "Structure of the payload of a Proposal Submission Action.",
+                    "maintainers": [
+                        {
+                            "name": "Catalyst Team",
+                            "url": "https://projectcatalyst.io/"
+                        }
+                    ],
+                    "x-changelog": {
+                        "2025-03-01": [
+                            "First Version Created."
+                        ]
+                    },
+                    "additionalProperties": false,
+                    "definitions": {
+                        "action": {
+                            "type": "string",
+                            "description": "The action being performed on the Proposal.",
+                            "enum": [
+                                "submission",
+                                "retraction"
+                            ]
+                        }
+                    },
+                    "properties": {
+                        "action": {
+                            "$ref": "#/definitions/action"
+                        }
+                    },
+                    "required": [
+                        "action"
+                    ]
+                }
+            },
+            "signers": {
+                "roles": {
+                    "user": [
+                        "Proposer"
+                    ]
+                },
+                "referenced": true,
+                "update": {
+                    "collaborators": true,
+                    "author": true
+                }
+            }
+        },
+        "Proposal Template": {
+            "type": [
+                "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+            ],
+            "description": "## Proposal Template Document\n\nA Proposal Template defines the allowed payload contents of a\nlinked proposal.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "value": "application/schema+json",
+                    "coseLabel": 3,
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                },
+                "template": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "Reference to the template used to create and/or validate this document.",
+                    "type": "Proposal Meta Template",
+                    "validation": "The document payload is not valid if it does not validate completely against the referenced template."
+                },
+                "category_id": {
+                    "required": "optional",
+                    "format": "Document Reference",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
+                    "type": "Category Parameters",
+                    "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+                }
+            },
+            "payload": {
+                "description": "JSON Schema document which defines the valid contents of a proposal document."
+            },
+            "signers": {
+                "roles": {
+                    "user": [],
+                    "admin": [
+                        "BrandAdmin",
+                        "CampaignAdmin"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Proposal Moderation Action": {
+            "type": [
+                "5e60e623-ad02-4a1b-a1ac-406db978ee48",
+                "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
+                "a5d232b8-5e03-4117-9afd-be32b878fcdd"
+            ],
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": "application/json",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                }
+            },
+            "signers": {
+                "roles": {
+                    "user": [
+                        "Registered"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Comment Action Document": {
+            "type": [
+                "5e60e623-ad02-4a1b-a1ac-406db978ee48",
+                "b679ded3-0e7c-41ba-89f8-da62a17898ea",
+                "a5d232b8-5e03-4117-9afd-be32b878fcdd"
+            ],
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": "application/json",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                }
+            },
+            "signers": {
+                "roles": {
+                    "user": [
+                        "Registered"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        },
+        "Category Parameters": {
+            "type": [
+                "818938c3-3139-4daa-afe6-974c78488e95"
+            ],
+            "headers": {
+                "alg": {
+                    "coseLabel": 1,
+                    "description": "Default cryptographic signature algorithm",
+                    "required": "optional",
+                    "format": "COSE Algorithm"
+                },
+                "content type": {
+                    "coseLabel": 3,
+                    "value": "application/json",
+                    "description": "IANA Media Type/s allowed in the Payload",
+                    "required": "yes",
+                    "format": "IANA Media Type"
+                },
+                "content-encoding": {
+                    "coseLabel": "content-encoding",
+                    "value": [
+                        "br"
+                    ],
+                    "description": "Supported HTTP Encodings of the Payload",
+                    "required": "optional",
+                    "format": "HTTP Content Encoding"
+                }
+            },
+            "metadata": {
+                "id": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "Document ID, created the first time the document is created."
+                },
+                "ver": {
+                    "required": "yes",
+                    "format": "UUIDv7",
+                    "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+                    "validation": "The document version must always be >= the document ID."
+                }
+            },
+            "signers": {
+                "roles": {
+                    "user": [
+                        "Registered"
+                    ]
+                },
+                "update": {
+                    "author": true
+                }
+            }
+        }
+    }
+}

@@ -3,7 +3,11 @@
 // Metadata Types and Constraints
 package signed_docs
 
-import "list"
+import (
+	"list"
+	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
+
+)
 
 // Format of a Metadata Field
 #metadataFormat:
@@ -11,7 +15,8 @@ import "list"
 	"Document Reference" |
 	"Document Hash" |
 	"Section Reference" |
-	"Collaborators Reference List"
+	"Collaborators Reference List" |
+	"Document Collation Reference"
 
 // Canonical List of all valid metadata names
 _metadataNames: list.UniqueItems
@@ -37,7 +42,7 @@ _allMetadataNames: or([
 // Definition of a metadata field.
 #metadataField: {
 	// Is the field required to be present.
-	required: #optionalField
+	required: optional.#field
 
 	// Format of the field.
 	format: #metadataFormat
@@ -77,20 +82,46 @@ _metadata: #metadataStruct & {
 	}
 
 	ref?: #metadataField & {
-		format:      "Document Reference"
-		description: "Reference to a Linked Document.  This is the primary hierarchial reference to a related document."
+		format: "Document Reference"
+		description: """
+			Reference to a Linked Document.  
+			This is the primary hierarchial reference to a related document.
+			"""
 	}
 
 	// IF we have a ref, we can optionally have a `ref_hash`
 	if ref != _|_ {
 		ref_hash?: #metadataField & {
 			format: "Document Hash"
+			description: """
+				Hash of the referenced document.  
+				This is the Blake2b-256 Hash over the entire referenced signed document.
+				It ensures that the intended referenced document is the one used.
+
+				Prevents substitutions where a new document with the same Document ID and Ver might be
+				published over an existing one.
+
+				This is only used when there could be security issues with substitutions of the referenced document.
+				"""
 		}
 	}
 
 	collation?: #metadataField & {
-		format:      "Document Collation Reference"
-		description: "Array of Collated Document References"
+		format: "Document Collation Reference"
+		description: """
+			Array of Collated Document References
+
+			This is an Array of the format:
+			  `[[DocumentID, DocumentVer, DocumentHash],...]`
+
+			It is equivalent to `ref` plus `ref_hash` but allows multiple documents to be 
+			referenced simultaneously.  
+			When a `collation` is used, Version and Hash are required.
+
+			When `collation` and `ref` appear in the same document, 
+			the first document in the collation list must be identical to the `ref` and `ref_hash` 
+			must be present.
+			"""
 	}
 
 	template?: #metadataField & {
@@ -144,26 +175,46 @@ _metadata: #metadataStruct & {
 
 	brand_id?: #metadataField & {
 		format:      "Document Reference"
-		required:    "optional"
 		description: "A reference to the Brand Parameters Document this document lies under."
+		validation: """
+			Any referenced document that includes a `brand_id` must match the `brand_id` 
+			of the referencing document.
+			It is also valid for the referenced document to not include this field, if it is 
+			optional for the referenced document.
+			"""
 	}
 
 	campaign_id?: #metadataField & {
 		format:      "Document Reference"
-		required:    "optional"
 		description: "A reference to the Campaign Parameters Document this document lies under."
+		validation: """
+			Any referenced document that includes a `campaign_id` must match the `campaign_id` 
+			of the referencing document.
+			It is also valid for the referenced document to not include this field, if it is 
+			optional for the referenced document.
+			"""
 	}
 
 	election_id?: #metadataField & {
 		format:      "Document Reference"
-		required:    "optional"
 		description: "A reference to the Election Parameters Document this document lies under."
+		validation: """
+			Any referenced document that includes a `election_id` must match the `election_id` 
+			of the referencing document.
+			It is also valid for the referenced document to not include this field, if it is 
+			optional for the referenced document.
+			"""
 	}
 
 	category_id?: #metadataField & {
 		format:      "Document Reference"
-		required:    "optional"
 		description: "A reference to the Category Parameters Document this document lies under."
+		validation: """
+			Any referenced document that includes a `category_id` must match the `category_id` 
+			of the referencing document.
+			It is also valid for the referenced document to not include this field, if it is 
+			optional for the referenced document.
+			"""
 	}
 
 }

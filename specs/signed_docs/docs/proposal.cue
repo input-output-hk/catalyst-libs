@@ -25,9 +25,33 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Template"
 			}
 
+			collaborators: {
+				required: "optional"
+			}
+
 			category_id: {
 				required: "optional"
 				type:     "Category Parameters"
+			}
+		}
+
+		payload: {
+			description: """
+				Proposal Document drafted for submission to a category of a campaign.
+
+				Must be valid according to the schema of the referenced Template.
+				"""
+		}
+
+		signers: {
+			roles: {
+				user: [
+					"Proposer",
+				]
+			}
+
+			update: {
+				"collaborators": true
 			}
 		}
 	}
