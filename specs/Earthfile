@@ -21,6 +21,8 @@ src:
     COPY . .
     ENV CUE_EXPERIMENT="embed"
 
+    SAVE ARTIFACT signed_doc.json
+
 
 check:
     FROM +src
