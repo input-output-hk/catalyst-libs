@@ -31,3 +31,4 @@ jobs:
         dart
         docs
         general
+        deps

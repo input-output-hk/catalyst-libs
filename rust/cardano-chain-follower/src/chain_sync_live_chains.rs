@@ -394,10 +394,7 @@ impl ProtectedLiveChainBlockList {
         // Search backwards for a fork smaller than or equal to the one we know.
         while this_block.fork() > fork {
             rollback_depth = rollback_depth.saturating_add(1);
-            entry = match entry.prev() {
-                Some(entry) => entry,
-                None => return None,
-            };
+            entry = entry.prev()?;
 
             this_block = entry.value().clone();
         }

@@ -16,6 +16,9 @@ pub enum ContentEncoding {
 
 impl ContentEncoding {
     /// Compress a Brotli payload
+    ///
+    /// # Errors
+    /// Returns compression failure
     pub fn encode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
@@ -28,6 +31,9 @@ impl ContentEncoding {
     }
 
     /// Decompress a Brotli payload
+    ///
+    /// # Errors
+    ///  Returns decompression failure
     pub fn decode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
