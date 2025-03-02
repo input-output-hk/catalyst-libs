@@ -10,6 +10,7 @@ use cardano_blockchain_types::{
 };
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
+use rbac_registration::cardano::cip509::Cip509;
 
 /// Use Mimalloc for the global allocator.
 #[cfg(feature = "mimalloc")]
@@ -457,8 +458,15 @@ fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
 }
 
 /// Function for logging bad CIP509.
-fn log_bad_cip509_info(_block: &MultiEraBlock, _network: Network) {
-    // TODO - Implement this function.
+fn log_bad_cip509_info(block: &MultiEraBlock, network: Network) {
+    for cip509 in Cip509::from_block(block, &[]) {
+        if cip509.report().is_problematic() {
+            info!(
+                network = network.to_string(),
+                "CIP509 invalid: {:?}", cip509
+            );
+        }
+    }
 }
 
 #[tokio::main]

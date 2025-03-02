@@ -3,7 +3,11 @@
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV4};
 use coset::{cbor::Value, Label, ProtectedHeader};
 
-use super::{cose_protected_header_find, decode_cbor_uuid, encode_cbor_uuid, DocumentRef};
+use super::{
+    cose_protected_header_find,
+    utils::{decode_document_field_from_protected_header, CborUuidV4},
+    DocumentRef, Section,
+};
 
 /// `ref` field COSE key value
 const REF_KEY: &str = "ref";
@@ -40,7 +44,7 @@ pub struct ExtraFields {
     reply: Option<DocumentRef>,
     /// Reference to the document section.
     #[serde(skip_serializing_if = "Option::is_none")]
-    section: Option<String>,
+    section: Option<Section>,
     /// Reference to the document collaborators. Collaborator type is TBD.
     #[serde(default = "Vec::new", skip_serializing_if = "Vec::is_empty")]
     collabs: Vec<String>,
@@ -79,7 +83,7 @@ impl ExtraFields {
 
     /// Return `section` field.
     #[must_use]
-    pub fn section(&self) -> Option<&String> {
+    pub fn section(&self) -> Option<&Section> {
         self.section.as_ref()
     }
 
@@ -128,7 +132,7 @@ impl ExtraFields {
         }
 
         if let Some(section) = &self.section {
-            builder = builder.text_value(SECTION_KEY.to_string(), Value::Text(section.clone()));
+            builder = builder.text_value(SECTION_KEY.to_string(), Value::from(section.clone()));
         }
 
         if !self.collabs.is_empty() {
@@ -147,8 +151,10 @@ impl ExtraFields {
         }
 
         if let Some(election_id) = &self.election_id {
-            builder =
-                builder.text_value(ELECTION_ID_KEY.to_string(), encode_cbor_uuid(election_id)?);
+            builder = builder.text_value(
+                ELECTION_ID_KEY.to_string(),
+                Value::try_from(CborUuidV4(*election_id))?,
+            );
         }
 
         if let Some(category_id) = &self.category_id {
@@ -159,206 +165,109 @@ impl ExtraFields {
     }
 
     /// Converting COSE Protected Header to `ExtraFields`.
-    /// Return `None` if it fails during
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn from_protected_header(
         protected: &ProtectedHeader, error_report: &ProblemReport,
-    ) -> Option<Self> {
-        /// Context for error messages.
-        const CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
-        let mut valid = true;
+    ) -> Self {
+        /// Context for problem report messages during decoding from COSE protected
+        /// header.
+        const COSE_DECODING_CONTEXT: &str = "COSE ProtectedHeader to ExtraFields";
 
-        let mut extra = ExtraFields::default();
+        let doc_ref = decode_document_field_from_protected_header(
+            protected,
+            REF_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let template = decode_document_field_from_protected_header(
+            protected,
+            TEMPLATE_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let reply = decode_document_field_from_protected_header(
+            protected,
+            REPLY_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let section = decode_document_field_from_protected_header(
+            protected,
+            SECTION_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let brand_id = decode_document_field_from_protected_header(
+            protected,
+            BRAND_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let campaign_id = decode_document_field_from_protected_header(
+            protected,
+            CAMPAIGN_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let election_id = decode_document_field_from_protected_header::<CborUuidV4>(
+            protected,
+            ELECTION_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        )
+        .map(|v| v.0);
+        let category_id = decode_document_field_from_protected_header(
+            protected,
+            CATEGORY_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
 
-        if let Some(cbor_doc_ref) =
-            cose_protected_header_find(protected, |key| key == &Label::Text(REF_KEY.to_string()))
-        {
-            match DocumentRef::try_from(cbor_doc_ref) {
-                Ok(doc_ref) => {
-                    extra.doc_ref = Some(doc_ref);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header doc ref",
-                        &format!("{cbor_doc_ref:?}"),
-                        &format!("Expected DocumentRef: {e}"),
-                        &format!("{CONTEXT}, DocumentRef"),
-                    );
-                },
-            }
-        }
-
-        if let Some(cbor_doc_template) = cose_protected_header_find(protected, |key| {
-            key == &Label::Text(TEMPLATE_KEY.to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_template) {
-                Ok(doc_template) => {
-                    extra.template = Some(doc_template);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header document template",
-                        &format!("{cbor_doc_template:?}"),
-                        &format!("Expected DocumentRef: {e}"),
-                        &format!("{CONTEXT}, DocumentRef"),
-                    );
-                },
-            }
-        }
-
-        if let Some(cbor_doc_reply) =
-            cose_protected_header_find(protected, |key| key == &Label::Text(REPLY_KEY.to_string()))
-        {
-            match DocumentRef::try_from(cbor_doc_reply) {
-                Ok(doc_reply) => {
-                    extra.reply = Some(doc_reply);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header document reply",
-                        &format!("{cbor_doc_reply:?}"),
-                        &format!("Expected DocumentRef: {e}"),
-                        &format!("{CONTEXT}, DocumentRef"),
-                    );
-                },
-            }
-        }
-
-        if let Some(cbor_doc_section) = cose_protected_header_find(protected, |key| {
-            key == &Label::Text(SECTION_KEY.to_string())
-        }) {
-            match cbor_doc_section.clone().into_text() {
-                Ok(doc_section) => {
-                    extra.section = Some(doc_section);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "COSE protected header document section",
-                        &format!("{cbor_doc_section:?}"),
-                        &format!("Expected String: {e:?}"),
-                        &format!("{CONTEXT}, converting document section to String"),
-                    );
-                },
-            }
-        }
+        let mut extra = ExtraFields {
+            doc_ref,
+            template,
+            reply,
+            section,
+            brand_id,
+            campaign_id,
+            election_id,
+            category_id,
+            ..Default::default()
+        };
 
         if let Some(cbor_doc_collabs) = cose_protected_header_find(protected, |key| {
             key == &Label::Text(COLLABS_KEY.to_string())
         }) {
-            match cbor_doc_collabs.clone().into_array() {
-                Ok(collabs) => {
-                    let mut c = Vec::new();
-                    for (ids, collaborator) in collabs.iter().cloned().enumerate() {
-                        match collaborator.clone().into_text() {
-                            Ok(collaborator) => {
-                                c.push(collaborator);
-                            },
-                            Err(e) => {
-                                valid = false;
-                                error_report.conversion_error(
-                                    &format!("COSE protected header collaborator index {ids}"),
-                                    &format!("{collaborator:?}"),
-                                    &format!("Expected String: {e:?}"),
-                                    &format!("{CONTEXT}, converting collaborator to String"),
-                                );
-                            },
-                        }
+            if let Ok(collabs) = cbor_doc_collabs.clone().into_array() {
+                let mut c = Vec::new();
+                for (ids, collaborator) in collabs.iter().cloned().enumerate() {
+                    match collaborator.clone().into_text() {
+                        Ok(collaborator) => {
+                            c.push(collaborator);
+                        },
+                        Err(_) => {
+                            error_report.conversion_error(
+                                &format!("COSE protected header collaborator index {ids}"),
+                                &format!("{collaborator:?}"),
+                                "Expected a CBOR String",
+                                &format!(
+                                    "{COSE_DECODING_CONTEXT}, converting collaborator to String",
+                                ),
+                            );
+                        },
                     }
-                    extra.collabs = c;
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header collaborators",
-                        &format!("{cbor_doc_collabs:?}"),
-                        &format!("Expected Array: {e:?}"),
-                        &format!("{CONTEXT}, converting collaborators to Array"),
-                    );
-                },
-            }
+                }
+                extra.collabs = c;
+            } else {
+                error_report.conversion_error(
+                    "CBOR COSE protected header collaborators",
+                    &format!("{cbor_doc_collabs:?}"),
+                    "Expected a CBOR Array",
+                    &format!("{COSE_DECODING_CONTEXT}, converting collaborators to Array",),
+                );
+            };
         }
 
-        if let Some(cbor_doc_brand_id) = cose_protected_header_find(protected, |key| {
-            key == &Label::Text(BRAND_ID_KEY.to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_brand_id) {
-                Ok(brand_id) => {
-                    extra.brand_id = Some(brand_id);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header brand ID",
-                        &format!("{cbor_doc_brand_id:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for brand ID"),
-                    );
-                },
-            }
-        }
-
-        if let Some(cbor_doc_campaign_id) = cose_protected_header_find(protected, |key| {
-            key == &Label::Text(CAMPAIGN_ID_KEY.to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_campaign_id) {
-                Ok(campaign_id) => {
-                    extra.campaign_id = Some(campaign_id);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header campaign ID",
-                        &format!("{cbor_doc_campaign_id:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for campaign ID"),
-                    );
-                },
-            }
-        }
-
-        if let Some(cbor_doc_election_id) = cose_protected_header_find(protected, |key| {
-            key == &Label::Text(ELECTION_ID_KEY.to_string())
-        }) {
-            match decode_cbor_uuid(cbor_doc_election_id.clone()) {
-                Ok(election_id) => {
-                    extra.election_id = Some(election_id);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header election ID",
-                        &format!("{cbor_doc_election_id:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for election ID"),
-                    );
-                },
-            }
-        }
-
-        if let Some(cbor_doc_category_id) = cose_protected_header_find(protected, |key| {
-            key == &Label::Text(CATEGORY_ID_KEY.to_string())
-        }) {
-            match DocumentRef::try_from(cbor_doc_category_id) {
-                Ok(category_id) => {
-                    extra.category_id = Some(category_id);
-                },
-                Err(e) => {
-                    valid = false;
-                    error_report.conversion_error(
-                        "CBOR COSE protected header category ID",
-                        &format!("{cbor_doc_category_id:?}"),
-                        &format!("Expected UUID: {e:?}"),
-                        &format!("{CONTEXT}, decoding CBOR UUID for category ID"),
-                    );
-                },
-            }
-        }
-
-        valid.then_some(extra)
+        extra
     }
 }
 

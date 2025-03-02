@@ -5,10 +5,11 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TxnIndex};
+use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionId, TxnIndex};
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
+    id_uri::IdUri,
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
@@ -59,7 +60,7 @@ pub struct Cip509 {
     /// An optional hash of the previous transaction.
     ///
     /// The hash must always be present except for the first registration transaction.
-    prv_tx_id: Option<Blake2b256Hash>,
+    prv_tx_id: Option<TransactionId>,
     /// Metadata.
     ///
     /// This field encoded in chunks. See [`X509Chunks`] for more details.
@@ -72,10 +73,14 @@ pub struct Cip509 {
     /// constructors.
     payment_history: PaymentHistory,
     /// A hash of the transaction from which this registration is extracted.
-    txn_hash: Blake2b256Hash,
+    txn_hash: TransactionId,
     /// A point (slot) and a transaction index identifying the block and the transaction
     /// that this `Cip509` was extracted from.
     origin: PointTxnIdx,
+    /// A catalyst ID.
+    ///
+    /// This field is only present in role 0 registrations.
+    catalyst_id: Option<IdUri>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -139,7 +144,7 @@ impl Cip509 {
             payment_history,
             report: &mut report,
         };
-        let cip509 =
+        let mut cip509 =
             Cip509::decode(&mut decoder, &mut decode_context).context("Failed to decode Cip509")?;
 
         // Perform the validation.
@@ -156,7 +161,7 @@ impl Cip509 {
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
         }
         if let Some(metadata) = &cip509.metadata {
-            validate_role_data(metadata, &cip509.report);
+            cip509.catalyst_id = validate_role_data(metadata, &cip509.report);
         }
 
         Ok(Some(cip509))
@@ -210,7 +215,7 @@ impl Cip509 {
 
     /// Returns a hash of the previous transaction.
     #[must_use]
-    pub fn previous_transaction(&self) -> Option<Blake2b256Hash> {
+    pub fn previous_transaction(&self) -> Option<TransactionId> {
         self.prv_tx_id
     }
 
@@ -228,7 +233,7 @@ impl Cip509 {
 
     /// Returns a hash of the transaction where this data is originating from.
     #[must_use]
-    pub fn txn_hash(&self) -> Blake2b256Hash {
+    pub fn txn_hash(&self) -> TransactionId {
         self.txn_hash
     }
 
@@ -242,6 +247,12 @@ impl Cip509 {
     #[must_use]
     pub fn txn_inputs_hash(&self) -> Option<&TxInputHash> {
         self.txn_inputs_hash.as_ref()
+    }
+
+    /// Returns a Catalyst ID of this registration if role 0 is present.
+    #[must_use]
+    pub fn catalyst_id(&self) -> Option<&IdUri> {
+        self.catalyst_id.as_ref()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
@@ -370,9 +381,10 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                 .missing_field("metadata (10, 11 or 12 chunks)", context);
         }
 
-        let txn_hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(decode_context.txn)))
-            .hash()
-            .into();
+        let txn_hash = Blake2b256Hash::from(
+            MultiEraTx::Conway(Box::new(Cow::Borrowed(decode_context.txn))).hash(),
+        )
+        .into();
         Ok(Self {
             purpose,
             txn_inputs_hash,
@@ -382,6 +394,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             payment_history: HashMap::new(),
             txn_hash,
             origin: decode_context.origin.clone(),
+            catalyst_id: None,
             report: decode_context.report.clone(),
         })
     }
@@ -501,7 +514,7 @@ fn decode_input_hash(
 /// Decodes previous transaction id.
 fn decode_previous_transaction_id(
     d: &mut Decoder, context: &str, report: &ProblemReport,
-) -> Result<Option<Blake2b256Hash>, ()> {
+) -> Result<Option<TransactionId>, ()> {
     let bytes = match decode_bytes(d, "Cip509 previous transaction id") {
         Ok(v) => v,
         Err(e) => {
@@ -515,7 +528,7 @@ fn decode_previous_transaction_id(
 
     let len = bytes.len();
     if let Ok(v) = Blake2b256Hash::try_from(bytes) {
-        Ok(Some(v))
+        Ok(Some(v.into()))
     } else {
         report.invalid_value(
             "previous transaction hash",

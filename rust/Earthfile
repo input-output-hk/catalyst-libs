@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.2.37 AS rust-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.3.0 AS rust-ci
 
 COPY_SRC:
     FUNCTION
@@ -67,6 +67,8 @@ build:
 
     SAVE ARTIFACT target/doc doc
     SAVE ARTIFACT target/release/cbork cbork
+    # Catalyst Signed Documents cli tool
+    SAVE ARTIFACT target/release/mk_signed_doc mk_signed_doc
 
 # build-src-check: Check for any caching issues with the source we are building against.
 check-builder-src-cache:

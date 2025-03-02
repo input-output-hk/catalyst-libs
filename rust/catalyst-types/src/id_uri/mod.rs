@@ -138,9 +138,9 @@ impl IdUri {
         Self { id: true, ..self }
     }
 
-    /// Was `IdUri` formatted as a id when it was parsed.
+    /// Was `IdUri` formatted as an id when it was parsed.
     #[must_use]
-    pub fn is_id(self) -> bool {
+    pub fn is_id(&self) -> bool {
         self.id
     }
 

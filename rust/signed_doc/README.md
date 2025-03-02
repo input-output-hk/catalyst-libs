@@ -18,7 +18,7 @@ openssl genpkey -algorithm=ED25519 -out=private.pem -outpubkey=public.pem
 `meta.json` file should follow the [`meta.schema.json`](./meta.schema.json).
 
 ```shell
-cargo run -p catalyst-signed-doc --example mk_signed_doc build signed_doc/doc.json signed_doc/doc.cose signed_doc/meta.json
+cargo run -p catalyst-signed-doc build signed_doc/doc.json signed_doc/doc.cose signed_doc/meta.json
 ```
 
 ### Sign document
@@ -26,11 +26,11 @@ cargo run -p catalyst-signed-doc --example mk_signed_doc build signed_doc/doc.js
 `KID` is a valid Catalyst ID URI.
 
 ```shell
-cargo run -p catalyst-signed-doc --example mk_signed_doc sign signed_doc/doc.cose signed_doc/meta.json <KID>
+cargo run -p catalyst-signed-doc sign signed_doc/doc.cose signed_doc/meta.json <KID>
 ```
 
 ### Inspect document
 
 ```shell
-cargo run -p catalyst-signed-doc --example mk_signed_doc inspect signed_doc/doc.cose
+cargo run -p catalyst-signed-doc inspect signed_doc/doc.cose
 ```
