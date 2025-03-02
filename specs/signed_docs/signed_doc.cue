@@ -53,6 +53,9 @@ docs: #DocumentDefinitions & {
 	}
 }
 
+// base Document Types to help with automated processing of the document schema information.
+base_types: _allDocTypes
+
 // Ensure that all Document Type IDs are Unique.
 // See: all_docs.cue for a list of all known document types.
 _allDocTypeIDs: list.UniqueItems
