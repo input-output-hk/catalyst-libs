@@ -24,5 +24,6 @@
         "dtsvet.vscode-wasm",
         "terrastruct.d2",
         "fill-labs.dependi",
+        "nefrob.vscode-just-syntax",
     ]
 }
