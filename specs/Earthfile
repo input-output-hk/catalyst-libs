@@ -18,17 +18,18 @@ src:
     FROM +builder
 
     WORKDIR /src
+    COPY . .
+    ENV CUE_EXPERIMENT="embed"
 
-    COPY signed_doc_defs.* .
 
 check:
     FROM +src
-    RUN cue --help
-    RUN ls -al
-    RUN cue vet signed_doc_defs.schema.cue -d '#SignedDoc' signed_doc_defs.yml
+    RUN cue fmt --check --files . 
+    RUN cue vet ./signed_docs/docs:signed_docs  signed_doc.json
 
-#  Regenerate 
-regen:
-    FROM src
+#  Regenerate - using the builder
+regenerate:
+    FROM +src
 
-    RUN ls -al
+    RUN cue export -f -s ./signed_docs/docs:signed_docs --out json --outfile signed_doc.json
+    SAVE ARTIFACT --keep-ts signed_doc.json AS LOCAL .

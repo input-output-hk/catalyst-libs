@@ -14,19 +14,19 @@
                 },
                 "content type": {
                     "coseLabel": 3,
-                    "value": "application/json",
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -44,21 +44,21 @@
                 "template": {
                     "required": "yes",
                     "format": "Document Reference",
-                    "description": "Reference to the template used to create and/or validate this document.",
                     "type": "Proposal Template",
+                    "description": "Reference to the template used to create and/or validate this document.",
                     "validation": "The document payload is not valid if it does not validate completely against the referenced template."
                 },
                 "collaborators": {
-                    "required": "optional",
                     "format": "Collaborators Reference List",
+                    "required": "optional",
                     "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
                     "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
                 },
                 "category_id": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -92,19 +92,19 @@
                 },
                 "content type": {
                     "coseLabel": 3,
-                    "value": "application/json",
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -126,30 +126,30 @@
                     "description": "Reference to a Linked Document.  \nThis is the primary hierarchial reference to a related document."
                 },
                 "reply": {
-                    "required": "optional",
                     "format": "Document Reference",
-                    "description": "Reference to a Comment document type being referred to.",
+                    "required": "optional",
                     "type": "Proposal Comment",
+                    "description": "Reference to a Comment document type being referred to.",
                     "validation": "The `ref` of the `reply` document must be the same as\nthe original comment document."
                 },
                 "section": {
-                    "required": "optional",
                     "format": "Section Reference",
+                    "required": "optional",
                     "description": "A Reference to the original document, or the comment being replied to.",
                     "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
                 },
                 "template": {
                     "required": "yes",
                     "format": "Document Reference",
-                    "description": "Reference to the template used to create and/or validate this document.",
                     "type": "Proposal Comment Template",
+                    "description": "Reference to the template used to create and/or validate this document.",
                     "validation": "The document payload is not valid if it does not validate completely against the referenced template."
                 },
                 "category_id": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -183,20 +183,20 @@
                     "format": "COSE Algorithm"
                 },
                 "content type": {
-                    "value": "application/schema+json",
                     "coseLabel": 3,
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/schema+json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -214,8 +214,8 @@
                 "category_id": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -251,20 +251,20 @@
                     "format": "COSE Algorithm"
                 },
                 "content type": {
-                    "value": "application/schema+json",
                     "coseLabel": 3,
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/schema+json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -282,15 +282,15 @@
                 "template": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "Reference to the template used to create and/or validate this document.",
                     "type": "Proposal Comment Meta Template",
+                    "description": "Reference to the template used to create and/or validate this document.",
                     "validation": "The document payload is not valid if it does not validate completely against the referenced template."
                 },
                 "category_id": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -325,20 +325,20 @@
                     "format": "COSE Algorithm"
                 },
                 "content type": {
-                    "value": "application/schema+json",
                     "coseLabel": 3,
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/schema+json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -356,8 +356,8 @@
                 "category_id": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -394,19 +394,19 @@
                 },
                 "content type": {
                     "coseLabel": 3,
-                    "value": "application/json",
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -429,8 +429,8 @@
                 "category_id": {
                     "required": "yes",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -500,20 +500,20 @@
                     "format": "COSE Algorithm"
                 },
                 "content type": {
-                    "value": "application/schema+json",
                     "coseLabel": 3,
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/schema+json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -531,15 +531,15 @@
                 "template": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "Reference to the template used to create and/or validate this document.",
                     "type": "Proposal Meta Template",
+                    "description": "Reference to the template used to create and/or validate this document.",
                     "validation": "The document payload is not valid if it does not validate completely against the referenced template."
                 },
                 "category_id": {
                     "required": "optional",
                     "format": "Document Reference",
-                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "type": "Category Parameters",
+                    "description": "A reference to the Category Parameters Document this document lies under.",
                     "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
                 }
             },
@@ -574,19 +574,19 @@
                 },
                 "content type": {
                     "coseLabel": 3,
-                    "value": "application/json",
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -628,19 +628,19 @@
                 },
                 "content type": {
                     "coseLabel": 3,
-                    "value": "application/json",
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
@@ -680,19 +680,19 @@
                 },
                 "content type": {
                     "coseLabel": 3,
-                    "value": "application/json",
                     "description": "IANA Media Type/s allowed in the Payload",
                     "required": "yes",
-                    "format": "IANA Media Type"
+                    "format": "IANA Media Type",
+                    "value": "application/json"
                 },
                 "content-encoding": {
                     "coseLabel": "content-encoding",
-                    "value": [
-                        "br"
-                    ],
                     "description": "Supported HTTP Encodings of the Payload",
                     "required": "optional",
-                    "format": "HTTP Content Encoding"
+                    "format": "HTTP Content Encoding",
+                    "value": [
+                        "br"
+                    ]
                 }
             },
             "metadata": {
