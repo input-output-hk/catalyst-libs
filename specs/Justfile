@@ -18,7 +18,8 @@ check: format
 
 # Fix and Check Markdown files
 regenerate: check
-    cue export -f -s ./signed_docs/docs:signed_docs --out json --outfile signed_doc.json
+    # Make sure keys are sorted so its both reproducible, AND diffs easily.
+    cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > signed_doc.json
 
 # Validate the generated signed_docs.json is correct against the cue schema.
 validate:
