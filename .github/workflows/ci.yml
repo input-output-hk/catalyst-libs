@@ -9,6 +9,7 @@ on:
       - synchronize
       - ready_for_review
 
+
 permissions:
   id-token: write
   contents: write
