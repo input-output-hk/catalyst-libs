@@ -1,6 +1,9 @@
 //! Chain of Cardano registration data
 
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{BTreeMap, HashMap},
+    sync::Arc,
+};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
@@ -94,7 +97,7 @@ impl RegistrationChain {
 
     /// Get the map of role number to point, transaction index, and role data.
     #[must_use]
-    pub fn role_data(&self) -> &HashMap<RoleNumber, (PointTxnIdx, RoleData)> {
+    pub fn role_data(&self) -> &BTreeMap<RoleNumber, (PointTxnIdx, RoleData)> {
         &self.inner.role_data
     }
 
@@ -127,7 +130,7 @@ struct RegistrationChainInner {
 
     // Role
     /// Map of role number to point, transaction index, and role data.
-    role_data: HashMap<RoleNumber, (PointTxnIdx, RoleData)>,
+    role_data: BTreeMap<RoleNumber, (PointTxnIdx, RoleData)>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
 }
@@ -364,8 +367,8 @@ fn revocations_list(
 
 /// Process the role data for chain root.
 fn chain_root_role_data(
-    role_data: HashMap<RoleNumber, RoleData>, point_tx_idx: &PointTxnIdx,
-) -> HashMap<RoleNumber, (PointTxnIdx, RoleData)> {
+    role_data: BTreeMap<RoleNumber, RoleData>, point_tx_idx: &PointTxnIdx,
+) -> BTreeMap<RoleNumber, (PointTxnIdx, RoleData)> {
     role_data
         .into_iter()
         .map(|(number, data)| (number, (point_tx_idx.clone(), data)))
@@ -374,7 +377,7 @@ fn chain_root_role_data(
 
 /// Update the role data in the registration chain.
 fn update_role_data(
-    inner: &mut RegistrationChainInner, role_set: HashMap<RoleNumber, RoleData>,
+    inner: &mut RegistrationChainInner, role_set: BTreeMap<RoleNumber, RoleData>,
     point_tx_idx: &PointTxnIdx,
 ) {
     for (number, mut data) in role_set {

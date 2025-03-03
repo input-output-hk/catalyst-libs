@@ -1,7 +1,7 @@
 //! A role number for `RoleData` in RBAC metadata.
 
 /// A role number for `RoleData` in `Cip509RbacMetadata`.
-#[derive(Debug, Eq, PartialEq, Copy, Clone, Hash)]
+#[derive(Debug, Eq, PartialEq, Ord, PartialOrd, Copy, Clone, Hash)]
 pub struct RoleNumber(u8);
 
 impl RoleNumber {
