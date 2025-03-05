@@ -47,7 +47,8 @@ _allMetadataNames: or([
 	// Format of the field.
 	format: #metadataFormat
 	if format == "Document Reference" {
-		type: #DocumentName
+		type:      #DocumentName
+		multiple?: bool | *false
 	}
 
 	// Markdown description of the field.
