@@ -31,6 +31,12 @@ impl From<TxnIndex> for usize {
     }
 }
 
+impl From<TxnIndex> for u16 {
+    fn from(value: TxnIndex) -> Self {
+        value.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
