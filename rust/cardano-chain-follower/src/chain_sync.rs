@@ -561,7 +561,7 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
         // Note: This can ONLY return with an error, otherwise it will sync indefinitely.
         if let Err(error) = follow_chain(&mut peer, cfg.chain, &mut fork_count).await {
             error!(
-                "Cardano Client {} failed to follow chain: {}: Reconnecting.",
+                "Cardano Client {} failed to follow chain: {:?}: Reconnecting.",
                 cfg.relay_address, error
             );
             continue;
