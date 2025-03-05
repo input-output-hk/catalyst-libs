@@ -147,6 +147,10 @@ impl RegistrationChainInner {
         if cip509.previous_transaction().is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
+        // Should be chain root, return immediately if not
+        if cip509.catalyst_id().is_none() {
+            bail!("Invalid chain root, catalyst id should be present.");
+        }
 
         let point_tx_idx = cip509.origin().clone();
         let current_tx_id_hash = cip509.txn_hash();
@@ -194,6 +198,9 @@ impl RegistrationChainInner {
         let Some(prv_tx_id) = cip509.previous_transaction() else {
             bail!("Empty previous transaction ID");
         };
+        if cip509.catalyst_id().is_some() {
+            bail!("Catalyst id should be present only for chain root registration.");
+        }
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
         // or else it is not a part of the chain
         if prv_tx_id == self.current_tx_id_hash {
