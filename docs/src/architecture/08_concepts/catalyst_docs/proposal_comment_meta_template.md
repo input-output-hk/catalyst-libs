@@ -1,1 +1,1 @@
-# Comment Action Meta Template
+# {{ insert_signed_doc_details( "Proposal Comment Meta Template" ) }}

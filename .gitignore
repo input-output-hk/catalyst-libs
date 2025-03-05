@@ -84,3 +84,6 @@ $RECYCLE.BIN/
 # Dart stuff
 /pubspec.lock
 /.dart_tool/**/*
+
+# Python stuff
+.pytest_cache

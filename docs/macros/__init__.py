@@ -1,5 +1,6 @@
 from .include import inc_file
-from .signed_docs import (doc_type_summary, doc_type_details)
+from .signed_docs import doc_type_details, doc_type_summary, signed_doc_details
+
 
 def define_env(env):
     """
@@ -18,3 +19,7 @@ def define_env(env):
     @env.macro
     def insert_doc_type_details():
         return doc_type_details(env)
+
+    @env.macro
+    def insert_signed_doc_details(name):
+        return signed_doc_details(env, name)

@@ -1,10 +1,12 @@
-import os
-import re
-import textwrap
 import json
+import os
 
-#SIGNED_DOCS_SPECS="signed_doc.json"
-SIGNED_DOCS_SPECS="includes/signed_doc.json"
+# import re
+# import textwrap
+
+# SIGNED_DOCS_SPECS="signed_doc.json"
+SIGNED_DOCS_SPECS = "includes/signed_doc.json"
+
 
 def uuid_as_cbor(uuid):
     return f"37(h'{uuid.replace('-', '')}')"
@@ -18,6 +20,7 @@ def get_signed_doc_data(env):
 
     with open(full_filename, "r") as f:
         return json.load(f)
+
 
 def doc_type_summary(env):
     """
@@ -34,7 +37,9 @@ def doc_type_summary(env):
 """
 
         for k in doc_types:
-            doc_type_summary += f"| {k} | `{doc_types[k]}` | `{uuid_as_cbor(doc_types[k])}` |\n"
+            doc_type_summary += (
+                f"| {k} | `{doc_types[k]}` | `{uuid_as_cbor(doc_types[k])}` |\n"
+            )
 
         return doc_type_summary
     except Exception as exc:
@@ -50,15 +55,16 @@ def name_for_uuid(doc_types, uuid):
             return k
     return "Unknown"
 
-               
-def name_to_spec_link(name,ref=None):
+
+def name_to_spec_link(name, ref=None):
     """
     Create a link to a document type, and an optional ref inside the document.
     """
-    link = "./../catalyst_docs/"+name.lower().replace(' ','_') + ".md"
+    link = "./../catalyst_docs/" + name.lower().replace(" ", "_") + ".md"
     if ref is not None:
         link += f"#{ref}"
     return link
+
 
 def base_types(docs, doc_types, name):
     types = docs[name]["type"]
@@ -66,6 +72,7 @@ def base_types(docs, doc_types, name):
     for sub_type in types:
         type_names += name_for_uuid(doc_types, sub_type) + "/"
     return type_names[:-1]
+
 
 def types_as_cbor(docs, name):
     types = docs[name]["type"]
@@ -91,16 +98,24 @@ def doc_type_details(env):
 """
 
         for k in docs:
-            doc_type_details += f"| {k} | {base_types(docs,doc_types,k)} | {types_as_cbor(docs,k)} | [Specification]({name_to_spec_link(k)}) | \n"
+            doc_type_details += f"| {k} | {base_types(docs, doc_types, k)} | {types_as_cbor(docs, k)} | [Specification]({name_to_spec_link(k)}) | \n"
 
         return doc_type_details
     except Exception as exc:
         return f"{exc}"
 
-#class env:
+
+def signed_doc_details(env, name):
+    """
+    Generate Signed Document Detailed Documentation Page.
+    """
+    return name + "\n" + "test\n"
+
+
+# class env:
 #    project_dir = "/home/steven/Development/iohk/catalyst-libs/specs"
 
-#if __name__ == '__main__':
+# if __name__ == '__main__':
 
-#    print(doc_type_details(env))    
+#    print(doc_type_details(env))
 #    print(doc_type_summary(env))

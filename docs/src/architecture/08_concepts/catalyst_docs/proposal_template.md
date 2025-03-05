@@ -1,1 +1,1 @@
-# Proposal Template
+# {{ insert_signed_doc_details( "Proposal Template" ) }}
