@@ -24,8 +24,10 @@ docs: #DocumentDefinitions & {
 			"""
 
 		metadata: {
-			collation: {
+			ref: {
+				type:     "Proposal"
 				required: "yes"
+				multiple: true
 			}
 
 			category_id: {

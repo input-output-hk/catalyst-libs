@@ -15,8 +15,7 @@ import (
 	"Document Reference" |
 	"Document Hash" |
 	"Section Reference" |
-	"Collaborators Reference List" |
-	"Document Collation Reference"
+	"Collaborators Reference List"
 
 // Canonical List of all valid metadata names
 _metadataNames: list.UniqueItems
@@ -24,8 +23,6 @@ _metadataNames: [
 	"id",
 	"ver",
 	"ref",
-	"ref_hash",
-	"collation",
 	"template",
 	"reply",
 	"section",
@@ -85,43 +82,17 @@ _metadata: #metadataStruct & {
 	ref?: #metadataField & {
 		format: "Document Reference"
 		description: """
-			Reference to a Linked Document.  
+			Reference to a Linked Document or Documents.  
 			This is the primary hierarchial reference to a related document.
-			"""
-	}
-
-	// IF we have a ref, we can optionally have a `ref_hash`
-	if ref != _|_ {
-		ref_hash?: #metadataField & {
-			format: "Document Hash"
-			description: """
-				Hash of the referenced document.  
-				This is the Blake2b-256 Hash over the entire referenced signed document.
-				It ensures that the intended referenced document is the one used.
-
-				Prevents substitutions where a new document with the same Document ID and Ver might be
-				published over an existing one.
-
-				This is only used when there could be security issues with substitutions of the referenced document.
-				"""
-		}
-	}
-
-	collation?: #metadataField & {
-		format: "Document Collation Reference"
-		description: """
-			Array of Collated Document References
 
 			This is an Array of the format:
-			  `[[DocumentID, DocumentVer, DocumentHash],...]`
+				`[[DocumentID, DocumentVer, DocumentHash],...]`
 
-			It is equivalent to `ref` plus `ref_hash` but allows multiple documents to be 
-			referenced simultaneously.  
-			When a `collation` is used, Version and Hash are required.
-
-			When `collation` and `ref` appear in the same document, 
-			the first document in the collation list must be identical to the `ref` and `ref_hash` 
-			must be present.
+			* `DocumentID` is the [UUIDv7] ID of the Document being referenced.
+			* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.
+			* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
+				It ensures that the intended referenced document is the one used, and there has been no substitution.
+				Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
 			"""
 	}
 

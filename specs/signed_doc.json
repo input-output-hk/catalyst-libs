@@ -232,7 +232,7 @@
           "required": "yes"
         },
         "ref": {
-          "description": "Reference to a Linked Document.  \nThis is the primary hierarchial reference to a related document.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
           "format": "Document Reference",
           "required": "yes",
           "type": "Proposal"
@@ -581,15 +581,17 @@
           "type": "Category Parameters",
           "validation": "Any referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
-        "collation": {
-          "description": "Array of Collated Document References\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\nIt is equivalent to `ref` plus `ref_hash` but allows multiple documents to be \nreferenced simultaneously.  \nWhen a `collation` is used, Version and Hash are required.\n\nWhen `collation` and `ref` appear in the same document, \nthe first document in the collation list must be identical to the `ref` and `ref_hash` \nmust be present.",
-          "format": "Document Collation Reference",
-          "required": "yes"
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.",
           "format": "UUIDv7",
           "required": "yes"
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "multiple": true,
+          "required": "yes",
+          "type": "Proposal"
         },
         "ver": {
           "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
@@ -599,7 +601,7 @@
         }
       },
       "payload": {
-        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.",
+        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.",
         "schema": {
           "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -608,8 +610,9 @@
             "action": {
               "description": "The action being performed on the Proposal.",
               "enum": [
-                "submission",
-                "retraction"
+                "final",
+                "draft",
+                "hide"
               ],
               "type": "string"
             }
