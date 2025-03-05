@@ -58,8 +58,9 @@ base_types: _allDocTypes
 
 // Ensure that all Document Type IDs are Unique.
 // See: all_docs.cue for a list of all known document types.
-_allDocTypeIDs: list.UniqueItems
-_allDocTypeIDs: [...uuid.#uuidv4] & [
+#allDocTypeIDs: list.UniqueItems
+
+#allDocTypeIDs: [...uuid.#v4] & [
 	for _, v in _allDocTypes {v},
 ]
 

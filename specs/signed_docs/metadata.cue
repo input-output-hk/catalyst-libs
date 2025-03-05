@@ -43,15 +43,15 @@ _allMetadataNames: or([
 
 	// Format of the field.
 	format: #metadataFormat
-	if format == "Document Reference" {
+	if format == "Document Reference" && required != "excluded" {
 		type:      #DocumentName
-		multiple?: bool | *false
+		multiple?: bool
 	}
 
 	// Markdown description of the field.
-	description: string
+	description: string | *""
 	// Optional notes about validating the field.
-	validation?: string
+	validation?: string | *""
 }
 
 // Metadata fields that are optional
@@ -60,12 +60,12 @@ _allMetadataNames: or([
 }
 _metadata: #metadataStruct & {
 	// Document ID
-	id: #metadataField & {
+	id: {
 		required:    "yes"
 		description: "Document ID, created the first time the document is created."
 	}
 	// Document Version
-	ver: #metadataField & {
+	ver: {
 		required: "yes"
 		description: """
 			## Document Version
@@ -79,7 +79,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	ref?: #metadataField & {
+	ref: {
 		format: "Document Reference"
 		description: """
 			Reference to a Linked Document or Documents.  
@@ -96,13 +96,13 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	template?: #metadataField & {
+	template?: {
 		format:      "Document Reference"
 		description: "Reference to the template used to create and/or validate this document."
 		validation:  "The document payload is not valid if it does not validate completely against the referenced template."
 	}
 
-	reply?: #metadataField & {
+	reply?: {
 		format:   "Document Reference"
 		required: "optional"
 		description: """
@@ -114,7 +114,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	section?: #metadataField & {
+	section?: {
 		format:   "Section Reference"
 		required: "optional"
 		description: """
@@ -126,7 +126,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	collaborators?: #metadataField & {
+	collaborators?: {
 		format:   "Collaborators Reference List"
 		required: "optional"
 		description: """
@@ -145,7 +145,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	brand_id?: #metadataField & {
+	brand_id?: {
 		format:      "Document Reference"
 		description: "A reference to the Brand Parameters Document this document lies under."
 		validation: """
@@ -156,7 +156,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	campaign_id?: #metadataField & {
+	campaign_id?: {
 		format:      "Document Reference"
 		description: "A reference to the Campaign Parameters Document this document lies under."
 		validation: """
@@ -167,7 +167,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	election_id?: #metadataField & {
+	election_id?: {
 		format:      "Document Reference"
 		description: "A reference to the Election Parameters Document this document lies under."
 		validation: """
@@ -178,7 +178,7 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	category_id?: #metadataField & {
+	category_id?: {
 		format:      "Document Reference"
 		description: "A reference to the Category Parameters Document this document lies under."
 		validation: """

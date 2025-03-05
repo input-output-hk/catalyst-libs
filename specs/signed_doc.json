@@ -40,6 +40,11 @@
           "format": "UUIDv7",
           "required": "yes"
         },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
+        },
         "ver": {
           "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "format": "UUIDv7",
@@ -91,6 +96,11 @@
           "description": "Document ID, created the first time the document is created.",
           "format": "UUIDv7",
           "required": "yes"
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
         },
         "ver": {
           "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
@@ -159,6 +169,11 @@
           "description": "Document ID, created the first time the document is created.",
           "format": "UUIDv7",
           "required": "yes"
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
@@ -321,6 +336,11 @@
           "format": "UUIDv7",
           "required": "yes"
         },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
+        },
         "ver": {
           "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "format": "UUIDv7",
@@ -389,6 +409,11 @@
           "description": "Document ID, created the first time the document is created.",
           "format": "UUIDv7",
           "required": "yes"
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
@@ -464,6 +489,11 @@
           "format": "UUIDv7",
           "required": "yes"
         },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
+        },
         "ver": {
           "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "format": "UUIDv7",
@@ -523,6 +553,11 @@
           "description": "Document ID, created the first time the document is created.",
           "format": "UUIDv7",
           "required": "yes"
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
         },
         "ver": {
           "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
@@ -696,6 +731,11 @@
           "description": "Document ID, created the first time the document is created.",
           "format": "UUIDv7",
           "required": "yes"
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "format": "Document Reference",
+          "required": "excluded"
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
