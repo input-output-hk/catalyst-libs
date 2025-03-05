@@ -20,8 +20,9 @@
             "type": "string",
             "description": "The action being performed on the Proposal.",
             "enum": [
-                "submission",
-                "retraction"
+                "final",
+                "draft",
+                "hide"
             ]
         }
     },
