@@ -9,26 +9,21 @@ mod signature;
 mod validation;
 
 fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
-    let alg = Algorithm::EdDSA;
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let section = "$".to_string();
-    let collabs = vec!["Alex1".to_string(), "Alex2".to_string()];
-    let content_type = ContentType::Json;
-    let content_encoding = ContentEncoding::Brotli;
 
     let metadata_fields = serde_json::json!({
-        "alg": alg.to_string(),
-        "content-type": content_type.to_string(),
-        "content-encoding": content_encoding.to_string(),
+        "alg": Algorithm::EdDSA.to_string(),
+        "content-type": ContentType::Json.to_string(),
+        "content-encoding": ContentEncoding::Brotli.to_string(),
         "type": uuid_v4.to_string(),
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
         "ref": {"id": uuid_v7.to_string()},
         "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
         "template": {"id": uuid_v7.to_string()},
-        "section": section,
-        "collabs": collabs,
+        "section": "$".to_string(),
+        "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
         "campaign_id": {"id": uuid_v7.to_string()},
         "election_id":  uuid_v4.to_string(),
         "brand_id":  {"id": uuid_v7.to_string()},
