@@ -4,47 +4,11 @@ use std::str::FromStr;
 
 use catalyst_signed_doc::*;
 
-mod decoding;
-mod signature;
-mod validation;
-
-fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
-    let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
-    let metadata_fields = serde_json::json!({
-        "alg": Algorithm::EdDSA.to_string(),
-        "content-type": ContentType::Json.to_string(),
-        "content-encoding": ContentEncoding::Brotli.to_string(),
-        "type": uuid_v4.to_string(),
-        "id": uuid_v7.to_string(),
-        "ver": uuid_v7.to_string(),
-        "ref": {"id": uuid_v7.to_string()},
-        "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-        "template": {"id": uuid_v7.to_string()},
-        "section": "$".to_string(),
-        "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
-        "campaign_id": {"id": uuid_v7.to_string()},
-        "election_id":  uuid_v4.to_string(),
-        "brand_id":  {"id": uuid_v7.to_string()},
-        "category_id": {"id": uuid_v7.to_string()},
-    });
-    (uuid_v7, uuid_v4, metadata_fields)
-}
-
-struct Provider(anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);
-impl providers::VerifyingKeyProvider for Provider {
-    async fn try_get_key(
-        &self, _kid: &IdUri,
-    ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
-        let res = self.0.as_ref().map_err(|e| anyhow::anyhow!("{e}"))?;
-        Ok(*res)
-    }
-}
+mod common;
 
 #[test]
 fn catalyst_signed_doc_cbor_roundtrip_test() {
-    let (uuid_v7, uuid_v4, metadata_fields) = test_metadata();
+    let (uuid_v7, uuid_v4, metadata_fields) = common::test_metadata();
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
     let doc = Builder::new()
@@ -79,7 +43,7 @@ async fn signature_verification_test() {
     );
 
     let kid = IdUri::from_str(&kid_str).unwrap();
-    let (_, _, metadata) = test_metadata();
+    let (_, _, metadata) = common::test_metadata();
     let signed_doc = Builder::new()
         .with_decoded_content(content)
         .with_json_metadata(metadata)
@@ -91,17 +55,17 @@ async fn signature_verification_test() {
 
     assert!(validator::validate_signatures(
         &signed_doc,
-        &Provider(Err(anyhow::anyhow!("some error")))
+        &common::Provider(Err(anyhow::anyhow!("some error")))
     )
     .await
     .is_err());
     assert!(
-        validator::validate_signatures(&signed_doc, &Provider(Ok(Some(pk))))
+        validator::validate_signatures(&signed_doc, &common::Provider(Ok(Some(pk))))
             .await
             .unwrap()
     );
     assert!(
-        !validator::validate_signatures(&signed_doc, &Provider(Ok(None)))
+        !validator::validate_signatures(&signed_doc, &common::Provider(Ok(None)))
             .await
             .unwrap()
     );
