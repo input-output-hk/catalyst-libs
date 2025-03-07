@@ -9,7 +9,10 @@ _allDocTypes: {
 	"Action":           "5e60e623-ad02-4a1b-a1ac-406db978ee48"
 	"SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65"
 	"ModerationAction": "a5d232b8-5e03-4117-9afd-be32b878fcdd"
+	"Brand":            "ebcabeeb-5bc5-4f95-91e8-cab8ca724172"
+	"Campaign":         "5ef32d5d-f240-462c-a7a4-ba4af221fa23"
 	"Category":         "818938c3-3139-4daa-afe6-974c78488e95"
+	"Election":         "788ff4c6-d65a-451f-bb33-575fe056b411"
 }
 
 // Source of truth for ALL Document Types and their matching UUID's.
@@ -59,8 +62,17 @@ _allDocs: {
 		_allDocTypes["Comment"],          // For Comment
 		_allDocTypes["ModerationAction"], // On Moderation
 	]
+	"Brand Parameters": [
+		_allDocTypes["Brand"],
+	]
+	"Campaign Parameters": [
+		_allDocTypes["Campaign"],
+	]
 	"Category Parameters": [
 		_allDocTypes["Category"],
+	]
+	"Election Parameters": [
+		_allDocTypes["Election"],
 	]
 
 }

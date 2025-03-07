@@ -1,5 +1,11 @@
 from .include import inc_file
-from .signed_docs import doc_type_details, doc_type_summary, signed_doc_details
+from .signed_docs import (
+    cose_header_parameters,
+    doc_type_details,
+    doc_type_summary,
+    external_links,
+    signed_doc_details,
+)
 
 
 def define_env(env):
@@ -14,12 +20,35 @@ def define_env(env):
 
     @env.macro
     def insert_doc_type_summary():
-        return doc_type_summary(env)
+        try:
+            return doc_type_summary(env)
+        except Exception as exc:
+            return f"Macro Expansion Error: {exc}"
 
     @env.macro
     def insert_doc_type_details():
-        return doc_type_details(env)
+        try:
+            return doc_type_details(env)
+        except Exception as exc:
+            return f"Macro Expansion Error: {exc}"
+
+    @env.macro
+    def insert_cose_header_parameters():
+        try:
+            return cose_header_parameters(env)
+        except Exception as exc:
+            return f"Macro Expansion Error: {exc}"
 
     @env.macro
     def insert_signed_doc_details(name):
-        return signed_doc_details(env, name)
+        try:
+            return signed_doc_details(env, name)
+        except Exception as exc:
+            return f"Macro Expansion Error: {exc}"
+
+    @env.macro
+    def insert_external_links():
+        try:
+            return external_links(env)
+        except Exception as exc:
+            return f"Macro Expansion Error: {exc}"

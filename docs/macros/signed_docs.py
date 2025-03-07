@@ -4,8 +4,10 @@ import os
 # import re
 # import textwrap
 
-# SIGNED_DOCS_SPECS="signed_doc.json"
-SIGNED_DOCS_SPECS = "includes/signed_doc.json"
+if __name__ == "__main__":
+    SIGNED_DOCS_SPECS = "signed_doc.json"
+else:
+    SIGNED_DOCS_SPECS = "includes/signed_doc.json"
 
 
 def uuid_as_cbor(uuid):
@@ -27,23 +29,20 @@ def doc_type_summary(env):
     Generate a Document Base Type Summary from the Document Specifications Data
     """
 
-    try:
-        doc_data = get_signed_doc_data(env)
-        doc_types = doc_data["base_types"]
+    doc_data = get_signed_doc_data(env)
+    doc_types = doc_data["base_types"]
 
-        doc_type_summary = """
+    doc_type_summary = """
 | Base Type | [UUID] | [CBOR] |
 | :--- | :--- | :--- |
 """
 
-        for k in doc_types:
-            doc_type_summary += (
-                f"| {k} | `{doc_types[k]}` | `{uuid_as_cbor(doc_types[k])}` |\n"
-            )
+    for k in doc_types:
+        doc_type_summary += (
+            f"| {k} | `{doc_types[k]}` | `{uuid_as_cbor(doc_types[k])}` |\n"
+        )
 
-        return doc_type_summary
-    except Exception as exc:
-        return f"{exc}"
+    return doc_type_summary
 
 
 def name_for_uuid(doc_types, uuid):
@@ -87,23 +86,150 @@ def doc_type_details(env):
     Generate a Document Type Detailed Summary from the Document Specifications Data
     """
 
-    try:
-        doc_data = get_signed_doc_data(env)
-        doc_types = doc_data["base_types"]
-        docs = doc_data["docs"]
+    doc_data = get_signed_doc_data(env)
+    doc_types = doc_data["base_types"]
+    docs = doc_data["docs"]
 
-        doc_type_details = """
+    doc_type_details = """
 | Document Type | Base Types | [CBOR] | Specification |
 | :--- | :--- | :--- | :--- |
 """
 
-        for k in docs:
-            doc_type_details += f"| {k} | {base_types(docs, doc_types, k)} | {types_as_cbor(docs, k)} | [Specification]({name_to_spec_link(k)}) | \n"
+    for k in docs:
+        doc_type_details += f"| {k} | {base_types(docs, doc_types, k)} | {types_as_cbor(docs, k)} | [Specification]({name_to_spec_link(k)}) | \n"
 
-        return doc_type_details
-    except Exception as exc:
-        return f"{exc}"
+    return doc_type_details
 
+
+def header_parameter_doc(header, doc_data):
+    """
+    Create documentation for a single cose header.
+    """
+    options = doc_data["cose_headers"][header]
+    content_types = doc_data["contentTypes"]
+    encoding_types = doc_data["encodingTypes"]
+    label = options.get("coseLabel")
+    custom_header = "***Custom Header***"
+    if not isinstance(label, str):
+        custom_header = ""
+    header_format = options["format"]
+    header_value = options.get("value", None)
+    header_format_display = f"{header_format}"
+    if isinstance(header_value, list) and len(header_value) > 0:
+        header_format_display += "\n  * Supported Values:"
+        for value in header_value:
+            value_entry = f"\n    * {value}"
+            value_data = None
+            if header_format == "IANA Media Type" and value in content_types:
+                value_data = content_types[value]
+            if header_format == "HTTP Content Encoding" and value in encoding_types:
+                value_data = encoding_types[value]
+
+            if value_data is not None:
+                if value_data["linked"]:
+                    value_entry = f"\n    * [{value}]"
+                value_entry += (
+                    f" : {value_data['description'].replace('\n', '\n      ')}"
+                )
+
+            header_format_display += value_entry
+
+    return f"""
+#### {header}
+
+{options.get("description")}
+
+* Required : {options["required"]}
+* Cose Label : {label} {custom_header}
+* Format : {header_format_display}
+
+"""
+
+
+def cose_header_parameters(env):
+    """
+    Insert details about Cose header Parameters that are defined for use.
+    """
+    doc_data = get_signed_doc_data(env)
+    headers = doc_data["cose_headers"]
+    header_order = doc_data["cose_headers_order"]
+    # Make sure unordered headers get included in the documentation.
+    for header in headers:
+        if header not in header_order:
+            header_order += header
+
+    header_parameters_doc = ""
+    for header in header_order:
+        header_parameters_doc += header_parameter_doc(header, doc_data)
+        headers.pop(header)
+
+    return header_parameters_doc
+
+
+def external_links(env):
+    """
+    Insert External Links we might have used in descriptions.
+    """
+    doc_data = get_signed_doc_data(env)
+    links = doc_data["documentationLinks"]
+
+    link_display = ""
+    for name in links:
+        link_display += f"[{name}]: {links[name]}\n"
+
+    return link_display
+
+
+def metadata_fields(env, doc_name=None):
+    """
+    Display Metadata fields for the default set, or a specific document.
+    """
+    doc_data = get_signed_doc_data(env)
+    if doc_name is not None:
+        fields =  doc_data["docs"][doc_name]["metadata"]
+        field_title_level = "###"
+    else:
+        fields = doc_data["metadata"]
+        field_title_level = "##"
+
+    order = doc_data["metadata_order"]
+
+    # make sure every field is listed in the ordering
+    for field_name in fields:
+        if not field_name in order:
+            order += field_name
+
+    field_display = ""
+    for field_name in order:
+        field = fields[field_name]
+        field_display += f"""
+{field_title_level} `{field_name}`
+
+| Parameter | Value |
+| --- | --- |
+| Required | {field["required"]} |
+"""
+        if field["required"] != "excluded":
+            field_display += f"| Format | {field["format"]} |\n"
+        if "multiple" in field:
+            field_display += f"| Multiple References | {field["multiple"]} |\n"
+        if "type" in field:
+            ref_heading = "Valid References"
+            ref_doc_names = field["type"]
+            if isinstance(ref_doc_names,str):
+                ref_doc_names = [ref_doc_names]
+            for ref_doc in ref_doc_names:
+                field_display += f"| {ref_heading} | {ref_doc} |\n"
+                ref_heading = ""
+
+        field_display += f"""
+{field["description"]}
+
+{field_title_level}# Validation
+
+{field["validation"]}
+"""
+    return field_display
 
 def signed_doc_details(env, name):
     """
@@ -112,10 +238,29 @@ def signed_doc_details(env, name):
     return name + "\n" + "test\n"
 
 
-# class env:
-#    project_dir = "/home/steven/Development/iohk/catalyst-libs/specs"
+# run as a program to debug the macros
+if __name__ == "__main__":
 
-# if __name__ == '__main__':
+    class env:
+        project_dir = "/home/steven/Development/iohk/catalyst-libs/specs"
 
-#    print(doc_type_details(env))
-#    print(doc_type_summary(env))
+    print()
+    print("### DOC TYPE DETAILS ###")
+    print(doc_type_details(env))
+
+    print()
+    print("### DOC TYPE SUMMARY ###")
+    print(doc_type_summary(env))
+
+    print()
+    print("### COSE HEADER PARAMETERS ###")
+    print(cose_header_parameters(env))
+
+    print()
+    print("### EXTERNAL LINKS ###")
+    print(external_links(env))
+
+    print()
+    print("### GLOBAL METADATA ###")
+    print(metadata_fields(env))
+
