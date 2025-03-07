@@ -51,6 +51,7 @@ crontabs
 crontagged
 csprng
 cstring
+cuelang
 dalek
 dashmap
 Datelike
@@ -123,6 +124,7 @@ jorm
 jormungandr
 Jörmungandr
 jsonschema
+Justfile
 kiduri
 lcov
 Leay
@@ -200,6 +202,7 @@ pubkey
 publickey
 pubspec
 pwrite
+pytest
 qpsg
 quic
 rapidoc
