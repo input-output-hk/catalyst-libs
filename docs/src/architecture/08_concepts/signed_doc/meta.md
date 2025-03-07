@@ -1,25 +1,4 @@
-# Metadata Fields List
-
-<!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "Additional Metadata fields: `additional_meta.cddl`"
-
-    ```CDDL
-    {{ include_file('src/architecture/08_concepts/signed_doc/cddl/additional_meta.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
-
-* [Metadata Fields List](#metadata-fields-list)
-  * [`ref` Document Reference](#ref-document-reference)
-    * [Validation](#validation)
-  * [`ref_hash` Secured Document Reference](#ref_hash-secured-document-reference)
-  * [`template` Template Reference](#template-template-reference)
-  * [`reply` Reply Reference](#reply-reply-reference)
-  * [`section` Section Reference](#section-section-reference)
-  * [`collabs` Authorized Collaborators](#collabs-authorized-collaborators)
-  * [`brand_id`](#brand_id)
-  * [`campaign_id`](#campaign_id)
-  * [`election_id`](#election_id)
-  * [`category_id`](#category_id)
+# Metadata Fields 
 
 ## `ref` Document Reference
 
