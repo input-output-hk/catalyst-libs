@@ -229,8 +229,8 @@ impl Cip36 {
     /// Get the `is_cip36` flag from the registration.
     /// True if it is CIP-36 format, false if CIP-15 format.
     #[must_use]
-    pub fn is_cip36(&self) -> Option<bool> {
-        self.key_registration.is_cip36
+    pub fn is_cip36(&self) -> bool {
+        self.key_registration.is_cip36.unwrap_or_default()
     }
 
     /// Get the voting public keys from the registration.
@@ -271,8 +271,8 @@ impl Cip36 {
 
     /// Is the payment address in the registration payable?
     #[must_use]
-    pub fn is_payable(&self) -> Option<bool> {
-        self.key_registration.is_payable
+    pub fn is_payable(&self) -> bool {
+        self.key_registration.is_payable.unwrap_or_default()
     }
 
     /// Get the signature from the registration witness.
