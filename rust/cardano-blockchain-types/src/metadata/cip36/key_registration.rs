@@ -47,7 +47,6 @@ pub(crate) struct Cip36KeyRegistration {
     /// None if it is not set.
     pub payment_addr: Option<ShelleyAddress>,
     /// Nonce (nonce that has been slot corrected).
-    /// Field 4 in the CIP-36 61284 Spec.
     /// None if it is not set.
     pub nonce: Option<u64>,
     /// Registration Purpose (Always 0 for Catalyst).
@@ -55,6 +54,7 @@ pub(crate) struct Cip36KeyRegistration {
     /// Default to 0.
     pub purpose: u64,
     /// Raw nonce (nonce that has not had slot correction applied).
+    /// Field 4 in the CIP-36 61284 Spec.
     /// None if it is not set.
     pub raw_nonce: Option<u64>,
     /// Is payment address payable? (not a script)
