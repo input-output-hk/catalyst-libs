@@ -5,6 +5,7 @@
 use std::fmt::{Display, Formatter};
 
 use anyhow::{anyhow, Context};
+use catalyst_types::hashes::Blake2b224Hash;
 use pallas::{
     crypto::hash::Hash,
     ledger::{
@@ -26,8 +27,9 @@ impl StakeAddress {
     /// Creates a new instance from the given parameters.
     #[allow(clippy::expect_used, clippy::missing_panics_doc)]
     #[must_use]
-    pub fn new(network: Network, is_script: bool, hash: Hash<28>) -> Self {
+    pub fn new(network: Network, is_script: bool, stake_pk_hash: Blake2b224Hash) -> Self {
         let network = network.into();
+        let hash = stake_pk_hash.into();
         // `pallas::StakeAddress` can only be constructed from `ShelleyAddress`, so we are forced
         // to create a dummy shelley address. The input hash parameter is used to construct both
         // payment and delegation parts, but the payment part isn't used in the stake address
@@ -49,8 +51,8 @@ impl StakeAddress {
     #[must_use]
     pub fn from_stake_cred(network: Network, cred: &conway::StakeCredential) -> Self {
         match cred {
-            conway::StakeCredential::Scripthash(h) => Self::new(network, true, *h),
-            conway::StakeCredential::AddrKeyhash(h) => Self::new(network, false, *h),
+            conway::StakeCredential::Scripthash(h) => Self::new(network, true, (*h).into()),
+            conway::StakeCredential::AddrKeyhash(h) => Self::new(network, false, (*h).into()),
         }
     }
 
@@ -111,7 +113,7 @@ impl TryFrom<&[u8]> for StakeAddress {
             v => return Err(anyhow!("Unexpected type value: {v}, header = {header}")),
         };
 
-        Ok(Self::new(network, is_script, hash))
+        Ok(Self::new(network, is_script, hash.into()))
     }
 }
 
@@ -155,7 +157,7 @@ mod tests {
         ];
 
         for (network, is_script, hash, expected_header) in test_data {
-            let stake_address = StakeAddress::new(network, is_script, hash);
+            let stake_address = StakeAddress::new(network, is_script, hash.into());
             assert_eq!(stake_address.is_script(), is_script);
 
             // Check that conversion to bytes includes the expected header value.
@@ -227,7 +229,7 @@ mod tests {
         // cSpell:enable
 
         for (network, is_script, hash, expected) in test_data {
-            let address = StakeAddress::new(network, is_script, hash);
+            let address = StakeAddress::new(network, is_script, hash.into());
             assert_eq!(expected, format!("{address}"));
         }
     }
