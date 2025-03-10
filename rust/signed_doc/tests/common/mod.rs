@@ -1,3 +1,5 @@
+use std::str::FromStr;
+
 use catalyst_signed_doc::*;
 
 pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
@@ -21,12 +23,40 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
         "brand_id":  {"id": uuid_v7.to_string()},
         "category_id": {"id": uuid_v7.to_string()},
     });
+    
     (uuid_v7, uuid_v4, metadata_fields)
 }
 
-pub struct Provider(pub anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);
+pub fn get_signing_key() -> ed25519_dalek::SigningKey {
+    let mut csprng = rand::rngs::OsRng;
+    ed25519_dalek::SigningKey::generate(&mut csprng)
+}
 
-impl providers::VerifyingKeyProvider for Provider {
+pub fn get_dummy_signed_doc() -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
+    let sk = get_signing_key();
+    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+    let (_, _, metadata) = test_metadata();
+    let pk = sk.verifying_key();
+    let kid_str = format!(
+        "id.catalyst://cardano/{}/0/0",
+        base64_url::encode(pk.as_bytes())
+    );
+    let kid = IdUri::from_str(&kid_str).unwrap();
+
+    let signed_doc = Builder::new()
+        .with_decoded_content(content)
+        .with_json_metadata(metadata)
+        .unwrap()
+        .add_signature(sk.to_bytes(), kid.clone())
+        .unwrap()
+        .build();
+
+    (signed_doc, pk)
+}
+
+pub struct TestProvider(pub anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);
+
+impl providers::VerifyingKeyProvider for TestProvider {
     async fn try_get_key(
         &self, _kid: &IdUri,
     ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
