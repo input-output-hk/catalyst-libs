@@ -21,7 +21,7 @@ pub enum IdUriError {
     /// Role 0 Key in path is invalid
     InvalidRole0Key,
     /// Role 0 Key in path is not encoded correctly
-    InvalidRole0KeyEncoding(#[from] base64_url::base64::DecodeError),
+    InvalidRole0KeyEncoding(#[from] base64::DecodeError),
     /// Role Index is invalid
     InvalidRole,
     /// Role Index is not encoded correctly
