@@ -35,17 +35,19 @@ async fn signature_verification_test() {
 
     assert!(validator::validate_signatures(
         &signed_doc,
-        &common::TestProvider(Err(anyhow::anyhow!("some error")))
+        &common::DummyVerifyingKeyProvider(Err(anyhow::anyhow!("some error")))
     )
     .await
     .is_err());
+
     assert!(
-        validator::validate_signatures(&signed_doc, &common::TestProvider(Ok(Some(pk))))
+        validator::validate_signatures(&signed_doc, &common::DummyVerifyingKeyProvider(Ok(Some(pk))))
             .await
             .unwrap()
     );
+
     assert!(
-        !validator::validate_signatures(&signed_doc, &common::TestProvider(Ok(None)))
+        !validator::validate_signatures(&signed_doc, &common::DummyVerifyingKeyProvider(Ok(None)))
             .await
             .unwrap()
     );

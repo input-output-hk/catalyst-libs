@@ -23,7 +23,7 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
         "brand_id":  {"id": uuid_v7.to_string()},
         "category_id": {"id": uuid_v7.to_string()},
     });
-    
+
     (uuid_v7, uuid_v4, metadata_fields)
 }
 
@@ -54,13 +54,23 @@ pub fn get_dummy_signed_doc() -> (CatalystSignedDocument, ed25519_dalek::Verifyi
     (signed_doc, pk)
 }
 
-pub struct TestProvider(pub anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);
+pub struct DummyVerifyingKeyProvider(pub anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);
 
-impl providers::VerifyingKeyProvider for TestProvider {
+impl providers::VerifyingKeyProvider for DummyVerifyingKeyProvider {
     async fn try_get_key(
         &self, _kid: &IdUri,
     ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
         let res = self.0.as_ref().map_err(|e| anyhow::anyhow!("{e}"))?;
         Ok(*res)
+    }
+}
+
+pub struct DummyCatSignDocProvider;
+
+impl providers::CatalystSignedDocumentProvider for DummyCatSignDocProvider {
+    async fn try_get_doc(
+            &self, doc_ref: &DocumentRef,
+        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+        Ok(None)
     }
 }
