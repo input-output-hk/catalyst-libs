@@ -278,6 +278,7 @@ impl TryFrom<CatalystSignedDocument> for Vec<u8> {
 mod tests {
     use std::str::FromStr;
 
+    use base64::Engine;
     use ed25519_dalek::{SigningKey, VerifyingKey};
     use metadata::{ContentEncoding, ContentType};
     use rand::rngs::OsRng;
@@ -357,7 +358,7 @@ mod tests {
 
         let kid_str = format!(
             "id.catalyst://cardano/{}/0/0",
-            base64_url::encode(pk.as_bytes())
+            base64::engine::general_purpose::URL_SAFE_NO_PAD.encode(pk.as_bytes())
         );
 
         let kid = IdUri::from_str(&kid_str).unwrap();
