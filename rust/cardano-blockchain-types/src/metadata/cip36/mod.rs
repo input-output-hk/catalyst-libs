@@ -10,7 +10,7 @@ use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::VerifyingKey;
 use key_registration::Cip36KeyRegistration;
 use minicbor::{Decode, Decoder};
-use pallas::ledger::addresses::ShelleyAddress;
+use pallas::ledger::addresses::Address;
 use registration_witness::Cip36RegistrationWitness;
 use voting_pk::VotingPubKey;
 
@@ -247,7 +247,7 @@ impl Cip36 {
 
     /// Get the payment address from the registration.
     #[must_use]
-    pub fn payment_address(&self) -> Option<&ShelleyAddress> {
+    pub fn payment_address(&self) -> Option<&Address> {
         self.key_registration.payment_addr.as_ref()
     }
 

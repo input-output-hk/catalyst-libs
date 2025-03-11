@@ -74,7 +74,16 @@ impl Cip36 {
             return;
         };
         // Extract the network tag and validate
-        let network_tag = address.network();
+        let Some(network_tag) = address.network() else {
+            // Byron address don't have network tag
+            self.err_report.missing_field(
+                "Network tag",
+                "Validate CIP36 payment address network, network tag not found",
+            );
+            self.is_valid_payment_address_network = false;
+            return;
+        };
+
         let valid = match self.network {
             Network::Mainnet => network_tag.value() == 1,
             Network::Preprod | Network::Preview => network_tag.value() == 0,
@@ -164,12 +173,9 @@ mod tests {
         // cSpell:disable
         let addr = Address::from_bech32("addr_test1qprhw4s70k0vzyhvxp6h97hvrtlkrlcvlmtgmaxdtjz87xrjkctk27ypuv9dzlzxusqse89naweygpjn5dxnygvus05sdq9h07").expect("Failed to create address");
         // cSpell:enable
-        let Address::Shelley(shelley_addr) = addr else {
-            panic!("Invalid address type")
-        };
         let mut cip36 = create_cip36();
         cip36.key_registration = Cip36KeyRegistration {
-            payment_addr: Some(shelley_addr),
+            payment_addr: Some(addr),
             ..Default::default()
         };
         cip36.validate_payment_address_network();
@@ -183,13 +189,10 @@ mod tests {
         // cSpell:disable
         let addr = Address::from_bech32("addr_test1qprhw4s70k0vzyhvxp6h97hvrtlkrlcvlmtgmaxdtjz87xrjkctk27ypuv9dzlzxusqse89naweygpjn5dxnygvus05sdq9h07").expect("Failed to create address");
         // cSpell:enable
-        let Address::Shelley(shelley_addr) = addr else {
-            panic!("Invalid address type")
-        };
         let mut cip36 = create_cip36();
         cip36.network = Network::Mainnet;
         cip36.key_registration = Cip36KeyRegistration {
-            payment_addr: Some(shelley_addr),
+            payment_addr: Some(addr),
             ..Default::default()
         };
         cip36.validate_payment_address_network();
