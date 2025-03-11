@@ -62,7 +62,9 @@ pub(crate) struct Cip36KeyRegistration {
     pub is_payable: Option<bool>,
 }
 
-/// Header type of address that are consider as payable.
+/// Header type of Shelley address that are consider as payable.
+/// Payable if payment part is a `PaymentKeyHash`
+/// <https://cips.cardano.org/cip/CIP-19>
 const VALID_PAYABLE_HEADER: [u8; 4] = [0, 2, 4, 6];
 
 /// Enum of CIP36 registration (61284) with its associated unsigned integer key.
@@ -117,7 +119,7 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                         let address = decode_payment_addr(d, err_report)?;
                         cip36_key_registration.is_payable = address
                             .as_ref()
-                            .map(|addr| !VALID_PAYABLE_HEADER.contains(&addr.typeid()))
+                            .map(|addr| VALID_PAYABLE_HEADER.contains(&addr.typeid()))
                             .or(None);
                         cip36_key_registration.payment_addr = address;
                     },
