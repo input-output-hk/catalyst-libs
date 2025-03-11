@@ -12,7 +12,7 @@ use catalyst_types::{
 use cbork_utils::decode_helper::{decode_array_len, decode_bytes, decode_helper, decode_map_len};
 use ed25519_dalek::VerifyingKey;
 use minicbor::{decode, Decode, Decoder};
-use pallas::ledger::addresses::{Address, ShelleyAddress};
+use pallas::ledger::addresses::Address;
 use strum::FromRepr;
 
 use super::voting_pk::VotingPubKey;
@@ -45,7 +45,7 @@ pub(crate) struct Cip36KeyRegistration {
     /// Payment Address to associate with the voting keys.
     /// Field 3 in the CIP-36 61284 Spec.
     /// None if it is not set.
-    pub payment_addr: Option<ShelleyAddress>,
+    pub payment_addr: Option<Address>,
     /// Nonce (nonce that has been slot corrected).
     /// None if it is not set.
     pub nonce: Option<u64>,
@@ -61,6 +61,9 @@ pub(crate) struct Cip36KeyRegistration {
     /// None if it is not set.
     pub is_payable: Option<bool>,
 }
+
+/// Header type of address that are consider as payable.
+const VALID_PAYABLE_HEADER: [u8; 4] = [0, 2, 4, 6];
 
 /// Enum of CIP36 registration (61284) with its associated unsigned integer key.
 #[derive(FromRepr, Debug, PartialEq)]
@@ -111,12 +114,12 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
                         cip36_key_registration.stake_pk = stake_pk;
                     },
                     Cip36KeyRegistrationKeys::PaymentAddr => {
-                        let shelley_addr = decode_payment_addr(d, err_report)?;
-                        cip36_key_registration.is_payable = shelley_addr
+                        let address = decode_payment_addr(d, err_report)?;
+                        cip36_key_registration.is_payable = address
                             .as_ref()
-                            .map(|addr| !addr.payment().is_script())
+                            .map(|addr| !VALID_PAYABLE_HEADER.contains(&addr.typeid()))
                             .or(None);
-                        cip36_key_registration.payment_addr = shelley_addr;
+                        cip36_key_registration.payment_addr = address;
                     },
                     Cip36KeyRegistrationKeys::Nonce => {
                         cip36_key_registration.raw_nonce = Some(decode_nonce(d)?);
@@ -294,16 +297,29 @@ fn decode_stake_pk(
 ///
 /// # Returns
 ///
-/// - The payment address as a `ShelleyAddress`.
-/// - None if cannot converted `Vec<u8>` to `ShelleyAddress`.
+/// - The payment address as a `Address`.
+/// - None if cannot converted `Vec<u8>` to `Address` or the address is a Byron address.
 /// - Error if decoding failed.
 fn decode_payment_addr(
     d: &mut Decoder, err_report: &ProblemReport,
-) -> Result<Option<ShelleyAddress>, decode::Error> {
+) -> Result<Option<Address>, decode::Error> {
     let raw_addr = decode_bytes(d, "CIP36 Key Registration payment address")?;
     // Cannot convert raw address to Address type
-    let address = match Address::from_bytes(&raw_addr) {
-        Ok(addr) => addr,
+    match Address::from_bytes(&raw_addr) {
+        Ok(addr) => {
+            match addr {
+                Address::Byron(byron_address) => {
+                    err_report.invalid_value(
+                        "Address",
+                        format!("{byron_address:?}").as_str(),
+                        "Expected non Byron address",
+                        "CIP36 Key Registration payment address",
+                    );
+                    Ok(None)
+                },
+                _ => Ok(Some(addr)),
+            }
+        },
         Err(e) => {
             err_report.conversion_error(
                 "Cardano address",
@@ -312,20 +328,8 @@ fn decode_payment_addr(
                 "CIP36 Key Registration payment address",
             );
             // Can't process any further
-            return Ok(None);
+            Ok(None)
         },
-    };
-
-    if let Address::Shelley(addr) = address {
-        Ok(Some(addr.clone()))
-    } else {
-        err_report.invalid_value(
-            "Shelley Address",
-            format!("{address}").as_str(),
-            "Expected Shelley address",
-            "CIP36 Key Registration payment address",
-        );
-        Ok(None)
     }
 }
 
