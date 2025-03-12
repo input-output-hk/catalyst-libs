@@ -32,7 +32,9 @@ pub fn get_signing_key() -> ed25519_dalek::SigningKey {
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-pub fn get_dummy_signed_doc(with_metadata: Option<serde_json::Value>) -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
+pub fn get_dummy_signed_doc(
+    with_metadata: Option<serde_json::Value>,
+) -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
     let sk = get_signing_key();
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
     let (_, _, metadata) = test_metadata();
