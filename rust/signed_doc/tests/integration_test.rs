@@ -30,7 +30,7 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
 
 #[tokio::test]
 async fn signature_verification_test() {
-    let (signed_doc, pk) = common::get_dummy_signed_doc();
+    let (signed_doc, pk) = common::get_dummy_signed_doc(None);
     assert!(!signed_doc.problem_report().is_problematic());
 
     assert!(validator::validate_signatures(

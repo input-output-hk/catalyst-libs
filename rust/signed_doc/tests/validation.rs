@@ -5,42 +5,37 @@ use catalyst_signed_doc::*;
 mod common;
 
 #[tokio::test]
-async fn test_check_category() {
-  let (doc, _) = common::get_dummy_signed_doc();
+async fn test_valid_proposal_doc() {
+    let uuid_v7 = UuidV7::new();
 
-  let provider = common::DummyCatSignDocProvider;
+    let (doc, _) = common::get_dummy_signed_doc(Some(serde_json::json!({
+        "alg": Algorithm::EdDSA.to_string(),
+        "content-type": ContentType::Json.to_string(),
+        "content-encoding": ContentEncoding::Brotli.to_string(),
+        "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
+        "id": uuid_v7.to_string(),
+        "ver": uuid_v7.to_string(),
+        "ref": serde_json::Value::Null,
+        "reply": serde_json::Value::Null,
+        "template": {
+          "id": doc_types::PROPOSAL_TEMPLATE_UUID_TYPE
+        },
+        "section": serde_json::Value::Null,
+        "collabs": serde_json::Value::Array(vec![]),
+        "campaign_id": serde_json::Value::Null,
+        "election_id":  serde_json::Value::Null,
+        "brand_id":  serde_json::Value::Null,
+        "category_id": serde_json::Value::Null,
+    })));
 
-  let result = validator::validate(&doc, &provider).await;
+    let provider = common::DummyCatSignDocProvider::default();
 
-  assert!(result.is_ok());
+    let result = validator::validate(&doc, &provider).await.unwrap();
+
+    println!("{:?}", doc.problem_report());
+
+    assert!(result);
 }
 
 #[tokio::test]
-async fn test_check_content_encoding() {
-  
-}
-
-#[tokio::test]
-async fn test_check_content_type() {
-  
-}
-
-#[tokio::test]
-async fn test_check_doc_ref() {
-  
-}
-
-#[tokio::test]
-async fn test_check_reply() {
-  
-}
-
-#[tokio::test]
-async fn test_check_section() {
-  
-}
-
-#[tokio::test]
-async fn test_check_template() {
-  
-}
+async fn test_invalid_proposal_doc() {}

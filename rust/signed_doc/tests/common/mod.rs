@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 
 use catalyst_signed_doc::*;
 
@@ -32,7 +32,7 @@ pub fn get_signing_key() -> ed25519_dalek::SigningKey {
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-pub fn get_dummy_signed_doc() -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
+pub fn get_dummy_signed_doc(with_metadata: Option<serde_json::Value>) -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
     let sk = get_signing_key();
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
     let (_, _, metadata) = test_metadata();
@@ -45,7 +45,7 @@ pub fn get_dummy_signed_doc() -> (CatalystSignedDocument, ed25519_dalek::Verifyi
 
     let signed_doc = Builder::new()
         .with_decoded_content(content)
-        .with_json_metadata(metadata)
+        .with_json_metadata(with_metadata.unwrap_or(metadata))
         .unwrap()
         .add_signature(sk.to_bytes(), kid.clone())
         .unwrap()
@@ -65,12 +65,13 @@ impl providers::VerifyingKeyProvider for DummyVerifyingKeyProvider {
     }
 }
 
-pub struct DummyCatSignDocProvider;
+#[derive(Default)]
+pub struct DummyCatSignDocProvider(pub HashMap<Uuid, CatalystSignedDocument>);
 
 impl providers::CatalystSignedDocumentProvider for DummyCatSignDocProvider {
     async fn try_get_doc(
-            &self, doc_ref: &DocumentRef,
-        ) -> anyhow::Result<Option<CatalystSignedDocument>> {
-        Ok(None)
+        &self, doc_ref: &DocumentRef,
+    ) -> anyhow::Result<Option<CatalystSignedDocument>> {
+        Ok(self.0.get(&doc_ref.id.uuid()).cloned())
     }
 }
