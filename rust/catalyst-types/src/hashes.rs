@@ -84,6 +84,13 @@ impl<const BYTES: usize> From<Hash<BYTES>> for Blake2bHash<BYTES> {
     }
 }
 
+impl<const BYTES: usize> From<Blake2bHash<BYTES>> for Hash<BYTES> {
+    #[inline]
+    fn from(hash: Blake2bHash<BYTES>) -> Self {
+        hash.0
+    }
+}
+
 impl<const BYTES: usize> From<Blake2bHash<BYTES>> for Vec<u8> {
     fn from(val: Blake2bHash<BYTES>) -> Self {
         val.0.to_vec()
