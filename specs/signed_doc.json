@@ -1,4 +1,8 @@
 {
+  "authors": {
+    "Alex Pozhylenkov": "alex.pozhylenkov@iohk.io",
+    "Steven Johnson": "steven.johnson@iohk.io"
+  },
   "base_types": {
     "Action": "5e60e623-ad02-4a1b-a1ac-406db978ee48",
     "Brand": "ebcabeeb-5bc5-4f95-91e8-cab8ca724172",
@@ -11,23 +15,90 @@
     "SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65",
     "Template": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
   },
+  "cddlDefinitions": {
+    "blake2b_256": {
+      "def": "bytes .size 32",
+      "requires": []
+    },
+    "catalyst_id": {
+      "def": "text",
+      "requires": []
+    },
+    "collaborators": {
+      "def": "[ * catalyst_id ]",
+      "requires": [
+        "catalyst_id"
+      ]
+    },
+    "document_hash": {
+      "def": "blake2b_256",
+      "requires": [
+        "blake2b_256"
+      ]
+    },
+    "document_id": {
+      "def": "uuid_v7",
+      "requires": [
+        "uuid_v7"
+      ]
+    },
+    "document_ref": {
+      "def": "[ 1* [ document_id, document_ver, document_hash ] ]",
+      "requires": [
+        "document_id",
+        "document_ver",
+        "document_hash"
+      ]
+    },
+    "document_type": {
+      "def": "[ 1* uuid_v4 ]",
+      "requires": [
+        "uuid_v4"
+      ]
+    },
+    "document_ver": {
+      "def": "uuid_v7",
+      "requires": [
+        "uuid_v7"
+      ]
+    },
+    "json_pointer": {
+      "def": "text",
+      "requires": []
+    },
+    "section_ref": {
+      "def": "json_pointer",
+      "requires": [
+        "json_pointer"
+      ]
+    },
+    "uuid_v4": {
+      "def": "6.37(bytes .size 16)",
+      "requires": []
+    },
+    "uuid_v7": {
+      "def": "6.37(bytes .size 16)",
+      "requires": []
+    }
+  },
   "contentTypes": {
     "application/cbor": {
-      "description": "[RFC8949] Binary CBOR Encoded Document",
-      "linked": true
+      "description": "RFC8949 Binary CBOR Encoded Document"
     },
     "application/cddl": {
-      "description": "[RFC8610] CBOR Document. Note: \n\t* This is an unofficial media type\n\t* [RFC9165] Additional Control Operators for CDDL are supported.  \n\t* Must not have Modules, schema must be self contained.",
-      "linked": false
+      "description": "CDDL Document; Note: \n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
     },
     "application/json": {
-      "description": "[RFC8259] JSON Document",
-      "linked": true
+      "description": "JSON Document"
     },
     "application/schema+json": {
-      "description": "[JSON Schema] Draft 7 Document. Note: \n\t* This is currently an unofficial media type.\n\t* Draft 7 is used because of its wide support by tooling.",
-      "linked": true
+      "description": "JSON Schema Draft 7 Document; Note: \n* This is currently an unofficial media type.\n* Draft 7 is used because of its wide support by tooling."
     }
+  },
+  "copyright": {
+    "copyright": "IOG Singapore, All Rights Reserved",
+    "created": "2024-12-27",
+    "license": "CC-BY-4.0"
   },
   "cose_headers": {
     "content type": {
@@ -79,72 +150,93 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -186,72 +278,93 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -293,72 +406,93 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -400,72 +534,93 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -509,72 +664,93 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -617,62 +793,81 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "optional",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": false,
           "required": "yes",
@@ -681,12 +876,14 @@
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -733,44 +930,60 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": false,
           "required": "yes",
@@ -779,6 +992,7 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
@@ -787,12 +1001,14 @@
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "optional",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": false,
           "required": "yes",
@@ -801,12 +1017,14 @@
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -853,74 +1071,95 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -972,62 +1211,81 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
@@ -1036,12 +1294,14 @@
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1091,74 +1351,95 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1208,72 +1489,93 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1318,44 +1620,60 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "yes",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": true,
           "required": "yes",
@@ -1364,30 +1682,35 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1474,62 +1797,81 @@
       "metadata": {
         "brand_id": {
           "description": "A reference to the Brand Parameters Document this document lies under.",
+          "exclusive": [
+            "campaign_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `brand_id` must match the `brand_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "campaign_id": {
           "description": "A reference to the Campaign Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "category_id"
+          ],
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "category_id": {
           "description": "A reference to the Category Parameters Document this document lies under.",
+          "exclusive": [
+            "brand_id",
+            "campaign_id"
+          ],
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
           "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "election_id": {
           "description": "A reference to the Election Parameters Document this document lies under.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+          "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
         },
         "id": {
-          "description": "Document ID, created the first time the document is created.",
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
           "format": "Document Reference",
           "multiple": false,
           "required": "optional",
@@ -1538,12 +1880,14 @@
         },
         "type": {
           "description": "The document TYPE.",
+          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
           "format": "UUIDv7",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1593,8 +1937,7 @@
   },
   "encodingTypes": {
     "br": {
-      "description": "[BROTLI](RFC7932) Compression",
-      "linked": true
+      "description": "BROTLI Compression"
     }
   },
   "linkAKA": {
@@ -1609,12 +1952,16 @@
     "URI": "RFC3986",
     "UTF-8": "RFC3629",
     "UUID": "RFC9562",
-    "UUIDv4": "RFC9562-V7",
+    "UUIDv4": "RFC9562-V4",
     "UUIDv7": "RFC9562-V7"
   },
   "metadata": {
     "brand_id": {
       "description": "A reference to the Brand Parameters Document this document lies under.",
+      "exclusive": [
+        "campaign_id",
+        "category_id"
+      ],
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
@@ -1623,42 +1970,54 @@
     },
     "campaign_id": {
       "description": "A reference to the Campaign Parameters Document this document lies under.",
+      "exclusive": [
+        "brand_id",
+        "category_id"
+      ],
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
       "type": "Campaign Parameters",
-      "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the `campaign_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+      "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
     },
     "category_id": {
       "description": "A reference to the Category Parameters Document this document lies under.",
+      "exclusive": [
+        "brand_id",
+        "campaign_id"
+      ],
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
       "type": "Category Parameters",
-      "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the `category_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+      "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `category_id` must match the \n`category_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
     },
     "collaborators": {
-      "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish new version of the document.",
+      "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+      "exclusive": null,
       "format": "Collaborators Reference List",
       "required": "optional",
-      "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+      "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
     },
     "election_id": {
       "description": "A reference to the Election Parameters Document this document lies under.",
+      "exclusive": null,
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
       "type": "Election Parameters",
-      "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the `election_id` \nof the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
+      "validation": "In addition to the validation performed for `ref`, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
     },
     "id": {
-      "description": "Document ID, created the first time the document is created.",
+      "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+      "exclusive": null,
       "format": "UUIDv7",
       "required": "yes",
-      "validation": "IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist."
+      "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
     },
     "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchial reference to a related document.\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the [UUIDv7] ID of the Document being referenced.\n* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n\tIt ensures that the intended referenced document is the one used, and there has been no substitution.\n\tPrevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+      "exclusive": null,
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
@@ -1681,65 +2040,75 @@
     },
     "reply": {
       "description": "Reference to a Comment document type being referred to.",
+      "exclusive": null,
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
       "type": [
-        "Proposal Meta Template",
-        "Proposal Template",
-        "Proposal",
-        "Proposal Comment Meta Template",
-        "Proposal Comment Template",
-        "Proposal Comment",
-        "Proposal Submission Action",
-        "Proposal Moderation Action",
-        "Comment Action Document",
-        "Brand Parameters",
-        "Campaign Parameters",
-        "Category Parameters",
-        "Election Parameters"
+        "Proposal Comment"
       ],
       "validation": "In addition to the validation performed for `ref`, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
     },
     "section": {
       "description": "A Reference to the original document, or the comment being replied to.",
+      "exclusive": null,
       "format": "Section Reference",
       "required": "optional",
       "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
     },
     "template": {
       "description": "Reference to the template used to create and/or validate this document.",
+      "exclusive": null,
       "format": "Document Reference",
       "multiple": false,
       "required": "optional",
       "type": [
         "Proposal Meta Template",
         "Proposal Template",
-        "Proposal",
         "Proposal Comment Meta Template",
-        "Proposal Comment Template",
-        "Proposal Comment",
-        "Proposal Submission Action",
-        "Proposal Moderation Action",
-        "Comment Action Document",
-        "Brand Parameters",
-        "Campaign Parameters",
-        "Category Parameters",
-        "Election Parameters"
+        "Proposal Comment Template"
       ],
       "validation": "In addition to the validation performed for `ref`, \nThe document payload is not valid if it does not validate completely against the referenced template."
     },
     "type": {
       "description": "The document TYPE.",
+      "exclusive": null,
       "format": "Document Type",
       "required": "yes",
       "validation": "**MUST** be a known document type."
     },
     "ver": {
-      "description": "## Document Version\n\nThe unique version of the document.\nThe first version of the document must set `ver` == `id`",
+      "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+      "exclusive": null,
       "format": "UUIDv7",
       "required": "yes",
       "validation": "The document version must always be >= the document ID."
+    }
+  },
+  "metadataFormats": {
+    "Collaborators Reference List": {
+      "cddl": "collaborators",
+      "description": "A list of collaborators who can participate in drafting and submitting a document"
+    },
+    "Document Reference": {
+      "cddl": "document_ref",
+      "description": "A document reference identifier"
+    },
+    "Document Type": {
+      "cddl": "document_type",
+      "description": "A document type identifier"
+    },
+    "Section Reference": {
+      "cddl": "section_ref",
+      "description": "A document section reference identifier"
+    },
+    "UUIDv4": {
+      "cddl": "uuid_v4",
+      "description": "Version 4 formatted UUID"
+    },
+    "UUIDv7": {
+      "cddl": "uuid_v7",
+      "description": "Version 7 formatted UUID"
     }
   },
   "metadata_order": [

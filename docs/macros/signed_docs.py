@@ -101,71 +101,6 @@ def doc_type_details(env):
     return doc_type_details
 
 
-def header_parameter_doc(header, doc_data):
-    """
-    Create documentation for a single cose header.
-    """
-    options = doc_data["cose_headers"][header]
-    content_types = doc_data["contentTypes"]
-    encoding_types = doc_data["encodingTypes"]
-    label = options.get("coseLabel")
-    custom_header = "***Custom Header***"
-    if not isinstance(label, str):
-        custom_header = ""
-    header_format = options["format"]
-    header_value = options.get("value", None)
-    header_format_display = f"{header_format}"
-    if isinstance(header_value, list) and len(header_value) > 0:
-        header_format_display += "\n  * Supported Values:"
-        for value in header_value:
-            value_entry = f"\n    * {value}"
-            value_data = None
-            if header_format == "IANA Media Type" and value in content_types:
-                value_data = content_types[value]
-            if header_format == "HTTP Content Encoding" and value in encoding_types:
-                value_data = encoding_types[value]
-
-            if value_data is not None:
-                if value_data["linked"]:
-                    value_entry = f"\n    * [{value}]"
-                value_entry += (
-                    f" : {value_data['description'].replace('\n', '\n      ')}"
-                )
-
-            header_format_display += value_entry
-
-    return f"""
-#### {header}
-
-{options.get("description")}
-
-* Required : {options["required"]}
-* Cose Label : {label} {custom_header}
-* Format : {header_format_display}
-
-"""
-
-
-def cose_header_parameters(env):
-    """
-    Insert details about Cose header Parameters that are defined for use.
-    """
-    doc_data = get_signed_doc_data(env)
-    headers = doc_data["cose_headers"]
-    header_order = doc_data["cose_headers_order"]
-    # Make sure unordered headers get included in the documentation.
-    for header in headers:
-        if header not in header_order:
-            header_order += header
-
-    header_parameters_doc = ""
-    for header in header_order:
-        header_parameters_doc += header_parameter_doc(header, doc_data)
-        headers.pop(header)
-
-    return header_parameters_doc
-
-
 def external_links(env):
     """
     Insert External Links we might have used in descriptions.
@@ -186,7 +121,7 @@ def metadata_fields(env, doc_name=None):
     """
     doc_data = get_signed_doc_data(env)
     if doc_name is not None:
-        fields =  doc_data["docs"][doc_name]["metadata"]
+        fields = doc_data["docs"][doc_name]["metadata"]
         field_title_level = "###"
     else:
         fields = doc_data["metadata"]
@@ -196,7 +131,7 @@ def metadata_fields(env, doc_name=None):
 
     # make sure every field is listed in the ordering
     for field_name in fields:
-        if not field_name in order:
+        if field_name not in order:
             order += field_name
 
     field_display = ""
@@ -210,13 +145,13 @@ def metadata_fields(env, doc_name=None):
 | Required | {field["required"]} |
 """
         if field["required"] != "excluded":
-            field_display += f"| Format | {field["format"]} |\n"
+            field_display += f"| Format | {field['format']} |\n"
         if "multiple" in field:
-            field_display += f"| Multiple References | {field["multiple"]} |\n"
+            field_display += f"| Multiple References | {field['multiple']} |\n"
         if "type" in field:
             ref_heading = "Valid References"
             ref_doc_names = field["type"]
-            if isinstance(ref_doc_names,str):
+            if isinstance(ref_doc_names, str):
                 ref_doc_names = [ref_doc_names]
             for ref_doc in ref_doc_names:
                 field_display += f"| {ref_heading} | {ref_doc} |\n"
@@ -230,6 +165,7 @@ def metadata_fields(env, doc_name=None):
 {field["validation"]}
 """
     return field_display
+
 
 def signed_doc_details(env, name):
     """
@@ -263,4 +199,3 @@ if __name__ == "__main__":
     print()
     print("### GLOBAL METADATA ###")
     print(metadata_fields(env))
-

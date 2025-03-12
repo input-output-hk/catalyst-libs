@@ -5,6 +5,7 @@ package signed_docs
 
 import (
 	"list"
+	"strings"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:uuid"
 )
 
@@ -73,6 +74,21 @@ _allTypes: [...#docType] & [
 
 _allDocNamesList: [...string] & [
 	for k, _ in _allDocs {k},
+]
+
+// List of all Comment Docs (not templates or actions)
+#commentDocNamesList: [...string] & [
+	for k, _ in _allDocs
+	if strings.Contains(k, "Comment") &&
+		!strings.Contains(k, "Template") &&
+		!strings.Contains(k, "Action") {k},
+]
+
+// List of all Template Docs (not actions)
+#templateDocNamesList: [...string] & [
+	for k, _ in _allDocs
+	if strings.Contains(k, "Template") &&
+		!strings.Contains(k, "Action") {k},
 ]
 
 // List of all the document names we have defined.

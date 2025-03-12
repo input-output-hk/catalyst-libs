@@ -12,31 +12,29 @@ import (
 // Content Type name : Description
 _contentTypes: {
 	[string]: {
-		linked:      bool | *true // content type has a link
-		description: string       // description of the content type
+		description: string // description of the content type
 	}
 }
 _contentTypes: {
 	"application/json": {
-		description: "[RFC8259] JSON Document"
+		description: "JSON Document"
 	}
 	"application/schema+json": {
 		description: """
-			[JSON Schema] Draft 7 Document. Note: 
-				* This is currently an unofficial media type.
-				* Draft 7 is used because of its wide support by tooling.
+			JSON Schema Draft 7 Document; Note: 
+			* This is currently an unofficial media type.
+			* Draft 7 is used because of its wide support by tooling.
 			"""
 	}
 	"application/cbor": {
-		description: "[RFC8949] Binary CBOR Encoded Document"
+		description: "RFC8949 Binary CBOR Encoded Document"
 	}
 	"application/cddl": {
-		linked: false
 		description: """
-			[RFC8610] CBOR Document. Note: 
-				* This is an unofficial media type
-				* [RFC9165] Additional Control Operators for CDDL are supported.  
-				* Must not have Modules, schema must be self contained.
+			CDDL Document; Note: 
+			* This is an unofficial media type
+			* RFC9165 Additional Control Operators for CDDL are supported.  
+			* Must not have Modules, schema must be self-contained.
 			"""
 	}
 }
@@ -46,13 +44,12 @@ contentTypes: _contentTypes
 // Content Encoding Type name : Description
 _encodingTypes: {
 	[string]: {
-		linked:      bool | *true // content type has a link
-		description: string       // description of the content type
+		description: string // description of the content type
 	}
 }
 _encodingTypes: {
 	"br": {
-		description: "[BROTLI](RFC7932) Compression"
+		description: "BROTLI Compression"
 	}
 }
 

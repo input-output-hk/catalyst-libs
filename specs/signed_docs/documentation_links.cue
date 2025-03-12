@@ -43,7 +43,7 @@ linkAKA: {
 // Known aliases for links.  Lets us automatically create [Named Link][Reference Link]
 linkAKA: {
 	"UUIDv7": "RFC9562-V7"
-	"UUIDv4": "RFC9562-V7"
+	"UUIDv4": "RFC9562-V4"
 	"UUID":   "RFC9562"
 	"URI":    "RFC3986"
 	"UTF-8":  "RFC3629"

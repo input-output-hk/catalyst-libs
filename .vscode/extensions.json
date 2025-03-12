@@ -25,5 +25,7 @@
         "terrastruct.d2",
         "fill-labs.dependi",
         "nefrob.vscode-just-syntax",
+        "charliermarsh.ruff",
+        "ms-python.python",
     ]
 }

@@ -9,13 +9,57 @@ import (
 
 )
 
+// Metadata Formats.
+// format_name : cddl definition
+#metadataFormats: {
+	[string]: {
+		description: string
+		cddl:        #cddlTypesConstraint
+	}
+}
+
+metadataFormats: #metadataFormats & {
+	"Document Reference": {
+		description: "A document reference identifier"
+		cddl:        "document_ref"
+	}
+	"UUIDv7": {
+		description: "Version 7 formatted UUID"
+		cddl:        "uuid_v7"
+	}
+	"UUIDv4": {
+		description: "Version 4 formatted UUID"
+		cddl:        "uuid_v4"
+	}
+	"Document Type": {
+		description: "A document type identifier"
+		cddl:        "document_type"
+	}
+	"Section Reference": {
+		description: "A document section reference identifier"
+		cddl:        "section_ref"
+	}
+	"Collaborators Reference List": {
+		description: "A list of collaborators who can participate in drafting and submitting a document"
+		cddl:        "collaborators"
+	}
+}
+
+// Types of a Metadata Fields
+#metadataTypes: [
+	for k, _ in metadataFormats {k},
+]
+
+// Constraint of Types of Metadata Fields
+#metadataTypesConstraint: or(#metadataTypes)
+
 // Format of a Metadata Field
-#metadataFormat:
-	"UUIDv7" |
-	"Document Type" |
-	*"Document Reference" |
-	"Section Reference" |
-	"Collaborators Reference List"
+//#metadataFormat:
+//	"UUIDv7" |
+//	"Document Type" |
+//	*"Document Reference" |
+//	"Section Reference" |
+//	"Collaborators Reference List"
 
 // Canonical List of all valid metadata names
 _metadataNames: list.UniqueItems
@@ -43,7 +87,7 @@ _allMetadataNames: or([
 	required: optional.#field
 
 	// Format of the field.
-	format: #metadataFormat
+	format: #metadataTypesConstraint | *#metadataTypes[0]
 	if format == "Document Reference" && required != "excluded" {
 		type: #DocumentName | [...#DocumentName]
 		multiple: bool | *false
@@ -53,6 +97,9 @@ _allMetadataNames: or([
 	description: string | *""
 	// Optional notes about validating the field.
 	validation: string | *null
+
+	// Is the field exclusive of another field (ie can not exist with that other field in the same document)
+	exclusive: [..._allMetadataNames] | *null
 }
 
 // Metadata fields that are optional
@@ -71,11 +118,16 @@ _metadata: #metadataStruct & {
 	}
 	// Document ID
 	id: {
-		required:    "yes"
-		format:      "UUIDv7"
-		description: "Document ID, created the first time the document is created."
+		required: "yes"
+		format:   "UUIDv7"
+		description: """
+			Document ID, created the first time the document is created.
+			This must be a properly created UUIDv7 which contains the 
+			timestamp of when the document was created.
+			"""
 		validation: """
-			IF `ver` does not == `id` then a document with `id` and `ver` being equal *MUST* exist.
+			IF `ver` does not == `id` then a document with 
+			`id` and `ver` being equal *MUST* exist.
 			"""
 	}
 	// Document Version
@@ -83,8 +135,6 @@ _metadata: #metadataStruct & {
 		required: "yes"
 		format:   "UUIDv7"
 		description: """
-			## Document Version
-
 			The unique version of the document.
 			The first version of the document must set `ver` == `id`
 			"""
@@ -97,16 +147,16 @@ _metadata: #metadataStruct & {
 	ref: {
 		description: """
 			Reference to a Linked Document or Documents.  
-			This is the primary hierarchial reference to a related document.
+			This is the primary hierarchical reference to a related document.			
 
 			This is an Array of the format:
 				`[[DocumentID, DocumentVer, DocumentHash],...]`
 
-			* `DocumentID` is the [UUIDv7] ID of the Document being referenced.
-			* `DocumentVer` is the [UUIDv7] Version of the Document being referenced.
+			* `DocumentID` is the UUIDv7 ID of the Document being referenced.
+			* `DocumentVer` is the UUIDv7 Version of the Document being referenced.
 			* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
-				It ensures that the intended referenced document is the one used, and there has been no substitution.
-				Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
+			  It ensures that the intended referenced document is the one used, and there has been no substitution.
+			  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
 			"""
 		validation: """
 			Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.
@@ -152,12 +202,12 @@ _metadata: #metadataStruct & {
 
 			Every subsequent version can amend the collaborators list.
 			However, the initial Author can never be removed from being able to
-			publish new version of the document.
+			publish a new version of the document.
 			"""
 		validation: """
 			This list does not imply these collaborators have consented to collaborate, only that the author/s
 			are permitting these potential collaborators to participate in the drafting and submission process.
-			However any document submission referencing a proposal MUST be signed by all collaborators in
+			However, any document submission referencing a proposal MUST be signed by all collaborators in
 			addition to the author.
 			"""
 	}
@@ -171,25 +221,33 @@ _metadata: #metadataStruct & {
 			It is also valid for the referenced document to not include this field, if it is 
 			optional for the referenced document.
 			"""
+		exclusive: [
+			"campaign_id",
+			"category_id",
+		]
 	}
 
 	campaign_id: {
 		description: "A reference to the Campaign Parameters Document this document lies under."
 		validation: """
 			In addition to the validation performed for `ref`, 
-			Any referenced document that includes a `campaign_id` must match the `campaign_id` 
-			of the referencing document.
+			Any referenced document that includes a `campaign_id` must match the 
+			`campaign_id` of the referencing document.
 			It is also valid for the referenced document to not include this field, if it is 
 			optional for the referenced document.
 			"""
+		exclusive: [
+			"brand_id",
+			"category_id",
+		]
 	}
 
 	election_id: {
 		description: "A reference to the Election Parameters Document this document lies under."
 		validation: """
 			In addition to the validation performed for `ref`, 
-			Any referenced document that includes a `election_id` must match the `election_id` 
-			of the referencing document.
+			Any referenced document that includes a `election_id` must match the 
+			`election_id` of the referencing document.
 			It is also valid for the referenced document to not include this field, if it is 
 			optional for the referenced document.
 			"""
@@ -199,11 +257,15 @@ _metadata: #metadataStruct & {
 		description: "A reference to the Category Parameters Document this document lies under."
 		validation: """
 			In addition to the validation performed for `ref`, 
-			Any referenced document that includes a `category_id` must match the `category_id` 
-			of the referencing document.
+			Any referenced document that includes a `category_id` must match the 
+			`category_id` of the referencing document.
 			It is also valid for the referenced document to not include this field, if it is 
 			optional for the referenced document.
 			"""
+		exclusive: [
+			"brand_id",
+			"campaign_id",
+		]
 	}
 }
 
@@ -213,9 +275,9 @@ metadata: {
 	ref: required:           "optional"
 	ref: type:               _allDocNamesList
 	template: required:      "optional"
-	template: type:          _allDocNamesList // TODO: Filter down to only Template Type Docs
+	template: type:          #templateDocNamesList
 	reply: required:         "optional"
-	reply: type:             _allDocNamesList // TODO: Filter down to only Comment Type Docs
+	reply: type:             #commentDocNamesList
 	section: required:       "optional"
 	collaborators: required: "optional"
 	brand_id: required:      "optional"
