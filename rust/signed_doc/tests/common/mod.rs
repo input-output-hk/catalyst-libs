@@ -27,15 +27,33 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
     (uuid_v7, uuid_v4, metadata_fields)
 }
 
-pub fn get_signing_key() -> ed25519_dalek::SigningKey {
+pub fn create_dummy_doc(doc_type_id: Uuid) -> (CatalystSignedDocument, UuidV7) {
+    let empty_json = serde_json::to_vec(&serde_json::json!({})).unwrap();
+
+    let doc_id = UuidV7::new();
+
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "type": doc_type_id,
+            "content-type": ContentType::Json.to_string(),
+            "template": { "id": doc_id.to_string() }
+        }))
+        .unwrap()
+        .with_decoded_content(empty_json.clone())
+        .build();
+
+    (doc, doc_id)
+}
+
+pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     let mut csprng = rand::rngs::OsRng;
     ed25519_dalek::SigningKey::generate(&mut csprng)
 }
 
-pub fn get_dummy_signed_doc(
+pub fn create_dummy_signed_doc(
     with_metadata: Option<serde_json::Value>,
 ) -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
-    let sk = get_signing_key();
+    let sk = create_signing_key();
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
     let (_, _, metadata) = test_metadata();
     let pk = sk.verifying_key();
