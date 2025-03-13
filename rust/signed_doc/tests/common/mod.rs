@@ -27,8 +27,8 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
     (uuid_v7, uuid_v4, metadata_fields)
 }
 
-pub fn create_dummy_doc(doc_type_id: Uuid) -> (CatalystSignedDocument, UuidV7) {
-    let empty_json = serde_json::to_vec(&serde_json::json!({})).unwrap();
+pub fn create_dummy_doc(doc_type_id: Uuid) -> anyhow::Result<(CatalystSignedDocument, UuidV7)> {
+    let empty_json = serde_json::to_vec(&serde_json::json!({}))?;
 
     let doc_id = UuidV7::new();
 
@@ -37,12 +37,11 @@ pub fn create_dummy_doc(doc_type_id: Uuid) -> (CatalystSignedDocument, UuidV7) {
             "type": doc_type_id,
             "content-type": ContentType::Json.to_string(),
             "template": { "id": doc_id.to_string() }
-        }))
-        .unwrap()
+        }))?
         .with_decoded_content(empty_json.clone())
         .build();
 
-    (doc, doc_id)
+    Ok((doc, doc_id))
 }
 
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {
@@ -52,26 +51,24 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 
 pub fn create_dummy_signed_doc(
     with_metadata: Option<serde_json::Value>,
-) -> (CatalystSignedDocument, ed25519_dalek::VerifyingKey) {
+) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey)> {
     let sk = create_signing_key();
-    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+    let content = serde_json::to_vec(&serde_json::Value::Null)?;
     let (_, _, metadata) = test_metadata();
     let pk = sk.verifying_key();
     let kid_str = format!(
         "id.catalyst://cardano/{}/0/0",
         base64_url::encode(pk.as_bytes())
     );
-    let kid = IdUri::from_str(&kid_str).unwrap();
+    let kid = IdUri::from_str(&kid_str)?;
 
     let signed_doc = Builder::new()
         .with_decoded_content(content)
-        .with_json_metadata(with_metadata.unwrap_or(metadata))
-        .unwrap()
-        .add_signature(sk.to_bytes(), kid.clone())
-        .unwrap()
+        .with_json_metadata(with_metadata.unwrap_or(metadata))?
+        .add_signature(sk.to_bytes(), kid.clone())?
         .build();
 
-    (signed_doc, pk)
+    Ok((signed_doc, pk))
 }
 
 pub struct DummyVerifyingKeyProvider(pub anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);

@@ -30,7 +30,7 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
 
 #[tokio::test]
 async fn signature_verification_test() {
-    let (signed_doc, pk) = common::create_dummy_signed_doc(None);
+    let (signed_doc, pk) = common::create_dummy_signed_doc(None).unwrap();
     assert!(!signed_doc.problem_report().is_problematic());
 
     assert!(validator::validate_signatures(
@@ -58,7 +58,7 @@ async fn signature_verification_test() {
 #[tokio::test]
 async fn test_valid_proposal_doc() {
     let (template_doc, template_doc_id) =
-        common::create_dummy_doc(doc_types::PROPOSAL_TEMPLATE_UUID_TYPE);
+        common::create_dummy_doc(doc_types::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
     let (doc, _) = common::create_dummy_signed_doc(Some(serde_json::json!({
@@ -71,7 +71,8 @@ async fn test_valid_proposal_doc() {
         "template": {
           "id": template_doc_id
         },
-    })));
+    })))
+    .unwrap();
 
     let provider =
         common::DummyCatSignDocProvider(From::from([(template_doc_id.into(), template_doc)]));
@@ -97,7 +98,8 @@ async fn test_valid_proposal_doc_with_empty_provider() {
         "template": {
           "id": template_doc_id
         },
-    })));
+    })))
+    .unwrap();
 
     let provider = common::DummyCatSignDocProvider::default();
 
@@ -118,7 +120,8 @@ async fn test_invalid_proposal_doc() {
         "ver": uuid_v7.to_string(),
         // without specifying template id
         "template": serde_json::Value::Null,
-    })));
+    })))
+    .unwrap();
 
     let provider = common::DummyCatSignDocProvider::default();
 
@@ -130,9 +133,9 @@ async fn test_invalid_proposal_doc() {
 #[tokio::test]
 async fn test_valid_comment_doc() {
     let (proposal_doc, proposal_doc_id) =
-        common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE);
+        common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let (template_doc, template_doc_id) =
-        common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE);
+        common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
     let (doc, _) = common::create_dummy_signed_doc(Some(serde_json::json!({
@@ -148,7 +151,8 @@ async fn test_valid_comment_doc() {
         "ref": {
             "id": proposal_doc_id
         }
-    })));
+    })))
+    .unwrap();
 
     let provider = common::DummyCatSignDocProvider(From::from([
         (template_doc_id.into(), template_doc),
@@ -165,9 +169,9 @@ async fn test_valid_comment_doc_with_reply() {
     let empty_json = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
     let (proposal_doc, proposal_doc_id) =
-        common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE);
+        common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let (template_doc, template_doc_id) =
-        common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE);
+        common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let comment_doc_id = UuidV7::new();
     let comment_doc = Builder::new()
@@ -201,7 +205,8 @@ async fn test_valid_comment_doc_with_reply() {
             "id": comment_doc_id,
             "ver": uuid_v7
         }
-    })));
+    })))
+    .unwrap();
 
     let provider = common::DummyCatSignDocProvider(From::from([
         (template_doc_id.into(), template_doc),
@@ -217,9 +222,9 @@ async fn test_valid_comment_doc_with_reply() {
 #[tokio::test]
 async fn test_invalid_comment_doc() {
     let (proposal_doc, proposal_doc_id) =
-        common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE);
+        common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let (template_doc, template_doc_id) =
-        common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE);
+        common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
     let (doc, _) = common::create_dummy_signed_doc(Some(serde_json::json!({
@@ -234,7 +239,8 @@ async fn test_invalid_comment_doc() {
         },
         // without ref
         "ref": serde_json::Value::Null
-    })));
+    })))
+    .unwrap();
 
     let provider = common::DummyCatSignDocProvider(From::from([
         (template_doc_id.into(), template_doc),
