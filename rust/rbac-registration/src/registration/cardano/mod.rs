@@ -430,12 +430,12 @@ fn update_role_data(
 
         // If there is new role encryption key, use it, else use the old one
         if data.encryption_key().is_none() {
-            let signing_key = inner
+            let encryption_key = inner
                 .role_data
                 .get(&number)
                 .and_then(|pd| pd.data().encryption_key())
                 .cloned();
-            data.set_encryption_key(signing_key);
+            data.set_encryption_key(encryption_key);
         }
 
         // Map of role number to point and role data
