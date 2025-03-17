@@ -29,6 +29,21 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
     (uuid_v7, uuid_v4, metadata_fields)
 }
 
+pub fn create_dummy_key_pair() -> anyhow::Result<(
+    ed25519_dalek::SigningKey,
+    ed25519_dalek::VerifyingKey,
+    IdUri,
+)> {
+    let sk = create_signing_key();
+    let pk = sk.verifying_key();
+    let kid = IdUri::from_str(&format!(
+        "id.catalyst://cardano/{}/0/0",
+        base64_url::encode(pk.as_bytes())
+    ))?;
+
+    Ok((sk, pk, kid))
+}
+
 pub fn create_dummy_doc(doc_type_id: Uuid) -> anyhow::Result<(CatalystSignedDocument, UuidV7)> {
     let empty_json = serde_json::to_vec(&serde_json::json!({}))?;
 
@@ -53,16 +68,11 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 
 pub fn create_dummy_signed_doc(
     with_metadata: Option<serde_json::Value>,
-) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey)> {
-    let sk = create_signing_key();
+) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey, IdUri)> {
+    let (sk, pk, kid) = create_dummy_key_pair()?;
+    
     let content = serde_json::to_vec(&serde_json::Value::Null)?;
     let (_, _, metadata) = test_metadata();
-    let pk = sk.verifying_key();
-    let kid_str = format!(
-        "id.catalyst://cardano/{}/0/0",
-        base64_url::encode(pk.as_bytes())
-    );
-    let kid = IdUri::from_str(&kid_str)?;
 
     let signed_doc = Builder::new()
         .with_decoded_content(content)
@@ -70,17 +80,16 @@ pub fn create_dummy_signed_doc(
         .add_signature(sk.to_bytes(), kid.clone())?
         .build();
 
-    Ok((signed_doc, pk))
+    Ok((signed_doc, pk, kid))
 }
 
-pub struct DummyVerifyingKeyProvider(pub anyhow::Result<Option<ed25519_dalek::VerifyingKey>>);
+pub struct DummyVerifyingKeyProvider(pub HashMap<IdUri, ed25519_dalek::VerifyingKey>);
 
 impl providers::VerifyingKeyProvider for DummyVerifyingKeyProvider {
     async fn try_get_key(
-        &self, _kid: &IdUri,
+        &self, kid: &IdUri,
     ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
-        let res = self.0.as_ref().map_err(|e| anyhow::anyhow!("{e}"))?;
-        Ok(*res)
+        Ok(self.0.get(kid).copied())
     }
 }
 
