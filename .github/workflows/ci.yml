@@ -24,6 +24,6 @@ jobs:
       forge_version: 0.8.0
 
   test_reporting:
-    if: always()
+    if: ${{ !github.event.pull_request.draft }}
     needs: ci
     uses: ./.github/workflows/generate-allure-report.yml
