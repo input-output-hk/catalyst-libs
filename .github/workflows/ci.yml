@@ -7,6 +7,7 @@ on:
     types:
       - synchronize
       - ready_for_review
+      - opened
     
 
 permissions:
@@ -17,6 +18,7 @@ permissions:
 
 jobs:
   ci:
+    if: ${{ !github.event.pull_request.draft }}
     uses: input-output-hk/catalyst-forge/.github/workflows/ci.yml@ci/v1.7.1
     with:
       forge_version: 0.8.0
