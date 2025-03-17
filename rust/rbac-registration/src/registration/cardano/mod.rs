@@ -5,7 +5,7 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::bail;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::TransactionId;
-use catalyst_types::uuid::UuidV4;
+use catalyst_types::{id_uri::IdUri, uuid::UuidV4};
 use ed25519_dalek::VerifyingKey;
 use tracing::{error, warn};
 use x509_cert::certificate::Certificate as X509Certificate;
@@ -54,6 +54,12 @@ impl RegistrationChain {
         Ok(Self {
             inner: Arc::new(new_inner),
         })
+    }
+
+    /// Returns a Catalyst ID.
+    #[must_use]
+    pub fn catalyst_id(&self) -> &IdUri {
+        &self.inner.catalyst_id
     }
 
     /// Get the current transaction ID hash.
@@ -118,6 +124,8 @@ impl RegistrationChain {
 /// Inner structure of registration chain.
 #[derive(Debug, Clone)]
 struct RegistrationChainInner {
+    /// A Catalyst ID.
+    catalyst_id: IdUri,
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: TransactionId,
     /// List of purpose for this registration chain
@@ -163,10 +171,9 @@ impl RegistrationChainInner {
         if cip509.previous_transaction().is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
-        // Should be chain root, return immediately if not
-        if cip509.catalyst_id().is_none() {
+        let Some(catalyst_id) = cip509.catalyst_id().cloned() else {
             bail!("Invalid chain root, catalyst id should be present.");
-        }
+        };
 
         let point_tx_idx = cip509.origin().clone();
         let current_tx_id_hash = cip509.txn_hash();
@@ -199,6 +206,7 @@ impl RegistrationChainInner {
         }
 
         Ok(Self {
+            catalyst_id,
             current_tx_id_hash,
             purpose,
             x509_certs,
