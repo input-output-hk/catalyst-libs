@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use std::{collections::HashMap, str::FromStr};
 
 use catalyst_signed_doc::*;
