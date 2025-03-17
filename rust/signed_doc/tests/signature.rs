@@ -69,7 +69,7 @@ async fn multiple_signatures_validation_test() {
     .await
     .is_ok_and(|v| !v));
 
-    // caes: with unrecognized provider
+    // case: with unrecognized provider
     assert!(validator::validate_signatures(
         &signed_doc,
         &common::DummyVerifyingKeyProvider(From::from([(kid_n.clone(), pk_n)]))

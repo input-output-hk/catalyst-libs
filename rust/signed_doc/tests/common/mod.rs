@@ -70,7 +70,7 @@ pub fn create_dummy_signed_doc(
     with_metadata: Option<serde_json::Value>,
 ) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey, IdUri)> {
     let (sk, pk, kid) = create_dummy_key_pair()?;
-    
+
     let content = serde_json::to_vec(&serde_json::Value::Null)?;
     let (_, _, metadata) = test_metadata();
 
