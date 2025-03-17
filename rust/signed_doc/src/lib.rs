@@ -21,7 +21,7 @@ pub use catalyst_types::{
     uuid::{Uuid, UuidV4, UuidV7},
 };
 pub use content::Content;
-use coset::{CborSerializable, Header};
+use coset::{CborSerializable, Header, TaggedCborSerializable};
 pub use metadata::{
     Algorithm, ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section,
 };
@@ -217,9 +217,11 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             .get(start..end)
             .ok_or(minicbor::decode::Error::end_of_input())?;
 
-        let cose_sign = coset::CoseSign::from_slice(cose_bytes).map_err(|e| {
-            minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
-        })?;
+        let cose_sign = coset::CoseSign::from_tagged_slice(cose_bytes)
+            .or_else(|_| coset::CoseSign::from_slice(cose_bytes))
+            .map_err(|e| {
+                minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
+            })?;
 
         let report = ProblemReport::new(PROBLEM_REPORT_CTX);
         let metadata = Metadata::from_protected_header(&cose_sign.protected, &report);
@@ -248,7 +250,7 @@ impl Encode<()> for CatalystSignedDocument {
     ) -> Result<(), encode::Error<W::Error>> {
         let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
 
-        let cose_bytes = cose_sign.to_vec().map_err(|e| {
+        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
             minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
         })?;
 
