@@ -30,7 +30,10 @@ pub mod tests {
 
     use catalyst_types::uuid::Uuid;
 
-    use super::*;
+    use super::{
+        CatalystSignedDocument, CatalystSignedDocumentProvider, DocumentRef, IdUri, VerifyingKey,
+        VerifyingKeyProvider,
+    };
 
     ///  Simple testing implmentation of `CatalystSignedDocumentProvider`
     #[derive(Default)]
@@ -38,6 +41,9 @@ pub mod tests {
 
     impl TestCatalystSignedDocumentProvider {
         /// Inserts document into the `TestCatalystSignedDocumentProvider`
+        ///
+        /// # Errors
+        ///  - Missing document id
         pub fn add_document(&mut self, doc: CatalystSignedDocument) -> anyhow::Result<()> {
             self.0.insert(doc.doc_id()?.uuid(), doc);
             Ok(())
@@ -65,7 +71,7 @@ pub mod tests {
 
     impl VerifyingKeyProvider for TestVerifyingKeyProvider {
         async fn try_get_key(&self, kid: &IdUri) -> anyhow::Result<Option<VerifyingKey>> {
-            Ok(self.0.get(&kid).cloned())
+            Ok(self.0.get(kid).copied())
         }
     }
 }
