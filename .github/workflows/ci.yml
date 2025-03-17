@@ -27,4 +27,3 @@ jobs:
     if: ${{ !github.event.pull_request.draft }}
     needs: ci
     uses: ./.github/workflows/generate-allure-report.yml
-    
