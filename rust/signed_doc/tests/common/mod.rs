@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
 
 use catalyst_signed_doc::*;
 
@@ -51,6 +51,7 @@ pub fn create_dummy_doc(doc_type_id: Uuid) -> anyhow::Result<(CatalystSignedDocu
 
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
+            "id": doc_id,
             "type": doc_type_id,
             "content-type": ContentType::Json.to_string(),
             "template": { "id": doc_id.to_string() }
@@ -81,25 +82,4 @@ pub fn create_dummy_signed_doc(
         .build();
 
     Ok((signed_doc, pk, kid))
-}
-
-pub struct DummyVerifyingKeyProvider(pub HashMap<IdUri, ed25519_dalek::VerifyingKey>);
-
-impl providers::VerifyingKeyProvider for DummyVerifyingKeyProvider {
-    async fn try_get_key(
-        &self, kid: &IdUri,
-    ) -> anyhow::Result<Option<ed25519_dalek::VerifyingKey>> {
-        Ok(self.0.get(kid).copied())
-    }
-}
-
-#[derive(Default)]
-pub struct DummyCatSignDocProvider(pub HashMap<Uuid, CatalystSignedDocument>);
-
-impl providers::CatalystSignedDocumentProvider for DummyCatSignDocProvider {
-    async fn try_get_doc(
-        &self, doc_ref: &DocumentRef,
-    ) -> anyhow::Result<Option<CatalystSignedDocument>> {
-        Ok(self.0.get(&doc_ref.id.uuid()).cloned())
-    }
 }

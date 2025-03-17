@@ -1,8 +1,6 @@
 //! Integration test for signature validation part.
 
-use std::collections::HashMap;
-
-use catalyst_signed_doc::*;
+use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 
 mod common;
 
@@ -12,20 +10,18 @@ async fn single_signature_validation_test() {
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: has key
-    assert!(validator::validate_signatures(
-        &signed_doc,
-        &common::DummyVerifyingKeyProvider(From::from([(kid, pk)]))
-    )
-    .await
-    .is_ok_and(|v| v));
+    let mut provider = TestVerifyingKeyProvider::default();
+    provider.add_pk(kid.clone(), pk);
+    assert!(validator::validate_signatures(&signed_doc, &provider)
+        .await
+        .is_ok_and(|v| v));
 
     // case: empty provider
-    assert!(validator::validate_signatures(
-        &signed_doc,
-        &common::DummyVerifyingKeyProvider(HashMap::default())
-    )
-    .await
-    .is_ok_and(|v| !v));
+    assert!(
+        validator::validate_signatures(&signed_doc, &TestVerifyingKeyProvider::default())
+            .await
+            .is_ok_and(|v| !v)
+    );
 }
 
 #[tokio::test]
@@ -50,38 +46,33 @@ async fn multiple_signatures_validation_test() {
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: all signatures valid
-    assert!(validator::validate_signatures(
-        &signed_doc,
-        &common::DummyVerifyingKeyProvider(From::from([
-            (kid1.clone(), pk1),
-            (kid2.clone(), pk2),
-            (kid3.clone(), pk3)
-        ]))
-    )
-    .await
-    .is_ok_and(|v| v));
+    let mut provider = TestVerifyingKeyProvider::default();
+    provider.add_pk(kid1.clone(), pk1);
+    provider.add_pk(kid2.clone(), pk2);
+    provider.add_pk(kid3.clone(), pk3);
+    assert!(validator::validate_signatures(&signed_doc, &provider)
+        .await
+        .is_ok_and(|v| v));
 
     // case: partially available signatures
-    assert!(validator::validate_signatures(
-        &signed_doc,
-        &common::DummyVerifyingKeyProvider(From::from([(kid1.clone(), pk1), (kid2.clone(), pk2)]))
-    )
-    .await
-    .is_ok_and(|v| !v));
+    let mut provider = TestVerifyingKeyProvider::default();
+    provider.add_pk(kid1.clone(), pk1);
+    provider.add_pk(kid2.clone(), pk2);
+    assert!(validator::validate_signatures(&signed_doc, &provider)
+        .await
+        .is_ok_and(|v| !v));
 
     // case: with unrecognized provider
-    assert!(validator::validate_signatures(
-        &signed_doc,
-        &common::DummyVerifyingKeyProvider(From::from([(kid_n.clone(), pk_n)]))
-    )
-    .await
-    .is_ok_and(|v| !v));
+    let mut provider = TestVerifyingKeyProvider::default();
+    provider.add_pk(kid_n.clone(), pk_n);
+    assert!(validator::validate_signatures(&signed_doc, &provider)
+        .await
+        .is_ok_and(|v| !v));
 
     // case: no valid signatures available
-    assert!(validator::validate_signatures(
-        &signed_doc,
-        &common::DummyVerifyingKeyProvider(HashMap::default())
-    )
-    .await
-    .is_ok_and(|v| !v));
+    assert!(
+        validator::validate_signatures(&signed_doc, &TestVerifyingKeyProvider::default())
+            .await
+            .is_ok_and(|v| !v)
+    );
 }

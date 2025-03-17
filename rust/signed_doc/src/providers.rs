@@ -23,20 +23,22 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 }
 
-#[cfg(test)]
-pub(crate) mod tests {
+pub mod tests {
+    //! Simple providers implementation just for the testing purposes
+
     use std::collections::HashMap;
 
     use catalyst_types::uuid::Uuid;
 
     use super::*;
 
-    /// Index documents only by `id` field
+    ///  Simple testing implmentation of `CatalystSignedDocumentProvider`
     #[derive(Default)]
-    pub(crate) struct TestCatalystSignedDocumentProvider(HashMap<Uuid, CatalystSignedDocument>);
+    pub struct TestCatalystSignedDocumentProvider(HashMap<Uuid, CatalystSignedDocument>);
 
     impl TestCatalystSignedDocumentProvider {
-        pub(crate) fn add_document(&mut self, doc: CatalystSignedDocument) -> anyhow::Result<()> {
+        /// Inserts document into the `TestCatalystSignedDocumentProvider`
+        pub fn add_document(&mut self, doc: CatalystSignedDocument) -> anyhow::Result<()> {
             self.0.insert(doc.doc_id()?.uuid(), doc);
             Ok(())
         }
@@ -47,6 +49,23 @@ pub(crate) mod tests {
             &self, doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             Ok(self.0.get(&doc_ref.id.uuid()).cloned())
+        }
+    }
+
+    /// Simple testing implmentation of `VerifyingKeyProvider`
+    #[derive(Default)]
+    pub struct TestVerifyingKeyProvider(HashMap<IdUri, VerifyingKey>);
+
+    impl TestVerifyingKeyProvider {
+        /// Inserts public key into the `TestVerifyingKeyProvider`
+        pub fn add_pk(&mut self, kid: IdUri, pk: VerifyingKey) {
+            self.0.insert(kid, pk);
+        }
+    }
+
+    impl VerifyingKeyProvider for TestVerifyingKeyProvider {
+        async fn try_get_key(&self, kid: &IdUri) -> anyhow::Result<Option<VerifyingKey>> {
+            Ok(self.0.get(&kid).cloned())
         }
     }
 }

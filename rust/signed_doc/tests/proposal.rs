@@ -1,6 +1,6 @@
 //! Integration test for proposal document validation part.
 
-use catalyst_signed_doc::*;
+use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
 
 mod common;
 
@@ -23,8 +23,8 @@ async fn test_valid_proposal_doc() {
     })))
     .unwrap();
 
-    let provider =
-        common::DummyCatSignDocProvider(From::from([(template_doc_id.into(), template_doc)]));
+    let mut provider = TestCatalystSignedDocumentProvider::default();
+    provider.add_document(template_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
@@ -50,7 +50,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
     })))
     .unwrap();
 
-    let provider = common::DummyCatSignDocProvider::default();
+    let provider = TestCatalystSignedDocumentProvider::default();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
@@ -72,7 +72,7 @@ async fn test_invalid_proposal_doc() {
     })))
     .unwrap();
 
-    let provider = common::DummyCatSignDocProvider::default();
+    let provider = TestCatalystSignedDocumentProvider::default();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
