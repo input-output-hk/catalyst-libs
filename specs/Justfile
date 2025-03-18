@@ -21,9 +21,9 @@ regenerate: check
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
     cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > signed_doc.json
     # Generate the markdown docs from the specification.
-    cd gen_docs; ./gen_doc_pages.py -g -o test ../signed_doc.json 
+    cd gen_docs; ./generate_docs.py -g -o test ../signed_doc.json 
     # Check our validation code actually works properly
-    cd gen_docs; ./gen_doc_pages.py -o test ../signed_doc.json 
+    cd gen_docs; ./generate_docs.py -o test ../signed_doc.json 
 
 
 # Validate the generated signed_docs.json is correct against the cue schema.

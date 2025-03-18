@@ -8,6 +8,11 @@ package signed_docs
 	[string]: string
 }
 
+// 
+#authorMinConstraint: {
+
+}
+
 // General Authors List
 authors: #authorList & {
 	"Steven Johnson":   "steven.johnson@iohk.io"

@@ -129,6 +129,7 @@
   ],
   "docs": {
     "Brand Parameters": {
+      "authors": {},
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -257,6 +258,7 @@
       ]
     },
     "Campaign Parameters": {
+      "authors": {},
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -385,6 +387,7 @@
       ]
     },
     "Category Parameters": {
+      "authors": {},
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -513,6 +516,7 @@
       ]
     },
     "Comment Action Document": {
+      "authors": {},
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -643,6 +647,7 @@
       ]
     },
     "Election Parameters": {
+      "authors": {},
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -771,7 +776,10 @@
       ]
     },
     "Proposal": {
-      "description": "## Proposal Document\n\nA Proposal is a document which describes a proposed solution or project to\naddress the criteria of a category within a campaign.\n\nThe proposal itself is a draft document, it is not submitted for consideration\nunless a `Proposal Submission Action` is submitted which references it.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
+      "authors": {
+        "Steven Johnson": "steven.johnson@iohk.io"
+      },
+      "description": "A Proposal is a document which describes a proposed solution or project to\naddress the criteria of a category within a campaign.\n\nThe proposal itself is a draft document, it is not submitted for consideration\nunless a `Proposal Submission Action` is submitted which references it.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -908,6 +916,7 @@
       ]
     },
     "Proposal Comment": {
+      "authors": {},
       "description": "## Proposal Comment Document\n\nA Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
       "headers": {
         "content type": {
@@ -1049,6 +1058,7 @@
       ]
     },
     "Proposal Comment Meta Template": {
+      "authors": {},
       "description": "## Proposal Comment Meta Template Document\n\nA Proposal Comment Meta Template is used to enforce functional requirements\nare met in any Proposal Comment Template.\n\nThe payload of a proposal comment template is controlled by its meta template.",
       "headers": {
         "content type": {
@@ -1189,6 +1199,7 @@
       ]
     },
     "Proposal Comment Template": {
+      "authors": {},
       "description": "## Proposal Comment Template Document\n\nA Proposal Comment Template defines the allowed payload contents of a\nlinked proposal comment.\n\nProposal comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
       "headers": {
         "content type": {
@@ -1329,6 +1340,7 @@
       ]
     },
     "Proposal Meta Template": {
+      "authors": {},
       "description": "## Proposal Meta Template Document\n\nA Proposal Meta Template is used to enforce functional requirements\nare met in any Proposal Template.\n\nThe payload of a proposal template is controlled by its meta template.",
       "headers": {
         "content type": {
@@ -1468,6 +1480,7 @@
       ]
     },
     "Proposal Moderation Action": {
+      "authors": {},
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1598,6 +1611,7 @@
       ]
     },
     "Proposal Submission Action": {
+      "authors": {},
       "description": "## Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  Unless they all submit or withdraw the same version of the proposal\nthe proposal will not be seen as submitted or withdrawn.\n\nThe payload is a fixed format.",
       "headers": {
         "content type": {
@@ -1775,6 +1789,7 @@
       ]
     },
     "Proposal Template": {
+      "authors": {},
       "description": "## Proposal Template Document\n\nA Proposal Template defines the allowed payload contents of a\nlinked proposal.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
       "headers": {
         "content type": {

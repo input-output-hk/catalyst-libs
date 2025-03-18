@@ -8,6 +8,7 @@ import re
 from pathlib import Path
 
 from common import metadata_field_link
+from gen_docs_page_md import gen_docs_page_md
 from gen_metadata_md import gen_metadata_md
 from gen_spec_index import gen_spec_index
 from gen_spec_md import gen_spec_md
@@ -154,8 +155,8 @@ def save_or_validate(
             old_contents = md_file.read_text()
             if old_contents == file_data:
                 print(f"{file_name} is already up-to-date.")
-            else:
-                md_file.write_text(file_data)
+                return True
+        md_file.write_text(file_data)
     else:
         print(f"Validating {file_name}")
         if not md_file.exists():
@@ -173,23 +174,20 @@ def create_individual_doc_files(docs: dict, args: argparse.Namespace) -> bool:
     """
     Create Individual markdown files for all document types.
     """
-
-    docs = get_signed_doc_data()
     all_docs = docs["docs"]
 
-    for doc_name in all_docs:
-        file_name = doc_name.lower().replace(" ", "_") + ".md"
-        print(f"{doc_name} : {file_name}")
+    good = True
 
-        doc_path = Path("docs", file_name)
-        if doc_path.is_file():
-            print("Exists")
-        else:
-            new_doc_contents = '# {{{{ insert_signed_doc_details( "{}" ) }}}}\n'.format(
-                doc_name
-            )
-            doc_path.write_text(new_doc_contents)
-            print("Created")
+    for doc_name in all_docs:
+        file_name = "docs/" + doc_name.lower().replace(" ", "_") + ".md"
+        good &= save_or_validate(
+            file_name,
+            lambda docs: gen_docs_page_md(doc_name, docs),
+            args,
+            docs,
+        )
+
+    return good
 
 
 def check_is_dir(base_path: Path) -> bool:
@@ -252,7 +250,7 @@ if __name__ == "__main__":
     good &= save_or_validate("spec.md", gen_spec_md, args, docs)
     good &= save_or_validate("types.md", gen_types_md, args, docs)
     good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)
-    # good &= create_individual_doc_files(docs, args)
+    good &= create_individual_doc_files(docs, args)
 
     if not good:
         print("File Comparisons Failed, Documentation is not current.")

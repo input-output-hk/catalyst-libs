@@ -5,8 +5,6 @@ package signed_docs
 docs: #DocumentDefinitions & {
 	"Proposal": {
 		description: """
-			## Proposal Document
-			
 			A Proposal is a document which describes a proposed solution or project to
 			address the criteria of a category within a campaign.
 			
@@ -53,6 +51,10 @@ docs: #DocumentDefinitions & {
 			update: {
 				"collaborators": true
 			}
+		}
+
+		authors: {
+			"Steven Johnson": "steven.johnson@iohk.io"
 		}
 	}
 }

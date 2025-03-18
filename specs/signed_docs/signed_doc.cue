@@ -26,6 +26,12 @@ import (
 	// The description of this document.  Markdown Supported.
 	validation?: string
 
+	// The business logic related to this document.  Markdown Supported.
+	business_logic?: {
+		front_end?: string
+		back_end?:  string
+	}
+
 	// Fixed headers in every document
 	headers: _coseHeaders
 
@@ -37,6 +43,8 @@ import (
 
 	// Required/Allowed Signers of a document
 	signers: _allowedSigners
+
+	authors: #authorList
 }
 
 // We can only define known documents in the document definitions object
