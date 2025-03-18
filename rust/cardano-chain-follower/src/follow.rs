@@ -3,7 +3,7 @@
 use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
 use pallas::network::miniprotocols::txmonitor::{TxBody, TxId};
 use tokio::sync::broadcast::{self};
-use tracing::{debug, error};
+use tracing::debug;
 
 use crate::{
     chain_sync::point_at_tip,
@@ -33,8 +33,8 @@ pub struct ChainFollower {
     snapshot: MithrilSnapshot,
     /// Mithril Snapshot Follower
     mithril_follower: Option<MithrilSnapshotIterator>,
-    /// Mithril TIP Reached
-    mithril_tip: Option<Point>,
+    // /// Mithril TIP Reached
+    // mithril_tip: Option<Point>,
     /// Live Block Updates
     sync_updates: broadcast::Receiver<chain_update::Kind>,
 }
@@ -78,7 +78,7 @@ impl ChainFollower {
             fork: Fork::BACKFILL, // This is correct, because Mithril is Fork 0.
             snapshot: MithrilSnapshot::new(chain),
             mithril_follower: None,
-            mithril_tip: None,
+            // mithril_tip: None,
             sync_updates: rx,
         }
     }
@@ -108,28 +108,28 @@ impl ChainFollower {
             }
         }
 
-        let roll_forward_condition = if let Some(mithril_tip) = &self.mithril_tip {
-            current_mithril_tip > *mithril_tip && *mithril_tip > self.current
-        } else {
-            true
-        };
+        // let roll_forward_condition = if let Some(mithril_tip) = &self.mithril_tip {
+        //     current_mithril_tip > *mithril_tip && *mithril_tip > self.current
+        // } else {
+        //     true
+        // };
 
-        if roll_forward_condition {
-            let snapshot = MithrilSnapshot::new(self.chain);
-            if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
-                // The Mithril Tip has moved forwards.
-                self.mithril_tip = Some(current_mithril_tip);
-                // Get the mithril tip block.
-                let update =
-                    ChainUpdate::new(chain_update::Kind::ImmutableBlockRollForward, false, block);
-                return Some(update);
-            }
-            error!(
-                tip = ?self.mithril_tip,
-                current = ?current_mithril_tip,
-                "Mithril Tip Block is not in snapshot. Should not happen."
-            );
-        }
+        // if roll_forward_condition {
+        //     let snapshot = MithrilSnapshot::new(self.chain);
+        //     if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
+        //         // The Mithril Tip has moved forwards.
+        //         self.mithril_tip = Some(current_mithril_tip);
+        //         // Get the mithril tip block.
+        //         let update =
+        //             ChainUpdate::new(chain_update::Kind::ImmutableBlockRollForward, false,
+        // block);         return Some(update);
+        //     }
+        //     error!(
+        //         tip = ?self.mithril_tip,
+        //         current = ?current_mithril_tip,
+        //         "Mithril Tip Block is not in snapshot. Should not happen."
+        //     );
+        // }
 
         None
     }
