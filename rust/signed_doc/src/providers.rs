@@ -35,7 +35,7 @@ pub mod tests {
         VerifyingKeyProvider,
     };
 
-    ///  Simple testing implmentation of `CatalystSignedDocumentProvider`
+    ///  Simple testing implementation of `CatalystSignedDocumentProvider`
     #[derive(Default)]
     pub struct TestCatalystSignedDocumentProvider(HashMap<Uuid, CatalystSignedDocument>);
 
@@ -58,7 +58,7 @@ pub mod tests {
         }
     }
 
-    /// Simple testing implmentation of `VerifyingKeyProvider`
+    /// Simple testing implementation of `VerifyingKeyProvider`
     #[derive(Default)]
     pub struct TestVerifyingKeyProvider(HashMap<IdUri, VerifyingKey>);
 
