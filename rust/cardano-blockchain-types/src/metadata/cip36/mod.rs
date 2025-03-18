@@ -10,14 +10,14 @@ use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::VerifyingKey;
 use key_registration::Cip36KeyRegistration;
 use minicbor::{Decode, Decoder};
-use pallas::ledger::addresses::ShelleyAddress;
+use pallas::ledger::addresses::Address;
 use registration_witness::Cip36RegistrationWitness;
 use voting_pk::VotingPubKey;
 
 use crate::{MetadatumLabel, MultiEraBlock, Network, Slot, TxnIndex};
 
 /// CIP-36 Catalyst registration
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 #[allow(clippy::struct_excessive_bools)]
 pub struct Cip36 {
     /// Key registration - 61284
@@ -247,7 +247,7 @@ impl Cip36 {
 
     /// Get the payment address from the registration.
     #[must_use]
-    pub fn payment_address(&self) -> Option<&ShelleyAddress> {
+    pub fn payment_address(&self) -> Option<&Address> {
         self.key_registration.payment_addr.as_ref()
     }
 
