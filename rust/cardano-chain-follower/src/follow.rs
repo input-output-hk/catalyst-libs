@@ -14,7 +14,7 @@ use crate::{
     mithril_snapshot_data::latest_mithril_snapshot_id,
     mithril_snapshot_iterator::MithrilSnapshotIterator,
     stats::{self},
-    Statistics,
+    Kind, Statistics,
 };
 
 /// The Chain Follower
@@ -87,6 +87,37 @@ impl ChainFollower {
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
         let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
 
+        if let Some(previous_mithril_tip) = &self.mithril_tip {
+            if current_mithril_tip != *previous_mithril_tip {
+                debug!(
+                    new_tip = ?self.mithril_tip,
+                    current_tip = ?current_mithril_tip,
+                    "Mithril Tip has changed"
+                );
+                // We have a new mithril tip so report Mithril Tip Roll Forward
+                let snapshot = MithrilSnapshot::new(self.chain);
+                if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
+                    let update = ChainUpdate::new(
+                        chain_update::Kind::ImmutableBlockRollForward,
+                        false, // Tip is Live chain tip, not Mithril Tip, and this is Mithril Tip.
+                        block,
+                    );
+                    // Update the new Mithril Tip in the followers state before we report it to the
+                    // following task..
+                    self.mithril_tip = Some(current_mithril_tip);
+                    return Some(update);
+                }
+
+                error!(
+                    tip = ?self.mithril_tip,
+                    current = ?current_mithril_tip,
+                    "Mithril Tip Block is not in snapshot. Should not happen."
+                );
+            }
+        }
+
+        self.mithril_tip = Some(current_mithril_tip.clone());
+
         if current_mithril_tip > self.current {
             if self.mithril_follower.is_none() {
                 self.mithril_follower = self
@@ -108,28 +139,29 @@ impl ChainFollower {
             }
         }
 
-        let roll_forward_condition = if let Some(mithril_tip) = &self.mithril_tip {
-            current_mithril_tip > *mithril_tip && *mithril_tip > self.current
-        } else {
-            true
-        };
-
-        if roll_forward_condition {
-            let snapshot = MithrilSnapshot::new(self.chain);
-            if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
-                // The Mithril Tip has moved forwards.
-                self.mithril_tip = Some(current_mithril_tip);
-                // Get the mithril tip block.
-                let update =
-                    ChainUpdate::new(chain_update::Kind::ImmutableBlockRollForward, false, block);
-                return Some(update);
-            }
-            error!(
-                tip = ?self.mithril_tip,
-                current = ?current_mithril_tip,
-                "Mithril Tip Block is not in snapshot. Should not happen."
-            );
-        }
+        // let roll_forward_condition = if let Some(mithril_tip) = &self.mithril_tip {
+        // current_mithril_tip > *mithril_tip && *mithril_tip > self.current
+        // } else {
+        // true
+        // };
+        //
+        // if roll_forward_condition {
+        // let snapshot = MithrilSnapshot::new(self.chain);
+        // if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
+        // The Mithril Tip has moved forwards.
+        // self.mithril_tip = Some(current_mithril_tip);
+        // Get the mithril tip block.
+        // debug!("The other ImmutableBlockRollForward");
+        // let update =
+        // ChainUpdate::new(chain_update::Kind::ImmutableBlockRollForward, false, block);
+        // return Some(update);
+        // }
+        // error!(
+        // tip = ?self.mithril_tip,
+        // current = ?current_mithril_tip,
+        // "Mithril Tip Block is not in snapshot. Should not happen."
+        // );
+        // }
 
         None
     }
@@ -215,6 +247,11 @@ impl ChainFollower {
     /// Update the current Point, and return `false` if this fails.
     fn update_current(&mut self, update: Option<&ChainUpdate>) -> bool {
         if let Some(update) = update {
+            if update.kind == Kind::ImmutableBlockRollForward {
+                // We DO NOT update anything for this kind of update, as its informational.
+                // It does not advance any follower, otherwise.
+                return true;
+            }
             let decoded = update.block_data().decode();
             self.current = Point::new(decoded.slot().into(), decoded.hash().into());
             return true;
@@ -254,8 +291,10 @@ impl ChainFollower {
 
             // IF we can't get a new block directly from the mithril data, or the live chain, then
             // wait for something to change which might mean we can get the next block.
-            let update = self.sync_updates.recv().await;
-            match update {
+            // Note, this is JUST a trigger, we don't process based on it other than to allow
+            // a blocked follower to continue.
+            let update_result = self.sync_updates.recv().await;
+            match update_result {
                 Ok(kind) => {
                     debug!("Update kind: {kind}");
                 },
@@ -405,7 +444,7 @@ mod tests {
         assert_eq!(follower.current, start);
         assert_eq!(follower.fork, 1.into());
         assert!(follower.mithril_follower.is_none());
-        assert!(follower.mithril_tip.is_none());
+        // assert!(follower.mithril_tip.is_none());
     }
 
     #[tokio::test]

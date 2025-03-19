@@ -181,6 +181,10 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let mut largest_aux_size: usize = 0;
 
     while let Some(chain_update) = follower.next().await {
+        if chain_update.kind == Kind::ImmutableBlockRollForward {
+            info!("Chain Immutable Roll Forward Detected.");
+            break;
+        }
         updates = updates.saturating_add(1);
 
         if chain_update.tip {

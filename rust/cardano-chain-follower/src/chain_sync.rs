@@ -484,7 +484,7 @@ async fn live_sync_backfill_and_purge(
         }
 
         debug!(
-            "After Purge: Size of the Live Chain is: {} Blocks",
+            "After Purge: Size of the Live Chain is: {} Blocks: ImmutableChainRollForward Triggered.",
             live_chain_length(cfg.chain)
         );
 
