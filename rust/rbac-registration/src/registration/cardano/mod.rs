@@ -101,14 +101,16 @@ impl RegistrationChain {
         &self.inner.revocations
     }
 
-    /// Get the map of latest update role number to point + transaction index, and role
-    /// data.
+    /// Get the map of role number to role data record where each field in role data
+    /// record has it own record of its value and its associated point and transaction
+    /// index.
     #[must_use]
     pub fn role_data_record(&self) -> &HashMap<RoleNumber, RoleDataRecord> {
         &self.inner.role_data_record
     }
 
-    /// Get the map of role number to list of point + transaction index, and role data.
+    /// Get the map of role number to list of history data of point + transaction index,
+    /// and role data.
     #[must_use]
     pub fn role_data_history(&self) -> &HashMap<RoleNumber, Vec<PointData<RoleData>>> {
         &self.inner.role_data_history
@@ -148,9 +150,10 @@ struct RegistrationChainInner {
 
     // Role
     /// Map of role number to list point + transaction index, and role data.
-    /// Record history of role data in point in time.
+    /// Record history of the whole role data in point in time.
     role_data_history: HashMap<RoleNumber, Vec<PointData<RoleData>>>,
-    /// Map of role number to role data history
+    /// Map of role number role data record where each field in role data record
+    /// has it own record of its value and its associated point and transaction index.
     role_data_record: HashMap<RoleNumber, RoleDataRecord>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
@@ -427,7 +430,7 @@ fn update_role_data(
     role_set: HashMap<RoleNumber, RoleData>, point_tx_idx: &PointTxnIdx,
 ) {
     for (number, data) in role_set {
-        // Update role data history
+        // Update role data history, put the whole role data
         role_data_history
             .entry(number)
             .or_default()
