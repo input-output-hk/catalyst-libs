@@ -7,7 +7,7 @@ pub use cip509::Cip509;
 pub use rbac::{C509Cert, Cip509RbacMetadata, SimplePublicKeyType, X509DerCert};
 pub use types::{
     CertKeyHash, KeyLocalRef, LocalRefInt, Payment, PaymentHistory, PointData, PointTxnIdx,
-    RoleData, RoleNumber, TxInputHash, ValidationSignature,
+    RoleData, RoleDataRecord, RoleNumber, TxInputHash, ValidationSignature,
 };
 pub use utils::Cip0134UriSet;
 
