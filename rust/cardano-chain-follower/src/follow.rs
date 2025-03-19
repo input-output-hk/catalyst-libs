@@ -87,6 +87,10 @@ impl ChainFollower {
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
         let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
 
+        // Return an ImmutableBlockRollForward event as soon as we can after one occurs.
+        // This is not an advancement in the followers sequential block iterating state.
+        // BUT it is a necessary status to return to a follower, so it can properly handle
+        // when immutable state advances (if it so requires)
         if let Some(previous_mithril_tip) = &self.mithril_tip {
             if current_mithril_tip != *previous_mithril_tip {
                 debug!(
@@ -102,12 +106,14 @@ impl ChainFollower {
                         false, // Tip is Live chain tip, not Mithril Tip, and this is Mithril Tip.
                         block,
                     );
-                    // Update the new Mithril Tip in the followers state before we report it to the
-                    // following task..
-                    self.mithril_tip = Some(current_mithril_tip);
                     return Some(update);
                 }
 
+                // This can only happen if the snapshot does not contain the tip block.
+                // So its effectively impossible.
+                // However, IF it does happen, nothing bad (other than a delay to reporting
+                // immutable roll forward) will occur, so we log this impossible
+                // error, and continue processing.
                 error!(
                     tip = ?self.mithril_tip,
                     current = ?current_mithril_tip,
@@ -115,8 +121,6 @@ impl ChainFollower {
                 );
             }
         }
-
-        self.mithril_tip = Some(current_mithril_tip.clone());
 
         if current_mithril_tip > self.current {
             if self.mithril_follower.is_none() {
@@ -128,9 +132,7 @@ impl ChainFollower {
 
             if let Some(follower) = self.mithril_follower.as_mut() {
                 if let Some(next) = follower.next().await {
-                    // debug!("Pre Previous update 3 : {:?}", self.previous);
                     self.previous = self.current.clone();
-                    // debug!("Post Previous update 3 : {:?}", self.previous);
                     self.current = next.point();
                     self.fork = Fork::IMMUTABLE; // Mithril Immutable data is always Fork 0.
                     let update = ChainUpdate::new(chain_update::Kind::Block, false, next);
@@ -138,30 +140,6 @@ impl ChainFollower {
                 }
             }
         }
-
-        // let roll_forward_condition = if let Some(mithril_tip) = &self.mithril_tip {
-        // current_mithril_tip > *mithril_tip && *mithril_tip > self.current
-        // } else {
-        // true
-        // };
-        //
-        // if roll_forward_condition {
-        // let snapshot = MithrilSnapshot::new(self.chain);
-        // if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
-        // The Mithril Tip has moved forwards.
-        // self.mithril_tip = Some(current_mithril_tip);
-        // Get the mithril tip block.
-        // debug!("The other ImmutableBlockRollForward");
-        // let update =
-        // ChainUpdate::new(chain_update::Kind::ImmutableBlockRollForward, false, block);
-        // return Some(update);
-        // }
-        // error!(
-        // tip = ?self.mithril_tip,
-        // current = ?current_mithril_tip,
-        // "Mithril Tip Block is not in snapshot. Should not happen."
-        // );
-        // }
 
         None
     }
@@ -248,8 +226,12 @@ impl ChainFollower {
     fn update_current(&mut self, update: Option<&ChainUpdate>) -> bool {
         if let Some(update) = update {
             if update.kind == Kind::ImmutableBlockRollForward {
-                // We DO NOT update anything for this kind of update, as its informational.
-                // It does not advance any follower, otherwise.
+                // The ImmutableBlockRollForward includes the Mithril TIP Block.
+                // Update the mithril_tip state to the point of it.
+                self.mithril_tip = Some(update.data.point());
+                // We DO NOT update anything else for this kind of update, as its informational and
+                // does not advance the state of the follower to a new block.
+                // It is still a valid update, and so return true, but don't update more state.
                 return true;
             }
             let decoded = update.block_data().decode();
@@ -272,10 +254,6 @@ impl ChainFollower {
 
         // We will loop here until we can successfully return a new block
         loop {
-            // Check if Immutable TIP has advanced, and if so, send a ChainUpdate about it.
-            // Should only happen once every ~6hrs.
-            // TODO.
-
             // Try and get the next update from the mithril chain, and return it if we are
             // successful.
             update = self.next_from_mithril().await;
@@ -293,16 +271,24 @@ impl ChainFollower {
             // wait for something to change which might mean we can get the next block.
             // Note, this is JUST a trigger, we don't process based on it other than to allow
             // a blocked follower to continue.
-            let update_result = self.sync_updates.recv().await;
-            match update_result {
+            let changed_data_trigger = self.sync_updates.recv().await;
+            match changed_data_trigger {
                 Ok(kind) => {
+                    // The KIND of event signaling changed data is not important, but we do log it
+                    // to help with debugging in case an update stops.
                     debug!("Update kind: {kind}");
                 },
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(distance)) => {
+                    // The update queue is small, its possible that it fills before a task can
+                    // read from it, this will cause this Lagged error.
+                    // BUT, because we don't care what the event was, this is as good as the missed
+                    // event.  Therefore its not an error, and just log it at debug to help with
+                    // debugging the logic only.
                     debug!("Lagged by {} updates", distance);
                 },
                 Err(tokio::sync::broadcast::error::RecvError::Closed) => {
-                    // We are closed, so we need to wait for the next update.
+                    // The queue is closed, so we need to return that its no longer possible to
+                    // get data from this follower.
                     // This is not an error.
                     return None;
                 },
