@@ -87,39 +87,48 @@ impl ChainFollower {
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
         let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
 
+        // Get previous mithril tip, or set it and return current if a previous does not exist.
+        let previous_mithril_tip = if let Some(tip) = &self.mithril_tip {
+            tip
+        } else {
+            debug!(
+                mithril_tip = ?current_mithril_tip,
+                "Setting Initial Mithril Tip"
+            );
+            self.mithril_tip = Some(current_mithril_tip.clone());
+            &current_mithril_tip
+        };
+
         // Return an ImmutableBlockRollForward event as soon as we can after one occurs.
         // This is not an advancement in the followers sequential block iterating state.
         // BUT it is a necessary status to return to a follower, so it can properly handle
         // when immutable state advances (if it so requires)
-        if let Some(previous_mithril_tip) = &self.mithril_tip {
-            if current_mithril_tip != *previous_mithril_tip {
-                debug!(
-                    new_tip = ?self.mithril_tip,
-                    current_tip = ?current_mithril_tip,
-                    "Mithril Tip has changed"
+        if current_mithril_tip != *previous_mithril_tip {
+            debug!(
+                new_tip = ?self.mithril_tip,
+                current_tip = ?current_mithril_tip,
+                "Mithril Tip has changed"
+            );
+            // We have a new mithril tip so report Mithril Tip Roll Forward
+            if let Some(block) = self.snapshot.read_block_at(&current_mithril_tip).await {
+                // Update the snapshot in the follower state to the new snapshot.
+                let update = ChainUpdate::new(
+                    chain_update::Kind::ImmutableBlockRollForward,
+                    false, // Tip is Live chain tip, not Mithril Tip, and this is Mithril Tip.
+                    block,
                 );
-                // We have a new mithril tip so report Mithril Tip Roll Forward
-                let snapshot = MithrilSnapshot::new(self.chain);
-                if let Some(block) = snapshot.read_block_at(&current_mithril_tip).await {
-                    let update = ChainUpdate::new(
-                        chain_update::Kind::ImmutableBlockRollForward,
-                        false, // Tip is Live chain tip, not Mithril Tip, and this is Mithril Tip.
-                        block,
-                    );
-                    return Some(update);
-                }
-
-                // This can only happen if the snapshot does not contain the tip block.
-                // So its effectively impossible.
-                // However, IF it does happen, nothing bad (other than a delay to reporting
-                // immutable roll forward) will occur, so we log this impossible
-                // error, and continue processing.
-                error!(
-                    tip = ?self.mithril_tip,
-                    current = ?current_mithril_tip,
-                    "Mithril Tip Block is not in snapshot. Should not happen."
-                );
+                return Some(update);
             }
+            // This can only happen if the snapshot does not contain the tip block.
+            // So its effectively impossible/unreachable.
+            // However, IF it does happen, nothing bad (other than a delay to reporting
+            // immutable roll forward) will occur, so we log this impossible
+            // error, and continue processing.
+            error!(
+                tip = ?self.mithril_tip,
+                current = ?current_mithril_tip,
+                "Mithril Tip Block is not in snapshot. Should not happen."
+            );
         }
 
         if current_mithril_tip > self.current {
@@ -229,6 +238,7 @@ impl ChainFollower {
                 // The ImmutableBlockRollForward includes the Mithril TIP Block.
                 // Update the mithril_tip state to the point of it.
                 self.mithril_tip = Some(update.data.point());
+                debug!(mithril_tip=?self.mithril_tip, "Updated followers current Mithril Tip");
                 // We DO NOT update anything else for this kind of update, as its informational and
                 // does not advance the state of the follower to a new block.
                 // It is still a valid update, and so return true, but don't update more state.
