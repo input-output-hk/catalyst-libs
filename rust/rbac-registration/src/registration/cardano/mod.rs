@@ -441,7 +441,7 @@ fn update_role_data(
             .or_insert(RoleDataRecord::new());
 
         // Update role data record
-        if let Some(record) = role_data_record.get_mut(&number) {
+        role_data_record.entry(number).and_modify(|record| {
             // Add signing key if it exists
             if let Some(signing_key) = data.signing_key() {
                 record.add_signing_key(signing_key.clone(), point_tx_idx);
@@ -462,7 +462,7 @@ fn update_role_data(
                 point_tx_idx.clone(),
                 data.extended_data().clone(),
             ));
-        }
+        });
     }
 }
 
