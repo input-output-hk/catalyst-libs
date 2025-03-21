@@ -102,7 +102,7 @@ impl<const BYTES: usize> TryFrom<&[u8]> for Blake2bHash<BYTES> {
     type Error = Blake2bHashError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        if value.len() < BYTES {
+        if value.len() != BYTES  {
             return Err(Blake2bHashError::InvalidLength {
                 expected: BYTES,
                 actual: value.len(),
@@ -204,6 +204,17 @@ mod tests {
     #[test]
     fn test_blake2b_hash_invalid_length() {
         let invalid_data = vec![0u8; 10];
+        let result = Blake2b224Hash::try_from(&invalid_data);
+        assert!(result.is_err());
+
+        if let Err(Blake2bHashError::InvalidLength { expected, actual }) = result {
+            assert_eq!(expected, BLAKE_2B224_SIZE);
+            assert_eq!(actual, invalid_data.len());
+        } else {
+            panic!("Expected InvalidLength error");
+        }
+
+        let invalid_data = vec![0u8; 50];
         let result = Blake2b224Hash::try_from(&invalid_data);
         assert!(result.is_err());
 
