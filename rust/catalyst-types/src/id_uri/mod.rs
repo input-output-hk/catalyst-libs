@@ -28,7 +28,7 @@ use role_index::RoleIndex;
 ///
 /// Identity of Catalyst Registration.
 /// Optionally also identifies a specific Signed Document Key
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(clippy::module_name_repetitions)]
 pub struct IdUri {
     /// Username
