@@ -102,7 +102,7 @@ impl<const BYTES: usize> TryFrom<&[u8]> for Blake2bHash<BYTES> {
     type Error = Blake2bHashError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        if value.len() != BYTES  {
+        if value.len() != BYTES {
             return Err(Blake2bHashError::InvalidLength {
                 expected: BYTES,
                 actual: value.len(),
