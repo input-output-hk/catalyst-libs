@@ -484,10 +484,11 @@ async fn live_sync_backfill_and_purge(
         }
 
         debug!(
-            "After Purge: Size of the Live Chain is: {} Blocks",
+            "After Purge: Size of the Live Chain is: {} Blocks: Triggering Sleeping Followers.",
             live_chain_length(cfg.chain)
         );
 
+        // Trigger any sleeping followers that data has changed.
         notify_follower(
             cfg.chain,
             update_sender.as_ref(),
