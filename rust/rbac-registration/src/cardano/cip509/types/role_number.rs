@@ -14,3 +14,9 @@ impl From<u8> for RoleNumber {
         Self(value)
     }
 }
+
+impl From<RoleNumber> for u8 {
+    fn from(value: RoleNumber) -> Self {
+        value.0
+    }
+}
