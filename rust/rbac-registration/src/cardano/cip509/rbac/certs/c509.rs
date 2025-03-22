@@ -28,7 +28,10 @@ impl Decode<'_, ProblemReport> for C509Cert {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "C509Cert")?;
                 match tag {
-                    t if t == KeyTag::Deleted.tag() => Ok(Self::Deleted),
+                    t if t == KeyTag::Deleted.tag() => {
+                        d.undefined()?;
+                        Ok(Self::Deleted)
+                    },
                     _ => Err(decode::Error::message("Unknown tag for C509Cert")),
                 }
             },

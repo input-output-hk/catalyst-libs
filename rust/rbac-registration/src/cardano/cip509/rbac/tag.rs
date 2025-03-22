@@ -7,6 +7,7 @@ pub(crate) enum KeyTag {
     /// Deleted Key tag 31.
     Deleted,
     /// Ed25519 Key tag 32773.
+    /// <https://cips.cardano.org/cip/CIP-0115>
     Ed25519,
 }
 
@@ -14,8 +15,8 @@ impl KeyTag {
     /// Get the tag value.
     pub(crate) fn tag(self) -> Tag {
         match self {
-            KeyTag::Deleted => Tag::new(0x31),
-            KeyTag::Ed25519 => Tag::new(0x8005),
+            KeyTag::Deleted => Tag::new(31),
+            KeyTag::Ed25519 => Tag::new(32773),
         }
     }
 }
