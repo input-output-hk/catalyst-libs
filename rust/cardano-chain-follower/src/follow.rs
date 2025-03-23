@@ -141,9 +141,6 @@ impl ChainFollower {
 
             if let Some(follower) = self.mithril_follower.as_mut() {
                 if let Some(next) = follower.next().await {
-                    self.previous = self.current.clone();
-                    self.current = next.point();
-                    self.fork = Fork::IMMUTABLE; // Mithril Immutable data is always Fork 0.
                     let update = ChainUpdate::new(chain_update::Kind::Block, false, next);
                     return Some(update);
                 }
@@ -217,11 +214,6 @@ impl ChainFollower {
                     rollback_depth,
                 );
             }
-            // debug!("Pre Previous update 4 : {:?}", self.previous);
-            self.previous = self.current.clone();
-            // debug!("Post Previous update 4 : {:?}", self.previous);
-            self.current = next_block.point().clone();
-            self.fork = next_block.fork();
 
             let tip = point_at_tip(self.chain, &self.current).await;
             let update = ChainUpdate::new(update_type, tip, next_block);
@@ -232,23 +224,20 @@ impl ChainFollower {
     }
 
     /// Update the current Point, and return `false` if this fails.
-    fn update_current(&mut self, update: Option<&ChainUpdate>) -> bool {
-        if let Some(update) = update {
-            if update.kind == Kind::ImmutableBlockRollForward {
-                // The ImmutableBlockRollForward includes the Mithril TIP Block.
-                // Update the mithril_tip state to the point of it.
-                self.mithril_tip = Some(update.data.point());
-                debug!(mithril_tip=?self.mithril_tip, "Updated followers current Mithril Tip");
-                // We DO NOT update anything else for this kind of update, as its informational and
-                // does not advance the state of the follower to a new block.
-                // It is still a valid update, and so return true, but don't update more state.
-                return true;
-            }
-            let decoded = update.block_data().decode();
-            self.current = Point::new(decoded.slot().into(), decoded.hash().into());
-            return true;
+    fn update_current(&mut self, update: &ChainUpdate) {
+        if update.kind == Kind::ImmutableBlockRollForward {
+            // The ImmutableBlockRollForward includes the Mithril TIP Block.
+            // Update the mithril_tip state to the point of it.
+            self.mithril_tip = Some(update.data.point());
+            debug!(mithril_tip=?self.mithril_tip, "Updated followers current Mithril Tip");
+            // We DO NOT update anything else for this kind of update, as its informational and
+            // does not advance the state of the follower to a new block.
+            // It is still a valid update, and so return true, but don't update more state.
+            return;
         }
-        false
+        self.previous = self.current.clone();
+        self.current = update.block_data().point();
+        self.fork = update.block_data().fork();
     }
 
     /// This is an unprotected version of `next()` which can ONLY be used within this
@@ -306,10 +295,9 @@ impl ChainFollower {
         }
 
         // Update the current block, so we know which one to get next.
-        if !self.update_current(update.as_ref()) {
-            return None;
+        if let Some(update) = &update {
+            self.update_current(update);
         }
-
         update
     }
 
@@ -444,19 +432,6 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_chain_follower_update_current_none() {
-        let chain = Network::Mainnet;
-        let start = Point::new(100u64.into(), [0; 32].into());
-        let end = Point::fuzzy(999u64.into());
-
-        let mut follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
-
-        let result = follower.update_current(None);
-
-        assert!(!result);
-    }
-
-    #[tokio::test]
     async fn test_chain_follower_update_current() {
         let chain = Network::Mainnet;
         let start = Point::new(100u64.into(), [0; 32].into());
@@ -467,9 +442,8 @@ mod tests {
         let block_data = mock_block();
         let update = ChainUpdate::new(chain_update::Kind::Block, false, block_data);
 
-        let result = follower.update_current(Some(&update.clone()));
+        follower.update_current(&update);
 
-        assert!(result);
         assert_eq!(follower.current, update.block_data().point());
     }
 }
