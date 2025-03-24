@@ -2,7 +2,7 @@
 
 use std::{
     fmt::Debug,
-    path::Path,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
@@ -29,6 +29,8 @@ struct MithrilSnapshotIteratorInner {
     start: Point,
     /// Previous iteration point.
     previous: Point,
+    /// Mithrill snapshot directory path
+    path: PathBuf,
     /// Inner iterator.
     inner: ImmutableBlockIterator,
 }
@@ -70,6 +72,17 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
 }
 
 impl MithrilSnapshotIterator {
+    /// Returns `true` if the `MithrilSnapshotIterator` could read data without any issues
+    /// (underlying mithrill snapshot directory exists)
+    pub(crate) fn is_valid(&self) -> bool {
+        #[allow(clippy::expect_used)]
+        let iter = self
+            .inner
+            .lock()
+            .expect("Safe here because the lock can't be poisoned");
+        iter.path.exists()
+    }
+
     /// Try and probe to establish the iterator from the desired point.
     async fn try_fuzzy_iterator(
         chain: Network, path: &Path, from: &Point, search_interval: u64,
@@ -127,6 +140,7 @@ impl MithrilSnapshotIterator {
                 chain,
                 start: this,
                 previous: previous?,
+                path: path.to_path_buf(),
                 inner: iterator,
             })),
         })
@@ -185,6 +199,7 @@ impl MithrilSnapshotIterator {
                 chain,
                 start: from.clone(),
                 previous,
+                path: path.to_path_buf(),
                 inner: iterator,
             })),
         })
@@ -196,8 +211,10 @@ impl MithrilSnapshotIterator {
         let inner = self.inner.clone();
 
         let res = task::spawn_blocking(move || {
-            #[allow(clippy::unwrap_used)] // Unwrap is safe here because the lock can't be poisoned.
-            let mut inner_iterator = inner.lock().unwrap();
+            #[allow(clippy::expect_used)]
+            let mut inner_iterator = inner
+                .lock()
+                .expect("Safe here because the lock can't be poisoned");
             inner_iterator.next()
         })
         .await;

@@ -3,7 +3,7 @@
 use cardano_blockchain_types::{Fork, MultiEraBlock, Network, Point};
 use pallas::network::miniprotocols::txmonitor::{TxBody, TxId};
 use tokio::sync::broadcast::{self};
-use tracing::{debug, error};
+use tracing::{debug, error, warn};
 
 use crate::{
     chain_sync::point_at_tip,
@@ -85,53 +85,54 @@ impl ChainFollower {
 
     /// If we can, get the next update from the mithril snapshot.
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
-        let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
+        loop {
+            let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
 
-        // Get previous mithril tip, or set it and return current if a previous does not exist.
-        let previous_mithril_tip = if let Some(tip) = &self.mithril_tip {
-            tip
-        } else {
-            debug!(
-                mithril_tip = ?current_mithril_tip,
-                "Setting Initial Mithril Tip"
-            );
-            self.mithril_tip = Some(current_mithril_tip.clone());
-            &current_mithril_tip
-        };
-
-        // Return an ImmutableBlockRollForward event as soon as we can after one occurs.
-        // This is not an advancement in the followers sequential block iterating state.
-        // BUT it is a necessary status to return to a follower, so it can properly handle
-        // when immutable state advances (if it so requires)
-        if current_mithril_tip != *previous_mithril_tip {
-            debug!(
-                new_tip = ?self.mithril_tip,
-                current_tip = ?current_mithril_tip,
-                "Mithril Tip has changed"
-            );
-            // We have a new mithril tip so report Mithril Tip Roll Forward
-            if let Some(block) = self.snapshot.read_block_at(&current_mithril_tip).await {
-                // Update the snapshot in the follower state to the new snapshot.
-                let update = ChainUpdate::new(
-                    chain_update::Kind::ImmutableBlockRollForward,
-                    false, // Tip is Live chain tip, not Mithril Tip, and this is Mithril Tip.
-                    block,
+            // Get previous mithril tip, or set it and return current if a previous does not exist.
+            let previous_mithril_tip = self.mithril_tip.get_or_insert_with(|| {
+                debug!(
+                    mithril_tip = ?current_mithril_tip,
+                    "Setting Initial Mithril Tip"
                 );
-                return Some(update);
-            }
-            // This can only happen if the snapshot does not contain the tip block.
-            // So its effectively impossible/unreachable.
-            // However, IF it does happen, nothing bad (other than a delay to reporting
-            // immutable roll forward) will occur, so we log this impossible
-            // error, and continue processing.
-            error!(
-                tip = ?self.mithril_tip,
-                current = ?current_mithril_tip,
-                "Mithril Tip Block is not in snapshot. Should not happen."
-            );
-        }
+                current_mithril_tip.clone()
+            });
 
-        if current_mithril_tip > self.current {
+            // Return an ImmutableBlockRollForward event as soon as we can after one occurs.
+            // This is not an advancement in the followers sequential block iterating state.
+            // BUT it is a necessary status to return to a follower, so it can properly handle
+            // when immutable state advances (if it so requires)
+            if current_mithril_tip != *previous_mithril_tip {
+                debug!(
+                    new_tip = ?self.mithril_tip,
+                    current_tip = ?current_mithril_tip,
+                    "Mithril Tip has changed"
+                );
+                // We have a new mithril tip so report Mithril Tip Roll Forward
+                if let Some(block) = self.snapshot.read_block_at(&current_mithril_tip).await {
+                    // Update the snapshot in the follower state to the new snapshot.
+                    let update = ChainUpdate::new(
+                        chain_update::Kind::ImmutableBlockRollForward,
+                        false, // Tip is Live chain tip, not Mithril Tip, and this is Mithril Tip.
+                        block,
+                    );
+                    return Some(update);
+                }
+                // This can only happen if the snapshot does not contain the tip block.
+                // So its effectively impossible/unreachable.
+                // However, IF it does happen, nothing bad (other than a delay to reporting
+                // immutable roll forward) will occur, so we log this impossible
+                // error, and continue processing.
+                error!(
+                    tip = ?self.mithril_tip,
+                    current = ?current_mithril_tip,
+                    "Mithril Tip Block is not in snapshot. Should not happen."
+                );
+            }
+
+            if current_mithril_tip <= self.current {
+                return None;
+            }
+
             if self.mithril_follower.is_none() {
                 self.mithril_follower = self
                     .snapshot
@@ -144,10 +145,18 @@ impl ChainFollower {
                     let update = ChainUpdate::new(chain_update::Kind::Block, false, next);
                     return Some(update);
                 }
-            }
-        }
 
-        None
+                // Verifying ultra rare scenario of race condition on the mithril snapshot data
+                // directory, where the underlying data directory could be no longer accessible
+                if !follower.is_valid() {
+                    // Set the mithril follower to None and restart the loop
+                    warn!("Mithril snapshot data directory race condition, underlying data directory is not accessible anymore");
+                    self.mithril_follower = None;
+                    continue;
+                }
+            }
+            return None;
+        }
     }
 
     /// If we can, get the next update from the live chain.
@@ -235,7 +244,8 @@ impl ChainFollower {
             // It is still a valid update, and so return true, but don't update more state.
             return;
         }
-        self.previous = self.current.clone();
+        // Avoids of doing unnecessary clones.
+        std::mem::swap(&mut self.previous, &mut self.current);
         self.current = update.block_data().point();
         self.fork = update.block_data().fork();
     }
@@ -247,23 +257,20 @@ impl ChainFollower {
     /// This function can NOT return None, but that state is used to help process data.
     ///
     /// This function must not be exposed for general use.
-    #[allow(clippy::unused_async)]
-    pub(crate) async fn unprotected_next(&mut self) -> Option<ChainUpdate> {
-        let mut update;
-
+    async fn unprotected_next(&mut self) -> Option<ChainUpdate> {
         // We will loop here until we can successfully return a new block
         loop {
             // Try and get the next update from the mithril chain, and return it if we are
             // successful.
-            update = self.next_from_mithril().await;
-            if update.is_some() {
-                break;
+            if let Some(update) = self.next_from_mithril().await {
+                self.update_current(&update);
+                return Some(update);
             }
 
             // No update from Mithril Data, so try and get one from the live chain.
-            update = self.next_from_live_chain().await;
-            if update.is_some() {
-                break;
+            if let Some(update) = self.next_from_live_chain().await {
+                self.update_current(&update);
+                return Some(update);
             }
 
             // IF we can't get a new block directly from the mithril data, or the live chain, then
@@ -293,12 +300,6 @@ impl ChainFollower {
                 },
             }
         }
-
-        // Update the current block, so we know which one to get next.
-        if let Some(update) = &update {
-            self.update_current(update);
-        }
-        update
     }
 
     /// Get the next block from the follower.
