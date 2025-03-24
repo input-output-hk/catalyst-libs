@@ -11,7 +11,6 @@ async fn test_valid_proposal_doc() {
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
-        "alg": Algorithm::EdDSA.to_string(),
         "content-type": ContentType::Json.to_string(),
         "content-encoding": ContentEncoding::Brotli.to_string(),
         "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
@@ -38,7 +37,6 @@ async fn test_valid_proposal_doc_with_empty_provider() {
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
-        "alg": Algorithm::EdDSA.to_string(),
         "content-type": ContentType::Json.to_string(),
         "content-encoding": ContentEncoding::Brotli.to_string(),
         "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
@@ -61,7 +59,6 @@ async fn test_valid_proposal_doc_with_empty_provider() {
 async fn test_invalid_proposal_doc() {
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
-        "alg": Algorithm::EdDSA.to_string(),
         "content-type": ContentType::Json.to_string(),
         "content-encoding": ContentEncoding::Brotli.to_string(),
         "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
