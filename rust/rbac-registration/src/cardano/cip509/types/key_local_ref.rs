@@ -7,7 +7,7 @@ use strum_macros::FromRepr;
 use crate::cardano::cip509::rbac::Cip509RbacMetadataInt;
 
 /// Local key reference.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct KeyLocalRef {
     /// Local reference.
     pub local_ref: LocalRefInt,
@@ -16,7 +16,7 @@ pub struct KeyLocalRef {
 }
 
 /// Enum of local reference with its associated unsigned integer value.
-#[derive(FromRepr, Debug, PartialEq, Clone, Eq, Hash)]
+#[derive(FromRepr, Debug, PartialEq, Clone, Copy, Eq, Hash)]
 #[repr(u8)]
 pub enum LocalRefInt {
     /// x509 certificates.
