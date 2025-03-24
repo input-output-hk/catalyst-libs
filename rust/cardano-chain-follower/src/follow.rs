@@ -443,8 +443,32 @@ mod tests {
         let block_data = mock_block();
         let update = ChainUpdate::new(chain_update::Kind::Block, false, block_data);
 
+        let old_current = follower.current.clone();
         follower.update_current(&update);
 
         assert_eq!(follower.current, update.block_data().point());
+        assert_eq!(follower.previous, old_current);
+        assert_eq!(follower.fork, update.block_data().fork());
+    }
+
+    #[tokio::test]
+    async fn test_chain_follower_update_current_immutable_roll_forward() {
+        let chain = Network::Mainnet;
+        let start = Point::new(100u64.into(), [0; 32].into());
+        let end = Point::fuzzy(999u64.into());
+
+        let mut follower = ChainFollower::new(chain, start.clone(), end.clone()).await;
+
+        let block_data = mock_block();
+        let update = ChainUpdate::new(
+            chain_update::Kind::ImmutableBlockRollForward,
+            false,
+            block_data,
+        );
+
+        let old_current = follower.current.clone();
+        follower.update_current(&update);
+
+        assert_eq!(follower.current, old_current);
     }
 }
