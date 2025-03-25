@@ -29,8 +29,6 @@ struct MithrilSnapshotIteratorInner {
     start: Point,
     /// Previous iteration point.
     previous: Point,
-    /// Mithrill snapshot directory path
-    path: PathBuf,
     /// Inner iterator.
     inner: ImmutableBlockIterator,
 }
@@ -48,6 +46,8 @@ impl Debug for MithrilSnapshotIteratorInner {
 /// Wraps the iterator type returned by Pallas.
 #[derive(Debug)]
 pub(crate) struct MithrilSnapshotIterator {
+    /// Mithrill snapshot directory path
+    path: PathBuf,
     /// Inner Mutable Synchronous Iterator State
     inner: Arc<Mutex<MithrilSnapshotIteratorInner>>,
 }
@@ -75,12 +75,7 @@ impl MithrilSnapshotIterator {
     /// Returns `true` if the `MithrilSnapshotIterator` could read data without any issues
     /// (underlying mithrill snapshot directory exists)
     pub(crate) fn is_valid(&self) -> bool {
-        #[allow(clippy::expect_used)]
-        let iter = self
-            .inner
-            .lock()
-            .expect("Safe here because the lock can't be poisoned");
-        iter.path.exists()
+        self.path.exists()
     }
 
     /// Try and probe to establish the iterator from the desired point.
@@ -136,11 +131,11 @@ impl MithrilSnapshotIterator {
         };
 
         Some(MithrilSnapshotIterator {
+            path: path.to_path_buf(),
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
                 chain,
                 start: this,
                 previous: previous?,
-                path: path.to_path_buf(),
                 inner: iterator,
             })),
         })
@@ -195,11 +190,11 @@ impl MithrilSnapshotIterator {
         let iterator = make_mithril_iterator(path, from, chain).await?;
 
         Ok(MithrilSnapshotIterator {
+            path: path.to_path_buf(),
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
                 chain,
                 start: from.clone(),
                 previous,
-                path: path.to_path_buf(),
                 inner: iterator,
             })),
         })

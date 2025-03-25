@@ -85,8 +85,8 @@ impl ChainFollower {
 
     /// If we can, get the next update from the mithril snapshot.
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
-        // This Loop allows us to re-try if we detect that the mithril snapshot has changed while we were trying to read a block from it.
-        // Typically this function never loops.
+        // This Loop allows us to re-try if we detect that the mithril snapshot has changed while
+        // we were trying to read a block from it. Typically this function never loops.
         loop {
             let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
 
@@ -132,7 +132,7 @@ impl ChainFollower {
             }
 
             if current_mithril_tip <= self.current {
-                return None;
+                break;
             }
 
             if self.mithril_follower.is_none() {
@@ -150,15 +150,17 @@ impl ChainFollower {
 
                 // Verifying ultra rare scenario of race condition on the mithril snapshot data
                 // directory, where the underlying data directory could be no longer accessible
-                if !follower.is_valid() {
-                    // Set the mithril follower to None and restart the loop
-                    warn!("Detected Mithril snapshot data directory race condition, underlying data directory is not accessible anymore: Correcting...");
-                    self.mithril_follower = None;
-                    continue;
+                if follower.is_valid() {
+                    break;
                 }
+                // Set the mithril follower to None and restart the loop
+                warn!("Detected Mithril snapshot data directory race condition, underlying data directory is not accessible anymore: Correcting...");
+                self.mithril_follower = None;
+            } else {
+                break;
             }
-            return None;
         }
+        None
     }
 
     /// If we can, get the next update from the live chain.
@@ -241,9 +243,10 @@ impl ChainFollower {
             // Update the mithril_tip state to the point of it.
             self.mithril_tip = Some(update.data.point());
             debug!(mithril_tip=?self.mithril_tip, "Updated followers current Mithril Tip");
+            // Reset mithril snapshot follower, because underlying data directory was renamed
+            self.mithril_follower = None;
             // We DO NOT update anything else for this kind of update, as its informational and
             // does not advance the state of the follower to a new block.
-            // It is still a valid update, and so return true, but don't update more state.
             return;
         }
         // Avoids of doing unnecessary clones.
