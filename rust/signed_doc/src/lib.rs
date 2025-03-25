@@ -22,9 +22,7 @@ pub use catalyst_types::{
 };
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
-pub use metadata::{
-    Algorithm, ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section,
-};
+pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{IdUri, Signatures};
 
