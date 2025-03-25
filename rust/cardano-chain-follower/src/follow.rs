@@ -85,6 +85,8 @@ impl ChainFollower {
 
     /// If we can, get the next update from the mithril snapshot.
     async fn next_from_mithril(&mut self) -> Option<ChainUpdate> {
+        // This Loop allows us to re-try if we detect that the mithril snapshot has changed while we were trying to read a block from it.
+        // Typically this function never loops.
         loop {
             let current_mithril_tip = latest_mithril_snapshot_id(self.chain).tip();
 
