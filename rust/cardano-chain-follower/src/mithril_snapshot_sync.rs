@@ -11,7 +11,6 @@ use cardano_blockchain_types::{MultiEraBlock, Network};
 use chrono::{TimeDelta, Utc};
 use dashmap::DashSet;
 use humantime::format_duration;
-use logcall::logcall;
 use mithril_client::{Client, MessageBuilder, MithrilCertificate, Snapshot, SnapshotListItem};
 use tokio::{
     fs::remove_dir_all,
@@ -19,7 +18,6 @@ use tokio::{
     time::{sleep, Duration},
 };
 use tracing::{debug, error};
-use tracing_log::log;
 
 use crate::{
     error::{Error, Result},
@@ -251,7 +249,7 @@ pub(crate) const MITHRIL_IMMUTABLE_SUB_DIRECTORY: &str = "immutable";
 /// This function returns the tip block point, and the block point immediately proceeding
 /// it in a tuple.
 #[allow(clippy::indexing_slicing)]
-#[logcall(ok = "debug", err = "error")]
+//#[logcall(ok = "debug", err = "error")]
 pub(crate) async fn get_mithril_tip(chain: Network, path: &Path) -> Result<MultiEraBlock> {
     let mut path = path.to_path_buf();
     path.push(MITHRIL_IMMUTABLE_SUB_DIRECTORY);
