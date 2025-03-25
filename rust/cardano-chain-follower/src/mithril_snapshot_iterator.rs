@@ -46,7 +46,7 @@ impl Debug for MithrilSnapshotIteratorInner {
 /// Wraps the iterator type returned by Pallas.
 #[derive(Debug)]
 pub(crate) struct MithrilSnapshotIterator {
-    /// Mithrill snapshot directory path
+    /// Mithril snapshot directory path
     path: PathBuf,
     /// Inner Mutable Synchronous Iterator State
     inner: Arc<Mutex<MithrilSnapshotIteratorInner>>,
@@ -73,7 +73,7 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
 
 impl MithrilSnapshotIterator {
     /// Returns `true` if the `MithrilSnapshotIterator` could read data without any issues
-    /// (underlying mithrill snapshot directory exists)
+    /// (underlying mithril snapshot directory exists)
     pub(crate) fn is_valid(&self) -> bool {
         self.path.exists()
     }
