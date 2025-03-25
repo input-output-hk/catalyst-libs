@@ -150,7 +150,7 @@ impl ChainFollower {
                 // directory, where the underlying data directory could be no longer accessible
                 if !follower.is_valid() {
                     // Set the mithril follower to None and restart the loop
-                    warn!("Mithril snapshot data directory race condition, underlying data directory is not accessible anymore");
+                    warn!("Detected Mithril snapshot data directory race condition, underlying data directory is not accessible anymore: Correcting...");
                     self.mithril_follower = None;
                     continue;
                 }
