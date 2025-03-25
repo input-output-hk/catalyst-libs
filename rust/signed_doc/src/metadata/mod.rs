@@ -1,7 +1,6 @@
 //! Catalyst Signed Document Metadata.
 use std::fmt::{Display, Formatter};
 
-mod algorithm;
 mod content_encoding;
 mod content_type;
 mod document_ref;
@@ -9,7 +8,6 @@ mod extra_fields;
 mod section;
 pub(crate) mod utils;
 
-pub use algorithm::Algorithm;
 use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{UuidV4, UuidV7},
@@ -42,8 +40,6 @@ pub struct Metadata(InnerMetadata);
 /// An actual representation of all metadata fields.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, Default)]
 pub(crate) struct InnerMetadata {
-    /// Cryptographic Algorithm
-    alg: Option<Algorithm>,
     /// Document Type `UUIDv4`.
     #[serde(rename = "type")]
     doc_type: Option<UuidV4>,
@@ -63,14 +59,6 @@ pub(crate) struct InnerMetadata {
 }
 
 impl Metadata {
-    /// Return Document Cryptographic Algorithm
-    ///
-    /// # Errors
-    /// - Missing 'alg' field.
-    pub fn algorithm(&self) -> anyhow::Result<Algorithm> {
-        self.0.alg.ok_or(anyhow::anyhow!("Missing 'alg' field"))
-    }
-
     /// Return Document Type `UUIDv4`.
     ///
     /// # Errors
@@ -121,9 +109,6 @@ impl Metadata {
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     pub(crate) fn from_metadata_fields(metadata: InnerMetadata, report: &ProblemReport) -> Self {
-        if metadata.alg.is_none() {
-            report.missing_field("alg", "Missing alg field in COSE protected header");
-        }
         if metadata.doc_type.is_none() {
             report.missing_field("type", "Missing type field in COSE protected header");
         }
@@ -180,20 +165,6 @@ impl InnerMetadata {
             extra,
             ..Self::default()
         };
-
-        if let Some(coset::RegisteredLabelWithPrivate::Assigned(alg)) = protected.header.alg {
-            match Algorithm::try_from(alg) {
-                Ok(alg) => metadata.alg = Some(alg),
-                Err(e) => {
-                    report.conversion_error(
-                        "COSE protected header algorithm",
-                        &format!("{alg:?}"),
-                        &format!("Expected Algorithm: {e}"),
-                        &format!("{COSE_DECODING_CONTEXT}, Algorithm"),
-                    );
-                },
-            }
-        }
 
         if let Some(value) = protected.header.content_type.as_ref() {
             match ContentType::try_from(value) {
@@ -260,7 +231,6 @@ impl Display for Metadata {
         writeln!(f, "  type: {:?},", self.0.doc_type)?;
         writeln!(f, "  id: {:?},", self.0.id)?;
         writeln!(f, "  ver: {:?},", self.0.ver)?;
-        writeln!(f, "  alg: {:?},", self.0.alg)?;
         writeln!(f, "  content_type: {:?}", self.0.content_type)?;
         writeln!(f, "  content_encoding: {:?}", self.0.content_encoding)?;
         writeln!(f, "  additional_fields: {:?},", self.0.extra)?;
@@ -273,7 +243,6 @@ impl TryFrom<&Metadata> for coset::Header {
 
     fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
         let mut builder = coset::HeaderBuilder::new()
-            .algorithm(meta.algorithm()?.into())
             .content_format(CoapContentFormat::from(meta.content_type()?));
 
         if let Some(content_encoding) = meta.content_encoding() {
