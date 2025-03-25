@@ -11,8 +11,9 @@ use tracing::{error, warn};
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
-    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx, RoleData,
-    RoleDataRecord, RoleNumber, SimplePublicKeyType, X509DerCert,
+    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, Cip509RbacMetadata, KeyData, KeyLocalRef,
+    LocalRefInt, PaymentHistory, PointData, PointTxnIdx, RoleData, RoleDataRecord, RoleNumber,
+    SimplePublicKeyType, X509DerCert,
 };
 
 /// Registration chains.
@@ -190,25 +191,37 @@ impl RegistrationChainInner {
         };
 
         let purpose = vec![purpose];
-        let certificate_uris = registration.certificate_uris;
+        let certificate_uris = registration.certificate_uris.clone();
         let mut x509_certs = HashMap::new();
-        update_x509_certs(&mut x509_certs, registration.x509_certs, &point_tx_idx);
+        update_x509_certs(
+            &mut x509_certs,
+            registration.x509_certs.clone(),
+            &point_tx_idx,
+        );
         let mut c509_certs = HashMap::new();
-        update_c509_certs(&mut c509_certs, registration.c509_certs, &point_tx_idx);
+        update_c509_certs(
+            &mut c509_certs,
+            registration.c509_certs.clone(),
+            &point_tx_idx,
+        );
         let mut simple_keys = HashMap::new();
-        update_public_keys(&mut simple_keys, registration.pub_keys, &point_tx_idx);
-        let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
+        update_public_keys(
+            &mut simple_keys,
+            registration.pub_keys.clone(),
+            &point_tx_idx,
+        );
+        let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
 
         // Role data
         let mut role_data_history = HashMap::new();
         let mut role_data_record = HashMap::new();
 
         update_role_data(
+            &registration,
             &mut role_data_history,
             &mut role_data_record,
-            registration.role_data,
             &point_tx_idx,
-        );
+        )?;
 
         Ok(Self {
             catalyst_id,
@@ -270,30 +283,30 @@ impl RegistrationChainInner {
         new_inner.payment_history.extend(payment_history);
         update_x509_certs(
             &mut new_inner.x509_certs,
-            registration.x509_certs,
+            registration.x509_certs.clone(),
             &point_tx_idx,
         );
         update_c509_certs(
             &mut new_inner.c509_certs,
-            registration.c509_certs,
+            registration.c509_certs.clone(),
             &point_tx_idx,
         );
         update_public_keys(
             &mut new_inner.simple_keys,
-            registration.pub_keys,
+            registration.pub_keys.clone(),
             &point_tx_idx,
         );
 
-        let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
+        let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
         // Revocation list should be appended
         new_inner.revocations.extend(revocations);
 
         update_role_data(
+            &registration,
             &mut new_inner.role_data_history,
             &mut new_inner.role_data_record,
-            registration.role_data,
             &point_tx_idx,
-        );
+        )?;
 
         Ok(new_inner)
     }
@@ -425,45 +438,153 @@ fn revocations_list(
 
 /// Update the role data related fields in the registration chain.
 fn update_role_data(
+    registration: &Cip509RbacMetadata,
     role_data_history: &mut HashMap<RoleNumber, Vec<PointData<RoleData>>>,
-    role_data_record: &mut HashMap<RoleNumber, RoleDataRecord>,
-    role_set: HashMap<RoleNumber, RoleData>, point_tx_idx: &PointTxnIdx,
-) {
-    for (number, data) in role_set {
+    role_data_record: &mut HashMap<RoleNumber, RoleDataRecord>, point_tx_idx: &PointTxnIdx,
+) -> anyhow::Result<()> {
+    for (number, data) in registration.clone().role_data {
         // Update role data history, put the whole role data
         role_data_history
             .entry(number)
             .or_default()
             .push(PointData::new(point_tx_idx.clone(), data.clone()));
 
-        role_data_record
+        // Update role data record
+        let record = role_data_record
             .entry(number)
             .or_insert(RoleDataRecord::new());
 
-        // Update role data record
-        role_data_record.entry(number).and_modify(|record| {
-            // Add signing key if it exists
-            if let Some(signing_key) = data.signing_key() {
-                record.add_signing_key(signing_key.clone(), point_tx_idx);
-            }
+        // Add signing key
+        if let Some(signing_key) = data.signing_key() {
+            update_signing_key(signing_key, record, point_tx_idx, registration)?;
+        }
 
-            // Add encryption key if it exists
-            if let Some(encryption_key) = data.encryption_key() {
-                record.add_encryption_key(encryption_key.clone(), point_tx_idx);
-            }
+        // Add encryption key
+        if let Some(encryption_key) = data.encryption_key() {
+            update_encryption_key(encryption_key, record, point_tx_idx, registration)?;
+        }
 
-            // Add payment key
-            if let Some(payment_key) = data.payment_key() {
-                record.add_payment_key(PointData::new(point_tx_idx.clone(), payment_key.clone()));
-            }
+        // Add payment key
+        if let Some(payment_key) = data.payment_key() {
+            record.add_payment_key(PointData::new(point_tx_idx.clone(), payment_key.clone()));
+        }
 
-            // Add extended data
-            record.add_extended_data(PointData::new(
-                point_tx_idx.clone(),
-                data.extended_data().clone(),
-            ));
-        });
+        // Add extended data
+        record.add_extended_data(PointData::new(
+            point_tx_idx.clone(),
+            data.extended_data().clone(),
+        ));
     }
+    Ok(())
+}
+
+/// Update signing key.
+fn update_signing_key(
+    signing_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
+    registration: &Cip509RbacMetadata,
+) -> anyhow::Result<()> {
+    let index = usize::try_from(signing_key.key_offset)
+        .map_err(|e| anyhow::anyhow!("Failed to convert signing key key_offset to usize: {}", e))?;
+
+    match signing_key.local_ref {
+        LocalRefInt::X509Certs => {
+            if let Some(cert) = registration.x509_certs.get(index) {
+                match cert {
+                    X509DerCert::Deleted => {
+                        record.add_signing_key(KeyData::X509(None), point_tx_idx);
+                    },
+                    X509DerCert::X509Cert(c) => {
+                        record.add_signing_key(KeyData::X509(Some(c.clone())), point_tx_idx);
+                    },
+                    X509DerCert::Undefined => {},
+                }
+            }
+        },
+        LocalRefInt::C509Certs => {
+            if let Some(cert) = registration.c509_certs.get(index) {
+                match cert {
+                    C509Cert::Deleted => {
+                        record.add_signing_key(KeyData::C509(None), point_tx_idx);
+                    },
+                    C509Cert::C509Certificate(c) => {
+                        record.add_signing_key(KeyData::C509(Some(c.clone())), point_tx_idx);
+                    },
+                    C509Cert::Undefined | C509Cert::C509CertInMetadatumReference(_) => {},
+                }
+            }
+        },
+        LocalRefInt::PubKeys => {
+            if let Some(key) = registration.pub_keys.get(index) {
+                match key {
+                    SimplePublicKeyType::Deleted => {
+                        record.add_signing_key(KeyData::PublicKey(None), point_tx_idx);
+                    },
+                    SimplePublicKeyType::Ed25519(k) => {
+                        record.add_signing_key(KeyData::PublicKey(Some(*k)), point_tx_idx);
+                    },
+                    SimplePublicKeyType::Undefined => {},
+                }
+            }
+        },
+    }
+    Ok(())
+}
+
+/// Update encryption key.
+fn update_encryption_key(
+    encryption_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
+    registration: &Cip509RbacMetadata,
+) -> anyhow::Result<()> {
+    let index = usize::try_from(encryption_key.key_offset).map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to convert encryption key key_offset to usize: {}",
+            e
+        )
+    })?;
+
+    match encryption_key.local_ref {
+        LocalRefInt::X509Certs => {
+            if let Some(cert) = registration.x509_certs.get(index) {
+                match cert {
+                    X509DerCert::Deleted => {
+                        record.add_encryption_key(KeyData::X509(None), point_tx_idx);
+                    },
+                    X509DerCert::X509Cert(c) => {
+                        record.add_encryption_key(KeyData::X509(Some(c.clone())), point_tx_idx);
+                    },
+                    X509DerCert::Undefined => {},
+                }
+            }
+        },
+        LocalRefInt::C509Certs => {
+            if let Some(cert) = registration.c509_certs.get(index) {
+                match cert {
+                    C509Cert::Deleted => {
+                        record.add_encryption_key(KeyData::C509(None), point_tx_idx);
+                    },
+                    C509Cert::C509Certificate(c) => {
+                        record.add_encryption_key(KeyData::C509(Some(c.clone())), point_tx_idx);
+                    },
+                    C509Cert::Undefined | C509Cert::C509CertInMetadatumReference(_) => {},
+                }
+            }
+        },
+        LocalRefInt::PubKeys => {
+            if let Some(key) = registration.pub_keys.get(index) {
+                match key {
+                    SimplePublicKeyType::Deleted => {
+                        record.add_encryption_key(KeyData::PublicKey(None), point_tx_idx);
+                    },
+                    SimplePublicKeyType::Ed25519(k) => {
+                        record.add_encryption_key(KeyData::PublicKey(Some(*k)), point_tx_idx);
+                    },
+                    SimplePublicKeyType::Undefined => {},
+                }
+            }
+        },
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]
