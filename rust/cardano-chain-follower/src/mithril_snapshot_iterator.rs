@@ -2,7 +2,7 @@
 
 use std::{
     fmt::Debug,
-    path::Path,
+    path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
 
@@ -46,6 +46,8 @@ impl Debug for MithrilSnapshotIteratorInner {
 /// Wraps the iterator type returned by Pallas.
 #[derive(Debug)]
 pub(crate) struct MithrilSnapshotIterator {
+    /// Mithril snapshot directory path
+    path: PathBuf,
     /// Inner Mutable Synchronous Iterator State
     inner: Arc<Mutex<MithrilSnapshotIteratorInner>>,
 }
@@ -70,6 +72,12 @@ pub(crate) fn probe_point(point: &Point, distance: u64) -> Point {
 }
 
 impl MithrilSnapshotIterator {
+    /// Returns `true` if the `MithrilSnapshotIterator` could read data without any issues
+    /// (underlying mithril snapshot directory exists)
+    pub(crate) fn is_valid(&self) -> bool {
+        self.path.exists()
+    }
+
     /// Try and probe to establish the iterator from the desired point.
     async fn try_fuzzy_iterator(
         chain: Network, path: &Path, from: &Point, search_interval: u64,
@@ -123,6 +131,7 @@ impl MithrilSnapshotIterator {
         };
 
         Some(MithrilSnapshotIterator {
+            path: path.to_path_buf(),
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
                 chain,
                 start: this,
@@ -181,6 +190,7 @@ impl MithrilSnapshotIterator {
         let iterator = make_mithril_iterator(path, from, chain).await?;
 
         Ok(MithrilSnapshotIterator {
+            path: path.to_path_buf(),
             inner: Arc::new(Mutex::new(MithrilSnapshotIteratorInner {
                 chain,
                 start: from.clone(),
@@ -196,8 +206,10 @@ impl MithrilSnapshotIterator {
         let inner = self.inner.clone();
 
         let res = task::spawn_blocking(move || {
-            #[allow(clippy::unwrap_used)] // Unwrap is safe here because the lock can't be poisoned.
-            let mut inner_iterator = inner.lock().unwrap();
+            #[allow(clippy::expect_used)]
+            let mut inner_iterator = inner
+                .lock()
+                .expect("Safe here because the lock can't be poisoned");
             inner_iterator.next()
         })
         .await;

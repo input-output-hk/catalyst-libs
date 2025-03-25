@@ -183,6 +183,18 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     while let Some(chain_update) = follower.next().await {
         updates = updates.saturating_add(1);
 
+        if chain_update.kind == Kind::ImmutableBlockRollForward {
+            let immutable_tip = u64::from(chain_update.data.point().slot_or_default());
+            let immutable = chain_update.immutable();
+            info!(
+                updates = updates,
+                immutable_tip = immutable_tip,
+                immutable = immutable,
+                "Chain Immutable Roll Forward Detected."
+            );
+            continue; // Nothing else to do, so get next sequential block.
+        }
+
         if chain_update.tip {
             reached_tip = true;
         }
