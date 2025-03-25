@@ -221,7 +221,7 @@ impl RegistrationChainInner {
             &mut role_data_history,
             &mut role_data_record,
             &point_tx_idx,
-        )?;
+        );
 
         Ok(Self {
             catalyst_id,
@@ -306,7 +306,7 @@ impl RegistrationChainInner {
             &mut new_inner.role_data_history,
             &mut new_inner.role_data_record,
             &point_tx_idx,
-        )?;
+        );
 
         Ok(new_inner)
     }
@@ -441,7 +441,7 @@ fn update_role_data(
     registration: &Cip509RbacMetadata,
     role_data_history: &mut HashMap<RoleNumber, Vec<PointData<RoleData>>>,
     role_data_record: &mut HashMap<RoleNumber, RoleDataRecord>, point_tx_idx: &PointTxnIdx,
-) -> anyhow::Result<()> {
+) {
     for (number, data) in registration.clone().role_data {
         // Update role data history, put the whole role data
         role_data_history
@@ -456,12 +456,12 @@ fn update_role_data(
 
         // Add signing key
         if let Some(signing_key) = data.signing_key() {
-            update_signing_key(signing_key, record, point_tx_idx, registration)?;
+            update_signing_key(signing_key, record, point_tx_idx, registration);
         }
 
         // Add encryption key
         if let Some(encryption_key) = data.encryption_key() {
-            update_encryption_key(encryption_key, record, point_tx_idx, registration)?;
+            update_encryption_key(encryption_key, record, point_tx_idx, registration);
         }
 
         // Add payment key
@@ -475,16 +475,14 @@ fn update_role_data(
             data.extended_data().clone(),
         ));
     }
-    Ok(())
 }
 
 /// Update signing key.
 fn update_signing_key(
     signing_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
     registration: &Cip509RbacMetadata,
-) -> anyhow::Result<()> {
-    let index = usize::try_from(signing_key.key_offset)
-        .map_err(|e| anyhow::anyhow!("Failed to convert signing key key_offset to usize: {}", e))?;
+) {
+    let index = signing_key.key_offset;
 
     match signing_key.local_ref {
         LocalRefInt::X509Certs => {
@@ -527,20 +525,14 @@ fn update_signing_key(
             }
         },
     }
-    Ok(())
 }
 
 /// Update encryption key.
 fn update_encryption_key(
     encryption_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
     registration: &Cip509RbacMetadata,
-) -> anyhow::Result<()> {
-    let index = usize::try_from(encryption_key.key_offset).map_err(|e| {
-        anyhow::anyhow!(
-            "Failed to convert encryption key key_offset to usize: {}",
-            e
-        )
-    })?;
+) {
+    let index = encryption_key.key_offset;
 
     match encryption_key.local_ref {
         LocalRefInt::X509Certs => {
@@ -583,8 +575,6 @@ fn update_encryption_key(
             }
         },
     }
-
-    Ok(())
 }
 
 #[cfg(test)]
