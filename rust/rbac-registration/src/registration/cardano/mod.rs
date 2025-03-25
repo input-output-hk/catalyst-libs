@@ -432,7 +432,7 @@ fn update_role_data(
                 .role_data
                 .get(&number)
                 .and_then(|pd| pd.data().signing_key())
-                .cloned();
+                .copied();
             data.set_signing_key(signing_key);
         }
 
@@ -442,7 +442,7 @@ fn update_role_data(
                 .role_data
                 .get(&number)
                 .and_then(|pd| pd.data().encryption_key())
-                .cloned();
+                .copied();
             data.set_encryption_key(encryption_key);
         }
 

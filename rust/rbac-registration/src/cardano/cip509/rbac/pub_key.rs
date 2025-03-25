@@ -25,7 +25,10 @@ impl Decode<'_, ProblemReport> for SimplePublicKeyType {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "SimplePublicKeyType")?;
                 match tag {
-                    t if t == KeyTag::Deleted.tag() => Ok(Self::Deleted),
+                    t if t == KeyTag::Deleted.tag() => {
+                        d.undefined()?;
+                        Ok(Self::Deleted)
+                    },
                     t if t == KeyTag::Ed25519.tag() => {
                         let bytes = decode_bytes(d, "Ed25519 SimplePublicKeyType")?;
                         let mut ed25519 = [0u8; 32];
@@ -42,7 +45,11 @@ impl Decode<'_, ProblemReport> for SimplePublicKeyType {
                             )))
                         }
                     },
-                    _ => Err(decode::Error::message("Unknown tag for Self")),
+                    _ => {
+                        Err(decode::Error::message(
+                            "Unknown tag for SimplePublicKeyType",
+                        ))
+                    },
                 }
             },
             minicbor::data::Type::Undefined => {
