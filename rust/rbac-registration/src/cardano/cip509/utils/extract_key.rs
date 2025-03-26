@@ -8,9 +8,9 @@ use oid_registry::{Oid, OID_SIG_ED25519};
 use x509_cert::Certificate as X509Certificate;
 
 /// Returns `VerifyingKey` from the given X509 certificate.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns an error if the signature algorithm is not supported and
 /// the public key cannot be extracted.
 pub fn x509_key(cert: &X509Certificate) -> anyhow::Result<VerifyingKey> {
@@ -34,9 +34,9 @@ pub fn x509_key(cert: &X509Certificate) -> anyhow::Result<VerifyingKey> {
 }
 
 /// Returns `VerifyingKey` from the given C509 certificate.
-/// 
+///
 /// # Errors
-/// 
+///
 /// Returns an error if the signature algorithm is not supported and
 /// the public key cannot be extracted.
 pub fn c509_key(cert: &C509) -> anyhow::Result<VerifyingKey> {

@@ -10,8 +10,7 @@ use x509_cert::Certificate as X509;
 use super::{PointData, PointTxnIdx};
 use crate::cardano::cip509::extract_key;
 
-/// Actual data of key local ref. Containing X509, C509m and public key.
-/// None if the certificate or public key is deleted.
+/// Actual data of key local ref. Containing X509, C509 and public key.
 #[derive(Debug, Clone)]
 pub enum CertOrPk {
     /// X509 certificate, None if deleted.
@@ -23,7 +22,7 @@ pub enum CertOrPk {
 }
 
 impl CertOrPk {
-    /// Extract public kry from the given certificate or public key.
+    /// Extract public key from the given certificate or public key.
     pub(crate) fn extract_pk(&self) -> Option<VerifyingKey> {
         match self {
             CertOrPk::X509(Some(x509)) => extract_key::x509_key(x509).ok(),
@@ -39,10 +38,10 @@ impl CertOrPk {
 /// used. Eg. Accessing key rotation 0 can be done by `signing_keys.first()`
 #[derive(Debug, Clone)]
 pub struct RoleDataRecord {
-    /// List of signing key and its associated point + tx index .
+    /// List of signing key data and its associated point + tx index .
     /// The vector index is used to indicate the key rotation.
     signing_keys: Vec<PointData<CertOrPk>>,
-    /// List of encryption key and its associated point + tx index
+    /// List of encryption key data and its associated point + tx index
     /// The vector index is used to indicate the key rotation.
     encryption_keys: Vec<PointData<CertOrPk>>,
     /// List of payment key and its associated point + tx index.
@@ -62,14 +61,14 @@ impl RoleDataRecord {
         }
     }
 
-    /// Add a signing key to the signing key list. The vector index is used to indicate
-    /// the key rotation.
+    /// Add a signing key data to the signing key list. The vector index is used to
+    /// indicate the key rotation.
     pub(crate) fn add_signing_key(&mut self, data: CertOrPk, point_tx_idx: &PointTxnIdx) {
         self.signing_keys
             .push(PointData::new(point_tx_idx.clone(), data));
     }
 
-    /// Add an encryption key to the encryption key list. The vector index is used to
+    /// Add an encryption key data to the encryption key list. The vector index is used to
     /// indicate the key rotation.
     pub(crate) fn add_encryption_key(&mut self, data: CertOrPk, point_tx_idx: &PointTxnIdx) {
         self.encryption_keys

@@ -120,13 +120,13 @@ impl RegistrationChain {
     pub fn role_data_history(&self) -> &HashMap<RoleNumber, Vec<PointData<RoleData>>> {
         &self.inner.role_data_history
     }
-    
+
     /// Get the map of tracked payment keys to its history.
     #[must_use]
     pub fn tracking_payment_history(&self) -> &PaymentHistory {
         &self.inner.payment_history
     }
-    
+
     /// Get the latest signing public key for a role.
     /// Returns the public key and the rotation,`None` if not found.
     #[must_use]
@@ -136,12 +136,12 @@ impl RegistrationChain {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
                 key.data()
-                .extract_pk()
-                .map(|pk| (pk, rdr.signing_keys().len().saturating_sub(1)))
+                    .extract_pk()
+                    .map(|pk| (pk, rdr.signing_keys().len().saturating_sub(1)))
             })
         })
     }
-    
+
     /// Get the latest encryption public key for a role.
     /// Returns the public key and the rotation, `None` if not found.
     #[must_use]
@@ -151,12 +151,12 @@ impl RegistrationChain {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
                 key.data()
-                .extract_pk()
-                .map(|pk| (pk, rdr.encryption_keys().len().saturating_sub(1)))
+                    .extract_pk()
+                    .map(|pk| (pk, rdr.encryption_keys().len().saturating_sub(1)))
             })
         })
     }
-    
+
     /// Get signing public key for a role with given rotation.
     /// Returns the public key, `None` if not found.
     #[must_use]
@@ -165,10 +165,10 @@ impl RegistrationChain {
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
-            .and_then(|key| key.extract_pk())
+                .and_then(|key| key.extract_pk())
         })
     }
-    
+
     /// Get encryption public key for a role with given rotation.
     /// Returns the public key, `None` if not found.
     #[must_use]
@@ -177,10 +177,10 @@ impl RegistrationChain {
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
-            .and_then(|key| key.extract_pk())
+                .and_then(|key| key.extract_pk())
         })
     }
-    
+
     /// Get signing key X509 certificate, C509 certificate or public key for a role with
     /// given rotation.
     #[must_use]
@@ -188,11 +188,11 @@ impl RegistrationChain {
         &self, role: &RoleNumber, rotation: usize,
     ) -> Option<CertOrPk> {
         self.inner
-        .role_data_record
-        .get(role)
-        .and_then(|rdr| rdr.signing_key_from_rotation(rotation))
+            .role_data_record
+            .get(role)
+            .and_then(|rdr| rdr.signing_key_from_rotation(rotation))
     }
-    
+
     /// Get encryption key X509 certificate, C509 certificate or public key for a role
     /// with given rotation.
     #[must_use]
