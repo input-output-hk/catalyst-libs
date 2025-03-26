@@ -167,46 +167,48 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) -> Option<IdUri> {
     let context = "Role data validation";
 
-    if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
-        // For the role 0 there must be exactly once certificate and it must not have `deleted`,
-        // `undefined` or `C509CertInMetadatumReference` values.
-        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-            && matches!(
-                metadata.c509_certs.first(),
-                Some(C509Cert::C509Certificate(_))
-            )
-        {
-            report.other(
-                "Only one certificate can be defined at index 0 for the role 0",
-                context,
-            );
-        }
-        if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-            && !matches!(
-                metadata.c509_certs.first(),
-                Some(C509Cert::C509Certificate(_))
-            )
-        {
-            report.other("The role 0 certificate must be present", context);
-        }
-    } else {
-        // For other roles there still must be exactly one certificate at 0 index, but it must
-        // have the `undefined` value.
-        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-            || matches!(
-                metadata.c509_certs.first(),
-                Some(C509Cert::C509Certificate(_))
-            )
-        {
-            report.other("Only role 0 can contain a certificate at 0 index", context);
-        }
-        if matches!(metadata.x509_certs.first(), Some(X509DerCert::Deleted))
-            || matches!(metadata.c509_certs.first(), Some(C509Cert::Deleted))
-        {
-            report.other("Only role 0 can delete a certificate at 0 index", context);
+    // There should be some role data
+    if !metadata.role_data.is_empty() {
+        if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
+            // For the role 0 there must be exactly once certificate and it must not have `deleted`,
+            // `undefined` or `C509CertInMetadatumReference` values.
+            if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+                && matches!(
+                    metadata.c509_certs.first(),
+                    Some(C509Cert::C509Certificate(_))
+                )
+            {
+                report.other(
+                    "Only one certificate can be defined at index 0 for the role 0",
+                    context,
+                );
+            }
+            if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+                && !matches!(
+                    metadata.c509_certs.first(),
+                    Some(C509Cert::C509Certificate(_))
+                )
+            {
+                report.other("The role 0 certificate must be present", context);
+            }
+        } else {
+            // For other roles there still must be exactly one certificate at 0 index, but it must
+            // have the `undefined` value.
+            if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+                || matches!(
+                    metadata.c509_certs.first(),
+                    Some(C509Cert::C509Certificate(_))
+                )
+            {
+                report.other("Only role 0 can contain a certificate at 0 index", context);
+            }
+            if matches!(metadata.x509_certs.first(), Some(X509DerCert::Deleted))
+                || matches!(metadata.c509_certs.first(), Some(C509Cert::Deleted))
+            {
+                report.other("Only role 0 can delete a certificate at 0 index", context);
+            }
         }
     }
-
     // It isn't allowed for any role to use a public key at 0 index.
     if !matches!(
         metadata.pub_keys.first(),
