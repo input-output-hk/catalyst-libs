@@ -61,7 +61,7 @@ run-mithril-download-example-preview: code-format code-lint
 run-mithril-download-example-mainnet: code-format code-lint
     cargo build -r --package cardano-chain-follower --example follow_chains --features mimalloc
     RUST_LOG="error,follow_chains=debug,cardano_chain_follower=debug,mithril-client=debug" \
-    ./target/release/examples/follow_chains --mainnet
+    ./target/release/examples/follow_chains --mainnet --mithril-sync-workers 64 --mithril-sync-chunk-size 16 --mithril-sync-queue-ahead=6
 
 # Run long running developer test for mithril downloading.
 debug-heap-mithril-download-example: code-format code-lint
