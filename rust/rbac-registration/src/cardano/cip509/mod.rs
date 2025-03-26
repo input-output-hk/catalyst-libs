@@ -6,10 +6,10 @@ pub use cip509::Cip509;
 #[allow(clippy::module_name_repetitions)]
 pub use rbac::{C509Cert, Cip509RbacMetadata, SimplePublicKeyType, X509DerCert};
 pub use types::{
-    CertKeyHash, KeyData, KeyLocalRef, LocalRefInt, Payment, PaymentHistory, PointData,
+    CertKeyHash, CertOrPk, KeyLocalRef, LocalRefInt, Payment, PaymentHistory, PointData,
     PointTxnIdx, RoleData, RoleDataRecord, RoleNumber, TxInputHash, ValidationSignature,
 };
-pub use utils::Cip0134UriSet;
+pub use utils::{extract_key, Cip0134UriSet};
 
 #[allow(clippy::module_inception)]
 mod cip509;

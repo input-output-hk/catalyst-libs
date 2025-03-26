@@ -6,7 +6,7 @@ pub use payment_history::{Payment, PaymentHistory};
 pub use point_data::PointData;
 pub use point_tx_idx::PointTxnIdx;
 pub use role_data::RoleData;
-pub use role_data_record::{KeyData, RoleDataRecord};
+pub use role_data_record::{CertOrPk, RoleDataRecord};
 pub use role_number::RoleNumber;
 pub use tx_input_hash::TxInputHash;
 pub use validation_signature::ValidationSignature;
