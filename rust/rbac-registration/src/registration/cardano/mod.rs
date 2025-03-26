@@ -165,7 +165,7 @@ impl RegistrationChain {
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
-                .and_then(|key| key.extract_pk())
+                .and_then(CertOrPk::extract_pk)
         })
     }
 
@@ -177,7 +177,7 @@ impl RegistrationChain {
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
-                .and_then(|key| key.extract_pk())
+                .and_then(CertOrPk::extract_pk)
         })
     }
 
@@ -186,7 +186,7 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_singing_key_cert_or_key_for_role_at_rotation(
         &self, role: &RoleNumber, rotation: usize,
-    ) -> Option<CertOrPk> {
+    ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
             .get(role)
@@ -198,7 +198,7 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
         &self, role: &RoleNumber, rotation: usize,
-    ) -> Option<CertOrPk> {
+    ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
             .get(role)

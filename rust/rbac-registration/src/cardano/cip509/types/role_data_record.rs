@@ -86,17 +86,15 @@ impl RoleDataRecord {
     /// The first signing key is at rotation 0, the second at rotation 1, and so on.
     /// Returns `None` if the given key rotation does not exist.
     #[must_use]
-    pub fn signing_key_from_rotation(&self, rotation: usize) -> Option<CertOrPk> {
-        self.signing_keys.get(rotation).map(|pd| pd.data().clone())
+    pub fn signing_key_from_rotation(&self, rotation: usize) -> Option<&CertOrPk> {
+        self.signing_keys.get(rotation).map(PointData::data)
     }
 
     /// Get the encryption key data associated with this role and the given key rotation.
     /// The first encryption key is at rotation 0, the second at rotation 1, and so on.
     /// Returns `None` if the given key rotation does not exist.
     #[must_use]
-    pub fn encryption_key_from_rotation(&self, rotation: usize) -> Option<CertOrPk> {
-        self.encryption_keys
-            .get(rotation)
-            .map(|pd| pd.data().clone())
+    pub fn encryption_key_from_rotation(&self, rotation: usize) -> Option<&CertOrPk> {
+        self.encryption_keys.get(rotation).map(PointData::data)
     }
 }
