@@ -1,5 +1,7 @@
 //! Chain of Cardano registration data
 
+mod update_rbac;
+
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
@@ -7,13 +9,15 @@ use c509_certificate::c509::C509;
 use cardano_blockchain_types::TransactionId;
 use catalyst_types::{id_uri::IdUri, uuid::UuidV4};
 use ed25519_dalek::VerifyingKey;
-use tracing::{error, warn};
+use tracing::error;
+use update_rbac::{
+    revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
+};
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
-    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, Cip509RbacMetadata, KeyData, KeyLocalRef,
-    LocalRefInt, PaymentHistory, PointData, PointTxnIdx, RoleData, RoleDataRecord, RoleNumber,
-    SimplePublicKeyType, X509DerCert,
+    CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
+    RoleDataRecord, RoleNumber,
 };
 
 /// Registration chains.
@@ -116,11 +120,89 @@ impl RegistrationChain {
     pub fn role_data_history(&self) -> &HashMap<RoleNumber, Vec<PointData<RoleData>>> {
         &self.inner.role_data_history
     }
-
+    
     /// Get the map of tracked payment keys to its history.
     #[must_use]
     pub fn tracking_payment_history(&self) -> &PaymentHistory {
         &self.inner.payment_history
+    }
+    
+    /// Get the latest signing public key for a role.
+    /// Returns the public key and the rotation,`None` if not found.
+    #[must_use]
+    pub fn get_latest_signing_pk_for_role(
+        &self, role: &RoleNumber,
+    ) -> Option<(VerifyingKey, usize)> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.signing_keys().last().and_then(|key| {
+                key.data()
+                .extract_pk()
+                .map(|pk| (pk, rdr.signing_keys().len().saturating_sub(1)))
+            })
+        })
+    }
+    
+    /// Get the latest encryption public key for a role.
+    /// Returns the public key and the rotation, `None` if not found.
+    #[must_use]
+    pub fn get_latest_encryption_pk_for_role(
+        &self, role: &RoleNumber,
+    ) -> Option<(VerifyingKey, usize)> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.encryption_keys().last().and_then(|key| {
+                key.data()
+                .extract_pk()
+                .map(|pk| (pk, rdr.encryption_keys().len().saturating_sub(1)))
+            })
+        })
+    }
+    
+    /// Get signing public key for a role with given rotation.
+    /// Returns the public key, `None` if not found.
+    #[must_use]
+    pub fn get_signing_pk_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<VerifyingKey> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.signing_key_from_rotation(rotation)
+            .and_then(|key| key.extract_pk())
+        })
+    }
+    
+    /// Get encryption public key for a role with given rotation.
+    /// Returns the public key, `None` if not found.
+    #[must_use]
+    pub fn get_encryption_pk_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<VerifyingKey> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.encryption_key_from_rotation(rotation)
+            .and_then(|key| key.extract_pk())
+        })
+    }
+    
+    /// Get signing key X509 certificate, C509 certificate or public key for a role with
+    /// given rotation.
+    #[must_use]
+    pub fn get_singing_key_cert_or_key_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<CertOrPk> {
+        self.inner
+        .role_data_record
+        .get(role)
+        .and_then(|rdr| rdr.signing_key_from_rotation(rotation))
+    }
+    
+    /// Get encryption key X509 certificate, C509 certificate or public key for a role
+    /// with given rotation.
+    #[must_use]
+    pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<CertOrPk> {
+        self.inner
+            .role_data_record
+            .get(role)
+            .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 }
 
@@ -312,271 +394,6 @@ impl RegistrationChainInner {
     }
 }
 
-/// Update x509 certificates in the registration chain.
-fn update_x509_certs(
-    x509_cert_map: &mut HashMap<usize, Vec<PointData<Option<X509Certificate>>>>,
-    x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxnIdx,
-) {
-    for (idx, cert) in x509_certs.into_iter().enumerate() {
-        match cert {
-            // Unchanged to that index
-            X509DerCert::Undefined => {
-                if let Some(cert_vec) = x509_cert_map.get_mut(&idx) {
-                    // Get the previous (last) one since the certificate is unchanged
-                    if let Some(last_cert) = cert_vec.last() {
-                        cert_vec.push(PointData::new(
-                            point_tx_idx.clone(),
-                            last_cert.data().clone(),
-                        ));
-                    }
-                }
-            },
-            // Delete the certificate, set to none
-            X509DerCert::Deleted => {
-                x509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), None));
-            },
-            // Add the new certificate
-            X509DerCert::X509Cert(cert) => {
-                x509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), Some(*cert)));
-            },
-        }
-    }
-}
-
-/// Update c509 certificates in the registration chain.
-fn update_c509_certs(
-    c509_cert_map: &mut HashMap<usize, Vec<PointData<Option<C509>>>>, c509_certs: Vec<C509Cert>,
-    point_tx_idx: &PointTxnIdx,
-) {
-    for (idx, cert) in c509_certs.into_iter().enumerate() {
-        match cert {
-            // Unchanged to that index
-            C509Cert::Undefined => {
-                if let Some(cert_vec) = c509_cert_map.get_mut(&idx) {
-                    // Get the previous (last) one since the certificate is unchanged
-                    if let Some(last_cert) = cert_vec.last() {
-                        cert_vec.push(PointData::new(
-                            point_tx_idx.clone(),
-                            last_cert.data().clone(),
-                        ));
-                    }
-                }
-            },
-            // Delete the certificate, set to none
-            C509Cert::Deleted => {
-                c509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), None));
-            },
-            // Certificate reference
-            C509Cert::C509CertInMetadatumReference(_) => {
-                warn!("Unsupported C509CertInMetadatumReference");
-            },
-            // Add the new certificate
-            C509Cert::C509Certificate(cert) => {
-                c509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), Some(*cert)));
-            },
-        }
-    }
-}
-
-/// Update public keys in the registration chain.
-fn update_public_keys(
-    pub_key_map: &mut HashMap<usize, Vec<PointData<Option<VerifyingKey>>>>,
-    pub_keys: Vec<SimplePublicKeyType>, point_tx_idx: &PointTxnIdx,
-) {
-    for (idx, cert) in pub_keys.into_iter().enumerate() {
-        match cert {
-            // Unchanged to that index
-            SimplePublicKeyType::Undefined => {
-                if let Some(key_vec) = pub_key_map.get_mut(&idx) {
-                    // Get the previous (last) one since the certificate is unchanged
-                    if let Some(last_key) = key_vec.last() {
-                        key_vec.push(PointData::new(point_tx_idx.clone(), *last_key.data()));
-                    }
-                }
-            },
-            // Delete the certificate, set to none
-            SimplePublicKeyType::Deleted => {
-                pub_key_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), None));
-            },
-            // Add the new public key
-            SimplePublicKeyType::Ed25519(key) => {
-                pub_key_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), Some(key)));
-            },
-        }
-    }
-}
-
-/// Process the revocation list.
-fn revocations_list(
-    revocation_list: Vec<CertKeyHash>, point_tx_idx: &PointTxnIdx,
-) -> Vec<PointData<CertKeyHash>> {
-    let mut revocations = Vec::new();
-    for item in revocation_list {
-        let point_data = PointData::new(point_tx_idx.clone(), item.clone());
-        revocations.push(point_data);
-    }
-    revocations
-}
-
-/// Update the role data related fields in the registration chain.
-fn update_role_data(
-    registration: &Cip509RbacMetadata,
-    role_data_history: &mut HashMap<RoleNumber, Vec<PointData<RoleData>>>,
-    role_data_record: &mut HashMap<RoleNumber, RoleDataRecord>, point_tx_idx: &PointTxnIdx,
-) {
-    for (number, data) in registration.clone().role_data {
-        // Update role data history, put the whole role data
-        role_data_history
-            .entry(number)
-            .or_default()
-            .push(PointData::new(point_tx_idx.clone(), data.clone()));
-
-        // Update role data record
-        let record = role_data_record
-            .entry(number)
-            .or_insert(RoleDataRecord::new());
-
-        // Add signing key
-        if let Some(signing_key) = data.signing_key() {
-            update_signing_key(signing_key, record, point_tx_idx, registration);
-        }
-
-        // Add encryption key
-        if let Some(encryption_key) = data.encryption_key() {
-            update_encryption_key(encryption_key, record, point_tx_idx, registration);
-        }
-
-        // Add payment key
-        if let Some(payment_key) = data.payment_key() {
-            record.add_payment_key(PointData::new(point_tx_idx.clone(), payment_key.clone()));
-        }
-
-        // Add extended data
-        record.add_extended_data(PointData::new(
-            point_tx_idx.clone(),
-            data.extended_data().clone(),
-        ));
-    }
-}
-
-/// Update signing key.
-fn update_signing_key(
-    signing_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
-    registration: &Cip509RbacMetadata,
-) {
-    let index = signing_key.key_offset;
-
-    match signing_key.local_ref {
-        LocalRefInt::X509Certs => {
-            if let Some(cert) = registration.x509_certs.get(index) {
-                match cert {
-                    X509DerCert::Deleted => {
-                        record.add_signing_key(KeyData::X509(None), point_tx_idx);
-                    },
-                    X509DerCert::X509Cert(c) => {
-                        record.add_signing_key(KeyData::X509(Some(c.clone())), point_tx_idx);
-                    },
-                    X509DerCert::Undefined => {},
-                }
-            }
-        },
-        LocalRefInt::C509Certs => {
-            if let Some(cert) = registration.c509_certs.get(index) {
-                match cert {
-                    C509Cert::Deleted => {
-                        record.add_signing_key(KeyData::C509(None), point_tx_idx);
-                    },
-                    C509Cert::C509Certificate(c) => {
-                        record.add_signing_key(KeyData::C509(Some(c.clone())), point_tx_idx);
-                    },
-                    C509Cert::Undefined | C509Cert::C509CertInMetadatumReference(_) => {},
-                }
-            }
-        },
-        LocalRefInt::PubKeys => {
-            if let Some(key) = registration.pub_keys.get(index) {
-                match key {
-                    SimplePublicKeyType::Deleted => {
-                        record.add_signing_key(KeyData::PublicKey(None), point_tx_idx);
-                    },
-                    SimplePublicKeyType::Ed25519(k) => {
-                        record.add_signing_key(KeyData::PublicKey(Some(*k)), point_tx_idx);
-                    },
-                    SimplePublicKeyType::Undefined => {},
-                }
-            }
-        },
-    }
-}
-
-/// Update encryption key.
-fn update_encryption_key(
-    encryption_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
-    registration: &Cip509RbacMetadata,
-) {
-    let index = encryption_key.key_offset;
-
-    match encryption_key.local_ref {
-        LocalRefInt::X509Certs => {
-            if let Some(cert) = registration.x509_certs.get(index) {
-                match cert {
-                    X509DerCert::Deleted => {
-                        record.add_encryption_key(KeyData::X509(None), point_tx_idx);
-                    },
-                    X509DerCert::X509Cert(c) => {
-                        record.add_encryption_key(KeyData::X509(Some(c.clone())), point_tx_idx);
-                    },
-                    X509DerCert::Undefined => {},
-                }
-            }
-        },
-        LocalRefInt::C509Certs => {
-            if let Some(cert) = registration.c509_certs.get(index) {
-                match cert {
-                    C509Cert::Deleted => {
-                        record.add_encryption_key(KeyData::C509(None), point_tx_idx);
-                    },
-                    C509Cert::C509Certificate(c) => {
-                        record.add_encryption_key(KeyData::C509(Some(c.clone())), point_tx_idx);
-                    },
-                    C509Cert::Undefined | C509Cert::C509CertInMetadatumReference(_) => {},
-                }
-            }
-        },
-        LocalRefInt::PubKeys => {
-            if let Some(key) = registration.pub_keys.get(index) {
-                match key {
-                    SimplePublicKeyType::Deleted => {
-                        record.add_encryption_key(KeyData::PublicKey(None), point_tx_idx);
-                    },
-                    SimplePublicKeyType::Ed25519(k) => {
-                        record.add_encryption_key(KeyData::PublicKey(Some(*k)), point_tx_idx);
-                    },
-                    SimplePublicKeyType::Undefined => {},
-                }
-            }
-        },
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -657,5 +474,25 @@ mod test {
 
         // x509 certificates update on 2 index
         assert_eq!(update.x509_certs().len(), 2);
+
+        let (_k, r) = update
+            .get_latest_signing_pk_for_role(&RoleNumber::ROLE_0)
+            .unwrap();
+        assert_eq!(r, 0);
+        assert!(update
+            .get_latest_encryption_pk_for_role(&RoleNumber::from(4))
+            .is_none());
+        assert!(update
+            .get_signing_pk_for_role_at_rotation(&RoleNumber::ROLE_0, 2)
+            .is_none());
+        assert!(update
+            .get_encryption_pk_for_role_at_rotation(&RoleNumber::from(4), 0)
+            .is_none());
+        assert!(update
+            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleNumber::ROLE_0, 0)
+            .is_some());
+        assert!(update
+            .get_encryption_key_cert_or_key_for_role_at_rotation(&RoleNumber::from(4), 3)
+            .is_none());
     }
 }
