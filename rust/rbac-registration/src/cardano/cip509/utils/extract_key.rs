@@ -5,7 +5,16 @@ use anyhow::{anyhow, Context};
 use c509_certificate::c509::C509;
 use ed25519_dalek::{VerifyingKey, PUBLIC_KEY_LENGTH};
 use oid_registry::{Oid, OID_SIG_ED25519};
+use thiserror::Error;
 use x509_cert::Certificate as X509Certificate;
+
+/// Error type for unsupported signature algorithms.
+#[derive(Error, Debug)]
+#[error("Unsupported signature algorithm: {oid}")]
+pub struct SignatureAlgoError {
+    /// An OID of unsupported signature algorithm.
+    oid: String,
+}
 
 /// Returns `VerifyingKey` from the given X509 certificate.
 ///
@@ -51,10 +60,12 @@ pub fn c509_key(cert: &C509) -> anyhow::Result<VerifyingKey> {
 }
 
 /// Checks that the signature algorithm is supported.
-fn check_signature_algorithm(oid: &Oid) -> anyhow::Result<()> {
+fn check_signature_algorithm(oid: &Oid) -> Result<(), SignatureAlgoError> {
     // Currently the only supported signature algorithm is ED25519.
     if *oid != OID_SIG_ED25519 {
-        return Err(anyhow!("Unsupported signature algorithm: {oid}"));
+        return Err(SignatureAlgoError {
+            oid: oid.to_id_string(),
+        });
     }
     Ok(())
 }
