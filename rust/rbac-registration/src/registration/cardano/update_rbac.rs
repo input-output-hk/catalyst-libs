@@ -192,7 +192,8 @@ pub(crate) fn update_signing_key(
                         record.add_signing_key(CertOrPk::X509(None), point_tx_idx);
                     },
                     X509DerCert::X509Cert(c) => {
-                        record.add_signing_key(CertOrPk::X509(Some(c.clone())), point_tx_idx);
+                        record
+                            .add_signing_key(CertOrPk::X509(Some(c.clone().into())), point_tx_idx);
                     },
                     X509DerCert::Undefined => {},
                 }
@@ -205,7 +206,8 @@ pub(crate) fn update_signing_key(
                         record.add_signing_key(CertOrPk::C509(None), point_tx_idx);
                     },
                     C509Cert::C509Certificate(c) => {
-                        record.add_signing_key(CertOrPk::C509(Some(c.clone())), point_tx_idx);
+                        record
+                            .add_signing_key(CertOrPk::C509(Some(c.clone().into())), point_tx_idx);
                     },
                     C509Cert::Undefined | C509Cert::C509CertInMetadatumReference(_) => {},
                 }
@@ -242,7 +244,10 @@ pub(crate) fn update_encryption_key(
                         record.add_encryption_key(CertOrPk::X509(None), point_tx_idx);
                     },
                     X509DerCert::X509Cert(c) => {
-                        record.add_encryption_key(CertOrPk::X509(Some(c.clone())), point_tx_idx);
+                        record.add_encryption_key(
+                            CertOrPk::X509(Some(c.clone().into())),
+                            point_tx_idx,
+                        );
                     },
                     X509DerCert::Undefined => {},
                 }
@@ -255,7 +260,10 @@ pub(crate) fn update_encryption_key(
                         record.add_encryption_key(CertOrPk::C509(None), point_tx_idx);
                     },
                     C509Cert::C509Certificate(c) => {
-                        record.add_encryption_key(CertOrPk::C509(Some(c.clone())), point_tx_idx);
+                        record.add_encryption_key(
+                            CertOrPk::C509(Some(c.clone().into())),
+                            point_tx_idx,
+                        );
                     },
                     C509Cert::Undefined | C509Cert::C509CertInMetadatumReference(_) => {},
                 }

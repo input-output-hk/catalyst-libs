@@ -1,5 +1,7 @@
 //! C509 certificate, X509 certificate, or public key.
 
+use std::sync::Arc;
+
 use c509_certificate::c509::C509;
 use ed25519_dalek::VerifyingKey;
 use x509_cert::Certificate as X509;
@@ -10,9 +12,9 @@ use crate::cardano::cip509::extract_key;
 #[derive(Debug, Clone)]
 pub enum CertOrPk {
     /// X509 certificate, None if deleted.
-    X509(Option<Box<X509>>),
+    X509(Option<Arc<X509>>),
     /// C509 certificate, None if deleted.
-    C509(Option<Box<C509>>),
+    C509(Option<Arc<C509>>),
     /// Public key, None if deleted.
     PublicKey(Option<VerifyingKey>),
 }
