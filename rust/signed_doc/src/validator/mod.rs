@@ -79,7 +79,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
 
-    let proposal_action_rules = Rules {
+    let proposal_submission_action_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -99,7 +99,10 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         section: SectionRule::NotSpecified,
     };
 
-    document_rules_map.insert(PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, proposal_action_rules);
+    document_rules_map.insert(
+        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+        proposal_submission_action_rules,
+    );
 
     document_rules_map
 }
