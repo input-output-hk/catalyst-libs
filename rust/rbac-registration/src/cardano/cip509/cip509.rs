@@ -161,7 +161,7 @@ impl Cip509 {
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
         }
         if let Some(metadata) = &cip509.metadata {
-            cip509.catalyst_id = validate_role_data(metadata, &cip509.report);
+            cip509.catalyst_id = validate_role_data(metadata, block.network(), &cip509.report);
         }
 
         Ok(Some(cip509))
