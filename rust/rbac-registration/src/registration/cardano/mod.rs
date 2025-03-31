@@ -1,5 +1,7 @@
 //! Chain of Cardano registration data
 
+mod update_rbac;
+
 use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
@@ -7,12 +9,15 @@ use c509_certificate::c509::C509;
 use cardano_blockchain_types::TransactionId;
 use catalyst_types::{id_uri::IdUri, uuid::UuidV4};
 use ed25519_dalek::VerifyingKey;
-use tracing::{error, warn};
+use tracing::error;
+use update_rbac::{
+    revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
+};
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
-    C509Cert, CertKeyHash, Cip0134UriSet, Cip509, PaymentHistory, PointData, PointTxnIdx, RoleData,
-    RoleNumber, SimplePublicKeyType, X509DerCert,
+    CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
+    RoleDataRecord, RoleNumber,
 };
 
 /// Registration chains.
@@ -101,23 +106,103 @@ impl RegistrationChain {
         &self.inner.revocations
     }
 
-    /// Get the map of latest update role number to point + transaction index, and role
-    /// data.
+    /// Get the map of role number to role data record where each field in role data
+    /// record has it own record of its value and its associated point and transaction
+    /// index.
     #[must_use]
-    pub fn role_data(&self) -> &HashMap<RoleNumber, PointData<RoleData>> {
-        &self.inner.role_data
+    pub fn role_data_record(&self) -> &HashMap<RoleNumber, RoleDataRecord> {
+        &self.inner.role_data_record
     }
 
-    /// Get the map of role number to list of point + transaction index, and role data.
+    /// Get the map of role number to list of history data of point + transaction index,
+    /// and role data.
     #[must_use]
-    pub fn all_role_data(&self) -> &HashMap<RoleNumber, Vec<PointData<RoleData>>> {
-        &self.inner.all_role_data
+    pub fn role_data_history(&self) -> &HashMap<RoleNumber, Vec<PointData<RoleData>>> {
+        &self.inner.role_data_history
     }
 
     /// Get the map of tracked payment keys to its history.
     #[must_use]
     pub fn tracking_payment_history(&self) -> &PaymentHistory {
         &self.inner.payment_history
+    }
+
+    /// Get the latest signing public key for a role.
+    /// Returns the public key and the rotation,`None` if not found.
+    #[must_use]
+    pub fn get_latest_signing_pk_for_role(
+        &self, role: &RoleNumber,
+    ) -> Option<(VerifyingKey, usize)> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.signing_keys().last().and_then(|key| {
+                key.data()
+                    .extract_pk()
+                    .map(|pk| (pk, rdr.signing_keys().len().saturating_sub(1)))
+            })
+        })
+    }
+
+    /// Get the latest encryption public key for a role.
+    /// Returns the public key and the rotation, `None` if not found.
+    #[must_use]
+    pub fn get_latest_encryption_pk_for_role(
+        &self, role: &RoleNumber,
+    ) -> Option<(VerifyingKey, usize)> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.encryption_keys().last().and_then(|key| {
+                key.data()
+                    .extract_pk()
+                    .map(|pk| (pk, rdr.encryption_keys().len().saturating_sub(1)))
+            })
+        })
+    }
+
+    /// Get signing public key for a role with given rotation.
+    /// Returns the public key, `None` if not found.
+    #[must_use]
+    pub fn get_signing_pk_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<VerifyingKey> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.signing_key_from_rotation(rotation)
+                .and_then(CertOrPk::extract_pk)
+        })
+    }
+
+    /// Get encryption public key for a role with given rotation.
+    /// Returns the public key, `None` if not found.
+    #[must_use]
+    pub fn get_encryption_pk_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<VerifyingKey> {
+        self.inner.role_data_record.get(role).and_then(|rdr| {
+            rdr.encryption_key_from_rotation(rotation)
+                .and_then(CertOrPk::extract_pk)
+        })
+    }
+
+    /// Get signing key X509 certificate, C509 certificate or public key for a role with
+    /// given rotation.
+    #[must_use]
+    pub fn get_singing_key_cert_or_key_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<&CertOrPk> {
+        self.inner
+            .role_data_record
+            .get(role)
+            .and_then(|rdr| rdr.signing_key_from_rotation(rotation))
+    }
+
+    /// Get encryption key X509 certificate, C509 certificate or public key for a role
+    /// with given rotation.
+    #[must_use]
+    pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
+        &self, role: &RoleNumber, rotation: usize,
+    ) -> Option<&CertOrPk> {
+        self.inner
+            .role_data_record
+            .get(role)
+            .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 }
 
@@ -148,10 +233,11 @@ struct RegistrationChainInner {
 
     // Role
     /// Map of role number to list point + transaction index, and role data.
-    /// Cannot use the latest one since role data can be partially updated.
-    all_role_data: HashMap<RoleNumber, Vec<PointData<RoleData>>>,
-    /// The latest update of role data associated to the role number.
-    role_data: HashMap<RoleNumber, PointData<RoleData>>,
+    /// Record history of the whole role data in point in time.
+    role_data_history: HashMap<RoleNumber, Vec<PointData<RoleData>>>,
+    /// Map of role number role data record where each field in role data record
+    /// has it own record of its value and its associated point and transaction index.
+    role_data_record: HashMap<RoleNumber, RoleDataRecord>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
 }
@@ -187,23 +273,37 @@ impl RegistrationChainInner {
         };
 
         let purpose = vec![purpose];
-        let certificate_uris = registration.certificate_uris;
+        let certificate_uris = registration.certificate_uris.clone();
         let mut x509_certs = HashMap::new();
-        update_x509_certs(&mut x509_certs, registration.x509_certs, &point_tx_idx);
+        update_x509_certs(
+            &mut x509_certs,
+            registration.x509_certs.clone(),
+            &point_tx_idx,
+        );
         let mut c509_certs = HashMap::new();
-        update_c509_certs(&mut c509_certs, registration.c509_certs, &point_tx_idx);
+        update_c509_certs(
+            &mut c509_certs,
+            registration.c509_certs.clone(),
+            &point_tx_idx,
+        );
         let mut simple_keys = HashMap::new();
-        update_public_keys(&mut simple_keys, registration.pub_keys, &point_tx_idx);
-        let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
+        update_public_keys(
+            &mut simple_keys,
+            registration.pub_keys.clone(),
+            &point_tx_idx,
+        );
+        let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
 
         // Role data
-        let mut all_role_data = HashMap::new();
-        let mut role_data = HashMap::new();
-        for (number, data) in registration.role_data {
-            let point_data = PointData::new(point_tx_idx.clone(), data);
-            all_role_data.insert(number, vec![point_data.clone()]);
-            role_data.insert(number, point_data);
-        }
+        let mut role_data_history = HashMap::new();
+        let mut role_data_record = HashMap::new();
+
+        update_role_data(
+            &registration,
+            &mut role_data_history,
+            &mut role_data_record,
+            &point_tx_idx,
+        );
 
         Ok(Self {
             catalyst_id,
@@ -214,8 +314,8 @@ impl RegistrationChainInner {
             certificate_uris,
             simple_keys,
             revocations,
-            all_role_data,
-            role_data,
+            role_data_history,
+            role_data_record,
             payment_history,
         })
     }
@@ -265,192 +365,32 @@ impl RegistrationChainInner {
         new_inner.payment_history.extend(payment_history);
         update_x509_certs(
             &mut new_inner.x509_certs,
-            registration.x509_certs,
+            registration.x509_certs.clone(),
             &point_tx_idx,
         );
         update_c509_certs(
             &mut new_inner.c509_certs,
-            registration.c509_certs,
+            registration.c509_certs.clone(),
             &point_tx_idx,
         );
         update_public_keys(
             &mut new_inner.simple_keys,
-            registration.pub_keys,
+            registration.pub_keys.clone(),
             &point_tx_idx,
         );
 
-        let revocations = revocations_list(registration.revocation_list, &point_tx_idx);
+        let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
         // Revocation list should be appended
         new_inner.revocations.extend(revocations);
 
-        update_role_data(&mut new_inner, registration.role_data, &point_tx_idx);
+        update_role_data(
+            &registration,
+            &mut new_inner.role_data_history,
+            &mut new_inner.role_data_record,
+            &point_tx_idx,
+        );
 
         Ok(new_inner)
-    }
-}
-
-/// Update x509 certificates in the registration chain.
-fn update_x509_certs(
-    x509_cert_map: &mut HashMap<usize, Vec<PointData<Option<X509Certificate>>>>,
-    x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxnIdx,
-) {
-    for (idx, cert) in x509_certs.into_iter().enumerate() {
-        match cert {
-            // Unchanged to that index
-            X509DerCert::Undefined => {
-                if let Some(cert_vec) = x509_cert_map.get_mut(&idx) {
-                    // Get the previous (last) one since the certificate is unchanged
-                    if let Some(last_cert) = cert_vec.last() {
-                        cert_vec.push(PointData::new(
-                            point_tx_idx.clone(),
-                            last_cert.data().clone(),
-                        ));
-                    }
-                }
-            },
-            // Delete the certificate, set to none
-            X509DerCert::Deleted => {
-                x509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), None));
-            },
-            // Add the new certificate
-            X509DerCert::X509Cert(cert) => {
-                x509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), Some(*cert)));
-            },
-        }
-    }
-}
-
-/// Update c509 certificates in the registration chain.
-fn update_c509_certs(
-    c509_cert_map: &mut HashMap<usize, Vec<PointData<Option<C509>>>>, c509_certs: Vec<C509Cert>,
-    point_tx_idx: &PointTxnIdx,
-) {
-    for (idx, cert) in c509_certs.into_iter().enumerate() {
-        match cert {
-            // Unchanged to that index
-            C509Cert::Undefined => {
-                if let Some(cert_vec) = c509_cert_map.get_mut(&idx) {
-                    // Get the previous (last) one since the certificate is unchanged
-                    if let Some(last_cert) = cert_vec.last() {
-                        cert_vec.push(PointData::new(
-                            point_tx_idx.clone(),
-                            last_cert.data().clone(),
-                        ));
-                    }
-                }
-            },
-            // Delete the certificate, set to none
-            C509Cert::Deleted => {
-                c509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), None));
-            },
-            // Certificate reference
-            C509Cert::C509CertInMetadatumReference(_) => {
-                warn!("Unsupported C509CertInMetadatumReference");
-            },
-            // Add the new certificate
-            C509Cert::C509Certificate(cert) => {
-                c509_cert_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), Some(*cert)));
-            },
-        }
-    }
-}
-
-/// Update public keys in the registration chain.
-fn update_public_keys(
-    pub_key_map: &mut HashMap<usize, Vec<PointData<Option<VerifyingKey>>>>,
-    pub_keys: Vec<SimplePublicKeyType>, point_tx_idx: &PointTxnIdx,
-) {
-    for (idx, cert) in pub_keys.into_iter().enumerate() {
-        match cert {
-            // Unchanged to that index
-            SimplePublicKeyType::Undefined => {
-                if let Some(key_vec) = pub_key_map.get_mut(&idx) {
-                    // Get the previous (last) one since the certificate is unchanged
-                    if let Some(last_key) = key_vec.last() {
-                        key_vec.push(PointData::new(point_tx_idx.clone(), *last_key.data()));
-                    }
-                }
-            },
-            // Delete the certificate, set to none
-            SimplePublicKeyType::Deleted => {
-                pub_key_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), None));
-            },
-            // Add the new public key
-            SimplePublicKeyType::Ed25519(key) => {
-                pub_key_map
-                    .entry(idx)
-                    .or_default()
-                    .push(PointData::new(point_tx_idx.clone(), Some(key)));
-            },
-        }
-    }
-}
-
-/// Process the revocation list.
-fn revocations_list(
-    revocation_list: Vec<CertKeyHash>, point_tx_idx: &PointTxnIdx,
-) -> Vec<PointData<CertKeyHash>> {
-    let mut revocations = Vec::new();
-    for item in revocation_list {
-        let point_data = PointData::new(point_tx_idx.clone(), item.clone());
-        revocations.push(point_data);
-    }
-    revocations
-}
-
-/// Update the role data in the registration chain.
-fn update_role_data(
-    inner: &mut RegistrationChainInner, role_set: HashMap<RoleNumber, RoleData>,
-    point_tx_idx: &PointTxnIdx,
-) {
-    for (number, mut data) in role_set {
-        // Update the record of role data first
-        inner
-            .all_role_data
-            .entry(number)
-            .or_default()
-            .push(PointData::new(point_tx_idx.clone(), data.clone()));
-
-        // If there is new role singing key, use it, else use the old one
-        if data.signing_key().is_none() {
-            let signing_key = inner
-                .role_data
-                .get(&number)
-                .and_then(|pd| pd.data().signing_key())
-                .copied();
-            data.set_signing_key(signing_key);
-        }
-
-        // If there is new role encryption key, use it, else use the old one
-        if data.encryption_key().is_none() {
-            let encryption_key = inner
-                .role_data
-                .get(&number)
-                .and_then(|pd| pd.data().encryption_key())
-                .copied();
-            data.set_encryption_key(encryption_key);
-        }
-
-        // Map of role number to point and role data
-        // Note that new role data will overwrite the old one
-        inner
-            .role_data
-            .insert(number, PointData::new(point_tx_idx.clone(), data));
     }
 }
 
@@ -497,14 +437,14 @@ mod test {
             .unwrap();
         data.assert_valid(&registration);
         let update = chain.update(registration).unwrap();
-
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
-        assert!(update.role_data().contains_key(&data.role));
+        assert!(update.role_data_record().contains_key(&data.role));
+
         // There is only 1 update to role 0 data
         assert_eq!(
             update
-                .all_role_data()
+                .role_data_history()
                 .get(&RoleNumber::ROLE_0)
                 .unwrap()
                 .len(),
@@ -513,13 +453,46 @@ mod test {
         // There is only 1 update to role 4 data
         assert_eq!(
             update
-                .all_role_data()
+                .role_data_history()
                 .get(&RoleNumber::from(4))
                 .unwrap()
                 .len(),
             1
         );
+
+        let role_0_data = update.role_data_record().get(&RoleNumber::ROLE_0).unwrap();
+        assert_eq!(role_0_data.signing_keys().len(), 1);
+        assert_eq!(role_0_data.encryption_keys().len(), 0);
+        assert_eq!(role_0_data.payment_keys().len(), 1);
+        assert_eq!(role_0_data.extended_data().len(), 1);
+
+        let role_4_data = update.role_data_record().get(&RoleNumber::from(4)).unwrap();
+        assert_eq!(role_4_data.signing_keys().len(), 1);
+        assert_eq!(role_4_data.encryption_keys().len(), 0);
+        assert_eq!(role_4_data.payment_keys().len(), 1);
+        assert_eq!(role_4_data.extended_data().len(), 1);
+
         // x509 certificates update on 2 index
         assert_eq!(update.x509_certs().len(), 2);
+
+        let (_k, r) = update
+            .get_latest_signing_pk_for_role(&RoleNumber::ROLE_0)
+            .unwrap();
+        assert_eq!(r, 0);
+        assert!(update
+            .get_latest_encryption_pk_for_role(&RoleNumber::from(4))
+            .is_none());
+        assert!(update
+            .get_signing_pk_for_role_at_rotation(&RoleNumber::ROLE_0, 2)
+            .is_none());
+        assert!(update
+            .get_encryption_pk_for_role_at_rotation(&RoleNumber::from(4), 0)
+            .is_none());
+        assert!(update
+            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleNumber::ROLE_0, 0)
+            .is_some());
+        assert!(update
+            .get_encryption_key_cert_or_key_for_role_at_rotation(&RoleNumber::from(4), 3)
+            .is_none());
     }
 }
