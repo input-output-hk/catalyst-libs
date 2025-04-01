@@ -47,8 +47,8 @@ docs: #DocumentDefinitions & {
 
 				// Brand Admin and Lower may publish this document.
 				admin: [
-					"BrandAdmin",
-					"CampaignAdmin",
+					"Brand Admin",
+					"Campaign Admin",
 				]
 			}
 		}

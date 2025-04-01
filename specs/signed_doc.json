@@ -1182,8 +1182,8 @@
       "signers": {
         "roles": {
           "admin": [
-            "RootAdmin",
-            "BrandAdmin"
+            "Root Admin",
+            "Brand Admin"
           ],
           "user": []
         },
@@ -1324,8 +1324,8 @@
       "signers": {
         "roles": {
           "admin": [
-            "BrandAdmin",
-            "CampaignAdmin"
+            "Brand Admin",
+            "Campaign Admin"
           ],
           "user": []
         },
@@ -1464,8 +1464,8 @@
       "signers": {
         "roles": {
           "admin": [
-            "RootAdmin",
-            "BrandAdmin"
+            "Root Admin",
+            "Brand Admin"
           ],
           "user": []
         },
@@ -1612,7 +1612,7 @@
     },
     "Proposal Submission Action": {
       "authors": {},
-      "description": "## Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  Unless they all submit or withdraw the same version of the proposal\nthe proposal will not be seen as submitted or withdrawn.\n\nThe payload is a fixed format.",
+      "description": "## Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  \nUnless they all submit the same version of the proposal\nthe proposal will not be seen as submitted.\n\nThe payload is a fixed format.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1914,8 +1914,8 @@
       "signers": {
         "roles": {
           "admin": [
-            "BrandAdmin",
-            "CampaignAdmin"
+            "Brand Admin",
+            "Campaign Admin"
           ],
           "user": []
         },

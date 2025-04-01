@@ -62,7 +62,22 @@ def metadata_format_link(name: str, depth: int = 0):
 
     while depth > 0:
         link = f"../{link}"
-        link -= 1
+        depth -= 1
+
+    return f"[{name}]({link})"
+
+def metadata_doc_ref_link(name: str, depth: int = 0):
+    """
+    Metadata Document Reference link.
+    """
+    link = name.lower().replace(" ","_")+".md"
+
+    if depth == 0:
+        link = f"./docs/{link}"
+    else:    
+        while depth > 1:
+            link = f"../{link}"
+            depth -= 1
 
     return f"[{name}]({link})"
 
@@ -75,7 +90,7 @@ def metadata_field_link(name: str, depth: int = 0):
 
     while depth > 0:
         link = f"../{link}"
-        link -= 1
+        depth -= 1
 
     return f"[`{name}`]({link})"
 
@@ -100,9 +115,14 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
     field_display = ""
     for field_name in order:
         field = fields[field_name]
+        # Don't display excluded fields in the docs for individual doc pages
+        if doc_name is not None:
+            if field["required"] == "excluded":
+                continue
+
         field_display += f"""
 {field_title_level} `{field_name}`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | {field["required"]} |
@@ -113,6 +133,18 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
         field_display += (
             f"| Format | {metadata_format_link(field['format'], depth)} |\n"
         )
+
+        if doc_name is not None:
+            if field_name == "type":
+                # Display the actual documents type values
+                monospace_types = []
+                for type in doc_data["docs"][doc_name]["type"]:
+                    monospace_types.append(f"`{type}`")
+                field_display += (
+                    f"| Type | {',<br/>'.join(monospace_types)} |\n"
+                )
+
+
         if field.get("multiple", False):
             field_display += f"| Multiple References | {field['multiple']} |\n"
         if "type" in field:
@@ -121,7 +153,7 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
             if isinstance(ref_doc_names, str):
                 ref_doc_names = [ref_doc_names]
             for ref_doc in ref_doc_names:
-                field_display += f"| {ref_heading} | {ref_doc} |\n"
+                field_display += f"| {ref_heading} | {metadata_doc_ref_link(ref_doc,depth)} |\n"
                 ref_heading = ""
         exclusive = field.get("exclusive", None)
         if exclusive is not None:
@@ -130,7 +162,7 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
                 field_display += f"| {exclusive_title} |  {ref}  |\n"
                 exclusive_title = ""
 
-        field_display += f"""
+        field_display += f"""<!-- markdownlint-enable MD033 -->
 {field["description"]}
 
 {field_title_level}# Validation

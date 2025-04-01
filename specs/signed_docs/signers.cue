@@ -23,14 +23,14 @@ _allUserRoles: or(_allUserRolesList)
 // Named Admin Roles
 _allAdminRolesList: list.UniqueItems
 _allAdminRolesList: [
-	"RootCA",
-	"BrandCA",
-	"CampaignCA",
-	"CategoryCA",
-	"RootAdmin",
-	"BrandAdmin",
-	"CampaignAdmin",
-	"CategoryAdmin",
+	"Root CA",
+	"Brand CA",
+	"Campaign CA",
+	"Category CA",
+	"Root Admin",
+	"Brand Admin",
+	"Campaign Admin",
+	"Category Admin",
 	"Moderator",
 ]
 _allAdminRoles: or(_allAdminRolesList)

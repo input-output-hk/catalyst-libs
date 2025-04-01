@@ -10,7 +10,7 @@ def name_to_spec_link(name, ref=None):
     """
     Create a link to a document type, and an optional ref inside the document.
     """
-    link = "./../catalyst_docs/" + name.lower().replace(" ", "_") + ".md"
+    link = "./docs/" + name.lower().replace(" ", "_") + ".md"
     if ref is not None:
         link += f"#{ref}"
     return link

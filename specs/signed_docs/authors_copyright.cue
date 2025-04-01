@@ -9,9 +9,7 @@ package signed_docs
 }
 
 // 
-#authorMinConstraint: {
-
-}
+#authorMinConstraint: {}
 
 // General Authors List
 authors: #authorList & {

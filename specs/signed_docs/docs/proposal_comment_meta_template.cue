@@ -45,8 +45,8 @@ docs: #DocumentDefinitions & {
 
 				// Root Admin and brand Admin may publish this document.
 				admin: [
-					"RootAdmin",
-					"BrandAdmin",
+					"Root Admin",
+					"Brand Admin",
 				]
 			}
 		}

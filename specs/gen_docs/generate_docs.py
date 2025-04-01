@@ -185,6 +185,7 @@ def create_individual_doc_files(docs: dict, args: argparse.Namespace) -> bool:
             lambda docs: gen_docs_page_md(doc_name, docs),
             args,
             docs,
+            depth=1
         )
 
     return good

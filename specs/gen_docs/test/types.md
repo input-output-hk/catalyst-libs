@@ -24,19 +24,19 @@ All Defined Document Types
 <!-- markdownlint-disable MD033 -->
 | Document Type | Base Types | [CBOR][RFC8949] |
 | :--- | :--- | :--- |
-| [Brand Parameters](./../catalyst_docs/brand_parameters.md) | Brand | [37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
-| [Campaign Parameters](./../catalyst_docs/campaign_parameters.md) | Campaign | [37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
-| [Category Parameters](./../catalyst_docs/category_parameters.md) | Category | [37(h'818938c331394daaafe6974c78488e95')] |
-| [Comment Action Document](./../catalyst_docs/comment_action_document.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
-| [Election Parameters](./../catalyst_docs/election_parameters.md) | Election | [37(h'788ff4c6d65a451fbb33575fe056b411')] |
-| [Proposal](./../catalyst_docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Comment](./../catalyst_docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Comment Meta Template](./../catalyst_docs/proposal_comment_meta_template.md) | Template/Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Comment Template](./../catalyst_docs/proposal_comment_template.md) | Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Meta Template](./../catalyst_docs/proposal_meta_template.md) | Template/Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Moderation Action](./../catalyst_docs/proposal_moderation_action.md) | Action/Proposal/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
-| [Proposal Submission Action](./../catalyst_docs/proposal_submission_action.md) | Action/Proposal/SubmissionAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'78927329cfd94ea19c710e019b126a65')] |
-| [Proposal Template](./../catalyst_docs/proposal_template.md) | Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Brand Parameters](./docs/brand_parameters.md) | Brand | [37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
+| [Campaign Parameters](./docs/campaign_parameters.md) | Campaign | [37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
+| [Category Parameters](./docs/category_parameters.md) | Category | [37(h'818938c331394daaafe6974c78488e95')] |
+| [Comment Action Document](./docs/comment_action_document.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Election Parameters](./docs/election_parameters.md) | Election | [37(h'788ff4c6d65a451fbb33575fe056b411')] |
+| [Proposal](./docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment](./docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) | Template/Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment Template](./docs/proposal_comment_template.md) | Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Meta Template](./docs/proposal_meta_template.md) | Template/Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Moderation Action](./docs/proposal_moderation_action.md) | Action/Proposal/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Proposal Submission Action](./docs/proposal_submission_action.md) | Action/Proposal/SubmissionAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'78927329cfd94ea19c710e019b126a65')] |
+| [Proposal Template](./docs/proposal_template.md) | Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
 <!-- markdownlint-enable MD033 -->
 
 ## Copyright
@@ -45,7 +45,7 @@ All Defined Document Types
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-03-12 |
+| Modified | 2025-04-01 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

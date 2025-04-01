@@ -76,12 +76,12 @@ uuid_v7 = 6.37(bytes .size 16)
 ## Individual Metadata field definitions
 
 ### `type`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](metadata.md#document-type) |
-
+<!-- markdownlint-enable MD033 -->
 The document TYPE.
 
 #### Validation
@@ -89,12 +89,12 @@ The document TYPE.
 **MUST** be a known document type.
 
 ### `id`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
 | Format | [UUIDv7](metadata.md#uuidv7) |
-
+<!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
@@ -105,12 +105,12 @@ IF [`ver`](metadata.md#ver) does not == [`id`](metadata.md#id) then a document w
 [`id`](metadata.md#id) and [`ver`](metadata.md#ver) being equal *MUST* exist.
 
 ### `ver`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
 | Format | [UUIDv7](metadata.md#uuidv7) |
-
+<!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](metadata.md#ver) == [`id`](metadata.md#id)
 
@@ -119,25 +119,25 @@ The first version of the document must set [`ver`](metadata.md#ver) == [`id`](me
 The document version must always be >= the document ID.
 
 ### `ref`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Proposal Meta Template |
-|  | Proposal Template |
-|  | Proposal |
-|  | Proposal Comment Meta Template |
-|  | Proposal Comment Template |
-|  | Proposal Comment |
-|  | Proposal Submission Action |
-|  | Proposal Moderation Action |
-|  | Comment Action Document |
-|  | Brand Parameters |
-|  | Campaign Parameters |
-|  | Category Parameters |
-|  | Election Parameters |
-
+| Valid References | [Proposal Meta Template](./docs/proposal_meta_template.md) |
+|  | [Proposal Template](./docs/proposal_template.md) |
+|  | [Proposal](./docs/proposal.md) |
+|  | [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) |
+|  | [Proposal Comment Template](./docs/proposal_comment_template.md) |
+|  | [Proposal Comment](./docs/proposal_comment.md) |
+|  | [Proposal Submission Action](./docs/proposal_submission_action.md) |
+|  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |
+|  | [Comment Action Document](./docs/comment_action_document.md) |
+|  | [Brand Parameters](./docs/brand_parameters.md) |
+|  | [Campaign Parameters](./docs/campaign_parameters.md) |
+|  | [Category Parameters](./docs/category_parameters.md) |
+|  | [Election Parameters](./docs/election_parameters.md) |
+<!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
@@ -156,16 +156,16 @@ Every Reference Document **MUST** Exist, and **MUST** be a valid reference to th
 The calculated Hash of the Referenced Document **MUST** match the Hash in the reference.
 
 ### `template`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Proposal Meta Template |
-|  | Proposal Template |
-|  | Proposal Comment Meta Template |
-|  | Proposal Comment Template |
-
+| Valid References | [Proposal Meta Template](./docs/proposal_meta_template.md) |
+|  | [Proposal Template](./docs/proposal_template.md) |
+|  | [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) |
+|  | [Proposal Comment Template](./docs/proposal_comment_template.md) |
+<!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
 #### Validation
@@ -174,13 +174,13 @@ In addition to the validation performed for `ref`,
 The document payload is not valid if it does not validate completely against the referenced template.
 
 ### `reply`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Proposal Comment |
-
+| Valid References | [Proposal Comment](./docs/proposal_comment.md) |
+<!-- markdownlint-enable MD033 -->
 Reference to a Comment document type being referred to.
 
 #### Validation
@@ -190,12 +190,12 @@ The [`ref`](metadata.md#ref) of the [`reply`](metadata.md#reply) document must b
 the original comment document.
 
 ### `section`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Section Reference](metadata.md#section-reference) |
-
+<!-- markdownlint-enable MD033 -->
 A Reference to the original document, or the comment being replied to.
 
 #### Validation
@@ -204,12 +204,12 @@ For a non-reply this must be a valid section reference into the referenced docum
 For a reply, this must be a valid section reference into the comment being replied to.
 
 ### `collaborators`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Collaborators Reference List](metadata.md#collaborators-reference-list) |
-
+<!-- markdownlint-enable MD033 -->
 A list of collaborators who may also publish updates to versions of this document.
 This should include all parties who have not signed this document directly.
 
@@ -225,15 +225,15 @@ However, any document submission referencing a proposal MUST be signed by all co
 addition to the author.
 
 ### `brand_id`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Brand Parameters |
+| Valid References | [Brand Parameters](./docs/brand_parameters.md) |
 | Exclusive |  campaign_id  |
 |  |  category_id  |
-
+<!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
 
 #### Validation
@@ -245,15 +245,15 @@ It is also valid for the referenced document to not include this field, if it is
 optional for the referenced document.
 
 ### `campaign_id`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Campaign Parameters |
+| Valid References | [Campaign Parameters](./docs/campaign_parameters.md) |
 | Exclusive |  brand_id  |
 |  |  category_id  |
-
+<!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
 #### Validation
@@ -265,15 +265,15 @@ It is also valid for the referenced document to not include this field, if it is
 optional for the referenced document.
 
 ### `category_id`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Category Parameters |
+| Valid References | [Category Parameters](./docs/category_parameters.md) |
 | Exclusive |  brand_id  |
 |  |  campaign_id  |
-
+<!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
 #### Validation
@@ -285,13 +285,13 @@ It is also valid for the referenced document to not include this field, if it is
 optional for the referenced document.
 
 ### `election_id`
-
+<!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | Election Parameters |
-
+| Valid References | [Election Parameters](./docs/election_parameters.md) |
+<!-- markdownlint-enable MD033 -->
 A reference to the Election Parameters Document this document lies under.
 
 #### Validation
@@ -308,7 +308,7 @@ optional for the referenced document.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-03-12 |
+| Modified | 2025-04-01 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

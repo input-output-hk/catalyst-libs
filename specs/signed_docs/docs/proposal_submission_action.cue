@@ -17,8 +17,9 @@ docs: #DocumentDefinitions & {
 			but none of them will take effect until ALL collaborators have posted equivalent actions.
 
 			For example, three collaborators Alice/Bob/Claire can each post one submission action
-			for the same document.  Unless they all submit or withdraw the same version of the proposal
-			the proposal will not be seen as submitted or withdrawn.
+			for the same document.  
+			Unless they all submit the same version of the proposal
+			the proposal will not be seen as submitted.
 
 			The payload is a fixed format.
 			"""
