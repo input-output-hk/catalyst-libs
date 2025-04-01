@@ -14,8 +14,8 @@ use rules::{
 
 use crate::{
     doc_types::{
-        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
-        PROPOSAL_TEMPLATE_UUID_TYPE,
+        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+        PROPOSAL_DOCUMENT_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE,
     },
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     CatalystSignedDocument, ContentEncoding, ContentType,
@@ -78,6 +78,31 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         category: CategoryRule::NotSpecified,
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
+
+    let proposal_submission_action_rules = Rules {
+        content_type: ContentTypeRule {
+            exp: ContentType::Json,
+        },
+        content_encoding: ContentEncodingRule {
+            exp: ContentEncoding::Brotli,
+            optional: false,
+        },
+        template: TemplateRule::NotSpecified,
+        category: CategoryRule::Specified { optional: true },
+        doc_ref: RefRule::Specified {
+            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE
+                .try_into()
+                .expect("Must be a valid UUID V4"),
+            optional: false,
+        },
+        reply: ReplyRule::NotSpecified,
+        section: SectionRule::NotSpecified,
+    };
+
+    document_rules_map.insert(
+        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+        proposal_submission_action_rules,
+    );
 
     document_rules_map
 }

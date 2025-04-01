@@ -137,14 +137,14 @@ impl Decode<'_, ProblemReport> for CborRoleData {
 
 /// Decodes a signing key.
 fn decode_signing_key(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
+    d: &mut Decoder, context: &str, report: &mut ProblemReport,
 ) -> Result<Option<KeyLocalRef>, ()> {
     if let Err(e) = decode_array_len(d, "RoleSigningKey") {
         report.other(&format!("{e:?}"), context);
         return Err(());
     }
 
-    match KeyLocalRef::decode(d, &mut ()) {
+    match KeyLocalRef::decode(d, report) {
         Ok(v) => Ok(Some(v)),
         Err(e) => {
             report.other(
@@ -158,14 +158,14 @@ fn decode_signing_key(
 
 /// Decodes an encryption key.
 fn decode_encryption_key(
-    d: &mut Decoder, context: &str, report: &ProblemReport,
+    d: &mut Decoder, context: &str, report: &mut ProblemReport,
 ) -> Result<Option<KeyLocalRef>, ()> {
     if let Err(e) = decode_array_len(d, "RoleEncryptionKey") {
         report.other(&format!("{e:?}"), context);
         return Err(());
     }
 
-    match KeyLocalRef::decode(d, &mut ()) {
+    match KeyLocalRef::decode(d, report) {
         Ok(v) => Ok(Some(v)),
         Err(e) => {
             report.other(

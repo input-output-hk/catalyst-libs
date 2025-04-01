@@ -7,7 +7,7 @@
 use std::borrow::Cow;
 
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{TxnWitness, VKeyHash};
+use cardano_blockchain_types::{Network, TxnWitness, VKeyHash};
 use catalyst_types::{
     hashes::{Blake2b128Hash, Blake2b256Hash},
     id_uri::IdUri,
@@ -164,49 +164,53 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 
 /// Checks the role data.
 #[allow(clippy::similar_names)]
-pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport) -> Option<IdUri> {
+pub fn validate_role_data(
+    metadata: &Cip509RbacMetadata, subnet: Network, report: &ProblemReport,
+) -> Option<IdUri> {
     let context = "Role data validation";
 
-    if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
-        // For the role 0 there must be exactly once certificate and it must not have `deleted`,
-        // `undefined` or `C509CertInMetadatumReference` values.
-        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-            && matches!(
-                metadata.c509_certs.first(),
-                Some(C509Cert::C509Certificate(_))
-            )
-        {
-            report.other(
-                "Only one certificate can be defined at index 0 for the role 0",
-                context,
-            );
-        }
-        if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-            && !matches!(
-                metadata.c509_certs.first(),
-                Some(C509Cert::C509Certificate(_))
-            )
-        {
-            report.other("The role 0 certificate must be present", context);
-        }
-    } else {
-        // For other roles there still must be exactly one certificate at 0 index, but it must
-        // have the `undefined` value.
-        if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
-            || matches!(
-                metadata.c509_certs.first(),
-                Some(C509Cert::C509Certificate(_))
-            )
-        {
-            report.other("Only role 0 can contain a certificate at 0 index", context);
-        }
-        if matches!(metadata.x509_certs.first(), Some(X509DerCert::Deleted))
-            || matches!(metadata.c509_certs.first(), Some(C509Cert::Deleted))
-        {
-            report.other("Only role 0 can delete a certificate at 0 index", context);
+    // There should be some role data
+    if !metadata.role_data.is_empty() {
+        if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
+            // For the role 0 there must be exactly once certificate and it must not have `deleted`,
+            // `undefined` or `C509CertInMetadatumReference` values.
+            if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+                && matches!(
+                    metadata.c509_certs.first(),
+                    Some(C509Cert::C509Certificate(_))
+                )
+            {
+                report.other(
+                    "Only one certificate can be defined at index 0 for the role 0",
+                    context,
+                );
+            }
+            if !matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+                && !matches!(
+                    metadata.c509_certs.first(),
+                    Some(C509Cert::C509Certificate(_))
+                )
+            {
+                report.other("The role 0 certificate must be present", context);
+            }
+        } else {
+            // For other roles there still must be exactly one certificate at 0 index, but it must
+            // have the `undefined` value.
+            if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
+                || matches!(
+                    metadata.c509_certs.first(),
+                    Some(C509Cert::C509Certificate(_))
+                )
+            {
+                report.other("Only role 0 can contain a certificate at 0 index", context);
+            }
+            if matches!(metadata.x509_certs.first(), Some(X509DerCert::Deleted))
+                || matches!(metadata.c509_certs.first(), Some(C509Cert::Deleted))
+            {
+                report.other("Only role 0 can delete a certificate at 0 index", context);
+            }
         }
     }
-
     // It isn't allowed for any role to use a public key at 0 index.
     if !matches!(
         metadata.pub_keys.first(),
@@ -233,7 +237,7 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
     let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
         if number == &RoleNumber::ROLE_0 {
-            catalyst_id = validate_role_0(data, metadata, context, report);
+            catalyst_id = validate_role_0(data, metadata, subnet, context, report);
         } else {
             if let Some(signing_key) = data.signing_key() {
                 if signing_key.key_offset == 0 {
@@ -262,7 +266,8 @@ pub fn validate_role_data(metadata: &Cip509RbacMetadata, report: &ProblemReport)
 
 /// Checks that the role 0 data is correct.
 fn validate_role_0(
-    role: &RoleData, metadata: &Cip509RbacMetadata, context: &str, report: &ProblemReport,
+    role: &RoleData, metadata: &Cip509RbacMetadata, subnet: Network, context: &str,
+    report: &ProblemReport,
 ) -> Option<IdUri> {
     if let Some(key) = role.encryption_key() {
         report.invalid_value(
@@ -294,7 +299,7 @@ fn validate_role_0(
             match metadata.x509_certs.first() {
                 Some(X509DerCert::X509Cert(cert)) => {
                     // All good: role 0 references a valid X509 certificate.
-                    catalyst_id = x509_cert_key(cert, context, report).map(|k| IdUri::new(network, None, k));
+                    catalyst_id = x509_cert_key(cert, context, report).map(|k| IdUri::new(network, Some(&subnet.to_string()), k));
                 }
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
@@ -304,7 +309,7 @@ fn validate_role_0(
             match metadata.c509_certs.first() {
                 Some(C509Cert::C509Certificate(cert)) => {
                     // All good: role 0 references a valid C509 certificate.
-                    catalyst_id = c509_cert_key(cert, context, report).map(|k| IdUri::new(network, None, k));
+                    catalyst_id = c509_cert_key(cert, context, report).map(|k| IdUri::new(network, Some(&subnet.to_string()), k));
                 }
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),

@@ -9,7 +9,6 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
     let uuid_v4 = UuidV4::new();
 
     let metadata_fields = serde_json::json!({
-        "alg": Algorithm::EdDSA.to_string(),
         "content-type": ContentType::Json.to_string(),
         "content-encoding": ContentEncoding::Brotli.to_string(),
         "type": uuid_v4.to_string(),
