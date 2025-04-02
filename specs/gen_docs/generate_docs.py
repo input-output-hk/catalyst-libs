@@ -13,6 +13,7 @@ from gen_metadata_md import gen_metadata_md
 from gen_spec_index import gen_spec_index
 from gen_spec_md import gen_spec_md
 from gen_types_md import gen_types_md
+from gen_docs_relationship_diagram_d2 import gen_docs_relationship_diagram
 
 SIGNED_DOCS_SPECS = "../signed_doc.json"
 SIGNED_DOCS_PAGES_DIR = "../../docs/src/architecture/08_concepts/catalyst_docs"
@@ -252,6 +253,7 @@ if __name__ == "__main__":
     good &= save_or_validate("types.md", gen_types_md, args, docs)
     good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)
     good &= create_individual_doc_files(docs, args)
+    good &= save_or_validate("doc_relationships.d2", gen_docs_relationship_diagram, args, docs)
 
     if not good:
         print("File Comparisons Failed, Documentation is not current.")
