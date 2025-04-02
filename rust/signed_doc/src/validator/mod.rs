@@ -285,10 +285,10 @@ where
 
 #[allow(missing_docs)]
 pub mod tests {
-    /// A Test Future Threshold value for the Document's timebased id field validation (5
+    /// A Test Future Threshold value for the Document's time based id field validation (5
     /// secs);
     pub const TEST_FUTURE_THRESHOLD: u64 = 5;
-    /// A Test Future Threshold value for the Document's timebased id field validation (5
+    /// A Test Future Threshold value for the Document's time based id field validation (5
     /// secs);
     pub const TEST_PAST_THRESHOLD: u64 = 5;
 
