@@ -109,7 +109,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 
 /// A comprehensive document type based validation of the `CatalystSignedDocument`.
 /// Includes time based validation of the `id` and `ver` fields based on the provided
-/// `future_threshold` and `past_threshold` threshold values.
+/// `future_threshold` and `past_threshold` threshold values (in seconds).
 /// Return true if it is valid, otherwise return false.
 ///
 /// # Errors
@@ -285,9 +285,6 @@ where
 
 #[allow(missing_docs)]
 pub mod tests {
-    #[cfg(test)]
-    use super::*;
-
     /// A Test Future Threshold value for the Document's timebased id field validation (5
     /// secs);
     pub const TEST_FUTURE_THRESHOLD: u64 = 5;
@@ -297,7 +294,88 @@ pub mod tests {
 
     #[cfg(test)]
     #[test]
+    fn document_id_and_ver_test() {
+        use std::time::SystemTime;
+
+        use uuid::{Timestamp, Uuid};
+
+        use crate::{validator::validate_id_and_ver, Builder, UuidV7};
+
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        let uuid_v7 = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": uuid_v7.to_string(),
+                "ver": uuid_v7.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(is_valid);
+
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0));
+        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0));
+        assert!(ver < id);
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": id.to_string(),
+                "ver": ver.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(!is_valid);
+
+        let to_far_in_past = Uuid::new_v7(Timestamp::from_unix_time(
+            now - TEST_PAST_THRESHOLD - 1,
+            0,
+            0,
+            0,
+        ));
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": to_far_in_past.to_string(),
+                "ver": to_far_in_past.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(!is_valid);
+
+        let to_far_in_future = Uuid::new_v7(Timestamp::from_unix_time(
+            now + TEST_FUTURE_THRESHOLD + 1,
+            0,
+            0,
+            0,
+        ));
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": to_far_in_future.to_string(),
+                "ver": to_far_in_future.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(!is_valid);
+    }
+
+    #[cfg(test)]
+    #[test]
     fn document_rules_init_test() {
+        use super::document_rules_init;
+
         document_rules_init();
     }
 }
