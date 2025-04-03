@@ -3,7 +3,7 @@
 pub(crate) mod rules;
 pub(crate) mod utils;
 
-use std::{collections::HashMap, sync::LazyLock};
+use std::{collections::HashMap, sync::LazyLock, time::SystemTime};
 
 use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport, uuid::Uuid};
 use coset::{CoseSign, CoseSignature};
@@ -108,12 +108,14 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 }
 
 /// A comprehensive document type based validation of the `CatalystSignedDocument`.
-/// Return true if all signatures are valid, otherwise return false.
+/// Includes time based validation of the `id` and `ver` fields based on the provided
+/// `future_threshold` and `past_threshold` threshold values (in seconds).
+/// Return true if it is valid, otherwise return false.
 ///
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
 pub async fn validate<Provider>(
-    doc: &CatalystSignedDocument, provider: &Provider,
+    doc: &CatalystSignedDocument, future_threshold: u64, past_threshold: u64, provider: &Provider,
 ) -> anyhow::Result<bool>
 where Provider: CatalystSignedDocumentProvider {
     let Ok(doc_type) = doc.doc_type() else {
@@ -123,6 +125,10 @@ where Provider: CatalystSignedDocumentProvider {
         );
         return Ok(false);
     };
+
+    if !validate_id_and_ver(doc, future_threshold, past_threshold)? {
+        return Ok(false);
+    }
 
     let Some(rules) = DOCUMENT_RULES.get(&doc_type.uuid()) else {
         doc.report().invalid_value(
@@ -134,6 +140,82 @@ where Provider: CatalystSignedDocumentProvider {
         return Ok(false);
     };
     rules.check(doc, provider).await
+}
+
+/// Validates document `id` and `ver` fields on the timestamps:
+/// 1. document `ver` cannot be smaller than document id field
+/// 2. document `id` cannot be too far in the future (`future_threshold` arg) from
+///    `SystemTime::now()` based on the provide threshold
+/// 3. document `id` cannot be too far behind (`past_threshold` arg) from
+///    `SystemTime::now()` based on the provide threshold
+fn validate_id_and_ver(
+    doc: &CatalystSignedDocument, future_threshold: u64, past_threshold: u64,
+) -> anyhow::Result<bool> {
+    let id = doc.doc_id().ok();
+    let ver = doc.doc_ver().ok();
+    if id.is_none() {
+        doc.report().missing_field(
+            "id",
+            "Can't get a document id during the validation process",
+        );
+    }
+    if ver.is_none() {
+        doc.report().missing_field(
+            "ver",
+            "Can't get a document ver during the validation process",
+        );
+    }
+    match (id, ver) {
+        (Some(id), Some(ver)) => {
+            let mut is_valid = true;
+            if ver < id {
+                doc.report().invalid_value(
+                    "ver",
+                    &ver.to_string(),
+                    "ver < id",
+                    &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
+                );
+                is_valid = false;
+            }
+
+            let (id_time, _) = id
+                .uuid()
+                .get_timestamp()
+                .ok_or(anyhow::anyhow!("Document id field must be a UUIDv7"))?
+                .to_unix();
+
+            let now = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .map_err(|_| {
+                    anyhow::anyhow!(
+                        "Cannot validate document id field, SystemTime before UNIX EPOCH!"
+                    )
+                })?
+                .as_secs();
+
+            if id_time > now.saturating_add(future_threshold) {
+                doc.report().invalid_value(
+                    "id",
+                    &ver.to_string(),
+                    "id < now + future_threshold",
+                    &format!("Document ID timestamp {id} cannot be too far in future (threshold: {future_threshold}) from now: {now}"),
+                );
+                is_valid = false;
+            }
+            if id_time < now.saturating_sub(past_threshold) {
+                doc.report().invalid_value(
+                    "id",
+                    &ver.to_string(),
+                    "id > now - past_threshold",
+                    &format!("Document ID timestamp {id} cannot be too far behind (threshold: {past_threshold}) from now: {now}"),
+                );
+                is_valid = false;
+            }
+            Ok(is_valid)
+        },
+
+        _ => Ok(false),
+    }
 }
 
 /// Verify document signatures.
@@ -208,12 +290,99 @@ where
     Ok(true)
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[allow(missing_docs)]
+pub mod tests {
+    /// A Test Future Threshold value for the Document's time based id field validation (5
+    /// secs);
+    pub const TEST_FUTURE_THRESHOLD: u64 = 5;
+    /// A Test Future Threshold value for the Document's time based id field validation (5
+    /// secs);
+    pub const TEST_PAST_THRESHOLD: u64 = 5;
 
+    #[cfg(test)]
+    #[test]
+    fn document_id_and_ver_test() {
+        use std::time::SystemTime;
+
+        use uuid::{Timestamp, Uuid};
+
+        use crate::{validator::validate_id_and_ver, Builder, UuidV7};
+
+        let now = SystemTime::now()
+            .duration_since(SystemTime::UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
+
+        let uuid_v7 = UuidV7::new();
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": uuid_v7.to_string(),
+                "ver": uuid_v7.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(is_valid);
+
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0));
+        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0));
+        assert!(ver < id);
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": id.to_string(),
+                "ver": ver.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(!is_valid);
+
+        let to_far_in_past = Uuid::new_v7(Timestamp::from_unix_time(
+            now - TEST_PAST_THRESHOLD - 1,
+            0,
+            0,
+            0,
+        ));
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": to_far_in_past.to_string(),
+                "ver": to_far_in_past.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(!is_valid);
+
+        let to_far_in_future = Uuid::new_v7(Timestamp::from_unix_time(
+            now + TEST_FUTURE_THRESHOLD + 1,
+            0,
+            0,
+            0,
+        ));
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "id": to_far_in_future.to_string(),
+                "ver": to_far_in_future.to_string()
+            }))
+            .unwrap()
+            .build();
+
+        let is_valid =
+            validate_id_and_ver(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD).unwrap();
+        assert!(!is_valid);
+    }
+
+    #[cfg(test)]
     #[test]
     fn document_rules_init_test() {
+        use super::document_rules_init;
+
         document_rules_init();
     }
 }

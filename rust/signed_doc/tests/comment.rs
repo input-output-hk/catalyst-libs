@@ -1,6 +1,10 @@
 //! Integration test for comment document validation part.
 
-use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
+use catalyst_signed_doc::{
+    providers::tests::TestCatalystSignedDocumentProvider,
+    validator::tests::{TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD},
+    *,
+};
 
 mod common;
 
@@ -31,7 +35,9 @@ async fn test_valid_comment_doc() {
     provider.add_document(template_doc).unwrap();
     provider.add_document(proposal_doc).unwrap();
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
+        .await
+        .unwrap();
 
     assert!(is_valid);
 }
@@ -85,7 +91,9 @@ async fn test_valid_comment_doc_with_reply() {
     provider.add_document(proposal_doc).unwrap();
     provider.add_document(comment_doc).unwrap();
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
+        .await
+        .unwrap();
 
     assert!(is_valid);
 }
@@ -116,7 +124,9 @@ async fn test_invalid_comment_doc() {
     provider.add_document(template_doc).unwrap();
     provider.add_document(proposal_doc).unwrap();
 
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
+        .await
+        .unwrap();
 
     assert!(!is_valid);
 }
