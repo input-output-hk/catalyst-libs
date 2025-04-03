@@ -119,12 +119,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
 /// # Errors
 /// If `provider` returns error, fails fast throwing that error.
 pub async fn validate<Provider>(
-    doc: &CatalystSignedDocument, future_threshold: Option<Duration>,
-    past_threshold: Option<Duration>, provider: &Provider,
+    doc: &CatalystSignedDocument, provider: &Provider,
 ) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+where Provider: CatalystSignedDocumentProvider {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
@@ -133,7 +130,7 @@ where
         return Ok(false);
     };
 
-    if !validate_id_and_ver(doc, future_threshold, past_threshold)? {
+    if !validate_id_and_ver(doc, provider)? {
         return Ok(false);
     }
 
@@ -151,14 +148,15 @@ where
 
 /// Validates document `id` and `ver` fields on the timestamps:
 /// 1. document `ver` cannot be smaller than document id field
-/// 2. If `future_threshold` not `None`, document `id` cannot be too far in the future
-///    (`future_threshold` arg) from `SystemTime::now()` based on the provide threshold
-/// 3. If `past_threshold` not `None`, document `id` cannot be too far behind
+/// 2. If `provider.future_threshold()` not `None`, document `id` cannot be too far in the
+///    future (`future_threshold` arg) from `SystemTime::now()` based on the provide
+///    threshold
+/// 3. If `provider.future_threshold()` not `None`, document `id` cannot be too far behind
 ///    (`past_threshold` arg) from `SystemTime::now()` based on the provide threshold
-fn validate_id_and_ver(
-    doc: &CatalystSignedDocument, future_threshold: Option<Duration>,
-    past_threshold: Option<Duration>,
-) -> anyhow::Result<bool> {
+fn validate_id_and_ver<Provider>(
+    doc: &CatalystSignedDocument, provider: &Provider,
+) -> anyhow::Result<bool>
+where Provider: CatalystSignedDocumentProvider {
     let id = doc.doc_id().ok();
     let ver = doc.doc_ver().ok();
     if id.is_none() {
@@ -201,7 +199,7 @@ fn validate_id_and_ver(
                     )
                 })?;
 
-            if let Some(future_threshold) = future_threshold {
+            if let Some(future_threshold) = provider.future_threshold() {
                 if ver_time > now.saturating_add(future_threshold) {
                     doc.report().invalid_value(
                     "ver",
@@ -213,7 +211,7 @@ fn validate_id_and_ver(
                 }
             }
 
-            if let Some(past_threshold) = past_threshold {
+            if let Some(past_threshold) = provider.past_threshold() {
                 if ver_time < now.saturating_sub(past_threshold) {
                     doc.report().invalid_value(
                     "ver",
@@ -304,24 +302,21 @@ where
     Ok(true)
 }
 
-#[allow(missing_docs)]
-pub mod tests {
-    use std::time::Duration;
+#[cfg(test)]
+mod tests {
+    use std::time::SystemTime;
 
-    /// A Test Future Threshold value for the Document's time based id field validation;
-    pub const TEST_FUTURE_THRESHOLD: Duration = Duration::from_secs(5);
-    /// A Test Future Threshold value for the Document's time based id field validation;
-    pub const TEST_PAST_THRESHOLD: Duration = Duration::from_secs(5);
+    use uuid::{Timestamp, Uuid};
 
-    #[cfg(test)]
+    use crate::{
+        providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
+        validator::{document_rules_init, validate_id_and_ver},
+        Builder, UuidV7,
+    };
+
     #[test]
     fn document_id_and_ver_test() {
-        use std::time::SystemTime;
-
-        use uuid::{Timestamp, Uuid};
-
-        use crate::{validator::validate_id_and_ver, Builder, UuidV7};
-
+        let provider = TestCatalystSignedDocumentProvider::default();
         let now = SystemTime::now()
             .duration_since(SystemTime::UNIX_EPOCH)
             .unwrap()
@@ -336,9 +331,7 @@ pub mod tests {
             .unwrap()
             .build();
 
-        let is_valid =
-            validate_id_and_ver(&doc, Some(TEST_FUTURE_THRESHOLD), Some(TEST_PAST_THRESHOLD))
-                .unwrap();
+        let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
         assert!(is_valid);
 
         let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0));
@@ -352,13 +345,11 @@ pub mod tests {
             .unwrap()
             .build();
 
-        let is_valid =
-            validate_id_and_ver(&doc, Some(TEST_FUTURE_THRESHOLD), Some(TEST_PAST_THRESHOLD))
-                .unwrap();
+        let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
         assert!(!is_valid);
 
         let to_far_in_past = Uuid::new_v7(Timestamp::from_unix_time(
-            now - TEST_PAST_THRESHOLD.as_secs() - 1,
+            now - provider.past_threshold().unwrap().as_secs() - 1,
             0,
             0,
             0,
@@ -371,13 +362,11 @@ pub mod tests {
             .unwrap()
             .build();
 
-        let is_valid =
-            validate_id_and_ver(&doc, Some(TEST_FUTURE_THRESHOLD), Some(TEST_PAST_THRESHOLD))
-                .unwrap();
+        let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
         assert!(!is_valid);
 
         let to_far_in_future = Uuid::new_v7(Timestamp::from_unix_time(
-            now + TEST_FUTURE_THRESHOLD.as_secs() + 1,
+            now + provider.future_threshold().unwrap().as_secs() + 1,
             0,
             0,
             0,
@@ -390,17 +379,12 @@ pub mod tests {
             .unwrap()
             .build();
 
-        let is_valid =
-            validate_id_and_ver(&doc, Some(TEST_FUTURE_THRESHOLD), Some(TEST_PAST_THRESHOLD))
-                .unwrap();
+        let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
         assert!(!is_valid);
     }
 
-    #[cfg(test)]
     #[test]
     fn document_rules_init_test() {
-        use super::document_rules_init;
-
         document_rules_init();
     }
 }
