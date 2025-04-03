@@ -175,6 +175,5 @@ Block:
 
 [Catalyst Signed Document]: ./../signed_doc/spec.md
 [Catalyst Signed Document content]: ./../signed_doc/spec.md#content-type
-[CBOR-deterministically-encoded]: https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [CBOR]: https://datatracker.ietf.org/doc/rfc8949/
