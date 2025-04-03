@@ -77,14 +77,14 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
 
 ### Metadata Fields
 
-* [`id`](./../signed_doc/spec.md#id).
+* [`id`](./../signed_doc/metadata.md#id).
   Used as a unique identifier of the chain.
   So all blocks from the same chain must have the same
-  [`id`](./../signed_doc/spec.md#id) field value.
-* [`ver`](./../signed_doc/spec.md#ver).
+  [`id`](./../signed_doc/metadata.md#id) field value.
+* [`ver`](./../signed_doc/metadata.md#ver).
   Used as a unique identifier of the block itself.
   Also the block's creation `timestamp` value is determined from the
-  [`ver`](./../signed_doc/spec.md#ver) field.
+  [`ver`](./../signed_doc/metadata.md#ver) field.
 * [`content type`](./../signed_doc/spec.md#content-type): `application/cbor`.
   [Catalyst Signed Document content] must be a [CBOR] encoded.
 
@@ -92,24 +92,21 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
   3 => 50
   ```
 
-* [`content encoding`](./../signed_doc/spec.md#content-encoding-optional):
+* [`content encoding`](./../signed_doc/spec.md#content-encoding):
   [Catalyst Signed Document content] must be [Brotli] compressed.
 
   ```CDDL
   "content-type" => "br"
   ```
 
-* [`type`](./../signed_doc/spec.md#type): `d9e7e6ce-2401-4d7d-9492-f4f7c64241c3` [UUID] value.
+* [`type`](./../signed_doc/metadata.md#type): `d9e7e6ce-2401-4d7d-9492-f4f7c64241c3` [UUID] value.
 
   ```CDDL
   "type" => 37(h'D9E7E6CE24014D7D9492F4F7C64241C3')
   ```
 
-* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference).
-  Previous block reference.
-  A [`ref`](./../signed_doc/meta.md#ref-document-reference) part **must** be a pair of
-  [`id`](./../signed_doc/spec.md#id) and
-  [`ver`](./../signed_doc/spec.md#ver).
+* [`ref`](./../signed_doc/metadata.md#ref).
+  Previous block reference, including Hash of the previous block.
 
 ### Content format
 
@@ -144,7 +141,7 @@ Block:
 
 ### Block validation rules
 
-* [`id`](./../signed_doc/spec.md#id)
+* [`id`](./../signed_doc/metadata.md#id)
   **MUST** be the same as for the previous block (except for genesis).
 * `height` **MUST** be incremented by `1` from the previous block height value (except for genesis and final block).
   *Genesis* block **MUST** have `0` value.
@@ -152,24 +149,17 @@ Block:
   E.g. previous block height is `9` and the *Final* block height is `-10`.
 * *Final* block is the last one for the specific chain and any other block could not be referenced to the *Final* one.
 
-* [`ver`](./../signed_doc/spec.md#ver)
+* [`ver`](./../signed_doc/metadata.md#ver)
   timestamp value **MUST** be greater or equals than the corresponding `timestamp`
   of the previous block (except for genesis).
-* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference)
+* [`ref`](./../signed_doc/metadata.md#ref)
   **MUST** be a reference to the previous block (except for genesis).
 * `ledger-type` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
 * `purpose-id` **MUST** be the same as for the previous block if present (except for genesis).
   **MANDATORY** field for *Genesis* and *Final* blocks.
-* [`kid`](./../signed_doc/spec.md#cose-signature-protected-header) field
+* [`kid`](./../signed_doc/spec.md#kid) field
   **MUST** be the same as for the previous block (except for genesis).
-* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference)'s
-  `hash-bytes` CBOR tag value and `bytes` size
-  **MUST** be the same as for the previous block (except for genesis).
-  Means that the hash function type and hash size itself must be the same.
-* [`ref_hash`](./../signed_doc/meta.md#ref-hash-secured-document-reference)
-  field for the *Genesis* block **MUST** be omitted.
-* `block-data` **MUST** be a [deterministically][CBOR-deterministically-encoded] encoded CBOR.
 
 ## Rationale
 
@@ -184,7 +174,7 @@ Block:
 <!-- OPTIONAL SECTIONS: see CIP-0001 > Document > Structure table -->
 
 [Catalyst Signed Document]: ./../signed_doc/spec.md
-[Catalyst Signed Document content]: ./../signed_doc/spec.md#signed-object-content
+[Catalyst Signed Document content]: ./../signed_doc/spec.md#content-type
 [CBOR-deterministically-encoded]: https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c
 [Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
 [CBOR]: https://datatracker.ietf.org/doc/rfc8949/

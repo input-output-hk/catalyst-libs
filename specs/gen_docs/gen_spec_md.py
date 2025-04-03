@@ -107,7 +107,7 @@ The COSE header parameters defined and used by Catalyst Signed Documents are as 
 ### Metadata
 
 Catalyst Signed Documents extend the Header Parameters with a series of Metadata fields.
-These fields are defined [here](./meta.md).
+These fields are defined [here](./metadata.md).
 
 ### Signing Catalyst Signed Documents
 
