@@ -66,15 +66,16 @@ def metadata_format_link(name: str, depth: int = 0):
 
     return f"[{name}]({link})"
 
+
 def metadata_doc_ref_link(name: str, depth: int = 0):
     """
     Metadata Document Reference link.
     """
-    link = name.lower().replace(" ","_")+".md"
+    link = name.lower().replace(" ", "_") + ".md"
 
     if depth == 0:
         link = f"./docs/{link}"
-    else:    
+    else:
         while depth > 1:
             link = f"../{link}"
             depth -= 1
@@ -140,10 +141,7 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
                 monospace_types = []
                 for type in doc_data["docs"][doc_name]["type"]:
                     monospace_types.append(f"`{type}`")
-                field_display += (
-                    f"| Type | {',<br/>'.join(monospace_types)} |\n"
-                )
-
+                field_display += f"| Type | {',<br/>'.join(monospace_types)} |\n"
 
         if field.get("multiple", False):
             field_display += f"| Multiple References | {field['multiple']} |\n"
@@ -153,7 +151,9 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
             if isinstance(ref_doc_names, str):
                 ref_doc_names = [ref_doc_names]
             for ref_doc in ref_doc_names:
-                field_display += f"| {ref_heading} | {metadata_doc_ref_link(ref_doc,depth)} |\n"
+                field_display += (
+                    f"| {ref_heading} | {metadata_doc_ref_link(ref_doc, depth)} |\n"
+                )
                 ref_heading = ""
         exclusive = field.get("exclusive", None)
         if exclusive is not None:

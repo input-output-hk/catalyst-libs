@@ -9,11 +9,11 @@ from pathlib import Path
 
 from common import metadata_field_link
 from gen_docs_page_md import gen_docs_page_md
+from gen_docs_relationship_diagram_d2 import gen_docs_relationship_diagram
 from gen_metadata_md import gen_metadata_md
 from gen_spec_index import gen_spec_index
 from gen_spec_md import gen_spec_md
 from gen_types_md import gen_types_md
-from gen_docs_relationship_diagram_d2 import gen_docs_relationship_diagram
 
 SIGNED_DOCS_SPECS = "../signed_doc.json"
 SIGNED_DOCS_PAGES_DIR = "../../docs/src/architecture/08_concepts/catalyst_docs"
@@ -186,7 +186,7 @@ def create_individual_doc_files(docs: dict, args: argparse.Namespace) -> bool:
             lambda docs: gen_docs_page_md(doc_name, docs),
             args,
             docs,
-            depth=1
+            depth=1,
         )
 
     return good
@@ -253,7 +253,9 @@ if __name__ == "__main__":
     good &= save_or_validate("types.md", gen_types_md, args, docs)
     good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)
     good &= create_individual_doc_files(docs, args)
-    good &= save_or_validate("doc_relationships.d2", gen_docs_relationship_diagram, args, docs)
+    good &= save_or_validate(
+        "doc_relationships.d2", gen_docs_relationship_diagram, args, docs
+    )
 
     if not good:
         print("File Comparisons Failed, Documentation is not current.")

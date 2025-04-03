@@ -7,6 +7,23 @@ vars: {
   }
 }
 
+title: |~md
+  # Signed Document Relationship Hierarchy
+~| {near: top-center}
+
+copyright: |~md
+  ## Copyright
+
+| Copyright | :copyright: 2024-2025 IOG Singapore, All Rights Reserved |
+| --- | --- |
+| License | This document is licensed under CC-BY-4.0 |
+| Created | 2024-12-27 |
+| Modified | 2025-04-03 |
+| Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Steven Johnson <steven.johnson@iohk.io> |
+
+~|  {near: bottom-right}
+
 "Brand Parameters": {
   shape: sql_table
   "content type": application/json
@@ -88,7 +105,7 @@ vars: {
 
 "Proposal Comment"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
 "Proposal Comment"."ref"->"Proposal"
-"Proposal Comment"."reply"->"Proposal Comment": Optional { style: { stroke: orange } }
+"Proposal Comment"."reply"->"Proposal Comment": (reply) Optional { style: { stroke: orange } }
 "Proposal Comment"."template"->"Proposal Comment Template"
 
 
