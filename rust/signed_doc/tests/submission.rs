@@ -29,9 +29,14 @@ async fn test_valid_submission_action() {
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(proposal_doc).unwrap();
 
-    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
-        .await
-        .unwrap();
+    let is_valid = validator::validate(
+        &doc,
+        Some(TEST_FUTURE_THRESHOLD),
+        Some(TEST_PAST_THRESHOLD),
+        &provider,
+    )
+    .await
+    .unwrap();
 
     assert!(is_valid);
 }
@@ -55,9 +60,14 @@ async fn test_valid_submission_action_with_empty_provider() {
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
-    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
-        .await
-        .unwrap();
+    let is_valid = validator::validate(
+        &doc,
+        Some(TEST_FUTURE_THRESHOLD),
+        Some(TEST_PAST_THRESHOLD),
+        &provider,
+    )
+    .await
+    .unwrap();
 
     assert!(!is_valid);
 }
@@ -78,9 +88,14 @@ async fn test_invalid_submission_action() {
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
-    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
-        .await
-        .unwrap();
+    let is_valid = validator::validate(
+        &doc,
+        Some(TEST_FUTURE_THRESHOLD),
+        Some(TEST_PAST_THRESHOLD),
+        &provider,
+    )
+    .await
+    .unwrap();
 
     assert!(!is_valid);
 }
