@@ -11,31 +11,6 @@ linked to a brand/campaign or category via the template used by the proposal.
 
 The payload of a proposal comment is controlled by its template.
 
-```d2 layout=elk
-
-"Proposal Comment": {
-  shape: sql_table
-  "content type": [application/json]
-  "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
-  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": [UUIDv7][RFC9562-V7]
-  "ver": [UUIDv7][RFC9562-V7]
-  "ref": Proposal
-  "template": Proposal Comment Template
-  "reply": Proposal Comment (Optional)
-  "section": Section Reference
-  "category_id": Category Parameters (Optional)
-
-}
-
-"Proposal Comment"."ref"->"Proposal"
-"Proposal Comment"."template"->"Proposal Comment Template"
-"Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
-"Proposal Comment"."category_id"->"Category Parameters": Optional
-
-
-```
-
 ### Validation
 
 TODO
@@ -113,7 +88,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-  `[[DocumentID, DocumentVer, DocumentHash],...]`
+   `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
@@ -216,7 +191,6 @@ New versions of this document may be published by:
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[application/json]: https://www.iana.org/assignments/media-types/application/json
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

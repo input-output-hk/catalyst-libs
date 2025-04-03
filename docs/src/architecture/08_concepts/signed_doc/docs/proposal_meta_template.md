@@ -9,25 +9,6 @@ are met in any Proposal Template.
 
 The payload of a proposal template is controlled by its meta template.
 
-```d2 layout=elk
-
-"Proposal Meta Template": {
-  shape: sql_table
-  "content type": [application/schema+json]
-  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": [UUIDv7][RFC9562-V7]
-  "ver": [UUIDv7][RFC9562-V7]
-  "category_id": Category Parameters (Optional)
-
-}
-
-"Proposal Meta Template"."category_id"->"Category Parameters": Optional
-
-
-```
-
 ### Validation
 
 TODO
@@ -144,7 +125,6 @@ New versions of this document may be published by:
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
-[application/schema+json]: https://datatracker.ietf.org/doc/draft-bhutton-json-schema/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema]: https://json-schema.org/draft-07
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
