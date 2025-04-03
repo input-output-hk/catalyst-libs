@@ -151,64 +151,71 @@ where Provider: CatalystSignedDocumentProvider {
 fn validate_id_and_ver(
     doc: &CatalystSignedDocument, future_threshold: u64, past_threshold: u64,
 ) -> anyhow::Result<bool> {
-    let Ok(id) = doc.doc_id() else {
+    let id = doc.doc_id().ok();
+    let ver = doc.doc_ver().ok();
+    if id.is_none() {
         doc.report().missing_field(
             "id",
             "Can't get a document id during the validation process",
         );
-        return Ok(false);
-    };
-    let Ok(ver) = doc.doc_ver() else {
+    }
+    if ver.is_none() {
         doc.report().missing_field(
             "ver",
             "Can't get a document ver during the validation process",
         );
-        return Ok(false);
-    };
-    let mut is_valid = true;
-    if ver < id {
-        doc.report().invalid_value(
-            "ver",
-            &ver.to_string(),
-            "ver < id",
-            &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
-        );
-        is_valid = false;
     }
+    match (id, ver) {
+        (Some(id), Some(ver)) => {
+            let mut is_valid = true;
+            if ver < id {
+                doc.report().invalid_value(
+                    "ver",
+                    &ver.to_string(),
+                    "ver < id",
+                    &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
+                );
+                is_valid = false;
+            }
 
-    let (id_time, _) = id
-        .uuid()
-        .get_timestamp()
-        .ok_or(anyhow::anyhow!("Document id field must be a UUIDv7"))?
-        .to_unix();
+            let (id_time, _) = id
+                .uuid()
+                .get_timestamp()
+                .ok_or(anyhow::anyhow!("Document id field must be a UUIDv7"))?
+                .to_unix();
 
-    let now = SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .map_err(|_| {
-            anyhow::anyhow!("Cannot validate document id field, SystemTime before UNIX EPOCH!")
-        })?
-        .as_secs();
+            let now = SystemTime::now()
+                .duration_since(SystemTime::UNIX_EPOCH)
+                .map_err(|_| {
+                    anyhow::anyhow!(
+                        "Cannot validate document id field, SystemTime before UNIX EPOCH!"
+                    )
+                })?
+                .as_secs();
 
-    if id_time > now.saturating_add(future_threshold) {
-        doc.report().invalid_value(
-            "id",
-            &ver.to_string(),
-            "id < now + future_threshold",
-            &format!("Document ID timestamp {id} cannot be too far in future (threshold: {future_threshold}) from now: {now}"),
-        );
-        is_valid = false;
+            if id_time > now.saturating_add(future_threshold) {
+                doc.report().invalid_value(
+                    "id",
+                    &ver.to_string(),
+                    "id < now + future_threshold",
+                    &format!("Document ID timestamp {id} cannot be too far in future (threshold: {future_threshold}) from now: {now}"),
+                );
+                is_valid = false;
+            }
+            if id_time < now.saturating_sub(past_threshold) {
+                doc.report().invalid_value(
+                    "id",
+                    &ver.to_string(),
+                    "id > now - past_threshold",
+                    &format!("Document ID timestamp {id} cannot be too far behind (threshold: {past_threshold}) from now: {now}"),
+                );
+                is_valid = false;
+            }
+            Ok(is_valid)
+        },
+
+        _ => Ok(false),
     }
-    if id_time < now.saturating_sub(past_threshold) {
-        doc.report().invalid_value(
-            "id",
-            &ver.to_string(),
-            "id > now - past_threshold",
-            &format!("Document ID timestamp {id} cannot be too far behind (threshold: {past_threshold}) from now: {now}"),
-        );
-        is_valid = false;
-    }
-
-    Ok(is_valid)
 }
 
 /// Verify document signatures.
