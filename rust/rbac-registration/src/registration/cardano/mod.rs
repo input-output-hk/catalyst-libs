@@ -21,7 +21,7 @@ use crate::cardano::cip509::{
 };
 
 /// Registration chains.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct RegistrationChain {
     /// Inner part of the registration chain.
     inner: Arc<RegistrationChainInner>,
