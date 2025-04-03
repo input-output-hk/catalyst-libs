@@ -144,10 +144,10 @@ where Provider: CatalystSignedDocumentProvider {
 
 /// Validates document id and ver fields on the timestamps:
 /// 1. document ver cannot be smaller that document id field
-/// 2. document id cannot be too far in the future (`future_threshold` arg) from now()
-///    based on the provide threshold
-/// 3. document id cannot be too far behind (`past_threshold` arg) from now() based on the
-///    provide threshold
+/// 2. document id cannot be too far in the future (`future_threshold` arg) from
+///    `SystemTime::now()` based on the provide threshold
+/// 3. document id cannot be too far behind (`past_threshold` arg) from
+///    `SystemTime::now()` based on the provide threshold
 fn validate_id_and_ver(
     doc: &CatalystSignedDocument, future_threshold: u64, past_threshold: u64,
 ) -> anyhow::Result<bool> {
