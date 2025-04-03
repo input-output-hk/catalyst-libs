@@ -11,4 +11,5 @@ nav:
   - Specification: spec.md
   - Metadata Fields: metadata.md
   - Document Types: types.md
+  - docs
 """
