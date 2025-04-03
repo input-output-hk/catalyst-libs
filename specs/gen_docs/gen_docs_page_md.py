@@ -3,6 +3,7 @@ import json
 from urllib.parse import urlparse
 
 from common import insert_copyright, metadata_fields
+from gen_docs_relationship_diagram_d2 import gen_doc_d2
 
 
 def header_parameter_summary(name, doc_defs: dict) -> str:
@@ -99,6 +100,10 @@ def gen_docs_page_md(name: str, doc_defs: dict) -> str:
 ## Description
 
 {doc_defs["docs"][name].get("description", "TODO")}
+
+```d2 layout=elk
+{gen_doc_d2(name, doc_defs)}
+```
 
 ### Validation
 

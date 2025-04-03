@@ -27,8 +27,9 @@ copyright: |~md
 "Brand Parameters": {
   shape: sql_table
   "content type": application/json
-    "type [0]": ebcabeeb-5bc5-4f95-91e8-cab8ca724172
-
+  "type [0]": ebcabeeb-5bc5-4f95-91e8-cab8ca724172
+  "id": UUIDv7
+  "ver": UUIDv7
 
 }
 
@@ -37,8 +38,9 @@ copyright: |~md
 "Campaign Parameters": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 5ef32d5d-f240-462c-a7a4-ba4af221fa23
-
+  "type [0]": 5ef32d5d-f240-462c-a7a4-ba4af221fa23
+  "id": UUIDv7
+  "ver": UUIDv7
 
 }
 
@@ -47,8 +49,9 @@ copyright: |~md
 "Category Parameters": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 818938c3-3139-4daa-afe6-974c78488e95
-
+  "type [0]": 818938c3-3139-4daa-afe6-974c78488e95
+  "id": UUIDv7
+  "ver": UUIDv7
 
 }
 
@@ -57,10 +60,11 @@ copyright: |~md
 "Comment Action Document": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
   "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
   "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
-
+  "id": UUIDv7
+  "ver": UUIDv7
 
 }
 
@@ -69,8 +73,9 @@ copyright: |~md
 "Election Parameters": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 788ff4c6-d65a-451f-bb33-575fe056b411
-
+  "type [0]": 788ff4c6-d65a-451f-bb33-575fe056b411
+  "id": UUIDv7
+  "ver": UUIDv7
 
 }
 
@@ -79,88 +84,96 @@ copyright: |~md
 "Proposal": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-
-    "category_id": Category Parameters
+  "type [0]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
   "template": Proposal Template
+  "collaborators": Collaborators Reference List
+  "category_id": Category Parameters (Optional)
 
 }
 
-"Proposal"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
 "Proposal"."template"->"Proposal Template"
+"Proposal"."category_id"->"Category Parameters": Optional
 
 
 "Proposal Comment": {
   shape: sql_table
   "content type": application/json
-    "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
   "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-
-    "category_id": Category Parameters
+  "id": UUIDv7
+  "ver": UUIDv7
   "ref": Proposal
-  "reply": Proposal Comment
   "template": Proposal Comment Template
+  "reply": Proposal Comment (Optional)
+  "section": Section Reference
+  "category_id": Category Parameters (Optional)
 
 }
 
-"Proposal Comment"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
 "Proposal Comment"."ref"->"Proposal"
-"Proposal Comment"."reply"->"Proposal Comment": (reply) Optional { style: { stroke: orange } }
 "Proposal Comment"."template"->"Proposal Comment Template"
+"Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
+"Proposal Comment"."category_id"->"Category Parameters": Optional
 
 
 "Proposal Comment Meta Template": {
   shape: sql_table
   "content type": application/schema+json
-    "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [2]": b679ded3-0e7c-41ba-89f8-da62a17898ea
   "type [3]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-
-    "category_id": Category Parameters
+  "id": UUIDv7
+  "ver": UUIDv7
+  "category_id": Category Parameters (Optional)
 
 }
 
-"Proposal Comment Meta Template"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
+"Proposal Comment Meta Template"."category_id"->"Category Parameters": Optional
 
 
 "Proposal Comment Template": {
   shape: sql_table
   "content type": application/schema+json
-    "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
   "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-
-    "category_id": Category Parameters
-  "template": Proposal Comment Meta Template
+  "id": UUIDv7
+  "ver": UUIDv7
+  "template": Proposal Comment Meta Template (Optional)
+  "category_id": Category Parameters (Optional)
 
 }
 
-"Proposal Comment Template"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
-"Proposal Comment Template"."template"->"Proposal Comment Meta Template": Optional { style: { stroke: orange } }
+"Proposal Comment Template"."template"->"Proposal Comment Meta Template": Optional
+"Proposal Comment Template"."category_id"->"Category Parameters": Optional
 
 
 "Proposal Meta Template": {
   shape: sql_table
   "content type": application/schema+json
-    "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-
-    "category_id": Category Parameters
+  "id": UUIDv7
+  "ver": UUIDv7
+  "category_id": Category Parameters (Optional)
 
 }
 
-"Proposal Meta Template"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
+"Proposal Meta Template"."category_id"->"Category Parameters": Optional
 
 
 "Proposal Moderation Action": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
   "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
   "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
-
+  "id": UUIDv7
+  "ver": UUIDv7
 
 }
 
@@ -169,29 +182,31 @@ copyright: |~md
 "Proposal Submission Action": {
   shape: sql_table
   "content type": application/json
-    "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
   "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
   "type [2]": 78927329-cfd9-4ea1-9c71-0e019b126a65
-
-    "category_id": Category Parameters
+  "id": UUIDv7
+  "ver": UUIDv7
   "ref": Proposal
+  "category_id": Category Parameters
 
 }
 
-"Proposal Submission Action"."category_id"->"Category Parameters"
 "Proposal Submission Action"."ref"->"Proposal"
+"Proposal Submission Action"."category_id"->"Category Parameters"
 
 
 "Proposal Template": {
   shape: sql_table
   "content type": application/schema+json
-    "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-
-    "category_id": Category Parameters
-  "template": Proposal Meta Template
+  "id": UUIDv7
+  "ver": UUIDv7
+  "template": Proposal Meta Template (Optional)
+  "category_id": Category Parameters (Optional)
 
 }
 
-"Proposal Template"."category_id"->"Category Parameters": Optional { style: { stroke: orange } }
-"Proposal Template"."template"->"Proposal Meta Template": Optional { style: { stroke: orange } }
+"Proposal Template"."template"->"Proposal Meta Template": Optional
+"Proposal Template"."category_id"->"Category Parameters": Optional

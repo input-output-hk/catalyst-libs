@@ -7,7 +7,7 @@ import json
 import re
 from pathlib import Path
 
-from common import metadata_field_link
+from common import doc_ref_link, metadata_field_link
 from gen_docs_page_md import gen_docs_page_md
 from gen_docs_relationship_diagram_d2 import gen_docs_relationship_diagram
 from gen_metadata_md import gen_metadata_md
@@ -59,6 +59,29 @@ def strip_end_whitespace(s: str) -> str:
     lines = s.splitlines()
     stripped_lines = [line.rstrip() for line in lines]
     return "\n".join(stripped_lines).strip() + "\n"
+
+
+def add_doc_ref_links(file_data: str, doc_data: dict, depth: int = 0) -> str:
+    """
+    Add Individual Document Reference cross reference links to the document.
+    All Document References in text must be as `<name>` or they will not be linked.
+    """
+    lines = file_data.splitlines()
+    file_data = ""
+    for line in lines:
+        if not line.startswith("#"):
+            for field_name in doc_data["docs"]:
+                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
+                replacement = f"\\1{doc_ref_link(field_name, depth)}\\2"
+                line = re.sub(
+                    fieldNameRegex,
+                    replacement,
+                    line,
+                    flags=re.IGNORECASE | re.MULTILINE,
+                )
+        file_data += f"{line}\n"
+
+    return file_data
 
 
 def add_metadata_links(file_data: str, doc_data: dict, depth: int = 0) -> str:
@@ -145,6 +168,7 @@ def save_or_validate(
     if file_name.endswith(".md"):
         file_data = add_reference_links(file_data, doc_data)
         file_data = add_metadata_links(file_data, doc_data, depth)
+        file_data = add_doc_ref_links(file_data, doc_data, depth)
 
     # Remove any leading or trailing newlines and add a single newline at the end/
     # Helps make clean markdown files.

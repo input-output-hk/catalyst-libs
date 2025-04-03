@@ -1,12 +1,7 @@
 # Generate the spec.md file
 from common import insert_copyright
 
-
-def gen_docs_relationship_diagram(doc_defs: dict) -> str:
-    """
-    Generate a D2 Relationship diagram for all documents and their references.
-    """
-    doc_config = """
+doc_config = """
 vars: {
   d2-config: {
     layout-engine: elk
@@ -17,11 +12,75 @@ vars: {
 }
 """
 
-    title = """
+title = """
 title: |~md
   # Signed Document Relationship Hierarchy
 ~| {near: top-center}        
 """
+
+
+def gen_doc_d2(doc: str, doc_defs: dict) -> str:
+    """
+    Generate an individual d2 table for an individual document.
+    """
+    ref_links = ""
+
+    doc_data = doc_defs["docs"][doc]
+    doc_metadata = doc_data["metadata"]
+    doc_type = doc_data["type"]
+
+    metadata_rows = ""
+
+    for meta in doc_defs["metadata_order"]:
+        if meta in doc_metadata and doc_metadata[meta]["required"] != "excluded":
+            if meta == "type":
+                type_count = 0
+                for uuid in doc_type:
+                    metadata_rows += f'  "type [{type_count}]": {uuid}\n'
+                    type_count += 1
+            elif doc_metadata[meta]["format"] == "Document Reference":
+                ref_doc = doc_metadata[meta].get("type", "Unspecified")
+                if doc_metadata[meta]["required"] == "optional":
+                    metadata_rows += f'  "{meta}": {ref_doc} (Optional)\n'
+                    if ref_doc == doc:
+                        ref_links += f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}": <{meta}> Optional\n'
+                    else:
+                        ref_links += f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}": Optional\n'
+                else:
+                    metadata_rows += f'  "{meta}": {ref_doc}\n'
+                    if ref_doc == doc:
+                        ref_links += f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}": <{meta}>n'
+                    else:
+                        ref_links += (
+                            f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}"\n'
+                        )
+            else:
+                metadata_rows += f'  "{meta}": {doc_metadata[meta]["format"]}\n'
+
+    return f"""
+"{doc}": {{
+  shape: sql_table
+  "content type": {doc_defs["docs"][doc]["headers"]["content type"]["value"]}
+{metadata_rows}
+}}
+
+{ref_links}
+"""
+
+
+def gen_doc_diagram(doc, doc_defs: dict) -> str:
+    """
+    Generate a D2 Relationship diagram for a single document.
+    """
+    doc_table = gen_doc_d2(doc, doc_defs)
+
+    return doc_config + doc_table
+
+
+def gen_docs_relationship_diagram(doc_defs: dict) -> str:
+    """
+    Generate a D2 Relationship diagram for all documents and their references.
+    """
 
     copyright = f"""
 copyright: |~md
@@ -31,44 +90,6 @@ copyright: |~md
 
     doc_tables = ""
     for doc in doc_defs["docs"]:
-        doc_refs = ""
-        ref_links = ""
-        uuids = ""
-        type_count = 0
-        for uuid in doc_defs["docs"][doc]["type"]:
-            uuids += f'  "type [{type_count}]": {uuid}\n'
-            type_count += 1
-
-        for ref in doc_defs["docs"][doc]["metadata"]:
-            ref_data = doc_defs["docs"][doc]["metadata"][ref]
-            if (ref_data["required"] != "excluded") and ref_data[
-                "format"
-            ] == "Document Reference":
-                ref_doc = ref_data.get("type", "Unspecified")
-                doc_refs += f'  "{ref}": {ref_doc}\n'
-                if "type" in ref_data:
-                    optional = (
-                        "Optional { style: { stroke: orange } }"
-                        if ref_data["required"] == "optional"
-                        else ""
-                    )
-                    # Self Reference
-                    if ref_doc == doc:
-                        optional = f"({ref}) {optional}"
-                    if len(optional) > 0:
-                        optional = f": {optional}".strip()
-                    ref_links += f'"{doc}"."{ref}"->"{ref_data["type"]}"{optional}\n'
-
-        doc_table = f"""
-"{doc}": {{
-  shape: sql_table
-  "content type": {doc_defs["docs"][doc]["headers"]["content type"]["value"]}
-  {uuids}
-  {doc_refs}
-}}
-
-{ref_links}
-"""
-        doc_tables += doc_table
+        doc_tables += gen_doc_d2(doc, doc_defs)
 
     return doc_config + title + copyright + doc_tables

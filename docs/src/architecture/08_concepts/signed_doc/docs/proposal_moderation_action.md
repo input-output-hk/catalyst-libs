@@ -4,6 +4,23 @@
 
 TODO
 
+```d2 layout=elk
+
+"Proposal Moderation Action": {
+  shape: sql_table
+  "content type": [application/json]
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
+  "id": [UUIDv7][RFC9562-V7]
+  "ver": [UUIDv7][RFC9562-V7]
+
+}
+
+
+
+```
+
 ### Validation
 
 TODO
@@ -94,5 +111,6 @@ New versions of this document may be published by:
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
+[application/json]: https://www.iana.org/assignments/media-types/application/json
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7

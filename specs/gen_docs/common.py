@@ -67,7 +67,7 @@ def metadata_format_link(name: str, depth: int = 0):
     return f"[{name}]({link})"
 
 
-def metadata_doc_ref_link(name: str, depth: int = 0):
+def doc_ref_link(name: str, depth: int = 0):
     """
     Metadata Document Reference link.
     """
@@ -151,9 +151,7 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0):
             if isinstance(ref_doc_names, str):
                 ref_doc_names = [ref_doc_names]
             for ref_doc in ref_doc_names:
-                field_display += (
-                    f"| {ref_heading} | {metadata_doc_ref_link(ref_doc, depth)} |\n"
-                )
+                field_display += f"| {ref_heading} | {doc_ref_link(ref_doc, depth)} |\n"
                 ref_heading = ""
         exclusive = field.get("exclusive", None)
         if exclusive is not None:
