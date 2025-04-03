@@ -1,10 +1,6 @@
 //! Integration test for proposal document validation part.
 
-use catalyst_signed_doc::{
-    providers::tests::TestCatalystSignedDocumentProvider,
-    validator::tests::{TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD},
-    *,
-};
+use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
 
 mod common;
 
@@ -29,9 +25,7 @@ async fn test_valid_proposal_doc() {
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();
 
-    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
-        .await
-        .unwrap();
+    let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
     assert!(is_valid);
 }
@@ -56,9 +50,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
-    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
-        .await
-        .unwrap();
+    let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
     assert!(!is_valid);
 }
@@ -79,9 +71,7 @@ async fn test_invalid_proposal_doc() {
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
-    let is_valid = validator::validate(&doc, TEST_FUTURE_THRESHOLD, TEST_PAST_THRESHOLD, &provider)
-        .await
-        .unwrap();
+    let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
     assert!(!is_valid);
 }
