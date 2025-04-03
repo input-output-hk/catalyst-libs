@@ -165,7 +165,7 @@ fn validate_id_and_ver(
         );
         return Ok(false);
     };
-
+    let mut is_valid = true;
     if ver < id {
         doc.report().invalid_value(
             "ver",
@@ -173,7 +173,7 @@ fn validate_id_and_ver(
             "ver < id",
             &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
         );
-        return Ok(false);
+        is_valid = false;
     }
 
     let (id_time, _) = id
@@ -196,7 +196,7 @@ fn validate_id_and_ver(
             "id < now + future_threshold",
             &format!("Document ID timestamp {id} cannot be too far in future (threshold: {future_threshold}) from now: {now}"),
         );
-        return Ok(false);
+        is_valid = false;
     }
     if id_time < now.saturating_sub(past_threshold) {
         doc.report().invalid_value(
@@ -205,10 +205,10 @@ fn validate_id_and_ver(
             "id > now - past_threshold",
             &format!("Document ID timestamp {id} cannot be too far behind (threshold: {past_threshold}) from now: {now}"),
         );
-        return Ok(false);
+        is_valid = false;
     }
 
-    Ok(true)
+    Ok(is_valid)
 }
 
 /// Verify document signatures.
