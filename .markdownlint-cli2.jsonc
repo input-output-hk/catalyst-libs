@@ -10,7 +10,8 @@
   "ignores": [
     ".config/dictionaries/**",
     "**/target/**",
-    "**/.dart_tool/**"
+    "**/.dart_tool/**",
+    "**/.pytest_cache/**"
   ],
   // Set standard config options in `/.markdownlint.jsonc`
   "config": {

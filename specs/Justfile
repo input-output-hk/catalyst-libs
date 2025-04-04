@@ -1,0 +1,45 @@
+# use with https://github.com/casey/just
+#
+# Developer convenience functions
+
+# required to get cuelang to enable file embedding
+export  CUE_EXPERIMENT := "embed"
+default:
+    @just --list --unsorted
+
+# Fiz (where possible) and format cue files
+format:
+    cue fix ./signed_docs/docs:signed_docs
+    cue fmt --files .
+
+# Check the signed document cue files are valid.
+check: format
+    cue vet ./signed_docs/docs:signed_docs -c
+
+# Fix and Check Markdown files
+regenerate: check
+    # Make sure keys are sorted so its both reproducible, AND diffs easily.
+    cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > signed_doc.json
+    # Generate the markdown docs from the specification.
+    cd gen_docs; ./generate_docs.py -g -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    # Check our validation code actually works properly
+    cd gen_docs; ./generate_docs.py -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    # Generate an .svg from the d2 diagram
+    d2 "../docs/src/architecture/08_concepts/signed_doc/doc_relationships.d2"
+
+
+# Validate the generated signed_docs.json is correct against the cue schema.
+validate:
+    cue vet ./signed_docs/docs:signed_docs  signed_doc.json
+
+# Pre Push Checks - intended to be run by a git pre-push hook.
+pre-push: format-python-code lint-python regenerate validate
+
+# Fix and Check Markdown files
+format-python-code:
+    ruff check --select I --fix .
+    ruff format .
+
+# Fix and Check Markdown files
+lint-python:
+    ruff check .    
