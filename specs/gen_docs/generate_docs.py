@@ -107,6 +107,35 @@ def add_metadata_links(file_data: str, doc_data: dict, depth: int = 0) -> str:
     return file_data
 
 
+def code_block_aware_re_subn(
+    linkNameRegex, replacement, file_data: str
+) -> tuple[str, int]:
+    """
+    Do a multiline regex replacement, but ignore anything inside a code block.
+    """
+    lines = file_data.splitlines()
+    new_file_data = ""
+    cnt = 0
+    in_code_block = False
+    for line in lines:
+        if line.strip().startswith("```"):
+            in_code_block = not in_code_block
+
+        if in_code_block:
+            this_cnt = 0
+        else:
+            (line, this_cnt) = re.subn(
+                linkNameRegex,
+                replacement,
+                line,
+                flags=re.IGNORECASE,
+            )
+        cnt += this_cnt
+        new_file_data += line + "\n"
+
+    return (new_file_data, cnt)
+
+
 def add_reference_links(file_data, doc_data) -> str:
     """
     Add Markdown reference links to the document.
@@ -127,21 +156,19 @@ def add_reference_links(file_data, doc_data) -> str:
         linkNameRegex = f"(^|\\s)({escLinkName})(\\.|\\s|$)"
         if linkName in linkAka:
             replacement = f"\\1[\\2][{linkAka[linkName]}]\\3"
-            (file_data, cnt) = re.subn(
+            (file_data, cnt) = code_block_aware_re_subn(
                 linkNameRegex,
                 replacement,
                 file_data,
-                flags=re.IGNORECASE | re.MULTILINE,
             )
             if cnt > 0:
                 actualLinksUsed[linkAka[linkName]] = links[linkAka[linkName]]
         else:
             replacement = r"\1[\2]\3"
-            (file_data, cnt) = re.subn(
+            (file_data, cnt) = code_block_aware_re_subn(
                 linkNameRegex,
                 replacement,
                 file_data,
-                flags=re.IGNORECASE | re.MULTILINE,
             )
             if cnt > 0:
                 actualLinksUsed[linkName] = links[linkName]

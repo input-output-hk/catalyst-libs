@@ -1,4 +1,5 @@
 # Generate the spec.md file
+# from common import doc_ref_link, insert_copyright
 from common import insert_copyright
 
 doc_config = """
@@ -19,7 +20,7 @@ title: |~md
 """
 
 
-def gen_doc_d2(doc: str, doc_defs: dict) -> str:
+def gen_doc_d2(doc: str, doc_defs: dict, depth=0, stand_alone=False) -> str:
     """
     Generate an individual d2 table for an individual document.
     """
@@ -43,17 +44,21 @@ def gen_doc_d2(doc: str, doc_defs: dict) -> str:
                 if doc_metadata[meta]["required"] == "optional":
                     metadata_rows += f'  "{meta}": {ref_doc} (Optional)\n'
                     if ref_doc == doc:
-                        ref_links += f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}": <{meta}> Optional\n'
+                        ref_links += (
+                            f'"{doc}"."{meta}"->"{ref_doc}": <{meta}> Optional\n'
+                        )
                     else:
-                        ref_links += f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}": Optional\n'
+                        ref_links += f'"{doc}"."{meta}"->"{ref_doc}": Optional\n'
                 else:
                     metadata_rows += f'  "{meta}": {ref_doc}\n'
                     if ref_doc == doc:
-                        ref_links += f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}": <{meta}>n'
+                        ref_links += f'"{doc}"."{meta}"->"{ref_doc}": <{meta}>n'
                     else:
-                        ref_links += (
-                            f'"{doc}"."{meta}"->"{doc_metadata[meta]["type"]}"\n'
-                        )
+                        ref_links += f'"{doc}"."{meta}"->"{ref_doc}"\n'
+                # if stand_alone:
+                # if ref_doc != doc:
+                #    ref_links += f'"{ref_doc}".shape=document\n'
+                # ref_links += f'"{ref_doc}".link={doc_ref_link(ref_doc, depth)}\n'
             else:
                 metadata_rows += f'  "{meta}": {doc_metadata[meta]["format"]}\n'
 

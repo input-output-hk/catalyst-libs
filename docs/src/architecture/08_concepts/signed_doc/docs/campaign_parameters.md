@@ -4,6 +4,17 @@
 
 TODO
 
+```d2 layout="elk"
+"Campaign Parameters": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5ef32d5d-f240-462c-a7a4-ba4af221fa23
+  "id": UUIDv7
+  "ver": UUIDv7
+
+}
+```
+
 ### Validation
 
 TODO
@@ -89,7 +100,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-03 |
+| Modified | 2025-04-04 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

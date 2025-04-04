@@ -11,6 +11,28 @@ linked to a brand/campaign or category via the template used by the proposal.
 
 The payload of a proposal comment is controlled by its template.
 
+```d2 layout="elk"
+"Proposal Comment": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "ref": Proposal
+  "template": Proposal Comment Template
+  "reply": Proposal Comment (Optional)
+  "section": Section Reference
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Comment"."ref"->"Proposal"
+"Proposal Comment"."template"->"Proposal Comment Template"
+"Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
+"Proposal Comment"."category_id"->"Category Parameters": Optional
+```
+
 ### Validation
 
 TODO
@@ -186,7 +208,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-03 |
+| Modified | 2025-04-04 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

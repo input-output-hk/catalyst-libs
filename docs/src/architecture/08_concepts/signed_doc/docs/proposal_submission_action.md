@@ -19,6 +19,24 @@ the proposal will not be seen as submitted.
 
 The payload is a fixed format.
 
+```d2 layout="elk"
+"Proposal Submission Action": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "type [2]": 78927329-cfd9-4ea1-9c71-0e019b126a65
+  "id": UUIDv7
+  "ver": UUIDv7
+  "ref": Proposal
+  "category_id": Category Parameters
+
+}
+
+"Proposal Submission Action"."ref"->"Proposal"
+"Proposal Submission Action"."category_id"->"Category Parameters"
+```
+
 ### Validation
 
 TODO
@@ -97,7 +115,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-  `[[DocumentID, DocumentVer, DocumentHash],...]`
+    `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
@@ -140,7 +158,7 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-         `hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.
+       `hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->
@@ -202,7 +220,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-03 |
+| Modified | 2025-04-04 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

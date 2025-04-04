@@ -9,6 +9,22 @@ are met in any Proposal Template.
 
 The payload of a proposal template is controlled by its meta template.
 
+```d2 layout="elk"
+"Proposal Meta Template": {
+  shape: sql_table
+  "content type": application/schema+json
+  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
+  "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
+  "id": UUIDv7
+  "ver": UUIDv7
+  "category_id": Category Parameters (Optional)
+
+}
+
+"Proposal Meta Template"."category_id"->"Category Parameters": Optional
+```
+
 ### Validation
 
 TODO
@@ -121,7 +137,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-03 |
+| Modified | 2025-04-04 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

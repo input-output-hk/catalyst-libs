@@ -4,6 +4,19 @@
 
 TODO
 
+```d2 layout="elk"
+"Comment Action Document": {
+  shape: sql_table
+  "content type": application/json
+  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
+  "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
+  "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
+  "id": UUIDv7
+  "ver": UUIDv7
+
+}
+```
+
 ### Validation
 
 TODO
@@ -89,7 +102,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-03 |
+| Modified | 2025-04-04 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

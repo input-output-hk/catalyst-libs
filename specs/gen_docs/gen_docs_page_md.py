@@ -93,22 +93,19 @@ def document_signers(name: str, doc_defs: dict) -> str:
 def gen_docs_page_md(name: str, doc_defs: dict) -> str:
     """
     Generate an individual Documents Specification Page file from the definitions.
-
-    TODO: Add this to insert an image (needs link escaping fixed)
-
-    ```d2 layout=elk
-    {doc_d1}
-    ```
-
     """
 
-    _doc_d2 = gen_doc_d2(name, doc_defs)
+    doc_d2 = gen_doc_d2(name, doc_defs, depth=1, stand_alone=True).strip()
     return f"""
 # {name}
 
 ## Description
 
 {doc_defs["docs"][name].get("description", "TODO")}
+
+```d2 layout="elk"
+{doc_d2}
+```
 
 ### Validation
 
