@@ -9,6 +9,7 @@ use std::{
     time::{Duration, SystemTime},
 };
 
+use anyhow::Context;
 use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport, uuid::Uuid};
 use coset::{CoseSign, CoseSignature};
 use rules::{
@@ -189,37 +190,50 @@ where Provider: CatalystSignedDocumentProvider {
                 .get_timestamp()
                 .ok_or(anyhow::anyhow!("Document ver field must be a UUIDv7"))?
                 .to_unix();
-            let ver_time = Duration::new(ver_time_secs, ver_time_nanos);
 
-            let now = SystemTime::now()
-                .duration_since(SystemTime::UNIX_EPOCH)
-                .map_err(|_| {
-                    anyhow::anyhow!(
-                        "Cannot validate document ver field, SystemTime before UNIX EPOCH!"
-                    )
-                })?;
-
-            if let Some(future_threshold) = provider.future_threshold() {
-                if ver_time > now.saturating_add(future_threshold) {
-                    doc.report().invalid_value(
+            let Some(ver_time) =
+                SystemTime::UNIX_EPOCH.checked_add(Duration::new(ver_time_secs, ver_time_nanos))
+            else {
+                doc.report().invalid_value(
                     "ver",
                     &ver.to_string(),
-                    "ver < now + future_threshold",
-                    &format!("Document Version timestamp {id} cannot be too far in future (threshold: {future_threshold:?}) from now: {now:?}"),
+                    "Must a valid duration since `UNIX_EPOCH`",
+                    "Cannot instantiate a valid `SystemTime` value from the provided `ver` field timestamp.",
                 );
-                    is_valid = false;
+                return Ok(false);
+            };
+
+            let now = SystemTime::now();
+
+            if let Ok(version_age) = ver_time.duration_since(now) {
+                // `now` is earlier than `ver_time`
+                if let Some(future_threshold) = provider.future_threshold() {
+                    if version_age > future_threshold {
+                        doc.report().invalid_value(
+                        "ver",
+                        &ver.to_string(),
+                        "ver < now + future_threshold",
+                        &format!("Document Version timestamp {id} cannot be too far in future (threshold: {future_threshold:?}) from now: {now:?}"),
+                    );
+                        is_valid = false;
+                    }
                 }
-            }
+            } else {
+                // `ver_time` is earlier than `now`
+                let version_age = now
+                    .duration_since(ver_time)
+                    .context("BUG! `ver_time` must be earlier than `now` at this place")?;
 
-            if let Some(past_threshold) = provider.past_threshold() {
-                if ver_time < now.saturating_sub(past_threshold) {
-                    doc.report().invalid_value(
-                    "ver",
-                    &ver.to_string(),
-                    "ver > now - past_threshold",
-                    &format!("Document Version timestamp {id} cannot be too far behind (threshold: {past_threshold:?}) from now: {now:?}",),
-                );
-                    is_valid = false;
+                if let Some(past_threshold) = provider.past_threshold() {
+                    if version_age > past_threshold {
+                        doc.report().invalid_value(
+                        "ver",
+                        &ver.to_string(),
+                        "ver > now - past_threshold",
+                        &format!("Document Version timestamp {id} cannot be too far behind (threshold: {past_threshold:?}) from now: {now:?}",),
+                    );
+                        is_valid = false;
+                    }
                 }
             }
 
