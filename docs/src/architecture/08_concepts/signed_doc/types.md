@@ -1,26 +1,58 @@
 # Document Types Table
 
-| [UUID]                               | [CBOR]                                    | Type Description             | Payload Type                      | Specification Link                                                             |
-| ------------------------------------ | ----------------------------------------- | ---------------------------- | --------------------------------- | ------------------------------------------------------------------------------ |
-| 7808d2ba-d511-40af-84e8-c0d1625fdfdc | `37(h'7808d2bad51140af84e8c0d1625fdfdc')` | Proposal Document            | [Brotli] Compressed [JSON]        | [Proposal Spec](./../catalyst_docs/proposal.md#proposal-document)              |
-| 0ce8ab38-9258-4fbc-a62e-7faa6e58318f | `37(h'0ce8ab3892584fbca62e7faa6e58318f')` | Proposal Template            | [Brotli] Compressed [JSON Schema] | [Proposal Template Spec](./../catalyst_docs/proposal.md#proposal-template)     |
-| b679ded3-0e7c-41ba-89f8-da62a17898ea | `37(h'b679ded30e7c41ba89f8da62a17898ea')` | Comment Document             | [Brotli] Compressed [JSON]        | [Comment Spec](./../catalyst_docs/comment.md#comment-document)                 |
-| 0b8424d4-ebfd-46e3-9577-1775a69d290c | `37(h'0b8424d4ebfd46e395771775a69d290c')` | Comment Template             | [Brotli] Compressed [JSON Schema] | [Comment Template Spec](./../catalyst_docs/comment.md#comment-template)        |
-| e4caf5f0-098b-45fd-94f3-0702a4573db5 | `37(h'e4caf5f0098b45fd94f30702a4573db5')` | Review Document              | [Brotli] Compressed [JSON]        | [Review Spec](./../catalyst_docs/review.md#review-document)                    |
-| ebe5d0bf-5d86-4577-af4d-008fddbe2edc | `37(h'ebe5d0bf5d864577af4d008fddbe2edc')` | Review Template              | [Brotli] Compressed [JSON Schema] | [Review Template Spec](./../catalyst_docs/review.md#review-template)           |
-| 48c20109-362a-4d32-9bba-e0a9cf8b45be | `37(h'48c20109362a4d329bbae0a9cf8b45be')` | Category Parameters Document | [Brotli] Compressed [JSON]        | *TBD*                                                                          |
-| 65b1e8b0-51f1-46a5-9970-72cdf26884be | `37(h'65b1e8b051f146a5997072cdf26884be')` | Category Parameters Template | [Brotli] Compressed [JSON Schema] | *TBD*                                                                          |
-| 0110ea96-a555-47ce-8408-36efe6ed6f7c | `37(h'0110ea96a55547ce840836efe6ed6f7c')` | Campaign Parameters Document | [Brotli] Compressed [JSON]        | *TBD*                                                                          |
-| 7e8f5fa2-44ce-49c8-bfd5-02af42c179a3 | `37(h'7e8f5fa244ce49c8bfd502af42c179a3')` | Campaign Parameters Template | [Brotli] Compressed [JSON Schema] | *TBD*                                                                          |
-| 3e4808cc-c86e-467b-9702-d60baa9d1fca | `37(h'3e4808ccc86e467b9702d60baa9d1fca')` | Brand Parameters Document    | [Brotli] Compressed [JSON]        | *TBD*                                                                          |
-| fd3c1735-80b1-4eea-8d63-5f436d97ea31 | `37(h'fd3c173580b14eea8d635f436d97ea31')` | Brand Parameters Template    | [Brotli] Compressed [JSON Schema] | *TBD*                                                                          |
-| 5e60e623-ad02-4a1b-a1ac-406db978ee48 | `37(h'5e60e623ad024a1ba1ac406db978ee48')` | Proposal Action Document     | *TBD*                             | *TBD*                                                                          |
-| 8de5586c-e998-4b95-8742-7be3c8592803 | `37(h'8DE5586CE9984B9587427BE3C8592803')` | Public Vote Tx V2            | [Brotli] Compressed [CBOR]        | [Public Vote Tx V2 Spec](./../catalyst_voting/v2.md#public-vote)               |
-| e78ee18d-f380-44c1-a852-80aa6ecb07fe | `37(h'E78EE18DF38044C1A85280AA6ECB07FE')` | Private Vote Tx V2           | [Brotli] Compressed [CBOR]        | [Private Vote Tx V2 Spec](./../catalyst_voting/v2.md#private-vote)             |
-| d9e7e6ce-2401-4d7d-9492-f4f7c64241c3 | `37(h'D9E7E6CE24014D7D9492F4F7C64241C3')` | Immutable Ledger Block       | [Brotli] Compressed [CBOR]        | [Immutable Ledger Block Spec](./../immutable_ledger/ledger.md#block-structure) |
+## Document Base Types
 
-[JSON Schema]: https://json-schema.org/draft-07
-[JSON]: https://datatracker.ietf.org/doc/html/rfc7159
-[Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
-[CBOR]: https://datatracker.ietf.org/doc/html/rfc8610
-[UUID]: https://www.rfc-editor.org/rfc/rfc9562.html
+All Document Types are defined by composing these base document types:
+
+| Base Type | [UUID][RFC9562] | [CBOR][RFC8949] |
+| :--- | :--- | :--- |
+| Action | `5e60e623-ad02-4a1b-a1ac-406db978ee48` | `37(h'5e60e623ad024a1ba1ac406db978ee48')` |
+| Brand | `ebcabeeb-5bc5-4f95-91e8-cab8ca724172` | `37(h'ebcabeeb5bc54f9591e8cab8ca724172')` |
+| Campaign | `5ef32d5d-f240-462c-a7a4-ba4af221fa23` | `37(h'5ef32d5df240462ca7a4ba4af221fa23')` |
+| Category | `818938c3-3139-4daa-afe6-974c78488e95` | `37(h'818938c331394daaafe6974c78488e95')` |
+| Comment | `b679ded3-0e7c-41ba-89f8-da62a17898ea` | `37(h'b679ded30e7c41ba89f8da62a17898ea')` |
+| Election | `788ff4c6-d65a-451f-bb33-575fe056b411` | `37(h'788ff4c6d65a451fbb33575fe056b411')` |
+| ModerationAction | `a5d232b8-5e03-4117-9afd-be32b878fcdd` | `37(h'a5d232b85e0341179afdbe32b878fcdd')` |
+| Proposal | `7808d2ba-d511-40af-84e8-c0d1625fdfdc` | `37(h'7808d2bad51140af84e8c0d1625fdfdc')` |
+| SubmissionAction | `78927329-cfd9-4ea1-9c71-0e019b126a65` | `37(h'78927329cfd94ea19c710e019b126a65')` |
+| Template | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` | `37(h'0ce8ab3892584fbca62e7faa6e58318f')` |
+
+## Document Types
+
+All Defined Document Types
+
+<!-- markdownlint-disable MD033 -->
+| Document Type | Base Types | [CBOR][RFC8949] |
+| :--- | :--- | :--- |
+| [Brand Parameters](./docs/brand_parameters.md) | Brand | [37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
+| [Campaign Parameters](./docs/campaign_parameters.md) | Campaign | [37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
+| [Category Parameters](./docs/category_parameters.md) | Category | [37(h'818938c331394daaafe6974c78488e95')] |
+| [Comment Action Document](./docs/comment_action_document.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Election Parameters](./docs/election_parameters.md) | Election | [37(h'788ff4c6d65a451fbb33575fe056b411')] |
+| [Proposal](./docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment](./docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) | Template/Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment Template](./docs/proposal_comment_template.md) | Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Meta Template](./docs/proposal_meta_template.md) | Template/Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Moderation Action](./docs/proposal_moderation_action.md) | Action/Proposal/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Proposal Submission Action](./docs/proposal_submission_action.md) | Action/Proposal/SubmissionAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'78927329cfd94ea19c710e019b126a65')] |
+| [Proposal Template](./docs/proposal_template.md) | Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+<!-- markdownlint-enable MD033 -->
+
+## Document Relationship Hierarchy
+
+![Document Relationship Hierarchy](doc_relationships.svg)
+
+## Copyright
+
+| Copyright | :copyright: 2024-2025 IOG Singapore, All Rights Reserved |
+| --- | --- |
+| License | This document is licensed under [CC-BY-4.0] |
+| Created | 2024-12-27 |
+| Modified | 2025-04-04 |
+| Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Steven Johnson <steven.johnson@iohk.io> |
+
+[CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
+[RFC9562]: https://www.rfc-editor.org/rfc/rfc9562.html
