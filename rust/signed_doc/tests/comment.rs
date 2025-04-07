@@ -6,9 +6,9 @@ mod common;
 
 #[tokio::test]
 async fn test_valid_comment_doc() {
-    let (proposal_doc, proposal_doc_id) =
+    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id) =
+    let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -19,10 +19,12 @@ async fn test_valid_comment_doc() {
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
         "template": {
-          "id": template_doc_id
+          "id": template_doc_id,
+          "ver": template_doc_ver
         },
         "ref": {
-            "id": proposal_doc_id
+            "id": proposal_doc_id,
+            "ver": proposal_doc_ver
         }
     })))
     .unwrap();
@@ -40,20 +42,23 @@ async fn test_valid_comment_doc() {
 async fn test_valid_comment_doc_with_reply() {
     let empty_json = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
-    let (proposal_doc, proposal_doc_id) =
+    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id) =
+    let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let comment_doc_id = UuidV7::new();
+    let comment_doc_ver = UuidV7::new();
     let comment_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
             "id": comment_doc_id,
+            "ver": comment_doc_ver,
             "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
             "content-type": ContentType::Json.to_string(),
-            "template": { "id": comment_doc_id.to_string() },
+            "template": { "id": template_doc_id.to_string(), "ver": template_doc_ver.to_string() },
             "ref": {
-                "id": proposal_doc_id
+                "id": proposal_doc_id,
+                "ver": proposal_doc_ver
             },
         }))
         .unwrap()
@@ -68,14 +73,16 @@ async fn test_valid_comment_doc_with_reply() {
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
         "template": {
-          "id": template_doc_id
+          "id": template_doc_id,
+          "ver": template_doc_ver
         },
         "ref": {
-            "id": proposal_doc_id
+            "id": proposal_doc_id,
+            "ver": proposal_doc_ver
         },
         "reply": {
             "id": comment_doc_id,
-            "ver": uuid_v7
+            "ver": comment_doc_ver
         }
     })))
     .unwrap();
@@ -92,9 +99,9 @@ async fn test_valid_comment_doc_with_reply() {
 
 #[tokio::test]
 async fn test_invalid_comment_doc() {
-    let (proposal_doc, _) =
+    let (proposal_doc, ..) =
         common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id) =
+    let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -105,7 +112,8 @@ async fn test_invalid_comment_doc() {
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
         "template": {
-          "id": template_doc_id
+          "id": template_doc_id,
+          "ver": template_doc_ver
         },
         // without ref
         "ref": serde_json::Value::Null
