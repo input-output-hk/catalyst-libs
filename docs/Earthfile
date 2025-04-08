@@ -18,10 +18,6 @@ src:
 generated-signed-docs-pages:
     FROM +src
 
-    RUN --no-cache echo there
-
-    RUN ls -al src/architecture/08_concepts
-
     SAVE ARTIFACT src/architecture/08_concepts/signed_doc signed_doc
 
 
