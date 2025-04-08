@@ -44,7 +44,11 @@ import (
 	// Required/Allowed Signers of a document
 	signers: _allowedSigners
 
+	// Authors which worked on a specific document.
 	authors: #authorList
+
+	// Change Log for every doc
+	versions: [#changelogEntry, ...#changelogEntry]
 }
 
 // We can only define known documents in the document definitions object

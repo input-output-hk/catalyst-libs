@@ -1,24 +1,24 @@
 # Common documentation generation functions
-import glob
-import os
-from datetime import datetime
 
 
-def get_latest_file_change(directory):
-    # Use glob to find all files ending with .cue in the directory
-    cue_files = glob.glob(os.path.join(directory, "*.cue"))
+def get_latest_file_change(versions: list, doc_versions: list) -> str:
+    """
+    Get the largest document version date.
+    """
+    latest_date = ""
+    for ver in versions:
+        if ver["modified"] > latest_date:
+            latest_date = ver["modified"]
 
-    if not cue_files:
-        return "????-??-??"
+    if doc_versions is not None:
+        for ver in doc_versions:
+            if ver["modified"] > latest_date:
+                latest_date = ver["modified"]
 
-    latest_file = max(cue_files, key=os.path.getmtime)
-    file_mod_time = os.path.getmtime(latest_file)
-    mod_date = datetime.fromtimestamp(file_mod_time).strftime("%Y-%m-%d")
-
-    return mod_date
+    return latest_date
 
 
-def insert_copyright(doc_data, document_name=None):
+def insert_copyright(doc_data, changelog=True, document_name=None):
     """
     Generate a copyright notice into the given document data.
 
@@ -26,7 +26,14 @@ def insert_copyright(doc_data, document_name=None):
     """
     authors = doc_data["authors"]
     copyright = doc_data["copyright"]
-    global_last_modified = get_latest_file_change("../signed_docs")
+    versions = copyright["versions"]
+    if document_name is not None:
+        authors = doc_data["docs"][document_name]["authors"] | authors
+        doc_versions = doc_data["docs"][document_name]["versions"]
+    else:
+        doc_versions = None
+
+    global_last_modified = get_latest_file_change(versions, doc_versions)
 
     copyright_year = copyright["created"][:4]
     last_modified_year = global_last_modified[:4]
@@ -47,11 +54,21 @@ def insert_copyright(doc_data, document_name=None):
     )
 
     author_title = " Authors "
-    for author in authors:
+    for author in sorted(authors):
         copyright_notice += f"|{author_title}| {author} <{authors[author]}> |\n"
         author_title = " "
 
-    return copyright_notice
+    if changelog:
+        if document_name is None:
+            versions = copyright["versions"]
+        else:
+            versions = doc_versions
+
+        copyright_notice += "\n### Changelog\n\n"
+        for version in versions:
+            copyright_notice += f"#### {version['version']} ({version['modified']})\n\n{version['changes']}\n\n"
+
+    return copyright_notice.strip()
 
 
 def metadata_format_link(name: str, depth: int = 0):

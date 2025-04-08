@@ -1,5 +1,9 @@
 VERSION 0.8
 
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.3.0 AS python-ci
+
+IMPORT ../docs AS docs
+
 # cspell: words cuelang
 
 # Get cue binary
@@ -23,11 +27,22 @@ src:
 
     SAVE ARTIFACT signed_doc.json
 
-
+# Check that the generated signed docs data matches the src.
 check:
     FROM +src
     RUN cue fmt --check --files . 
     RUN cue vet ./signed_docs/docs:signed_docs  signed_doc.json
+
+# Check the the generated signed docs documentation matches the generated signed docs data
+check-docs-generation:
+    FROM python-ci+python-base
+    COPY ./gen_docs gen_docs
+    COPY +src/signed_doc.json .
+    COPY --dir docs+generated-signed-docs-pages/signed_doc signed_doc
+     # Check our validation code actually works properly
+    RUN cd gen_docs; \
+        ./generate_docs.py -o "../signed_doc" ../signed_doc.json 
+
 
 #  Regenerate - using the builder
 regenerate:

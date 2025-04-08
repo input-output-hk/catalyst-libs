@@ -98,7 +98,19 @@
   "copyright": {
     "copyright": "IOG Singapore, All Rights Reserved",
     "created": "2024-12-27",
-    "license": "CC-BY-4.0"
+    "license": "CC-BY-4.0",
+    "versions": [
+      {
+        "changes": "* First Published Version",
+        "modified": "2025-04-04",
+        "version": "0.01"
+      },
+      {
+        "changes": "* Add version control changelogs to the specification.",
+        "modified": "2025-04-09",
+        "version": "0.02"
+      }
+    ]
   },
   "cose_headers": {
     "content type": {
@@ -255,6 +267,13 @@
       },
       "type": [
         "ebcabeeb-5bc5-4f95-91e8-cab8ca724172"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Campaign Parameters": {
@@ -384,6 +403,13 @@
       },
       "type": [
         "5ef32d5d-f240-462c-a7a4-ba4af221fa23"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Category Parameters": {
@@ -513,9 +539,16 @@
       },
       "type": [
         "818938c3-3139-4daa-afe6-974c78488e95"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
-    "Comment Action Document": {
+    "Comment Moderation Action": {
       "authors": {},
       "headers": {
         "content type": {
@@ -644,6 +677,13 @@
         "5e60e623-ad02-4a1b-a1ac-406db978ee48",
         "b679ded3-0e7c-41ba-89f8-da62a17898ea",
         "a5d232b8-5e03-4117-9afd-be32b878fcdd"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Election Parameters": {
@@ -773,6 +813,13 @@
       },
       "type": [
         "788ff4c6-d65a-451f-bb33-575fe056b411"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal": {
@@ -913,6 +960,13 @@
       },
       "type": [
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Comment": {
@@ -1055,6 +1109,13 @@
       "type": [
         "b679ded3-0e7c-41ba-89f8-da62a17898ea",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Comment Meta Template": {
@@ -1196,6 +1257,13 @@
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "b679ded3-0e7c-41ba-89f8-da62a17898ea",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Comment Template": {
@@ -1337,6 +1405,13 @@
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "b679ded3-0e7c-41ba-89f8-da62a17898ea",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Meta Template": {
@@ -1477,6 +1552,13 @@
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Moderation Action": {
@@ -1608,6 +1690,13 @@
         "5e60e623-ad02-4a1b-a1ac-406db978ee48",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
         "a5d232b8-5e03-4117-9afd-be32b878fcdd"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Submission Action": {
@@ -1786,6 +1875,13 @@
         "5e60e623-ad02-4a1b-a1ac-406db978ee48",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
         "78927329-cfd9-4ea1-9c71-0e019b126a65"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     },
     "Proposal Template": {
@@ -1926,6 +2022,13 @@
       "type": [
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-04-04",
+          "version": "0.01"
+        }
       ]
     }
   },
@@ -2045,7 +2148,7 @@
         "Proposal Comment",
         "Proposal Submission Action",
         "Proposal Moderation Action",
-        "Comment Action Document",
+        "Comment Moderation Action",
         "Brand Parameters",
         "Campaign Parameters",
         "Category Parameters",

@@ -106,5 +106,5 @@ All Defined Document Types
 
 ![Document Relationship Hierarchy](doc_relationships.svg)
 
-{insert_copyright(doc_defs)}
+{insert_copyright(doc_defs, changelog=False)}
 """
