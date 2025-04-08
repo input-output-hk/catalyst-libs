@@ -160,16 +160,22 @@ mod tests {
         let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
 
         let valid_template_doc_id = UuidV7::new();
+        let valid_template_doc_ver = UuidV7::new();
         let another_type_template_doc_id = UuidV7::new();
+        let another_type_template_doc_ver = UuidV7::new();
         let missing_type_template_doc_id = UuidV7::new();
+        let missing_type_template_doc_ver = UuidV7::new();
         let missing_content_template_doc_id = UuidV7::new();
+        let missing_content_template_doc_ver = UuidV7::new();
         let invalid_content_template_doc_id = UuidV7::new();
+        let invalid_content_template_doc_ver = UuidV7::new();
 
         // prepare replied documents
         {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_template_doc_id.to_string(),
+                    "ver": valid_template_doc_ver.to_string(),
                     "type": exp_template_type.to_string()
                 }))
                 .unwrap()
@@ -181,6 +187,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": another_type_template_doc_id.to_string(),
+                    "ver": another_type_template_doc_ver.to_string(),
                     "type": UuidV4::new().to_string()
                 }))
                 .unwrap()
@@ -192,6 +199,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_type_template_doc_id.to_string(),
+                    "ver": missing_type_template_doc_ver.to_string(),
                 }))
                 .unwrap()
                 .with_decoded_content(json_schema.clone())
@@ -202,6 +210,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_content_template_doc_id.to_string(),
+                    "ver": missing_content_template_doc_ver.to_string(),
                     "type": exp_template_type.to_string()
                 }))
                 .unwrap()
@@ -212,6 +221,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": invalid_content_template_doc_id.to_string(),
+                    "ver": invalid_content_template_doc_ver.to_string(),
                     "type": exp_template_type.to_string()
                 }))
                 .unwrap()
@@ -225,7 +235,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": valid_template_doc_id.to_string() }
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -246,7 +256,7 @@ mod tests {
         let rule = TemplateRule::Specified { exp_template_type };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "template": {"id": valid_template_doc_id.to_string() }
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -258,7 +268,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": valid_template_doc_id.to_string() }
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -269,7 +279,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": valid_template_doc_id.to_string() }
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(vec![])
@@ -280,7 +290,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": another_type_template_doc_id.to_string() }
+                "template": {"id": another_type_template_doc_id.to_string(), "ver": another_type_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -291,7 +301,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": missing_type_template_doc_id.to_string() }
+                "template": {"id": missing_type_template_doc_id.to_string(), "ver": missing_type_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -302,7 +312,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": missing_content_template_doc_id.to_string() }
+                "template": {"id": missing_content_template_doc_id.to_string(), "ver": missing_content_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -313,7 +323,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": missing_content_template_doc_id.to_string() }
+                "template": {"id": missing_content_template_doc_id.to_string(), "ver": missing_content_template_doc_ver.to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -324,7 +334,7 @@ mod tests {
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
-                "template": {"id": UuidV7::new().to_string() }
+                "template": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -341,8 +351,9 @@ mod tests {
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
+        let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
