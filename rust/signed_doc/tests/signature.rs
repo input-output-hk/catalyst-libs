@@ -6,7 +6,7 @@ mod common;
 
 #[tokio::test]
 async fn single_signature_validation_test() {
-    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(None).unwrap();
+    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(None, None).unwrap();
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: has key
@@ -26,10 +26,10 @@ async fn single_signature_validation_test() {
 
 #[tokio::test]
 async fn multiple_signatures_validation_test() {
-    let (sk1, pk1, kid1) = common::create_dummy_key_pair().unwrap();
-    let (sk2, pk2, kid2) = common::create_dummy_key_pair().unwrap();
-    let (sk3, pk3, kid3) = common::create_dummy_key_pair().unwrap();
-    let (_, pk_n, kid_n) = common::create_dummy_key_pair().unwrap();
+    let (sk1, pk1, kid1) = common::create_dummy_key_pair(None).unwrap();
+    let (sk2, pk2, kid2) = common::create_dummy_key_pair(None).unwrap();
+    let (sk3, pk3, kid3) = common::create_dummy_key_pair(None).unwrap();
+    let (_, pk_n, kid_n) = common::create_dummy_key_pair(None).unwrap();
 
     let signed_doc = Builder::new()
         .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())

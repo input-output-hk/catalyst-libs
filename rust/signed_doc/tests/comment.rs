@@ -12,19 +12,22 @@ async fn test_valid_comment_doc() {
         common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
-        "content-type": ContentType::Json.to_string(),
-        "content-encoding": ContentEncoding::Brotli.to_string(),
-        "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
-        "id": uuid_v7.to_string(),
-        "ver": uuid_v7.to_string(),
-        "template": {
-          "id": template_doc_id
-        },
-        "ref": {
-            "id": proposal_doc_id
-        }
-    })))
+    let (doc, ..) = common::create_dummy_signed_doc(
+        Some(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+            "template": {
+              "id": template_doc_id
+            },
+            "ref": {
+                "id": proposal_doc_id
+            }
+        })),
+        None,
+    )
     .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
@@ -61,23 +64,26 @@ async fn test_valid_comment_doc_with_reply() {
         .build();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
-        "content-type": ContentType::Json.to_string(),
-        "content-encoding": ContentEncoding::Brotli.to_string(),
-        "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
-        "id": uuid_v7.to_string(),
-        "ver": uuid_v7.to_string(),
-        "template": {
-          "id": template_doc_id
-        },
-        "ref": {
-            "id": proposal_doc_id
-        },
-        "reply": {
-            "id": comment_doc_id,
-            "ver": uuid_v7
-        }
-    })))
+    let (doc, ..) = common::create_dummy_signed_doc(
+        Some(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+            "template": {
+              "id": template_doc_id
+            },
+            "ref": {
+                "id": proposal_doc_id
+            },
+            "reply": {
+                "id": comment_doc_id,
+                "ver": uuid_v7
+            }
+        })),
+        None,
+    )
     .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
@@ -98,18 +104,21 @@ async fn test_invalid_comment_doc() {
         common::create_dummy_doc(doc_types::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
-        "content-type": ContentType::Json.to_string(),
-        "content-encoding": ContentEncoding::Brotli.to_string(),
-        "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
-        "id": uuid_v7.to_string(),
-        "ver": uuid_v7.to_string(),
-        "template": {
-          "id": template_doc_id
-        },
-        // without ref
-        "ref": serde_json::Value::Null
-    })))
+    let (doc, ..) = common::create_dummy_signed_doc(
+        Some(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "content-encoding": ContentEncoding::Brotli.to_string(),
+            "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+            "template": {
+              "id": template_doc_id
+            },
+            // without ref
+            "ref": serde_json::Value::Null
+        })),
+        None,
+    )
     .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();

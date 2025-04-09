@@ -20,6 +20,7 @@ pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
+pub(crate) use signature_kid::SignatureKidRule;
 pub(crate) use template::TemplateRule;
 
 /// Struct represented a full collection of rules for all fields
@@ -38,6 +39,8 @@ pub(crate) struct Rules {
     pub(crate) section: SectionRule,
     /// 'category' field validation rule
     pub(crate) category: CategoryRule,
+    /// `kid` field validation rule
+    pub(crate) kid: SignatureKidRule,
 }
 
 impl Rules {
@@ -54,6 +57,7 @@ impl Rules {
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
             self.category.check(doc, provider).boxed(),
+            self.kid.check(doc).boxed(),
         ];
 
         let res = futures::future::join_all(rules)
