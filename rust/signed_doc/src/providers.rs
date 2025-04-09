@@ -1,6 +1,6 @@
 //! Providers traits, which are used during different validation procedures.
 
-use std::future::Future;
+use std::{future::Future, time::Duration};
 
 use catalyst_types::id_uri::IdUri;
 use ed25519_dalek::VerifyingKey;
@@ -21,12 +21,22 @@ pub trait CatalystSignedDocumentProvider: Send + Sync {
     fn try_get_doc(
         &self, doc_ref: &DocumentRef,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
+
+    /// Returns a future threshold value, which is used in the validation of the `ver`
+    /// field that it is not too far in the future.
+    /// If `None` is returned, skips "too far in the future" validation.
+    fn future_threshold(&self) -> Option<Duration>;
+
+    /// Returns a past threshold value, which is used in the validation of the `ver`
+    /// field that it is not too far behind.
+    /// If `None` is returned, skips "too far behind" validation.
+    fn past_threshold(&self) -> Option<Duration>;
 }
 
 pub mod tests {
     //! Simple providers implementation just for the testing purposes
 
-    use std::collections::HashMap;
+    use std::{collections::HashMap, time::Duration};
 
     use catalyst_types::uuid::Uuid;
 
@@ -55,6 +65,14 @@ pub mod tests {
             &self, doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             Ok(self.0.get(&doc_ref.id.uuid()).cloned())
+        }
+
+        fn future_threshold(&self) -> Option<std::time::Duration> {
+            Some(Duration::from_secs(5))
+        }
+
+        fn past_threshold(&self) -> Option<Duration> {
+            Some(Duration::from_secs(5))
         }
     }
 

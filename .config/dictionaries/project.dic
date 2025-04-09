@@ -51,6 +51,7 @@ crontabs
 crontagged
 csprng
 cstring
+cuelang
 dalek
 dashmap
 Datelike
@@ -89,6 +90,7 @@ fmmap
 fmtchk
 fmtfix
 fontawesome
+fromfiledate
 fsgr
 fstat
 fstatat
@@ -123,6 +125,7 @@ jorm
 jormungandr
 Jörmungandr
 jsonschema
+Justfile
 kiduri
 lcov
 Leay
@@ -132,6 +135,7 @@ libp2p
 libsqlite
 libssh
 libtest
+lineterm
 linkat
 lintfix
 lipsum
@@ -141,6 +145,7 @@ logcall
 lookaside
 maindbname
 mapref
+markdownlint
 mdlint
 mdns
 MEMMAP
@@ -200,6 +205,7 @@ pubkey
 publickey
 pubspec
 pwrite
+pytest
 qpsg
 quic
 rapidoc
@@ -256,6 +262,8 @@ timelike
 timespec
 tinygo
 tinyvec
+tofile
+tofiledate
 toobig
 toolsets
 Traceback
