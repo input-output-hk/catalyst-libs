@@ -11,6 +11,7 @@ mod content_type;
 mod doc_ref;
 mod reply;
 mod section;
+mod signature_kid;
 mod template;
 
 pub(crate) use category::CategoryRule;

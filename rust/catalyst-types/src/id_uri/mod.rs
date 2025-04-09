@@ -642,7 +642,7 @@ impl Display for IdUri {
         )?;
 
         // Role and Rotation are only serialized if its NOT and ID or they are not the defaults.
-        if !self.role.is_default() || !self.rotation.is_default() || !self.id {
+        if !self.role.is_role_0() || !self.rotation.is_default() || !self.id {
             write!(f, "/{}", self.role)?;
             if !self.rotation.is_default() || !self.id {
                 write!(f, "/{}", self.rotation)?;

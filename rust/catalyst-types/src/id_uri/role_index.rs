@@ -24,19 +24,25 @@ pub enum RoleIndexError {
 pub struct RoleIndex(u16);
 
 impl RoleIndex {
-    /// Default Role Index
-    pub const DEFAULT: RoleIndex = RoleIndex(0);
+    /// Delegated Representative
+    pub const DREP: RoleIndex = RoleIndex(1);
+    /// Proposer
+    pub const PROPOSER: RoleIndex = RoleIndex(3);
+    /// Default Role 0
+    pub const ROLE_0: RoleIndex = RoleIndex(0);
+    /// Voter Delegation
+    pub const VOTER_DELEGATION: RoleIndex = RoleIndex(2);
 
-    /// Is the `RoleIndex` the default value
+    /// Is the `RoleIndex` the Role 0 value
     #[must_use]
-    pub fn is_default(self) -> bool {
-        self == Self::DEFAULT
+    pub fn is_role_0(self) -> bool {
+        self == Self::ROLE_0
     }
 }
 
 impl Default for RoleIndex {
     fn default() -> Self {
-        Self::DEFAULT
+        Self::ROLE_0
     }
 }
 
