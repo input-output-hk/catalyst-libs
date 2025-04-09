@@ -88,9 +88,11 @@ _allMetadataNames: or([
 
 	// Format of the field.
 	format: #metadataTypesConstraint | *#metadataTypes[0]
+
 	if format == "Document Reference" && required != "excluded" {
 		type: #DocumentName | [...#DocumentName]
 		multiple: bool | *false
+		linked_refs: [..._allMetadataNames] | *null
 	}
 
 	// Markdown description of the field.
@@ -167,7 +169,7 @@ _metadata: #metadataStruct & {
 	template: {
 		description: "Reference to the template used to create and/or validate this document."
 		validation: """
-			In addition to the validation performed for `ref`, 
+			In addition to the validation performed for `Document Reference` type fields, 
 			The document payload is not valid if it does not validate completely against the referenced template.
 			"""
 	}
@@ -177,7 +179,7 @@ _metadata: #metadataStruct & {
 			Reference to a Comment document type being referred to.
 			"""
 		validation: """
-			In addition to the validation performed for `ref`, 
+			In addition to the validation performed for `Document Reference` type fields, 
 			The `ref` of the `reply` document must be the same as
 			the original comment document.
 			"""
@@ -215,11 +217,10 @@ _metadata: #metadataStruct & {
 	brand_id: {
 		description: "A reference to the Brand Parameters Document this document lies under."
 		validation: """
-			In addition to the validation performed for `ref`, 
-			Any referenced document that includes a `brand_id` must match the `brand_id` 
-			of the referencing document.
-			It is also valid for the referenced document to not include this field, if it is 
-			optional for the referenced document.
+			In addition to the validation performed for `Document Reference` type fields: 
+
+			* Any linked referenced document that includes a `brand_id` must match the 
+			`brand_id` of the referencing document.
 			"""
 		exclusive: [
 			"campaign_id",
@@ -230,11 +231,10 @@ _metadata: #metadataStruct & {
 	campaign_id: {
 		description: "A reference to the Campaign Parameters Document this document lies under."
 		validation: """
-			In addition to the validation performed for `ref`, 
-			Any referenced document that includes a `campaign_id` must match the 
+			In addition to the validation performed for `Document Reference` type fields: 
+
+			* Any linked referenced document that includes a `campaign_id` must match the 
 			`campaign_id` of the referencing document.
-			It is also valid for the referenced document to not include this field, if it is 
-			optional for the referenced document.
 			"""
 		exclusive: [
 			"brand_id",
@@ -245,7 +245,7 @@ _metadata: #metadataStruct & {
 	election_id: {
 		description: "A reference to the Election Parameters Document this document lies under."
 		validation: """
-			In addition to the validation performed for `ref`, 
+			In addition to the validation performed for `Document Reference` type fields, 
 			Any referenced document that includes a `election_id` must match the 
 			`election_id` of the referencing document.
 			It is also valid for the referenced document to not include this field, if it is 
@@ -256,17 +256,17 @@ _metadata: #metadataStruct & {
 	category_id: {
 		description: "A reference to the Category Parameters Document this document lies under."
 		validation: """
-			In addition to the validation performed for `ref`, 
-			Any referenced document that includes a `category_id` must match the 
+			In addition to the validation performed for `Document Reference` type fields: 
+
+			* Any linked referenced document that includes a `category_id` must match the 
 			`category_id` of the referencing document.
-			It is also valid for the referenced document to not include this field, if it is 
-			optional for the referenced document.
 			"""
 		exclusive: [
 			"brand_id",
 			"campaign_id",
 		]
 	}
+
 }
 
 // Note: we make all normally excluded fields optional at the global level, because they are globally optional

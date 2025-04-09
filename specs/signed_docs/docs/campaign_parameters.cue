@@ -4,6 +4,16 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Campaign Parameters": {
+		description: """
+			Parameters which define a Campaign within a Brand in the system.
+			"""
+
+		metadata: {
+			brand_id: {
+				required: "yes"
+				type:     "Brand Parameters"
+			}
+		}
 
 		versions: [
 			{
