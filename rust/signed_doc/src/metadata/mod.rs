@@ -126,18 +126,6 @@ impl Metadata {
             );
         }
 
-        if let Some(id) = metadata.id {
-            if let Some(ver) = metadata.ver {
-                if ver < id {
-                    report.invalid_value(
-                        "ver",
-                        &ver.to_string(),
-                        "ver < id",
-                        &format!("Document Version {ver} cannot be smaller than Document ID {id}"),
-                    );
-                }
-            }
-        }
         Self(metadata)
     }
 

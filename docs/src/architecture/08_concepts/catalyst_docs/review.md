@@ -46,7 +46,7 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   "content-encoding" => "br"
   ```
 
-* [`template`](./../signed_doc/meta.md#ref-document-reference).
+* [`template`](./../signed_doc/metadata.md#ref-document-reference).
   A reference to the review template document,
   which [`type`](./../signed_doc/spec.md#type) must be equal to
   [review template `type`](#review-template) field value.
