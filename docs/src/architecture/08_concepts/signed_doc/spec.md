@@ -1,176 +1,125 @@
----
-Title: Catalyst Signed Document
-Category: Catalyst
-Status: Proposed
-Authors:
-    - Steven Johnson <steven.johnson@iohk.io>
-    - Alex Pozhylenkov <alex.pozhylenkov@iohk.io>
-Implementors:
-    - Catalyst Fund 14
-Discussions: []
-Created: 2024-12-27
-License: CC-BY-4.0
----
-
-* [Abstract](#abstract)
-* [Motivation: why is this CIP necessary?](#motivation-why-is-this-cip-necessary)
-* [Specification](#specification)
-  * [Catalyst Signed Document metadata fields](#catalyst-signed-document-metadata-fields)
-    * [`type`](#type)
-    * [`id`](#id)
-    * [`ver`](#ver)
-    * [`alg`](#alg)
-    * [`content type`](#content-type)
-    * [`content encoding` (optional)](#content-encoding-optional)
-  * [Catalyst Signed Document content](#catalyst-signed-document-content)
-  * [COSE signature protected header](#cose-signature-protected-header)
-* [Copyright](#copyright)
+# Catalyst Signed Document Specification
 
 ## Abstract
 
-Project Catalyst both produces and consumes a lot of different data objects,
-in different places of the system.
-To ensure the data object is authoritative, it must be signed.
-In addition to the data object content and the signature, metadata is also included
-to describe different kind of Catalyst Signed Document properties.
+Project Catalyst requires a verifiable data format for the publication and validation of
+large volumes of off chain information.
 
-## Motivation: why is this CIP necessary?
+The Catalyst Signed Documents Specification is based on [COSE][RFC9052]
+and provides the basis of this document specification.
 
-As we decentralize project catalyst, it will be required to unambiguously identify who produced some
-data object, and the purpose of it.
+## Motivation
+
+As Project Catalyst decentralizes via both on-chain and off-chain mechanisms, a reliable,
+standardized process for authenticating documents and their relationships is required.
 
 ## Specification
 
-Catalyst Signed Document is [COSE] based structure, particularly `COSE Signed Data Object` [COSE] type.
-It fully inherits an original [COSE] design and specifies the details of different [COSE] header's fields.
+Project Catalyst generates a large volume of off chain information.
+This information requires similar guarantees as on-chain data.
+It needs to be verifiably published and also immutable.
+However, we also require the ability to publish new versions of documents,
+and for documents to be able to securely reference one another.
 
-### Catalyst Signed Document metadata fields
+Catalyst Signed Documents are based on [COSE][RFC9052].
+Specifically, the [COSE Sign][RFC9052-CoseSign] format is used.
+This allows one or more signatures to be attached to the same document.
 
-To uniquely specify a Catalyst Signed Document `id`, `type`, `version` etc.,
-a list of different metadata fields is specified.
+### [COSE Header Parameters][RFC9052-HeaderParameters]
 
-Also as you can see from the specification,
-it is allowed to add any number of additional metadata fields, which could be specified for each `type` of document.
+[COSE][RFC9052] documents define a set of standard [COSE header parameters][RFC9052-HeaderParameters].
+All [COSE Header Parameters][RFC9052-HeaderParameters] are protected and
+*MUST* appear in the protected headers section of the document.
+The [COSE header parameters][RFC9052-HeaderParameters] defined and used by Catalyst Signed Documents are as follows:
 
-[A full list of considered additional metadata fields](./meta.md).
+#### content type
 
-All these fields will be encoded as the [COSE] `protected` header
+IANA Media Type/s allowed in the Payload
 
-<!-- markdownlint-disable max-one-sentence-per-line code-block-style -->
-??? note "Catalyst Signed Document metadata fields: `signed_doc_meta.cddl`"
+* Required : yes
+* [Cose][RFC9052] Label : 3
+* Format : IANA Media Type
+  * Supported Values:
+    * [application/json] : [JSON][RFC8259] Document
+    * [application/schema+json] : [JSON Schema] Draft 7 Document; Note:
+      * This is currently an unofficial media type.
+      * Draft 7 is used because of its wide support by tooling.
+    * [application/cbor] : [RFC8949] Binary [CBOR][RFC8949] Encoded Document
+    * application/cddl : [CDDL][RFC8610] Document; Note:
+      * This is an unofficial media type
+      * [RFC9165] Additional Control Operators for [CDDL][RFC8610] are supported.
+      * Must not have Modules, schema must be self-contained.
 
-    ```CDDL
-    {{ include_file('src/architecture/08_concepts/signed_doc/cddl/signed_doc_meta.cddl', indent=4) }}
-    ```
-<!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
+#### content-encoding
 
-#### `type`
+Supported HTTP Encodings of the Payload.
+If no compression or encoding is used, then this field must not be present.
 
-Each Catalyst Signed Document will have a type identifier called `type`.
+* Required : optional
+* [Cose][RFC9052] Label : content-encoding ***Custom Header***
+* Format : HTTP Content Encoding
+  * Supported Values:
+    * [br] : [BROTLI][RFC7932] Compression
 
-The `type` is a [UUID] v4.
+### Metadata
 
-[A full list of Catalyst supported document types](./types.md)
+Catalyst Signed Documents extend the Header Parameters with a series of Metadata fields.
+These fields are defined [here](./metadata.md).
 
-#### `id`
+### Signing Catalyst Signed Documents
 
-Every Catalyst Signed Document will have a unique ID.
-All Catalyst Signed Document with the same `id` are considered different versions of the same Catalyst Signed Document
-(read about [`ver`](#ver)).
-However, `id` uniqueness is only guaranteed on first use.
+Catalyst Signed Documents are based on the [COSE Sign][RFC9052-CoseSign] format.
+This allows one or more signatures to be attached to the same document.
+A catalyst signed document *MUST* have at least one valid signature attached.
+Multiple signatures may also be attached to the same document, where that is required.
 
-If the same `id` is used, by unauthorized publishers, the Catalyst Signed Document is invalid.
+Each signature is contained in an array of signatures attached to the document.
+The signatures contain protected headers, and the signature itself.
+The headers currently defined for the signatures are:
 
-The `id` is a [UUID] v7.
+#### `kid`
 
-The first time a Catalyst Signed Document is created, it will be assigned by the creator a new `id` which must
-be well constructed.
+The kid is a [UTF-8][RFC3629] encoded Catalyst ID.
+Any `kid` format which conforms to the Catalyst ID specification may be used.
+The Catalyst ID unambiguously defines both the signing keys and signing algorithm
+used to sign the protected portion of the document.
 
-* The time must be the time the Catalyst Signed Document was first created.
-* The random value must be truly random.
-
-Creating `id` this way ensures there are no collisions, and they can be independently created without central co-ordination.
-
-*Note: All Catalyst Signed Documents are signed,
-the first creation of an `id` assigns that `id` to the creator and any assigned collaborators.
-A Catalyst Signed Document that is not signed by the creator, or an assigned collaborator, is invalid.
-There is no reasonable way an `id` can collide accidentally.
-Therefore, detection of invalid `id`s published by unauthorized publishers, could result in anti-spam
-or system integrity mitigations being triggered.
-This could result in all actions in the system being blocked by the offending publisher,
-including all otherwise legitimate publications by the same author being marked as fraudulent.*
-
-#### `ver`
-
-Every Catalyst Signed Document in the system will be versioned.
-There can, and probably will, exist multiple versions of the same document.
-
-The `ver` is a [UUID] v7.
-
-The initial `ver` assigned the first time a Catalyst Signed Document is published **MUST** be identical to the [`id`](#id).
-Subsequent versions will retain the same [`id`](#id) and will create a new `ver`,
-following best practice for creating a new [UUID] v7.
-
-#### `alg`
-
-This is an original [COSE] header field,
-which indicates the cryptography algorithm used for the security processing.
-
-<!-- markdownlint-disable max-one-sentence-per-line -->
-!!! warning ""
-
-    It must be equal to `EdDSA` value
-<!-- markdownlint-enable max-one-sentence-per-line -->
-
-Only `ed25119` considered at this moment as the only option to be supported for signed objects.
-
-#### [`content type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)
-
-This is an original [COSE] header field,
-which indicates the [`content type`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type)
-of the [content](#catalyst-signed-document-content) ([COSE] `payload`) data.
-
-#### [`content encoding`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding) (optional)
-
-This field is used to indicate the [`content encoding`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding)
-algorithm of the [content](#catalyst-signed-document-content) data.
-
-Supported encodings:
-
-* `br` - [Brotli] compressed data.
-
-### Catalyst Signed Document content
-
-The Catalyst Signed Document content data is encoded (and could be additionally compressed,
-read [`content encoding`](#content-encoding-optional)) as [COSE] `payload`.
-
-### [COSE] signature protected header
-
-As it mentioned earlier, Catalyst Signed Document utilizes `COSE Signed Data Object` format,
-which allows to provide multi-signature functionality.
-In that regard,
-each Catalyst Signed Document [COSE] signature **must** include the following `protected` header field:
-
-<!-- markdownlint-disable code-block-style -->
-```CDDL
-; All encoders/decoders of this specification must follow deterministic cbor encoding rules
-; https://datatracker.ietf.org/doc/html/draft-ietf-cbor-cde-06
-
-signature_protected_header = {
-    4 => bytes ; "kid", UTF-8 encoded URI string
-}
-```
-<!-- markdownlint-enable code-block-style -->
-
-* `kid`: A unique identifier of the signer.
-  A [UTF-8] encoded [URI] string.
+* Required: yes
+* [Cose][RFC9052] Label: 4
+* Format: [UTF-8][RFC3629] encoded Catalyst ID
 
 ## Copyright
 
-This document is licensed under [CC-BY-4.0](https://creativecommons.org/licenses/by/4.0/legalcode).
+| Copyright | :copyright: 2024-2025 IOG Singapore, All Rights Reserved |
+| --- | --- |
+| License | This document is licensed under [CC-BY-4.0] |
+| Created | 2024-12-27 |
+| Modified | 2025-04-09 |
+| Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Steven Johnson <steven.johnson@iohk.io> |
 
-[Brotli]: https://datatracker.ietf.org/doc/html/rfc7932
-[UTF-8]: https://datatracker.ietf.org/doc/html/rfc3629
-[URI]: https://datatracker.ietf.org/doc/html/rfc3986
-[COSE]: https://datatracker.ietf.org/doc/html/rfc9052
-[UUID]: https://www.rfc-editor.org/rfc/rfc9562.html
+### Changelog
+
+#### 0.01 (2025-04-04)
+
+* First Published Version
+
+#### 0.02 (2025-04-09)
+
+* Add version control changelogs to the specification.
+
+[application/schema+json]: https://datatracker.ietf.org/doc/draft-bhutton-json-schema/
+[RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
+[application/cbor]: https://www.iana.org/assignments/media-types/application/cbor
+[application/json]: https://www.iana.org/assignments/media-types/application/json
+[JSON Schema]: https://json-schema.org/draft-07
+[RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
+[CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
+[RFC9165]: https://www.rfc-editor.org/rfc/rfc9165
+[RFC7932]: https://www.rfc-editor.org/rfc/rfc7932
+[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
+[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
+[RFC9052]: https://datatracker.ietf.org/doc/html/rfc9052
+[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
+[br]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br

@@ -1,0 +1,52 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.3.0 AS python-ci
+
+IMPORT ../docs AS docs
+
+# cspell: words cuelang
+
+# Get cue binary
+cue-bin:
+    FROM cuelang/cue:0.12.0
+    SAVE ARTIFACT /usr/bin/cue
+
+
+# builder - debian plus cue binary
+builder:
+    FROM debian:stable-20250203-slim
+    COPY +cue-bin/cue /usr/bin/cue
+
+# Copy all the source we need to build the docs
+src:
+    FROM +builder
+
+    WORKDIR /src
+    COPY . .
+    ENV CUE_EXPERIMENT="embed"
+
+    SAVE ARTIFACT signed_doc.json
+
+# Check that the generated signed docs data matches the src.
+check:
+    FROM +src
+    RUN cue fmt --check --files . 
+    RUN cue vet ./signed_docs/docs:signed_docs  signed_doc.json
+
+# Check the the generated signed docs documentation matches the generated signed docs data
+check-docs-generation:
+    FROM python-ci+python-base
+    COPY ./gen_docs gen_docs
+    COPY +src/signed_doc.json .
+    COPY --dir docs+generated-signed-docs-pages/signed_doc signed_doc
+     # Check our validation code actually works properly
+    RUN cd gen_docs; \
+        ./generate_docs.py -o "../signed_doc" ../signed_doc.json 
+
+
+#  Regenerate - using the builder
+regenerate:
+    FROM +src
+
+    RUN cue export -f -s ./signed_docs/docs:signed_docs --out json --outfile signed_doc.json
+    SAVE ARTIFACT --keep-ts signed_doc.json AS LOCAL .

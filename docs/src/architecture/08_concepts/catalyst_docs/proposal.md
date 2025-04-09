@@ -50,12 +50,12 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   "content-encoding" => "br"
   ```
 
-* [`template`](./../signed_doc/meta.md#ref-document-reference).
+* [`template`](./../signed_doc/metadata.md#ref-document-reference).
   A reference to the proposal template document,
   which [`type`](./../signed_doc/spec.md#type) must be equal to
   [proposal template `type`](#proposal-template) field value.
 
-* [`category_id`](./../signed_doc/meta.md#category_id) (optional).
+* [`category_id`](./../signed_doc/metadata.md#category_id) (optional).
   A reference to the category document,
   which [`type`](./../signed_doc/spec.md#type) must be equal to
   `48c20109-362a-4d32-9bba-e0a9cf8b45be` value.
@@ -112,7 +112,7 @@ A list of used [Catalyst Signed Document protected header fields](./../signed_do
   "content-encoding" => "br"
   ```
 
-* [`category_id`](./../signed_doc/meta.md#category_id) (optional).
+* [`category_id`](./../signed_doc/metadata.md#category_id) (optional).
   A reference to the category document,
   which [`type`](./../signed_doc/spec.md#type) must be equal to
   `48c20109-362a-4d32-9bba-e0a9cf8b45be` value.
