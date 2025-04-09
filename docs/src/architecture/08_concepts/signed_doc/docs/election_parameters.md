@@ -2,7 +2,7 @@
 
 ## Description
 
-TODO
+Parameters which define an individual voting event.
 
 ```d2 layout="elk"
 "Election Parameters": {
@@ -11,8 +11,15 @@ TODO
   "type [0]": 788ff4c6-d65a-451f-bb33-575fe056b411
   "id": UUIDv7
   "ver": UUIDv7
+  "brand_id": Brand Parameters
+  "campaign_id": Campaign Parameters
+  "category_id": Category Parameters
 
 }
+
+"Election Parameters"."brand_id"->"Brand Parameters"
+"Election Parameters"."campaign_id"->"Campaign Parameters"
+"Election Parameters"."category_id"->"Category Parameters"
 ```
 
 ### Validation
@@ -36,7 +43,7 @@ TODO
 
 ## Metadata
 
-### `type`
+### [`type`](../metadata.md#type)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -50,7 +57,7 @@ The document TYPE.
 
 **MUST** be a known document type.
 
-### `id`
+### [`id`](../metadata.md#id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -66,7 +73,7 @@ timestamp of when the document was created.
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
-### `ver`
+### [`ver`](../metadata.md#ver)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -79,6 +86,72 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 #### Validation
 
 The document version must always be >= the document ID.
+
+### [`brand_id`](../metadata.md#brand_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+| Exclusive | [`campaign_id`](../metadata.md#campaign_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Brand Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`brand_id`](../metadata.md#brand_id) must match the
+[`brand_id`](../metadata.md#brand_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`campaign_id`](../metadata.md#campaign_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+
+### [`campaign_id`](../metadata.md#campaign_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Campaign Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
+[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+
+### [`category_id`](../metadata.md#category_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Category Parameters](category_parameters.md) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`campaign_id`](../metadata.md#campaign_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Category Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
+[`category_id`](../metadata.md#category_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`campaign_id`](../metadata.md#campaign_id) metadata.
 
 ## Payload
 

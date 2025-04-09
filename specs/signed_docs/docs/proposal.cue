@@ -27,9 +27,26 @@ docs: #DocumentDefinitions & {
 				required: "optional"
 			}
 
+			brand_id: {
+				required: "optional"
+				type:     "Brand Parameters"
+				linked_refs: [
+					"template",
+				]
+			}
+			campaign_id: {
+				required: "optional"
+				type:     "Campaign Parameters"
+				linked_refs: [
+					"template",
+				]
+			}
 			category_id: {
 				required: "optional"
 				type:     "Category Parameters"
+				linked_refs: [
+					"template",
+				]
 			}
 		}
 
@@ -37,7 +54,8 @@ docs: #DocumentDefinitions & {
 			description: """
 				Proposal Document drafted for submission to a category of a campaign.
 
-				Must be valid according to the schema of the referenced Template.
+				Must be valid according to the schema contained within the 
+				`Document Reference` from the `template` metadata.
 				"""
 		}
 

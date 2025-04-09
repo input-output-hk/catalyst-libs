@@ -5,6 +5,16 @@ package signed_docs
 docs: #DocumentDefinitions & {
 	"Proposal Moderation Action": {
 
+		description: """
+			A Moderation action performed on a Proposal.
+			"""
+
+		metadata: {
+			ref: {
+				required: "yes"
+				type:     "Proposal"
+			}}
+
 		versions: [
 			{
 				version:  "0.01"

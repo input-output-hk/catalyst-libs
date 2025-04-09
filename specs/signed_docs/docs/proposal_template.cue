@@ -28,6 +28,14 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Meta Template"
 			}
 
+			brand_id: {
+				required: "optional"
+				type:     "Brand Parameters"
+			}
+			campaign_id: {
+				required: "optional"
+				type:     "Campaign Parameters"
+			}
 			category_id: {
 				required: "optional"
 				type:     "Category Parameters"

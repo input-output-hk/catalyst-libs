@@ -41,20 +41,25 @@ def gen_doc_d2(doc: str, doc_defs: dict, depth=0, stand_alone=False) -> str:
                     type_count += 1
             elif doc_metadata[meta]["format"] == "Document Reference":
                 ref_doc = doc_metadata[meta].get("type", "Unspecified")
+                if not isinstance(ref_doc, list):
+                    ref_doc = [ref_doc]
+                ref_doc_display = "/".join(ref_doc)
                 if doc_metadata[meta]["required"] == "optional":
-                    metadata_rows += f'  "{meta}": {ref_doc} (Optional)\n'
-                    if ref_doc == doc:
-                        ref_links += (
-                            f'"{doc}"."{meta}"->"{ref_doc}": <{meta}> Optional\n'
-                        )
-                    else:
-                        ref_links += f'"{doc}"."{meta}"->"{ref_doc}": Optional\n'
+                    metadata_rows += f'  "{meta}": {ref_doc_display} (Optional)\n'
+                    for link_doc in ref_doc:
+                        if link_doc == doc:
+                            ref_links += (
+                                f'"{doc}"."{meta}"->"{link_doc}": <{meta}> Optional\n'
+                            )
+                        else:
+                            ref_links += f'"{doc}"."{meta}"->"{link_doc}": Optional\n'
                 else:
-                    metadata_rows += f'  "{meta}": {ref_doc}\n'
-                    if ref_doc == doc:
-                        ref_links += f'"{doc}"."{meta}"->"{ref_doc}": <{meta}>n'
-                    else:
-                        ref_links += f'"{doc}"."{meta}"->"{ref_doc}"\n'
+                    metadata_rows += f'  "{meta}": {ref_doc_display}\n'
+                    for link_doc in ref_doc:
+                        if link_doc == doc:
+                            ref_links += f'"{doc}"."{meta}"->"{link_doc}": <{meta}>n'
+                        else:
+                            ref_links += f'"{doc}"."{meta}"->"{link_doc}"\n'
                 # if stand_alone:
                 # if ref_doc != doc:
                 #    ref_links += f'"{ref_doc}".shape=document\n'
@@ -89,7 +94,7 @@ def gen_docs_relationship_diagram(doc_defs: dict) -> str:
 
     copyright = f"""
 copyright: |~md
-  {insert_copyright(doc_defs)}
+  {insert_copyright(doc_defs, changelog=False)}
 ~|  {{near: bottom-right}}
 """
 

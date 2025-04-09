@@ -22,11 +22,15 @@ The payload of a proposal comment is controlled by its template.
   "id": UUIDv7
   "ver": UUIDv7
   "template": Proposal Comment Meta Template (Optional)
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
   "category_id": Category Parameters (Optional)
 
 }
 
 "Proposal Comment Template"."template"->"Proposal Comment Meta Template": Optional
+"Proposal Comment Template"."brand_id"->"Brand Parameters": Optional
+"Proposal Comment Template"."campaign_id"->"Campaign Parameters": Optional
 "Proposal Comment Template"."category_id"->"Category Parameters": Optional
 ```
 
@@ -51,7 +55,7 @@ TODO
 
 ## Metadata
 
-### `type`
+### [`type`](../metadata.md#type)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -65,7 +69,7 @@ The document TYPE.
 
 **MUST** be a known document type.
 
-### `id`
+### [`id`](../metadata.md#id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -81,7 +85,7 @@ timestamp of when the document was created.
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
-### `ver`
+### [`ver`](../metadata.md#ver)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -95,7 +99,7 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### `template`
+### [`template`](../metadata.md#template)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -107,28 +111,74 @@ Reference to the template used to create and/or validate this document.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
-### `category_id`
+### [`brand_id`](../metadata.md#brand_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+| Exclusive | [`campaign_id`](../metadata.md#campaign_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Brand Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`brand_id`](../metadata.md#brand_id) must match the
+[`brand_id`](../metadata.md#brand_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`campaign_id`](../metadata.md#campaign_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+
+### [`campaign_id`](../metadata.md#campaign_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Campaign Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
+[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+
+### [`category_id`](../metadata.md#category_id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive |  brand_id  |
-|  |  campaign_id  |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`campaign_id`](../metadata.md#campaign_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
 [`category_id`](../metadata.md#category_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`campaign_id`](../metadata.md#campaign_id) metadata.
 
 ## Payload
 

@@ -4,6 +4,24 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Election Parameters": {
+		description: """
+			Parameters which define an individual voting event.
+			"""
+
+		metadata: {
+			brand_id: {
+				required: "yes"
+				type:     "Brand Parameters"
+			}
+			campaign_id: {
+				required: "yes"
+				type:     "Campaign Parameters"
+			}
+			category_id: {
+				required: "yes"
+				type:     "Category Parameters"
+			}
+		}
 
 		versions: [
 			{

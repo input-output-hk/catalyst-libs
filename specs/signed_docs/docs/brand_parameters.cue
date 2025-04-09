@@ -5,6 +5,10 @@ package signed_docs
 docs: #DocumentDefinitions & {
 	"Brand Parameters": {
 
+		description: """
+			Parameters which define this brand within the system.
+			"""
+
 		versions: [
 			{
 				version:  "0.01"

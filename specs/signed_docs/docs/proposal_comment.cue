@@ -35,9 +35,29 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Comment Template"
 			}
 
+			brand_id: {
+				required: "optional"
+				type:     "Brand Parameters"
+				linked_refs: [
+					"ref",
+					"template",
+				]
+			}
+			campaign_id: {
+				required: "optional"
+				type:     "Campaign Parameters"
+				linked_refs: [
+					"ref",
+					"template",
+				]
+			}
 			category_id: {
 				required: "optional"
 				type:     "Category Parameters"
+				linked_refs: [
+					"ref",
+					"template",
+				]
 			}
 		}
 

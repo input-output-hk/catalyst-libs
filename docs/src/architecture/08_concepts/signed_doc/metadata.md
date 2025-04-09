@@ -142,7 +142,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-   `[[DocumentID, DocumentVer, DocumentHash],...]`
+  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
@@ -170,7 +170,7 @@ Reference to the template used to create and/or validate this document.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
 ### `reply`
@@ -185,7 +185,7 @@ Reference to a Comment document type being referred to.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
 The [`ref`](metadata.md#ref) of the [`reply`](metadata.md#reply) document must be the same as
 the original comment document.
 
@@ -231,18 +231,20 @@ addition to the author.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Brand Parameters](./docs/brand_parameters.md) |
-| Exclusive |  campaign_id  |
-|  |  category_id  |
+| Exclusive | [`campaign_id`](metadata.md#campaign_id) |
+|  | [`category_id`](metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`brand_id`](metadata.md#brand_id) must match the [`brand_id`](metadata.md#brand_id)
-of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`brand_id`](metadata.md#brand_id) must match the
+[`brand_id`](metadata.md#brand_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`campaign_id`](metadata.md#campaign_id)
+and [`category_id`](metadata.md#category_id) metadata.
 
 ### `campaign_id`
 <!-- markdownlint-disable MD033 -->
@@ -251,18 +253,20 @@ optional for the referenced document.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Campaign Parameters](./docs/campaign_parameters.md) |
-| Exclusive |  brand_id  |
-|  |  category_id  |
+| Exclusive | [`brand_id`](metadata.md#brand_id) |
+|  | [`category_id`](metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`campaign_id`](metadata.md#campaign_id) must match the
+In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`campaign_id`](metadata.md#campaign_id) must match the
 [`campaign_id`](metadata.md#campaign_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* MUST NOT be present in any document that contains
+[`brand_id`](metadata.md#brand_id)
+and [`category_id`](metadata.md#category_id) metadata.
 
 ### `category_id`
 <!-- markdownlint-disable MD033 -->
@@ -271,18 +275,20 @@ optional for the referenced document.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Category Parameters](./docs/category_parameters.md) |
-| Exclusive |  brand_id  |
-|  |  campaign_id  |
+| Exclusive | [`brand_id`](metadata.md#brand_id) |
+|  | [`campaign_id`](metadata.md#campaign_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`category_id`](metadata.md#category_id) must match the
+In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`category_id`](metadata.md#category_id) must match the
 [`category_id`](metadata.md#category_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* MUST NOT be present in any document that contains
+[`brand_id`](metadata.md#brand_id)
+and [`campaign_id`](metadata.md#campaign_id) metadata.
 
 ### `election_id`
 <!-- markdownlint-disable MD033 -->
@@ -296,7 +302,7 @@ A reference to the Election Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
 Any referenced document that includes a [`election_id`](metadata.md#election_id) must match the
 [`election_id`](metadata.md#election_id) of the referencing document.
 It is also valid for the referenced document to not include this field, if it is

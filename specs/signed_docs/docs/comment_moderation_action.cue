@@ -4,6 +4,17 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Comment Moderation Action": {
+		description: """
+			A Moderation Action performed on any Comment.
+			"""
+
+		metadata: {
+			ref: {
+				required: "yes"
+				type: ["Proposal Comment"]
+			}
+
+		}
 
 		versions: [
 			{

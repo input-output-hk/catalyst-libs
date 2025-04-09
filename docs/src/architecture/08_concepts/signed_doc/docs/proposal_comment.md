@@ -23,6 +23,8 @@ The payload of a proposal comment is controlled by its template.
   "template": Proposal Comment Template
   "reply": Proposal Comment (Optional)
   "section": Section Reference
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
   "category_id": Category Parameters (Optional)
 
 }
@@ -30,6 +32,8 @@ The payload of a proposal comment is controlled by its template.
 "Proposal Comment"."ref"->"Proposal"
 "Proposal Comment"."template"->"Proposal Comment Template"
 "Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
+"Proposal Comment"."brand_id"->"Brand Parameters": Optional
+"Proposal Comment"."campaign_id"->"Campaign Parameters": Optional
 "Proposal Comment"."category_id"->"Category Parameters": Optional
 ```
 
@@ -54,7 +58,7 @@ TODO
 
 ## Metadata
 
-### `type`
+### [`type`](../metadata.md#type)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -68,7 +72,7 @@ The document TYPE.
 
 **MUST** be a known document type.
 
-### `id`
+### [`id`](../metadata.md#id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -84,7 +88,7 @@ timestamp of when the document was created.
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
-### `ver`
+### [`ver`](../metadata.md#ver)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -98,7 +102,7 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### `ref`
+### [`ref`](../metadata.md#ref)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -123,7 +127,7 @@ This is an Array of the format:
 Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.
 The calculated Hash of the Referenced Document **MUST** match the Hash in the reference.
 
-### `template`
+### [`template`](../metadata.md#template)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -135,10 +139,10 @@ Reference to the template used to create and/or validate this document.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
-### `reply`
+### [`reply`](../metadata.md#reply)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -150,11 +154,11 @@ Reference to a Comment document type being referred to.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The [`ref`](../metadata.md#ref) of the [`reply`](../metadata.md#reply) document must be the same as
 the original comment document.
 
-### `section`
+### [`section`](../metadata.md#section)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -168,25 +172,95 @@ A Reference to the original document, or the comment being replied to.
 For a non-reply this must be a valid section reference into the referenced document.
 For a reply, this must be a valid section reference into the comment being replied to.
 
-### `category_id`
+### [`brand_id`](../metadata.md#brand_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+| Linked Reference Metadata | [`ref`](#ref) |
+|  | [`template`](#template) |
+| Exclusive | [`campaign_id`](../metadata.md#campaign_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Brand Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`brand_id`](../metadata.md#brand_id) must match the
+[`brand_id`](../metadata.md#brand_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`campaign_id`](../metadata.md#campaign_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+* The Document referenced by [`ref`](../metadata.md#ref)
+  * MUST contain [`brand_id`](../metadata.md#brand_id) metadata; AND
+  * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`brand_id`](../metadata.md#brand_id) metadata; AND
+  * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
+
+### [`campaign_id`](../metadata.md#campaign_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
+| Linked Reference Metadata | [`ref`](#ref) |
+|  | [`template`](#template) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Campaign Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
+[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+* The Document referenced by [`ref`](../metadata.md#ref)
+  * MUST contain [`campaign_id`](../metadata.md#campaign_id) metadata; AND
+  * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`campaign_id`](../metadata.md#campaign_id) metadata; AND
+  * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
+
+### [`category_id`](../metadata.md#category_id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive |  brand_id  |
-|  |  campaign_id  |
+| Linked Reference Metadata | [`ref`](#ref) |
+|  | [`template`](#template) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`campaign_id`](../metadata.md#campaign_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
 [`category_id`](../metadata.md#category_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`campaign_id`](../metadata.md#campaign_id) metadata.
+* The Document referenced by [`ref`](../metadata.md#ref)
+  * MUST contain [`category_id`](../metadata.md#category_id) metadata; AND
+  * MUST match the referencing documents [`category_id`](../metadata.md#category_id) value.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`category_id`](../metadata.md#category_id) metadata; AND
+  * MUST match the referencing documents [`category_id`](../metadata.md#category_id) value.
 
 ## Payload
 
