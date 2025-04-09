@@ -27,7 +27,7 @@ All Defined Document Types
 | [Brand Parameters](./docs/brand_parameters.md) | Brand | [37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
 | [Campaign Parameters](./docs/campaign_parameters.md) | Campaign | [37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
 | [Category Parameters](./docs/category_parameters.md) | Category | [37(h'818938c331394daaafe6974c78488e95')] |
-| [Comment Action Document](./docs/comment_action_document.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Comment Moderation Action](./docs/comment_moderation_action.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
 | [Election Parameters](./docs/election_parameters.md) | Election | [37(h'788ff4c6d65a451fbb33575fe056b411')] |
 | [Proposal](./docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
 | [Proposal Comment](./docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
@@ -49,7 +49,7 @@ All Defined Document Types
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-04 |
+| Modified | 2025-04-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

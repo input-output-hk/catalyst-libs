@@ -56,5 +56,15 @@ docs: #DocumentDefinitions & {
 		authors: {
 			"Steven Johnson": "steven.johnson@iohk.io"
 		}
+
+		versions: [
+			{
+				version:  "0.01"
+				modified: "2025-04-04"
+				changes: """
+					* First Published Version
+					"""
+			},
+		]
 	}
 }

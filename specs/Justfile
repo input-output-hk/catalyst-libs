@@ -7,9 +7,13 @@ export  CUE_EXPERIMENT := "embed"
 default:
     @just --list --unsorted
 
-# Fiz (where possible) and format cue files
-format:
+# Fix cue files.  This also sets all the file times on the cue files to NOW.
+# So it should only be run when required.
+fix:
     cue fix ./signed_docs/docs:signed_docs
+
+# Fix the format of cue files
+format:
     cue fmt --files .
 
 # Check the signed document cue files are valid.

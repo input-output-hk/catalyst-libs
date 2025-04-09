@@ -3,6 +3,7 @@
 # Autogenerate Documentation Pages from the formal specification
 
 import argparse
+import difflib
 import json
 import re
 from pathlib import Path
@@ -218,6 +219,19 @@ def save_or_validate(
         current_file = md_file.read_text()
         if current_file != file_data:
             print(f"Documentation not generated correctly: {file_name}.")
+            print(current_file)
+            diff = difflib.unified_diff(
+                current_file.splitlines(),
+                file_data.splitlines(),
+                fromfile="Existing File",
+                tofile="New File",
+                fromfiledate="",
+                tofiledate="",
+                n=3,
+                lineterm="\n",
+            )
+            for line in diff:
+                print(line.rstrip())
             return False
     return True
 

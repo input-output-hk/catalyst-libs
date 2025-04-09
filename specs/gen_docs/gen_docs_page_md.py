@@ -137,5 +137,5 @@ def gen_docs_page_md(name: str, doc_defs: dict) -> str:
 
 {document_signers(name, doc_defs)}
 
-{insert_copyright(doc_defs)}
+{insert_copyright(doc_defs, document_name=name)}
 """

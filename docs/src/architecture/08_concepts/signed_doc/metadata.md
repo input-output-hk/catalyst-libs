@@ -132,7 +132,7 @@ The document version must always be >= the document ID.
 |  | [Proposal Comment](./docs/proposal_comment.md) |
 |  | [Proposal Submission Action](./docs/proposal_submission_action.md) |
 |  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |
-|  | [Comment Action Document](./docs/comment_action_document.md) |
+|  | [Comment Moderation Action](./docs/comment_moderation_action.md) |
 |  | [Brand Parameters](./docs/brand_parameters.md) |
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
@@ -308,7 +308,7 @@ optional for the referenced document.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-04 |
+| Modified | 2025-04-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
