@@ -14,15 +14,15 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
         "type": uuid_v4.to_string(),
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
-        "ref": {"id": uuid_v7.to_string()},
+        "ref": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
         "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-        "template": {"id": uuid_v7.to_string()},
+        "template": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
         "section": "$".to_string(),
         "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
-        "campaign_id": {"id": uuid_v7.to_string()},
+        "campaign_id": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
         "election_id":  uuid_v4.to_string(),
-        "brand_id":  {"id": uuid_v7.to_string()},
-        "category_id": {"id": uuid_v7.to_string()},
+        "brand_id":  {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+        "category_id": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
     });
 
     (uuid_v7, uuid_v4, metadata_fields)
@@ -43,22 +43,26 @@ pub fn create_dummy_key_pair() -> anyhow::Result<(
     Ok((sk, pk, kid))
 }
 
-pub fn create_dummy_doc(doc_type_id: Uuid) -> anyhow::Result<(CatalystSignedDocument, UuidV7)> {
+pub fn create_dummy_doc(
+    doc_type_id: Uuid,
+) -> anyhow::Result<(CatalystSignedDocument, UuidV7, UuidV7)> {
     let empty_json = serde_json::to_vec(&serde_json::json!({}))?;
 
     let doc_id = UuidV7::new();
+    let doc_ver = UuidV7::new();
 
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
-            "id": doc_id,
-            "type": doc_type_id,
             "content-type": ContentType::Json.to_string(),
-            "template": { "id": doc_id.to_string() }
+            "type": doc_type_id,
+            "id": doc_id,
+            "ver": doc_ver,
+            "template": { "id": doc_id.to_string(), "ver": doc_ver.to_string() }
         }))?
         .with_decoded_content(empty_json.clone())
         .build();
 
-    Ok((doc, doc_id))
+    Ok((doc, doc_id, doc_ver))
 }
 
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {
