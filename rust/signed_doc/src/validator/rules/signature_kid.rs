@@ -16,14 +16,19 @@ impl SignatureKidRule {
     pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
         let contains_exp_role = doc.kids().iter().enumerate().all(|(i, kid)| {
             let (role_index, _) = kid.role_and_rotation();
-            doc.report().invalid_value(
-                "kid",
-                role_index.to_string().as_str(),
-                format!("{:?}", self.exp).as_str(),
-                format!("Invalid Catalyst Signed Document signature {i} `kid` Catalyst Role value")
+            let res = self.exp.contains(&role_index);
+            if !res {
+                doc.report().invalid_value(
+                    "kid",
+                    role_index.to_string().as_str(),
+                    format!("{:?}", self.exp).as_str(),
+                    format!(
+                        "Invalid Catalyst Signed Document signature {i} `kid` Catalyst Role value"
+                    )
                     .as_str(),
-            );
-            self.exp.contains(&role_index)
+                );
+            }
+            res
         });
         if !contains_exp_role {
             return Ok(false);
