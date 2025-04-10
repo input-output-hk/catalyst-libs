@@ -30,8 +30,6 @@ impl RoleIndex {
     pub const PROPOSER: RoleIndex = RoleIndex(3);
     /// Default Role 0
     pub const ROLE_0: RoleIndex = RoleIndex(0);
-    /// Voter Delegation
-    pub const VOTER_DELEGATION: RoleIndex = RoleIndex(2);
 
     /// Is the `RoleIndex` the default value (Role 0)
     #[must_use]
