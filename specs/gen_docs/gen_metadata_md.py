@@ -64,5 +64,5 @@ All Metadata fields use one of these types.
 
 {metadata_fields(doc_defs)}
 
-{insert_copyright(doc_defs)}
+{insert_copyright(doc_defs, changelog=False)}
 """

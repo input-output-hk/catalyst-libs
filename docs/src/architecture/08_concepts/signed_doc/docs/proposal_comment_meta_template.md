@@ -47,7 +47,7 @@ TODO
 
 ## Metadata
 
-### `type`
+### [`type`](../metadata.md#type)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -61,7 +61,7 @@ The document TYPE.
 
 **MUST** be a known document type.
 
-### `id`
+### [`id`](../metadata.md#id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -77,7 +77,7 @@ timestamp of when the document was created.
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
-### `ver`
+### [`ver`](../metadata.md#ver)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -91,25 +91,27 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### `category_id`
+### [`category_id`](../metadata.md#category_id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive |  brand_id  |
-|  |  campaign_id  |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`campaign_id`](../metadata.md#campaign_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
 [`category_id`](../metadata.md#category_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`campaign_id`](../metadata.md#campaign_id) metadata.
 
 ## Payload
 
@@ -138,9 +140,15 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-04 |
+| Modified | 2025-04-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
+
+### Changelog
+
+#### 0.01 (2025-04-04)
+
+* First Published Version
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema]: https://json-schema.org/draft-07

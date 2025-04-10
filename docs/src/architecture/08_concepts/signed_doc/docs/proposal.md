@@ -22,11 +22,15 @@ The payload of a proposal is controlled by its template.
   "ver": UUIDv7
   "template": Proposal Template
   "collaborators": Collaborators Reference List
+  "brand_id": Brand Parameters (Optional)
+  "campaign_id": Campaign Parameters (Optional)
   "category_id": Category Parameters (Optional)
 
 }
 
 "Proposal"."template"->"Proposal Template"
+"Proposal"."brand_id"->"Brand Parameters": Optional
+"Proposal"."campaign_id"->"Campaign Parameters": Optional
 "Proposal"."category_id"->"Category Parameters": Optional
 ```
 
@@ -51,7 +55,7 @@ TODO
 
 ## Metadata
 
-### `type`
+### [`type`](../metadata.md#type)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -65,7 +69,7 @@ The document TYPE.
 
 **MUST** be a known document type.
 
-### `id`
+### [`id`](../metadata.md#id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -81,7 +85,7 @@ timestamp of when the document was created.
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
-### `ver`
+### [`ver`](../metadata.md#ver)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -95,7 +99,7 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### `template`
+### [`template`](../metadata.md#template)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -107,10 +111,10 @@ Reference to the template used to create and/or validate this document.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
-### `collaborators`
+### [`collaborators`](../metadata.md#collaborators)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -131,31 +135,90 @@ are permitting these potential collaborators to participate in the drafting and 
 However, any document submission referencing a proposal MUST be signed by all collaborators in
 addition to the author.
 
-### `category_id`
+### [`brand_id`](../metadata.md#brand_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+| Linked Reference Metadata | [`template`](#template) |
+| Exclusive | [`campaign_id`](../metadata.md#campaign_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Brand Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`brand_id`](../metadata.md#brand_id) must match the
+[`brand_id`](../metadata.md#brand_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`campaign_id`](../metadata.md#campaign_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`brand_id`](../metadata.md#brand_id) metadata; AND
+  * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
+
+### [`campaign_id`](../metadata.md#campaign_id)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
+| Linked Reference Metadata | [`template`](#template) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`category_id`](../metadata.md#category_id) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Campaign Parameters Document this document lies under.
+
+#### Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
+[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`category_id`](../metadata.md#category_id) metadata.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`campaign_id`](../metadata.md#campaign_id) metadata; AND
+  * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
+
+### [`category_id`](../metadata.md#category_id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive |  brand_id  |
-|  |  campaign_id  |
+| Linked Reference Metadata | [`template`](#template) |
+| Exclusive | [`brand_id`](../metadata.md#brand_id) |
+|  | [`campaign_id`](../metadata.md#campaign_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
 #### Validation
 
-In addition to the validation performed for `ref`,
-Any referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
 [`category_id`](../metadata.md#category_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* MUST NOT be present in any document that contains
+[`brand_id`](../metadata.md#brand_id)
+and [`campaign_id`](../metadata.md#campaign_id) metadata.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`category_id`](../metadata.md#category_id) metadata; AND
+  * MUST match the referencing documents [`category_id`](../metadata.md#category_id) value.
 
 ## Payload
 
 Proposal Document drafted for submission to a category of a campaign.
 
-Must be valid according to the schema of the referenced Template.
+Must be valid according to the schema contained within the
+[Document Reference](../metadata.md#document-reference) from the [`template`](../metadata.md#template) metadata.
 
 ## Signers
 
@@ -174,9 +237,15 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-04 |
+| Modified | 2025-04-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
+
+### Changelog
+
+#### 0.01 (2025-04-04)
+
+* First Published Version
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

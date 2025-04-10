@@ -28,6 +28,14 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Meta Template"
 			}
 
+			brand_id: {
+				required: "optional"
+				type:     "Brand Parameters"
+			}
+			campaign_id: {
+				required: "optional"
+				type:     "Campaign Parameters"
+			}
 			category_id: {
 				required: "optional"
 				type:     "Category Parameters"
@@ -53,5 +61,14 @@ docs: #DocumentDefinitions & {
 			}
 		}
 
+		versions: [
+			{
+				version:  "0.01"
+				modified: "2025-04-04"
+				changes: """
+					* First Published Version
+					"""
+			},
+		]
 	}
 }

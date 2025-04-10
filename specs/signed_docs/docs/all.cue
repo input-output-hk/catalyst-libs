@@ -57,7 +57,7 @@ _allDocs: {
 		_allDocTypes["Proposal"],         // For Proposal
 		_allDocTypes["ModerationAction"], // On Moderation
 	]
-	"Comment Action Document": [
+	"Comment Moderation Action": [
 		_allDocTypes["Action"],           // Action
 		_allDocTypes["Comment"],          // For Comment
 		_allDocTypes["ModerationAction"], // On Moderation

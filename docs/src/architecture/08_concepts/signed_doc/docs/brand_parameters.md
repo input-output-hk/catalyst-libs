@@ -2,7 +2,7 @@
 
 ## Description
 
-TODO
+Parameters which define this brand within the system.
 
 ```d2 layout="elk"
 "Brand Parameters": {
@@ -36,7 +36,7 @@ TODO
 
 ## Metadata
 
-### `type`
+### [`type`](../metadata.md#type)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -50,7 +50,7 @@ The document TYPE.
 
 **MUST** be a known document type.
 
-### `id`
+### [`id`](../metadata.md#id)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -66,7 +66,7 @@ timestamp of when the document was created.
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
-### `ver`
+### [`ver`](../metadata.md#ver)
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -100,9 +100,15 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-04 |
+| Modified | 2025-04-09 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
+
+### Changelog
+
+#### 0.01 (2025-04-04)
+
+* First Published Version
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
