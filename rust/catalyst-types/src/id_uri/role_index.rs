@@ -33,9 +33,9 @@ impl RoleIndex {
     /// Voter Delegation
     pub const VOTER_DELEGATION: RoleIndex = RoleIndex(2);
 
-    /// Is the `RoleIndex` the Role 0 value
+    /// Is the `RoleIndex` the default value (Role 0)
     #[must_use]
-    pub fn is_role_0(self) -> bool {
+    pub fn is_default(self) -> bool {
         self == Self::ROLE_0
     }
 }
