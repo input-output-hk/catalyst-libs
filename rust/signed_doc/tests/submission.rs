@@ -6,7 +6,7 @@ mod common;
 
 #[tokio::test]
 async fn test_valid_submission_action() {
-    let (proposal_doc, proposal_doc_id) =
+    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(doc_types::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -17,7 +17,8 @@ async fn test_valid_submission_action() {
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
         "ref": {
-            "id": proposal_doc_id
+            "id": proposal_doc_id,
+            "ver": proposal_doc_ver
         },
     })))
     .unwrap();
@@ -33,6 +34,7 @@ async fn test_valid_submission_action() {
 #[tokio::test]
 async fn test_valid_submission_action_with_empty_provider() {
     let proposal_doc_id = UuidV7::new();
+    let proposal_doc_ver = UuidV7::new();
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(Some(serde_json::json!({
@@ -42,7 +44,8 @@ async fn test_valid_submission_action_with_empty_provider() {
         "id": uuid_v7.to_string(),
         "ver": uuid_v7.to_string(),
         "ref": {
-            "id": proposal_doc_id
+            "id": proposal_doc_id,
+            "ver": proposal_doc_ver
         },
     })))
     .unwrap();
