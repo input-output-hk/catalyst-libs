@@ -234,6 +234,8 @@ pub fn validate_role_data(
         );
     }
 
+    validate_role_numbers(metadata.role_data.keys(), context, report);
+
     let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
         if number == &RoleNumber::ROLE_0 {
@@ -262,6 +264,19 @@ pub fn validate_role_data(
         }
     }
     catalyst_id
+}
+
+/// Checks that there are no unknown roles.
+fn validate_role_numbers<'a>(
+    roles: impl Iterator<Item = &'a RoleNumber> + 'a, context: &str, report: &ProblemReport,
+) {
+    let known_roles = &[RoleNumber::ROLE_0, 3.into()];
+
+    for role in roles {
+        if !known_roles.contains(role) {
+            report.other(&format!("Unknown role found: {role:?}"), context);
+        }
+    }
 }
 
 /// Checks that the role 0 data is correct.
