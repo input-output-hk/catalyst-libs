@@ -30,7 +30,7 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
 }
 
 pub fn create_dummy_key_pair(
-    role_index: Option<RoleIndex>,
+    role_index: RoleIndex,
 ) -> anyhow::Result<(
     ed25519_dalek::SigningKey,
     ed25519_dalek::VerifyingKey,
@@ -38,7 +38,6 @@ pub fn create_dummy_key_pair(
 )> {
     let sk = create_signing_key();
     let pk = sk.verifying_key();
-    let role_index = role_index.unwrap_or_default();
     let kid = IdUri::from_str(&format!(
         "id.catalyst://cardano/{}/{role_index}/0",
         base64_url::encode(pk.as_bytes())
@@ -71,7 +70,7 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 }
 
 pub fn create_dummy_signed_doc(
-    with_metadata: Option<serde_json::Value>, with_role_index: Option<RoleIndex>,
+    with_metadata: Option<serde_json::Value>, with_role_index: RoleIndex,
 ) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey, IdUri)> {
     let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
 

@@ -22,7 +22,7 @@ async fn test_valid_submission_action() {
                 "id": proposal_doc_id
             },
         })),
-        Some(RoleIndex::PROPOSER),
+        RoleIndex::PROPOSER,
     )
     .unwrap();
 
@@ -50,7 +50,7 @@ async fn test_valid_submission_action_with_empty_provider() {
                 "id": proposal_doc_id
             },
         })),
-        Some(RoleIndex::PROPOSER),
+        RoleIndex::PROPOSER,
     )
     .unwrap();
 
@@ -74,7 +74,7 @@ async fn test_invalid_submission_action() {
             // without specifying ref
             "ref": serde_json::Value::Null,
         })),
-        Some(RoleIndex::PROPOSER),
+        RoleIndex::PROPOSER,
     )
     .unwrap();
 

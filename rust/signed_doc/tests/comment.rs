@@ -1,6 +1,7 @@
 //! Integration test for comment document validation part.
 
 use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
+use catalyst_types::id_uri::role_index::RoleIndex;
 
 mod common;
 
@@ -26,7 +27,7 @@ async fn test_valid_comment_doc() {
                 "id": proposal_doc_id
             }
         })),
-        None,
+        RoleIndex::ROLE_0,
     )
     .unwrap();
 
@@ -82,7 +83,7 @@ async fn test_valid_comment_doc_with_reply() {
                 "ver": uuid_v7
             }
         })),
-        None,
+        RoleIndex::ROLE_0,
     )
     .unwrap();
 
@@ -117,7 +118,7 @@ async fn test_invalid_comment_doc() {
             // without ref
             "ref": serde_json::Value::Null
         })),
-        None,
+        RoleIndex::ROLE_0,
     )
     .unwrap();
 
