@@ -480,7 +480,17 @@ mod tests {
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
-        data.assert_valid(&registration);
+        assert!(registration.report().is_problematic());
+
+        let origin = registration.origin();
+        assert_eq!(origin.txn_index(), data.txn_index);
+        assert_eq!(origin.point().slot_or_default(), data.slot);
+
+        // The consume function must return the problem report contained within the registration.
+        let report = registration.consume().unwrap_err();
+        assert!(report.is_problematic());
+        let report = format!("{report:?}");
+        assert!(report.contains("Unknown role found: RoleNumber(4)"));
     }
 
     #[test]
