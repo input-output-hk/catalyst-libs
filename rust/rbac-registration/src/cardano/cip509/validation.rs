@@ -13,7 +13,7 @@ use catalyst_types::{
     id_uri::IdUri,
     problem_report::ProblemReport,
 };
-use ed25519_dalek::{VerifyingKey, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{Signature, VerifyingKey, PUBLIC_KEY_LENGTH};
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -21,9 +21,12 @@ use pallas::{
     },
     ledger::{addresses::Address, primitives::conway, traverse::MultiEraTx},
 };
-use x509_cert::Certificate;
+use x509_cert::{der::Encode as X509Encode, Certificate};
 
-use super::utils::cip19::compare_key_hash;
+use super::{
+    extract_key::{c509_key, x509_key},
+    utils::cip19::compare_key_hash,
+};
 use crate::cardano::cip509::{
     rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
     RoleNumber, SimplePublicKeyType, X509DerCert,
@@ -160,6 +163,117 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
             }
         })
         .collect()
+}
+
+/// Validate self-signed certificates.
+/// All certificates should be self-signed and support only ED25519 signature.
+pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
+    let context = "Cip509 self-signed certificate validation";
+
+    // Checking all C509 cert
+    for (index, cert) in metadata.c509_certs.clone().iter().enumerate() {
+        if let C509Cert::C509Certificate(c) = cert {
+            // Self-sign certificate must be type 2
+            if c.tbs_cert().c509_certificate_type() != 2 {
+                report.invalid_value(
+                    &format!("C509 index {index} certificate type"),
+                    &c.tbs_cert().c509_certificate_type().to_string(),
+                    "Certificate must have cert type 2",
+                    context,
+                );
+                continue;
+            }
+
+            let pk = match c509_key(c) {
+                Ok(pk) => pk,
+                Err(e) => {
+                    report.other(
+                        &format!(
+                            "Failed to extract public key from C509 certificate index {index}: {e:?}",
+                        ),
+                        context,
+                    );
+                    continue;
+                },
+            };
+
+            let Some(sig) = c
+                .issuer_signature_value()
+                .clone()
+                .and_then(|b| b.try_into().ok())
+                .map(|arr: [u8; 64]| Signature::from_bytes(&arr))
+            else {
+                report.conversion_error(
+                    &format!("C509 index {index} signature"),
+                    &format!("{:?}", c.issuer_signature_value()),
+                    "Expected 64-byte Ed25519 signature",
+                    context,
+                );
+                continue;
+            };
+
+            // TODO(bkioshn): signature verification should be improved in c509 crate
+            if pk.verify_strict(&c.tbs_cert().to_cbor(), &sig).is_err() {
+                report.other(
+                    &format!("Cannot verify C509 certificate index {index} signature"),
+                    context,
+                );
+            }
+        }
+    }
+
+    // Check all x509 cert
+    for (index, cert) in metadata.x509_certs.clone().iter().enumerate() {
+        if let X509DerCert::X509Cert(c) = cert {
+            let pk = match x509_key(c) {
+                Ok(pk) => pk,
+                Err(e) => {
+                    report.other(
+                        &format!(
+                            "Failed to extract public key from X509 certificate index {index}: {e:?}",
+                        ),
+                        context,
+                    );
+                    continue;
+                },
+            };
+
+            let Some(sig) = c
+                .signature
+                .as_bytes()
+                .and_then(|bytes| bytes.try_into().ok())
+                .map(|arr: [u8; 64]| Signature::from_bytes(&arr))
+            else {
+                report.conversion_error(
+                    &format!("X509 index {index} signature"),
+                    &format!("{:?}", c.signature.as_bytes()),
+                    "Expected 64-byte Ed25519 signature",
+                    context,
+                );
+                continue;
+            };
+
+            let tbs_der = match c.tbs_certificate.to_der() {
+                Ok(tbs_der) => tbs_der,
+                Err(e) => {
+                    report.invalid_encoding(
+                        &format!("X509 tbs certificate index {index}"),
+                        "DER encoding",
+                        &format!("Expected DER encoded X509 certificate: {e:?}"),
+                        context,
+                    );
+                    continue;
+                },
+            };
+
+            if pk.verify_strict(&tbs_der, &sig).is_err() {
+                report.other(
+                    &format!("Cannot verify X509 certificate index {index} signature"),
+                    context,
+                );
+            }
+        }
+    }
 }
 
 /// Checks the role data.

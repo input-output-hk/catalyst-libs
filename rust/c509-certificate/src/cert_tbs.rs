@@ -133,6 +133,15 @@ impl TbsCert {
     pub fn issuer_signature_algorithm(&self) -> &IssuerSignatureAlgorithm {
         &self.issuer_signature_algorithm
     }
+    
+    /// Convert the TBS Certificate to CBOR.
+    #[must_use]
+    pub fn to_cbor(&self) -> Vec<u8> {
+        let mut buf = Vec::new();
+        let mut e = Encoder::new(&mut buf);
+        let _unused = self.encode(&mut e, &mut ());
+        buf
+    }
 }
 
 impl Encode<()> for TbsCert {
