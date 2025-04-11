@@ -208,7 +208,7 @@ impl RegistrationChain {
 
     /// Returns a list of role 0 stake addresses.
     #[must_use]
-    pub fn stake_addresses(&self) -> Vec<StakeAddress> {
+    pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
         let mut result = Vec::new();
 
         if let Some(uris) = self.inner.certificate_uris.x_uris().get(&0) {
