@@ -2,6 +2,7 @@
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::id_uri::role_index::RoleIndex;
+use ed25519_dalek::ed25519::signature::Signer;
 
 mod common;
 
@@ -36,11 +37,11 @@ async fn multiple_signatures_validation_test() {
         .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
         .with_json_metadata(common::test_metadata().2)
         .unwrap()
-        .add_signature(sk1.to_bytes(), kid1.clone())
+        .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
         .unwrap()
-        .add_signature(sk2.to_bytes(), kid2.clone())
+        .add_signature(|m| sk2.sign(&m).to_vec(), kid2.clone())
         .unwrap()
-        .add_signature(sk3.to_bytes(), kid3.clone())
+        .add_signature(|m| sk3.sign(&m).to_vec(), kid3.clone())
         .unwrap()
         .build();
 
