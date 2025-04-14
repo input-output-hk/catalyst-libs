@@ -1,6 +1,5 @@
 //! Catalyst Signed Document Builder.
 use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
-use ed25519_dalek::{ed25519::signature::Signer, SecretKey};
 
 use crate::{
     CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
@@ -55,20 +54,21 @@ impl Builder {
     /// Fails if a `CatalystSignedDocument` cannot be created due to missing metadata or
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
-    pub fn add_signature(mut self, sk: SecretKey, kid: IdUri) -> anyhow::Result<Self> {
+    pub fn add_signature(
+        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: IdUri,
+    ) -> anyhow::Result<Self> {
         let cose_sign = self
             .0
             .as_cose_sign()
             .map_err(|e| anyhow::anyhow!("Failed to sign: {e}"))?;
 
-        let sk = ed25519_dalek::SigningKey::from_bytes(&sk);
         let protected_header = coset::HeaderBuilder::new().key_id(kid.to_string().into_bytes());
 
         let mut signature = coset::CoseSignatureBuilder::new()
             .protected(protected_header.build())
             .build();
         let data_to_sign = cose_sign.tbs_data(&[], &signature);
-        signature.signature = sk.sign(&data_to_sign).to_vec();
+        signature.signature = sign_fn(data_to_sign);
         self.0.signatures.push(kid, signature);
 
         Ok(self)

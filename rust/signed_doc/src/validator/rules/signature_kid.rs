@@ -44,6 +44,7 @@ mod tests {
         id_uri::IdUri,
         uuid::{UuidV4, UuidV7},
     };
+    use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
     use crate::{Builder, ContentType};
@@ -67,7 +68,7 @@ mod tests {
                 "content-type": ContentType::Json.to_string(),
             }))
             .unwrap()
-            .add_signature(sk.to_bytes(), kid)
+            .add_signature(|m| sk.sign(&m).to_vec(), kid)
             .unwrap()
             .build();
 

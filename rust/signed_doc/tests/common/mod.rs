@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use catalyst_signed_doc::*;
 use catalyst_types::id_uri::role_index::RoleIndex;
+use ed25519_dalek::ed25519::signature::Signer;
 
 pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
     let uuid_v7 = UuidV7::new();
@@ -84,7 +85,7 @@ pub fn create_dummy_signed_doc(
     let signed_doc = Builder::new()
         .with_decoded_content(content)
         .with_json_metadata(with_metadata.unwrap_or(metadata))?
-        .add_signature(sk.to_bytes(), kid.clone())?
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())?
         .build();
 
     Ok((signed_doc, pk, kid))

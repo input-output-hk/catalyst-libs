@@ -3,7 +3,7 @@
 #![allow(missing_docs, clippy::missing_docs_in_private_items)]
 
 use std::{
-    fs::{read_to_string, File},
+    fs::File,
     io::{Read, Write},
     path::PathBuf,
 };
@@ -11,7 +11,6 @@ use std::{
 use anyhow::Context;
 use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri};
 use clap::Parser;
-use ed25519_dalek::pkcs8::DecodePrivateKey;
 
 fn main() {
     if let Err(err) = Cli::parse().exec() {
@@ -37,8 +36,8 @@ enum Cli {
         /// Path to the formed (could be empty, without any signatures) COSE document
         /// This exact file would be modified and new signature would be added
         doc: PathBuf,
-        /// Path to the secret key in PEM format
-        sk: PathBuf,
+        /// Bip32 extended secret key hex bytes (includes `chain_code`)
+        sk_hex: String,
         /// Signer kid
         kid: IdUri,
     },
@@ -77,13 +76,14 @@ impl Cli {
                 );
                 save_signed_doc(signed_doc, &output)?;
             },
-            Self::Sign { sk, doc, kid } => {
-                let sk = load_secret_key_from_file(&sk).context("Failed to load SK FILE")?;
+            Self::Sign { doc, sk_hex, kid } => {
+                let sk = load_secret_key(&sk_hex)?;
                 let cose_bytes = read_bytes_from_file(&doc)?;
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
+
                 let new_signed_doc = signed_doc
                     .into_builder()
-                    .add_signature(sk.to_bytes(), kid)?
+                    .add_signature(|message| sk.sign::<()>(&message).to_bytes().to_vec(), kid)?
                     .build();
                 save_signed_doc(new_signed_doc, &doc)?;
             },
@@ -144,8 +144,8 @@ fn write_bytes_to_file(bytes: &[u8], output: &PathBuf) -> anyhow::Result<()> {
         .context(format!("Failed to write to file {output:?}"))
 }
 
-fn load_secret_key_from_file(sk_path: &PathBuf) -> anyhow::Result<ed25519_dalek::SigningKey> {
-    let sk_str = read_to_string(sk_path)?;
-    let sk = ed25519_dalek::SigningKey::from_pkcs8_pem(&sk_str)?;
+fn load_secret_key(sk_hex: &str) -> anyhow::Result<ed25519_bip32::XPrv> {
+    let sk_bytes = hex::decode(sk_hex)?;
+    let sk = ed25519_bip32::XPrv::from_slice_verified(&sk_bytes)?;
     Ok(sk)
 }
