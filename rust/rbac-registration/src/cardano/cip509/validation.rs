@@ -170,13 +170,12 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
     let context = "Cip509 self-signed certificate validation";
 
-    // Checking all C509 cert
-    for (index, cert) in metadata.c509_certs.clone().iter().enumerate() {
+    for (index, cert) in metadata.c509_certs.iter().enumerate() {
         if let C509Cert::C509Certificate(c) = cert {
             // Self-sign certificate must be type 2
             if c.tbs_cert().c509_certificate_type() != 2 {
                 report.invalid_value(
-                    &format!("C509 index {index} certificate type"),
+                    &format!("C509 certificate type at index {index}"),
                     &c.tbs_cert().c509_certificate_type().to_string(),
                     "Certificate must have cert type 2",
                     context,
@@ -189,7 +188,7 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
                 Err(e) => {
                     report.other(
                         &format!(
-                            "Failed to extract public key from C509 certificate index {index}: {e:?}",
+                            "Failed to extract subject public key from C509 certificate at index {index}: {e:?}",
                         ),
                         context,
                     );
@@ -204,7 +203,7 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
                 .map(|arr: [u8; 64]| Signature::from_bytes(&arr))
             else {
                 report.conversion_error(
-                    &format!("C509 index {index} signature"),
+                    &format!("C509 issuer signature at index {index}"),
                     &format!("{:?}", c.issuer_signature_value()),
                     "Expected 64-byte Ed25519 signature",
                     context,
@@ -215,22 +214,21 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
             // TODO(bkioshn): signature verification should be improved in c509 crate
             if pk.verify_strict(&c.tbs_cert().to_cbor(), &sig).is_err() {
                 report.other(
-                    &format!("Cannot verify C509 certificate index {index} signature"),
+                    &format!("Cannot verify C509 certificate signature at index {index}"),
                     context,
                 );
             }
         }
     }
 
-    // Check all x509 cert
-    for (index, cert) in metadata.x509_certs.clone().iter().enumerate() {
+    for (index, cert) in metadata.x509_certs.iter().enumerate() {
         if let X509DerCert::X509Cert(c) = cert {
             let pk = match x509_key(c) {
                 Ok(pk) => pk,
                 Err(e) => {
                     report.other(
                         &format!(
-                            "Failed to extract public key from X509 certificate index {index}: {e:?}",
+                            "Failed to extract subject public key from X509 certificate at index {index}: {e:?}",
                         ),
                         context,
                     );
@@ -241,11 +239,11 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
             let Some(sig) = c
                 .signature
                 .as_bytes()
-                .and_then(|bytes| bytes.try_into().ok())
+                .and_then(|b| b.try_into().ok())
                 .map(|arr: [u8; 64]| Signature::from_bytes(&arr))
             else {
                 report.conversion_error(
-                    &format!("X509 index {index} signature"),
+                    &format!("X509 signature at index {index}"),
                     &format!("{:?}", c.signature.as_bytes()),
                     "Expected 64-byte Ed25519 signature",
                     context,
@@ -257,7 +255,7 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
                 Ok(tbs_der) => tbs_der,
                 Err(e) => {
                     report.invalid_encoding(
-                        &format!("X509 tbs certificate index {index}"),
+                        &format!("X509 tbs certificate at index {index}"),
                         "DER encoding",
                         &format!("Expected DER encoded X509 certificate: {e:?}"),
                         context,
@@ -268,7 +266,7 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
 
             if pk.verify_strict(&tbs_der, &sig).is_err() {
                 report.other(
-                    &format!("Cannot verify X509 certificate index {index} signature"),
+                    &format!("Cannot verify X509 certificate signature at index {index} "),
                     context,
                 );
             }
