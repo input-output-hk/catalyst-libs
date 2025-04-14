@@ -36,7 +36,7 @@ enum Cli {
         /// Path to the formed (could be empty, without any signatures) COSE document
         /// This exact file would be modified and new signature would be added
         doc: PathBuf,
-        /// Bip32 extended secret key hex bytes (includes chain_code)
+        /// Bip32 extended secret key hex bytes (includes `chain_code`)
         sk_hex: String,
         /// Signer kid
         kid: IdUri,
