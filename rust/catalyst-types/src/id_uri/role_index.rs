@@ -60,7 +60,7 @@ impl TryFrom<u8> for RoleIndex {
             1 => Ok(Self::DelegatedRepresentative),
             2 => Ok(Self::VoterDelegation),
             3 => Ok(Self::Proposer),
-            _ => Err(RoleIndexError::InvalidRole(value))
+            _ => Err(RoleIndexError::InvalidRole(value)),
         }
     }
 }
