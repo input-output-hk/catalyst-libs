@@ -38,7 +38,7 @@ pub enum RoleIndex {
 }
 
 impl RoleIndex {
-    /// Is the `RoleIndex` the default value [Self::Role0]
+    /// Is the `RoleIndex` the default value [`Self::Role0`]
     #[must_use]
     pub fn is_default(self) -> bool {
         self == Self::Role0
@@ -77,6 +77,6 @@ impl FromStr for RoleIndex {
 
 impl Display for RoleIndex {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{:?}", self)
+        write!(f, "{self:?}")
     }
 }
