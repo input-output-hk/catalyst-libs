@@ -29,7 +29,7 @@ async fn test_valid_comment_doc() {
                 "ver": proposal_doc_ver
             }
         })),
-        RoleIndex::ROLE_0,
+        RoleIndex::Role0,
     )
     .unwrap();
 
@@ -90,7 +90,7 @@ async fn test_valid_comment_doc_with_reply() {
                 "ver": comment_doc_ver
             }
         })),
-        RoleIndex::ROLE_0,
+        RoleIndex::Role0,
     )
     .unwrap();
 
@@ -126,7 +126,7 @@ async fn test_invalid_comment_doc() {
             // without ref
             "ref": serde_json::Value::Null
         })),
-        RoleIndex::ROLE_0,
+        RoleIndex::Role0,
     )
     .unwrap();
 

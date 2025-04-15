@@ -23,7 +23,7 @@ async fn test_valid_proposal_doc() {
               "ver": template_doc_ver
             },
         })),
-        RoleIndex::PROPOSER,
+        RoleIndex::Proposer,
     )
     .unwrap();
 
@@ -54,7 +54,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
               "ver": template_doc_ver
             },
         })),
-        RoleIndex::PROPOSER,
+        RoleIndex::Proposer,
     )
     .unwrap();
 
@@ -78,7 +78,7 @@ async fn test_invalid_proposal_doc() {
             // without specifying template id
             "template": serde_json::Value::Null,
         })),
-        RoleIndex::PROPOSER,
+        RoleIndex::Proposer,
     )
     .unwrap();
 

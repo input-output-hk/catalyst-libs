@@ -23,7 +23,7 @@ async fn test_valid_submission_action() {
                 "ver": proposal_doc_ver
             },
         })),
-        RoleIndex::PROPOSER,
+        RoleIndex::Proposer,
     )
     .unwrap();
 
@@ -53,7 +53,7 @@ async fn test_valid_submission_action_with_empty_provider() {
                 "ver": proposal_doc_ver
             },
         })),
-        RoleIndex::PROPOSER,
+        RoleIndex::Proposer,
     )
     .unwrap();
 
@@ -77,7 +77,7 @@ async fn test_invalid_submission_action() {
             // without specifying ref
             "ref": serde_json::Value::Null,
         })),
-        RoleIndex::PROPOSER,
+        RoleIndex::Proposer,
     )
     .unwrap();
 

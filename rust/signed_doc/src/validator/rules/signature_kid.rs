@@ -52,12 +52,12 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            exp: &[RoleIndex::ROLE_0],
+            exp: &[RoleIndex::Role0],
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
         let pk = sk.verifying_key();
-        let kid = IdUri::new("cardano", None, pk).with_role(RoleIndex::ROLE_0);
+        let kid = IdUri::new("cardano", None, pk).with_role(RoleIndex::Role0);
 
         let doc = Builder::new()
             .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
@@ -74,7 +74,7 @@ mod tests {
 
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.exp = &[RoleIndex::PROPOSER];
+        rule.exp = &[RoleIndex::Proposer];
         assert!(!rule.check(&doc).await.unwrap());
     }
 }

@@ -56,7 +56,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
         kid: SignatureKidRule {
-            exp: &[RoleIndex::PROPOSER],
+            exp: &[RoleIndex::Proposer],
         },
     };
     document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
@@ -89,7 +89,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         section: SectionRule::Specified { optional: true },
         category: CategoryRule::NotSpecified,
         kid: SignatureKidRule {
-            exp: &[RoleIndex::ROLE_0],
+            exp: &[RoleIndex::Role0],
         },
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
@@ -113,7 +113,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
         kid: SignatureKidRule {
-            exp: &[RoleIndex::PROPOSER],
+            exp: &[RoleIndex::Proposer],
         },
     };
 
