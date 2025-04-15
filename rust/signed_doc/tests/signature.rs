@@ -1,14 +1,14 @@
 //! Integration test for signature validation part.
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
-use catalyst_types::id_uri::role_index::RoleIndex;
+use catalyst_types::id_uri::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
 mod common;
 
 #[tokio::test]
 async fn single_signature_validation_test() {
-    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(None, RoleIndex::Role0).unwrap();
+    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(None, RoleId::Role0).unwrap();
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: has key
@@ -28,10 +28,10 @@ async fn single_signature_validation_test() {
 
 #[tokio::test]
 async fn multiple_signatures_validation_test() {
-    let (sk1, pk1, kid1) = common::create_dummy_key_pair(RoleIndex::Role0).unwrap();
-    let (sk2, pk2, kid2) = common::create_dummy_key_pair(RoleIndex::Role0).unwrap();
-    let (sk3, pk3, kid3) = common::create_dummy_key_pair(RoleIndex::Role0).unwrap();
-    let (_, pk_n, kid_n) = common::create_dummy_key_pair(RoleIndex::Role0).unwrap();
+    let (sk1, pk1, kid1) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
+    let (sk2, pk2, kid2) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
+    let (sk3, pk3, kid3) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
+    let (_, pk_n, kid_n) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let signed_doc = Builder::new()
         .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())

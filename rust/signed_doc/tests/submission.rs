@@ -1,7 +1,7 @@
 //! Test for proposal submission action.
 
 use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
-use catalyst_types::id_uri::role_index::RoleIndex;
+use catalyst_types::id_uri::role_index::RoleId;
 
 mod common;
 
@@ -23,7 +23,7 @@ async fn test_valid_submission_action() {
                 "ver": proposal_doc_ver
             },
         })),
-        RoleIndex::Proposer,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -53,7 +53,7 @@ async fn test_valid_submission_action_with_empty_provider() {
                 "ver": proposal_doc_ver
             },
         })),
-        RoleIndex::Proposer,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -77,7 +77,7 @@ async fn test_invalid_submission_action() {
             // without specifying ref
             "ref": serde_json::Value::Null,
         })),
-        RoleIndex::Proposer,
+        RoleId::Proposer,
     )
     .unwrap();
 
