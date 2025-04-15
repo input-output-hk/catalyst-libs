@@ -326,7 +326,7 @@ impl IdUri {
     /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<IdUri>()
     ///     .unwrap();
-    /// let new_role: RoleId = 5.into();
+    /// let new_role = RoleId::try_from(3).unwrap();
     /// let id_uri_with_role = id_uri.with_role(new_role);
     /// let (role, _) = id_uri_with_role.role_and_rotation();
     /// assert_eq!(role, new_role);
@@ -444,7 +444,7 @@ impl IdUri {
     /// use catalyst_types::id_uri::{key_rotation::KeyRotation, role_index::RoleId, IdUri};
     ///
     /// let id_uri =
-    ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"
+    ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/3/5"
     ///         .parse::<IdUri>()
     ///         .unwrap();
     ///
