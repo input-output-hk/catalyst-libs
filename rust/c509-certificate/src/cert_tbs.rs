@@ -135,12 +135,15 @@ impl TbsCert {
     }
 
     /// Convert the TBS Certificate to CBOR.
-    #[must_use]
-    pub fn to_cbor(&self) -> Vec<u8> {
+    ///
+    /// # Errors
+    /// Returns an error if encoding fails.
+    pub fn to_cbor<W: Write>(&self) -> Result<Vec<u8>, minicbor::encode::Error<W::Error>> {
         let mut buf = Vec::new();
         let mut e = Encoder::new(&mut buf);
-        let _unused = self.encode(&mut e, &mut ());
-        buf
+        self.encode(&mut e, &mut ())
+            .map_err(minicbor::encode::Error::message)?;
+        Ok(buf)
     }
 }
 
