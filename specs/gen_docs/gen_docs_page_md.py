@@ -96,12 +96,17 @@ def gen_docs_page_md(name: str, doc_defs: dict) -> str:
     """
 
     doc_d2 = gen_doc_d2(name, doc_defs, depth=1, stand_alone=True).strip()
+    todo_msg = f"""
+This specification outlines the required definitions for the current features, the document will be
+incrementally improved in future iterations as more functionality and features are added.
+This section will be included and updated in future iterations.
+"""
     return f"""
 # {name}
 
 ## Description
 
-{doc_defs["docs"][name].get("description", "TODO")}
+{doc_defs["docs"][name].get("description", todo_msg)}
 
 ```d2 layout="elk"
 {doc_d2}
@@ -109,17 +114,17 @@ def gen_docs_page_md(name: str, doc_defs: dict) -> str:
 
 ### Validation
 
-{doc_defs["docs"][name].get("validation", "TODO")}
+{doc_defs["docs"][name].get("validation", todo_msg)}
 
 ### Business Logic
 
 #### Front End
 
-{doc_defs["docs"][name].get("business_logic", {}).get("front_end", "TODO")}
+{doc_defs["docs"][name].get("business_logic", {}).get("front_end", todo_msg)}
 
 #### Back End
 
-{doc_defs["docs"][name].get("business_logic", {}).get("back_end", "TODO")}
+{doc_defs["docs"][name].get("business_logic", {}).get("back_end", todo_msg)}
 
 ## COSE Header Parameters
 
