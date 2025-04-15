@@ -202,7 +202,6 @@ fn validate_c509_self_signed_cert(c: &C509, index: usize, report: &ProblemReport
             report.other(
                 &format!(
                     "Failed to extract subject public key from C509 certificate at index {index}: {e:?}",
-                    
                 ),
                 context,
             );
