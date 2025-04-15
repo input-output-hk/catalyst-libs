@@ -77,6 +77,6 @@ impl FromStr for RoleIndex {
 
 impl Display for RoleIndex {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{self:?}")
+        write!(f, "{}", *self as u8)
     }
 }
