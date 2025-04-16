@@ -25,7 +25,8 @@ docs: #DocumentDefinitions & {
 			Subsequent Versions can be signed/co-signed by either the Original Author of the first version,
 			OR any of the listed `collaborators` in the immediately previous version.
 			This allows any collaborator to update the next version of a document, provided they are still a collaborator.
-			It is valid for a proposal to be signed by a collaborator who is no longer listed as in the `collaborators`
+			It is valid for a proposal to be signed by a collaborator 
+			who is no longer listed as in the `collaborators`
 			of the document they are signing, provided they are listed as a collaborator in the immediately previous document version.
 			This allows for a collaborator to make an update to the document which removes themselves
 			from the `collaborators` list.

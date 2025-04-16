@@ -56,7 +56,8 @@ docs: #DocumentDefinitions & {
 				"""
 
 			back_end: """
-				A Submitted proposal with collaborators *MUST* have a `final` submission by *ALL* listed `collaborators`.
+				A Submitted proposal with collaborators *MUST* have 
+				a `final` submission by *ALL* listed `collaborators`.
 				If any `collaborator` has not submitted a `final` submission by the deadline, then the proposal 
 				is not considered `final` and will not be considered in the category it was being submitted to.
 				"""
