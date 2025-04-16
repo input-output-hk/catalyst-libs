@@ -36,26 +36,39 @@ The payload of a proposal is controlled by its template.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+The first version of a Proposal *MUST* be signed by the original author.
+It may optionally be co-signed by any of the listed [`collaborators`](../metadata.md#collaborators).
+It may not be signed by anyone else.
+
+Subsequent Versions can be signed/co-signed by either the Original Author of the first version,
+OR any of the listed [`collaborators`](../metadata.md#collaborators) in the immediately previous version.
+This allows any collaborator to update the next version of a document, provided they are still a collaborator.
+It is valid for a proposal to be signed by a collaborator who is no longer listed as in the [`collaborators`](../metadata.md#collaborators)
+of the document they are signing, provided they are listed as a collaborator in the immediately previous document version.
+This allows for a collaborator to make an update to the document which removes themselves
+from the [`collaborators`](../metadata.md#collaborators) list.
+
+All versions of the document *MUST* list the author as the original author.
+The Author can not be changed by any document revision.
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+As validity of the documents is currently enforced by the backend,
+the front end does not need to validate the document has been signed
+correctly.
+It may do so, but it is not required.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+Before accepting a new proposal to be published, the backend will ensure:
+
+* The document has been signed by a valid author or collaborator.
+* That the signer of the document was a registered proposer
+* That the document was signed with their proposers key
+* That all listed [`collaborators`](../metadata.md#collaborators) are registered as proposers.
+* That the document has been signed validly according to the [validation](#validation) rules.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 

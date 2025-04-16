@@ -851,6 +851,10 @@
       "authors": {
         "Steven Johnson": "steven.johnson@iohk.io"
       },
+      "business_logic": {
+        "back_end": "Before accepting a new proposal to be published, the backend will ensure:\n\n* The document has been signed by a valid author or collaborator.\n* That the signer of the document was a registered proposer\n* That the document was signed with their proposers key\n* That all listed `collaborators` are registered as proposers.\n* That the document has been signed validly according to the [validation](#validation) rules.",
+        "front_end": "As validity of the documents is currently enforced by the backend, \nthe front end does not need to validate the document has been signed\ncorrectly.\nIt may do so, but it is not required."
+      },
       "description": "A Proposal is a document which describes a proposed solution or project to\naddress the criteria of a category within a campaign.\n\nThe proposal itself is a draft document, it is not submitted for consideration\nunless a `Proposal Submission Action` is submitted which references it.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
       "headers": {
         "content type": {
@@ -1000,6 +1004,7 @@
       "type": [
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
       ],
+      "validation": "The first version of a Proposal *MUST* be signed by the original author.\nIt may optionally be co-signed by any of the listed `collaborators`.\nIt may not be signed by anyone else.\n\nSubsequent Versions can be signed/co-signed by either the Original Author of the first version,\nOR any of the listed `collaborators` in the immediately previous version.\nThis allows any collaborator to update the next version of a document, provided they are still a collaborator.\nIt is valid for a proposal to be signed by a collaborator who is no longer listed as in the `collaborators`\nof the document they are signing, provided they are listed as a collaborator in the immediately previous document version.\nThis allows for a collaborator to make an update to the document which removes themselves\nfrom the `collaborators` list.\n\nAll versions of the document *MUST* list the author as the original author.\nThe Author can not be changed by any document revision.",
       "versions": [
         {
           "changes": "* First Published Version",
