@@ -23,7 +23,7 @@ impl SignatureKidRule {
                     role_index.to_string().as_str(),
                     format!("{:?}", self.exp).as_str(),
                     format!(
-                        "Invalid Catalyst Signed Document signature {i} `kid` Catalyst Role value"
+                        "Invalid Catalyst Signed Document signature at position [{i}] `kid` Catalyst Role value"
                     )
                     .as_str(),
                 );
