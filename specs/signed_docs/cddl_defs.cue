@@ -65,6 +65,10 @@ cddlDefinitions: #cddlDefinitions & {
 		def: "[ * catalyst_id ]"
 		requires: ["catalyst_id"]
 	}
+	"revocations": {
+		def: "[ * document_ver ] / true "
+		requires: ["document_ver"]
+	}
 }
 
 #cddlTypes: [

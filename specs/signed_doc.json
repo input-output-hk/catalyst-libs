@@ -81,6 +81,12 @@
       "def": "text",
       "requires": []
     },
+    "revocations": {
+      "def": "[ * document_ver ] / true ",
+      "requires": [
+        "document_ver"
+      ]
+    },
     "section_ref": {
       "def": "json_pointer",
       "requires": [
@@ -242,6 +248,13 @@
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
           "exclusive": null,
@@ -382,6 +395,13 @@
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
           "exclusive": null,
@@ -521,6 +541,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -663,6 +690,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -811,6 +845,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -969,6 +1010,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1143,6 +1191,13 @@
           "type": "Proposal Comment",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
           "exclusive": null,
@@ -1290,6 +1345,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1446,6 +1508,13 @@
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
           "exclusive": null,
@@ -1596,6 +1665,13 @@
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
           "exclusive": null,
@@ -1743,6 +1819,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1892,6 +1975,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -2083,6 +2173,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -2286,6 +2383,13 @@
       ],
       "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
     },
+    "revocations": {
+      "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+      "exclusive": null,
+      "format": "Version Revocations",
+      "required": "excluded",
+      "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+    },
     "section": {
       "description": "A Reference to the original document, or the comment being replied to.",
       "exclusive": null,
@@ -2347,6 +2451,10 @@
     "UUIDv7": {
       "cddl": "uuid_v7",
       "description": "Version 7 formatted UUID"
+    },
+    "Version Revocations": {
+      "cddl": "revocations",
+      "description": "A list of all versions of this document which are 'revoked'."
     }
   },
   "metadata_order": [
@@ -2358,6 +2466,7 @@
     "reply",
     "section",
     "collaborators",
+    "revocations",
     "brand_id",
     "campaign_id",
     "category_id",

@@ -43,6 +43,10 @@ metadataFormats: #metadataFormats & {
 		description: "A list of collaborators who can participate in drafting and submitting a document"
 		cddl:        "collaborators"
 	}
+	"Version Revocations": {
+		description: "A list of all versions of this document which are 'revoked'."
+		cddl:        "revocations"
+	}
 }
 
 // Types of a Metadata Fields
@@ -52,14 +56,6 @@ metadataFormats: #metadataFormats & {
 
 // Constraint of Types of Metadata Fields
 #metadataTypesConstraint: or(#metadataTypes)
-
-// Format of a Metadata Field
-//#metadataFormat:
-//	"UUIDv7" |
-//	"Document Type" |
-//	*"Document Reference" |
-//	"Section Reference" |
-//	"Collaborators Reference List"
 
 // Canonical List of all valid metadata names
 _metadataNames: list.UniqueItems
@@ -72,6 +68,7 @@ _metadataNames: [
 	"reply",
 	"section",
 	"collaborators",
+	"revocations",
 	"brand_id",
 	"campaign_id",
 	"election_id",
@@ -218,6 +215,30 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
+	revocations: {
+		format: "Version Revocations"
+		description: """
+			A document may include a list of any prior versions which are considered to be revoked.
+			Only the revocation list in the latest version of the document applies.
+			Revoked documents are flagged as no longer valid, and should not be displayed.
+			As a special case, if the revocations are set to `true` then all versions of the document
+			are revoked, including the latest document.
+
+			In this case, when the latest document is revoked, the payload may be empty.
+			Any older document that has `revocations` set to `true` is always to be filtered
+			and its payload is to be assumed to be invalid.
+
+			This allows for an entire document and any/all published versions to be revoked.
+			A new version of the document that is published after this, may reinstate prior
+			document versions, by not listing them as revoked.  
+			However, any document where revocations was set `true` can never be reinstated.
+			"""
+		validation: """
+			If the field is `true` the payload may be absent or invalid.
+			Such documents may never be submitted.
+			"""
+	}
+
 	brand_id: {
 		description: "A reference to the Brand Parameters Document this document lies under."
 		validation: """
@@ -306,6 +327,7 @@ metadata_order: [..._allMetadataNames] & [
 	"reply",
 	"section",
 	"collaborators",
+	"revocations",
 	"brand_id",
 	"campaign_id",
 	"category_id",

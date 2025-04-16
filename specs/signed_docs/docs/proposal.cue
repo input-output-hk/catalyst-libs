@@ -65,6 +65,10 @@ docs: #DocumentDefinitions & {
 				required: "optional"
 			}
 
+			revocations: {
+				required: "optional"
+			}
+
 			brand_id: {
 				required: "optional"
 				type:     "Brand Parameters"

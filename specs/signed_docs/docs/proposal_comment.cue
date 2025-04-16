@@ -28,7 +28,7 @@ docs: #DocumentDefinitions & {
 				a different version of the document.
 
 				If the front end posts a reply to another comment: 
-				
+
 				* it should reference the comment being replied to in the `reply` field. 
 				* The `ref` field must refer to the same document, but can be a different version.
 				"""
@@ -56,6 +56,10 @@ docs: #DocumentDefinitions & {
 			template: {
 				required: "yes"
 				type:     "Proposal Comment Template"
+			}
+
+			revocations: {
+				required: "optional"
 			}
 
 			brand_id: {

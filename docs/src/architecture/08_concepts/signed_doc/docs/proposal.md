@@ -22,6 +22,7 @@ The payload of a proposal is controlled by its template.
   "ver": UUIDv7
   "template": Proposal Template
   "collaborators": Collaborators Reference List
+  "revocations": Version Revocations
   "brand_id": Brand Parameters (Optional)
   "campaign_id": Campaign Parameters (Optional)
   "category_id": Category Parameters (Optional)
@@ -157,6 +158,33 @@ This list does not imply these collaborators have consented to collaborate, only
 are permitting these potential collaborators to participate in the drafting and submission process.
 However, any document submission referencing a proposal MUST be signed by all collaborators in
 addition to the author.
+
+### [`revocations`](../metadata.md#revocations)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Version Revocations](../metadata.md#version-revocations) |
+<!-- markdownlint-enable MD033 -->
+A document may include a list of any prior versions which are considered to be revoked.
+Only the revocation list in the latest version of the document applies.
+Revoked documents are flagged as no longer valid, and should not be displayed.
+As a special case, if the revocations are set to `true` then all versions of the document
+are revoked, including the latest document.
+
+In this case, when the latest document is revoked, the payload may be empty.
+Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
+and its payload is to be assumed to be invalid.
+
+This allows for an entire document and any/all published versions to be revoked.
+A new version of the document that is published after this, may reinstate prior
+document versions, by not listing them as revoked.
+However, any document where revocations was set `true` can never be reinstated.
+
+#### Validation
+
+If the field is `true` the payload may be absent or invalid.
+Such documents may never be submitted.
 
 ### [`brand_id`](../metadata.md#brand_id)
 <!-- markdownlint-disable MD033 -->

@@ -75,6 +75,18 @@ Version 7 formatted [UUID][RFC9562]
 uuid_v7 = 6.37(bytes .size 16)
 ```
 
+### Version Revocations
+
+A list of all versions of this document which are 'revoked'.
+
+#### [CDDL][RFC8610] Specification
+
+```cddl
+revocations = [ * document_ver ] / true
+document_ver = uuid_v7
+uuid_v7 = 6.37(bytes .size 16)
+```
+
 ## Individual Metadata field definitions
 
 ### `type`
@@ -229,6 +241,12 @@ This list does not imply these collaborators have consented to collaborate, only
 are permitting these potential collaborators to participate in the drafting and submission process.
 However, any document submission referencing a proposal MUST be signed by all collaborators in
 addition to the author.
+
+### `revocations`
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | excluded |
 
 ### `brand_id`
 <!-- markdownlint-disable MD033 -->
