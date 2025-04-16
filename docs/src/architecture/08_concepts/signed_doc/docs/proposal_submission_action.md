@@ -55,8 +55,8 @@ unless there exists a `draft` or `final` proposal submission from that collabora
 Any document that lists a collaborator should be highlighted to that collaborator so
 they can take appropriate action, such as:
 
-* Confirm they are a collaborator of a version (by submitting this document as `draft`)
-* Agree to final submission by submitting this document as `final`
+* Confirm they are a collaborator by submitting this document as `draft`
+* Agree to being a collaborator on the final submission by submitting this document as `final`
 * Hide themselves from the collaborators list but do not remove themselves by submitting `hide`
 * Remove themselves permanently as a collaborator by publishing a new version with them removed.
 
@@ -139,7 +139,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-  `[[DocumentID, DocumentVer, DocumentHash],...]`
+ `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
@@ -184,8 +184,8 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-        `hide` is only actioned if sent by the author,
-       for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+         `hide` is only actioned if sent by the author,
+        for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->

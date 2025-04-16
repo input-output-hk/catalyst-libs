@@ -20,7 +20,7 @@ docs: #DocumentDefinitions & {
 
 		// The business logic related to this document.  Markdown Supported.
 		business_logic: {
-			front_end?: """
+			front_end: """
 				Comments are valid for any version of the document, however
 				as comments refer to a specific version of a document, they may
 				lose context when displayed against the latest version of a document.

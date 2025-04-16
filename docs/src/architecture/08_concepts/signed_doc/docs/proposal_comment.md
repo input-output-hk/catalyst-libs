@@ -44,10 +44,15 @@ It may reference a different version of the document.
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+Comments are valid for any version of the document, however
+as comments refer to a specific version of a document, they may
+lose context when displayed against the latest version of a document.
+In these cases, the front end should clearly show that a comment was on
+a different version of the document.
+
+If the front end posts a reply to another comment:
+* it should reference the comment being replied to in the [`reply`](../metadata.md#reply) field.
+* The [`ref`](../metadata.md#ref) field must refer to the same document, but can be a different version.
 
 #### Back End
 
@@ -117,7 +122,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-  `[[DocumentID, DocumentVer, DocumentHash],...]`
+ `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
