@@ -12,8 +12,8 @@ A list of collaborators who can participate in drafting and submitting a documen
 #### [CDDL][RFC8610] Specification
 
 ```cddl
-catalyst_id = text
 collaborators = [ * catalyst_id ]
+catalyst_id = text
 ```
 
 ### Document Reference
@@ -23,12 +23,14 @@ A document reference identifier
 #### [CDDL][RFC8610] Specification
 
 ```cddl
-uuid_v7 = 6.37(bytes .size 16)
-document_id = uuid_v7
-document_ver = uuid_v7
-blake2b_256 = bytes .size 32
-document_hash = blake2b_256
 document_ref = [ 1* [ document_id, document_ver, document_hash ] ]
+document_id = uuid_v7
+uuid_v7 = 6.37(bytes .size 16)
+document_ver = uuid_v7
+document_hash = cid_hash / generic_future_hash
+cid_hash = [cid, text]
+cid = 0
+generic_future_hash = [uint, text / bytes]
 ```
 
 ### Document Type
@@ -38,8 +40,8 @@ A document type identifier
 #### [CDDL][RFC8610] Specification
 
 ```cddl
-uuid_v4 = 6.37(bytes .size 16)
 document_type = [ 1* uuid_v4 ]
+uuid_v4 = 6.37(bytes .size 16)
 ```
 
 ### Section Reference
@@ -49,8 +51,8 @@ A document section reference identifier
 #### [CDDL][RFC8610] Specification
 
 ```cddl
-json_pointer = text
 section_ref = json_pointer
+json_pointer = text
 ```
 
 ### [UUIDv4][RFC9562-V4]
@@ -146,9 +148,13 @@ This is an Array of the format:
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
+* `DocumentHash` is the Unique identifier for a document based on its contents.
+  Initially, this is designed to be a [IPFS-CID].
+  In future iterations, there could be other `DocumentHash` types which support
+  alternative decentralized storage means.
   It ensures that the intended referenced document is the one used, and there has been no substitution.
   Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
+  Also allows the document contents to be easily located and sourced from decentralized storage.
 
 #### Validation
 
@@ -319,6 +325,7 @@ optional for the referenced document.
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8610]: https://www.rfc-editor.org/rfc/rfc8610

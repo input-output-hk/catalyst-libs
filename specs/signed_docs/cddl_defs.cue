@@ -33,9 +33,19 @@ cddlDefinitions: #cddlDefinitions & {
 		def: "uuid_v7"
 		requires: ["uuid_v7"]
 	}
+	"cid": {
+		def: "0"
+	}
+	"cid_hash": {
+		def: "[cid, text]"
+		requires: ["cid"]
+	}
+	"generic_future_hash": {
+		def: "[uint, text / bytes]"
+	}
 	"document_hash": {
-		def: "blake2b_256"
-		requires: ["blake2b_256"]
+		def: "cid_hash / generic_future_hash"
+		requires: ["cid_hash", "generic_future_hash"]
 	}
 	"document_ref": {
 		def: "[ 1* [ document_id, document_ver, document_hash ] ]"

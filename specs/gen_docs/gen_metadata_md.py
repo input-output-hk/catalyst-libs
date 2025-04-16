@@ -13,7 +13,7 @@ def get_cddl(name, defs, found=[]):
             next_cddl, found = get_cddl(requires, defs, found)
             found.append(requires)
             this_cddl += next_cddl
-    this_cddl += f"{name} = {defs[name]['def']}\n"
+    this_cddl = f"{name} = {defs[name]['def']}\n{this_cddl}"
 
     return this_cddl, found
 

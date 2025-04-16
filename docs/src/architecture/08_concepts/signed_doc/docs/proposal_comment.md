@@ -127,9 +127,13 @@ This is an Array of the format:
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
+* `DocumentHash` is the Unique identifier for a document based on its contents.
+  Initially, this is designed to be a [IPFS-CID].
+  In future iterations, there could be other `DocumentHash` types which support
+  alternative decentralized storage means.
   It ensures that the intended referenced document is the one used, and there has been no substitution.
   Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
+  Also allows the document contents to be easily located and sourced from decentralized storage.
 
 #### Validation
 
@@ -303,5 +307,6 @@ New versions of this document may be published by:
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

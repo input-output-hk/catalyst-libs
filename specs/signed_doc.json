@@ -24,6 +24,16 @@
       "def": "text",
       "requires": []
     },
+    "cid": {
+      "def": "0",
+      "requires": []
+    },
+    "cid_hash": {
+      "def": "[cid, text]",
+      "requires": [
+        "cid"
+      ]
+    },
     "collaborators": {
       "def": "[ * catalyst_id ]",
       "requires": [
@@ -31,9 +41,10 @@
       ]
     },
     "document_hash": {
-      "def": "blake2b_256",
+      "def": "cid_hash / generic_future_hash",
       "requires": [
-        "blake2b_256"
+        "cid_hash",
+        "generic_future_hash"
       ]
     },
     "document_id": {
@@ -61,6 +72,10 @@
       "requires": [
         "uuid_v7"
       ]
+    },
+    "generic_future_hash": {
+      "def": "[uint, text / bytes]",
+      "requires": []
     },
     "json_pointer": {
       "def": "text",
@@ -214,7 +229,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -354,7 +369,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -494,7 +509,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -631,7 +646,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -784,7 +799,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -942,7 +957,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1109,7 +1124,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -1263,7 +1278,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1418,7 +1433,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1568,7 +1583,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1713,7 +1728,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -1862,7 +1877,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -2056,7 +2071,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -2131,6 +2146,7 @@
   },
   "documentationLinks": {
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+    "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
     "JSON Schema": "https://json-schema.org/draft-07",
     "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
     "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
@@ -2235,7 +2251,7 @@
       "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
     },
     "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
       "exclusive": null,
       "format": "Document Reference",
       "linked_refs": null,
