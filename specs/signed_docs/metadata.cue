@@ -149,7 +149,7 @@ _metadata: #metadataStruct & {
 			This is the primary hierarchical reference to a related document.			
 
 			This is an Array of the format:
-				`[[DocumentID, DocumentVer, DocumentHash],...]`
+			  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 			* `DocumentID` is the UUIDv7 ID of the Document being referenced.
 			* `DocumentVer` is the UUIDv7 Version of the Document being referenced.

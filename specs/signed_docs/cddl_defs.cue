@@ -34,18 +34,14 @@ cddlDefinitions: #cddlDefinitions & {
 		requires: ["uuid_v7"]
 	}
 	"cid": {
-		def: "0"
-	}
-	"cid_hash": {
-		def: "[cid, text]"
-		requires: ["cid"]
+		def: "text"
 	}
 	"generic_future_hash": {
 		def: "[uint, text / bytes]"
 	}
 	"document_hash": {
-		def: "cid_hash / generic_future_hash"
-		requires: ["cid_hash", "generic_future_hash"]
+		def: "{ \"cid\" => cid }"
+		requires: ["cid"]
 	}
 	"document_ref": {
 		def: "[ 1* [ document_id, document_ver, document_hash ] ]"

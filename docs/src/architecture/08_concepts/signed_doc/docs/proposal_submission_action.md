@@ -140,7 +140,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-    `[[DocumentID, DocumentVer, DocumentHash],...]`
+  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
@@ -189,8 +189,8 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-      `hide` is only actioned if sent by the author,
-         for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+       `hide` is only actioned if sent by the author,
+      for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->

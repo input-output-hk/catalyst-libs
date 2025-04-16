@@ -27,10 +27,8 @@ document_ref = [ 1* [ document_id, document_ver, document_hash ] ]
 document_id = uuid_v7
 uuid_v7 = 6.37(bytes .size 16)
 document_ver = uuid_v7
-document_hash = cid_hash / generic_future_hash
-cid_hash = [cid, text]
-cid = 0
-generic_future_hash = [uint, text / bytes]
+document_hash = { "cid" => cid }
+cid = text
 ```
 
 ### Document Type
