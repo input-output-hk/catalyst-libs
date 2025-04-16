@@ -1782,6 +1782,10 @@
     },
     "Proposal Submission Action": {
       "authors": {},
+      "business_logic": {
+        "back_end": "A Submitted proposal with collaborators *MUST* have a `final` submission by *ALL* listed `collaborators`.\nIf any `collaborator` has not submitted a `final` submission by the deadline, then the proposal \nis not considered `final` and will not be considered in the category it was being submitted to.",
+        "front_end": "A proposal with `collaborators` will not be shown as having a confirmed collaborator,\nunless there exists a `draft` or `final` proposal submission from that collaborator.\n\nAny document that lists a collaborator should be highlighted to that collaborator so\nthey can take appropriate action, such as:\n\n* Confirm they are a collaborator of a version (by submitting this document as `draft`)\n* Agree to final submission by submitting this document as `final`\n* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`\n* Remove themselves permanently as a collaborator by publishing a new version with them removed.\n\nTo eliminate the necessity for collaborators to accept collaboration on every version, \nthey will be considered as agreeing to be a collaborator on any version of the document\nthat lists them, if their latest submission is `draft` or `final`.\n\nIf their latest submission on a document is `hide` they should be considered to not\nhave agreed to be a collaborator.\n\n*NOTE* `final` status ONLY applies to the exactly referenced document and version."
+      },
       "description": "## Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  \nUnless they all submit the same version of the proposal\nthe proposal will not be seen as submitted.\n\nThe payload is a fixed format.",
       "headers": {
         "content type": {
@@ -1903,7 +1907,7 @@
         }
       },
       "payload": {
-        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.",
+        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
         "schema": {
           "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1959,6 +1963,7 @@
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
         "78927329-cfd9-4ea1-9c71-0e019b126a65"
       ],
+      "validation": "No validation is required beyond as defined by:\n\n* [metadata](#metadata) \n* [payload](#payload)\n* [signers](#signers)",
       "versions": [
         {
           "changes": "* First Published Version",

@@ -39,26 +39,41 @@ The payload is a fixed format.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+No validation is required beyond as defined by:
+
+* [metadata](#metadata)
+* [payload](#payload)
+* [signers](#signers)
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+A proposal with [`collaborators`](../metadata.md#collaborators) will not be shown as having a confirmed collaborator,
+unless there exists a `draft` or `final` proposal submission from that collaborator.
+
+Any document that lists a collaborator should be highlighted to that collaborator so
+they can take appropriate action, such as:
+
+* Confirm they are a collaborator of a version (by submitting this document as `draft`)
+* Agree to final submission by submitting this document as `final`
+* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`
+* Remove themselves permanently as a collaborator by publishing a new version with them removed.
+
+To eliminate the necessity for collaborators to accept collaboration on every version,
+they will be considered as agreeing to be a collaborator on any version of the document
+that lists them, if their latest submission is `draft` or `final`.
+
+If their latest submission on a document is `hide` they should be considered to not
+have agreed to be a collaborator.
+
+*NOTE* `final` status ONLY applies to the exactly referenced document and version.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+A Submitted proposal with collaborators *MUST* have a `final` submission by *ALL* listed [`collaborators`](../metadata.md#collaborators).
+If any `collaborator` has not submitted a `final` submission by the deadline, then the proposal
+is not considered `final` and will not be considered in the category it was being submitted to.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -124,7 +139,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-   `[[DocumentID, DocumentVer, DocumentHash],...]`
+  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
@@ -167,9 +182,10 @@ The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
 States:
 
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
-* `draft` : Reverses the previous `final` state for a signer.
+* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-         `hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.
+        `hide` is only actioned if sent by the author,
+       for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->
