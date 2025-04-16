@@ -39,17 +39,26 @@ The payload of a proposal comment is controlled by its template.
 
 ### Validation
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ### Business Logic
 
 #### Front End
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 #### Back End
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -114,7 +123,7 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-   `[[DocumentID, DocumentVer, DocumentHash],...]`
+  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
 * `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
 * `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.

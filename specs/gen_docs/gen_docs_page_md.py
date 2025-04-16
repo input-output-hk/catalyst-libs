@@ -96,11 +96,13 @@ def gen_docs_page_md(name: str, doc_defs: dict) -> str:
     """
 
     doc_d2 = gen_doc_d2(name, doc_defs, depth=1, stand_alone=True).strip()
-    todo_msg = f"""
-This specification outlines the required definitions for the current features, the document will be
-incrementally improved in future iterations as more functionality and features are added.
+    todo_msg = """
+This specification outlines the required definitions for the current features. 
+The document will be incrementally improved in future iterations as more functionality 
+and features are added.
 This section will be included and updated in future iterations.
-"""
+""".strip()
+
     return f"""
 # {name}
 
