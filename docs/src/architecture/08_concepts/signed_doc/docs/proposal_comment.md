@@ -2,8 +2,6 @@
 
 ## Description
 
-## Proposal Comment Document
-
 A Proposal Comment is a document which comments on a referenced Proposal document.
 
 Proposal Comments themselves are intentionally general, however they may be
@@ -39,10 +37,8 @@ The payload of a proposal comment is controlled by its template.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+A comment which is a reply *MUST* reference the same document.
+It may reference a different version of the document.
 
 ### Business Logic
 
@@ -55,10 +51,8 @@ This section will be included and updated in future iterations.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+The backend will only validate the document being referenced exists,
+and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.md#reply) metadata fields is correct.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 

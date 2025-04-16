@@ -1015,7 +1015,10 @@
     },
     "Proposal Comment": {
       "authors": {},
-      "description": "## Proposal Comment Document\n\nA Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
+      "business_logic": {
+        "back_end": "The backend will only validate the document being referenced exists, \nand the integrity of the `ref` and `reply` metadata fields is correct."
+      },
+      "description": "A Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1173,6 +1176,7 @@
         "b679ded3-0e7c-41ba-89f8-da62a17898ea",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
       ],
+      "validation": "A comment which is a reply *MUST* reference the same document.\nIt may reference a different version of the document.",
       "versions": [
         {
           "changes": "* First Published Version",
