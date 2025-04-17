@@ -36,9 +36,6 @@ cddlDefinitions: #cddlDefinitions & {
 	"cid": {
 		def: "6.42(bytes) ; TODO: add size limits if possible"
 	}
-	"generic_future_hash": {
-		def: "[uint, text / bytes]"
-	}
 	"document_locator": {
 		def: "{ \"cid\" => cid }"
 		requires: ["cid"]

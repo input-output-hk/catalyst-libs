@@ -66,10 +66,6 @@
         "uuid_v7"
       ]
     },
-    "generic_future_hash": {
-      "def": "[uint, text / bytes]",
-      "requires": []
-    },
     "json_pointer": {
       "def": "text",
       "requires": []
