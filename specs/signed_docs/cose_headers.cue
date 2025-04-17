@@ -5,6 +5,7 @@ package signed_docs
 
 import (
 	"list"
+	"strings"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
 
 )
@@ -163,6 +164,8 @@ cose_headers: _coseHeaders
 cose_headers:
 	"content type":
 		value: #allContentTypes
+
+_cddlContentTypes: "\"\(strings.Join(cose_headers."content type".value, "\" / \""))\""
 
 // Preferred display order of cose header fields.
 // if header not listed, display after the listed fields, in alphabetical order.

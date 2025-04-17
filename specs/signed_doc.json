@@ -16,6 +16,58 @@
     "Template": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
   },
   "cddlDefinitions": {
+    "COSE_Document_Generic_Headers": {
+      "def": "(\n\t3 => \"application/json\" / \"application/schema+json\" / \"application/cbor\" / \"application/cddl\",  ; content type\n\t?\"content-encoding\" => [ *tstr ],  ; content encoding\n)",
+      "requires": []
+    },
+    "COSE_Document_Header_Map": {
+      "def": "{\n\tCOSE_Document_Generic_Headers,\n\t* label => values\t\t\n}",
+      "requires": [
+        "COSE_Document_Generic_Headers"
+      ]
+    },
+    "COSE_Document_Headers": {
+      "def": "(\n\tprotected : bstr .cbor COSE_Document_Header_Map,\n\tunprotected : {} ; Unused\n)",
+      "requires": [
+        "COSE_Document_Header_Map"
+      ]
+    },
+    "COSE_Generic_Headers": {
+      "def": "(\n\t; ? 1 => int / tstr,  ; algorithm identifier\n\t; ? 2 => [+label],    ; criticality\n\t? 3 => tstr / int,  ; content type\n\t; ? 4 => bstr,        ; key identifier\n\t; ? 5 => bstr,        ; IV\n\t; ? 6 => bstr,        ; Partial IV\n\t; ? 7 => COSE_Signature / [+COSE_Signature] ; Counter signature\n)\n",
+      "requires": []
+    },
+    "COSE_Headers": {
+      "def": "(\n\tprotected : empty_or_serialized_map,\n\tunprotected : {} ; Unused\n)",
+      "requires": [
+        "COSE_empty_or_serialized_map",
+        "COSE_header_map"
+      ]
+    },
+    "COSE_Sign": {
+      "def": "[\n\tCOSE_Document_Headers,\n\tpayload : bstr / nil,\n\tsignatures : [+ COSE_Signature]\n]\t\t",
+      "requires": [
+        "COSE_Document_Headers",
+        "COSE_Signature"
+      ]
+    },
+    "COSE_Signature": {
+      "def": "[\n\tCOSE_Headers,\n\tsignature : bstr\n]",
+      "requires": [
+        "COSE_Headers"
+      ]
+    },
+    "COSE_empty_or_serialized_map": {
+      "def": "bstr .cbor COSE_header_map / bstr .size 0",
+      "requires": [
+        "COSE_header_map"
+      ]
+    },
+    "COSE_header_map": {
+      "def": "{\n\tCOSE_Generic_Headers,\n\t* label => values\t\t\n}",
+      "requires": [
+        "COSE_Generic_Headers"
+      ]
+    },
     "blake2b_256": {
       "def": "bytes .size 32",
       "requires": []
@@ -80,6 +132,12 @@
       "def": "json_pointer",
       "requires": [
         "json_pointer"
+      ]
+    },
+    "signed_document": {
+      "def": "COSE_Sign",
+      "requires": [
+        "COSE_Sign"
       ]
     },
     "uuid_v4": {
