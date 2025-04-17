@@ -8,7 +8,6 @@ pub use point_data::PointData;
 pub use point_tx_idx::PointTxnIdx;
 pub use role_data::RoleData;
 pub use role_data_record::RoleDataRecord;
-pub use role_number::RoleNumber;
 pub use tx_input_hash::TxInputHash;
 pub use validation_signature::ValidationSignature;
 
@@ -20,6 +19,5 @@ mod point_data;
 mod point_tx_idx;
 mod role_data;
 mod role_data_record;
-mod role_number;
 mod tx_input_hash;
 mod validation_signature;

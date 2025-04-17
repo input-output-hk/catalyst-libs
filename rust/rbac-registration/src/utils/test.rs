@@ -6,7 +6,7 @@ use cardano_blockchain_types::{MultiEraBlock, Network, Point, Slot, TransactionI
 use catalyst_types::uuid::UuidV4;
 use uuid::Uuid;
 
-use crate::cardano::cip509::{Cip509, RoleNumber};
+use crate::cardano::cip509::Cip509;
 
 /// Test data expected from block.
 #[allow(dead_code)]
@@ -16,7 +16,7 @@ pub struct BlockTestData {
     /// Slot number.
     pub slot: Slot,
     /// Role.
-    pub role: RoleNumber,
+    pub role: u8,
     /// Transaction index.
     pub txn_index: TxnIndex,
     /// Transaction hash.
@@ -37,9 +37,11 @@ impl BlockTestData {
         assert!(!cip509.report().is_problematic(), "{:?}", cip509.report());
 
         let origin = cip509.origin();
+        let role = self.role.try_into().unwrap();
+
         assert_eq!(origin.txn_index(), self.txn_index);
         assert_eq!(origin.point().as_fuzzy(), Point::fuzzy(self.slot));
-        assert!(cip509.role_data(self.role).is_some());
+        assert!(cip509.role_data(role).is_some());
         assert_eq!(cip509.txn_hash(), self.txn_hash);
         assert_eq!(cip509.previous_transaction(), self.prv_hash);
         let (purpose, ..) = cip509.clone().consume().unwrap();
@@ -62,7 +64,7 @@ pub fn block_1() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 82_004_293.into(),
-        role: 0.into(),
+        role: 0,
         txn_index: 0.into(),
         txn_hash: "1bf8eb4da8fe5910cc890025deb9740ba5fa4fd2ac418ccbebfd6a09ed10e88b"
             .parse()
@@ -95,7 +97,7 @@ pub fn block_2() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 77_171_632.into(),
-        role: 0.into(),
+        role: 0,
         txn_index: 0.into(),
         txn_hash: "337d35026efaa48b5ee092d38419e102add1b535364799eb8adec8ac6d573b79"
             .parse()
@@ -130,7 +132,7 @@ pub fn block_3() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 77_170_639.into(),
-        role: 0.into(),
+        role: 0,
         txn_index: 0.into(),
         txn_hash: "0fda4c9f86e763fecd33f57d8f93540b1598c0a0e539dd996c48052ce94bab80"
             .parse()
@@ -168,7 +170,7 @@ pub fn block_4() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 82_004_569.into(),
-        role: 4.into(),
+        role: 4,
         txn_index: 1.into(),
         txn_hash: "eef40a97a4ed1e40c3febd05a84b3ffaa191141b60806c2bba85d9c6879fb378"
             .parse()
@@ -200,7 +202,7 @@ pub fn block_5() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 87_374_283.into(),
-        role: 0.into(),
+        role: 0,
         txn_index: 1.into(),
         txn_hash: "760fd99479771d32388e8865a22c4ed2b7badca1443cffe87854f491eba96e51"
             .parse()
@@ -232,7 +234,7 @@ pub fn block_6() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 87_374_696.into(),
-        role: 0.into(),
+        role: 0,
         txn_index: 4.into(),
         txn_hash: "3c0f2965e0a974cf45f10ba0fb2547eb9d3f8764e8608d47fbe7ff16af7f7e32"
             .parse()

@@ -10,7 +10,7 @@ use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Network, TxnWitness, VKeyHash};
 use catalyst_types::{
     hashes::{Blake2b128Hash, Blake2b256Hash},
-    id_uri::IdUri,
+    id_uri::{role_index::RoleId, IdUri},
     problem_report::ProblemReport,
 };
 use ed25519_dalek::{Signature, VerifyingKey, PUBLIC_KEY_LENGTH};
@@ -29,7 +29,7 @@ use super::{
 };
 use crate::cardano::cip509::{
     rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    RoleNumber, SimplePublicKeyType, X509DerCert,
+    SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -302,7 +302,7 @@ pub fn validate_role_data(
 
     // There should be some role data
     if !metadata.role_data.is_empty() {
-        if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
+        if metadata.role_data.contains_key(&RoleId::Role0) {
             // For the role 0 there must be exactly once certificate and it must not have `deleted`,
             // `undefined` or `C509CertInMetadatumReference` values.
             if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
@@ -369,7 +369,7 @@ pub fn validate_role_data(
 
     let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
-        if number == &RoleNumber::ROLE_0 {
+        if number == &RoleId::Role0 {
             catalyst_id = validate_role_0(data, metadata, subnet, context, report);
         } else {
             if let Some(signing_key) = data.signing_key() {
@@ -399,9 +399,9 @@ pub fn validate_role_data(
 
 /// Checks that there are no unknown roles.
 fn validate_role_numbers<'a>(
-    roles: impl Iterator<Item = &'a RoleNumber> + 'a, context: &str, report: &ProblemReport,
+    roles: impl Iterator<Item = &'a RoleId> + 'a, context: &str, report: &ProblemReport,
 ) {
-    let known_roles = &[RoleNumber::ROLE_0, 3.into()];
+    let known_roles = &[RoleId::Role0, RoleId::Proposer];
 
     for role in roles {
         if !known_roles.contains(role) {
@@ -619,7 +619,7 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report.contains("Unknown role found: RoleNumber(4)"));
+        assert!(report.contains("Unknown role found: RoleId(4)"));
     }
 
     #[test]

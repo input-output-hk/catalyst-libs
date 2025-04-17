@@ -81,3 +81,13 @@ impl Display for RoleId {
         write!(f, "{}", *self as u8)
     }
 }
+
+impl<'a, C> minicbor::Decode<'a, C> for RoleId {
+    fn decode(d: &mut minicbor::Decoder<'a>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
+        let v = <u8 as minicbor::Decode<'a, C>>::decode(d, ctx)?;
+
+        RoleId::try_from(v).map_err(|_| {
+            minicbor::decode::Error::message(format!("Unknown role found: RoleId({v})"))
+        })
+    }
+}
