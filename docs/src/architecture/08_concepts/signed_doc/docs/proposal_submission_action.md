@@ -39,26 +39,42 @@ The payload is a fixed format.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+No validation is required beyond as defined by:
+
+* [metadata](#metadata)
+* [payload](#payload)
+* [signers](#signers)
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+A proposal with [`collaborators`](../metadata.md#collaborators) will not be shown as having a confirmed collaborator,
+unless there exists a `draft` or `final` proposal submission from that collaborator.
+
+Any document that lists a collaborator should be highlighted to that collaborator so
+they can take appropriate action, such as:
+
+* Confirm they are a collaborator by submitting this document as `draft`
+* Agree to being a collaborator on the final submission by submitting this document as `final`
+* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`
+* Remove themselves permanently as a collaborator by publishing a new version with them removed.
+
+To eliminate the necessity for collaborators to accept collaboration on every version,
+they will be considered as agreeing to be a collaborator on any version of the document
+that lists them, if their latest submission is `draft` or `final`.
+
+If their latest submission on a document is `hide` they should be considered to not
+have agreed to be a collaborator.
+
+*NOTE* `final` status ONLY applies to the exactly referenced document and version.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+A Submitted proposal with collaborators *MUST* have
+a `final` submission by *ALL* listed [`collaborators`](../metadata.md#collaborators).
+If any `collaborator` has not submitted a `final` submission by the deadline, then the proposal
+is not considered `final` and will not be considered in the category it was being submitted to.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -124,18 +140,40 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-   `[[DocumentID, DocumentVer, DocumentHash],...]`
 
-* `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
-* `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
-  It ensures that the intended referenced document is the one used, and there has been no substitution.
-  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
+```cddl
+[ 1* [ document_id, document_ver, document_locator ] ]
+```
+
+If a reference is defined as required, there must be at least 1 reference specified.
+Some documents allow multiple references, and they are documented as required.
+
+* `document_id` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
+* `document_ver` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
+* `document_locator` is a content unique locator for the document.
+  This serves two purposes.
+
+  1. It ensures that the document referenced by an ID/Version is not substituted.
+     In other words, that the document intended to be referenced, is actually referenced.
+  2. Allow the document to be unambiguously located in decentralized storage systems.
+
+  There can be any number of Document Locations in any reference.
+  The currently defined locations are:
+
+  * `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+  * Others may be added when further storage mechanisms are defined.
+
+  The value set here does not guarantee that the document is actually stored.
+  It only defines that if it were stored, this is the identifier that
+  that is required to retrieve it.
 
 #### Validation
 
-Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.
-The calculated Hash of the Referenced Document **MUST** match the Hash in the reference.
+The following must be true for a valid reference:
+
+* The Referenced Document **MUST** Exist
+* Every value in the `document_locator` must consistently reference the exact same document.
+* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
 ### [`category_id`](../metadata.md#category_id)
 <!-- markdownlint-disable MD033 -->
@@ -167,9 +205,10 @@ The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
 States:
 
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
-* `draft` : Reverses the previous `final` state for a signer.
+* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-         `hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.
+        `hide` is only actioned if sent by the author,
+       for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->
@@ -241,7 +280,9 @@ New versions of this document may be published by:
 
 * First Published Version
 
+[CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

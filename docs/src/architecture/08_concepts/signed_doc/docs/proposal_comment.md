@@ -2,8 +2,6 @@
 
 ## Description
 
-## Proposal Comment Document
-
 A Proposal Comment is a document which comments on a referenced Proposal document.
 
 Proposal Comments themselves are intentionally general, however they may be
@@ -23,6 +21,7 @@ The payload of a proposal comment is controlled by its template.
   "template": Proposal Comment Template
   "reply": Proposal Comment (Optional)
   "section": Section Reference
+  "revocations": Version Revocations
   "brand_id": Brand Parameters (Optional)
   "campaign_id": Campaign Parameters (Optional)
   "category_id": Category Parameters (Optional)
@@ -39,26 +38,28 @@ The payload of a proposal comment is controlled by its template.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+A comment which is a reply *MUST* reference the same document.
+It may reference a different version of the document.
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+Comments are valid for any version of the document, however
+as comments refer to a specific version of a document, they may
+lose context when displayed against the latest version of a document.
+In these cases, the front end should clearly show that a comment was on
+a different version of the document.
+
+If the front end posts a reply to another comment:
+
+* it should reference the comment being replied to in the [`reply`](../metadata.md#reply) field.
+* The [`ref`](../metadata.md#ref) field must refer to the same document, but can be a different version.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+The backend will only validate the document being referenced exists,
+and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.md#reply) metadata fields is correct.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -123,18 +124,40 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
-* `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
-* `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
-  It ensures that the intended referenced document is the one used, and there has been no substitution.
-  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
+```cddl
+[ 1* [ document_id, document_ver, document_locator ] ]
+```
+
+If a reference is defined as required, there must be at least 1 reference specified.
+Some documents allow multiple references, and they are documented as required.
+
+* `document_id` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
+* `document_ver` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
+* `document_locator` is a content unique locator for the document.
+  This serves two purposes.
+
+  1. It ensures that the document referenced by an ID/Version is not substituted.
+     In other words, that the document intended to be referenced, is actually referenced.
+  2. Allow the document to be unambiguously located in decentralized storage systems.
+
+  There can be any number of Document Locations in any reference.
+  The currently defined locations are:
+
+  * `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+  * Others may be added when further storage mechanisms are defined.
+
+  The value set here does not guarantee that the document is actually stored.
+  It only defines that if it were stored, this is the identifier that
+  that is required to retrieve it.
 
 #### Validation
 
-Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.
-The calculated Hash of the Referenced Document **MUST** match the Hash in the reference.
+The following must be true for a valid reference:
+
+* The Referenced Document **MUST** Exist
+* Every value in the `document_locator` must consistently reference the exact same document.
+* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
 ### [`template`](../metadata.md#template)
 <!-- markdownlint-disable MD033 -->
@@ -180,6 +203,33 @@ A Reference to the original document, or the comment being replied to.
 
 For a non-reply this must be a valid section reference into the referenced document.
 For a reply, this must be a valid section reference into the comment being replied to.
+
+### [`revocations`](../metadata.md#revocations)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Version Revocations](../metadata.md#version-revocations) |
+<!-- markdownlint-enable MD033 -->
+A document may include a list of any prior versions which are considered to be revoked.
+Only the revocation list in the latest version of the document applies.
+Revoked documents are flagged as no longer valid, and should not be displayed.
+As a special case, if the revocations are set to `true` then all versions of the document
+are revoked, including the latest document.
+
+In this case, when the latest document is revoked, the payload may be empty.
+Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
+and its payload is to be assumed to be invalid.
+
+This allows for an entire document and any/all published versions to be revoked.
+A new version of the document that is published after this, may reinstate prior
+document versions, by not listing them as revoked.
+However, any document where revocations was set `true` can never be reinstated.
+
+#### Validation
+
+If the field is `true` the payload may be absent or invalid.
+Such documents may never be submitted.
 
 ### [`brand_id`](../metadata.md#brand_id)
 <!-- markdownlint-disable MD033 -->
@@ -301,7 +351,9 @@ New versions of this document may be published by:
 
 * First Published Version
 
+[CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

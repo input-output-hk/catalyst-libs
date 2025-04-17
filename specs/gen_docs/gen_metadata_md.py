@@ -13,7 +13,7 @@ def get_cddl(name, defs, found=[]):
             next_cddl, found = get_cddl(requires, defs, found)
             found.append(requires)
             this_cddl += next_cddl
-    this_cddl += f"{name} = {defs[name]['def']}\n"
+    this_cddl = f"{name} = {defs[name]['def']}\n{this_cddl}"
 
     return this_cddl, found
 
@@ -28,7 +28,7 @@ def metadata_types(doc_defs):
     metadata_types = ""
 
     for metadatum in metadata:
-        cddl_def, _ = get_cddl(metadata[metadatum]["cddl"], cddl)
+        cddl_def, _ = get_cddl(metadata[metadatum]["cddl"], cddl, [])
         cddl_def = cddl_def.strip()
         # TODO: We could check if the `cddl_def` is actually valid CDDL here.
         metadata_types += f"""

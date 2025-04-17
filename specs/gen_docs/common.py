@@ -128,7 +128,7 @@ def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0) -> str
     # make sure every field is listed in the ordering
     for field_name in fields:
         if field_name not in order:
-            order += field_name
+            order.append(field_name)
 
     field_display = ""
     for field_name in order:

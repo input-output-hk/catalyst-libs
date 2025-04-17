@@ -24,16 +24,14 @@
       "def": "text",
       "requires": []
     },
+    "cid": {
+      "def": "6.42(bytes) ; TODO: add size limits if possible",
+      "requires": []
+    },
     "collaborators": {
       "def": "[ * catalyst_id ]",
       "requires": [
         "catalyst_id"
-      ]
-    },
-    "document_hash": {
-      "def": "blake2b_256",
-      "requires": [
-        "blake2b_256"
       ]
     },
     "document_id": {
@@ -42,12 +40,18 @@
         "uuid_v7"
       ]
     },
+    "document_locator": {
+      "def": "{ \"cid\" => cid }",
+      "requires": [
+        "cid"
+      ]
+    },
     "document_ref": {
-      "def": "[ 1* [ document_id, document_ver, document_hash ] ]",
+      "def": "[ 1* [ document_id, document_ver, document_locator ] ]",
       "requires": [
         "document_id",
         "document_ver",
-        "document_hash"
+        "document_locator"
       ]
     },
     "document_type": {
@@ -65,6 +69,12 @@
     "json_pointer": {
       "def": "text",
       "requires": []
+    },
+    "revocations": {
+      "def": "[ * document_ver ] / true ",
+      "requires": [
+        "document_ver"
+      ]
     },
     "section_ref": {
       "def": "json_pointer",
@@ -214,11 +224,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -226,6 +236,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -354,11 +371,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -366,6 +383,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -494,11 +518,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -506,6 +530,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -631,7 +662,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -640,7 +671,7 @@
           "type": [
             "Proposal Comment"
           ],
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -648,6 +679,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -784,11 +822,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -796,6 +834,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -850,6 +895,10 @@
     "Proposal": {
       "authors": {
         "Steven Johnson": "steven.johnson@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "Before accepting a new proposal to be published, the backend will ensure:\n\n* The document has been signed by a valid author or collaborator.\n* That the signer of the document was a registered proposer\n* That the document was signed with their proposers key\n* That all listed `collaborators` are registered as proposers.\n* That the document has been signed validly according to the [validation](#validation) rules.",
+        "front_end": "As validity of the documents is currently enforced by the backend, \nthe front end does not need to validate the document has been signed\ncorrectly.\nIt may do so, but it is not required."
       },
       "description": "A Proposal is a document which describes a proposed solution or project to\naddress the criteria of a category within a campaign.\n\nThe proposal itself is a draft document, it is not submitted for consideration\nunless a `Proposal Submission Action` is submitted which references it.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
       "headers": {
@@ -938,11 +987,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -950,6 +999,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1000,6 +1056,7 @@
       "type": [
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
       ],
+      "validation": "The first version of a Proposal *MUST* be signed by the original author.\nIt may optionally be co-signed by any of the listed `collaborators`.\nIt may not be signed by anyone else.\n\nSubsequent Versions can be signed/co-signed by either the Original Author of the first version,\nOR any of the listed `collaborators` in the immediately previous version.\nThis allows any collaborator to update the next version of a document, provided they are still a collaborator.\nIt is valid for a proposal to be signed by a collaborator \nwho is no longer listed as in the `collaborators`\nof the document they are signing, provided they are listed as a collaborator in the immediately previous document version.\nThis allows for a collaborator to make an update to the document which removes themselves\nfrom the `collaborators` list.\n\nAll versions of the document *MUST* list the author as the original author.\nThe Author can not be changed by any document revision.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -1010,7 +1067,11 @@
     },
     "Proposal Comment": {
       "authors": {},
-      "description": "## Proposal Comment Document\n\nA Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
+      "business_logic": {
+        "back_end": "The backend will only validate the document being referenced exists, \nand the integrity of the `ref` and `reply` metadata fields is correct.",
+        "front_end": "Comments are valid for any version of the document, however\nas comments refer to a specific version of a document, they may\nlose context when displayed against the latest version of a document.\nIn these cases, the front end should clearly show that a comment was on\na different version of the document.\n\nIf the front end posts a reply to another comment: \n\n* it should reference the comment being replied to in the `reply` field. \n* The `ref` field must refer to the same document, but can be a different version."
+      },
+      "description": "A Proposal Comment is a document which comments on a referenced Proposal document.\n\nProposal Comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1100,14 +1161,14 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1118,6 +1179,13 @@
           "required": "optional",
           "type": "Proposal Comment",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "optional",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1168,6 +1236,7 @@
         "b679ded3-0e7c-41ba-89f8-da62a17898ea",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
       ],
+      "validation": "A comment which is a reply *MUST* reference the same document.\nIt may reference a different version of the document.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -1253,11 +1322,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1265,6 +1334,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1408,11 +1484,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1420,6 +1496,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1558,11 +1641,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1570,6 +1653,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1703,14 +1793,14 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1718,6 +1808,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1773,6 +1870,10 @@
     },
     "Proposal Submission Action": {
       "authors": {},
+      "business_logic": {
+        "back_end": "A Submitted proposal with collaborators *MUST* have \na `final` submission by *ALL* listed `collaborators`.\nIf any `collaborator` has not submitted a `final` submission by the deadline, then the proposal \nis not considered `final` and will not be considered in the category it was being submitted to.",
+        "front_end": "A proposal with `collaborators` will not be shown as having a confirmed collaborator,\nunless there exists a `draft` or `final` proposal submission from that collaborator.\n\nAny document that lists a collaborator should be highlighted to that collaborator so\nthey can take appropriate action, such as:\n\n* Confirm they are a collaborator by submitting this document as `draft`\n* Agree to being a collaborator on the final submission by submitting this document as `final`\n* Hide themselves from the collaborators list but do not remove themselves by submitting `hide`\n* Remove themselves permanently as a collaborator by publishing a new version with them removed.\n\nTo eliminate the necessity for collaborators to accept collaboration on every version, \nthey will be considered as agreeing to be a collaborator on any version of the document\nthat lists them, if their latest submission is `draft` or `final`.\n\nIf their latest submission on a document is `hide` they should be considered to not\nhave agreed to be a collaborator.\n\n*NOTE* `final` status ONLY applies to the exactly referenced document and version."
+      },
       "description": "## Proposal Submission Action\n\nA Proposal Submission Action is a document which can attempt to either submit a \nparticular version of a proposal into a campaign, or withdraw it.\n\nThe last action on the document ts the action which takes effect at the deadline.\n\nFor multiple collaborators, multiple submission actions can be posted independently, \nbut none of them will take effect until ALL collaborators have posted equivalent actions.\n\nFor example, three collaborators Alice/Bob/Claire can each post one submission action\nfor the same document.  \nUnless they all submit the same version of the proposal\nthe proposal will not be seen as submitted.\n\nThe payload is a fixed format.",
       "headers": {
         "content type": {
@@ -1848,14 +1949,14 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": true,
           "required": "yes",
           "type": "Proposal",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1863,6 +1964,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -1894,7 +2002,7 @@
         }
       },
       "payload": {
-        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, for a collaborator its synonymous with `draft`.",
+        "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
         "schema": {
           "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -1950,6 +2058,7 @@
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
         "78927329-cfd9-4ea1-9c71-0e019b126a65"
       ],
+      "validation": "No validation is required beyond as defined by:\n\n* [metadata](#metadata) \n* [payload](#payload)\n* [signers](#signers)",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -2041,11 +2150,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2053,6 +2162,13 @@
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
@@ -2115,7 +2231,9 @@
     }
   },
   "documentationLinks": {
+    "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+    "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
     "JSON Schema": "https://json-schema.org/draft-07",
     "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
     "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
@@ -2143,10 +2261,12 @@
   "linkAKA": {
     "BROTLI": "RFC7932",
     "CBOR": "RFC8949",
+    "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
     "CDDL": "RFC8610",
     "COSE": "RFC9052",
     "COSE Header Parameters": "RFC9052-HeaderParameters",
     "COSE Sign": "RFC9052-CoseSign",
+    "IPFS CID": "IPFS-CID",
     "JSON": "RFC8259",
     "RFC9165 - CDDL Additional Controls": "RFC9165",
     "URI": "RFC3986",
@@ -2220,7 +2340,7 @@
       "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
     },
     "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\t`[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.",
+      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
       "exclusive": null,
       "format": "Document Reference",
       "linked_refs": null,
@@ -2241,7 +2361,7 @@
         "Category Parameters",
         "Election Parameters"
       ],
-      "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+      "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
     },
     "reply": {
       "description": "Reference to a Comment document type being referred to.",
@@ -2254,6 +2374,13 @@
         "Proposal Comment"
       ],
       "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+    },
+    "revocations": {
+      "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+      "exclusive": null,
+      "format": "Version Revocations",
+      "required": "excluded",
+      "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
     },
     "section": {
       "description": "A Reference to the original document, or the comment being replied to.",
@@ -2316,6 +2443,10 @@
     "UUIDv7": {
       "cddl": "uuid_v7",
       "description": "Version 7 formatted UUID"
+    },
+    "Version Revocations": {
+      "cddl": "revocations",
+      "description": "A list of all versions of this document which are 'revoked'."
     }
   },
   "metadata_order": [
@@ -2327,6 +2458,7 @@
     "reply",
     "section",
     "collaborators",
+    "revocations",
     "brand_id",
     "campaign_id",
     "category_id",
