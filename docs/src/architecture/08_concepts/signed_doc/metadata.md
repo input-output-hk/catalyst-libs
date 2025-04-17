@@ -23,12 +23,12 @@ A document reference identifier
 #### [CDDL][RFC8610] Specification
 
 ```cddl
-document_ref = [ 1* [ document_id, document_ver, document_hash ] ]
+document_ref = [ 1* [ document_id, document_ver, document_locator ] ]
 document_id = uuid_v7
 uuid_v7 = 6.37(bytes .size 16)
 document_ver = uuid_v7
-document_hash = { "cid" => cid }
-cid = text
+document_locator = { "cid" => cid }
+cid = 6.42(bytes) ; TODO: add size limits if possible
 ```
 
 ### Document Type
@@ -154,22 +154,40 @@ Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
 This is an Array of the format:
-  `[[DocumentID, DocumentVer, DocumentHash],...]`
 
-* `DocumentID` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
-* `DocumentVer` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `DocumentHash` is the Unique identifier for a document based on its contents.
-  Initially, this is designed to be a [IPFS-CID].
-  In future iterations, there could be other `DocumentHash` types which support
-  alternative decentralized storage means.
-  It ensures that the intended referenced document is the one used, and there has been no substitution.
-  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
-  Also allows the document contents to be easily located and sourced from decentralized storage.
+```cddl
+[ 1* [ document_id, document_ver, document_locator ] ]
+```
+
+If a reference is defined as required, there must be at least 1 reference specified.
+Some documents allow multiple references, and they are documented as required.
+
+* `document_id` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
+* `document_ver` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
+* `document_locator` is a content unique locator for the document.
+  This serves two purposes.
+
+  1. It ensures that the document referenced by an ID/Version is not substituted.
+     In other words, that the document intended to be referenced, is actually referenced.
+  2. Allow the document to be unambiguously located in decentralized storage systems.
+
+  There can be any number of Document Locations in any reference.
+  The currently defined locations are:
+
+  * `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+  * Others may be added when further storage mechanisms are defined.
+
+  The value set here does not guarantee that the document is actually stored.
+  It only defines that if it were stored, this is the identifier that
+  that is required to retrieve it.
 
 #### Validation
 
-Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.
-The calculated Hash of the Referenced Document **MUST** match the Hash in the reference.
+The following must be true for a valid reference:
+
+* The Referenced Document **MUST** Exist
+* Every value in the `document_locator` must consistently reference the exact same document.
+* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
 ### `template`
 <!-- markdownlint-disable MD033 -->
@@ -340,6 +358,7 @@ optional for the referenced document.
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
+[CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4

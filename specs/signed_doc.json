@@ -25,7 +25,7 @@
       "requires": []
     },
     "cid": {
-      "def": "text",
+      "def": "6.42(bytes) ; TODO: add size limits if possible",
       "requires": []
     },
     "collaborators": {
@@ -34,24 +34,24 @@
         "catalyst_id"
       ]
     },
-    "document_hash": {
-      "def": "{ \"cid\" => cid }",
-      "requires": [
-        "cid"
-      ]
-    },
     "document_id": {
       "def": "uuid_v7",
       "requires": [
         "uuid_v7"
       ]
     },
+    "document_locator": {
+      "def": "{ \"cid\" => cid }",
+      "requires": [
+        "cid"
+      ]
+    },
     "document_ref": {
-      "def": "[ 1* [ document_id, document_ver, document_hash ] ]",
+      "def": "[ 1* [ document_id, document_ver, document_locator ] ]",
       "requires": [
         "document_id",
         "document_ver",
-        "document_hash"
+        "document_locator"
       ]
     },
     "document_type": {
@@ -228,11 +228,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -375,11 +375,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -522,11 +522,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -666,7 +666,7 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -675,7 +675,7 @@
           "type": [
             "Proposal Comment"
           ],
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -826,11 +826,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -991,11 +991,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1165,14 +1165,14 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1326,11 +1326,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1488,11 +1488,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1645,11 +1645,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1797,14 +1797,14 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
           "type": "Proposal",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -1953,14 +1953,14 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": true,
           "required": "yes",
           "type": "Proposal",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2154,11 +2154,11 @@
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
-          "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
@@ -2235,6 +2235,7 @@
     }
   },
   "documentationLinks": {
+    "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
     "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
     "JSON Schema": "https://json-schema.org/draft-07",
@@ -2264,10 +2265,12 @@
   "linkAKA": {
     "BROTLI": "RFC7932",
     "CBOR": "RFC8949",
+    "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
     "CDDL": "RFC8610",
     "COSE": "RFC9052",
     "COSE Header Parameters": "RFC9052-HeaderParameters",
     "COSE Sign": "RFC9052-CoseSign",
+    "IPFS CID": "IPFS-CID",
     "JSON": "RFC8259",
     "RFC9165 - CDDL Additional Controls": "RFC9165",
     "URI": "RFC3986",
@@ -2341,7 +2344,7 @@
       "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
     },
     "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n  `[[DocumentID, DocumentVer, DocumentHash],...]`\n\n* `DocumentID` is the UUIDv7 ID of the Document being referenced.\n* `DocumentVer` is the UUIDv7 Version of the Document being referenced.\n* `DocumentHash` is the Unique identifier for a document based on its contents.\n  Initially, this is designed to be a IPFS-CID.\n  In future iterations, there could be other `DocumentHash` types which support\n  alternative decentralized storage means.\n  It ensures that the intended referenced document is the one used, and there has been no substitution.\n  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.\n  Also allows the document contents to be easily located and sourced from decentralized storage.",
+      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
       "exclusive": null,
       "format": "Document Reference",
       "linked_refs": null,
@@ -2362,7 +2365,7 @@
         "Category Parameters",
         "Election Parameters"
       ],
-      "validation": "Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.\nThe calculated Hash of the Referenced Document **MUST** match the Hash in the reference. "
+      "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
     },
     "reply": {
       "description": "Reference to a Comment document type being referred to.",

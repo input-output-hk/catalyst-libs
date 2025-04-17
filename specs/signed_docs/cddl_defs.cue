@@ -34,18 +34,18 @@ cddlDefinitions: #cddlDefinitions & {
 		requires: ["uuid_v7"]
 	}
 	"cid": {
-		def: "text"
+		def: "6.42(bytes) ; TODO: add size limits if possible"
 	}
 	"generic_future_hash": {
 		def: "[uint, text / bytes]"
 	}
-	"document_hash": {
+	"document_locator": {
 		def: "{ \"cid\" => cid }"
 		requires: ["cid"]
 	}
 	"document_ref": {
-		def: "[ 1* [ document_id, document_ver, document_hash ] ]"
-		requires: ["document_id", "document_ver", "document_hash"]
+		def: "[ 1* [ document_id, document_ver, document_locator ] ]"
+		requires: ["document_id", "document_ver", "document_locator"]
 	}
 	"json_pointer": {
 		def: "text"
