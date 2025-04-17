@@ -3,7 +3,7 @@
 use displaydoc::Display;
 use thiserror::Error;
 
-use super::{key_rotation::KeyRotationError, role_index::RoleIndexError};
+use super::{key_rotation::KeyRotationError, role_index::RoleIdError};
 
 /// Errors that can occur when parsing a `KidUri`
 #[derive(Display, Error, Debug)]
@@ -25,7 +25,7 @@ pub enum IdUriError {
     /// Role Index is invalid
     InvalidRole,
     /// Role Index is not encoded correctly
-    InvalidRoleIndex(#[from] RoleIndexError),
+    InvalidRoleId(#[from] RoleIdError),
     /// Role Key Rotation is invalid
     InvalidRotation,
     /// Role Key Rotation is not encoded correctly
