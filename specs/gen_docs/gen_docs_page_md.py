@@ -7,9 +7,7 @@ from gen_docs_relationship_diagram_d2 import gen_doc_d2
 
 
 def header_parameter_summary(name, doc_defs: dict) -> str:
-    """
-    Generate concrete Cose header parameter settings for a specific document.
-    """
+    """Generate concrete Cose header parameter settings for a specific document."""
     headers = doc_defs["docs"][name]["headers"]
     header_docs = ""
     for header in headers:
@@ -22,9 +20,7 @@ def header_parameter_summary(name, doc_defs: dict) -> str:
 
 
 def metadata_summary(name, doc_defs: dict) -> str:
-    """
-    Generate concrete Metadata summary for a specific document.
-    """
+    """Generate concrete Metadata summary for a specific document."""
     return metadata_fields(doc_defs, name, depth=1)
 
 
@@ -37,9 +33,7 @@ def uri_validator(uri: str):
 
 
 def document_payload(name: str, doc_defs: dict) -> str:
-    """
-    Generate Payload Documentation
-    """
+    """Generate Payload Documentation"""
     if "payload" not in doc_defs["docs"][name]:
         return "TODO"
 
@@ -67,9 +61,7 @@ def document_payload(name: str, doc_defs: dict) -> str:
 
 
 def document_signers(name: str, doc_defs: dict) -> str:
-    """
-    Generate documentation about who may sign this document.s
-    """
+    """Generate documentation about who may sign this document.s"""
     signers = doc_defs["docs"][name]["signers"]
     signers_doc = ""
 
@@ -91,10 +83,7 @@ def document_signers(name: str, doc_defs: dict) -> str:
 
 
 def gen_docs_page_md(name: str, doc_defs: dict) -> str:
-    """
-    Generate an individual Documents Specification Page file from the definitions.
-    """
-
+    """Generate an individual Documents Specification Page file from the definitions."""
     doc_d2 = gen_doc_d2(name, doc_defs, depth=1, stand_alone=True).strip()
     todo_msg = """
 This specification outlines the required definitions for the current features. 

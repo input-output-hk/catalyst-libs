@@ -21,9 +21,7 @@ title: |~md
 
 
 def gen_doc_d2(doc: str, doc_defs: dict, depth=0, stand_alone=False) -> str:
-    """
-    Generate an individual d2 table for an individual document.
-    """
+    """Generate an individual d2 table for an individual document."""
     ref_links = ""
 
     doc_data = doc_defs["docs"][doc]
@@ -79,19 +77,14 @@ def gen_doc_d2(doc: str, doc_defs: dict, depth=0, stand_alone=False) -> str:
 
 
 def gen_doc_diagram(doc, doc_defs: dict) -> str:
-    """
-    Generate a D2 Relationship diagram for a single document.
-    """
+    """Generate a D2 Relationship diagram for a single document."""
     doc_table = gen_doc_d2(doc, doc_defs)
 
     return doc_config + doc_table
 
 
 def gen_docs_relationship_diagram(doc_defs: dict) -> str:
-    """
-    Generate a D2 Relationship diagram for all documents and their references.
-    """
-
+    """Generate a D2 Relationship diagram for all documents and their references."""
     copyright = f"""
 copyright: |~md
   {insert_copyright(doc_defs, changelog=False)}

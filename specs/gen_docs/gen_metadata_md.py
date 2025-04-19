@@ -3,9 +3,7 @@ from common import insert_copyright, metadata_fields
 
 
 def get_cddl(name, defs, found=[]):
-    """
-    Get the CDDL for a metadatum.
-    """
+    """Get the CDDL for a metadatum."""
     this_cddl = ""
     # Add required definitions to this one (recursive)
     for requires in defs[name]["requires"]:
@@ -19,9 +17,7 @@ def get_cddl(name, defs, found=[]):
 
 
 def metadata_types(doc_defs):
-    """
-    Generate the metadata types documentation.
-    """
+    """Generate the metadata types documentation."""
     metadata = doc_defs["metadataFormats"]
     cddl = doc_defs["cddlDefinitions"]
 
@@ -47,9 +43,7 @@ def metadata_types(doc_defs):
 
 
 def gen_metadata_md(doc_defs):
-    """
-    Generate a `metadata.md` file from the definitions.
-    """
+    """Generate a `metadata.md` file from the definitions."""
     return f"""
 # Metadata Fields
 

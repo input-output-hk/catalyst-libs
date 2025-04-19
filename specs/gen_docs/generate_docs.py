@@ -4,33 +4,22 @@
 
 import argparse
 import difflib
-import json
 import re
+import sys
 from pathlib import Path
 
 from common import doc_ref_link, metadata_field_link, metadata_format_link
 from gen_docs_page_md import gen_docs_page_md
-from gen_docs_relationship_diagram_d2 import gen_docs_relationship_diagram
-from gen_metadata_md import gen_metadata_md
-from gen_spec_index import gen_spec_index
-from gen_spec_md import gen_spec_md
-from gen_types_md import gen_types_md
+from gen_spec_index import SpecIndex
+from gen_spec_md import SpecMd
+from signed_doc_spec import SignedDocSpec
 
 SIGNED_DOCS_SPECS = "../signed_doc.json"
 SIGNED_DOCS_PAGES_DIR = "../../docs/src/architecture/08_concepts/catalyst_docs"
 
 
-def get_signed_doc_data(spec_file: str) -> dict:
-    """
-    Load the Signed Document Data from its json file.
-    """
-    with open(spec_file, "r") as f:
-        return json.load(f)
-
-
 def remove_tabs(text: str, tabstop: int = 4) -> str:
-    """
-    Replace tabs in the input text with spaces so that the text aligns on tab stops.
+    """Replace tabs in the input text with spaces so that the text aligns on tab stops.
 
     Args:
         text (str): The input text containing tabs.
@@ -38,6 +27,7 @@ def remove_tabs(text: str, tabstop: int = 4) -> str:
 
     Returns:
         str: Text with tabs replaced by spaces, aligned at each tab stop.
+
     """
     # Create a regex pattern to match any tab character
     pattern = "\t"
@@ -54,95 +44,18 @@ def remove_tabs(text: str, tabstop: int = 4) -> str:
 
 
 def strip_end_whitespace(s: str) -> str:
-    """
-    Strip all whitespace from the end of any lines.
-    """
+    """Strip all whitespace from the end of any lines."""
     lines = s.splitlines()
     stripped_lines = [line.rstrip() for line in lines]
     return "\n".join(stripped_lines).strip() + "\n"
 
 
-def add_doc_ref_links(
-    file_data: str, doc_data: dict, depth: int = 0, primary_source=False
-) -> str:
-    """
-    Add Individual Document Reference cross reference links to the document.
-    All Document References in text must be as `<name>` or they will not be linked.
-    """
-    lines = file_data.splitlines()
-    file_data = ""
-    for line in lines:
-        if not primary_source or not line.startswith("#"):
-            for field_name in doc_data["docs"]:
-                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
-                replacement = f"\\1{doc_ref_link(field_name, depth)}\\2"
-                line = re.sub(
-                    fieldNameRegex,
-                    replacement,
-                    line,
-                    flags=re.IGNORECASE | re.MULTILINE,
-                )
-        file_data += f"{line}\n"
-
-    return file_data
-
-
-def add_metadata_links(
-    file_data: str, doc_data: dict, depth: int = 0, primary_source=False
-) -> str:
-    """
-    Add metadata field documentation cross reference links to the document.
-    All metadata fields in text must be as `<name>` or they will not be linked.
-    """
-    lines = file_data.splitlines()
-    file_data = ""
-    for line in lines:
-        if not primary_source or not line.startswith("#"):
-            for field_name in doc_data["metadata"]:
-                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
-                replacement = f"\\1{metadata_field_link(field_name, depth)}\\2"
-                line = re.sub(
-                    fieldNameRegex,
-                    replacement,
-                    line,
-                    flags=re.IGNORECASE | re.MULTILINE,
-                )
-        file_data += f"{line}\n"
-
-    return file_data
-
-
-def add_metadata_format_links(
-    file_data: str, doc_data: dict, depth: int = 0, primary_source=False
-) -> str:
-    """
-    Add metadata field documentation cross reference links to the document.
-    All metadata fields in text must be as `<name>` or they will not be linked.
-    """
-    lines = file_data.splitlines()
-    file_data = ""
-    for line in lines:
-        if not primary_source or not line.startswith("#"):
-            for field_name in doc_data["metadataFormats"]:
-                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
-                replacement = f"\\1{metadata_format_link(field_name, depth)}\\2"
-                line = re.sub(
-                    fieldNameRegex,
-                    replacement,
-                    line,
-                    flags=re.IGNORECASE | re.MULTILINE,
-                )
-        file_data += f"{line}\n"
-
-    return file_data
-
-
 def code_block_aware_re_subn(
-    linkNameRegex, replacement, file_data: str
+    linkNameRegex,
+    replacement,
+    file_data: str,
 ) -> tuple[str, int]:
-    """
-    Do a multiline regex replacement, but ignore anything inside a code block.
-    """
+    """Do a multiline regex replacement, but ignore anything inside a code block."""
     lines = file_data.splitlines()
     new_file_data = ""
     cnt = 0
@@ -166,9 +79,89 @@ def code_block_aware_re_subn(
     return (new_file_data, cnt)
 
 
-def add_reference_links(file_data, doc_data) -> str:
+def add_doc_ref_links(
+    file_data: str,
+    doc_data: dict,
+    depth: int = 0,
+    primary_source=False,
+) -> str:
+    """Add Individual Document Reference cross reference links to the document.
+    All Document References in text must be as `<name>` or they will not be linked.
     """
-    Add Markdown reference links to the document.
+    lines = file_data.splitlines()
+    file_data = ""
+    for line in lines:
+        if not primary_source or not line.startswith("#"):
+            for field_name in doc_data["docs"]:
+                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
+                replacement = f"\\1{doc_ref_link(field_name, depth)}\\2"
+                line = re.sub(
+                    fieldNameRegex,
+                    replacement,
+                    line,
+                    flags=re.IGNORECASE | re.MULTILINE,
+                )
+        file_data += f"{line}\n"
+
+    return file_data
+
+
+def add_metadata_links(
+    file_data: str,
+    doc_data: dict,
+    depth: int = 0,
+    primary_source=False,
+) -> str:
+    """Add metadata field documentation cross reference links to the document.
+    All metadata fields in text must be as `<name>` or they will not be linked.
+    """
+    lines = file_data.splitlines()
+    file_data = ""
+    for line in lines:
+        if not primary_source or not line.startswith("#"):
+            for field_name in doc_data["metadata"]:
+                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
+                replacement = f"\\1{metadata_field_link(field_name, depth)}\\2"
+                line = re.sub(
+                    fieldNameRegex,
+                    replacement,
+                    line,
+                    flags=re.IGNORECASE | re.MULTILINE,
+                )
+        file_data += f"{line}\n"
+
+    return file_data
+
+
+def add_metadata_format_links(
+    file_data: str,
+    doc_data: dict,
+    depth: int = 0,
+    primary_source=False,
+) -> str:
+    """Add metadata field documentation cross reference links to the document.
+    All metadata fields in text must be as `<name>` or they will not be linked.
+    """
+    lines = file_data.splitlines()
+    file_data = ""
+    for line in lines:
+        if not primary_source or not line.startswith("#"):
+            for field_name in doc_data["metadataFormats"]:
+                fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
+                replacement = f"\\1{metadata_format_link(field_name, depth)}\\2"
+                line = re.sub(
+                    fieldNameRegex,
+                    replacement,
+                    line,
+                    flags=re.IGNORECASE | re.MULTILINE,
+                )
+        file_data += f"{line}\n"
+
+    return file_data
+
+
+def add_reference_links(file_data, doc_data) -> str:
+    """Add Markdown reference links to the document.
     Only Reference links found to be used by the document will be added.
     """
     links = doc_data["documentationLinks"]
@@ -177,7 +170,8 @@ def add_reference_links(file_data, doc_data) -> str:
     file_data = strip_end_whitespace(file_data)
 
     allLinkNames = sorted(
-        list(linkAka.keys()) + list(links.keys()), key=lambda x: -len(x)
+        list(linkAka.keys()) + list(links.keys()),
+        key=lambda x: -len(x),
     )
 
     actualLinksUsed = {}
@@ -225,10 +219,16 @@ def save_or_validate(
     if file_name.endswith(".md"):
         file_data = add_reference_links(file_data, doc_data)
         file_data = add_metadata_links(
-            file_data, doc_data, depth, primary_source=file_name == "metadata.md"
+            file_data,
+            doc_data,
+            depth,
+            primary_source=file_name == "metadata.md",
         )
         file_data = add_metadata_format_links(
-            file_data, doc_data, depth, primary_source=file_name == "metadata.md"
+            file_data,
+            doc_data,
+            depth,
+            primary_source=file_name == "metadata.md",
         )
         file_data = add_doc_ref_links(file_data, doc_data, depth)
 
@@ -271,9 +271,7 @@ def save_or_validate(
 
 
 def create_individual_doc_files(docs: dict, args: argparse.Namespace) -> bool:
-    """
-    Create Individual markdown files for all document types.
-    """
+    """Create Individual markdown files for all document types."""
     all_docs = docs["docs"]
 
     good = True
@@ -292,24 +290,25 @@ def create_individual_doc_files(docs: dict, args: argparse.Namespace) -> bool:
 
 
 def check_is_dir(base_path: Path) -> bool:
-    """
-    Check if the path exists, and is a directory.
+    """Check if the path exists, and is a directory.
+
     Otherwise try and make it.
     Fails if it exists and is NOT a directory.
     """
     # Check the base path exists and is a directory.
     if not base_path.exists():
         base_path.mkdir(parents=True)
-    else:
-        if not base_path.is_dir():
-            print("Base path is not a Directory")
-            return False
+    elif not base_path.is_dir():
+        print("Base path is not a Directory")
+        return False
     return True
 
 
 def init_parser() -> argparse.Namespace:
+    """Initialise and run the CLI parser."""
     parser = argparse.ArgumentParser(
-        description="Markdown Documentation Generator for the Signed Documentation Specifications"
+        description="Markdown Documentation Generator for the"
+        " Signed Documentation Specifications",
     )
     parser.add_argument("spec", help="Path to JSON Specification file")
     parser.add_argument(
@@ -329,9 +328,9 @@ def init_parser() -> argparse.Namespace:
 
     # Check the base path exists and is a directory.
     if not check_is_dir(Path(args.output)):
-        exit(1)
+        sys.exit(1)
     if not check_is_dir(Path(args.output, "docs")):
-        exit(1)
+        sys.exit(1)
 
     return args
 
@@ -341,24 +340,31 @@ if __name__ == "__main__":
     args = init_parser()
 
     # Get the compiled documentation json file
-    docs = get_signed_doc_data(args.spec)
+    spec = SignedDocSpec(args.spec)
+    docs = spec.data()
 
     # We start out hoping everything is OK.
     good = True
 
     # Generate each of the files.
-    good &= save_or_validate(".pages", gen_spec_index, args, docs)
-    good &= save_or_validate("spec.md", gen_spec_md, args, docs)
-    good &= save_or_validate("types.md", gen_types_md, args, docs)
-    good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)
-    good &= create_individual_doc_files(docs, args)
-    good &= save_or_validate(
-        "doc_relationships.d2", gen_docs_relationship_diagram, args, docs
-    )
+    good &= SpecIndex(args, spec).save_or_validate()
+    good &= SpecMd(args, spec).save_or_validate()
+
+    # good &= save_or_validate(".pages", gen_spec_index, args, docs)
+    # good &= save_or_validate("spec.md", gen_spec_md, args, docs)
+    # good &= save_or_validate("types.md", gen_types_md, args, docs)
+    # good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)
+    # good &= create_individual_doc_files(docs, args)
+    # good &= save_or_validate(
+    #    "doc_relationships.d2",
+    #    gen_docs_relationship_diagram,
+    #    args,
+    #    docs,
+    # )
 
     if not good:
         print("File Comparisons Failed, Documentation is not current.")
-        exit(1)
+        sys.exit(1)
 
     if args.generate:
         print("Documentation Generated Successfully.")

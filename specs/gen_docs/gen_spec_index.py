@@ -1,11 +1,14 @@
 # Generate the spec.md file
 
+from doc_generator import DocGenerator
 
-def gen_spec_index(doc_defs):
-    """
-    Generate a `.pages` file for the base specification files.
-    """
-    return """
+
+class SpecIndex(DocGenerator):
+    def __init__(self, args, spec):
+        super().__init__(args, spec, ".pages", flags=self.NO_FLAGS)
+
+    def generate(self):
+        self._filedata = """
 title: Catalyst Signed Document
 nav:
   - Specification: spec.md
@@ -13,3 +16,4 @@ nav:
   - Document Types: types.md
   - docs
 """
+        super().generate()

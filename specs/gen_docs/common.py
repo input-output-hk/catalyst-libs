@@ -2,25 +2,20 @@
 
 
 def get_latest_file_change(versions: list, doc_versions: list) -> str:
-    """
-    Get the largest document version date.
-    """
+    """Get the largest document version date."""
     latest_date = ""
     for ver in versions:
-        if ver["modified"] > latest_date:
-            latest_date = ver["modified"]
+        latest_date = max(latest_date, ver["modified"])
 
     if doc_versions is not None:
         for ver in doc_versions:
-            if ver["modified"] > latest_date:
-                latest_date = ver["modified"]
+            latest_date = max(latest_date, ver["modified"])
 
     return latest_date
 
 
 def insert_copyright(doc_data, changelog=True, document_name=None):
-    """
-    Generate a copyright notice into the given document data.
+    """Generate a copyright notice into the given document data.
 
     document_name: Name of the signed document we also get copyright info from.
     """
@@ -72,9 +67,7 @@ def insert_copyright(doc_data, changelog=True, document_name=None):
 
 
 def metadata_format_link(name: str, depth: int = 0):
-    """
-    Metadata Format link.
-    """
+    """Metadata Format link."""
     link = f"metadata.md#{name.lower().replace(' ', '-')}"
 
     while depth > 0:
@@ -85,9 +78,7 @@ def metadata_format_link(name: str, depth: int = 0):
 
 
 def doc_ref_link(name: str, depth: int = 0):
-    """
-    Metadata Document Reference link.
-    """
+    """Metadata Document Reference link."""
     link = name.lower().replace(" ", "_") + ".md"
 
     if depth == 0:
@@ -101,9 +92,7 @@ def doc_ref_link(name: str, depth: int = 0):
 
 
 def metadata_field_link(name: str, depth: int = 0):
-    """
-    Metadata Field link.
-    """
+    """Metadata Field link."""
     link = f"metadata.md#{name.lower().replace('`', '')}"
 
     while depth > 0:
@@ -114,9 +103,7 @@ def metadata_field_link(name: str, depth: int = 0):
 
 
 def metadata_fields(doc_data: dict, doc_name: str = None, depth: int = 0) -> str:
-    """
-    Display Metadata fields for the default set, or a specific document.
-    """
+    """Display Metadata fields for the default set, or a specific document."""
     field_title_level = "###"
     if doc_name is not None:
         fields = doc_data["docs"][doc_name]["metadata"]

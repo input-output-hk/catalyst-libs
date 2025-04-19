@@ -1,39 +1,40 @@
 # Generate the spec.md file
-from common import insert_copyright
+
+from doc_generator import DocGenerator
 
 
-def header_parameter_doc(header, doc_data):
-    """
-    Create documentation for a single cose header.
-    """
-    options = doc_data["cose_headers"][header]
-    content_types = doc_data["contentTypes"]
-    encoding_types = doc_data["encodingTypes"]
-    label = options.get("coseLabel")
-    custom_header = "***Custom Header***"
-    if not isinstance(label, str):
-        custom_header = ""
-    header_format = options["format"]
-    header_value = options.get("value", None)
-    header_format_display = f"{header_format}"
-    if isinstance(header_value, list) and len(header_value) > 0:
-        header_format_display += "\n  * Supported Values:"
-        for value in header_value:
-            value_entry = f"\n    * {value}"
-            value_data = None
-            if header_format == "IANA Media Type" and value in content_types:
-                value_data = content_types[value]
-            if header_format == "HTTP Content Encoding" and value in encoding_types:
-                value_data = encoding_types[value]
+class SpecMd(DocGenerator):
+    def __init__(self, args, spec):
+        super().__init__(args, spec, "spec.md")
+        print(self)
 
-            if value_data is not None:
-                value_entry += (
-                    f" : {value_data['description'].replace('\n', '\n      ')}"
-                )
+    def header_parameter_doc(self, header: str) -> str:
+        """Create documentation for a single cose header."""
+        options = self._spec.cose_header(header)
+        label = options.get("coseLabel")
 
-            header_format_display += value_entry
+        custom_header = "***Custom Header***"
+        if not isinstance(label, str):
+            custom_header = ""
+        header_format = options["format"]
+        header_value = options.get("value", None)
+        header_format_display = f"{header_format}"
+        if isinstance(header_value, list) and len(header_value) > 0:
+            header_format_display += "\n  * Supported Values:"
+            for value in header_value:
+                value_entry = f"\n    * {value}"
+                description = None
+                if header_format == "IANA Media Type":
+                    description = self._spec.content_type_description(value)
+                if header_format == "HTTP Content Encoding":
+                    description = self._spec.encoding_type_description(value)
 
-    return f"""
+                if description is not None:
+                    value_entry += f" : {description.replace('\n', '\n      ')}"
+
+                header_format_display += value_entry
+
+        return f"""
 #### {header}
 
 {options.get("description")}
@@ -41,33 +42,20 @@ def header_parameter_doc(header, doc_data):
 * Required : {options["required"]}
 * Cose Label : {label} {custom_header}
 * Format : {header_format_display}
-"""
-
-
-def cose_header_parameters(doc_data):
     """
-    Insert details about Cose header Parameters that are defined for use.
-    """
-    headers = doc_data["cose_headers"]
-    header_order = doc_data["cose_headers_order"]
-    # Make sure unordered headers get included in the documentation.
-    for header in headers:
-        if header not in header_order:
-            header_order += header
 
-    header_parameters_doc = ""
-    for header in header_order:
-        header_parameters_doc += header_parameter_doc(header, doc_data)
-        headers.pop(header)
+    def cose_header_parameters(self) -> str:
+        """Insert details about Cose header Parameters that are defined for use."""
+        headers = self._spec.all_cose_headers()
+        header_parameters_doc = ""
+        for header in headers:
+            header_parameters_doc += self.header_parameter_doc(header)
 
-    return header_parameters_doc.strip()
+        return header_parameters_doc.strip()
 
-
-def gen_spec_md(doc_defs):
-    """
-    Generate a `spec.md` file from the definitions.
-    """
-    return f"""
+    def generate(self):
+        """Generate a `spec.md` file from the definitions."""
+        self._filedata = f"""
 # Catalyst Signed Document Specification
 
 ## Abstract
@@ -102,7 +90,7 @@ All COSE Header Parameters are protected and
 *MUST* appear in the protected headers section of the document.
 The COSE header parameters defined and used by Catalyst Signed Documents are as follows:
 
-{cose_header_parameters(doc_defs)}
+{self.cose_header_parameters()}
 
 ### Metadata
 
@@ -131,5 +119,6 @@ used to sign the protected portion of the document.
 * Cose Label: 4
 * Format: UTF-8 encoded Catalyst ID
 
-{insert_copyright(doc_defs)}
+{self.insert_copyright()}
 """
+        super().generate()

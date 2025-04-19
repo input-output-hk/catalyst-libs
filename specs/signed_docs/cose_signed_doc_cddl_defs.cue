@@ -7,6 +7,18 @@ cddlDefinitions: #cddlDefinitions & {
 	"signed_document": {
 		def: "COSE_Sign"
 		requires: ["COSE_Sign"]
+		description: """
+			Catalyst Signed Document.
+
+			A specific implementation of a COSE-SIGN data objects
+			used by the Catalyst project to encapsulate and authenticate
+			documents used within the system.
+
+			See: \(documentationLinks."RFC9052-CoseSign")
+			"""
+		comment: """
+			Catalyst Signed Document data object.
+			"""
 	}
 	"COSE_Sign": {
 		def: """
@@ -17,34 +29,38 @@ cddlDefinitions: #cddlDefinitions & {
 			]		
 			"""
 		requires: ["COSE_Document_Headers", "COSE_Signature"]
+		comment: "COSE-SIGN data object"
 	}
 	"COSE_Document_Headers": {
 		def: """
 			(
 				protected : bstr .cbor COSE_Document_Header_Map,
-				unprotected : {} ; Unused
+				unprotected : {} ; Unused and ignored
 			)
 			"""
 		requires: ["COSE_Document_Header_Map"]
+		comment: "COSE Document headers (only protected headers are used)"
 	}
 	"COSE_Document_Header_Map": {
 		def: """
 			{
-				COSE_Document_Generic_Headers,
+				COSE_Document_Standard_Headers,
 				* label => values		
 			}
 			"""
-		requires: ["COSE_Document_Generic_Headers"]
+		requires: ["COSE_Document_Standard_Headers"]
+		comment: "COSE Document Header Map"
 	}
-	"COSE_Document_Generic_Headers": {
-		def: """
+	"COSE_Document_Standard_Headers": {
+		def:     """
 			(
 				\(cose_headers."content type".coseLabel) => \(_cddlContentTypes),  ; content type
 				?"\(cose_headers."content-encoding".coseLabel)" => [ *tstr ],  ; content encoding
 			)
 			"""
+		comment: "COSE Standard headers used by a Document"
 	}
-	"COSE_Headers": {
+	"COSE_Signature_Headers": {
 		def: """
 			(
 				protected : empty_or_serialized_map,
@@ -52,6 +68,7 @@ cddlDefinitions: #cddlDefinitions & {
 			)
 			"""
 		requires: ["COSE_empty_or_serialized_map", "COSE_header_map"]
+		comment: "COSE Document Signature headers (only protected headers are used)"
 	}
 	"COSE_empty_or_serialized_map": {
 		def: "bstr .cbor COSE_header_map / bstr .size 0"
@@ -77,7 +94,7 @@ cddlDefinitions: #cddlDefinitions & {
 				signature : bstr
 			]
 			"""
-		requires: ["COSE_Headers"]
+		requires: ["COSE_Signature_Headers"]
 	}
 	"COSE_Generic_Headers": {
 		def: """

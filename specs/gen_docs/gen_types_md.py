@@ -7,9 +7,7 @@ def uuid_as_cbor(uuid):
 
 
 def name_to_spec_link(name, ref=None):
-    """
-    Create a link to a document type, and an optional ref inside the document.
-    """
+    """Create a link to a document type, and an optional ref inside the document."""
     link = "./docs/" + name.lower().replace(" ", "_") + ".md"
     if ref is not None:
         link += f"#{ref}"
@@ -17,9 +15,7 @@ def name_to_spec_link(name, ref=None):
 
 
 def name_for_uuid(doc_types, uuid):
-    """
-    Get the name for a document base type, given its uuid
-    """
+    """Get the name for a document base type, given its uuid"""
     for k in doc_types:
         if doc_types[k] == uuid:
             return k
@@ -43,10 +39,7 @@ def types_as_cbor(docs, name):
 
 
 def doc_type_details(doc_data):
-    """
-    Generate a Document Type Detailed Summary from the Document Specifications Data
-    """
-
+    """Generate a Document Type Detailed Summary from the Document Specifications Data"""
     doc_types = doc_data["base_types"]
     docs = doc_data["docs"]
 
@@ -65,9 +58,7 @@ def doc_type_details(doc_data):
 
 
 def doc_type_summary(doc_data):
-    """
-    Generate a Document Base Type Summary from the Document Specifications Data
-    """
+    """Generate a Document Base Type Summary from the Document Specifications Data"""
     doc_types = doc_data["base_types"]
 
     doc_type_summary = """
@@ -84,9 +75,7 @@ def doc_type_summary(doc_data):
 
 
 def gen_types_md(doc_defs):
-    """
-    Generate a `types.md` file from the definitions.
-    """
+    """Generate a `types.md` file from the definitions."""
     return f"""
 # Document Types Table
 
