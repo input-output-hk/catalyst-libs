@@ -19,7 +19,7 @@ COSE_Sign = [
 
 ; COSE Document headers (only protected headers are used)
 COSE_Document_Headers = (
-  protected   : bstr .cbor COSE_Document_Header_Map / bstr .size 0,
+  protected   : bstr .cbor COSE_Document_Header_Map,
   unprotected : { COSE_Generic_Headers } ; Unused and ignored
 )
 

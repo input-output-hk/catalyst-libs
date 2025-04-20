@@ -48,7 +48,7 @@ cddlDefinitions: #cddlDefinitions & {
 		]
 		def:     """
 			(
-			  protected   : bstr .cbor \(requires[0]) / bstr .size 0,
+			  protected   : bstr .cbor \(requires[0]),
 			  unprotected : { \(requires[1]) } ; Unused and ignored
 			)
 			"""

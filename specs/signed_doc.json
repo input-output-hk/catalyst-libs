@@ -26,7 +26,7 @@
     },
     "COSE_Document_Headers": {
       "comment": "COSE Document headers (only protected headers are used)",
-      "def": "(\n  protected   : bstr .cbor COSE_Document_Header_Map / bstr .size 0,\n  unprotected : { COSE_Generic_Headers } ; Unused and ignored\n)",
+      "def": "(\n  protected   : bstr .cbor COSE_Document_Header_Map,\n  unprotected : { COSE_Generic_Headers } ; Unused and ignored\n)",
       "requires": [
         "COSE_Document_Header_Map",
         "COSE_Generic_Headers"
