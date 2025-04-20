@@ -35,6 +35,14 @@ metadataFormats: #metadataFormats & {
 		description: "A document type identifier"
 		cddl:        "document_type"
 	}
+	"Document Id": {
+		description: "A unique document identifier"
+		cddl:        "document_id"
+	}
+	"Document Ver": {
+		description: "A unique chronological document version"
+		cddl:        "document_ver"
+	}
 	"Section Reference": {
 		description: "A document section reference identifier"
 		cddl:        "section_ref"
@@ -118,7 +126,7 @@ _metadata: #metadataStruct & {
 	// Document ID
 	id: {
 		required: "yes"
-		format:   "UUIDv7"
+		format:   "Document Id"
 		description: """
 			Document ID, created the first time the document is created.
 			This must be a properly created UUIDv7 which contains the 
@@ -132,7 +140,7 @@ _metadata: #metadataStruct & {
 	// Document Version
 	ver: {
 		required: "yes"
-		format:   "UUIDv7"
+		format:   "Document Ver"
 		description: """
 			The unique version of the document.
 			The first version of the document must set `ver` == `id`

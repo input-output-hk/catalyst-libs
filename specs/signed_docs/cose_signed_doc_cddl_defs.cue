@@ -3,10 +3,17 @@
 // COSE Signed Document CDDL Definitions
 package signed_docs
 
+import (
+	"strings"
+)
+
+// Formatted content strings to use in CDDL Definition.
+_cddlContentTypes: "\"\(strings.Join(cose_headers."content type".value, "\" /\n  \""))\""
+
 cddlDefinitions: #cddlDefinitions & {
 	"signed_document": {
-		def: "COSE_Sign"
 		requires: ["COSE_Sign"]
+		def:         "\(requires[0])"
 		description: """
 			Catalyst Signed Document.
 
@@ -21,93 +28,121 @@ cddlDefinitions: #cddlDefinitions & {
 			"""
 	}
 	"COSE_Sign": {
-		def: """
+		requires: [
+			"COSE_Document_Headers",
+			"COSE_Signature",
+		]
+		def:     """
 			[
-				COSE_Document_Headers,
-				payload : bstr / nil,
-				signatures : [+ COSE_Signature]
+			  \(requires[0]),
+			  payload : bstr / nil,
+			  signatures : [+ \(requires[1])]
 			]		
 			"""
-		requires: ["COSE_Document_Headers", "COSE_Signature"]
 		comment: "COSE-SIGN data object"
 	}
 	"COSE_Document_Headers": {
-		def: """
+		requires: [
+			"COSE_Document_Header_Map",
+			"COSE_Generic_Headers",
+		]
+		def:     """
 			(
-				protected : bstr .cbor COSE_Document_Header_Map,
-				unprotected : {} ; Unused and ignored
+			  protected   : bstr .cbor \(requires[0]) / bstr .size 0,
+			  unprotected : { \(requires[1]) } ; Unused and ignored
 			)
 			"""
-		requires: ["COSE_Document_Header_Map"]
 		comment: "COSE Document headers (only protected headers are used)"
 	}
 	"COSE_Document_Header_Map": {
-		def: """
+		requires: [
+			"COSE_Document_Standard_Headers",
+			"Signed_Document_Metadata_Headers",
+		]
+		def:     """
 			{
-				COSE_Document_Standard_Headers,
-				* label => values		
+			  \(requires[0]),
+			  \(requires[1]),
 			}
 			"""
-		requires: ["COSE_Document_Standard_Headers"]
 		comment: "COSE Document Header Map"
 	}
 	"COSE_Document_Standard_Headers": {
 		def:     """
 			(
-				\(cose_headers."content type".coseLabel) => \(_cddlContentTypes),  ; content type
-				?"\(cose_headers."content-encoding".coseLabel)" => [ *tstr ],  ; content encoding
-			)
+				? 1 => int / tstr,  ; algorithm identifier
+				? 2 => [+\(requires[0])],    ; criticality
+				? 3 => tstr / int,  ; content type
+				? 4 => bstr,        ; key identifier
+				? ( 5 => bstr //    ; IV
+					6 => bstr )     ; Partial IV
+			)		
 			"""
 		comment: "COSE Standard headers used by a Document"
+		requires: [
+			"COSE_label",
+		]
+	}
+	"Signed_Document_Metadata_Headers": {
+		def:     "\(requires[0])"
+		comment: "Generic definition (does not include metadata constraints)"
+		requires: [
+			"COSE_Generic_Headers",
+		]
 	}
 	"COSE_Signature_Headers": {
-		def: """
+		requires: [
+			"COSE_Signature_Header_Map",
+			"COSE_Generic_Headers",
+		]
+		def:     """
 			(
-				protected : empty_or_serialized_map,
-				unprotected : {} ; Unused
+			  protected   : bstr .cbor \(requires[0]),
+			  unprotected : { \(requires[1]) } ; Unused and ignored
 			)
 			"""
-		requires: ["COSE_empty_or_serialized_map", "COSE_header_map"]
-		comment: "COSE Document Signature headers (only protected headers are used)"
-	}
-	"COSE_empty_or_serialized_map": {
-		def: "bstr .cbor COSE_header_map / bstr .size 0"
-		requires: ["COSE_header_map"]
-	}
-	"COSE_header_map": {
-		def: """
-			{
-				COSE_Generic_Headers,
-				* label => values		
-			}
-			"""
-		requires: ["COSE_Generic_Headers"]
-	}
-	"COSE_empty_or_serialized_map": {
-		def: "bstr .cbor COSE_header_map / bstr .size 0"
-		requires: ["COSE_header_map"]
+		comment: "COSE Signature headers (only protected headers are used)"
 	}
 	"COSE_Signature": {
 		def: """
 			[
-				COSE_Headers,
-				signature : bstr
+			  \(requires[0]),
+			  signature : bstr
 			]
 			"""
 		requires: ["COSE_Signature_Headers"]
+		comment: "An Individual Document Signature"
+	}
+	"COSE_Signature_Header_Map": {
+		def:     """
+			(
+				? 1 => int / tstr,  ; algorithm identifier
+				? 2 => [+\(requires[0])],    ; criticality
+				? 3 => tstr / int,  ; content type
+				? 4 => bstr,        ; key identifier
+				? ( 5 => bstr //    ; IV
+					6 => bstr )     ; Partial IV
+			)		
+			"""
+		comment: "COSE Signature headers"
+		requires: [
+			"COSE_label",
+		]
 	}
 	"COSE_Generic_Headers": {
-		def: """
-			(
-				; ? 1 => int / tstr,  ; algorithm identifier
-				; ? 2 => [+label],    ; criticality
-				? 3 => tstr / int,  ; content type
-				; ? 4 => bstr,        ; key identifier
-				; ? 5 => bstr,        ; IV
-				; ? 6 => bstr,        ; Partial IV
-				; ? 7 => COSE_Signature / [+COSE_Signature] ; Counter signature
-			)
-
-			"""
+		def:     "( * \(requires[0]) => \(requires[1]) )"
+		comment: "Generic Header definition"
+		requires: [
+			"COSE_label",
+			"COSE_values",
+		]
+	}
+	"COSE_label": {
+		def:     "int / tstr"
+		comment: "COSE Map Generic Label"
+	}
+	"COSE_values": {
+		def:     "any"
+		comment: "COSE Map Generic Value"
 	}
 }

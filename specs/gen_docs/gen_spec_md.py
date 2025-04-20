@@ -1,12 +1,12 @@
 # Generate the spec.md file
 
 from doc_generator import DocGenerator
+from gen_cddl_file import CDDLFile
 
 
 class SpecMd(DocGenerator):
     def __init__(self, args, spec):
         super().__init__(args, spec, "spec.md")
-        print(self)
 
     def header_parameter_doc(self, header: str) -> str:
         """Create documentation for a single cose header."""
@@ -55,6 +55,9 @@ class SpecMd(DocGenerator):
 
     def generate(self):
         """Generate a `spec.md` file from the definitions."""
+
+        signed_doc_cddl = CDDLFile(self._args, self._spec, "signed_document")
+        signed_doc_cddl.save_or_validate()
         self._filedata = f"""
 # Catalyst Signed Document Specification
 
@@ -82,6 +85,17 @@ and for documents to be able to securely reference one another.
 Catalyst Signed Documents are based on COSE.
 Specifically, the COSE Sign format is used.
 This allows one or more signatures to be attached to the same document.
+
+### Signed Document CDDL Definition
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+
+??? note "CDDL"
+
+    ```cddl
+    {{ include_file('{signed_doc_cddl.file_path()}') }}
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### COSE Header Parameters
 

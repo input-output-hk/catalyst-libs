@@ -28,6 +28,7 @@ class DocGenerator:
         flags: int = HAS_MARKDOWN_LINKS,
     ):
         # Must be called BEFORE subclasses add any customization.
+        self._args = args
         self._spec = spec
         self._filename = filename
         self._filepath = Path(args.output).joinpath(self._filename)
@@ -132,6 +133,10 @@ class DocGenerator:
         """Add Markdown reference links to the document.
         Only Reference links found to be used by the document will be added.
         """
+        # Don't do this if the document does not have markdown style links
+        if not self._has_markdown_links:
+            return
+
         self.strip_end_whitespace()
 
         allLinkNames = self._spec.link_names()

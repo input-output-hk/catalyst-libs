@@ -15,7 +15,7 @@ package signed_docs
 
 cddlDefinitions: #cddlDefinitions & {
 	"uuid_v7": {
-		def:         "6.37(bytes .size 16)"
+		def:         "#6.37(bytes .size 16)"
 		description: """
 			Version 7 UUID
 			See: \(documentationLinks."RFC9562-V7")
@@ -24,7 +24,7 @@ cddlDefinitions: #cddlDefinitions & {
 		comment:     "UUIDv7"
 	}
 	"uuid_v4": {
-		def:         "6.37(bytes .size 16)"
+		def:         "#6.37(bytes .size 16)"
 		description: "Version 4 UUID"
 		comment:     "UUIDv4"
 	}
@@ -52,7 +52,7 @@ cddlDefinitions: #cddlDefinitions & {
 		comment:     "Document Version"
 	}
 	"cid": {
-		def:         "6.42(bytes)"
+		def:         "#6.42(bytes)"
 		description: """
 			IPLD content identifier.
 			Also known as an IPFS CID
@@ -65,30 +65,65 @@ cddlDefinitions: #cddlDefinitions & {
 			"""
 	}
 	"document_locator": {
-		def: "{ \"cid\" => cid }"
+		def: """
+			{ 
+			  \"cid\" => \(requires[0])
+			}
+			"""
 		requires: ["cid"]
+		comment: "Where a document can be located, must be a unique identifier."
 	}
 	"document_ref": {
-		def: "[ 1* [ document_id, document_ver, document_locator ] ]"
-		requires: ["document_id", "document_ver", "document_locator"]
+		def: """
+			[ 1* [
+			  \(requires[0]), 
+			  \(requires[1]), 
+			  \(requires[2])
+			] ]
+			"""
+		requires: [
+			"document_id",
+			"document_ver",
+			"document_locator",
+		]
+		comment: "Reference to another Signed Document"
 	}
 	"json_pointer": {
-		def: "text"
+		def:     "text"
+		comment: "RFC6901 Standard JSON Pointer"
 	}
 	"section_ref": {
-		def: "json_pointer"
+		def: "\(requires[0])"
 		requires: ["json_pointer"]
-	}
-	"catalyst_id": {
-		def: "text"
+		comment: "Reference to a section in a referenced document."
 	}
 	"collaborators": {
-		def: "[ * catalyst_id ]"
-		requires: ["catalyst_id"]
+		def: "[ * \(requires[0]) ]"
+		requires: ["catalyst_id_kid"]
+		comment: "Allowed Collaborators on the next subsequent version of a document."
 	}
 	"revocations": {
-		def: "[ * document_ver ] / true "
+		def: "[ * \(requires[0]) ] / true "
 		requires: ["document_ver"]
+		comment: "List of revoked versions of this document."
+	}
+	"iana_media_types": {
+		def:     """
+			(
+			  \(_cddlContentTypes)
+			)
+			"""
+		comment: "Supported Content Media Types"
+	}
+	"http_content_encoding": {
+		def: """
+			"br"
+			"""
+		comment: "Supported Content Encoding Types"
+	}
+	"catalyst_id_kid": {
+		def:     "bytes"
+		comment: "UTF8 Catalyst ID URI encoded as a bytes string."
 	}
 }
 

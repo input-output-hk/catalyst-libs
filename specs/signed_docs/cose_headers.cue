@@ -5,9 +5,7 @@ package signed_docs
 
 import (
 	"list"
-	"strings"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
-
 )
 
 // Content Type name : Description
@@ -118,16 +116,34 @@ _allCoseHeaderNames: or([
 	for k in _coseHeaderNames {k},
 ])
 
-#coseHeaderFormat:
-	"COSE Algorithm" |
-	"IANA Media Type" |
-	"HTTP Content Encoding"
+coseHeaderFormats: #metadataFormats & {
+	"IANA Media Type": {
+		description: "An IANA Media Type string which identifies the payload."
+		cddl:        "iana_media_types"
+	}
+	"HTTP Content Encoding": {
+		description: "Encoding if any on the payload."
+		cddl:        "http_content_encoding"
+	}
+	"Catalyst ID": {
+		description: "KID (Catalyst ID URI)"
+		cddl:        "catalyst_id_kid"
+	}
+}
+
+// Types of a Metadata Fields
+#coseHeaderTypes: [
+	for k, _ in coseHeaderFormats {k},
+]
+
+// Constraint of Types of Cose Header Fields
+#coseHeaderTypesConstraint: or(#coseHeaderTypes)
 
 #coseField: {
 	coseLabel:   int | string
 	description: string
 	required:    optional.#field | *"yes"
-	format:      #coseHeaderFormat
+	format:      #coseHeaderTypesConstraint
 	if format == "IANA Media Type" {
 		"value": #contentType | [...#contentType]
 	}
@@ -148,7 +164,7 @@ _coseHeaders: #coseHeaders & {
 		format:      "IANA Media Type"
 		description: "IANA Media Type/s allowed in the Payload"
 	}
-	// Allowed content encodings
+	// Documents Used content encodings
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
@@ -160,12 +176,19 @@ _coseHeaders: #coseHeaders & {
 	}
 }
 
+_coseSignatureHeaders: #coseHeaders & {
+	// Key identifier
+	"kid": #coseField & {
+		coseLabel:   4
+		format:      "Catalyst ID"
+		description: "Catalyst ID URI identifying the Public Key"
+	}
+}
+
 cose_headers: _coseHeaders
 cose_headers:
 	"content type":
 		value: #allContentTypes
-
-_cddlContentTypes: "\"\(strings.Join(cose_headers."content type".value, "\" / \""))\""
 
 // Preferred display order of cose header fields.
 // if header not listed, display after the listed fields, in alphabetical order.
@@ -174,3 +197,6 @@ cose_headers_order: [
 	"content type",
 	"content-encoding",
 ]
+
+// Headers defined for signatures.
+cose_signature_headers: _coseSignatureHeaders

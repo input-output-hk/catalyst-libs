@@ -25,6 +25,17 @@ Catalyst Signed Documents are based on [COSE][RFC9052].
 Specifically, the [COSE Sign][RFC9052-CoseSign] format is used.
 This allows one or more signatures to be attached to the same document.
 
+### Signed Document [CDDL][RFC8610] Definition
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+
+??? note "CDDL"
+
+    ```cddl
+    { include_file('cddl/signed_document.cddl') }
+    ```
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### [COSE Header Parameters][RFC9052-HeaderParameters]
 
 [COSE][RFC9052] documents define a set of standard [COSE header parameters][RFC9052-HeaderParameters].

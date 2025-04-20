@@ -1,0 +1,137 @@
+; Catalyst Signed Document.
+;
+; A specific implementation of a COSE-SIGN data objects
+; used by the Catalyst project to encapsulate and authenticate
+; documents used within the system.
+;
+; See: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
+
+
+; Catalyst Signed Document data object.
+signed_document = COSE_Sign
+
+; COSE-SIGN data object
+COSE_Sign = [
+  COSE_Document_Headers,
+  payload : bstr / nil,
+  signatures : [+ COSE_Signature]
+]
+
+; COSE Document headers (only protected headers are used)
+COSE_Document_Headers = (
+  protected   : bstr .cbor COSE_Document_Header_Map / bstr .size 0,
+  unprotected : { COSE_Generic_Headers } ; Unused and ignored
+)
+
+; COSE Document Header Map
+COSE_Document_Header_Map = {
+  COSE_Document_Standard_Headers,
+  Signed_Document_Metadata_Headers,
+}
+
+; COSE Standard headers used by a Document
+COSE_Document_Standard_Headers = (
+  3 => iana_media_types
+  ?"content-encoding" => http_content_encoding
+)
+
+; Supported Content Media Types
+iana_media_types = (
+  "application/json" /
+  "application/schema+json" /
+  "application/cbor" /
+  "application/cddl"
+)
+
+; Supported Content Encoding Types
+http_content_encoding = "br"
+
+; Generic definition (does not include metadata constraints)
+Signed_Document_Metadata_Headers = (
+  "type" => document_type
+  "id" => document_id
+  "ver" => document_ver
+  ?"ref" => document_ref
+  ?"template" => document_ref
+  ?"reply" => document_ref
+  ?"section" => section_ref
+  ?"collaborators" => collaborators
+  ?"revocations" => revocations
+  ?"election_id" => document_ref
+  ? (
+      "brand_id" => document_ref //
+      "campaign_id" => document_ref //
+      "category_id" => document_ref
+  ))
+
+; Document Type
+document_type = [ 1* uuid_v4 ]
+
+; UUIDv4
+uuid_v4 = #6.37(bytes .size 16)
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)
+
+; Document Version
+document_ver = uuid_v7
+
+; Reference to another Signed Document
+document_ref = [ 1* [
+  document_id,
+  document_ver,
+  document_locator
+] ]
+
+; Where a document can be located, must be a unique identifier.
+document_locator = {
+  "cid" => cid
+}
+
+; IPLD content identifier
+; TODO: add size limits if possible
+cid = #6.42(bytes)
+
+; Reference to a section in a referenced document.
+section_ref = json_pointer
+
+; RFC6901 Standard JSON Pointer
+json_pointer = text
+
+; Allowed Collaborators on the next subsequent version of a document.
+collaborators = [ * catalyst_id_kid ]
+
+; UTF8 Catalyst ID URI encoded as a bytes string.
+catalyst_id_kid = bytes
+
+; List of revoked versions of this document.
+revocations = [ * document_ver ] / true
+
+; Generic Header definition
+COSE_Generic_Headers = ( * COSE_label => COSE_values )
+
+; COSE Map Generic Label
+COSE_label = int / tstr
+
+; COSE Map Generic Value
+COSE_values = any
+
+; An Individual Document Signature
+COSE_Signature = [
+  COSE_Signature_Headers,
+  signature : bstr
+]
+
+; COSE Signature headers (only protected headers are used)
+COSE_Signature_Headers = (
+  protected   : bstr .cbor COSE_Signature_Header_Map,
+  unprotected : { COSE_Generic_Headers } ; Unused and ignored
+)
+
+; COSE Signature headers
+COSE_Signature_Header_Map = (
+  4 => catalyst_id_kid
+)
