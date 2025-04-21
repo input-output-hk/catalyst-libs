@@ -22,6 +22,7 @@ The payload of a proposal is controlled by its template.
   "ver": UUIDv7
   "template": Proposal Template
   "collaborators": Collaborators Reference List
+  "revocations": Version Revocations
   "brand_id": Brand Parameters (Optional)
   "campaign_id": Campaign Parameters (Optional)
   "category_id": Category Parameters (Optional)
@@ -36,26 +37,40 @@ The payload of a proposal is controlled by its template.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+The first version of a Proposal *MUST* be signed by the original author.
+It may optionally be co-signed by any of the listed [`collaborators`](../metadata.md#collaborators).
+It may not be signed by anyone else.
+
+Subsequent Versions can be signed/co-signed by either the Original Author of the first version,
+OR any of the listed [`collaborators`](../metadata.md#collaborators) in the immediately previous version.
+This allows any collaborator to update the next version of a document, provided they are still a collaborator.
+It is valid for a proposal to be signed by a collaborator
+who is no longer listed as in the [`collaborators`](../metadata.md#collaborators)
+of the document they are signing, provided they are listed as a collaborator in the immediately previous document version.
+This allows for a collaborator to make an update to the document which removes themselves
+from the [`collaborators`](../metadata.md#collaborators) list.
+
+All versions of the document *MUST* list the author as the original author.
+The Author can not be changed by any document revision.
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+As validity of the documents is currently enforced by the backend,
+the front end does not need to validate the document has been signed
+correctly.
+It may do so, but it is not required.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+Before accepting a new proposal to be published, the backend will ensure:
+
+* The document has been signed by a valid author or collaborator.
+* That the signer of the document was a registered proposer
+* That the document was signed with their proposers key
+* That all listed [`collaborators`](../metadata.md#collaborators) are registered as proposers.
+* That the document has been signed validly according to the [validation](#validation) rules.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -143,6 +158,33 @@ This list does not imply these collaborators have consented to collaborate, only
 are permitting these potential collaborators to participate in the drafting and submission process.
 However, any document submission referencing a proposal MUST be signed by all collaborators in
 addition to the author.
+
+### [`revocations`](../metadata.md#revocations)
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Version Revocations](../metadata.md#version-revocations) |
+<!-- markdownlint-enable MD033 -->
+A document may include a list of any prior versions which are considered to be revoked.
+Only the revocation list in the latest version of the document applies.
+Revoked documents are flagged as no longer valid, and should not be displayed.
+As a special case, if the revocations are set to `true` then all versions of the document
+are revoked, including the latest document.
+
+In this case, when the latest document is revoked, the payload may be empty.
+Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
+and its payload is to be assumed to be invalid.
+
+This allows for an entire document and any/all published versions to be revoked.
+A new version of the document that is published after this, may reinstate prior
+document versions, by not listing them as revoked.
+However, any document where revocations was set `true` can never be reinstated.
+
+#### Validation
+
+If the field is `true` the payload may be absent or invalid.
+Such documents may never be submitted.
 
 ### [`brand_id`](../metadata.md#brand_id)
 <!-- markdownlint-disable MD033 -->
