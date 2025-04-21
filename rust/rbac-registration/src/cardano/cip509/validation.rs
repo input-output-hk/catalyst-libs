@@ -13,7 +13,7 @@ use catalyst_types::{
     id_uri::IdUri,
     problem_report::ProblemReport,
 };
-use ed25519_dalek::{VerifyingKey, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{Signature, VerifyingKey, PUBLIC_KEY_LENGTH};
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -21,9 +21,12 @@ use pallas::{
     },
     ledger::{addresses::Address, primitives::conway, traverse::MultiEraTx},
 };
-use x509_cert::Certificate;
+use x509_cert::{der::Encode as X509Encode, Certificate as X509};
 
-use super::utils::cip19::compare_key_hash;
+use super::{
+    extract_key::{c509_key, x509_key},
+    utils::cip19::compare_key_hash,
+};
 use crate::cardano::cip509::{
     rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
     RoleNumber, SimplePublicKeyType, X509DerCert,
@@ -162,6 +165,134 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
         .collect()
 }
 
+/// Validate self-signed certificates.
+/// All certificates should be self-signed and support only ED25519 signature.
+pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
+    let context = "Cip509 self-signed certificate validation";
+
+    for (index, cert) in metadata.c509_certs.iter().enumerate() {
+        if let C509Cert::C509Certificate(c) = cert {
+            validate_c509_self_signed_cert(c, index, report, context);
+        }
+    }
+
+    for (index, cert) in metadata.x509_certs.iter().enumerate() {
+        if let X509DerCert::X509Cert(c) = cert {
+            validate_x509_self_signed_cert(c, index, report, context);
+        }
+    }
+}
+
+/// Validate C509 certificate that it is a self-signed.
+fn validate_c509_self_signed_cert(c: &C509, index: usize, report: &ProblemReport, context: &str) {
+    // Self-sign certificate must be type 2
+    if c.tbs_cert().c509_certificate_type() != 2 {
+        report.invalid_value(
+            &format!("C509 certificate type at index {index}"),
+            &c.tbs_cert().c509_certificate_type().to_string(),
+            "Certificate must have cert type 2",
+            context,
+        );
+        return;
+    }
+
+    let pk = match c509_key(c) {
+        Ok(pk) => pk,
+        Err(e) => {
+            report.other(
+                &format!(
+                    "Failed to extract subject public key from C509 certificate at index {index}: {e:?}",
+                ),
+                context,
+            );
+            return;
+        },
+    };
+
+    let Some(sig) = c
+        .issuer_signature_value()
+        .clone()
+        .and_then(|b| b.try_into().ok())
+        .map(|arr: [u8; 64]| Signature::from_bytes(&arr))
+    else {
+        report.conversion_error(
+            &format!("C509 issuer signature at index {index}"),
+            &format!("{:?}", c.issuer_signature_value()),
+            "Expected 64-byte Ed25519 signature",
+            context,
+        );
+        return;
+    };
+
+    // TODO(bkioshn): signature verification should be improved in c509 crate
+    let Ok(tbs_cbor) = c.tbs_cert().to_cbor::<Vec<u8>>() else {
+        report.invalid_encoding(
+            &format!("C509 TBS certificate at index {index}"),
+            "CBOR encoding",
+            "Expected CBOR encoded TBS certificate",
+            context,
+        );
+        return;
+    };
+    if pk.verify_strict(&tbs_cbor, &sig).is_err() {
+        report.other(
+            &format!("Cannot verify C509 certificate signature at index {index}",),
+            context,
+        );
+    }
+}
+
+/// Validate X509 certificate that it is a self-signed.
+fn validate_x509_self_signed_cert(c: &X509, index: usize, report: &ProblemReport, context: &str) {
+    let pk = match x509_key(c) {
+        Ok(pk) => pk,
+        Err(e) => {
+            report.other(
+                &format!(
+                    "Failed to extract subject public key from X509 certificate at index {index}: {e:?}",
+                ),
+                context,
+            );
+            return;
+        },
+    };
+
+    let Some(sig) = c
+        .signature
+        .as_bytes()
+        .and_then(|b| b.try_into().ok())
+        .map(|arr: [u8; 64]| Signature::from_bytes(&arr))
+    else {
+        report.conversion_error(
+            &format!("X509 signature at index {index}"),
+            &format!("{:?}", c.signature.as_bytes()),
+            "Expected 64-byte Ed25519 signature",
+            context,
+        );
+        return;
+    };
+
+    let tbs_der = match c.tbs_certificate.to_der() {
+        Ok(tbs_der) => tbs_der,
+        Err(e) => {
+            report.invalid_encoding(
+                &format!("X509 tbs certificate at index {index}"),
+                "DER encoding",
+                &format!("Expected DER encoded X509 certificate: {e:?}"),
+                context,
+            );
+            return;
+        },
+    };
+
+    if pk.verify_strict(&tbs_der, &sig).is_err() {
+        report.other(
+            &format!("Cannot verify X509 certificate signature at index {index} "),
+            context,
+        );
+    }
+}
+
 /// Checks the role data.
 #[allow(clippy::similar_names)]
 pub fn validate_role_data(
@@ -234,6 +365,8 @@ pub fn validate_role_data(
         );
     }
 
+    validate_role_numbers(metadata.role_data.keys(), context, report);
+
     let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
         if number == &RoleNumber::ROLE_0 {
@@ -262,6 +395,19 @@ pub fn validate_role_data(
         }
     }
     catalyst_id
+}
+
+/// Checks that there are no unknown roles.
+fn validate_role_numbers<'a>(
+    roles: impl Iterator<Item = &'a RoleNumber> + 'a, context: &str, report: &ProblemReport,
+) {
+    let known_roles = &[RoleNumber::ROLE_0, 3.into()];
+
+    for role in roles {
+        if !known_roles.contains(role) {
+            report.other(&format!("Unknown role found: {role:?}"), context);
+        }
+    }
 }
 
 /// Checks that the role 0 data is correct.
@@ -328,9 +474,7 @@ fn validate_role_0(
 }
 
 /// Extracts `VerifyingKey` from the given `X509` certificate.
-fn x509_cert_key(
-    cert: &Certificate, context: &str, report: &ProblemReport,
-) -> Option<VerifyingKey> {
+fn x509_cert_key(cert: &X509, context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
     let Some(extended_public_key) = cert
         .tbs_certificate
         .subject_public_key_info
@@ -465,7 +609,17 @@ mod tests {
         assert_eq!(1, registrations.len());
 
         let registration = registrations.pop().unwrap();
-        data.assert_valid(&registration);
+        assert!(registration.report().is_problematic());
+
+        let origin = registration.origin();
+        assert_eq!(origin.txn_index(), data.txn_index);
+        assert_eq!(origin.point().slot_or_default(), data.slot);
+
+        // The consume function must return the problem report contained within the registration.
+        let report = registration.consume().unwrap_err();
+        assert!(report.is_problematic());
+        let report = format!("{report:?}");
+        assert!(report.contains("Unknown role found: RoleNumber(4)"));
     }
 
     #[test]

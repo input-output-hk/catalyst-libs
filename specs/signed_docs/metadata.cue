@@ -43,6 +43,10 @@ metadataFormats: #metadataFormats & {
 		description: "A list of collaborators who can participate in drafting and submitting a document"
 		cddl:        "collaborators"
 	}
+	"Version Revocations": {
+		description: "A list of all versions of this document which are 'revoked'."
+		cddl:        "revocations"
+	}
 }
 
 // Types of a Metadata Fields
@@ -52,14 +56,6 @@ metadataFormats: #metadataFormats & {
 
 // Constraint of Types of Metadata Fields
 #metadataTypesConstraint: or(#metadataTypes)
-
-// Format of a Metadata Field
-//#metadataFormat:
-//	"UUIDv7" |
-//	"Document Type" |
-//	*"Document Reference" |
-//	"Section Reference" |
-//	"Collaborators Reference List"
 
 // Canonical List of all valid metadata names
 _metadataNames: list.UniqueItems
@@ -72,6 +68,7 @@ _metadataNames: [
 	"reply",
 	"section",
 	"collaborators",
+	"revocations",
 	"brand_id",
 	"campaign_id",
 	"election_id",
@@ -152,17 +149,39 @@ _metadata: #metadataStruct & {
 			This is the primary hierarchical reference to a related document.			
 
 			This is an Array of the format:
-				`[[DocumentID, DocumentVer, DocumentHash],...]`
 
-			* `DocumentID` is the UUIDv7 ID of the Document being referenced.
-			* `DocumentVer` is the UUIDv7 Version of the Document being referenced.
-			* `DocumentHash` is the Blake2b-256 Hash of the entire document being referenced, not just its payload.
-			  It ensures that the intended referenced document is the one used, and there has been no substitution.
-			  Prevents substitutions where a new document with the same Document ID and Ver might be published over an existing one.
+			```cddl
+			\(cddlDefinitions."document_ref".def)
+			```
+
+			If a reference is defined as required, there must be at least 1 reference specified.
+			Some documents allow multiple references, and they are documented as required.
+
+			* `document_id` is the UUIDv7 ID of the Document being referenced.
+			* `document_ver` is the UUIDv7 Version of the Document being referenced.
+			* `document_locator` is a content unique locator for the document.
+			  This serves two purposes.
+			  
+			  1. It ensures that the document referenced by an ID/Version is not substituted.
+			     In other words, that the document intended to be referenced, is actually referenced.
+			  2. Allow the document to be unambiguously located in decentralized storage systems.
+			  
+			  There can be any number of Document Locations in any reference.
+			  The currently defined locations are:
+			  
+			  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).
+			  * Others may be added when further storage mechanisms are defined.
+
+			  The value set here does not guarantee that the document is actually stored.
+			  It only defines that if it were stored, this is the identifier that
+			  that is required to retrieve it.
 			"""
 		validation: """
-			Every Reference Document **MUST** Exist, and **MUST** be a valid reference to the document.
-			The calculated Hash of the Referenced Document **MUST** match the Hash in the reference. 
+			The following must be true for a valid reference:
+
+			* The Referenced Document **MUST** Exist
+			* Every value in the `document_locator` must consistently reference the exact same document.
+			* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 			"""
 	}
 
@@ -211,6 +230,30 @@ _metadata: #metadataStruct & {
 			are permitting these potential collaborators to participate in the drafting and submission process.
 			However, any document submission referencing a proposal MUST be signed by all collaborators in
 			addition to the author.
+			"""
+	}
+
+	revocations: {
+		format: "Version Revocations"
+		description: """
+			A document may include a list of any prior versions which are considered to be revoked.
+			Only the revocation list in the latest version of the document applies.
+			Revoked documents are flagged as no longer valid, and should not be displayed.
+			As a special case, if the revocations are set to `true` then all versions of the document
+			are revoked, including the latest document.
+
+			In this case, when the latest document is revoked, the payload may be empty.
+			Any older document that has `revocations` set to `true` is always to be filtered
+			and its payload is to be assumed to be invalid.
+
+			This allows for an entire document and any/all published versions to be revoked.
+			A new version of the document that is published after this, may reinstate prior
+			document versions, by not listing them as revoked.  
+			However, any document where revocations was set `true` can never be reinstated.
+			"""
+		validation: """
+			If the field is `true` the payload may be absent or invalid.
+			Such documents may never be submitted.
 			"""
 	}
 
@@ -302,6 +345,7 @@ metadata_order: [..._allMetadataNames] & [
 	"reply",
 	"section",
 	"collaborators",
+	"revocations",
 	"brand_id",
 	"campaign_id",
 	"category_id",
