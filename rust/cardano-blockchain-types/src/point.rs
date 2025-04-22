@@ -23,7 +23,7 @@ use crate::Slot;
 /// * `Point` - The inner type is a `Point` from the `pallas::network::miniprotocols`
 ///   module. This inner `Point` type encapsulates the specific details required to
 ///   identify a point in the blockchain.
-#[derive(Clone, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Point(pallas::network::miniprotocols::Point);
 
 impl Point {
@@ -435,22 +435,22 @@ impl PartialOrd<u64> for Point {
     }
 }
 
-impl PartialEq for Point {
-    /// Compares two Points.
-    /// If both of the points are not `Point::ORIGIN` and one of the as fuzzy point,
-    /// so equality is defined using the slot value without hash
-    fn eq(&self, other: &Self) -> bool {
-        match (&self.0, &other.0) {
-            (
-                pallas::network::miniprotocols::Point::Specific(a, _),
-                pallas::network::miniprotocols::Point::Specific(b, _),
-            ) if self.is_fuzzy() || other.is_fuzzy() => a.eq(b),
-            (a, b) => a.eq(b),
-        }
-    }
-}
+// impl PartialEq for Point {
+//     /// Compares two Points.
+//     /// If both of the points are not `Point::ORIGIN` and one of the as fuzzy point,
+//     /// so equality is defined using the slot value without hash
+//     fn eq(&self, other: &Self) -> bool {
+//         match (&self.0, &other.0) {
+//             (
+//                 pallas::network::miniprotocols::Point::Specific(a, _),
+//                 pallas::network::miniprotocols::Point::Specific(b, _),
+//             ) if self.is_fuzzy() || other.is_fuzzy() => a.eq(b),
+//             (a, b) => a.eq(b),
+//         }
+//     }
+// }
 
-impl Eq for Point {}
+// impl Eq for Point {}
 
 impl PartialEq<Option<Point>> for Point {
     /// Allows for direct comparison between a `Point` and an `Option<Point>`,
