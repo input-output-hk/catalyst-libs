@@ -118,7 +118,7 @@ This can be useful if a user lost his private key while maintaining access to hi
 used in that registration chain).
 After that `C1` is considered no longer valid and must not be used.
 
-### TODO:
+### TODO
 
 * Multiple stake addresses.
 * ???
