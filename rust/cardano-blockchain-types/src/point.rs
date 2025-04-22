@@ -23,7 +23,7 @@ use crate::Slot;
 /// * `Point` - The inner type is a `Point` from the `pallas::network::miniprotocols`
 ///   module. This inner `Point` type encapsulates the specific details required to
 ///   identify a point in the blockchain.
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, Hash, Debug)]
 pub struct Point(pallas::network::miniprotocols::Point);
 
 impl Point {
@@ -168,7 +168,7 @@ impl Point {
     /// ```
     #[must_use]
     pub fn is_fuzzy(&self) -> bool {
-        if *self == Self::TIP {
+        if self.is_tip() {
             false
         } else {
             match self.0 {
@@ -435,6 +435,23 @@ impl PartialOrd<u64> for Point {
     }
 }
 
+impl PartialEq for Point {
+    /// Compares two Points.
+    /// If both of the points are not `Point::ORIGIN` and one of the as fuzzy point,
+    /// so equality is defined using the slot value without hash
+    fn eq(&self, other: &Self) -> bool {
+        match (&self.0, &other.0) {
+            (
+                pallas::network::miniprotocols::Point::Specific(a, _),
+                pallas::network::miniprotocols::Point::Specific(b, _),
+            ) if self.is_fuzzy() || other.is_fuzzy() => a.eq(b),
+            (a, b) => a.eq(b),
+        }
+    }
+}
+
+impl Eq for Point {}
+
 impl PartialEq<Option<Point>> for Point {
     /// Allows for direct comparison between a `Point` and an `Option<Point>`,
     /// returning `true` only if the `Option` contains a `Point` that is equal to the
@@ -579,6 +596,6 @@ mod tests {
         let point1 = Point::new(100u64.into(), Blake2bHash::new(&[]));
         let fuzzy1 = Point::fuzzy(100u64.into());
 
-        assert!(point1 != fuzzy1);
+        assert!(point1 == fuzzy1);
     }
 }
