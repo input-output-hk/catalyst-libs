@@ -17,7 +17,7 @@ impl Signature {
     /// Convert COSE Signature to `Signature`.
     pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
         match IdUri::try_from(signature.protected.header.key_id.as_ref()) {
-            Ok(kid) if kid.is_id() => Some(Self { kid, signature }),
+            Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
             Ok(kid) => {
                 report.invalid_value(
                     &format!("COSE signature protected header key ID"),
