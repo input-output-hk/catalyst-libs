@@ -18,10 +18,11 @@
   "cddlDefinitions": {
     "COSE_Document_Header_Map": {
       "comment": "COSE Document Header Map",
-      "def": "{\n  COSE_Document_Standard_Headers,\n  Signed_Document_Metadata_Headers,\n}",
+      "def": "{\n  COSE_Document_Standard_Headers,\n  Signed_Document_Metadata_Headers,\n  COSE_Generic_Headers\n}",
       "requires": [
         "COSE_Document_Standard_Headers",
-        "Signed_Document_Metadata_Headers"
+        "Signed_Document_Metadata_Headers",
+        "COSE_Generic_Headers"
       ]
     },
     "COSE_Document_Headers": {
@@ -63,10 +64,11 @@
       ]
     },
     "COSE_Signature_Header_Map": {
-      "comment": "COSE Signature headers",
-      "def": "(\n\t? 1 => int / tstr,  ; algorithm identifier\n\t? 2 => [+COSE_label],    ; criticality\n\t? 3 => tstr / int,  ; content type\n\t? 4 => bstr,        ; key identifier\n\t? ( 5 => bstr //    ; IV\n\t\t6 => bstr )     ; Partial IV\n)\t\t",
+      "comment": "COSE Signature Header Map",
+      "def": "{\n  COSE_Signature_Standard_Headers,\n  COSE_Generic_Headers\n}",
       "requires": [
-        "COSE_label"
+        "COSE_Signature_Standard_Headers",
+        "COSE_Generic_Headers"
       ]
     },
     "COSE_Signature_Headers": {
@@ -74,6 +76,14 @@
       "def": "(\n  protected   : bstr .cbor COSE_Signature_Header_Map,\n  unprotected : { COSE_Generic_Headers } ; Unused and ignored\n)",
       "requires": [
         "COSE_Signature_Header_Map",
+        "COSE_Generic_Headers"
+      ]
+    },
+    "COSE_Signature_Standard_Headers": {
+      "comment": "COSE Signature headers",
+      "def": "(\n\t? 1 => int / tstr,  ; algorithm identifier\n\t? 2 => [+COSE_label],    ; criticality\n\t? 3 => tstr / int,  ; content type\n\t? 4 => bstr,        ; key identifier\n\t? ( 5 => bstr //    ; IV\n\t\t6 => bstr )     ; Partial IV\n),\nCOSE_Generic_Headers\n",
+      "requires": [
+        "COSE_label",
         "COSE_Generic_Headers"
       ]
     },

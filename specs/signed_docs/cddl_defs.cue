@@ -29,7 +29,7 @@ cddlDefinitions: #cddlDefinitions & {
 		comment:     "UUIDv4"
 	}
 	"document_type": {
-		def: "[ 1* uuid_v4 ]"
+		def: "[ 1* \(requires[0]) ]"
 		requires: ["uuid_v4"]
 		description: "Unique Document Type Identifier"
 		comment:     "Document Type"
@@ -40,13 +40,13 @@ cddlDefinitions: #cddlDefinitions & {
 		comment:     "Blake2B-256"
 	}
 	"document_id": {
-		def: "uuid_v7"
+		def: "\(requires[0])"
 		requires: ["uuid_v7"]
 		description: "Unique Document Identifier"
 		comment:     "Document ID"
 	}
 	"document_ver": {
-		def: "uuid_v7"
+		def: "\(requires[0])"
 		requires: ["uuid_v7"]
 		description: "Unique Chronological Document Version Identifier"
 		comment:     "Document Version"

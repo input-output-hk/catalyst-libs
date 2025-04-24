@@ -1,6 +1,6 @@
-#!/usr/bin/env python
+"""Base Document Generator Class."""
 
-# Autogenerate Documentation Pages from the formal specification
+# Autogenerate Documentation Pages from the specification
 
 import argparse
 import difflib
@@ -13,7 +13,7 @@ from signed_doc_spec import SignedDocSpec
 
 
 class DocGenerator:
-    """base class for individual document generators"""
+    """Base class for individual document generators."""
 
     NO_FLAGS = 0
     HAS_MARKDOWN_LINKS = 1
@@ -26,12 +26,12 @@ class DocGenerator:
         filename: str,
         depth: int = 0,
         flags: int = HAS_MARKDOWN_LINKS,
-    ):
-        # Must be called BEFORE subclasses add any customization.
+    ) -> None:
+        """Must be called BEFORE subclasses add any customization."""
         self._args = args
         self._spec = spec
         self._filename = filename
-        self._filepath = Path(args.output).joinpath(self._filename)
+        self._filepath = Path(args.output).joinpath(self._filename).resolve()
         self._generate = args.generate
         self._depth = depth
         self._filedata = ""
@@ -43,9 +43,10 @@ class DocGenerator:
         self,
         field_names: list[str],
         link_fmt_func: typing.Callable[[str, int], str],
-        primary_source=False,
-    ):
-        """Should NOT be used directly."""
+        *,
+        primary_source: bool = False,
+    ) -> None:
+        """Do NOT be used directly."""
         # Don't do this if the document does not have markdown style links
         if not self._has_markdown_links:
             return
@@ -55,10 +56,10 @@ class DocGenerator:
         for line in lines:
             if not primary_source or not line.startswith("#"):
                 for field_name in field_names:
-                    fieldNameRegex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
+                    field_name_regex = f"(^|\\s)`{field_name}`(\\.|\\s|$)"
                     replacement = f"\\1{link_fmt_func(field_name, self._depth)}\\2"
-                    line = re.sub(
-                        fieldNameRegex,
+                    line = re.sub(  # noqa: PLW2901
+                        field_name_regex,
                         replacement,
                         line,
                         flags=re.IGNORECASE | re.MULTILINE,
@@ -67,8 +68,9 @@ class DocGenerator:
 
         self._filedata = file_data
 
-    def add_doc_ref_links(self, primary_source=False):
+    def add_doc_ref_links(self, *, primary_source: bool = False) -> None:
         """Add Individual Document Reference cross reference links to the document.
+
         All Document References in text must be as `<name>` or they will not be linked.
         """
         self.add_generic_markdown_links(
@@ -77,8 +79,9 @@ class DocGenerator:
             primary_source,
         )
 
-    def add_metadata_links(self):
+    def add_metadata_links(self) -> None:
         """Add metadata field documentation cross reference links to the document.
+
         All metadata fields in text must be as `<name>` or they will not be linked.
         """
         self.add_generic_markdown_links(
@@ -87,8 +90,9 @@ class DocGenerator:
             self._is_metadata_primary_source,
         )
 
-    def add_metadata_format_links(self):
+    def add_metadata_format_links(self) -> None:
         """Add metadata format documentation cross reference links to the document.
+
         All metadata formats in text must be as `<name>` or they will not be linked.
         """
         self.add_generic_markdown_links(
@@ -97,13 +101,17 @@ class DocGenerator:
             self._is_metadata_primary_source,
         )
 
-    def strip_end_whitespace(self):
+    def strip_end_whitespace(self) -> None:
         """Strip all whitespace from the end of any lines."""
         lines = self._filedata.splitlines()
         stripped_lines = [line.rstrip() for line in lines]
         self._filedata = "\n".join(stripped_lines).strip() + "\n"
 
-    def code_block_aware_re_subn(self, linkNameRegex, replacement) -> bool:
+    def code_block_aware_re_subn(
+        self,
+        link_name_regex: str | re.Pattern[str],
+        replacement: str | callable[[re.Match[str]], str],
+    ) -> bool:
         """Do a multiline regex replacement, but ignore anything inside a code block."""
         lines = self._filedata.splitlines()
         new_file_data = ""
@@ -116,8 +124,8 @@ class DocGenerator:
             if in_code_block:
                 this_cnt = 0
             else:
-                (line, this_cnt) = re.subn(
-                    linkNameRegex,
+                (line, this_cnt) = re.subn(  # noqa: PLW2901
+                    link_name_regex,
                     replacement,
                     line,
                     flags=re.IGNORECASE,
@@ -129,8 +137,9 @@ class DocGenerator:
 
         return cnt != 0
 
-    def add_reference_links(self):
+    def add_reference_links(self) -> None:
         """Add Markdown reference links to the document.
+
         Only Reference links found to be used by the document will be added.
         """
         # Don't do this if the document does not have markdown style links
@@ -139,29 +148,29 @@ class DocGenerator:
 
         self.strip_end_whitespace()
 
-        allLinkNames = self._spec.link_names()
+        actual_link_names = self._spec.link_names()
 
-        actualLinksUsed = {}
-        for linkName in allLinkNames:
-            escLinkName = re.escape(linkName)
-            linkNameRegex = f"(^|\\s)({escLinkName})(\\.|\\s|$)"
-            aka = self._spec.link_aka(linkName)
+        actual_links_used = {}
+        for link_name in actual_link_names:
+            esc_link_name = re.escape(link_name)
+            link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
+            aka = self._spec.link_aka(link_name)
             if aka is not None:
                 replacement = f"\\1[\\2][{aka}]\\3"
-                linkName = aka
+                link_name = aka  # noqa: PLW2901
             else:
                 replacement = r"\1[\2]\3"
 
             if self.code_block_aware_re_subn(
-                linkNameRegex,
+                link_name_regex,
                 replacement,
             ):
-                actualLinksUsed[linkName] = self._spec.link_for_linkname(linkName)
+                actual_links_used[link_name] = self._spec.link_for_link_name(link_name)
 
-        for link in actualLinksUsed:
-            self._filedata += f"\n[{link}]: {actualLinksUsed[link]}"
+        for link, actual in actual_links_used.items():
+            self._filedata += f"\n[{link}]: {actual}"
 
-    def remove_tabs(self, tabstop: int = 4):
+    def remove_tabs(self, tabstop: int = 4) -> str:
         """Replace tabs in the input text with spaces so that the text aligns on tab stops.
 
         Args:
@@ -175,7 +184,7 @@ class DocGenerator:
         # Create a regex pattern to match any tab character
         pattern = "\t"
 
-        def replace_tab(match):
+        def replace_tab(match: re.Match[str]) -> str:
             # Calculate the number of spaces needed to reach the next tab stop
             position = match.start()
             return " " * (tabstop - (position % tabstop))
@@ -185,16 +194,14 @@ class DocGenerator:
 
         self._filedata = no_tabs_text
 
-    def insert_copyright(self, changelog=True) -> str:
+    def insert_copyright(self, *, changelog: bool = True) -> str:
         """Generate a copyright notice into the given document data.
 
         document_name: Name of the signed document we also get copyright info from.
         """
-        (authors, copyright, versions, global_last_modified) = self._spec.copyright(
-            self._document_name
-        )
+        (authors, copyright_data, versions, global_last_modified) = self._spec.copyright(self._document_name)
 
-        copyright_year = copyright["created"][:4]
+        copyright_year = copyright_data["created"][:4]
         last_modified_year = global_last_modified[:4]
         if last_modified_year != copyright_year:
             copyright_year = f"{copyright_year}-{last_modified_year}"
@@ -205,8 +212,8 @@ class DocGenerator:
 
 | Copyright | :copyright: {copyright_year} {copyright["copyright"]} |
 | --- | --- |
-| License | This document is licensed under {copyright["license"]} |
-| Created | {copyright["created"]} |
+| License | This document is licensed under {copyright_data["license"]} |
+| Created | {copyright_data["created"]} |
 | Modified | {global_last_modified} |
 """.strip()
             + "\n"
@@ -224,8 +231,9 @@ class DocGenerator:
 
         return copyright_notice.strip()
 
-    def generate(self):
+    def generate(self) -> bool:
         """Generate the document.
+
         Must be implemented by Sub Classes
         Which then call this for all common processing.
         """
@@ -243,6 +251,8 @@ class DocGenerator:
         # Remove any leading or trailing newlines and add a single newline at the end/
         # Helps make clean markdown files.
         self.strip_end_whitespace()
+
+        return True
 
     def save_or_validate(
         self,
@@ -283,3 +293,14 @@ class DocGenerator:
                 print(line.rstrip())
             return False
         return True
+
+    def file_name(self) -> str:
+        """Return the files name."""
+        return self._filename
+
+    def file_path(self, relative_doc: typing.Self | None = None) -> Path:
+        """Return a path to the file."""
+        if relative_doc is not None:
+            relative_path = relative_doc.file_path().parent
+            return self._filepath.relative_to(relative_path)
+        return self._filepath

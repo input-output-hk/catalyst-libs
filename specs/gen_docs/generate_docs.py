@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-
-# Autogenerate Documentation Pages from the formal specification
+"""Autogenerate Documentation Pages from the specification."""
 
 import argparse
 import difflib
@@ -307,8 +306,7 @@ def check_is_dir(base_path: Path) -> bool:
 def init_parser() -> argparse.Namespace:
     """Initialise and run the CLI parser."""
     parser = argparse.ArgumentParser(
-        description="Markdown Documentation Generator for the"
-        " Signed Documentation Specifications",
+        description="Markdown Documentation Generator for the Signed Documentation Specifications",
     )
     parser.add_argument("spec", help="Path to JSON Specification file")
     parser.add_argument(
@@ -350,11 +348,11 @@ if __name__ == "__main__":
     good &= SpecIndex(args, spec).save_or_validate()
     good &= SpecMd(args, spec).save_or_validate()
 
-    # good &= save_or_validate(".pages", gen_spec_index, args, docs)
-    # good &= save_or_validate("spec.md", gen_spec_md, args, docs)
-    # good &= save_or_validate("types.md", gen_types_md, args, docs)
-    # good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)
-    # good &= create_individual_doc_files(docs, args)
+    # good &= save_or_validate(".pages", gen_spec_index, args, docs)  # noqa: ERA001
+    # good &= save_or_validate("spec.md", gen_spec_md, args, docs)  # noqa: ERA001
+    # good &= save_or_validate("types.md", gen_types_md, args, docs)  # noqa: ERA001
+    # good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)  # noqa: ERA001
+    # good &= create_individual_doc_files(docs, args)  # noqa: ERA001
     # good &= save_or_validate(
     #    "doc_relationships.d2",
     #    gen_docs_relationship_diagram,

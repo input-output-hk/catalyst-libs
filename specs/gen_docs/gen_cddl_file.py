@@ -1,15 +1,17 @@
-# Generate the spec.md file
+"""Generate the spec.md file."""
 
+import argparse
 import re
-from pathlib import Path
 
 from doc_generator import DocGenerator
+from signed_doc_spec import SignedDocSpec
 
 
 def add_cddl_comments(comment: str) -> tuple[str, bool]:
     """Add cddl comment markers to lines.
 
-    Returns True if more than 1 line."""
+    Returns True if more than 1 line.
+    """
     comment = comment.strip()
     comment_lines = comment.splitlines()
     comment = ""
@@ -21,16 +23,20 @@ def add_cddl_comments(comment: str) -> tuple[str, bool]:
 
 
 class CDDLFile(DocGenerator):
-    def __init__(self, args, spec, cddl_root: str):
-        file_name = (
-            "cddl/" + cddl_root.lower().replace(" ", "_").replace("-", "_") + ".cddl"
-        )
+    """Generate a CDDL File."""
+
+    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec, cddl_root: str) -> None:
+        """CDDL File Generator."""
+        file_name = "cddl/" + cddl_root.lower().replace(" ", "_").replace("-", "_") + ".cddl"
 
         super().__init__(args, spec, file_name, flags=self.NO_FLAGS)
         self._cddl_root = cddl_root
 
-    def get_cddl(self, name, found=[]) -> tuple[str, list[str]]:
+    def get_cddl(self, name: str, found: list[str] | None = None) -> tuple[str, list[str]]:
         """Get the CDDL for a metadatum."""
+        if found is None:
+            found = []
+
         this_cddl = ""
         this_def = self._spec.cddl_def(name)
         cddl_def: str = this_def["def"].strip()
@@ -60,13 +66,12 @@ class CDDLFile(DocGenerator):
 
         return this_cddl, found
 
-    def generate(self):
+    def generate(self) -> bool:
+        """Generate a CDDL File."""
         cddl_data, _ = self.get_cddl(self._cddl_root)
         defs = self._spec.cddl_def(self._cddl_root)
 
-        description, _ = add_cddl_comments(
-            defs.get("description", f"{self._cddl_root}")
-        )
+        description, _ = add_cddl_comments(defs.get("description", f"{self._cddl_root}"))
 
         # Remove double line breaks,
         # so we only ever have 1 between definitions
@@ -78,12 +83,4 @@ class CDDLFile(DocGenerator):
 
 {cddl_data.strip()}
 """
-        super().generate()
-
-    def file_path(self, depth: int = 0) -> Path:
-        """Return a path to the file"""
-        path = self._filename
-        while depth > 0:
-            depth -= 1
-            path = "../" + path
-        return path
+        return super().generate()

@@ -58,11 +58,13 @@ cddlDefinitions: #cddlDefinitions & {
 		requires: [
 			"COSE_Document_Standard_Headers",
 			"Signed_Document_Metadata_Headers",
+			"COSE_Generic_Headers",
 		]
 		def:     """
 			{
 			  \(requires[0]),
 			  \(requires[1]),
+			  \(requires[2])
 			}
 			"""
 		comment: "COSE Document Header Map"
@@ -114,6 +116,19 @@ cddlDefinitions: #cddlDefinitions & {
 		comment: "An Individual Document Signature"
 	}
 	"COSE_Signature_Header_Map": {
+		requires: [
+			"COSE_Signature_Standard_Headers",
+			"COSE_Generic_Headers",
+		]
+		def:     """
+			{
+			  \(requires[0]),
+			  \(requires[1])
+			}
+			"""
+		comment: "COSE Signature Header Map"
+	}
+	"COSE_Signature_Standard_Headers": {
 		def:     """
 			(
 				? 1 => int / tstr,  ; algorithm identifier
@@ -122,11 +137,14 @@ cddlDefinitions: #cddlDefinitions & {
 				? 4 => bstr,        ; key identifier
 				? ( 5 => bstr //    ; IV
 					6 => bstr )     ; Partial IV
-			)		
+			),
+			\(requires[1])
+			
 			"""
 		comment: "COSE Signature headers"
 		requires: [
 			"COSE_label",
+			"COSE_Generic_Headers",
 		]
 	}
 	"COSE_Generic_Headers": {

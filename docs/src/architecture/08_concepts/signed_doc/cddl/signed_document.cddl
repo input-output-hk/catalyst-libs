@@ -27,6 +27,7 @@ COSE_Document_Headers = (
 COSE_Document_Header_Map = {
   COSE_Document_Standard_Headers,
   Signed_Document_Metadata_Headers,
+  COSE_Generic_Headers
 }
 
 ; COSE Standard headers used by a Document
@@ -131,7 +132,13 @@ COSE_Signature_Headers = (
   unprotected : { COSE_Generic_Headers } ; Unused and ignored
 )
 
+; COSE Signature Header Map
+COSE_Signature_Header_Map = {
+  COSE_Signature_Standard_Headers,
+  COSE_Generic_Headers
+}
+
 ; COSE Signature headers
-COSE_Signature_Header_Map = (
+COSE_Signature_Standard_Headers = (
   4 => catalyst_id_kid
 )

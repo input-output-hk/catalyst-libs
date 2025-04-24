@@ -1,11 +1,17 @@
-# Generate the spec.md file
+"""Generate the spec.md file."""
+
+import argparse
 
 from doc_generator import DocGenerator
 from gen_cddl_file import CDDLFile
+from signed_doc_spec import SignedDocSpec
 
 
 class SpecMd(DocGenerator):
-    def __init__(self, args, spec):
+    """Generate the spec.md file."""
+
+    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec) -> None:
+        """Initialise Spec.md generator."""
         super().__init__(args, spec, "spec.md")
 
     def header_parameter_doc(self, header: str) -> str:
@@ -53,11 +59,12 @@ class SpecMd(DocGenerator):
 
         return header_parameters_doc.strip()
 
-    def generate(self):
+    def generate(self) -> bool:
         """Generate a `spec.md` file from the definitions."""
-
         signed_doc_cddl = CDDLFile(self._args, self._spec, "signed_document")
-        signed_doc_cddl.save_or_validate()
+        if not signed_doc_cddl.save_or_validate():
+            return False
+
         self._filedata = f"""
 # Catalyst Signed Document Specification
 
@@ -89,18 +96,20 @@ This allows one or more signatures to be attached to the same document.
 ### Signed Document CDDL Definition
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
-
 ??? note "CDDL"
 
+    * [{signed_doc_cddl.file_name()}]({signed_doc_cddl.file_path(self)})
+
     ```cddl
-    {{ include_file('{signed_doc_cddl.file_path()}') }}
+    {{{{ include_file('./{signed_doc_cddl.file_path(self)}', indent=4) }}}}
     ```
+
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### COSE Header Parameters
 
 COSE documents define a set of standard COSE header parameters.
-All COSE Header Parameters are protected and 
+All COSE Header Parameters are protected and
 *MUST* appear in the protected headers section of the document.
 The COSE header parameters defined and used by Catalyst Signed Documents are as follows:
 
@@ -126,7 +135,7 @@ The headers currently defined for the signatures are:
 
 The kid is a UTF-8 encoded Catalyst ID.
 Any `kid` format which conforms to the Catalyst ID specification may be used.
-The Catalyst ID unambiguously defines both the signing keys and signing algorithm 
+The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 used to sign the protected portion of the document.
 
 * Required: yes
@@ -135,4 +144,4 @@ used to sign the protected portion of the document.
 
 {self.insert_copyright()}
 """
-        super().generate()
+        return super().generate()
