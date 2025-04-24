@@ -2,8 +2,8 @@
 use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
 
 use crate::{
-    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
-    PROBLEM_REPORT_CTX,
+    signature::Signature, CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata,
+    Signatures, PROBLEM_REPORT_CTX,
 };
 
 /// Catalyst Signed Document Builder.
@@ -69,7 +69,9 @@ impl Builder {
             .build();
         let data_to_sign = cose_sign.tbs_data(&[], &signature);
         signature.signature = sign_fn(data_to_sign);
-        self.0.signatures.push(kid, signature);
+        if let Some(sign) = Signature::from_cose_sig(signature, &self.0.report) {
+            self.0.signatures.push(sign);
+        }
 
         Ok(self)
     }
