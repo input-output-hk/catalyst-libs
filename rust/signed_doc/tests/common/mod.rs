@@ -85,7 +85,7 @@ pub fn create_dummy_signed_doc(
     let signed_doc = Builder::new()
         .with_decoded_content(content)
         .with_json_metadata(with_metadata.unwrap_or(metadata))?
-        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())?
+        .add_signature(|m| sk.sign(&m).to_vec(), &kid)?
         .build();
 
     Ok((signed_doc, pk, kid))

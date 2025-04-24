@@ -37,11 +37,11 @@ async fn multiple_signatures_validation_test() {
         .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
         .with_json_metadata(common::test_metadata().2)
         .unwrap()
-        .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
+        .add_signature(|m| sk1.sign(&m).to_vec(), &kid1)
         .unwrap()
-        .add_signature(|m| sk2.sign(&m).to_vec(), kid2.clone())
+        .add_signature(|m| sk2.sign(&m).to_vec(), &kid2)
         .unwrap()
-        .add_signature(|m| sk3.sign(&m).to_vec(), kid3.clone())
+        .add_signature(|m| sk3.sign(&m).to_vec(), &kid3)
         .unwrap()
         .build();
 
