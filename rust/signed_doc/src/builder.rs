@@ -55,7 +55,7 @@ impl Builder {
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
-        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: IdUri,
+        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: &IdUri,
     ) -> anyhow::Result<Self> {
         let cose_sign = self
             .0

@@ -83,7 +83,7 @@ impl Cli {
 
                 let new_signed_doc = signed_doc
                     .into_builder()
-                    .add_signature(|message| sk.sign::<()>(&message).to_bytes().to_vec(), kid)?
+                    .add_signature(|message| sk.sign::<()>(&message).to_bytes().to_vec(), &kid)?
                     .build();
                 save_signed_doc(new_signed_doc, &doc)?;
             },

@@ -20,7 +20,7 @@ impl Signature {
             Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
             Ok(kid) => {
                 report.invalid_value(
-                    &format!("COSE signature protected header key ID"),
+                    "COSE signature protected header key ID",
                     &kid.to_string(),
                     &format!(
                         "COSE signature protected header key ID must be a Catalyst Id URI, missing URI schema {}", IdUri::SCHEME
@@ -31,7 +31,7 @@ impl Signature {
             },
             Err(e) => {
                 report.conversion_error(
-                    &format!("COSE signature protected header key ID"),
+                    "COSE signature protected header key ID",
                     &format!("{:?}", &signature.protected.header.key_id),
                     &format!("{e:?}"),
                     "Converting COSE signature header key ID to IdUri",

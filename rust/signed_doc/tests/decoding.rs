@@ -18,7 +18,7 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
         .with_decoded_content(content.clone())
-        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
         .unwrap()
         .build();
 
@@ -48,7 +48,7 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
         .with_decoded_content(content.clone())
-        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
         .unwrap()
         .build();
 
