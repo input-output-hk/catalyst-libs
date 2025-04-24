@@ -76,7 +76,7 @@ class DocGenerator:
         self.add_generic_markdown_links(
             self._spec.document_names(),
             doc_ref_link,
-            primary_source,
+            primary_source=primary_source,
         )
 
     def add_metadata_links(self) -> None:
@@ -87,7 +87,7 @@ class DocGenerator:
         self.add_generic_markdown_links(
             self._spec.metadata_names(),
             metadata_field_link,
-            self._is_metadata_primary_source,
+            primary_source=self._is_metadata_primary_source,
         )
 
     def add_metadata_format_links(self) -> None:
@@ -98,7 +98,7 @@ class DocGenerator:
         self.add_generic_markdown_links(
             self._spec.metadata_format_names(),
             metadata_format_link,
-            self._is_metadata_primary_source,
+            primary_source=self._is_metadata_primary_source,
         )
 
     def strip_end_whitespace(self) -> None:
@@ -110,7 +110,7 @@ class DocGenerator:
     def code_block_aware_re_subn(
         self,
         link_name_regex: str | re.Pattern[str],
-        replacement: str | callable[[re.Match[str]], str],
+        replacement: str | typing.Callable[[re.Match[str]], str],
     ) -> bool:
         """Do a multiline regex replacement, but ignore anything inside a code block."""
         lines = self._filedata.splitlines()
@@ -210,7 +210,7 @@ class DocGenerator:
             f"""
 ## Copyright
 
-| Copyright | :copyright: {copyright_year} {copyright["copyright"]} |
+| Copyright | :copyright: {copyright_year} {copyright_data["copyright"]} |
 | --- | --- |
 | License | This document is licensed under {copyright_data["license"]} |
 | Created | {copyright_data["created"]} |

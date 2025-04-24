@@ -13,7 +13,7 @@ class SignedDocSpec:
     DOCS_KEY = "docs"
     METADATA_KEY = "metadata"
     METADATA_FORMATS_KEY = "metadataFormats"
-    LINK_AKA_KEY = "link_aka"
+    LINK_AKA_KEY = "linkAKA"
     DOCUMENTATION_LINKS_KEY = "documentationLinks"
 
     def __init__(self, spec_file: str) -> None:
