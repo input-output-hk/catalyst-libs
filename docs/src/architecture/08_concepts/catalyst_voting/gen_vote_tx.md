@@ -27,7 +27,7 @@ Project "Catalyst" requires a structure to keep people vote's data in the secure
 ??? note "vote transaction definition: `gen_vote_tx.cddl`"
 
     ```CDDL
-    {{ include_file('src/architecture/08_concepts/catalyst_voting/cddl/gen_vote_tx.cddl', indent=4) }}
+    {{ include_file('./cddl/gen_vote_tx.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
