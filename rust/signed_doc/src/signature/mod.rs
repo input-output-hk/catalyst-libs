@@ -97,7 +97,7 @@ impl Signatures {
             .filter_map(|(idx, signature)| {
                 let sign = Signature::from_cose_sig(signature, report);
                 if sign.is_none() {
-                    report.other(&format!("COSE signature protected header key ID at id {idx}"), "Converting COSE signatures list to Calyst Signed Documents signatures list",);
+                    report.other(&format!("COSE signature protected header key ID at id {idx}"), "Converting COSE signatures list to Catalyst Signed Documents signatures list",);
                 }
                 sign
             }).collect();

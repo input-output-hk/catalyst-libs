@@ -39,7 +39,7 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
 fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
     let (_, _, metadata_fields) = common::test_metadata();
     let (sk, _, kid) = create_dummy_key_pair(RoleIndex::ROLE_0).unwrap();
-    // trasform Catalyst ID URI form to the ID form
+    // transform Catalyst ID URI form to the ID form
     let kid = kid.as_id();
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
