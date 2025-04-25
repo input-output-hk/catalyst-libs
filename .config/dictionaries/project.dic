@@ -23,6 +23,7 @@ blosc
 bmac
 bootstrapper
 BROTLI
+Cabe
 cantopen
 cardano
 carryforward
@@ -60,11 +61,13 @@ dbsync
 dcbor
 decompressor
 delegators
+direnv
 displaydoc
 dleq
 dlog
 dockerhub
 docstrings
+doctests
 Dominik
 dotenv
 dotenvy
@@ -121,6 +124,7 @@ ioerr
 iohk
 ipfs
 ipld
+ipynb
 jetbrains
 jorm
 jormungandr
@@ -169,6 +173,7 @@ MPMC
 msvc
 Multiaddr
 multiera
+mypy
 nanos
 netkey
 nextest
@@ -206,7 +211,12 @@ pubkey
 publickey
 pubspec
 pwrite
+pycodestyle
+pyenv
+Pyflakes
+pypackages
 pytest
+pytype
 qpsg
 quic
 rapidoc
@@ -284,6 +294,7 @@ utimensat
 UTXO
 uuidv4
 uuidv7
+venv
 vitss
 Vkey
 vkeywitness
