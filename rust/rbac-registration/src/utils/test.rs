@@ -266,7 +266,7 @@ pub fn block_7() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 89_726_597.into(),
-        role: 0.into(),
+        role: 0,
         txn_index: 2.into(),
         txn_hash: "5f70cb6017e0ff4369689c210bf983bdc6b184d214cb461215373c692d03e7e3"
             .parse()
