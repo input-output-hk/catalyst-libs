@@ -68,7 +68,7 @@ mod tests {
                 "content-type": ContentType::Json.to_string(),
             }))
             .unwrap()
-            .add_signature(|m| sk.sign(&m).to_vec(), kid)
+            .add_signature(|m| sk.sign(&m).to_vec(), &kid)
             .unwrap()
             .build();
 
