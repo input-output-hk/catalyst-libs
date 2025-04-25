@@ -45,7 +45,7 @@ All [COSE Header Parameters][RFC9052-HeaderParameters] are protected and
 *MUST* appear in the protected headers section of the document.
 The [COSE header parameters][RFC9052-HeaderParameters] defined and used by Catalyst Signed Documents are as follows:
 
-#### content type
+#### `content type`
 
 IANA Media Type/s allowed in the Payload
 
@@ -63,7 +63,7 @@ IANA Media Type/s allowed in the Payload
       * [RFC9165] Additional Control Operators for [CDDL][RFC8610] are supported.
       * Must not have Modules, schema must be self-contained.
 
-#### content-encoding
+#### `content-encoding`
 
 Supported HTTP Encodings of the Payload.
 If no compression or encoding is used, then this field must not be present.
@@ -92,14 +92,16 @@ The headers currently defined for the signatures are:
 
 #### `kid`
 
-The kid is a [UTF-8][RFC3629] encoded Catalyst ID.
-Any `kid` format which conforms to the Catalyst ID specification may be used.
+Catalyst ID [URI][RFC3986] identifying the Public Key.
+
+The `kid` is a [UTF-8][RFC3629] encoded Catalyst ID [URI][RFC3986].
+Any `kid` [URI][RFC3986] which conforms to the Catalyst ID specification may be used.
 The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 used to sign the protected portion of the document.
 
-* Required: yes
-* [Cose][RFC9052] Label: 4
-* Format: [UTF-8][RFC3629] encoded Catalyst ID
+* Required : yes
+* [Cose][RFC9052] Label : 4
+* Format : Catalyst ID
 
 ## Copyright
 
@@ -135,4 +137,5 @@ used to sign the protected portion of the document.
 [RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [RFC9052]: https://datatracker.ietf.org/doc/html/rfc9052
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
+[RFC3986]: https://datatracker.ietf.org/doc/html/rfc3986
 [br]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br

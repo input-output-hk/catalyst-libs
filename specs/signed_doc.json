@@ -293,7 +293,7 @@
   "cose_signature_headers": {
     "kid": {
       "coseLabel": 4,
-      "description": "Catalyst ID URI identifying the Public Key",
+      "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
       "format": "Catalyst ID",
       "required": "yes"
     }

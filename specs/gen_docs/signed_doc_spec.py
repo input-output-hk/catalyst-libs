@@ -4,17 +4,34 @@
 
 import json
 import textwrap
+import typing
+from enum import Enum
 from pathlib import Path
+
+
+class HeaderType(Enum):
+    """All header Types."""
+
+    DOCUMENT = 1
+    SIGNATURE = 2
+    METADATA = 3
 
 
 class SignedDocSpec:
     """Signed Document Specification Data."""
 
-    DOCS_KEY = "docs"
-    METADATA_KEY = "metadata"
-    METADATA_FORMATS_KEY = "metadataFormats"
-    LINK_AKA_KEY = "linkAKA"
-    DOCUMENTATION_LINKS_KEY = "documentationLinks"
+    DOCS_KEY: typing.ClassVar = "docs"
+    LINK_AKA_KEY: typing.ClassVar = "linkAKA"
+    DOCUMENTATION_LINKS_KEY: typing.ClassVar = "documentationLinks"
+    HEADERS: typing.ClassVar = {
+        HeaderType.DOCUMENT: {"headers": "cose_headers", "order": "cose_headers_order", "format": "coseHeaderFormats"},
+        HeaderType.SIGNATURE: {
+            "headers": "cose_signature_headers",
+            "order": "cose_signature_headers_order",
+            "format": "coseHeaderFormats",
+        },
+        HeaderType.METADATA: {"headers": "metadata", "order": "metadata_order", "format": "metadataFormats"},
+    }
 
     def __init__(self, spec_file: str) -> None:
         """Initialize the Signed Document Specification."""
@@ -31,36 +48,10 @@ class SignedDocSpec:
         docs: dict = self._data[self.DOCS_KEY]
         return docs.keys()
 
-    def metadata_names(self) -> list[str]:
-        """Get a list of all metadata names defined."""
-        metadata_headers = self._data["metadata_order"]
-        metadata: dict = self._data[self.METADATA_KEY]
-        for header in metadata:
-            if header not in metadata_headers:
-                metadata_headers.append(header)
-        return metadata_headers
-
-    def standard_document_header_names(self) -> list[str | int]:
-        """Get a list of all standard document header names defined."""
-        headers = self._data["cose_headers_order"]
-        header_data: dict = self._data["cose_headers"]
-        for header in header_data:
-            if header not in headers:
-                headers.append(header)
-        return headers
-
-    def standard_signature_header_names(self) -> list[str | int]:
-        """Get a list of all standard signature header names defined."""
-        headers = []
-        header_data: dict = self._data["cose_signature_headers"]
-        for header in header_data:
-            if header not in headers:
-                headers.append(header)
-        return headers
-
-    def metadata_format_names(self) -> list[str]:
+    def format_names(self, header_type: HeaderType) -> list[str]:
         """Get a list of all metadata format names defined."""
-        metadata_formats: dict = self._data[self.METADATA_FORMATS_KEY]
+        _, _, formats = self.headers_and_order(header_type=header_type)
+        metadata_formats: dict = self._data[formats]
         return metadata_formats.keys()
 
     def link_aka(self, link_name: str) -> str | None:
@@ -82,9 +73,10 @@ class SignedDocSpec:
         """Get a link for a link name."""
         return self._data[self.DOCUMENTATION_LINKS_KEY][link_name]
 
-    def cose_header(self, header: str) -> dict:
+    def header(self, header: str, header_type: HeaderType = HeaderType.DOCUMENT) -> dict:
         """Get Cose header definition."""
-        return self._data["cose_headers"][header]
+        headers, _, _ = self.headers_and_order(header_type)
+        return headers[header]
 
     def content_type_description(self, content_type: str) -> str | None:
         """Get a description for a known content type."""
@@ -100,27 +92,31 @@ class SignedDocSpec:
             description = description.get("description")
         return description
 
-    def all_cose_headers(self) -> list[str]:
-        """Return a list of sorted Cose headers."""
-        headers: dict = self._data["cose_headers"]
-        header_order: list[str] = self._data["cose_headers_order"]
+    def headers_and_order(self, header_type: HeaderType) -> tuple[dict, list[str], str]:
+        """Get headers and their ordering for a header_type."""
+        headers = self.HEADERS[header_type]["headers"]
+        header_order = self.HEADERS[header_type]["order"]
+        formats = self.HEADERS[header_type]["format"]
+
+        headers: dict = self._data[headers]
+        header_order: list[str] = self._data.get(header_order, [])
+
         # Make sure unordered headers get included in the documentation.
         for header in headers:
             if header not in header_order:
-                header_order += header
+                header_order.append(header)
+
+        return (headers, header_order, formats)
+
+    def all_headers(self, header_type: HeaderType = HeaderType.DOCUMENT) -> list[str]:
+        """Return a list of sorted Cose headers."""
+        _, header_order, _ = self.headers_and_order(header_type)
         return header_order
 
     def cddl_type_for_metadata(self, name: str | None, header_type: str) -> str:
         """Get the CDDL type for a given Metadata field."""
-        if header_type == "document":
-            headers: dict = self._data["cose_headers"]
-            formats = "coseHeaderFormats"
-        elif header_type == "signature":
-            headers: dict = self._data["cose_signature_headers"]
-            formats = "coseHeaderFormats"
-        else:
-            headers: dict = self._data[self.METADATA_KEY]
-            formats = self.METADATA_FORMATS_KEY
+        headers, _, formats = self.headers_and_order(header_type)
+
         cddl_def = headers.get(name)
         if cddl_def is not None:
             cddl_def = cddl_def.get("format")
@@ -133,7 +129,7 @@ class SignedDocSpec:
     def cddl_def(self, name: str) -> dict | None:  # noqa: C901
         """Get a cddl definition by name."""
 
-        def synthetic_headers(defs: dict, header_type: str = "metadata") -> dict:  # noqa: C901, PLR0912
+        def synthetic_headers(defs: dict, header_type: HeaderType = HeaderType.METADATA) -> dict:
             """Generate a synthetic cddl def for this type.
 
             Needs to be generated from Metadata definitions.
@@ -141,28 +137,22 @@ class SignedDocSpec:
             cddl_def = ""
             defs["requires"] = []
             exclusives = []
-            if header_type == "document":
-                header_names = self.standard_document_header_names()
-                header_map_key = "cose_headers"
-            elif header_type == "signature":
-                header_names = self.standard_signature_header_names()
-                header_map_key = "cose_signature_headers"
-            else:
-                header_names = self.metadata_names()
-                header_map_key = self.METADATA_KEY
 
-            for datum in header_names:
-                optional = "" if self._data[header_map_key][datum]["required"] == "yes" else "?"
+            headers, header_names, _ = self.headers_and_order(header_type)
 
-                exclusive: list[str] | None = self._data[header_map_key][datum].get("exclusive")
+            for header in header_names:
+                header_data = headers[header]
+                optional = "" if header_data["required"] == "yes" else "?"
+
+                exclusive: list[str] | None = header_data.get("exclusive")
                 if exclusive is not None:
-                    exclusive.append(datum)
+                    exclusive.append(header)
                     exclusive.sort()
                     if exclusive not in exclusives:
                         exclusives.append(exclusive)
                 else:
-                    cddl_type = self.cddl_type_for_metadata(datum, header_type)
-                    field_name = self._data[header_map_key][datum].get("coseLabel", datum)
+                    cddl_type = self.cddl_type_for_metadata(header, header_type)
+                    field_name = header_data.get("coseLabel", header)
                     if isinstance(field_name, str):
                         field_name = f'"{field_name}"'
                     cddl_def += f"{optional}{field_name} => {cddl_type}\n"
@@ -173,7 +163,7 @@ class SignedDocSpec:
                 exclusive_fields = []
                 for entry in exclusive_set:
                     cddl_type = self.cddl_type_for_metadata(entry, header_type)
-                    field_name = self._data[header_map_key][entry].get("coseLabel", entry)
+                    field_name = headers[entry].get("coseLabel", entry)
                     if isinstance(field_name, str):
                         field_name = f'"{field_name}"'
                     exclusive_fields.append(f"{field_name} => {cddl_type}")
@@ -193,11 +183,11 @@ class SignedDocSpec:
         if defs is not None:
             defs = defs.get(name)
             if name == "Signed_Document_Metadata_Headers":
-                defs = synthetic_headers(defs)
+                defs = synthetic_headers(defs, HeaderType.METADATA)
             elif name == "COSE_Document_Standard_Headers":
-                defs = synthetic_headers(defs, "document")
+                defs = synthetic_headers(defs, HeaderType.DOCUMENT)
             elif name == "COSE_Signature_Standard_Headers":
-                defs = synthetic_headers(defs, "signature")
+                defs = synthetic_headers(defs, HeaderType.SIGNATURE)
         return defs
 
     def copyright(self, document_name: str | None) -> tuple[dict[str, str], dict, list[dict], str]:

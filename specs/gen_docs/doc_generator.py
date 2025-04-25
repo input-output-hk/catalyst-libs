@@ -9,7 +9,7 @@ import typing
 from pathlib import Path
 
 from common import doc_ref_link, metadata_field_link, metadata_format_link
-from signed_doc_spec import SignedDocSpec
+from signed_doc_spec import HeaderType, SignedDocSpec
 
 
 class DocGenerator:
@@ -84,8 +84,9 @@ class DocGenerator:
 
         All metadata fields in text must be as `<name>` or they will not be linked.
         """
+        _, metadata_names, _ = self._spec.headers_and_order(header_type=HeaderType.METADATA)
         self.add_generic_markdown_links(
-            self._spec.metadata_names(),
+            metadata_names,
             metadata_field_link,
             primary_source=self._is_metadata_primary_source,
         )
@@ -96,7 +97,7 @@ class DocGenerator:
         All metadata formats in text must be as `<name>` or they will not be linked.
         """
         self.add_generic_markdown_links(
-            self._spec.metadata_format_names(),
+            self._spec.format_names(header_type=HeaderType.METADATA),
             metadata_format_link,
             primary_source=self._is_metadata_primary_source,
         )

@@ -21,7 +21,8 @@ format-python-code:
     ruff format .
 
 # Fix and Check Markdown files
-lint-python:
+lint-python: format-python-code
+    ruff check --fix .
     ruff check .
 
 # generates specifications data

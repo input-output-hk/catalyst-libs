@@ -4,7 +4,7 @@ import argparse
 
 from doc_generator import DocGenerator
 from gen_cddl_file import CDDLFile
-from signed_doc_spec import SignedDocSpec
+from signed_doc_spec import HeaderType, SignedDocSpec
 
 
 class SpecMd(DocGenerator):
@@ -14,9 +14,9 @@ class SpecMd(DocGenerator):
         """Initialise Spec.md generator."""
         super().__init__(args, spec, "spec.md")
 
-    def header_parameter_doc(self, header: str) -> str:
+    def header_parameter_doc(self, header: str, header_type:HeaderType) -> str:
         """Create documentation for a single cose header."""
-        options = self._spec.cose_header(header)
+        options = self._spec.header(header, header_type=header_type)
         label = options.get("coseLabel")
 
         custom_header = "***Custom Header***"
@@ -41,7 +41,7 @@ class SpecMd(DocGenerator):
                 header_format_display += value_entry
 
         return f"""
-#### {header}
+#### `{header}`
 
 {options.get("description")}
 
@@ -50,12 +50,12 @@ class SpecMd(DocGenerator):
 * Format : {header_format_display}
     """
 
-    def cose_header_parameters(self) -> str:
+    def cose_header_parameters(self, header_type: HeaderType) -> str:
         """Insert details about Cose header Parameters that are defined for use."""
-        headers = self._spec.all_cose_headers()
+        headers = self._spec.all_headers(header_type)
         header_parameters_doc = ""
         for header in headers:
-            header_parameters_doc += self.header_parameter_doc(header)
+            header_parameters_doc += self.header_parameter_doc(header, header_type=header_type)
 
         return header_parameters_doc.strip()
 
@@ -113,7 +113,7 @@ All COSE Header Parameters are protected and
 *MUST* appear in the protected headers section of the document.
 The COSE header parameters defined and used by Catalyst Signed Documents are as follows:
 
-{self.cose_header_parameters()}
+{self.cose_header_parameters(header_type=HeaderType.DOCUMENT)}
 
 ### Metadata
 
@@ -131,16 +131,7 @@ Each signature is contained in an array of signatures attached to the document.
 The signatures contain protected headers, and the signature itself.
 The headers currently defined for the signatures are:
 
-#### `kid`
-
-The kid is a UTF-8 encoded Catalyst ID.
-Any `kid` format which conforms to the Catalyst ID specification may be used.
-The Catalyst ID unambiguously defines both the signing keys and signing algorithm
-used to sign the protected portion of the document.
-
-* Required: yes
-* Cose Label: 4
-* Format: UTF-8 encoded Catalyst ID
+{self.cose_header_parameters(header_type=HeaderType.SIGNATURE)}
 
 {self.insert_copyright()}
 """
