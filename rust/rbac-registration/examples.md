@@ -33,6 +33,28 @@ It is allowed to update the role 0 with the exact same certificate.
 While it is completely useless, one can simply change the key every time with the same effect, so it doesn't make sense
 to prevent it.
 
+### Invalid registrations
+
+```mermaid
+flowchart LR
+    Root[Valid Root] --- R1[Valid update 1] --- R2[Invalid update 2] --- R3[Invalid update 3]
+    R1 --- R4[Valid update 4]
+```
+
+All following registrations (either a role update or an additional role) must reference the previous valid registration.
+In the example above both the root and the first update are valid.
+The second update is invalid, so it is ignored and the chain still consists of two transactions.
+The third update can be valid by itself, but as it references the previous invalid update it will be discarded too.
+The fourth update references the last valid registration (update number 1), so assuming it is valid, the chain now
+consists of three registrations (root, update 1 and update 4).
+
+If the root registration is invalid, then it cannot be continued: any registrations that try to reference it as a
+previous one will be invalid.
+
+### Branching registrations
+
+TODO: FIXME
+
 ### Updating a stake address
 
 ```mermaid
