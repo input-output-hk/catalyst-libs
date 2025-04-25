@@ -223,7 +223,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
 
         let report = ProblemReport::new(PROBLEM_REPORT_CTX);
         let metadata = Metadata::from_protected_header(&cose_sign.protected, &report);
-        let signatures = Signatures::from_cose_sig(&cose_sign.signatures, &report);
+        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
             Content::from_encoded(payload, metadata.content_encoding(), &report)

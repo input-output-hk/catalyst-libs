@@ -125,6 +125,10 @@ cddlDefinitions: #cddlDefinitions & {
 		def:     "bytes"
 		comment: "UTF8 Catalyst ID URI encoded as a bytes string."
 	}
+	"revocations": {
+		def: "[ * document_ver ] / true "
+		requires: ["document_ver"]
+	}
 }
 
 #cddlTypes: [
