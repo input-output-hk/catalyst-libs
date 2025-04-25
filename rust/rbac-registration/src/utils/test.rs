@@ -249,6 +249,38 @@ pub fn block_6() -> BlockTestData {
     }
 }
 
+/// Returns the decoded `conway_7.block` block that contains 6 transactions.
+/// Slot number: `89_726_597`, Block number: `3_407_396`
+/// Tx hash: 5f70cb6017e0ff4369689c210bf983bdc6b184d214cb461215373c692d03e7e3
+///
+/// CIP509 details (valid data):
+/// Role: 0
+/// Tx index: 2
+/// prv hash: None
+/// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
+/// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
+pub fn block_7() -> BlockTestData {
+    let data = hex::decode(include_str!("../test_data/cardano/conway_7.block")).unwrap();
+    BlockTestData {
+        block: block(data),
+        slot: 89_726_597.into(),
+        role: 0.into(),
+        txn_index: 2.into(),
+        txn_hash: "5f70cb6017e0ff4369689c210bf983bdc6b184d214cb461215373c692d03e7e3"
+            .parse()
+            .unwrap(),
+        prv_hash: None,
+        purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
+            .parse::<Uuid>()
+            .unwrap()
+            .try_into()
+            .unwrap(),
+        stake_addr: Some(
+            "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr".to_string(),
+        ),
+    }
+}
+
 /// Converts the given raw data to a block.
 fn block(data: Vec<u8>) -> MultiEraBlock {
     // This point is used to bypass validation in the block constructor.

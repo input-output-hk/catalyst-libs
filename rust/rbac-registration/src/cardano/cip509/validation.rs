@@ -647,4 +647,16 @@ mod tests {
         assert_eq!(1, addresses.len());
         assert_eq!(addresses.first().unwrap(), &hash);
     }
+
+    // Verify that we are able to parse `Cip509` with legacy transaction output type.
+    #[test]
+    fn legacy_transaction_output() {
+        let data = test::block_7();
+
+        let mut registrations = Cip509::from_block(&data.block, &[]);
+        assert_eq!(1, registrations.len());
+
+        let registration = registrations.pop().unwrap();
+        data.assert_valid(&registration);
+    }
 }
