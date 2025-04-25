@@ -13,6 +13,35 @@ pub struct Signature {
     signature: CoseSignature,
 }
 
+impl Signature {
+    /// Convert COSE Signature to `Signature`.
+    pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
+        match IdUri::try_from(signature.protected.header.key_id.as_ref()) {
+            Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
+            Ok(kid) => {
+                report.invalid_value(
+                    "COSE signature protected header key ID",
+                    &kid.to_string(),
+                    &format!(
+                        "COSE signature protected header key ID must be a Catalyst Id URI, missing URI schema {}", IdUri::SCHEME
+                    ),
+                    "Converting COSE signature header key ID to IdUri",
+                );
+                None
+            },
+            Err(e) => {
+                report.conversion_error(
+                    "COSE signature protected header key ID",
+                    &format!("{:?}", &signature.protected.header.key_id),
+                    &format!("{e:?}"),
+                    "Converting COSE signature header key ID to IdUri",
+                );
+                None
+            },
+        }
+    }
+}
+
 /// List of Signatures.
 #[derive(Debug, Clone, Default)]
 pub struct Signatures(Vec<Signature>);
@@ -42,9 +71,9 @@ impl Signatures {
         self.0.iter().map(|sig| sig.signature.clone())
     }
 
-    /// Add a new signature
-    pub(crate) fn push(&mut self, kid: IdUri, signature: CoseSignature) {
-        self.0.push(Signature { kid, signature });
+    /// Add a `Signature` object into the list
+    pub(crate) fn push(&mut self, sign: Signature) {
+        self.0.push(sign);
     }
 
     /// Number of signatures.
@@ -60,27 +89,19 @@ impl Signatures {
     }
 
     /// Convert list of COSE Signature to `Signatures`.
-    pub(crate) fn from_cose_sig(cose_sigs: &[CoseSignature], error_report: &ProblemReport) -> Self {
-        let mut signatures = Vec::new();
-
-        cose_sigs
+    pub(crate) fn from_cose_sig_list(cose_sigs: &[CoseSignature], report: &ProblemReport) -> Self {
+        let res = cose_sigs
             .iter()
             .cloned()
             .enumerate()
-            .for_each(|(idx, signature)| {
-                match IdUri::try_from(signature.protected.header.key_id.as_ref()) {
-                    Ok(kid) => signatures.push(Signature { kid, signature }),
-                    Err(e) => {
-                        error_report.conversion_error(
-                            &format!("COSE signature protected header key ID at id {idx}"),
-                            &format!("{:?}", &signature.protected.header.key_id),
-                            &format!("{e:?}"),
-                            "Converting COSE signature header key ID to IdUri",
-                        );
-                    },
+            .filter_map(|(idx, signature)| {
+                let sign = Signature::from_cose_sig(signature, report);
+                if sign.is_none() {
+                    report.other(&format!("COSE signature protected header key ID at id {idx}"), "Converting COSE signatures list to Catalyst Signed Documents signatures list",);
                 }
-            });
+                sign
+            }).collect();
 
-        Self(signatures)
+        Self(res)
     }
 }

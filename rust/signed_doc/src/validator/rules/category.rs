@@ -70,14 +70,18 @@ mod tests {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
         let valid_category_doc_id = UuidV7::new();
+        let valid_category_doc_ver = UuidV7::new();
         let another_type_category_doc_id = UuidV7::new();
+        let another_type_category_doc_ver = UuidV7::new();
         let missing_type_category_doc_id = UuidV7::new();
+        let missing_type_category_doc_ver = UuidV7::new();
 
         // prepare replied documents
         {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_category_doc_id.to_string(),
+                    "ver": valid_category_doc_ver.to_string(),
                     "type": CATEGORY_DOCUMENT_UUID_TYPE.to_string()
                 }))
                 .unwrap()
@@ -88,6 +92,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": another_type_category_doc_id.to_string(),
+                    "ver": another_type_category_doc_ver.to_string(),
                     "type": UuidV4::new().to_string()
                 }))
                 .unwrap()
@@ -98,6 +103,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_type_category_doc_id.to_string(),
+                    "ver": missing_type_category_doc_ver.to_string(),
                 }))
                 .unwrap()
                 .build();
@@ -108,7 +114,7 @@ mod tests {
         let rule = CategoryRule::Specified { optional: false };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": valid_category_doc_id.to_string() }
+                "category_id": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
             }))
             .unwrap()
             .build();
@@ -127,7 +133,7 @@ mod tests {
         // reference to the document with another `type` field
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": another_type_category_doc_id.to_string() }
+                "category_id": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -136,7 +142,7 @@ mod tests {
         // missing `type` field in the referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": missing_type_category_doc_id.to_string() }
+                "category_id": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -145,7 +151,7 @@ mod tests {
         // cannot find a referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": UuidV7::new().to_string() }
+                "category_id": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
             .unwrap()
             .build();
@@ -162,8 +168,11 @@ mod tests {
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
+        let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"category_id": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({
+                "category_id": {"id": ref_id.to_string(), "ver": ref_ver.to_string(), }
+            }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());

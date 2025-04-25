@@ -133,6 +133,18 @@ impl TbsCert {
     pub fn issuer_signature_algorithm(&self) -> &IssuerSignatureAlgorithm {
         &self.issuer_signature_algorithm
     }
+
+    /// Convert the TBS Certificate to CBOR.
+    ///
+    /// # Errors
+    /// Returns an error if encoding fails.
+    pub fn to_cbor<W: Write>(&self) -> Result<Vec<u8>, minicbor::encode::Error<W::Error>> {
+        let mut buf = Vec::new();
+        let mut e = Encoder::new(&mut buf);
+        self.encode(&mut e, &mut ())
+            .map_err(minicbor::encode::Error::message)?;
+        Ok(buf)
+    }
 }
 
 impl Encode<()> for TbsCert {
