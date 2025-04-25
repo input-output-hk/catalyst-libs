@@ -2,6 +2,8 @@ VERSION 0.8
 
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/mdlint:feat/include-relative-docs AS mdlint-ci
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/include-relative-docs AS cspell-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:feat/include-relative-docs AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci:feat/include-relative-docs AS cat-ci
 
 
 FROM debian:stable-slim
@@ -42,3 +44,16 @@ repo-docs:
     COPY --dir *.md LICENSE-APACHE LICENSE-MIT .
 
     SAVE ARTIFACT /repo repo
+
+# We lint python globally in repos, so that all scripts and programs
+# are linted equally.
+# Its also fast.
+check-python:
+    DO python-ci+LINT_PYTHON    
+
+# Sync standard configs.
+sync-config:
+    FROM scratch
+    COPY --dir cat-ci+repo-config/repo .
+
+    SAVE ARTIFACT /repo/ruff.toml AS LOCAL ruff.toml
