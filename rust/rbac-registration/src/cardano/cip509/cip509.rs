@@ -36,7 +36,8 @@ use crate::cardano::cip509::{
     types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
     utils::Cip0134UriSet,
     validation::{
-        validate_aux, validate_role_data, validate_stake_public_key, validate_txn_inputs_hash,
+        validate_aux, validate_role_data, validate_self_sign_cert, validate_stake_public_key,
+        validate_txn_inputs_hash,
     },
     x509_chunks::X509Chunks,
     Payment, PointTxnIdx, RoleData,
@@ -162,6 +163,7 @@ impl Cip509 {
         }
         if let Some(metadata) = &cip509.metadata {
             cip509.catalyst_id = validate_role_data(metadata, block.network(), &cip509.report);
+            validate_self_sign_cert(metadata, &report);
         }
 
         Ok(Some(cip509))

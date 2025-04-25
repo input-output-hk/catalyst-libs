@@ -157,7 +157,7 @@ pub fn block_3() -> BlockTestData {
 /// Slot number: `82_004_569`, Block number: `3_118_395`
 /// Tx hash: 0xeef40a97a4ed1e40c3febd05a84b3ffaa191141b60806c2bba85d9c6879fb378
 ///
-/// CIP509 details (valid data, signing key ref to x509 cert index 1):
+/// CIP509 details (invalid data - unknown role 4):
 /// Role: 4
 /// Tx index: 1
 /// prv hash: Link to `block_1`
@@ -174,6 +174,102 @@ pub fn block_4() -> BlockTestData {
             .parse()
             .unwrap(),
         prv_hash: Some(block_1().txn_hash),
+        purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
+            .parse::<Uuid>()
+            .unwrap()
+            .try_into()
+            .unwrap(),
+        stake_addr: Some(
+            "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr".to_string(),
+        ),
+    }
+}
+
+/// Returns the decoded `conway_5.block` block that contains 2 transactions.
+/// Slot number: `87_374_283`, Block number: `3_320_156`
+/// Tx hash: 760fd99479771d32388e8865a22c4ed2b7badca1443cffe87854f491eba96e51
+///
+/// CIP509 details (valid data):
+/// Role: 0
+/// Tx index: 1
+/// prv hash: None
+/// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
+/// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
+pub fn block_5() -> BlockTestData {
+    let data = hex::decode(include_str!("../test_data/cardano/conway_5.block")).unwrap();
+    BlockTestData {
+        block: block(data),
+        slot: 87_374_283.into(),
+        role: 0.into(),
+        txn_index: 1.into(),
+        txn_hash: "760fd99479771d32388e8865a22c4ed2b7badca1443cffe87854f491eba96e51"
+            .parse()
+            .unwrap(),
+        prv_hash: None,
+        purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
+            .parse::<Uuid>()
+            .unwrap()
+            .try_into()
+            .unwrap(),
+        stake_addr: Some(
+            "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr".to_string(),
+        ),
+    }
+}
+
+/// Returns the decoded `conway_6.block` block that contains 7 transactions.
+/// Slot number: `87_374_696`, Block number: `3_320_165`
+/// Tx hash: 3c0f2965e0a974cf45f10ba0fb2547eb9d3f8764e8608d47fbe7ff16af7f7e32
+///
+/// CIP509 details (valid data):
+/// Role: 0
+/// Tx index: 4
+/// prv hash: None
+/// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
+/// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
+pub fn block_6() -> BlockTestData {
+    let data = hex::decode(include_str!("../test_data/cardano/conway_6.block")).unwrap();
+    BlockTestData {
+        block: block(data),
+        slot: 87_374_696.into(),
+        role: 0.into(),
+        txn_index: 4.into(),
+        txn_hash: "3c0f2965e0a974cf45f10ba0fb2547eb9d3f8764e8608d47fbe7ff16af7f7e32"
+            .parse()
+            .unwrap(),
+        prv_hash: Some(block_5().txn_hash),
+        purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
+            .parse::<Uuid>()
+            .unwrap()
+            .try_into()
+            .unwrap(),
+        stake_addr: Some(
+            "stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr".to_string(),
+        ),
+    }
+}
+
+/// Returns the decoded `conway_7.block` block that contains 6 transactions.
+/// Slot number: `89_726_597`, Block number: `3_407_396`
+/// Tx hash: 5f70cb6017e0ff4369689c210bf983bdc6b184d214cb461215373c692d03e7e3
+///
+/// CIP509 details (valid data):
+/// Role: 0
+/// Tx index: 2
+/// prv hash: None
+/// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
+/// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
+pub fn block_7() -> BlockTestData {
+    let data = hex::decode(include_str!("../test_data/cardano/conway_7.block")).unwrap();
+    BlockTestData {
+        block: block(data),
+        slot: 89_726_597.into(),
+        role: 0.into(),
+        txn_index: 2.into(),
+        txn_hash: "5f70cb6017e0ff4369689c210bf983bdc6b184d214cb461215373c692d03e7e3"
+            .parse()
+            .unwrap(),
+        prv_hash: None,
         purpose: "ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c"
             .parse::<Uuid>()
             .unwrap()

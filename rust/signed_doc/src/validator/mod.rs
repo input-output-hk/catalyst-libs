@@ -10,11 +10,15 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport, uuid::Uuid};
+use catalyst_types::{
+    id_uri::{role_index::RoleIndex, IdUri},
+    problem_report::ProblemReport,
+    uuid::Uuid,
+};
 use coset::{CoseSign, CoseSignature};
 use rules::{
     CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, Rules, SectionRule,
-    TemplateRule,
+    SignatureKidRule, TemplateRule,
 };
 
 use crate::{
@@ -51,6 +55,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
+        kid: SignatureKidRule {
+            exp: &[RoleIndex::PROPOSER],
+        },
     };
     document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
 
@@ -81,6 +88,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         section: SectionRule::Specified { optional: true },
         category: CategoryRule::NotSpecified,
+        kid: SignatureKidRule {
+            exp: &[RoleIndex::ROLE_0],
+        },
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
 
@@ -102,6 +112,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
+        kid: SignatureKidRule {
+            exp: &[RoleIndex::PROPOSER],
+        },
     };
 
     document_rules_map.insert(

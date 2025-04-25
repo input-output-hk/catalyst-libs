@@ -95,14 +95,18 @@ mod tests {
         let exp_ref_type = UuidV4::new();
 
         let valid_referenced_doc_id = UuidV7::new();
+        let valid_referenced_doc_ver = UuidV7::new();
         let another_type_referenced_doc_id = UuidV7::new();
+        let another_type_referenced_doc_ver = UuidV7::new();
         let missing_type_referenced_doc_id = UuidV7::new();
+        let missing_type_referenced_doc_ver = UuidV7::new();
 
         // prepare replied documents
         {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_referenced_doc_id.to_string(),
+                    "ver": valid_referenced_doc_ver.to_string(),
                     "type": exp_ref_type.to_string()
                 }))
                 .unwrap()
@@ -113,6 +117,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": another_type_referenced_doc_id.to_string(),
+                    "ver": another_type_referenced_doc_ver.to_string(),
                     "type": UuidV4::new().to_string()
                 }))
                 .unwrap()
@@ -123,6 +128,7 @@ mod tests {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_type_referenced_doc_id.to_string(),
+                    "ver": missing_type_referenced_doc_ver.to_string(),
                 }))
                 .unwrap()
                 .build();
@@ -136,7 +142,7 @@ mod tests {
         };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": {"id": valid_referenced_doc_id.to_string() }
+                "ref": {"id": valid_referenced_doc_id.to_string(), "ver": valid_referenced_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -161,7 +167,7 @@ mod tests {
         // reference to the document with another `type` field
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": {"id": another_type_referenced_doc_id.to_string() }
+                "ref": {"id": another_type_referenced_doc_id.to_string(), "ver": another_type_referenced_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -170,7 +176,7 @@ mod tests {
         // missing `type` field in the referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": {"id": missing_type_referenced_doc_id.to_string() }
+                "ref": {"id": missing_type_referenced_doc_id.to_string(), "ver": missing_type_referenced_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -179,7 +185,7 @@ mod tests {
         // cannot find a referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": {"id": UuidV7::new().to_string() }
+                "ref": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
             .unwrap()
             .build();
@@ -195,8 +201,9 @@ mod tests {
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
+        let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string() } }))
+            .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());

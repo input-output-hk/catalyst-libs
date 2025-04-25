@@ -6,9 +6,10 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::TransactionId;
+use cardano_blockchain_types::{Cip0134Uri, StakeAddress, TransactionId};
 use catalyst_types::{id_uri::IdUri, uuid::UuidV4};
 use ed25519_dalek::VerifyingKey;
+use pallas::ledger::addresses::Address;
 use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
@@ -204,6 +205,21 @@ impl RegistrationChain {
             .get(role)
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
+
+    /// Returns a list of role 0 stake addresses.
+    #[must_use]
+    pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
+        let mut result = Vec::new();
+
+        if let Some(uris) = self.inner.certificate_uris.x_uris().get(&0) {
+            result.extend(convert_stake_addresses(uris));
+        }
+        if let Some(uris) = self.inner.certificate_uris.c_uris().get(&0) {
+            result.extend(convert_stake_addresses(uris));
+        }
+
+        result
+    }
 }
 
 /// Inner structure of registration chain.
@@ -391,6 +407,18 @@ impl RegistrationChainInner {
     }
 }
 
+/// Converts a list of `Cip0134Uri` to a list of stake addresses.
+fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
+    uris.iter()
+        .filter_map(|uri| {
+            match uri.address() {
+                Address::Stake(a) => Some(a.clone().into()),
+                _ => None,
+            }
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -398,7 +426,7 @@ mod test {
 
     #[test]
     fn multiple_registrations() {
-        let data = test::block_1();
+        let data = test::block_5();
         let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
@@ -428,7 +456,7 @@ mod test {
         );
 
         // Add the second registration.
-        let data = test::block_4();
+        let data = test::block_6();
         let registration = Cip509::new(&data.block, data.txn_index, &[])
             .unwrap()
             .unwrap();
@@ -437,59 +465,34 @@ mod test {
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
         assert!(update.role_data_record().contains_key(&data.role));
+        // Update contains changes to role 0 without adding more roles.
+        assert_eq!(update.role_data_record().len(), 1);
 
-        // There is only 1 update to role 0 data
+        // There are 2 updates to role 0 data.
         assert_eq!(
             update
                 .role_data_history()
                 .get(&RoleNumber::ROLE_0)
                 .unwrap()
                 .len(),
-            1
-        );
-        // There is only 1 update to role 4 data
-        assert_eq!(
-            update
-                .role_data_history()
-                .get(&RoleNumber::from(4))
-                .unwrap()
-                .len(),
-            1
+            2
         );
 
         let role_0_data = update.role_data_record().get(&RoleNumber::ROLE_0).unwrap();
-        assert_eq!(role_0_data.signing_keys().len(), 1);
+        assert_eq!(role_0_data.signing_keys().len(), 2);
         assert_eq!(role_0_data.encryption_keys().len(), 0);
-        assert_eq!(role_0_data.payment_keys().len(), 1);
-        assert_eq!(role_0_data.extended_data().len(), 1);
-
-        let role_4_data = update.role_data_record().get(&RoleNumber::from(4)).unwrap();
-        assert_eq!(role_4_data.signing_keys().len(), 1);
-        assert_eq!(role_4_data.encryption_keys().len(), 0);
-        assert_eq!(role_4_data.payment_keys().len(), 1);
-        assert_eq!(role_4_data.extended_data().len(), 1);
-
-        // x509 certificates update on 2 index
-        assert_eq!(update.x509_certs().len(), 2);
+        assert_eq!(role_0_data.payment_keys().len(), 2);
+        assert_eq!(role_0_data.extended_data().len(), 2);
 
         let (_k, r) = update
             .get_latest_signing_pk_for_role(&RoleNumber::ROLE_0)
             .unwrap();
-        assert_eq!(r, 0);
-        assert!(update
-            .get_latest_encryption_pk_for_role(&RoleNumber::from(4))
-            .is_none());
+        assert_eq!(r, 1);
         assert!(update
             .get_signing_pk_for_role_at_rotation(&RoleNumber::ROLE_0, 2)
             .is_none());
         assert!(update
-            .get_encryption_pk_for_role_at_rotation(&RoleNumber::from(4), 0)
-            .is_none());
-        assert!(update
             .get_singing_key_cert_or_key_for_role_at_rotation(&RoleNumber::ROLE_0, 0)
             .is_some());
-        assert!(update
-            .get_encryption_key_cert_or_key_for_role_at_rotation(&RoleNumber::from(4), 3)
-            .is_none());
     }
 }

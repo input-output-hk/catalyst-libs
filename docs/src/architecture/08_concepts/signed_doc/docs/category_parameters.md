@@ -20,17 +20,26 @@ Parameters which define a Category withing a Campaign under a Brand in the syste
 
 ### Validation
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ### Business Logic
 
 #### Front End
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 #### Back End
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
