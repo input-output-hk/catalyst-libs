@@ -108,15 +108,7 @@ fn convert_payment_key(
 
     let address = match outputs.get(index) {
         Some(conway::PseudoTransactionOutput::PostAlonzo(o)) => &o.address,
-        Some(conway::PseudoTransactionOutput::Legacy(_)) => {
-            report.other(
-                &format!(
-                    "Unsupported legacy transaction output type in payment key index ({index})"
-                ),
-                context,
-            );
-            return None;
-        },
+        Some(conway::PseudoTransactionOutput::Legacy(o)) => &o.address,
         None => {
             report.other(
                 &format!(
