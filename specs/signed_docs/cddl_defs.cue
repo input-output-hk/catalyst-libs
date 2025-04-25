@@ -33,13 +33,16 @@ cddlDefinitions: #cddlDefinitions & {
 		def: "uuid_v7"
 		requires: ["uuid_v7"]
 	}
-	"document_hash": {
-		def: "blake2b_256"
-		requires: ["blake2b_256"]
+	"cid": {
+		def: "6.42(bytes) ; TODO: add size limits if possible"
+	}
+	"document_locator": {
+		def: "{ \"cid\" => cid }"
+		requires: ["cid"]
 	}
 	"document_ref": {
-		def: "[ 1* [ document_id, document_ver, document_hash ] ]"
-		requires: ["document_id", "document_ver", "document_hash"]
+		def: "[ 1* [ document_id, document_ver, document_locator ] ]"
+		requires: ["document_id", "document_ver", "document_locator"]
 	}
 	"json_pointer": {
 		def: "text"
@@ -54,6 +57,10 @@ cddlDefinitions: #cddlDefinitions & {
 	"collaborators": {
 		def: "[ * catalyst_id ]"
 		requires: ["catalyst_id"]
+	}
+	"revocations": {
+		def: "[ * document_ver ] / true "
+		requires: ["document_ver"]
 	}
 }
 

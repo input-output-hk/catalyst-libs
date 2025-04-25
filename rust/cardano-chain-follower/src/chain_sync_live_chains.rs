@@ -76,8 +76,23 @@ impl ProtectedLiveChainBlockList {
     fn get_block(&self, point: &Point, mut advance: i64, strict: bool) -> Option<MultiEraBlock> {
         let chain = self.0.read().ok()?;
 
-        let mut this = if strict {
+        let mut this = if strict && !point.is_fuzzy() {
+            // Strict with concrete point.
+            // We can call `get` only for non fuzzy points.
+            // Because of the `Point` type equality strictly defined that fuzzy point and non fuzzy
+            // point are always not equal, even if they are pointing to the same slot.
             chain.get(point)?
+        } else if strict {
+            // Strict but fuzzy point.
+            // For the fuzzy point make a a fuzzy lookup forwards (including the point).
+            // Because of the `Point` type equality strictly defined that fuzzy point and non fuzzy
+            // point are always not equal, even if they are pointing to the same slot.
+            let found = chain.lower_bound(Bound::Included(point))?;
+            // make sure the found point is what we wanted.
+            if point.slot_or_default() != found.value().point().slot_or_default() {
+                return None;
+            }
+            found
         } else if advance < 0 {
             // This is a fuzzy lookup backwards.
             advance = advance.saturating_add(1);

@@ -1,4 +1,5 @@
 //! Catalyst ID URI.
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/>
 
 // cspell: words userinfo rngs Fftx csprng
 
@@ -25,6 +26,7 @@ use key_rotation::KeyRotation;
 use role_index::RoleIndex;
 
 /// Catalyst ID
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/>
 ///
 /// Identity of Catalyst Registration.
 /// Optionally also identifies a specific Signed Document Key
@@ -66,7 +68,7 @@ impl IdUri {
     /// * Wednesday, January 1, 2025 12:00:00 AM
     const MIN_NONCE: i64 = 1_735_689_600;
     /// URI scheme for Catalyst
-    const SCHEME: &Scheme = Scheme::new_or_panic("id.catalyst");
+    pub const SCHEME: &Scheme = Scheme::new_or_panic("id.catalyst");
 
     /// Get the cosmetic username from the URI.
     #[must_use]
@@ -142,6 +144,12 @@ impl IdUri {
     #[must_use]
     pub fn is_id(&self) -> bool {
         self.id
+    }
+
+    /// Was `IdUri` formatted as an uri when it was parsed.
+    #[must_use]
+    pub fn is_uri(&self) -> bool {
+        !self.id
     }
 
     /// Add or change the username in a Catalyst ID URI.
