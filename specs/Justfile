@@ -41,10 +41,11 @@ pre-push: format-python-code lint-python regenerate validate
 
 # Fix and Check Markdown files
 format-python-code:
+    # Sort imports.
     ruff check --select I --fix .
+    # Format code.
     ruff format .
 
 # Fix and Check Markdown files
-lint-python:
-    #ruff check --fix --select=ALL --ignore=T201 .    
+lint-python: format-python-code
     ruff check --fix  .        

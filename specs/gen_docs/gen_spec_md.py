@@ -14,7 +14,7 @@ class SpecMd(DocGenerator):
         """Initialise Spec.md generator."""
         super().__init__(args, spec, "spec.md")
 
-    def header_parameter_doc(self, header: str, header_type:HeaderType) -> str:
+    def header_parameter_doc(self, header: str, header_type: HeaderType) -> str:
         """Create documentation for a single cose header."""
         options = self._spec.header(header, header_type=header_type)
         label = options.get("coseLabel")

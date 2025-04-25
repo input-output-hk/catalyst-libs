@@ -43,7 +43,7 @@ class SignedDocSpec:
         """Return the raw spec data."""
         return self._data
 
-    def document_names(self) -> dict:
+    def document_names(self) -> list[str]:
         """Get all documents."""
         docs: dict = self._data[self.DOCS_KEY]
         return docs.keys()
@@ -175,8 +175,6 @@ class SignedDocSpec:
 )
 """.strip()
             defs["def"] = f"(\n{textwrap.indent(cddl_def, '  ')})"
-
-            print(defs)
             return defs
 
         defs = self._data.get("cddlDefinitions")
@@ -219,3 +217,20 @@ class SignedDocSpec:
             versions = doc_versions
 
         return (authors, copyright_data, versions, latest_change)
+
+    def base_document_types(self) -> dict[str, str]:
+        """Get the base document types."""
+        return self._data["base_types"]
+
+    def document_type(self, doc_name: str) -> list[str]:
+        """Get the types for a specific document."""
+        docs = self._data[self.DOCS_KEY]
+        return docs[doc_name]["type"]
+
+    def doc_name_for_type(self, uuid: str) -> str:
+        """Get the name for a document base type, given its uuid."""
+        doc_types = self.base_document_types()
+        for k, v in doc_types.items():
+            if v == uuid:
+                return k
+        return "Unknown"

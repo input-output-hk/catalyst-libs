@@ -39,6 +39,19 @@ class DocGenerator:
         self._is_metadata_primary_source = flags & self.IS_METADATA_PRIMARY_SOURCE != 0
         self._document_name = None
 
+    @staticmethod
+    def uuid_as_cbor(uuid: str) -> str:
+        """UUID in CBOR Diagnostic Notation."""
+        return f"37(h'{uuid.replace('-', '')}')"
+
+    @staticmethod
+    def name_to_spec_link(name: str, ref: str | None = None) -> str:
+        """Create a link to a document type, and an optional ref inside the document."""
+        link = "./docs/" + name.lower().replace(" ", "_") + ".md"
+        if ref is not None:
+            link += f"#{ref}"
+        return link
+
     def add_generic_markdown_links(
         self,
         field_names: list[str],

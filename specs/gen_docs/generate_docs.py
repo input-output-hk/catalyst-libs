@@ -11,6 +11,7 @@ from common import doc_ref_link, metadata_field_link, metadata_format_link
 from gen_docs_page_md import gen_docs_page_md
 from gen_spec_index import SpecIndex
 from gen_spec_md import SpecMd
+from gen_types_md import TypesMd
 from signed_doc_spec import SignedDocSpec
 
 SIGNED_DOCS_SPECS = "../signed_doc.json"
@@ -252,7 +253,6 @@ def save_or_validate(
         current_file = md_file.read_text()
         if current_file != file_data:
             print(f"Documentation not generated correctly: {file_name}.")
-            print(current_file)
             diff = difflib.unified_diff(
                 current_file.splitlines(),
                 file_data.splitlines(),
@@ -347,9 +347,8 @@ if __name__ == "__main__":
     # Generate each of the files.
     good &= SpecIndex(args, spec).save_or_validate()
     good &= SpecMd(args, spec).save_or_validate()
+    good &= TypesMd(args, spec).save_or_validate()
 
-    # good &= save_or_validate(".pages", gen_spec_index, args, docs)  # noqa: ERA001
-    # good &= save_or_validate("spec.md", gen_spec_md, args, docs)  # noqa: ERA001
     # good &= save_or_validate("types.md", gen_types_md, args, docs)  # noqa: ERA001
     # good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)  # noqa: ERA001
     # good &= create_individual_doc_files(docs, args)  # noqa: ERA001

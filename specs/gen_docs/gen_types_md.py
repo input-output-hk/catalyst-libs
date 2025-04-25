@@ -1,99 +1,90 @@
-# Generate the spec.md file
-from common import insert_copyright
+"""Generate the types.md file."""
+
+import argparse
+
+from doc_generator import DocGenerator
+from signed_doc_spec import SignedDocSpec
 
 
-def uuid_as_cbor(uuid):
-    return f"37(h'{uuid.replace('-', '')}')"
+class TypesMd(DocGenerator):
+    """Generate the `types.md` File."""
 
+    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec) -> None:
+        """Initialize."""
+        super().__init__(args, spec, "types.md")
 
-def name_to_spec_link(name, ref=None):
-    """Create a link to a document type, and an optional ref inside the document."""
-    link = "./docs/" + name.lower().replace(" ", "_") + ".md"
-    if ref is not None:
-        link += f"#{ref}"
-    return link
+    def formatted_doc_types(self, name: str) -> str:
+        """Return a formatted doc types entry."""
+        types = self._spec.document_type(name)
+        type_names = ""
+        for sub_type in types:
+            type_names += f"{self._spec.doc_name_for_type(sub_type)}/"
+        return type_names[:-1]
 
+    def formatted_cbor_doc_types(self, name: str) -> str:
+        """Return doc types formatted as cbor."""
+        types = self._spec.document_type(name)
+        type_names = "["
+        for sub_type in types:
+            type_names += self.uuid_as_cbor(sub_type) + ",<br/>"
+        return type_names[:-6] + "]"
 
-def name_for_uuid(doc_types, uuid):
-    """Get the name for a document base type, given its uuid"""
-    for k in doc_types:
-        if doc_types[k] == uuid:
-            return k
-    return "Unknown"
+    def doc_type_summary(self) -> None:
+        """Generate a Document Base Type Summary from the Document Specifications Data."""
+        doc_types = self._spec.base_document_types()
 
-
-def base_types(docs, doc_types, name):
-    types = docs[name]["type"]
-    type_names = ""
-    for sub_type in types:
-        type_names += name_for_uuid(doc_types, sub_type) + "/"
-    return type_names[:-1]
-
-
-def types_as_cbor(docs, name):
-    types = docs[name]["type"]
-    type_names = "["
-    for sub_type in types:
-        type_names += uuid_as_cbor(sub_type) + ",<br/>"
-    return type_names[:-6] + "]"
-
-
-def doc_type_details(doc_data):
-    """Generate a Document Type Detailed Summary from the Document Specifications Data"""
-    doc_types = doc_data["base_types"]
-    docs = doc_data["docs"]
-
-    doc_type_details = """
-<!-- markdownlint-disable MD033 -->
-| Document Type | Base Types | CBOR | 
-| :--- | :--- | :--- | 
-"""
-
-    for k in docs:
-        doc_type_details += f"| [{k}]({name_to_spec_link(k)}) | {base_types(docs, doc_types, k)} | {types_as_cbor(docs, k)} |\n"
-
-    doc_type_details += "<!-- markdownlint-enable MD033 -->"
-
-    return doc_type_details.strip()
-
-
-def doc_type_summary(doc_data):
-    """Generate a Document Base Type Summary from the Document Specifications Data"""
-    doc_types = doc_data["base_types"]
-
-    doc_type_summary = """
+        doc_type_summary = """
 | Base Type | UUID | CBOR |
 | :--- | :--- | :--- |
 """
 
-    for k in doc_types:
-        doc_type_summary += (
-            f"| {k} | `{doc_types[k]}` | `{uuid_as_cbor(doc_types[k])}` |\n"
-        )
+        for k, v in doc_types.items():
+            doc_type_summary += f"| {k} | `{v}` | `{self.uuid_as_cbor(v)}` |\n"
 
-    return doc_type_summary.strip()
+        return doc_type_summary.strip()
 
+    def doc_type_details(self) -> str:
+        """Generate a Document Type Detailed Summary from the Document Specifications Data."""
+        docs = self._spec.document_names()
 
-def gen_types_md(doc_defs):
-    """Generate a `types.md` file from the definitions."""
-    return f"""
+        doc_type_details = """
+<!-- markdownlint-disable MD033 -->
+| Document Type | Base Types | CBOR |
+| :--- | :--- | :--- |
+"""
+
+        for k in docs:
+            doc_type_details += (
+                f"| [{k}]({self.name_to_spec_link(k)}) |"
+                f" {self.formatted_doc_types(k)} |"
+                f" {self.formatted_cbor_doc_types(k)} |\n"
+            )
+
+        doc_type_details += "<!-- markdownlint-enable MD033 -->"
+
+        return doc_type_details.strip()
+
+    def generate(self) -> bool:
+        """Generate the `types.md` File."""
+        self._filedata = f"""
 # Document Types Table
 
 ## Document Base Types
 
 All Document Types are defined by composing these base document types:
 
-{doc_type_summary(doc_defs)}
+{self.doc_type_summary()}
 
 ## Document Types
 
 All Defined Document Types
 
-{doc_type_details(doc_defs)}
+{self.doc_type_details()}
 
 ## Document Relationship Hierarchy
 
 ![Document Relationship Hierarchy](doc_relationships.svg)
 
-{insert_copyright(doc_defs, changelog=False)}
+{self.insert_copyright(changelog=False)}
 """
+        return super().generate()
