@@ -71,7 +71,7 @@ class Metadata:
         """Is this metadata excluded from the specs definition. (must not be present)."""
         return self.required == "excluded"
 
-    def metadata_as_markdown(self, include_types: bool = True) -> str:
+    def metadata_as_markdown(self, *, include_types: bool = True) -> str:
         """Generate Markdown of Metadata fields for the default set, or a specific document."""
         field_title_level = "###"
 
