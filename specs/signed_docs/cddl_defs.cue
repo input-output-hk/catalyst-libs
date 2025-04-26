@@ -25,7 +25,11 @@ cddlDefinitions: #cddlDefinitions & {
 	}
 	"uuid_v4": {
 		def:         "#6.37(bytes .size 16)"
-		description: "Version 4 UUID"
+		description: """
+			Version 4 UUID
+			See: \(documentationLinks."RFC9562-V4")
+			     \(documentationLinks."CBOR-TAG-37")
+			"""
 		comment:     "UUIDv4"
 	}
 	"document_type": {

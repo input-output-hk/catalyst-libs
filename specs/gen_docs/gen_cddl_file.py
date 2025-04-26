@@ -2,6 +2,7 @@
 
 import argparse
 import re
+import textwrap
 
 from doc_generator import DocGenerator
 from signed_doc_spec import SignedDocSpec
@@ -65,6 +66,25 @@ class CDDLFile(DocGenerator):
 """
 
         return this_cddl, found
+
+    def markdown_reference(self, *, indent: int = 0, relative_doc: DocGenerator | None = None) -> str:
+        """Create a Markdown formatted reference for the CDDL file."""
+        file_path = self.file_path(relative_doc)
+        file_name = self.file_name()
+
+        return textwrap.indent(
+            f"""
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
+
+    * [{file_name}]({file_path})
+
+    ```cddl
+    {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
+    ```
+""".strip(),
+            " " * indent,
+        )
 
     def generate(self) -> bool:
         """Generate a CDDL File."""

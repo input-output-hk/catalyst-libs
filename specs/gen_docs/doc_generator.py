@@ -272,7 +272,8 @@ class DocGenerator:
         self,
     ) -> bool:
         """Save a file or Validate it, depending on whats required."""
-        self.generate()
+        if not self.generate():
+            return False
 
         if self._generate:
             print(f"Generating {self._filename}")

@@ -156,33 +156,25 @@ _metadata: #metadataStruct & {
 			Reference to a Linked Document or Documents.  
 			This is the primary hierarchical reference to a related document.			
 
-			This is an Array of the format:
-
-			```cddl
-			\(cddlDefinitions."document_ref".def)
-			```
-
 			If a reference is defined as required, there must be at least 1 reference specified.
 			Some documents allow multiple references, and they are documented as required.
 
-			* `document_id` is the UUIDv7 ID of the Document being referenced.
-			* `document_ver` is the UUIDv7 Version of the Document being referenced.
-			* `document_locator` is a content unique locator for the document.
-			  This serves two purposes.
+			The document reference serves two purposes:
 			  
-			  1. It ensures that the document referenced by an ID/Version is not substituted.
-			     In other words, that the document intended to be referenced, is actually referenced.
-			  2. Allow the document to be unambiguously located in decentralized storage systems.
-			  
-			  There can be any number of Document Locations in any reference.
-			  The currently defined locations are:
-			  
-			  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).
-			  * Others may be added when further storage mechanisms are defined.
+			1. It ensures that the document referenced by an ID/Version is not substituted.
+				In other words, that the document intended to be referenced, is actually referenced.
+			2. It Allows the document to be unambiguously located in decentralized storage systems.
+			
+			There can be any number of Document Locations in any reference.
+			The currently defined locations are:
+			
+			* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).
+			* Others may be added when further storage mechanisms are defined.
 
-			  The value set here does not guarantee that the document is actually stored.
-			  It only defines that if it were stored, this is the identifier that
-			  that is required to retrieve it.
+			The document location does not guarantee that the document is actually stored.
+			It only defines that if it were stored, this is the identifier
+			that is required to retrieve it.  Therefore it is required that Document References
+			are unique and reproducible, given a documents contents.
 			"""
 		validation: """
 			The following must be true for a valid reference:

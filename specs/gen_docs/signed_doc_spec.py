@@ -5,8 +5,11 @@
 import json
 import textwrap
 import typing
+from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
+
+from metadata_spec import Metadata
 
 
 class HeaderType(Enum):
@@ -15,6 +18,14 @@ class HeaderType(Enum):
     DOCUMENT = 1
     SIGNATURE = 2
     METADATA = 3
+
+
+@dataclass(kw_only=True)
+class MetadataFormat:
+    """Metadata Formats Data Definition."""
+
+    cddl: str
+    description: str
 
 
 class SignedDocSpec:
@@ -234,3 +245,31 @@ class SignedDocSpec:
             if v == uuid:
                 return k
         return "Unknown"
+
+    def get_metadata_definition(self, metadata_name: str, doc_name: str | None = None) -> Metadata:
+        """Get a metadata definition by name, and optionally for a document."""
+        if doc_name is None:
+            raw_metadata_def = self._data["metadata"][metadata_name]
+        else:
+            raw_metadata_def = self._data[self.DOCS_KEY][doc_name]["metadata"][metadata_name]
+
+        return Metadata(name=metadata_name, **raw_metadata_def)
+
+    def get_all_metadata_formats(self) -> list[str]:
+        """Get a list of all metadata formats defined."""
+        return self._data["metadataFormats"].keys()
+
+    def get_metadata_format(self, format_name: str) -> MetadataFormat:
+        """Get a metadata format definition by name."""
+        format_def = self._data["metadataFormats"][format_name]
+
+        return MetadataFormat(**format_def)
+
+    def get_metadata_as_markdown(self, doc_name: str | None = None) -> str:
+        """Get metadata definitions in a markdown format."""
+        fields = self.all_headers(HeaderType.METADATA)
+        field_display = ""
+        for field in fields:
+            metadata_def = self.get_metadata_definition(field, doc_name)
+            field_display += metadata_def.metadata_as_markdown(include_types=doc_name is not None)
+        return field_display.strip()

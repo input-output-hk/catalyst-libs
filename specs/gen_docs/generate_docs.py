@@ -9,6 +9,7 @@ from pathlib import Path
 
 from common import doc_ref_link, metadata_field_link, metadata_format_link
 from gen_docs_page_md import gen_docs_page_md
+from gen_metadata_md import MetadataMd
 from gen_spec_index import SpecIndex
 from gen_spec_md import SpecMd
 from gen_types_md import TypesMd
@@ -348,8 +349,8 @@ if __name__ == "__main__":
     good &= SpecIndex(args, spec).save_or_validate()
     good &= SpecMd(args, spec).save_or_validate()
     good &= TypesMd(args, spec).save_or_validate()
+    good &= MetadataMd(args, spec).save_or_validate()
 
-    # good &= save_or_validate("types.md", gen_types_md, args, docs)  # noqa: ERA001
     # good &= save_or_validate("metadata.md", gen_metadata_md, args, docs)  # noqa: ERA001
     # good &= create_individual_doc_files(docs, args)  # noqa: ERA001
     # good &= save_or_validate(

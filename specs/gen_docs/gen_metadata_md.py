@@ -1,50 +1,44 @@
-# Generate the spec.md file
-from common import insert_copyright, metadata_fields
+"""Generate the metadata.md file."""
+
+import argparse
+
+from doc_generator import DocGenerator
+from gen_cddl_file import CDDLFile
+from signed_doc_spec import SignedDocSpec
 
 
-def get_cddl(name, defs, found=[]):
-    """Get the CDDL for a metadatum."""
-    this_cddl = ""
-    # Add required definitions to this one (recursive)
-    for requires in defs[name]["requires"]:
-        if requires not in found:
-            next_cddl, found = get_cddl(requires, defs, found)
-            found.append(requires)
-            this_cddl += next_cddl
-    this_cddl = f"{name} = {defs[name]['def']}\n{this_cddl}"
+class MetadataMd(DocGenerator):
+    """Generate the metadata.md file."""
 
-    return this_cddl, found
+    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec) -> None:
+        """Initialise Spec.md generator."""
+        super().__init__(args, spec, "metadata.md", flags=self.HAS_MARKDOWN_LINKS + self.IS_METADATA_PRIMARY_SOURCE)
 
+    def metadata_types(self) -> str:
+        """Generate the metadata types documentation."""
+        metadata_types = ""
 
-def metadata_types(doc_defs):
-    """Generate the metadata types documentation."""
-    metadata = doc_defs["metadataFormats"]
-    cddl = doc_defs["cddlDefinitions"]
+        for format_name in self._spec.get_all_metadata_formats():
+            format_def = self._spec.get_metadata_format(format_name)
 
-    metadata_types = ""
+            cddl_def = CDDLFile(self._args, self._spec, format_def.cddl)
+            if not cddl_def.save_or_validate():
+                raise ValueError
+            cddl_markdown_ref = cddl_def.markdown_reference(relative_doc=self)
+            metadata_types += f"""
+### {format_name}
 
-    for metadatum in metadata:
-        cddl_def, _ = get_cddl(metadata[metadatum]["cddl"], cddl, [])
-        cddl_def = cddl_def.strip()
-        # TODO: We could check if the `cddl_def` is actually valid CDDL here.
-        metadata_types += f"""
-### {metadatum}
+{format_def.description}
 
-{metadata[metadatum]["description"]}
-
-#### CDDL Specification
-
-```cddl
-{cddl_def}
-```
+{cddl_markdown_ref}
 """
 
-    return metadata_types.strip()
+        return metadata_types.strip()
 
-
-def gen_metadata_md(doc_defs):
-    """Generate a `metadata.md` file from the definitions."""
-    return f"""
+    def generate(self) -> bool:
+        """Generate the `types.md` File."""
+        try:
+            self._filedata = f"""
 # Metadata Fields
 
 ## Metadata Types
@@ -52,11 +46,15 @@ def gen_metadata_md(doc_defs):
 The following types of metadata have been defined.
 All Metadata fields use one of these types.
 
-{metadata_types(doc_defs)}
+{self.metadata_types()}
 
 ## Individual Metadata field definitions
 
-{metadata_fields(doc_defs)}
+{self._spec.get_metadata_as_markdown()}
 
-{insert_copyright(doc_defs, changelog=False)}
+{self.insert_copyright(changelog=False)}
 """
+        except Exception as e:  # noqa: BLE001
+            print(f"Failed to generate metadata: {e}")
+            return False
+        return super().generate()
