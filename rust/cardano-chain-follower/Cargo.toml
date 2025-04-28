@@ -58,6 +58,14 @@ hickory-resolver = { version = "0.24.2", features = ["dns-over-rustls"] }
 moka = { version = "0.12.9", features = ["sync"] }
 cpu-time = "1.0.0"
 
+# Its a transitive dependency of the "ureq" crate,
+# but its breaks API after version "0.26.8".
+webpki-roots = { version = "=0.26.8" }
+
+[package.metadata.cargo-machete]
+# remove that after fixing issues with latest crates
+ignored = ["webpki-roots"]
+
 [dev-dependencies]
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 test-log = { version = "0.2.16", default-features = false, features = [
