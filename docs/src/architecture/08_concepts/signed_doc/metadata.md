@@ -310,8 +310,7 @@ addition to the author.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Brand Parameters](./docs/brand_parameters.md) |
-| Exclusive | [`brand_id`](metadata.md#brand_id) |
-|  | [`campaign_id`](metadata.md#campaign_id) |
+| Exclusive | [`campaign_id`](metadata.md#campaign_id) |
 |  | [`category_id`](metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
@@ -322,7 +321,9 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 
 * Any linked referenced document that includes a [`brand_id`](metadata.md#brand_id) must match the
 [`brand_id`](metadata.md#brand_id) of the referencing document.
-* MUST NOT be present in any document that contains ['brand_id', 'campaign_id', 'category_id'] metadata.
+* MUST NOT be present in any document that contains
+[`campaign_id`](metadata.md#campaign_id)
+and [`category_id`](metadata.md#category_id) metadata.
 
 ### `campaign_id`
 
@@ -333,7 +334,6 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Campaign Parameters](./docs/campaign_parameters.md) |
 | Exclusive | [`brand_id`](metadata.md#brand_id) |
-|  | [`campaign_id`](metadata.md#campaign_id) |
 |  | [`category_id`](metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
@@ -344,7 +344,9 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 
 * Any linked referenced document that includes a [`campaign_id`](metadata.md#campaign_id) must match the
 [`campaign_id`](metadata.md#campaign_id) of the referencing document.
-* MUST NOT be present in any document that contains ['brand_id', 'campaign_id', 'category_id'] metadata.
+* MUST NOT be present in any document that contains
+[`brand_id`](metadata.md#brand_id)
+and [`category_id`](metadata.md#category_id) metadata.
 
 ### `category_id`
 
@@ -356,7 +358,6 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 | Valid References | [Category Parameters](./docs/category_parameters.md) |
 | Exclusive | [`brand_id`](metadata.md#brand_id) |
 |  | [`campaign_id`](metadata.md#campaign_id) |
-|  | [`category_id`](metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
@@ -366,7 +367,9 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 
 * Any linked referenced document that includes a [`category_id`](metadata.md#category_id) must match the
 [`category_id`](metadata.md#category_id) of the referencing document.
-* MUST NOT be present in any document that contains ['brand_id', 'campaign_id', 'category_id'] metadata.
+* MUST NOT be present in any document that contains
+[`brand_id`](metadata.md#brand_id)
+and [`campaign_id`](metadata.md#campaign_id) metadata.
 
 ### `election_id`
 

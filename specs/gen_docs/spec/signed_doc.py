@@ -2,6 +2,7 @@
 
 # Autogenerate Documentation Pages from the formal specification
 
+import datetime
 import json
 import textwrap
 import typing
@@ -9,7 +10,16 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from metadata_spec import Metadata
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+
+from spec.cddl_definitions import CDDLDefinition
+from spec.change_log_entry import ChangeLogEntry
+from spec.content_types import ContentTypes, EncodingTypes
+from spec.copyright import Copyright
+from spec.cose_header import CoseHeader
+from spec.document import Document
+from spec.metadata import Metadata
+from spec.metadata_formats import MetadataFormats
 
 
 class HeaderType(Enum):
@@ -20,7 +30,7 @@ class HeaderType(Enum):
     METADATA = 3
 
 
-@dataclass(kw_only=True)
+@dataclass(kw_only=True, frozen=True)
 class MetadataFormat:
     """Metadata Formats Data Definition."""
 
@@ -28,20 +38,51 @@ class MetadataFormat:
     description: str
 
 
+class SignedDoc(BaseModel):
+    """Signed Doc Deserialized Specification."""
+
+    authors: dict[str, str]
+    base_types: dict[str, str]
+    cddl_definitions: dict[str, CDDLDefinition] = Field(alias="cddlDefinitions")
+    content_types: dict[str, ContentTypes] = Field(alias="contentTypes")
+    copyright: Copyright
+    cose_header_formats: dict[str, MetadataFormats] = Field(alias="coseHeaderFormats")
+    cose_headers: dict[str, CoseHeader]
+    cose_headers_order: list[str]
+    cose_signature_headers: dict[str, CoseHeader]
+    docs: dict[str, Document]
+    documentation_links: dict[str, HttpUrl] = Field(alias="documentationLinks")
+    encoding_types: dict[str, EncodingTypes] = Field(alias="encodingTypes")
+    link_aka: dict[str, str] = Field(alias="linkAKA")
+    metadata: dict[str, Metadata]
+    metadata_formats: dict[str, MetadataFormats] = Field(alias="metadataFormats")
+    metadata_order: list[str]
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class SignedDocSpec:
     """Signed Document Specification Data."""
 
-    DOCS_KEY: typing.ClassVar = "docs"
-    LINK_AKA_KEY: typing.ClassVar = "linkAKA"
-    DOCUMENTATION_LINKS_KEY: typing.ClassVar = "documentationLinks"
-    HEADERS: typing.ClassVar = {
-        HeaderType.DOCUMENT: {"headers": "cose_headers", "order": "cose_headers_order", "format": "coseHeaderFormats"},
+    DOCS_KEY: typing.ClassVar[str] = "docs"
+    LINK_AKA_KEY: typing.ClassVar[str] = "linkAKA"
+    DOCUMENTATION_LINKS_KEY: typing.ClassVar[str] = "documentationLinks"
+    HEADERS: typing.ClassVar[dict[str, dict[str, str]]] = {
+        HeaderType.DOCUMENT: {
+            "headers": "cose_headers",
+            "order": "cose_headers_order",
+            "format": "coseHeaderFormats",
+        },
         HeaderType.SIGNATURE: {
             "headers": "cose_signature_headers",
             "order": "cose_signature_headers_order",
             "format": "coseHeaderFormats",
         },
-        HeaderType.METADATA: {"headers": "metadata", "order": "metadata_order", "format": "metadataFormats"},
+        HeaderType.METADATA: {
+            "headers": "metadata",
+            "order": "metadata_order",
+            "format": "metadataFormats",
+        },
     }
 
     def __init__(self, spec_file: str) -> None:
@@ -49,6 +90,7 @@ class SignedDocSpec:
         with Path(spec_file).open("r") as f:
             self._data: dict = json.load(f)
         self._file = spec_file
+        self._spec = SignedDoc(**self._data)
 
     def data(self) -> dict:
         """Return the raw spec data."""
@@ -56,8 +98,7 @@ class SignedDocSpec:
 
     def document_names(self) -> list[str]:
         """Get all documents."""
-        docs: dict = self._data[self.DOCS_KEY]
-        return docs.keys()
+        return self._spec.docs.keys()
 
     def format_names(self, header_type: HeaderType) -> list[str]:
         """Get a list of all metadata format names defined."""
@@ -67,41 +108,36 @@ class SignedDocSpec:
 
     def link_aka(self, link_name: str) -> str | None:
         """Get a Link AKA for a link name, or None if it doesn't exist."""
-        link_aka: dict = self._data[self.LINK_AKA_KEY]
-        return link_aka.get(link_name)
+        return self._spec.link_aka.get(link_name)
 
     def link_names(self) -> list[str]:
         """Get a list of ALL link names, including AKAs.
 
         Sorted from longest Link name to shortest.
         """
-        link_aka: list[str] = list(self._data[self.LINK_AKA_KEY].keys())
-        primary_links: list[str] = list(self._data[self.DOCUMENTATION_LINKS_KEY].keys())
+        link_aka: list[str] = list(self._spec.link_aka.keys())
+        primary_links: list[str] = list(self._spec.documentation_links.keys())
 
         return sorted(link_aka + primary_links, key=lambda x: -len(x))
 
     def link_for_link_name(self, link_name: str) -> str:
         """Get a link for a link name."""
-        return self._data[self.DOCUMENTATION_LINKS_KEY][link_name]
+        return self._spec.documentation_links[link_name]
 
-    def header(self, header: str, header_type: HeaderType = HeaderType.DOCUMENT) -> dict:
+    def header(
+        self, header: str, header_type: HeaderType = HeaderType.DOCUMENT
+    ) -> dict:
         """Get Cose header definition."""
         headers, _, _ = self.headers_and_order(header_type)
         return headers[header]
 
-    def content_type_description(self, content_type: str) -> str | None:
+    def content_type_description(self, content_type: str) -> str:
         """Get a description for a known content type."""
-        description = self._data["contentTypes"].get(content_type)
-        if description is not None:
-            description = description.get("description")
-        return description
+        return self._spec.content_types[content_type].description
 
-    def encoding_type_description(self, encoding_type: str) -> str | None:
+    def encoding_type_description(self, encoding_type: str) -> str:
         """Get a description for a known content type."""
-        description = self._data["encodingTypes"].get(encoding_type)
-        if description is not None:
-            description = description.get("description")
-        return description
+        return self._spec.encoding_types[encoding_type].description
 
     def headers_and_order(self, header_type: HeaderType) -> tuple[dict, list[str], str]:
         """Get headers and their ordering for a header_type."""
@@ -140,7 +176,9 @@ class SignedDocSpec:
     def cddl_def(self, name: str) -> dict | None:  # noqa: C901
         """Get a cddl definition by name."""
 
-        def synthetic_headers(defs: dict, header_type: HeaderType = HeaderType.METADATA) -> dict:
+        def synthetic_headers(
+            defs: dict, header_type: HeaderType = HeaderType.METADATA
+        ) -> dict:
             """Generate a synthetic cddl def for this type.
 
             Needs to be generated from Metadata definitions.
@@ -199,29 +237,35 @@ class SignedDocSpec:
                 defs = synthetic_headers(defs, HeaderType.SIGNATURE)
         return defs
 
-    def copyright(self, document_name: str | None) -> tuple[dict[str, str], dict, list[dict], str]:
+    def copyright(
+        self,
+        document_name: str | None,
+    ) -> tuple[dict[str, str], Copyright, list[ChangeLogEntry], datetime.date]:
         """Get copyright information from the spec."""
 
-        def get_latest_file_change(versions: list, doc_versions: list | None) -> str:
+        def get_latest_file_change(
+            versions: list[ChangeLogEntry], doc_versions: list[ChangeLogEntry] | None
+        ) -> datetime.date:
             """Get the largest document version date."""
-            latest_date = ""
+            latest_date = datetime.date.fromtimestamp(0.0)  # noqa: DTZ012
             for ver in versions:
-                latest_date = max(latest_date, ver["modified"])
+                latest_date = max(latest_date, ver.modified)
 
             if doc_versions is not None:
                 for ver in doc_versions:
-                    latest_date = max(latest_date, ver["modified"])
+                    latest_date = max(latest_date, ver.modified)
 
             return latest_date
 
-        authors = self._data["authors"]
-        copyright_data = self._data["copyright"]
-        versions = copyright_data["versions"]
+        authors = self._spec.authors
+        copyright_data = self._spec.copyright
+        versions = copyright_data.versions
 
         doc_versions = None
         if document_name is not None:
-            authors = self._data[self.DOCS_KEY][document_name]["authors"] | authors
-            doc_versions = self._data[self.DOCS_KEY][document_name]["versions"]
+            doc = self._spec.docs[document_name]
+            authors = doc.authors | authors
+            doc_versions = doc.versions
 
         latest_change = get_latest_file_change(versions, doc_versions)
         if doc_versions is not None:
@@ -246,14 +290,14 @@ class SignedDocSpec:
                 return k
         return "Unknown"
 
-    def get_metadata_definition(self, metadata_name: str, doc_name: str | None = None) -> Metadata:
+    def get_metadata(self, metadata_name: str, doc_name: str | None = None) -> Metadata:
         """Get a metadata definition by name, and optionally for a document."""
         if doc_name is None:
-            raw_metadata_def = self._data["metadata"][metadata_name]
+            raw_metadata_def = self._spec.metadata[metadata_name]
         else:
-            raw_metadata_def = self._data[self.DOCS_KEY][doc_name]["metadata"][metadata_name]
-
-        return Metadata(name=metadata_name, **raw_metadata_def)
+            raw_metadata_def = self._spec.docs[doc_name].metadata[metadata_name]
+        raw_metadata_def.set_name(metadata_name, doc_name)
+        return raw_metadata_def
 
     def get_all_metadata_formats(self) -> list[str]:
         """Get a list of all metadata formats defined."""
@@ -270,6 +314,8 @@ class SignedDocSpec:
         fields = self.all_headers(HeaderType.METADATA)
         field_display = ""
         for field in fields:
-            metadata_def = self.get_metadata_definition(field, doc_name)
-            field_display += metadata_def.metadata_as_markdown(include_types=doc_name is not None)
+            metadata_def = self.get_metadata(field, doc_name)
+            field_display += metadata_def.metadata_as_markdown(
+                include_types=doc_name is not None,
+            )
         return field_display.strip()

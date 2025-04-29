@@ -1,9 +1,74 @@
+"""Generate the individual pages docs/<doc_name>.md file."""
+
+import argparse
+import typing
+
+from spec.signed_doc import SignedDocSpec
+
+from .cddl_file import CDDLFile
+from .doc_generator import DocGenerator
+from .docs_relationship_diagram_d2 import gen_doc_d2
+
+
+class IndividualDocMd(DocGenerator):
+    """Generate the individual pages docs/<doc_name>.md file."""
+
+    TODO_MSG: typing.ClassVar[str] = """
+This specification outlines the required definitions for the current features. 
+The document will be incrementally improved in future iterations as more functionality 
+and features are added.
+This section will be included and updated in future iterations.
+""".strip()
+
+    def __init__(
+        self, args: argparse.Namespace, spec: SignedDocSpec, doc_name: str
+    ) -> None:
+        """Generate the individual pages docs/<doc_name>.md file."""
+        file_name = "docs/" + doc_name.lower().replace(" ", "_") + ".md"
+        super().__init__(args, spec, file_name, flags=self.HAS_MARKDOWN_LINKS)
+
+        self._document_name = doc_name
+
+    @classmethod
+    def save_or_validate_all(
+        cls, args: argparse.Namespace, spec: SignedDocSpec
+    ) -> bool:
+        """Save or Validate all documentation pages."""
+        good = True
+        for doc_name in spec.document_names():
+            good &= cls(args, spec, doc_name).save_or_validate()
+
+        return good
+
+    def generate(self) -> bool:
+        """Generate the individual documents File."""
+        try:
+            # TODO: generate the relationship diagram.  # noqa: FIX002, TD002, TD003
+            # doc_d2 = gen_doc_d2(self._document_name, self._spec.copyrightdoc_defs, depth=1, stand_alone=True).strip()  # noqa: ERA001
+
+            self._filedata = f"""
+# {self._document_name}
+
+## Description
+
+{doc_defs["docs"][name].get("description", todo_msg)}
+
+```d2 layout="elk"
+{doc_d2}
+```
+
+"""
+        except Exception as e:  # noqa: BLE001
+            print(f"Failed to generate documentation for metadata: {e}")
+            return False
+        return super().generate()
+
+
 # Generate the spec.md file
 import json
 from urllib.parse import urlparse
 
 from common import insert_copyright, metadata_fields
-from gen_docs_relationship_diagram_d2 import gen_doc_d2
 
 
 def header_parameter_summary(name, doc_defs: dict) -> str:
@@ -85,12 +150,6 @@ def document_signers(name: str, doc_defs: dict) -> str:
 def gen_docs_page_md(name: str, doc_defs: dict) -> str:
     """Generate an individual Documents Specification Page file from the definitions."""
     doc_d2 = gen_doc_d2(name, doc_defs, depth=1, stand_alone=True).strip()
-    todo_msg = """
-This specification outlines the required definitions for the current features. 
-The document will be incrementally improved in future iterations as more functionality 
-and features are added.
-This section will be included and updated in future iterations.
-""".strip()
 
     return f"""
 # {name}

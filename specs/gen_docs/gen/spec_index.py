@@ -2,8 +2,8 @@
 
 import argparse
 
-from doc_generator import DocGenerator
-from signed_doc_spec import SignedDocSpec
+from gen.doc_generator import DocGenerator
+from spec.signed_doc import SignedDocSpec
 
 
 class SpecIndex(DocGenerator):

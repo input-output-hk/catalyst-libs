@@ -25,9 +25,9 @@ regenerate: check
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
     cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > signed_doc.json
     # Generate the markdown docs from the specification.
-    cd gen_docs; ./generate_docs.py -g -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    cd gen_docs; ./main.py -g -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
     # Check our validation code actually works properly
-    cd gen_docs; ./generate_docs.py -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    cd gen_docs; ./main.py -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
     # Generate an .svg from the d2 diagram
     d2 "../docs/src/architecture/08_concepts/signed_doc/doc_relationships.d2"
 

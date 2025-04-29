@@ -7,13 +7,14 @@ import re
 import sys
 from pathlib import Path
 
+from spec_signed_doc import SignedDocSpec
+
 from common import doc_ref_link, metadata_field_link, metadata_format_link
 from gen_docs_page_md import gen_docs_page_md
 from gen_metadata_md import MetadataMd
 from gen_spec_index import SpecIndex
 from gen_spec_md import SpecMd
 from gen_types_md import TypesMd
-from signed_doc_spec import SignedDocSpec
 
 SIGNED_DOCS_SPECS = "../signed_doc.json"
 SIGNED_DOCS_PAGES_DIR = "../../docs/src/architecture/08_concepts/catalyst_docs"

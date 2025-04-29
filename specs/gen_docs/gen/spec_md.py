@@ -2,9 +2,9 @@
 
 import argparse
 
-from doc_generator import DocGenerator
-from gen_cddl_file import CDDLFile
-from signed_doc_spec import HeaderType, SignedDocSpec
+from gen.cddl_file import CDDLFile
+from gen.doc_generator import DocGenerator
+from spec.signed_doc import HeaderType, SignedDocSpec
 
 
 class SpecMd(DocGenerator):
@@ -55,7 +55,9 @@ class SpecMd(DocGenerator):
         headers = self._spec.all_headers(header_type)
         header_parameters_doc = ""
         for header in headers:
-            header_parameters_doc += self.header_parameter_doc(header, header_type=header_type)
+            header_parameters_doc += self.header_parameter_doc(
+                header, header_type=header_type
+            )
 
         return header_parameters_doc.strip()
 

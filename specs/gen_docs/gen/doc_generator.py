@@ -8,8 +8,8 @@ import re
 import typing
 from pathlib import Path
 
-from common import doc_ref_link, metadata_field_link, metadata_format_link
-from signed_doc_spec import HeaderType, SignedDocSpec
+from spec.metadata import Metadata
+from spec.signed_doc import HeaderType, SignedDocSpec
 
 
 class DocGenerator:
@@ -88,7 +88,7 @@ class DocGenerator:
         """
         self.add_generic_markdown_links(
             self._spec.document_names(),
-            doc_ref_link,
+            Metadata.doc_ref_link,
             primary_source=primary_source,
         )
 
@@ -97,10 +97,12 @@ class DocGenerator:
 
         All metadata fields in text must be as `<name>` or they will not be linked.
         """
-        _, metadata_names, _ = self._spec.headers_and_order(header_type=HeaderType.METADATA)
+        _, metadata_names, _ = self._spec.headers_and_order(
+            header_type=HeaderType.METADATA
+        )
         self.add_generic_markdown_links(
             metadata_names,
-            metadata_field_link,
+            Metadata.field_link,
             primary_source=self._is_metadata_primary_source,
         )
 
@@ -111,7 +113,7 @@ class DocGenerator:
         """
         self.add_generic_markdown_links(
             self._spec.format_names(header_type=HeaderType.METADATA),
-            metadata_format_link,
+            Metadata.format_link,
             primary_source=self._is_metadata_primary_source,
         )
 
@@ -213,21 +215,25 @@ class DocGenerator:
 
         document_name: Name of the signed document we also get copyright info from.
         """
-        (authors, copyright_data, versions, global_last_modified) = self._spec.copyright(self._document_name)
+        (authors, copyright_data, versions, global_last_modified) = (
+            self._spec.copyright(self._document_name)
+        )
 
-        copyright_year = copyright_data["created"][:4]
-        last_modified_year = global_last_modified[:4]
+        copyright_year = copyright_data.created.year
+        last_modified_year = global_last_modified.year
         if last_modified_year != copyright_year:
-            copyright_year = f"{copyright_year}-{last_modified_year}"
+            copyright_year = f"{copyright_year:04}-{last_modified_year:04}"
+        else:
+            copyright_year = f"{copyright_year:04}"
 
         copyright_notice = (
             f"""
 ## Copyright
 
-| Copyright | :copyright: {copyright_year} {copyright_data["copyright"]} |
+| Copyright | :copyright: {copyright_year} {copyright_data.copyright} |
 | --- | --- |
-| License | This document is licensed under {copyright_data["license"]} |
-| Created | {copyright_data["created"]} |
+| License | This document is licensed under {copyright_data.license} |
+| Created | {copyright_data.created} |
 | Modified | {global_last_modified} |
 """.strip()
             + "\n"
@@ -241,7 +247,11 @@ class DocGenerator:
         if changelog:
             copyright_notice += "\n### Changelog\n\n"
             for version in versions:
-                copyright_notice += f"#### {version['version']} ({version['modified']})\n\n{version['changes']}\n\n"
+                copyright_notice += f"""#### {version.version} ({version.modified})
+
+{version.changes}
+
+"""
 
         return copyright_notice.strip()
 

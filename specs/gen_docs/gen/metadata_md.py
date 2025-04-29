@@ -1,18 +1,24 @@
 """Generate the metadata.md file."""
 
 import argparse
+import traceback
 
-from doc_generator import DocGenerator
-from gen_cddl_file import CDDLFile
-from signed_doc_spec import SignedDocSpec
+from gen.cddl_file import CDDLFile
+from gen.doc_generator import DocGenerator
+from spec.signed_doc import SignedDocSpec
 
 
 class MetadataMd(DocGenerator):
     """Generate the metadata.md file."""
 
     def __init__(self, args: argparse.Namespace, spec: SignedDocSpec) -> None:
-        """Initialise Spec.md generator."""
-        super().__init__(args, spec, "metadata.md", flags=self.HAS_MARKDOWN_LINKS + self.IS_METADATA_PRIMARY_SOURCE)
+        """Initialise metadata.md generator."""
+        super().__init__(
+            args,
+            spec,
+            "metadata.md",
+            flags=self.HAS_MARKDOWN_LINKS + self.IS_METADATA_PRIMARY_SOURCE,
+        )
 
     def metadata_types(self) -> str:
         """Generate the metadata types documentation."""
@@ -56,5 +62,28 @@ All Metadata fields use one of these types.
 """
         except Exception as e:  # noqa: BLE001
             print(f"Failed to generate metadata: {e}")
+            print(traceback.format_exc())
             return False
         return super().generate()
+
+    @staticmethod
+    def format_link(name: str, depth: int = 0) -> str:
+        """Metadata Format link."""
+        link = f"metadata.md#{name.lower().replace(' ', '-')}"
+
+        while depth > 0:
+            link = f"../{link}"
+            depth -= 1
+
+        return f"[{name}]({link})"
+
+    @staticmethod
+    def field_link(name: str, depth: int = 0) -> str:
+        """Metadata Field link."""
+        link = f"metadata.md#{name.lower().replace('`', '')}"
+
+        while depth > 0:
+            link = f"../{link}"
+            depth -= 1
+
+        return f"[`{name}`]({link})"

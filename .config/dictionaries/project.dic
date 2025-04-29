@@ -125,6 +125,7 @@ iohk
 ipfs
 ipld
 ipynb
+isort
 jetbrains
 jorm
 jormungandr
@@ -212,6 +213,8 @@ publickey
 pubspec
 pwrite
 pycodestyle
+pydantic
+pydot
 pyenv
 Pyflakes
 pypackages
