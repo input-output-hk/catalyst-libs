@@ -15,7 +15,8 @@ Commonly used abbreviations in this document:
 * A stake address or `StakeN` (for example, `Stake1`) - a stake address in the role 0 registration.
 * A (public) key or `PubKeyN` (`PubKey3`) - a subject public key of the role 0.
 * A chain or `ChainN` (`Chain1`) - a chain of individual registration transactions.
-* A root - the first registration in RBAC registration chain.
+* A root (`Root`) - the first registration in RBAC registration chain.
+* A registration or a registration transaction - a transaction that contains CIP509 RBAC registration.
 
 In diagrams registration chains are either marked as `Root --- R1 --- R2 --- ...` when there is a single chain or with
 a letter with a number (`A0 --- A1`) when there are multiple ones.
