@@ -100,14 +100,14 @@ flowchart LR
 
 It is allowed to change a stake address by updating the role 0.
 
-### Updating a public key
+### Updating a subject public key
 
 ```mermaid
 flowchart LR
     Root[PubKey1] --- R1[PubKey2] --- R2[PubKey3]
 ```
 
-It is allowed to change a public key by updating the role 0.
+It is allowed to change a subject public key by updating the role 0.
 It is worth noting that the Catalyst ID associated with this registration chain is based on the subject public key of
 the very first role 0 registration and updating the key doesn't change the Catalyst ID.
 In the example above the Catalyst ID is based on the `PubKey1`.
@@ -137,7 +137,7 @@ flowchart LR
 It isn't allowed to use the key that was already used to start any of existing chains because it would result in the
 same Catalyst ID.
 In the example above the `Chain1` chain consists of the initial registration with the `PubKey1` key (therefore the
-Catalyst ID is based on it) and two updated with `PubKey2` and `PubKey3`.
+Catalyst ID is based on it) with two subject public key updates (`PubKey2` and `PubKey3`).
 The `Chain2` chain is invalid because it uses the same `PubKey1` and would have the same Catalyst ID.
 Both `Chain3` and `Chain4` chains are valid even though they use the `PubKey2` and `PubKey3` keys that are already used
 in the `Chain1` chain.
@@ -170,7 +170,8 @@ flowchart LR
 In the example above there is the `Chain1` registration chain that was created with some `Stake1` stake address and
 `PubKey1` key then both address and key were updated to `Stake2` and `PubKey2`.
 The `Chain2` registration is invalid because it uses the same stake address and key.
-There are no reason to start a new registration chain and not to update the existing one, so this isn't allowed.
+There are no reason to start a new registration chain with the same data already registered and not to update the
+existing one, so this isn't allowed.
 
 The `Chain3` registration is valid because the `PubKey2` key wasn't used before to start a chain and the `Stake1` stake
 address isn't currently used by `Chain1`.
@@ -179,7 +180,8 @@ table.
 Therefore, when registration information is requested using the `Stake1` address we need to build both chains to
 determine that only `Chain3` is relevant.
 
-The `Chain4` registration is valid, but it "overrides" `Chain1` essentially discarding it and starting a new chain.
+The `Chain4` registration is valid, but it "overrides" `Chain1` essentially discarding it and starting a new chain
+because it has the same stake address (`Stake2`).
 This can be useful if a user lost his private key while maintaining access to his Cardano wallet (and the stake address
 used in that registration chain).
 After that `Chain1` is considered no longer valid and must not be used.
