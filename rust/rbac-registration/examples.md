@@ -39,6 +39,8 @@ to prevent it.
 flowchart LR
     Root[Valid Root] --- R1[Valid update 1] --- R2[Invalid update 2] --- R3[Invalid update 3]
     R1 --- R4[Valid update 4]
+    style R2 fill: red
+    style R3 fill: red
 ```
 
 All following registrations (either a role update or an additional role) must reference the previous valid registration.
@@ -51,9 +53,42 @@ consists of three registrations (root, update 1 and update 4).
 If the root registration is invalid, then it cannot be continued: any registrations that try to reference it as a
 previous one will be invalid.
 
+### Multiple registrations in one block
+
+```mermaid
+flowchart LR
+    Root[Root] --- A[A]
+    Root --- B[B]
+    Root --- C[C]
+    style A fill: yellow
+    style B fill: yellow
+    style C fill: yellow
+```
+
+Technically it is possible for multiple RBAC registration transactions to be included into the same block, but there is
+no way to specify the ordering.
+Therefore, one should normally wait for the previous transaction to be processed before submitting the next one.
+
+In the example above there are three transactions: `A`, `B` and `C`.
+If all of them reference the root registration and are included into the same block then only one of them will be
+applied to the registration chain and the other two will be considered invalid.
+If these transactions reference each other (`A - B - C`) then only the first one will be applied regardless of the
+processing order.
+
 ### Branching registrations
 
-TODO: FIXME
+```mermaid
+flowchart LR
+    Root[Slot 100] --- R1[Slot 110] --- R2[Slot 121]
+    Root ---- R3[Slot 120] --- R4[Slot 130]
+    style R3 fill: red
+    style R4 fill: red
+```
+
+It isn't allowed to reference not the latest registration in the chain.
+In the example the registration in the slot number 120 would be ignored because it references the root registration, but
+the latest transaction is the one in the slot number 110.
+The registration in the slot number 130 is ignored because it references an invalid transaction.
 
 ### Updating a stake address
 
