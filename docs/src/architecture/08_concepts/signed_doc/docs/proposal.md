@@ -18,8 +18,8 @@ The payload of a proposal is controlled by its template.
   shape: sql_table
   "content type": application/json
   "type [0]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": UUIDv7
-  "ver": UUIDv7
+  "id": Document Id
+  "ver": Document Ver
   "template": Proposal Template
   "collaborators": Collaborators Reference List
   "revocations": Version Revocations
@@ -80,6 +80,7 @@ Before accepting a new proposal to be published, the backend will ensure:
 ## Metadata
 
 ### [`type`](../metadata.md#type)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -89,41 +90,44 @@ Before accepting a new proposal to be published, the backend will ensure:
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### [`type`](../metadata.md#type) Validation
 
 **MUST** be a known document type.
 
 ### [`id`](../metadata.md#id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Id](../metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### [`id`](../metadata.md#id) Validation
 
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
 ### [`ver`](../metadata.md#ver)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Ver](../metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
-#### Validation
+#### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
 
 ### [`template`](../metadata.md#template)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -133,12 +137,13 @@ The document version must always be >= the document ID.
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
-#### Validation
+#### [`template`](../metadata.md#template) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
 ### [`collaborators`](../metadata.md#collaborators)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -152,7 +157,7 @@ Every subsequent version can amend the collaborators list.
 However, the initial Author can never be removed from being able to
 publish a new version of the document.
 
-#### Validation
+#### [`collaborators`](../metadata.md#collaborators) Validation
 
 This list does not imply these collaborators have consented to collaborate, only that the author/s
 are permitting these potential collaborators to participate in the drafting and submission process.
@@ -160,6 +165,7 @@ However, any document submission referencing a proposal MUST be signed by all co
 addition to the author.
 
 ### [`revocations`](../metadata.md#revocations)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -181,12 +187,13 @@ A new version of the document that is published after this, may reinstate prior
 document versions, by not listing them as revoked.
 However, any document where revocations was set `true` can never be reinstated.
 
-#### Validation
+#### [`revocations`](../metadata.md#revocations) Validation
 
 If the field is `true` the payload may be absent or invalid.
 Such documents may never be submitted.
 
 ### [`brand_id`](../metadata.md#brand_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -199,7 +206,7 @@ Such documents may never be submitted.
 <!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
 
-#### Validation
+#### [`brand_id`](../metadata.md#brand_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -213,6 +220,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
   * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
 
 ### [`campaign_id`](../metadata.md#campaign_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -225,7 +233,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
-#### Validation
+#### [`campaign_id`](../metadata.md#campaign_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -239,6 +247,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
   * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
 
 ### [`category_id`](../metadata.md#category_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -251,7 +260,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
-#### Validation
+#### [`category_id`](../metadata.md#category_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 

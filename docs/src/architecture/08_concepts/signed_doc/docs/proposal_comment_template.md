@@ -19,8 +19,8 @@ The payload of a proposal comment is controlled by its template.
   "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
   "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
   "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": UUIDv7
-  "ver": UUIDv7
+  "id": Document Id
+  "ver": Document Ver
   "template": Proposal Comment Meta Template (Optional)
   "brand_id": Brand Parameters (Optional)
   "campaign_id": Campaign Parameters (Optional)
@@ -65,6 +65,7 @@ This section will be included and updated in future iterations.
 ## Metadata
 
 ### [`type`](../metadata.md#type)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -74,41 +75,44 @@ This section will be included and updated in future iterations.
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### [`type`](../metadata.md#type) Validation
 
 **MUST** be a known document type.
 
 ### [`id`](../metadata.md#id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Id](../metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### [`id`](../metadata.md#id) Validation
 
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
 ### [`ver`](../metadata.md#ver)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Ver](../metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
-#### Validation
+#### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
 
 ### [`template`](../metadata.md#template)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -118,12 +122,13 @@ The document version must always be >= the document ID.
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
-#### Validation
+#### [`template`](../metadata.md#template) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
 ### [`brand_id`](../metadata.md#brand_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -135,7 +140,7 @@ The document payload is not valid if it does not validate completely against the
 <!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
 
-#### Validation
+#### [`brand_id`](../metadata.md#brand_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -146,6 +151,7 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 and [`category_id`](../metadata.md#category_id) metadata.
 
 ### [`campaign_id`](../metadata.md#campaign_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -157,7 +163,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
-#### Validation
+#### [`campaign_id`](../metadata.md#campaign_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -168,6 +174,7 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 and [`category_id`](../metadata.md#category_id) metadata.
 
 ### [`category_id`](../metadata.md#category_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -179,7 +186,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
-#### Validation
+#### [`category_id`](../metadata.md#category_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 

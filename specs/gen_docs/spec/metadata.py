@@ -124,7 +124,7 @@ class Metadata(BaseModel):
         """Is this metadata excluded from the specs definition. (must not be present)."""
         return self.required == "excluded"
 
-    def metadata_as_markdown(self, *, include_types: bool = True) -> str:
+    def metadata_as_markdown(self, *, doc_types: list[str] | None = None) -> str:
         """Generate Markdown of Metadata fields for the default set, or a specific document."""
         field_title_level = "###"
 
@@ -139,9 +139,9 @@ class Metadata(BaseModel):
         if not self.is_excluded():
             field_display += f"| Format | `{self.format}` |\n"
 
-            if include_types and len(self.type) > 0:
+            if self.name == "type" and doc_types is not None:
                 # Display the actual documents type values
-                monospace_types = [f"`{doc_type}`" for doc_type in self.type]
+                monospace_types = [f"`{doc_type}`" for doc_type in doc_types]
                 field_display += f"| Type | {',<br/>'.join(monospace_types)} |\n"
 
             if self.multiple:

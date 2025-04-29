@@ -7,14 +7,15 @@ import re
 import sys
 from pathlib import Path
 
-from spec_signed_doc import SignedDocSpec
-
-from common import doc_ref_link, metadata_field_link, metadata_format_link
+import rich
 from gen_docs_page_md import gen_docs_page_md
 from gen_metadata_md import MetadataMd
 from gen_spec_index import SpecIndex
 from gen_spec_md import SpecMd
 from gen_types_md import TypesMd
+from spec_signed_doc import SignedDocSpec
+
+from common import doc_ref_link, metadata_field_link, metadata_format_link
 
 SIGNED_DOCS_SPECS = "../signed_doc.json"
 SIGNED_DOCS_PAGES_DIR = "../../docs/src/architecture/08_concepts/catalyst_docs"
@@ -239,22 +240,22 @@ def save_or_validate(
     file_data = strip_end_whitespace(file_data)
     md_file = Path(args.output).joinpath(file_name)
     if args.generate:
-        print(f"Generating {file_name}")
+        rich.print(f"Generating {file_name}")
         if md_file.exists():
             old_contents = md_file.read_text()
             if old_contents == file_data:
-                print(f"{file_name} is already up-to-date.")
+                rich.print(f"{file_name} is already up-to-date.")
                 return True
         md_file.write_text(file_data)
     else:
-        print(f"Validating {file_name}")
+        rich.print(f"Validating {file_name}")
         if not md_file.exists():
-            print(f"Documentation file missing: {file_name}.")
+            rich.print(f"Documentation file missing: {file_name}.")
             return False
 
         current_file = md_file.read_text()
         if current_file != file_data:
-            print(f"Documentation not generated correctly: {file_name}.")
+            rich.print(f"Documentation not generated correctly: {file_name}.")
             diff = difflib.unified_diff(
                 current_file.splitlines(),
                 file_data.splitlines(),
@@ -266,7 +267,7 @@ def save_or_validate(
                 lineterm="\n",
             )
             for line in diff:
-                print(line.rstrip())
+                rich.print(line.rstrip())
             return False
     return True
 
@@ -300,7 +301,7 @@ def check_is_dir(base_path: Path) -> bool:
     if not base_path.exists():
         base_path.mkdir(parents=True)
     elif not base_path.is_dir():
-        print("Base path is not a Directory")
+        rich.print("Base path is not a Directory")
         return False
     return True
 
@@ -362,10 +363,10 @@ if __name__ == "__main__":
     # )
 
     if not good:
-        print("File Comparisons Failed, Documentation is not current.")
+        rich.print("File Comparisons Failed, Documentation is not current.")
         sys.exit(1)
 
     if args.generate:
-        print("Documentation Generated Successfully.")
+        rich.print("Documentation Generated Successfully.")
     else:
-        print("Documentation Validated Successfully.")
+        rich.print("Documentation Validated Successfully.")

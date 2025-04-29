@@ -5,9 +5,10 @@ import argparse
 import sys
 from pathlib import Path
 
+import rich
 from rich_argparse import RichHelpFormatter
 
-from gen.docs_page_md import gen_docs_page_md
+from gen.docs_page_md import IndividualDocMd
 from gen.metadata_md import MetadataMd
 from gen.spec_index import SpecIndex
 from gen.spec_md import SpecMd
@@ -25,7 +26,7 @@ def check_is_dir(base_path: Path) -> bool:
     if not base_path.exists():
         base_path.mkdir(parents=True)
     elif not base_path.is_dir():
-        print("Base path is not a Directory")
+        rich.print("Base path is not a Directory")
         return False
     return True
 
@@ -74,15 +75,16 @@ def main(args: argparse.Namespace) -> None:
     good &= SpecMd(args, spec).save_or_validate()
     good &= TypesMd(args, spec).save_or_validate()
     good &= MetadataMd(args, spec).save_or_validate()
+    good &= IndividualDocMd.save_or_validate_all(args, spec)
 
     if not good:
-        print("File Comparisons Failed, Documentation is not current.")
+        rich.print("File Comparisons Failed, Documentation is not current.")
         sys.exit(1)
 
     if args.generate:
-        print("Documentation Generated Successfully.")
+        rich.print("Documentation Generated Successfully.")
     else:
-        print("Documentation Validated Successfully.")
+        rich.print("Documentation Validated Successfully.")
 
 
 if __name__ == "__main__":

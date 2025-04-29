@@ -11,8 +11,8 @@ A Moderation Action performed on any Comment.
   "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
   "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
   "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
-  "id": UUIDv7
-  "ver": UUIDv7
+  "id": Document Id
+  "ver": Document Ver
   "ref": Proposal Comment
 
 }
@@ -51,6 +51,7 @@ This section will be included and updated in future iterations.
 ## Metadata
 
 ### [`type`](../metadata.md#type)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -60,41 +61,44 @@ This section will be included and updated in future iterations.
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### [`type`](../metadata.md#type) Validation
 
 **MUST** be a known document type.
 
 ### [`id`](../metadata.md#id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Id](../metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### [`id`](../metadata.md#id) Validation
 
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
 ### [`ver`](../metadata.md#ver)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Ver](../metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
-#### Validation
+#### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
 
 ### [`ref`](../metadata.md#ref)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -105,35 +109,27 @@ The document version must always be >= the document ID.
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
-This is an Array of the format:
-
-```cddl
-[ 1* [ document_id, document_ver, document_locator ] ]
-```
-
 If a reference is defined as required, there must be at least 1 reference specified.
 Some documents allow multiple references, and they are documented as required.
 
-* `document_id` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
-* `document_ver` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `document_locator` is a content unique locator for the document.
-  This serves two purposes.
+The document reference serves two purposes:
 
-  1. It ensures that the document referenced by an ID/Version is not substituted.
-     In other words, that the document intended to be referenced, is actually referenced.
-  2. Allow the document to be unambiguously located in decentralized storage systems.
+1. It ensures that the document referenced by an ID/Version is not substituted.
+    In other words, that the document intended to be referenced, is actually referenced.
+2. It Allows the document to be unambiguously located in decentralized storage systems.
 
-  There can be any number of Document Locations in any reference.
-  The currently defined locations are:
+There can be any number of Document Locations in any reference.
+The currently defined locations are:
 
-  * `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
-  * Others may be added when further storage mechanisms are defined.
+* `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+* Others may be added when further storage mechanisms are defined.
 
-  The value set here does not guarantee that the document is actually stored.
-  It only defines that if it were stored, this is the identifier that
-  that is required to retrieve it.
+The document location does not guarantee that the document is actually stored.
+It only defines that if it were stored, this is the identifier
+that is required to retrieve it.  Therefore it is required that Document References
+are unique and reproducible, given a documents contents.
 
-#### Validation
+#### [`ref`](../metadata.md#ref) Validation
 
 The following must be true for a valid reference:
 
@@ -143,7 +139,10 @@ The following must be true for a valid reference:
 
 ## Payload
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ## Signers
 

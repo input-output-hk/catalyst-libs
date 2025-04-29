@@ -20,6 +20,7 @@ from spec.cose_header import CoseHeader
 from spec.document import Document
 from spec.metadata import Metadata
 from spec.metadata_formats import MetadataFormats
+from spec.optional import OptionalField
 
 
 class HeaderType(Enum):
@@ -275,12 +276,11 @@ class SignedDocSpec:
 
     def base_document_types(self) -> dict[str, str]:
         """Get the base document types."""
-        return self._data["base_types"]
+        return self._spec.base_types
 
     def document_type(self, doc_name: str) -> list[str]:
         """Get the types for a specific document."""
-        docs = self._data[self.DOCS_KEY]
-        return docs[doc_name]["type"]
+        return self._spec.docs[doc_name].type
 
     def doc_name_for_type(self, uuid: str) -> str:
         """Get the name for a document base type, given its uuid."""
@@ -289,6 +289,12 @@ class SignedDocSpec:
             if v == uuid:
                 return k
         return "Unknown"
+
+    def get_document(self, doc_name: str) -> Document:
+        """Get a named document."""
+        doc = self._spec.docs[doc_name]
+        doc.set_name(doc_name)
+        return doc
 
     def get_metadata(self, metadata_name: str, doc_name: str | None = None) -> Metadata:
         """Get a metadata definition by name, and optionally for a document."""
@@ -314,8 +320,12 @@ class SignedDocSpec:
         fields = self.all_headers(HeaderType.METADATA)
         field_display = ""
         for field in fields:
+            doc_types = None
+            if doc_name is not None:
+                doc_types = self.get_document(doc_name).type
             metadata_def = self.get_metadata(field, doc_name)
-            field_display += metadata_def.metadata_as_markdown(
-                include_types=doc_name is not None,
-            )
+            if doc_name is None or metadata_def.required != OptionalField.excluded:
+                field_display += metadata_def.metadata_as_markdown(
+                    doc_types=doc_types,
+                )
         return field_display.strip()

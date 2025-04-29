@@ -2,13 +2,13 @@
 
 from typing import Any
 
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 
 class Payload(BaseModel):
     """Payload Deserialized Specification."""
 
     description: str
-    schema: AnyUrl | dict[str, Any] | None = Field(default=None)
+    schema: HttpUrl | dict[str, Any] | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")

@@ -8,6 +8,8 @@ import re
 import typing
 from pathlib import Path
 
+import rich
+
 from spec.metadata import Metadata
 from spec.signed_doc import HeaderType, SignedDocSpec
 
@@ -286,24 +288,24 @@ class DocGenerator:
             return False
 
         if self._generate:
-            print(f"Generating {self._filename}")
+            rich.print(f"Generating {self._filename}")
             if self._filepath.exists():
                 old_contents = self._filepath.read_text()
                 if old_contents == self._filedata:
-                    print(f"{self._filename} is already up-to-date.")
+                    rich.print(f"{self._filename} is already up-to-date.")
                     return True
 
             self._filepath.write_text(self._filedata)
             return True
 
-        print(f"Validating {self._filename}")
+        rich.print(f"Validating {self._filename}")
         if not self._filepath.exists():
-            print(f"Documentation file missing: {self._filename}.")
+            rich.print(f"Documentation file missing: {self._filename}.")
             return False
 
         current_file = self._filepath.read_text()
         if current_file != self._filedata:
-            print(f"Documentation not generated correctly: {self._filename}.")
+            rich.print(f"Documentation not generated correctly: {self._filename}.")
             diff = difflib.unified_diff(
                 current_file.splitlines(),
                 self._filedata.splitlines(),
@@ -315,7 +317,7 @@ class DocGenerator:
                 lineterm="\n",
             )
             for line in diff:
-                print(line.rstrip())
+                rich.print(line.rstrip())
             return False
         return True
 

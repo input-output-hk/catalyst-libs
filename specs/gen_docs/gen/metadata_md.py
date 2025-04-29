@@ -1,11 +1,15 @@
 """Generate the metadata.md file."""
 
 import argparse
-import traceback
+
+import rich
+from rich.console import Console
 
 from gen.cddl_file import CDDLFile
 from gen.doc_generator import DocGenerator
 from spec.signed_doc import SignedDocSpec
+
+console = Console()
 
 
 class MetadataMd(DocGenerator):
@@ -61,8 +65,8 @@ All Metadata fields use one of these types.
 {self.insert_copyright(changelog=False)}
 """
         except Exception as e:  # noqa: BLE001
-            print(f"Failed to generate metadata: {e}")
-            print(traceback.format_exc())
+            rich.print(f"Failed to generate metadata: {e}")
+            console.print_exception()
             return False
         return super().generate()
 

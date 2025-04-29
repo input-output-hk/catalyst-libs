@@ -27,7 +27,9 @@ class Document(BaseModel):
     type: list[str]
     description: str | None = Field(default=None)
     validation: str | None = Field(default=None)
-    business_logic: DocumentBusinessLogic | None = Field(default=None)
+    business_logic: DocumentBusinessLogic = Field(
+        default_factory=DocumentBusinessLogic,
+    )
     headers: dict[str, CoseHeader]
     metadata: dict[str, Metadata]
     payload: Payload | None = Field(default=None)
@@ -35,4 +37,13 @@ class Document(BaseModel):
     authors: dict[str, str]
     versions: list[ChangeLogEntry]
 
+    doc_name: str | None = Field(default=None)  # Set when wwe get a document
+
     model_config = ConfigDict(extra="forbid")
+
+    def set_name(self, doc_name: str | None = None) -> None:
+        """Set the name properties."""
+        self.doc_name = doc_name
+
+        for name, meta in self.metadata.items():
+            meta.set_name(name, doc_name)
