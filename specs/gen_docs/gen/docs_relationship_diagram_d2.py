@@ -1,6 +1,4 @@
-# Generate the spec.md file
-# from common import doc_ref_link, insert_copyright
-from common import insert_copyright
+"""Generate the doc_relationship_diagram.d2."""
 
 doc_config = """
 vars: {
@@ -16,11 +14,13 @@ vars: {
 title = """
 title: |~md
   # Signed Document Relationship Hierarchy
-~| {near: top-center}        
+~| {near: top-center}
 """
 
 
-def gen_doc_d2(doc: str, doc_defs: dict, depth=0, stand_alone=False) -> str:
+def gen_doc_d2(
+    doc: str, doc_defs: dict, depth: int = 0, stand_alone: bool = False
+) -> str:  # noqa: C901
     """Generate an individual d2 table for an individual document."""
     ref_links = ""
 
