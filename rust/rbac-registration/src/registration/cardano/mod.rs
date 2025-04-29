@@ -139,7 +139,7 @@ impl RegistrationChain {
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
-                let rotation = KeyRotation::from_keys_decrement(rdr.signing_keys());
+                let rotation = KeyRotation::from_latest_rotation(rdr.signing_keys());
 
                 key.data().extract_pk().map(|pk| (pk, rotation))
             })
@@ -154,7 +154,7 @@ impl RegistrationChain {
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
-                let rotation = KeyRotation::from_keys_decrement(rdr.encryption_keys());
+                let rotation = KeyRotation::from_latest_rotation(rdr.encryption_keys());
 
                 key.data().extract_pk().map(|pk| (pk, rotation))
             })
@@ -413,11 +413,9 @@ impl RegistrationChainInner {
 /// Converts a list of `Cip0134Uri` to a list of stake addresses.
 fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
     uris.iter()
-        .filter_map(|uri| {
-            match uri.address() {
-                Address::Stake(a) => Some(a.clone().into()),
-                _ => None,
-            }
+        .filter_map(|uri| match uri.address() {
+            Address::Stake(a) => Some(a.clone().into()),
+            _ => None,
         })
         .collect()
 }

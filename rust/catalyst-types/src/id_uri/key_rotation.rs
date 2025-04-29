@@ -31,13 +31,16 @@ impl KeyRotation {
         self == Self::DEFAULT
     }
 
-    /// Get the current rotation from the provided indexed data, if present.
+    /// Get the key by the rotation value from the provided keys slice, if present.
     pub fn get_key<'a, T>(&self, keys: &'a [T]) -> Option<&'a T> {
         keys.get(self.0 as usize)
     }
 
-    /// Get the current rotation from the provided indexed data, if present.
-    pub fn from_keys_decrement<T>(keys: &[T]) -> Self {
+    /// Get the latest rotation value calculated from the provided keys slice
+    /// (`keys.len() - 1`).
+    ///
+    /// An empty slice will be saturated to `0` rotation value.
+    pub fn from_latest_rotation<T>(keys: &[T]) -> Self {
         // we allow the cast here as per spec we cannot overflow `u16` with a keys count.
         #[allow(clippy::cast_possible_truncation)]
         let rotation = keys.len() as u16;
