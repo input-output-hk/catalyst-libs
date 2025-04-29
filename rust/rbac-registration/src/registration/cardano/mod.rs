@@ -413,9 +413,11 @@ impl RegistrationChainInner {
 /// Converts a list of `Cip0134Uri` to a list of stake addresses.
 fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
     uris.iter()
-        .filter_map(|uri| match uri.address() {
-            Address::Stake(a) => Some(a.clone().into()),
-            _ => None,
+        .filter_map(|uri| {
+            match uri.address() {
+                Address::Stake(a) => Some(a.clone().into()),
+                _ => None,
+            }
         })
         .collect()
 }
