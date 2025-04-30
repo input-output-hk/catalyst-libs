@@ -8,7 +8,7 @@ use anyhow::bail;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Cip0134Uri, StakeAddress, TransactionId};
 use catalyst_types::{
-    id_uri::{role_index::RoleId, IdUri},
+    id_uri::{key_rotation::KeyRotation, role_index::RoleId, IdUri},
     uuid::UuidV4,
 };
 use ed25519_dalek::VerifyingKey;
@@ -134,12 +134,14 @@ impl RegistrationChain {
     /// Get the latest signing public key for a role.
     /// Returns the public key and the rotation,`None` if not found.
     #[must_use]
-    pub fn get_latest_signing_pk_for_role(&self, role: &RoleId) -> Option<(VerifyingKey, usize)> {
+    pub fn get_latest_signing_pk_for_role(
+        &self, role: &RoleId,
+    ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
-                key.data()
-                    .extract_pk()
-                    .map(|pk| (pk, rdr.signing_keys().len().saturating_sub(1)))
+                let rotation = KeyRotation::from_latest_rotation(rdr.signing_keys());
+
+                key.data().extract_pk().map(|pk| (pk, rotation))
             })
         })
     }
@@ -149,12 +151,12 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_latest_encryption_pk_for_role(
         &self, role: &RoleId,
-    ) -> Option<(VerifyingKey, usize)> {
+    ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
-                key.data()
-                    .extract_pk()
-                    .map(|pk| (pk, rdr.encryption_keys().len().saturating_sub(1)))
+                let rotation = KeyRotation::from_latest_rotation(rdr.encryption_keys());
+
+                key.data().extract_pk().map(|pk| (pk, rotation))
             })
         })
     }
@@ -163,7 +165,7 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_signing_pk_for_role_at_rotation(
-        &self, role: &RoleId, rotation: usize,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
@@ -175,7 +177,7 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_encryption_pk_for_role_at_rotation(
-        &self, role: &RoleId, rotation: usize,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
@@ -187,7 +189,7 @@ impl RegistrationChain {
     /// given rotation.
     #[must_use]
     pub fn get_singing_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleId, rotation: usize,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -199,7 +201,7 @@ impl RegistrationChain {
     /// with given rotation.
     #[must_use]
     pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleId, rotation: usize,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -492,12 +494,12 @@ mod test {
         let (_k, r) = update
             .get_latest_signing_pk_for_role(&RoleId::Role0)
             .unwrap();
-        assert_eq!(r, 1);
+        assert_eq!(r, KeyRotation::from(1));
         assert!(update
-            .get_signing_pk_for_role_at_rotation(&RoleId::Role0, 2)
+            .get_signing_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(2))
             .is_none());
         assert!(update
-            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleId::Role0, 0)
+            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(0))
             .is_some());
     }
 }
