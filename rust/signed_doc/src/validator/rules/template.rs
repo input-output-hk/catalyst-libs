@@ -10,7 +10,7 @@ use crate::{
     validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
-/// Enum represents different content schemas, agains which documents content would be
+/// Enum represents different content schemas, against which documents content would be
 /// validated.
 #[allow(dead_code)]
 pub(crate) enum ContentSchema {
