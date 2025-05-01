@@ -41,7 +41,7 @@ check-docs-generation:
     COPY --dir docs+generated-signed-docs-pages/signed_doc signed_doc
      # Check our validation code actually works properly
     RUN cd gen_docs; \
-        ./generate_docs.py -o "../signed_doc" ../signed_doc.json 
+        ./main.py -o "../signed_doc" ../signed_doc.json 
 
 
 #  Regenerate - using the builder
