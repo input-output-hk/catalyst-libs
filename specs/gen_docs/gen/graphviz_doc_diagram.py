@@ -1,4 +1,4 @@
-# Graphviz DOT file generation functions.
+"""Graphviz DOT file generation functions."""
 
 from textwrap import indent
 

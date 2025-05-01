@@ -25,7 +25,9 @@ class DocRelationshipFile(DocGenerator):
         super().__init__(args, spec, file_name, flags=self.NO_FLAGS, depth=depth)
         self._document_name = doc_name
 
-    def markdown_reference(self, *, indent: int = 0, relative_doc: DocGenerator | None = None, extension="png") -> str:
+    def markdown_reference(
+        self, *, indent: int = 0, relative_doc: DocGenerator | None = None, extension: str = "png"
+    ) -> str:
         """Create a Markdown formatted reference for the DOT file."""
         file_path = self.file_path(relative_doc)
         file_name = self.file_name().rsplit("/")[-1]

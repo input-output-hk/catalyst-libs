@@ -4,7 +4,6 @@ import argparse
 
 from gen.cddl_file import CDDLFile
 from gen.doc_generator import DocGenerator
-from gen.doc_relationship_diagrams import DocRelationshipFile
 from spec.signed_doc import HeaderType, SignedDocSpec
 
 

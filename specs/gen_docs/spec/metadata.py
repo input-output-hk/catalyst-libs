@@ -1,8 +1,6 @@
 """Metadata Field Specification."""
 
-from dataclasses import dataclass
 from functools import cached_property
-from typing import Any, Self
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field
 
