@@ -165,7 +165,7 @@ fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) ->
             if !schema_validation_errors.is_empty() {
                 doc.report().functional_validation(
             &format!(
-                "Proposal document content does not compliant with the template json schema. [{schema_validation_errors}]"
+                "Proposal document content does not compliant with the json schema. [{schema_validation_errors}]"
             ),
             "Invalid Proposal document content",
         );
