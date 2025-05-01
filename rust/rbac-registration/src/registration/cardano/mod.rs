@@ -7,7 +7,10 @@ use std::{collections::HashMap, sync::Arc};
 use anyhow::bail;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Cip0134Uri, StakeAddress, TransactionId};
-use catalyst_types::{id_uri::IdUri, uuid::UuidV4};
+use catalyst_types::{
+    id_uri::{key_rotation::KeyRotation, IdUri},
+    uuid::UuidV4,
+};
 use ed25519_dalek::VerifyingKey;
 use pallas::ledger::addresses::Address;
 use tracing::error;
@@ -133,12 +136,12 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_latest_signing_pk_for_role(
         &self, role: &RoleNumber,
-    ) -> Option<(VerifyingKey, usize)> {
+    ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
-                key.data()
-                    .extract_pk()
-                    .map(|pk| (pk, rdr.signing_keys().len().saturating_sub(1)))
+                let rotation = KeyRotation::from_latest_rotation(rdr.signing_keys());
+
+                key.data().extract_pk().map(|pk| (pk, rotation))
             })
         })
     }
@@ -148,12 +151,12 @@ impl RegistrationChain {
     #[must_use]
     pub fn get_latest_encryption_pk_for_role(
         &self, role: &RoleNumber,
-    ) -> Option<(VerifyingKey, usize)> {
+    ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
-                key.data()
-                    .extract_pk()
-                    .map(|pk| (pk, rdr.encryption_keys().len().saturating_sub(1)))
+                let rotation = KeyRotation::from_latest_rotation(rdr.encryption_keys());
+
+                key.data().extract_pk().map(|pk| (pk, rotation))
             })
         })
     }
@@ -162,7 +165,7 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_signing_pk_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: usize,
+        &self, role: &RoleNumber, rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
@@ -174,7 +177,7 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_encryption_pk_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: usize,
+        &self, role: &RoleNumber, rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
@@ -186,7 +189,7 @@ impl RegistrationChain {
     /// given rotation.
     #[must_use]
     pub fn get_singing_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: usize,
+        &self, role: &RoleNumber, rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -198,7 +201,7 @@ impl RegistrationChain {
     /// with given rotation.
     #[must_use]
     pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: usize,
+        &self, role: &RoleNumber, rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -487,12 +490,15 @@ mod test {
         let (_k, r) = update
             .get_latest_signing_pk_for_role(&RoleNumber::ROLE_0)
             .unwrap();
-        assert_eq!(r, 1);
+        assert_eq!(r, KeyRotation::from(1));
         assert!(update
-            .get_signing_pk_for_role_at_rotation(&RoleNumber::ROLE_0, 2)
+            .get_signing_pk_for_role_at_rotation(&RoleNumber::ROLE_0, &KeyRotation::from(2))
             .is_none());
         assert!(update
-            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleNumber::ROLE_0, 0)
+            .get_singing_key_cert_or_key_for_role_at_rotation(
+                &RoleNumber::ROLE_0,
+                &KeyRotation::from(0)
+            )
             .is_some());
     }
 }

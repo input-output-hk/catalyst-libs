@@ -2,7 +2,6 @@ VERSION 0.8
 
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/docs:feat/include-relative-docs AS docs-ci
 
-
 IMPORT .. AS repo
 
 # Copy all the source we need to build the docs
