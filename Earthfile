@@ -5,7 +5,6 @@ IMPORT github.com/input-output-hk/catalyst-ci/earthly/cspell:feat/include-relati
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:feat/include-relative-docs AS python-ci
 IMPORT github.com/input-output-hk/catalyst-ci:feat/include-relative-docs AS cat-ci
 
-
 FROM debian:stable-slim
 
 # check-markdown : markdown check using catalyst-ci.
