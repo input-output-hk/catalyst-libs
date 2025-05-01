@@ -27,7 +27,7 @@ pub enum RoleIdError {
 #[repr(u8)]
 #[non_exhaustive]
 pub enum RoleId {
-    /// Can Vote and Comment on Proposals.
+    /// Primary required role use for voting and commenting.
     Role0 = 0,
     /// Allows for voters to give their voting power to the dRep who then votes on their
     /// behalf.
