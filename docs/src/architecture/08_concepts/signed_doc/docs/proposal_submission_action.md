@@ -150,7 +150,8 @@ The currently defined locations are:
 
 The document location does not guarantee that the document is actually stored.
 It only defines that if it were stored, this is the identifier
-that is required to retrieve it.  Therefore it is required that Document References
+that is required to retrieve it.
+Therefore it is required that Document References
 are unique and reproducible, given a documents contents.
 
 #### [`ref`](../metadata.md#ref) Validation
@@ -194,8 +195,8 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-      `hide` is only actioned if sent by the author,
-         for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+         `hide` is only actioned if sent by the author,
+        for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->
@@ -223,9 +224,6 @@ Schema :
     }
   ],
   "properties": {
-    "$schema": {
-      "type": "string"
-    },
     "action": {
       "$ref": "#/definitions/action"
     }
@@ -234,7 +232,6 @@ Schema :
     "action"
   ],
   "title": "Proposal Submission Action Payload Schema",
-  "type": "object",
   "x-changelog": {
     "2025-03-01": [
       "First Version Created."

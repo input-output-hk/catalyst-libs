@@ -229,7 +229,8 @@ The currently defined locations are:
 
 The document location does not guarantee that the document is actually stored.
 It only defines that if it were stored, this is the identifier
-that is required to retrieve it.  Therefore it is required that Document References
+that is required to retrieve it.
+Therefore it is required that Document References
 are unique and reproducible, given a documents contents.
 
 #### `ref` Validation
