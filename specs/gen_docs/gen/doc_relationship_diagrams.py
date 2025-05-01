@@ -96,7 +96,7 @@ class DocRelationshipFile(DocGenerator):
 
         for doc_name in self._spec.document_names():
             if doc_name not in doc_names:
-                # Add any documents as dummys with links, if they reference any docs in our doc_names.
+                # Add any documents as dummies with links, if they reference any docs in our doc_names.
                 doc = self._spec.get_document(doc_name)
                 refs = doc.all_references()
                 for ref in refs:
