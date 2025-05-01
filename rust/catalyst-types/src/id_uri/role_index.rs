@@ -31,7 +31,7 @@ pub enum RoleId {
     Role0 = 0,
     /// Delegated representative (dRep) that vote on behalf of delegators.
     DelegatedRepresentative = 1,
-    /// Assigns a voters voting power to a registered dRep.
+    /// Voter role that delegates voting power to a chosen representative (dRep).
     VoterDelegation = 2,
     /// Allows the Propers signing key to also be used as a public encryption key.
     Proposer = 3,
