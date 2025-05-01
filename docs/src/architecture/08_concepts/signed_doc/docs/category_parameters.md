@@ -4,19 +4,13 @@
 
 Parameters which define a Category withing a Campaign under a Brand in the system.
 
-```d2 layout="elk"
-"Category Parameters": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": 818938c3-3139-4daa-afe6-974c78488e95
-  "id": Document Id
-  "ver": Document Ver
-  "campaign_id": Campaign Parameters
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Category Parameters"."campaign_id"->"Campaign Parameters"
+```graphviz dot category_parameters.dot.svg
+{{ include_file('./../diagrams/category_parameters.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 

@@ -5,11 +5,16 @@ description = "Generate Signed Document documentation files."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "pydantic>=2.11.3",
+    "pydantic>=2.11.4",
     "pydot>=3.0.4",
     "rich>=14.0.0",
     "rich-argparse>=1.7.0",
 ]
+
+[tool.ruff]
+# Extend the project wide `ruff.toml` file.
+# Done so we can add known libraries to sorting.
+extend = "../../ruff.toml"
 
 [tool.ruff.lint.isort]
 known-third-party = [

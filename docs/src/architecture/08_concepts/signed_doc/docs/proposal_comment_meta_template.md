@@ -9,22 +9,13 @@ are met in any Proposal Comment Template.
 
 The payload of a proposal comment template is controlled by its meta template.
 
-```d2 layout="elk"
-"Proposal Comment Meta Template": {
-  shape: sql_table
-  "content type": application/schema+json
-  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [2]": b679ded3-0e7c-41ba-89f8-da62a17898ea
-  "type [3]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": Document Id
-  "ver": Document Ver
-  "category_id": Category Parameters (Optional)
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Comment Meta Template"."category_id"->"Category Parameters": Optional
+```graphviz dot proposal_comment_meta_template.dot.svg
+{{ include_file('./../diagrams/proposal_comment_meta_template.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 

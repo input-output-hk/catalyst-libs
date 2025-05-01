@@ -4,16 +4,13 @@
 
 Parameters which define this brand within the system.
 
-```d2 layout="elk"
-"Brand Parameters": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": ebcabeeb-5bc5-4f95-91e8-cab8ca724172
-  "id": Document Id
-  "ver": Document Ver
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
+```graphviz dot brand_parameters.dot.svg
+{{ include_file('./../diagrams/brand_parameters.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 

@@ -9,6 +9,7 @@ import typing
 from pathlib import Path
 
 import rich
+import rich.markdown
 
 from spec.metadata import Metadata
 from spec.signed_doc import HeaderType, SignedDocSpec
@@ -40,6 +41,9 @@ class DocGenerator:
         self._has_markdown_links = flags & self.HAS_MARKDOWN_LINKS != 0
         self._is_metadata_primary_source = flags & self.IS_METADATA_PRIMARY_SOURCE != 0
         self._document_name = None
+
+        # Make sure any destination directory exists.
+        self._filepath.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def uuid_as_cbor(uuid: str) -> str:
@@ -99,9 +103,7 @@ class DocGenerator:
 
         All metadata fields in text must be as `<name>` or they will not be linked.
         """
-        _, metadata_names, _ = self._spec.headers_and_order(
-            header_type=HeaderType.METADATA
-        )
+        _, metadata_names, _ = self._spec.headers_and_order(header_type=HeaderType.METADATA)
         self.add_generic_markdown_links(
             metadata_names,
             Metadata.field_link,
@@ -217,9 +219,7 @@ class DocGenerator:
 
         document_name: Name of the signed document we also get copyright info from.
         """
-        (authors, copyright_data, versions, global_last_modified) = (
-            self._spec.copyright(self._document_name)
-        )
+        (authors, copyright_data, versions, global_last_modified) = self._spec.copyright(self._document_name)
 
         copyright_year = copyright_data.created.year
         last_modified_year = global_last_modified.year
@@ -280,11 +280,52 @@ class DocGenerator:
 
         return True
 
+    def validate_generation(self) -> bool:
+        """Check and Output the status when a file does not validate."""
+        rich.print(f"Validating {self._filename}")
+        if not self._filepath.exists():
+            rich.print(f"Documentation file missing: {self._filename}.")
+            return False
+
+        current_file = self._filepath.read_text()
+        if current_file == self._filedata:
+            return True
+
+        rich.print(f"Documentation not generated correctly: {self._filename}.")
+        diff = difflib.unified_diff(
+            current_file.splitlines(),
+            self._filedata.splitlines(),
+            fromfile=self._filename,
+            tofile="Expected File",
+            fromfiledate="",
+            tofiledate="",
+            n=3,
+            lineterm="\n",
+        )
+        rich.print(
+            rich.markdown.Markdown(
+                f"""
+```diff
+{"\n".join(diff)}
+```
+""",
+                code_theme="vim",
+            ),
+        )
+        return False
+
     def save_or_validate(
         self,
     ) -> bool:
         """Save a file or Validate it, depending on whats required."""
-        if not self.generate():
+        rich.print(f"{'Generating' if self._generate else 'Validating'} {self._filename}")
+
+        try:
+            if not self.generate():
+                return False
+        except Exception as e:  # noqa: BLE001
+            rich.print(f"Failed to generate documentation for {self._filename}: {e}")
+            rich.console.Console().print_exception()
             return False
 
         if self._generate:
@@ -298,28 +339,7 @@ class DocGenerator:
             self._filepath.write_text(self._filedata)
             return True
 
-        rich.print(f"Validating {self._filename}")
-        if not self._filepath.exists():
-            rich.print(f"Documentation file missing: {self._filename}.")
-            return False
-
-        current_file = self._filepath.read_text()
-        if current_file != self._filedata:
-            rich.print(f"Documentation not generated correctly: {self._filename}.")
-            diff = difflib.unified_diff(
-                current_file.splitlines(),
-                self._filedata.splitlines(),
-                fromfile="Existing File",
-                tofile="Expected File",
-                fromfiledate="",
-                tofiledate="",
-                n=3,
-                lineterm="\n",
-            )
-            for line in diff:
-                rich.print(line.rstrip())
-            return False
-        return True
+        return self.validate_generation()
 
     def file_name(self) -> str:
         """Return the files name."""
@@ -329,5 +349,5 @@ class DocGenerator:
         """Return a path to the file."""
         if relative_doc is not None:
             relative_path = relative_doc.file_path().parent
-            return self._filepath.relative_to(relative_path)
+            return self._filepath.relative_to(relative_path, walk_up=True)
         return self._filepath

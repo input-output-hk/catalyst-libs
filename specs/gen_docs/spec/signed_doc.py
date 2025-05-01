@@ -125,9 +125,7 @@ class SignedDocSpec:
         """Get a link for a link name."""
         return self._spec.documentation_links[link_name]
 
-    def header(
-        self, header: str, header_type: HeaderType = HeaderType.DOCUMENT
-    ) -> dict:
+    def header(self, header: str, header_type: HeaderType = HeaderType.DOCUMENT) -> dict:
         """Get Cose header definition."""
         headers, _, _ = self.headers_and_order(header_type)
         return headers[header]
@@ -177,9 +175,7 @@ class SignedDocSpec:
     def cddl_def(self, name: str) -> dict | None:  # noqa: C901
         """Get a cddl definition by name."""
 
-        def synthetic_headers(
-            defs: dict, header_type: HeaderType = HeaderType.METADATA
-        ) -> dict:
+        def synthetic_headers(defs: dict, header_type: HeaderType = HeaderType.METADATA) -> dict:
             """Generate a synthetic cddl def for this type.
 
             Needs to be generated from Metadata definitions.

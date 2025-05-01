@@ -1,9 +1,6 @@
 """Individual Document Specification."""
 
-from dataclasses import dataclass
-from typing import Any
-
-from pydantic import AnyUrl, BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from spec.change_log_entry import ChangeLogEntry
 from spec.cose_header import CoseHeader
@@ -30,6 +27,7 @@ class Document(BaseModel):
     business_logic: DocumentBusinessLogic = Field(
         default_factory=DocumentBusinessLogic,
     )
+    notes: list[str]
     headers: dict[str, CoseHeader]
     metadata: dict[str, Metadata]
     payload: Payload | None = Field(default=None)
@@ -47,3 +45,11 @@ class Document(BaseModel):
 
         for name, meta in self.metadata.items():
             meta.set_name(name, doc_name)
+
+    def all_references(self) -> list[str]:
+        """Get a list of all documents this document references."""
+        all_refs: list[str] = []
+        for meta in self.metadata.values():
+            if meta.format == "Document Reference":
+                all_refs.extend(meta.type)
+        return list(set(all_refs))

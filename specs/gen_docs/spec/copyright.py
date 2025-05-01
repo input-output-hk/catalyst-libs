@@ -2,7 +2,7 @@
 
 import datetime
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 from spec.change_log_entry import ChangeLogEntry
 

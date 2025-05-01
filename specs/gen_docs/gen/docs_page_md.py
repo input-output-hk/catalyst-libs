@@ -4,31 +4,24 @@ import argparse
 import json
 import typing
 
-import rich
 from pydantic import HttpUrl
-from rich.console import Console
 
+from gen.doc_generator import DocGenerator
+from gen.doc_relationship_diagrams import DocRelationshipFile
 from spec.signed_doc import SignedDocSpec
-
-from .doc_generator import DocGenerator
-from .docs_relationship_diagram_d2 import gen_doc_d2
-
-console = Console()
 
 
 class IndividualDocMd(DocGenerator):
     """Generate the individual pages docs/<doc_name>.md file."""
 
     TODO_MSG: typing.ClassVar[str] = """
-This specification outlines the required definitions for the current features. 
-The document will be incrementally improved in future iterations as more functionality 
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
 and features are added.
 This section will be included and updated in future iterations.
 """.strip()
 
-    def __init__(
-        self, args: argparse.Namespace, spec: SignedDocSpec, doc_name: str
-    ) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec, doc_name: str) -> None:
         """Generate the individual pages docs/<doc_name>.md file."""
         file_name = "docs/" + doc_name.lower().replace(" ", "_") + ".md"
         super().__init__(args, spec, file_name, flags=self.HAS_MARKDOWN_LINKS)
@@ -38,9 +31,7 @@ This section will be included and updated in future iterations.
         self._depth = 1
 
     @classmethod
-    def save_or_validate_all(
-        cls, args: argparse.Namespace, spec: SignedDocSpec
-    ) -> bool:
+    def save_or_validate_all(cls, args: argparse.Namespace, spec: SignedDocSpec) -> bool:
         """Save or Validate all documentation pages."""
         good = True
         for doc_name in spec.document_names():
@@ -73,13 +64,11 @@ This section will be included and updated in future iterations.
 
         payload_docs = self._doc.payload.description + "\n"
 
-        schema = self._doc.payload.schema
+        schema = self._doc.payload.doc_schema
         if schema is not None:
             if isinstance(schema, HttpUrl):
                 if schema == "https://json-schema.org/draft-07/schema":
-                    payload_docs += (
-                        "\n**Must be a valid JSON Schema Draft 7 document.**"
-                    )
+                    payload_docs += "\n**Must be a valid JSON Schema Draft 7 document.**"
                 else:
                     payload_docs += f"\nMust be a valid according to <{schema}>."
             else:
@@ -115,27 +104,20 @@ This section will be included and updated in future iterations.
 
     def generate(self) -> bool:
         """Generate the individual documents File."""
-        try:
-            # TODO: generate the relationship diagram.  # noqa: FIX002, TD002, TD003
-            # doc_d2 = gen_doc_d2(self._document_name, self._spec.copyrightdoc_defs, depth=1, stand_alone=True).strip()  # noqa: ERA001
+        # Generate the relationship diagram.
 
-            doc_d2 = gen_doc_d2(
-                self._document_name,
-                self._spec.data(),
-                depth=1,
-                stand_alone=True,
-            ).strip()
+        graph = DocRelationshipFile(self._args, self._spec, self._document_name, depth=self._depth)
+        if not graph.save_or_validate():
+            return False
 
-            self._filedata = f"""
+        self._filedata = f"""
 # {self._document_name}
 
 ## Description
 
 {self.description_or_todo(self._doc.description)}
 
-```d2 layout="elk"
-{doc_d2}
-```
+{graph.markdown_reference(relative_doc=self, extension="svg")}
 
 ### Validation
 
@@ -169,8 +151,4 @@ This section will be included and updated in future iterations.
 
 {self.insert_copyright()}
 """
-        except Exception as e:  # noqa: BLE001
-            rich.print(f"Failed to generate documentation for metadata: {e}")
-            console.print_exception()
-            return False
         return super().generate()

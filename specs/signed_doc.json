@@ -422,6 +422,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -569,6 +570,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -716,6 +718,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -865,6 +868,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -1020,6 +1024,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -1188,6 +1193,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "Proposal Document drafted for submission to a category of a campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
       },
@@ -1368,6 +1374,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Document which must validate against the referenced template."
       },
@@ -1520,6 +1527,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Comment Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
         "schema": "https://json-schema.org/draft-07/schema"
@@ -1685,6 +1693,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the content of the Proposal Comments."
       },
@@ -1839,6 +1848,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
         "schema": "https://json-schema.org/draft-07/schema"
@@ -1994,6 +2004,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -2150,6 +2161,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
         "schema": {
@@ -2175,6 +2187,9 @@
             }
           ],
           "properties": {
+            "$schema": {
+              "type": "string"
+            },
             "action": {
               "$ref": "#/definitions/action"
             }
@@ -2183,6 +2198,7 @@
             "action"
           ],
           "title": "Proposal Submission Action Payload Schema",
+          "type": "object",
           "x-changelog": {
             "2025-03-01": [
               "First Version Created."
@@ -2351,6 +2367,7 @@
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents of a proposal document."
       },

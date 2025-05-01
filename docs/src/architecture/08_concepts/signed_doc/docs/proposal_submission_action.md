@@ -19,23 +19,13 @@ the proposal will not be seen as submitted.
 
 The payload is a fixed format.
 
-```d2 layout="elk"
-"Proposal Submission Action": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
-  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "type [2]": 78927329-cfd9-4ea1-9c71-0e019b126a65
-  "id": Document Id
-  "ver": Document Ver
-  "ref": Proposal
-  "category_id": Category Parameters
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Submission Action"."ref"->"Proposal"
-"Proposal Submission Action"."category_id"->"Category Parameters"
+```graphviz dot proposal_submission_action.dot.svg
+{{ include_file('./../diagrams/proposal_submission_action.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
@@ -149,7 +139,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-    In other words, that the document intended to be referenced, is actually referenced.
+   In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.
@@ -204,8 +194,8 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-         `hide` is only actioned if sent by the author,
-        for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+      `hide` is only actioned if sent by the author,
+         for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->
@@ -233,6 +223,9 @@ Schema :
     }
   ],
   "properties": {
+    "$schema": {
+      "type": "string"
+    },
     "action": {
       "$ref": "#/definitions/action"
     }
@@ -241,6 +234,7 @@ Schema :
     "action"
   ],
   "title": "Proposal Submission Action Payload Schema",
+  "type": "object",
   "x-changelog": {
     "2025-03-01": [
       "First Version Created."

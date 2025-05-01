@@ -9,21 +9,13 @@ are met in any Proposal Template.
 
 The payload of a proposal template is controlled by its meta template.
 
-```d2 layout="elk"
-"Proposal Meta Template": {
-  shape: sql_table
-  "content type": application/schema+json
-  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": Document Id
-  "ver": Document Ver
-  "category_id": Category Parameters (Optional)
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Meta Template"."category_id"->"Category Parameters": Optional
+```graphviz dot proposal_meta_template.dot.svg
+{{ include_file('./../diagrams/proposal_meta_template.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 

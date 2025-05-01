@@ -12,26 +12,13 @@ linked to a brand/campaign or category via the template used by the proposal.
 
 The payload of a proposal is controlled by its template.
 
-```d2 layout="elk"
-"Proposal Template": {
-  shape: sql_table
-  "content type": application/schema+json
-  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": Document Id
-  "ver": Document Ver
-  "template": Proposal Meta Template (Optional)
-  "brand_id": Brand Parameters (Optional)
-  "campaign_id": Campaign Parameters (Optional)
-  "category_id": Category Parameters (Optional)
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Template"."template"->"Proposal Meta Template": Optional
-"Proposal Template"."brand_id"->"Brand Parameters": Optional
-"Proposal Template"."campaign_id"->"Campaign Parameters": Optional
-"Proposal Template"."category_id"->"Category Parameters": Optional
+```graphviz dot proposal_template.dot.svg
+{{ include_file('./../diagrams/proposal_template.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 

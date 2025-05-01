@@ -1,4 +1,4 @@
-"""Generate the spec.md file."""
+"""Generate CDDL Files."""
 
 import argparse
 import re
@@ -26,20 +26,14 @@ def add_cddl_comments(comment: str) -> tuple[str, bool]:
 class CDDLFile(DocGenerator):
     """Generate a CDDL File."""
 
-    def __init__(
-        self, args: argparse.Namespace, spec: SignedDocSpec, cddl_root: str
-    ) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec, cddl_root: str) -> None:
         """CDDL File Generator."""
-        file_name = (
-            "cddl/" + cddl_root.lower().replace(" ", "_").replace("-", "_") + ".cddl"
-        )
+        file_name = "cddl/" + cddl_root.lower().replace(" ", "_").replace("-", "_") + ".cddl"
 
         super().__init__(args, spec, file_name, flags=self.NO_FLAGS)
         self._cddl_root = cddl_root
 
-    def get_cddl(
-        self, name: str, found: list[str] | None = None
-    ) -> tuple[str, list[str]]:
+    def get_cddl(self, name: str, found: list[str] | None = None) -> tuple[str, list[str]]:
         """Get the CDDL for a metadatum."""
         if found is None:
             found = []
@@ -73,9 +67,7 @@ class CDDLFile(DocGenerator):
 
         return this_cddl, found
 
-    def markdown_reference(
-        self, *, indent: int = 0, relative_doc: DocGenerator | None = None
-    ) -> str:
+    def markdown_reference(self, *, indent: int = 0, relative_doc: DocGenerator | None = None) -> str:
         """Create a Markdown formatted reference for the CDDL file."""
         file_path = self.file_path(relative_doc)
         file_name = self.file_name()
@@ -90,6 +82,8 @@ class CDDLFile(DocGenerator):
     ```cddl
     {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
     ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 """.strip(),
             " " * indent,
         )
@@ -99,9 +93,7 @@ class CDDLFile(DocGenerator):
         cddl_data, _ = self.get_cddl(self._cddl_root)
         defs = self._spec.cddl_def(self._cddl_root)
 
-        description, _ = add_cddl_comments(
-            defs.get("description", f"{self._cddl_root}")
-        )
+        description, _ = add_cddl_comments(defs.get("description", f"{self._cddl_root}"))
 
         # Remove double line breaks,
         # so we only ever have 1 between definitions

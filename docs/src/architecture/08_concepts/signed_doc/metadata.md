@@ -18,6 +18,8 @@ A list of collaborators who can participate in drafting and submitting a documen
     {{ include_file('./cddl/collaborators.cddl', indent=4) }}
     ```
 
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### Document Id
 
 A unique document identifier
@@ -30,6 +32,8 @@ A unique document identifier
     ```cddl
     {{ include_file('./cddl/document_id.cddl', indent=4) }}
     ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Reference
 
@@ -44,6 +48,8 @@ A document reference identifier
     {{ include_file('./cddl/document_ref.cddl', indent=4) }}
     ```
 
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### Document Type
 
 A document type identifier
@@ -56,6 +62,8 @@ A document type identifier
     ```cddl
     {{ include_file('./cddl/document_type.cddl', indent=4) }}
     ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Ver
 
@@ -70,6 +78,8 @@ A unique chronological document version
     {{ include_file('./cddl/document_ver.cddl', indent=4) }}
     ```
 
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### Section Reference
 
 A document section reference identifier
@@ -82,6 +92,8 @@ A document section reference identifier
     ```cddl
     {{ include_file('./cddl/section_ref.cddl', indent=4) }}
     ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv4][RFC9562-V4]
 
@@ -96,6 +108,8 @@ Version 4 formatted [UUID][RFC9562]
     {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
     ```
 
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### [UUIDv7][RFC9562-V7]
 
 Version 7 formatted [UUID][RFC9562]
@@ -109,6 +123,8 @@ Version 7 formatted [UUID][RFC9562]
     {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
     ```
 
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### Version Revocations
 
 A list of all versions of this document which are 'revoked'.
@@ -121,6 +137,8 @@ A list of all versions of this document which are 'revoked'.
     ```cddl
     {{ include_file('./cddl/revocations.cddl', indent=4) }}
     ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Individual Metadata field definitions
 

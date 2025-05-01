@@ -4,6 +4,7 @@ import argparse
 
 from gen.cddl_file import CDDLFile
 from gen.doc_generator import DocGenerator
+from gen.doc_relationship_diagrams import DocRelationshipFile
 from spec.signed_doc import HeaderType, SignedDocSpec
 
 
@@ -55,9 +56,7 @@ class SpecMd(DocGenerator):
         headers = self._spec.all_headers(header_type)
         header_parameters_doc = ""
         for header in headers:
-            header_parameters_doc += self.header_parameter_doc(
-                header, header_type=header_type
-            )
+            header_parameters_doc += self.header_parameter_doc(header, header_type=header_type)
 
         return header_parameters_doc.strip()
 
@@ -96,6 +95,8 @@ Specifically, the COSE Sign format is used.
 This allows one or more signatures to be attached to the same document.
 
 ### Signed Document CDDL Definition
+
+{signed_doc_cddl.markdown_reference(relative_doc=self)}
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL"

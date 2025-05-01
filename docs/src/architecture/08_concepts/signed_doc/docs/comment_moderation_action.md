@@ -4,21 +4,13 @@
 
 A Moderation Action performed on any Comment.
 
-```d2 layout="elk"
-"Comment Moderation Action": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": 5e60e623-ad02-4a1b-a1ac-406db978ee48
-  "type [1]": b679ded3-0e7c-41ba-89f8-da62a17898ea
-  "type [2]": a5d232b8-5e03-4117-9afd-be32b878fcdd
-  "id": Document Id
-  "ver": Document Ver
-  "ref": Proposal Comment
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Comment Moderation Action"."ref"->"Proposal Comment"
+```graphviz dot comment_moderation_action.dot.svg
+{{ include_file('./../diagrams/comment_moderation_action.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
@@ -115,7 +107,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-    In other words, that the document intended to be referenced, is actually referenced.
+  In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.

@@ -31,6 +31,7 @@ CBOR
 cbork
 cddlc
 cdylib
+CELLBORDER
 CEST
 chacha
 CHAINCODE
@@ -80,6 +81,7 @@ encryptor
 Errno
 Eternl
 excalidraw
+explicitely
 extn
 fadvise
 fcntl
@@ -94,6 +96,7 @@ fmmap
 fmtchk
 fmtfix
 fontawesome
+fontname
 fromfiledate
 fsgr
 fstat
@@ -106,10 +109,12 @@ getres
 giantstep
 gmtime
 gossipsub
+graphviz
 happ
 hardano
 Hardlink
 hasher
+headlabel
 heaptrack
 hexdigit
 highwater
@@ -133,6 +138,7 @@ Jörmungandr
 jsonschema
 Justfile
 kiduri
+labelloc
 lcov
 Leay
 Leshiy
@@ -192,6 +198,7 @@ outlen
 Outparam
 outpubkey
 parameterises
+penwidth
 permissioned
 permissionless
 pg_isready
@@ -222,6 +229,7 @@ pytest
 pytype
 qpsg
 quic
+rankdir
 rapidoc
 readlinkat
 redoc
@@ -265,6 +273,7 @@ subsec
 symlinkat
 syscall
 tacho
+taillabel
 testcase
 testcov
 testdocs

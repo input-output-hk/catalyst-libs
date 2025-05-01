@@ -1,8 +1,6 @@
 """Metadata Formats Specification."""
 
-import datetime
-
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict
 
 
 class MetadataFormats(BaseModel):

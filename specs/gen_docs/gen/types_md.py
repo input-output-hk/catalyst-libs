@@ -3,6 +3,7 @@
 import argparse
 
 from gen.doc_generator import DocGenerator
+from gen.doc_relationship_diagrams import DocRelationshipFile
 from spec.signed_doc import SignedDocSpec
 
 
@@ -66,6 +67,10 @@ class TypesMd(DocGenerator):
 
     def generate(self) -> bool:
         """Generate the `types.md` File."""
+        graph = DocRelationshipFile(self._args, self._spec)
+        if not graph.save_or_validate():
+            return False
+
         self._filedata = f"""
 # Document Types Table
 
@@ -83,7 +88,7 @@ All Defined Document Types
 
 ## Document Relationship Hierarchy
 
-![Document Relationship Hierarchy](doc_relationships.svg)
+{graph.markdown_reference(relative_doc=self)}
 
 {self.insert_copyright(changelog=False)}
 """

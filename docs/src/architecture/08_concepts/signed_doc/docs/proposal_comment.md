@@ -9,32 +9,13 @@ linked to a brand/campaign or category via the template used by the proposal.
 
 The payload of a proposal comment is controlled by its template.
 
-```d2 layout="elk"
-"Proposal Comment": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
-  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": Document Id
-  "ver": Document Ver
-  "ref": Proposal
-  "template": Proposal Comment Template
-  "reply": Proposal Comment (Optional)
-  "section": Section Reference
-  "revocations": Version Revocations
-  "brand_id": Brand Parameters (Optional)
-  "campaign_id": Campaign Parameters (Optional)
-  "category_id": Category Parameters (Optional)
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Comment"."ref"->"Proposal"
-"Proposal Comment"."template"->"Proposal Comment Template"
-"Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
-"Proposal Comment"."brand_id"->"Brand Parameters": Optional
-"Proposal Comment"."campaign_id"->"Campaign Parameters": Optional
-"Proposal Comment"."category_id"->"Category Parameters": Optional
+```graphviz dot proposal_comment.dot.svg
+{{ include_file('./../diagrams/proposal_comment.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
@@ -133,7 +114,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-   In other words, that the document intended to be referenced, is actually referenced.
+ In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.

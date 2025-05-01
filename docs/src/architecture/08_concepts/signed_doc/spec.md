@@ -28,6 +28,17 @@ This allows one or more signatures to be attached to the same document.
 ### Signed Document [CDDL][RFC8610] Definition
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
+
+    * [cddl/signed_document.cddl](cddl/signed_document.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/signed_document.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL"
 
     * [cddl/signed_document.cddl](cddl/signed_document.cddl)

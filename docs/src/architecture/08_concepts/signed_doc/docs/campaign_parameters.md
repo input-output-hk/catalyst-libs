@@ -4,19 +4,13 @@
 
 Parameters which define a Campaign within a Brand in the system.
 
-```d2 layout="elk"
-"Campaign Parameters": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": 5ef32d5d-f240-462c-a7a4-ba4af221fa23
-  "id": Document Id
-  "ver": Document Ver
-  "brand_id": Brand Parameters
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Campaign Parameters"."brand_id"->"Brand Parameters"
+```graphviz dot campaign_parameters.dot.svg
+{{ include_file('./../diagrams/campaign_parameters.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 

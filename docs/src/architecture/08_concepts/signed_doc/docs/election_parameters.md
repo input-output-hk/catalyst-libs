@@ -4,23 +4,13 @@
 
 Parameters which define an individual voting event.
 
-```d2 layout="elk"
-"Election Parameters": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": 788ff4c6-d65a-451f-bb33-575fe056b411
-  "id": Document Id
-  "ver": Document Ver
-  "brand_id": Brand Parameters
-  "campaign_id": Campaign Parameters
-  "category_id": Category Parameters
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Election Parameters"."brand_id"->"Brand Parameters"
-"Election Parameters"."campaign_id"->"Campaign Parameters"
-"Election Parameters"."category_id"->"Category Parameters"
+```graphviz dot election_parameters.dot.svg
+{{ include_file('./../diagrams/election_parameters.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
