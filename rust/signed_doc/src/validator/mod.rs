@@ -17,8 +17,8 @@ use catalyst_types::{
 };
 use coset::{CoseSign, CoseSignature};
 use rules::{
-    CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, Rules, SectionRule,
-    SignatureKidRule, TemplateRule,
+    CategoryRule, ContentEncodingRule, ContentRule, ContentTypeRule, RefRule, ReplyRule, Rules,
+    SectionRule, SignatureKidRule,
 };
 
 use crate::{
@@ -46,7 +46,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        template: TemplateRule::Specified {
+        template: ContentRule::Templated {
             exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE
                 .try_into()
                 .expect("Must be a valid UUID V4"),
@@ -69,7 +69,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        template: TemplateRule::Specified {
+        template: ContentRule::Templated {
             exp_template_type: COMMENT_TEMPLATE_UUID_TYPE
                 .try_into()
                 .expect("Must be a valid UUID V4"),
@@ -102,7 +102,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        template: TemplateRule::NotSpecified,
+        template: ContentRule::NotSpecified,
         category: CategoryRule::Specified { optional: true },
         doc_ref: RefRule::Specified {
             exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE

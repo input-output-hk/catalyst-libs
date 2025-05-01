@@ -10,25 +10,37 @@ use crate::{
     validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
-/// `template` field validation rule
-pub(crate) enum TemplateRule {
-    /// Is 'template' specified
-    Specified {
+/// Enum represents different content schemas, agains which documents content would be
+/// validated.
+#[allow(dead_code)]
+pub(crate) enum ContentSchema {
+    /// Draft 7 JSON schema
+    Json(jsonschema::Validator),
+}
+
+/// Document's content validation rule
+pub(crate) enum ContentRule {
+    /// Based on the 'template' field and loaded corresponding template document
+    Templated {
         /// expected `type` field of the template
         exp_template_type: UuidV4,
     },
-    /// 'template' is not specified
+    /// Statically defined document's content schema.
+    /// `template` field should not been specified
+    #[allow(dead_code)]
+    Static(ContentSchema),
+    /// 'template' field is not specified
     #[allow(dead_code)]
     NotSpecified,
 }
 
-impl TemplateRule {
+impl ContentRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: CatalystSignedDocumentProvider {
-        if let Self::Specified { exp_template_type } = self {
+        if let Self::Templated { exp_template_type } = self {
             let Some(template_ref) = doc.doc_meta().template() else {
                 doc.report()
                     .missing_field("template", "Document must have a template field");
@@ -51,7 +63,7 @@ impl TemplateRule {
                     return false;
                 };
                 match doc_content_type {
-                    ContentType::Json => json_schema_check(doc, &template_doc),
+                    ContentType::Json => templated_json_schema_check(doc, &template_doc),
                     ContentType::Cbor => {
                         // TODO: not implemented yet
                         true
@@ -65,6 +77,18 @@ impl TemplateRule {
                 template_validator,
             )
             .await;
+        }
+        if let Self::Static(content_schema) = self {
+            if let Some(template) = doc.doc_meta().template() {
+                doc.report().unknown_field(
+                    "template",
+                    &template.to_string(),
+                    "Document does not expect to have a template field",
+                );
+                return Ok(false);
+            }
+
+            return Ok(content_schema_check(doc, content_schema));
         }
         if let Self::NotSpecified = self {
             if let Some(template) = doc.doc_meta().template() {
@@ -83,7 +107,9 @@ impl TemplateRule {
 
 /// Validate a provided `doc` against the `template` content's Json schema, assuming that
 /// the `doc` content is JSON.
-fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSignedDocument) -> bool {
+fn templated_json_schema_check(
+    doc: &CatalystSignedDocument, template_doc: &CatalystSignedDocument,
+) -> bool {
     let Ok(template_content) = template_doc.doc_content().decoded_bytes() else {
         doc.report().missing_field(
             "payload",
@@ -109,6 +135,10 @@ fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSigned
         return false;
     };
 
+    content_schema_check(doc, &ContentSchema::Json(schema_validator))
+}
+
+fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) -> bool {
     let Ok(doc_content) = doc.doc_content().decoded_bytes() else {
         doc.report()
             .missing_field("payload", "Document must have a content");
@@ -122,22 +152,26 @@ fn json_schema_check(doc: &CatalystSignedDocument, template_doc: &CatalystSigned
         return false;
     };
 
-    let schema_validation_errors =
-        schema_validator
-            .iter_errors(&doc_json)
-            .fold(String::new(), |mut str, e| {
-                let _ = write!(str, "{{ {e} }}, ");
-                str
-            });
+    match schema {
+        ContentSchema::Json(schema_validator) => {
+            let schema_validation_errors =
+                schema_validator
+                    .iter_errors(&doc_json)
+                    .fold(String::new(), |mut str, e| {
+                        let _ = write!(str, "{{ {e} }}, ");
+                        str
+                    });
 
-    if !schema_validation_errors.is_empty() {
-        doc.report().functional_validation(
+            if !schema_validation_errors.is_empty() {
+                doc.report().functional_validation(
             &format!(
                 "Proposal document content does not compliant with the template json schema. [{schema_validation_errors}]"
             ),
             "Invalid Proposal document content",
         );
-        return false;
+                return false;
+            }
+        },
     }
     true
 }
@@ -151,7 +185,7 @@ mod tests {
 
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
-    async fn ref_rule_specified_test() {
+    async fn content_rule_templated_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
         let exp_template_type = UuidV4::new();
@@ -231,7 +265,7 @@ mod tests {
         }
 
         // all correct
-        let rule = TemplateRule::Specified { exp_template_type };
+        let rule = ContentRule::Templated { exp_template_type };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
@@ -253,7 +287,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `content-type` field
-        let rule = TemplateRule::Specified { exp_template_type };
+        let rule = ContentRule::Templated { exp_template_type };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_ver.to_string() }
@@ -264,7 +298,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing content
-        let rule = TemplateRule::Specified { exp_template_type };
+        let rule = ContentRule::Templated { exp_template_type };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
@@ -275,7 +309,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded
-        let rule = TemplateRule::Specified { exp_template_type };
+        let rule = ContentRule::Templated { exp_template_type };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "content-type": content_type.to_string(),
@@ -342,14 +376,53 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
 
+    #[allow(clippy::too_many_lines)]
+    #[tokio::test]
+    async fn content_rule_static_test() {
+        let provider = TestCatalystSignedDocumentProvider::default();
+
+        let json_schema = ContentSchema::Json(
+            jsonschema::options()
+                .with_draft(jsonschema::Draft::Draft7)
+                .build(&serde_json::json!({}))
+                .unwrap(),
+        );
+        let json_content = serde_json::to_vec(&serde_json::json!({})).unwrap();
+
+        // all correct
+        let rule = ContentRule::Static(json_schema);
+        let doc = Builder::new()
+            .with_decoded_content(json_content.clone())
+            .build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // missing content
+        let doc = Builder::new().build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // content not a json encoded
+        let doc = Builder::new().with_decoded_content(vec![]).build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // defined `template` field which should be absent
+        let ref_id = UuidV7::new();
+        let ref_ver = UuidV7::new();
+        let doc =  Builder::new().with_decoded_content(json_content)
+            .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+    }
+
     #[tokio::test]
     async fn template_rule_not_specified_test() {
-        let rule: TemplateRule = TemplateRule::NotSpecified;
+        let rule = ContentRule::NotSpecified;
         let provider = TestCatalystSignedDocumentProvider::default();
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
+        // defined `template` field which should be absent
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
         let doc = Builder::new()

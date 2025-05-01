@@ -21,7 +21,7 @@ pub(crate) use doc_ref::RefRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature_kid::SignatureKidRule;
-pub(crate) use template::TemplateRule;
+pub(crate) use template::ContentRule;
 
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {
@@ -32,7 +32,7 @@ pub(crate) struct Rules {
     /// 'ref' field validation rule
     pub(crate) doc_ref: RefRule,
     /// 'template' field validation rule
-    pub(crate) template: TemplateRule,
+    pub(crate) template: ContentRule,
     /// 'reply' field validation rule
     pub(crate) reply: ReplyRule,
     /// 'section' field validation rule
