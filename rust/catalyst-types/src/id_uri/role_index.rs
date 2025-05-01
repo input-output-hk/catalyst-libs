@@ -29,8 +29,7 @@ pub enum RoleIdError {
 pub enum RoleId {
     /// Primary required role use for voting and commenting.
     Role0 = 0,
-    /// Allows for voters to give their voting power to the dRep who then votes on their
-    /// behalf.
+    /// Delegated representative (dRep) that vote on behalf of delegators.
     DelegatedRepresentative = 1,
     /// Assigns a voters voting power to a registered dRep.
     VoterDelegation = 2,
