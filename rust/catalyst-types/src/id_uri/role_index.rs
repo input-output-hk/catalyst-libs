@@ -26,6 +26,7 @@ pub enum RoleIdError {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u8)]
 #[non_exhaustive]
+#[derive(strum::FromRepr)]
 pub enum RoleId {
     /// Primary required role use for voting and commenting.
     Role0 = 0,
@@ -55,13 +56,7 @@ impl TryFrom<u8> for RoleId {
     type Error = RoleIdError;
 
     fn try_from(value: u8) -> Result<Self, RoleIdError> {
-        match value {
-            0 => Ok(Self::Role0),
-            1 => Ok(Self::DelegatedRepresentative),
-            2 => Ok(Self::VoterDelegation),
-            3 => Ok(Self::Proposer),
-            _ => Err(RoleIdError::InvalidRole(value)),
-        }
+        Self::from_repr(value).ok_or(RoleIdError::InvalidRole(value))
     }
 }
 
