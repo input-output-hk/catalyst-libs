@@ -2,13 +2,20 @@
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::id_uri::role_index::RoleIndex;
+use common::test_metadata;
 use ed25519_dalek::ed25519::signature::Signer;
 
 mod common;
 
 #[tokio::test]
 async fn single_signature_validation_test() {
-    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(None, RoleIndex::ROLE_0).unwrap();
+    let (_, _, metadata) = test_metadata();
+    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(
+        metadata,
+        serde_json::to_vec(&serde_json::json!({})).unwrap(),
+        RoleIndex::ROLE_0,
+    )
+    .unwrap();
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: has key
