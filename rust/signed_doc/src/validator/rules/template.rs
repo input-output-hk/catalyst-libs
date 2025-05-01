@@ -138,6 +138,7 @@ fn templated_json_schema_check(
     content_schema_check(doc, &ContentSchema::Json(schema_validator))
 }
 
+/// Validating the document's content agains the provided schema
 fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) -> bool {
     let Ok(doc_content) = doc.doc_content().decoded_bytes() else {
         doc.report()

@@ -100,9 +100,9 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             &serde_json::from_str(include_str!(
                 "./../../schemas/proposal_submission_action.schema.json"
             ))
-            .unwrap(),
+            .expect("Must be a valid json file"),
         )
-        .unwrap();
+        .expect("Must be a valid json scheme file");
     let proposal_submission_action_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
