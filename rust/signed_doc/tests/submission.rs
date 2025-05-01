@@ -23,7 +23,10 @@ async fn test_valid_submission_action() {
                 "ver": proposal_doc_ver
             },
         }),
-        include_bytes!("data/submission_action.json").to_vec(),
+        serde_json::to_vec(&serde_json::json!({
+            "action": "final"
+        }))
+        .unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();
@@ -52,7 +55,10 @@ async fn test_valid_submission_action_with_empty_provider() {
                 "ver": proposal_doc_ver
             },
         }),
-        include_bytes!("data/submission_action.json").to_vec(),
+        serde_json::to_vec(&serde_json::json!({
+            "action": "final"
+        }))
+        .unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();
@@ -78,7 +84,10 @@ async fn test_invalid_submission_action() {
             // without specifying ref
             "ref": serde_json::Value::Null,
         }),
-        include_bytes!("data/submission_action.json").to_vec(),
+        serde_json::to_vec(&serde_json::json!({
+            "action": "final"
+        }))
+        .unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();
