@@ -23,7 +23,7 @@ async fn test_valid_proposal_doc() {
               "ver": template_doc_ver
             },
         }),
-        serde_json::to_vec(&serde_json::json!({})).unwrap(),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();
@@ -55,7 +55,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
               "ver": template_doc_ver
             },
         }),
-        serde_json::to_vec(&serde_json::json!({})).unwrap(),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();
@@ -80,7 +80,7 @@ async fn test_invalid_proposal_doc() {
             // without specifying template id
             "template": serde_json::Value::Null,
         }),
-        serde_json::to_vec(&serde_json::json!({})).unwrap(),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();

@@ -112,7 +112,7 @@ async fn test_invalid_submission_action() {
                 "ver": proposal_doc_ver
             },
         }),
-        serde_json::to_vec(&serde_json::json!({})).unwrap(),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::PROPOSER,
     )
     .unwrap();

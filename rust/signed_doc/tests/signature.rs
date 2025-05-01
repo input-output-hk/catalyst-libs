@@ -12,7 +12,7 @@ async fn single_signature_validation_test() {
     let (_, _, metadata) = test_metadata();
     let (signed_doc, pk, kid) = common::create_dummy_signed_doc(
         metadata,
-        serde_json::to_vec(&serde_json::json!({})).unwrap(),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::ROLE_0,
     )
     .unwrap();
