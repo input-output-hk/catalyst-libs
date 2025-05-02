@@ -89,6 +89,16 @@ linkAKA: {
 	for k, _ in _contentTypes {k},
 ]
 
+_allCoapTypes: [
+	for _, v in _contentTypes if v.coap_type != _|_ {v.coap_type},
+]
+
+_allCoapTypesStr: [
+	for v in _allCoapTypes {"\(v)"},
+]
+
+_allCoapTypes: list.UniqueItems
+
 #contentTypesConstraint: or(#allContentTypes)
 
 // Supported Content Types (list of values)

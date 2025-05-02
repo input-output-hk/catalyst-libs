@@ -7,7 +7,7 @@ class ContentTypes(BaseModel):
     """Content Types Deserialized Specification."""
 
     description: str
-    coap_type: int | None = Field(default = None)
+    coap_type: int | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")
 

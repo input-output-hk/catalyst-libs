@@ -180,7 +180,7 @@
     },
     "media_type": {
       "comment": "Supported Content Media Types.\nIf uint is used, only CoAP Content Formats that match the string format are allowed.",
-      "def": "uint / tstr .eq (\n  \"application/json\" /\n  \"application/schema+json\" /\n  \"application/cbor\" /\n  \"application/cddl\"\n)",
+      "def": "(\n    (uint .eq (50 / 60)) / \n    (tstr .eq (\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"application/cbor\" /\n        \"application/cddl\"\n    ))\n)",
       "requires": []
     },
     "revocations": {

@@ -113,8 +113,11 @@ cddlDefinitions: #cddlDefinitions & {
 	}
 	"media_type": {
 		def: """
-			uint / tstr .eq (
-			  \(_cddlContentTypes)
+			(
+			    (uint .eq (\(_cddlCoapTypes))) / 
+			    (tstr .eq (
+			        \(_cddlContentTypes)
+			    ))
 			)
 			"""
 		comment: """

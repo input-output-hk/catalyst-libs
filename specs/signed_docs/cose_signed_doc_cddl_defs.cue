@@ -8,7 +8,10 @@ import (
 )
 
 // Formatted content strings to use in CDDL Definition.
-_cddlContentTypes: "\"\(strings.Join(cose_headers."content type".value, "\" /\n  \""))\""
+_cddlContentTypes: "\"\(strings.Join(cose_headers."content type".value, "\" /\n        \""))\""
+
+// Formatted CoAP content string to use in CDDL Definition.
+_cddlCoapTypes: "\(strings.Join(_allCoapTypesStr, " / "))"
 
 cddlDefinitions: #cddlDefinitions & {
 	"signed_document": {

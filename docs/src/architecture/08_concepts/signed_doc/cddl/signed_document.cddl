@@ -38,11 +38,14 @@ COSE_Document_Standard_Headers = (
 
 ; Supported Content Media Types.
 ; If uint is used, only CoAP Content Formats that match the string format are allowed.
-media_type = uint / tstr .eq (
-  "application/json" /
-  "application/schema+json" /
-  "application/cbor" /
-  "application/cddl"
+media_type = (
+    (uint .eq (50 / 60)) /
+    (tstr .eq (
+        "application/json" /
+        "application/schema+json" /
+        "application/cbor" /
+        "application/cddl"
+    ))
 )
 
 ; Supported Content Encoding Types
