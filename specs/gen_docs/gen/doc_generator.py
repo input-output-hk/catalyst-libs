@@ -282,7 +282,6 @@ class DocGenerator:
 
     def validate_generation(self) -> bool:
         """Check and Output the status when a file does not validate."""
-        rich.print(f"Validating {self._filename}")
         if not self._filepath.exists():
             rich.print(f"Documentation file missing: {self._filename}.")
             return False
@@ -329,7 +328,6 @@ class DocGenerator:
             return False
 
         if self._generate:
-            rich.print(f"Generating {self._filename}")
             if self._filepath.exists():
                 old_contents = self._filepath.read_text()
                 if old_contents == self._filedata:
