@@ -334,7 +334,7 @@ impl IdUri {
     /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<IdUri>()
     ///     .unwrap();
-    /// let new_role = RoleId::try_from(3).unwrap();
+    /// let new_role = RoleId::Proposer;
     /// let id_uri_with_role = id_uri.with_role(new_role);
     /// let (role, _) = id_uri_with_role.role_and_rotation();
     /// assert_eq!(role, new_role);
@@ -452,7 +452,7 @@ impl IdUri {
     /// use catalyst_types::id_uri::{key_rotation::KeyRotation, role_index::RoleId, IdUri};
     ///
     /// let id_uri =
-    ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/3/5"
+    ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"
     ///         .parse::<IdUri>()
     ///         .unwrap();
     ///
@@ -686,7 +686,7 @@ mod tests {
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         ":1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
-        "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/3/3",
+        "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3",
         "id.catalyst://preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/0/1",
         "id.catalyst://midnight/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/1#encrypt",

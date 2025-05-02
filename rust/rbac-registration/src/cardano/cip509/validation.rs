@@ -365,6 +365,10 @@ pub fn validate_role_data(
         );
     }
 
+    for unknown_role in metadata.role_data.keys().filter(|role| !role.is_known()) {
+        report.other(&format!("Unknown role found: {unknown_role}"), context);
+    }
+
     let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
         if number == &RoleId::Role0 {
@@ -604,7 +608,7 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report.contains("Unknown role found: RoleId(4)"));
+        assert!(report.contains("Unknown role found: 4"));
     }
 
     #[test]

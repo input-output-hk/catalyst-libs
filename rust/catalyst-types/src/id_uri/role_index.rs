@@ -23,18 +23,21 @@ pub enum RoleIdError {
 /// Project Catalyst User Role Index.
 ///
 /// <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-catalyst-role-definitions/CIP-XXXX/README.md>
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, strum::FromRepr)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum RoleId {
     /// Primary required role use for voting and commenting.
     Role0 = 0,
+
     /// Delegated representative (dRep) that vote on behalf of delegators.
     DelegatedRepresentative = 1,
-    /// Voter role that delegates voting power to a chosen representative (dRep).
-    VoterDelegation = 2,
+
     /// Proposer that enabling creation, collaboration, and submission of proposals.
     Proposer = 3,
+
+    /// A custom role.
+    Custom(u8),
 }
 
 impl RoleId {
@@ -42,6 +45,26 @@ impl RoleId {
     #[must_use]
     pub fn is_default(self) -> bool {
         self == Self::Role0
+    }
+
+    /// Returns the `u8` representation of the role.
+    #[must_use]
+    pub const fn as_u8(self) -> u8 {
+        match self {
+            RoleId::Role0 => 0,
+            RoleId::DelegatedRepresentative => 1,
+            RoleId::Proposer => 3,
+            RoleId::Custom(b) => b,
+        }
+    }
+
+    /// Returns `true` if the role belongs to the canonical set of known roles.
+    #[must_use]
+    pub const fn is_known(self) -> bool {
+        matches!(
+            self,
+            Self::Role0 | Self::DelegatedRepresentative | Self::Proposer
+        )
     }
 }
 
@@ -51,11 +74,14 @@ impl Default for RoleId {
     }
 }
 
-impl TryFrom<u8> for RoleId {
-    type Error = RoleIdError;
-
-    fn try_from(value: u8) -> Result<Self, RoleIdError> {
-        Self::from_repr(value).ok_or(RoleIdError::InvalidRole(value))
+impl From<u8> for RoleId {
+    fn from(value: u8) -> Self {
+        match value {
+            0 => Self::Role0,
+            1 => Self::DelegatedRepresentative,
+            3 => Self::Proposer,
+            b => Self::Custom(b),
+        }
     }
 }
 
@@ -65,22 +91,56 @@ impl FromStr for RoleId {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let value: u8 = s.parse()?;
 
-        Self::try_from(value)
+        Ok(Self::from(value))
     }
 }
 
 impl Display for RoleId {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        write!(f, "{}", *self as u8)
+        write!(f, "{}", self.as_u8())
     }
 }
 
 impl<'a, C> minicbor::Decode<'a, C> for RoleId {
     fn decode(d: &mut minicbor::Decoder<'a>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
-        let v = <u8 as minicbor::Decode<'a, C>>::decode(d, ctx)?;
+        <u8 as minicbor::Decode<'a, C>>::decode(d, ctx).map(Self::from)
+    }
+}
 
-        RoleId::try_from(v).map_err(|_| {
-            minicbor::decode::Error::message(format!("Unknown role found: RoleId({v})"))
-        })
+#[cfg(test)]
+mod tests {
+    use minicbor::{Decoder, Encoder};
+    use proptest::{num, prelude::*};
+
+    use super::*;
+
+    proptest! {
+        #[test]
+        fn role_encode(i in num::u16::ANY) {
+            let mut buffer = vec![0u8; 16];
+
+            let mut encoder = Encoder::new(buffer.as_mut_slice());
+
+            encoder.int(i.into()).unwrap();
+
+            let mut decoder = Decoder::new(buffer.as_slice());
+            let i_str = i.to_string();
+
+            if i > u16::from(u8::MAX) {
+                assert!(RoleId::from_str(&i_str).is_err());
+                assert!(decoder.decode::<RoleId>().is_err());
+            } else {
+                let i = u8::try_from(i).unwrap();
+
+                let r = RoleId::from(i);
+                let r_str = RoleId::from_str(&i_str).unwrap();
+                let r_display = r.to_string();
+                let r_dec: RoleId = decoder.decode().unwrap();
+
+                assert_eq!(r, r_str);
+                assert_eq!(r, r_dec);
+                assert_eq!(i_str, r_display);
+            }
+        }
     }
 }

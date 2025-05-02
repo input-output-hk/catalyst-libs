@@ -469,9 +469,7 @@ mod test {
         let update = chain.update(registration).unwrap();
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
-        assert!(update
-            .role_data_record()
-            .contains_key(&data.role.try_into().unwrap()));
+        assert!(update.role_data_record().contains_key(&data.role));
         // Update contains changes to role 0 without adding more roles.
         assert_eq!(update.role_data_record().len(), 1);
 

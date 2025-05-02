@@ -52,7 +52,7 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            exp: &[RoleId::Role0],
+            exp: &[RoleId::Role0, RoleId::DelegatedRepresentative],
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
