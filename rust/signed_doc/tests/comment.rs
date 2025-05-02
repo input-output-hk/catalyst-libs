@@ -14,7 +14,7 @@ async fn test_valid_comment_doc() {
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(
-        Some(serde_json::json!({
+        serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
@@ -28,7 +28,8 @@ async fn test_valid_comment_doc() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             }
-        })),
+        }),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::ROLE_0,
     )
     .unwrap();
@@ -71,7 +72,7 @@ async fn test_valid_comment_doc_with_reply() {
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(
-        Some(serde_json::json!({
+        serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
@@ -89,7 +90,8 @@ async fn test_valid_comment_doc_with_reply() {
                 "id": comment_doc_id,
                 "ver": comment_doc_ver
             }
-        })),
+        }),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::ROLE_0,
     )
     .unwrap();
@@ -113,7 +115,7 @@ async fn test_invalid_comment_doc() {
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(
-        Some(serde_json::json!({
+        serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::COMMENT_DOCUMENT_UUID_TYPE,
@@ -125,7 +127,8 @@ async fn test_invalid_comment_doc() {
             },
             // without ref
             "ref": serde_json::Value::Null
-        })),
+        }),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
         RoleIndex::ROLE_0,
     )
     .unwrap();
