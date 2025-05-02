@@ -111,7 +111,7 @@
       "requires": []
     },
     "catalyst_id_kid": {
-      "comment": "UTF8 Catalyst ID URI encoded as a bytes string.",
+      "comment": "UTF8 Catalyst ID encoded as a bytes string.",
       "def": "bytes",
       "requires": []
     },
@@ -254,7 +254,7 @@
   "coseHeaderFormats": {
     "Catalyst ID": {
       "cddl": "catalyst_id_kid",
-      "description": "KID (Catalyst ID URI)"
+      "description": "KID (Catalyst ID)"
     },
     "HTTP Content Encoding": {
       "cddl": "http_content_encoding",
@@ -295,7 +295,7 @@
   "cose_signature_headers": {
     "kid": {
       "coseLabel": 4,
-      "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
+      "description": "Catalyst ID identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
       "format": "Catalyst ID",
       "required": "yes"
     }

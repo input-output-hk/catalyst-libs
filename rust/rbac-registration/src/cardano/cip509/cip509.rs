@@ -7,9 +7,9 @@ use std::{borrow::Cow, collections::HashMap};
 use anyhow::{anyhow, Context};
 use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionId, TxnIndex};
 use catalyst_types::{
+    catalyst_id::CatalystId,
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
-    id_uri::IdUri,
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
@@ -81,7 +81,7 @@ pub struct Cip509 {
     /// A catalyst ID.
     ///
     /// This field is only present in role 0 registrations.
-    catalyst_id: Option<IdUri>,
+    catalyst_id: Option<CatalystId>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -253,7 +253,7 @@ impl Cip509 {
 
     /// Returns a Catalyst ID of this registration if role 0 is present.
     #[must_use]
-    pub fn catalyst_id(&self) -> Option<&IdUri> {
+    pub fn catalyst_id(&self) -> Option<&CatalystId> {
         self.catalyst_id.as_ref()
     }
 

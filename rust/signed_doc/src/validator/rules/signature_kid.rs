@@ -1,6 +1,6 @@
 //! Catalyst Signed Document COSE signature `kid` (Catalyst Id) role validation
 
-use catalyst_types::id_uri::role_index::RoleIndex;
+use catalyst_types::catalyst_id::role_index::RoleIndex;
 
 use crate::CatalystSignedDocument;
 
@@ -41,7 +41,7 @@ impl SignatureKidRule {
 #[cfg(test)]
 mod tests {
     use catalyst_types::{
-        id_uri::IdUri,
+        catalyst_id::CatalystId,
         uuid::{UuidV4, UuidV7},
     };
     use ed25519_dalek::ed25519::signature::Signer;
@@ -57,7 +57,7 @@ mod tests {
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
         let pk = sk.verifying_key();
-        let kid = IdUri::new("cardano", None, pk).with_role(RoleIndex::ROLE_0);
+        let kid = CatalystId::new("cardano", None, pk).with_role(RoleIndex::ROLE_0);
 
         let doc = Builder::new()
             .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())

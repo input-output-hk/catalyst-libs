@@ -9,8 +9,8 @@ use std::borrow::Cow;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Network, TxnWitness, VKeyHash};
 use catalyst_types::{
+    catalyst_id::CatalystId,
     hashes::{Blake2b128Hash, Blake2b256Hash},
-    id_uri::IdUri,
     problem_report::ProblemReport,
 };
 use ed25519_dalek::{Signature, VerifyingKey, PUBLIC_KEY_LENGTH};
@@ -297,7 +297,7 @@ fn validate_x509_self_signed_cert(c: &X509, index: usize, report: &ProblemReport
 #[allow(clippy::similar_names)]
 pub fn validate_role_data(
     metadata: &Cip509RbacMetadata, subnet: Network, report: &ProblemReport,
-) -> Option<IdUri> {
+) -> Option<CatalystId> {
     let context = "Role data validation";
 
     // There should be some role data
@@ -414,7 +414,7 @@ fn validate_role_numbers<'a>(
 fn validate_role_0(
     role: &RoleData, metadata: &Cip509RbacMetadata, subnet: Network, context: &str,
     report: &ProblemReport,
-) -> Option<IdUri> {
+) -> Option<CatalystId> {
     if let Some(key) = role.encryption_key() {
         report.invalid_value(
             "Role 0 encryption key",
@@ -445,7 +445,7 @@ fn validate_role_0(
             match metadata.x509_certs.first() {
                 Some(X509DerCert::X509Cert(cert)) => {
                     // All good: role 0 references a valid X509 certificate.
-                    catalyst_id = x509_cert_key(cert, context, report).map(|k| IdUri::new(network, Some(&subnet.to_string()), k));
+                    catalyst_id = x509_cert_key(cert, context, report).map(|k| CatalystId::new(network, Some(&subnet.to_string()), k));
                 }
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
@@ -455,7 +455,7 @@ fn validate_role_0(
             match metadata.c509_certs.first() {
                 Some(C509Cert::C509Certificate(cert)) => {
                     // All good: role 0 references a valid C509 certificate.
-                    catalyst_id = c509_cert_key(cert, context, report).map(|k| IdUri::new(network, Some(&subnet.to_string()), k));
+                    catalyst_id = c509_cert_key(cert, context, report).map(|k| CatalystId::new(network, Some(&subnet.to_string()), k));
                 }
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),

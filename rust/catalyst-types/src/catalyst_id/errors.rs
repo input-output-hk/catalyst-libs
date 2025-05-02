@@ -7,7 +7,7 @@ use super::{key_rotation::KeyRotationError, role_index::RoleIndexError};
 
 /// Errors that can occur when parsing a `KidUri`
 #[derive(Display, Error, Debug)]
-pub enum IdUriError {
+pub enum CatalystIdError {
     /// Invalid KID URI
     InvalidURI(#[from] fluent_uri::error::ParseError<String>),
     /// Invalid Scheme, not a ID URI

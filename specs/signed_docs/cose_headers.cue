@@ -139,7 +139,7 @@ coseHeaderFormats: #metadataFormats & {
 		cddl:        "http_content_encoding"
 	}
 	"Catalyst ID": {
-		description: "KID (Catalyst ID URI)"
+		description: "KID (Catalyst ID)"
 		cddl:        "catalyst_id_kid"
 	}
 }
@@ -195,9 +195,9 @@ _coseSignatureHeaders: #coseHeaders & {
 		coseLabel: 4
 		format:    "Catalyst ID"
 		description: """
-			Catalyst ID URI identifying the Public Key.
+			Catalyst ID identifying the Public Key.
 
-			The `kid` is a UTF-8 encoded Catalyst ID URI.
+			The `kid` is a UTF-8 encoded Catalyst ID.
 			Any `kid` URI which conforms to the Catalyst ID specification may be used.
 			The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 			used to sign the protected portion of the document.			

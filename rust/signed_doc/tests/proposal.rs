@@ -1,7 +1,7 @@
 //! Integration test for proposal document validation part.
 
 use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
-use catalyst_types::id_uri::role_index::RoleIndex;
+use catalyst_types::catalyst_id::role_index::RoleIndex;
 
 mod common;
 

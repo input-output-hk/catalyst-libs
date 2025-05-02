@@ -8,7 +8,7 @@ use anyhow::bail;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Cip0134Uri, StakeAddress, TransactionId};
 use catalyst_types::{
-    id_uri::{key_rotation::KeyRotation, IdUri},
+    catalyst_id::{key_rotation::KeyRotation, CatalystId},
     uuid::UuidV4,
 };
 use ed25519_dalek::VerifyingKey;
@@ -67,7 +67,7 @@ impl RegistrationChain {
 
     /// Returns a Catalyst ID.
     #[must_use]
-    pub fn catalyst_id(&self) -> &IdUri {
+    pub fn catalyst_id(&self) -> &CatalystId {
         &self.inner.catalyst_id
     }
 
@@ -229,7 +229,7 @@ impl RegistrationChain {
 #[derive(Debug, Clone)]
 struct RegistrationChainInner {
     /// A Catalyst ID.
-    catalyst_id: IdUri,
+    catalyst_id: CatalystId,
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: TransactionId,
     /// List of purpose for this registration chain

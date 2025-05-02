@@ -70,7 +70,7 @@ When used as a Catalyst ID, where only catalyst IDs would be used, the scheme ca
 The [authority](https://datatracker.ietf.org/doc/html/rfc3986#section-3.2) references the blockchain or network
 the key was registered within.
 
-It is perfectly valid for an ID Uri to reference a different network than the place where the ID or Key is used.
+It is perfectly valid for an Catalyst ID to reference a different network than the place where the ID or Key is used.
 For example, a `cardano` ID can be used to post documents to `IPFS`.
 Its purpose is to define WHERE the key was registered, and nothing more.
 
@@ -112,7 +112,7 @@ A URI is identical, provided the hostname and path are the same, the [userinfo] 
 a part in validating or finding the catalyst keychain being referenced.
 
 The `nonce` part contained in the `password` component of the username *MUST* be an integer,
-and it is the number of seconds since 1970 UTC, when the Catalyst ID URI was generated.
+and it is the number of seconds since 1970 UTC, when the Catalyst ID was generated.
 
 Applications which use the `nonce` will define its use, anything that does not use the `nonce` will ignore it.
 

@@ -1,5 +1,5 @@
-//! Catalyst ID URI.
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/>
+//! Catalyst ID.
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_catalyst_id/catalyst-id/>
 
 // cspell: words userinfo rngs Fftx csprng
 
@@ -26,13 +26,13 @@ use key_rotation::KeyRotation;
 use role_index::RoleIndex;
 
 /// Catalyst ID
-/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/>
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_catalyst_id/catalyst-id/>
 ///
 /// Identity of Catalyst Registration.
 /// Optionally also identifies a specific Signed Document Key
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(clippy::module_name_repetitions)]
-pub struct IdUri {
+pub struct CatalystId {
     /// Username
     username: Option<String>,
     /// Nonce (like the password in http basic auth, but NOT a password, just a nonce)
@@ -58,7 +58,7 @@ pub struct IdUri {
     id: bool,
 }
 
-impl IdUri {
+impl CatalystId {
     /// Encryption Key Identifier Fragment
     const ENCRYPTION_FRAGMENT: &EStr<Fragment> = EStr::new_or_panic("encrypt");
     /// Maximum allowable Nonce Value
@@ -82,7 +82,7 @@ impl IdUri {
         self.nonce
     }
 
-    /// Get the network the `IdUri` is referencing the registration to.
+    /// Get the network the `CatalystId` is referencing the registration to.
     #[must_use]
     pub fn network(&self) -> (String, Option<String>) {
         (self.network.clone(), self.subnet.clone())
@@ -112,7 +112,7 @@ impl IdUri {
         (self.role, self.rotation)
     }
 
-    /// Create a new `IdUri` for a Signing Key
+    /// Create a new `CatalystId` for a Signing Key
     #[must_use]
     pub fn new(network: &str, subnet: Option<&str>, role0_pk: VerifyingKey) -> Self {
         Self {
@@ -128,31 +128,31 @@ impl IdUri {
         }
     }
 
-    /// The `IdUri` is formatted as a URI.
+    /// The `CatalystId` is formatted as a URI.
     #[must_use]
     pub fn as_uri(self) -> Self {
         Self { id: false, ..self }
     }
 
-    /// The `IdUri` is formatted as a id.
+    /// The `CatalystId` is formatted as a id.
     #[must_use]
     pub fn as_id(self) -> Self {
         Self { id: true, ..self }
     }
 
-    /// Was `IdUri` formatted as an id when it was parsed.
+    /// Was `CatalystId` formatted as an id when it was parsed.
     #[must_use]
     pub fn is_id(&self) -> bool {
         self.id
     }
 
-    /// Was `IdUri` formatted as an uri when it was parsed.
+    /// Was `CatalystId` formatted as an uri when it was parsed.
     #[must_use]
     pub fn is_uri(&self) -> bool {
         !self.id
     }
 
-    /// Add or change the username in a Catalyst ID URI.
+    /// Add or change the username in a Catalyst ID.
     #[must_use]
     pub fn with_username(self, name: &str) -> Self {
         Self {
@@ -161,7 +161,7 @@ impl IdUri {
         }
     }
 
-    /// Add or change the username in a Catalyst ID URI.
+    /// Add or change the username in a Catalyst ID.
     #[must_use]
     pub fn without_username(self) -> Self {
         Self {
@@ -171,7 +171,7 @@ impl IdUri {
     }
 
     /// Add or change the nonce (a unique identifier for a data update) to a specific
-    /// value in a Catalyst `IdUri`.
+    /// value in a Catalyst `CatalystId`.
     ///
     /// This method is intended for use with trusted data where the nonce is known and
     /// verified beforehand. It ensures that the provided nonce is within the valid
@@ -180,10 +180,10 @@ impl IdUri {
     ///
     /// # Parameters
     /// - `nonce`: A `DateTime` representing the specific nonce value to set in the
-    ///   Catalyst `IdUri`. This should be a valid UTC datetime.
+    ///   Catalyst `CatalystId`. This should be a valid UTC datetime.
     ///
     /// # Returns
-    /// The updated Catalyst `IdUri` with the specified nonce, if it was within the
+    /// The updated Catalyst `CatalystId` with the specified nonce, if it was within the
     /// allowed range; otherwise, it will be updated with a clamped value of the
     /// nonce.
     ///
@@ -207,7 +207,7 @@ impl IdUri {
         Self { nonce, ..self }
     }
 
-    /// Add or change the nonce in a Catalyst ID URI. The nonce will be set to the current
+    /// Add or change the nonce in a Catalyst ID. The nonce will be set to the current
     /// UTC time when this method is called.
     ///
     /// This function returns a new instance of the type with the nonce field updated to
@@ -215,15 +215,15 @@ impl IdUri {
     ///
     /// # Examples
     /// ```rust
-    /// use catalyst_types::id_uri::IdUri;
+    /// use catalyst_types::catalyst_id::CatalystId;
     /// use chrono::Utc;
     ///
-    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
-    ///     .parse::<IdUri>()
+    /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<CatalystId>()
     ///     .unwrap();
-    /// assert!(id_uri.nonce().is_none());
-    /// let id_uri_with_nonce = id_uri.with_nonce();
-    /// assert!(id_uri_with_nonce.nonce().is_some());
+    /// assert!(catalyst_id.nonce().is_none());
+    /// let catalyst_id_with_nonce = catalyst_id.with_nonce();
+    /// assert!(catalyst_id_with_nonce.nonce().is_some());
     /// ```
     #[must_use]
     pub fn with_nonce(self) -> Self {
@@ -238,15 +238,15 @@ impl IdUri {
     ///
     /// # Examples
     /// ```rust
-    /// use catalyst_types::id_uri::IdUri;
+    /// use catalyst_types::catalyst_id::CatalystId;
     /// use chrono::{DateTime, Duration, Utc};
-    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
-    ///     .parse::<IdUri>()
+    /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<CatalystId>()
     ///     .unwrap()
     ///     .with_nonce();
     ///
-    /// let id_uri_without_nonce = id_uri.without_nonce();
-    /// assert_eq!(id_uri_without_nonce.nonce(), None);
+    /// let catalyst_id_without_nonce = catalyst_id.without_nonce();
+    /// assert_eq!(catalyst_id_without_nonce.nonce(), None);
     /// ```
     #[must_use]
     pub fn without_nonce(self) -> Self {
@@ -256,9 +256,9 @@ impl IdUri {
         }
     }
 
-    /// Set that the `IdUri` is used to identify an encryption key.
+    /// Set that the `CatalystId` is used to identify an encryption key.
     ///
-    /// This method sets `IdUri` is identifying an encryption key.
+    /// This method sets `CatalystId` is identifying an encryption key.
     ///
     /// # Returns
     ///
@@ -267,15 +267,15 @@ impl IdUri {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::id_uri::IdUri;
+    /// use catalyst_types::catalyst_id::CatalystId;
     ///
-    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
-    ///     .parse::<IdUri>()
+    /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<CatalystId>()
     ///     .unwrap();
-    /// assert_eq!(id_uri.is_encryption_key(), false);
+    /// assert_eq!(catalyst_id.is_encryption_key(), false);
     ///
-    /// let id_uri = id_uri.with_encryption();
-    /// assert_eq!(id_uri.is_encryption_key(), true);
+    /// let catalyst_id = catalyst_id.with_encryption();
+    /// assert_eq!(catalyst_id.is_encryption_key(), true);
     /// ```
     #[must_use]
     pub fn with_encryption(self) -> Self {
@@ -285,9 +285,9 @@ impl IdUri {
         }
     }
 
-    /// Set that the `IdUri` is not for encryption
+    /// Set that the `CatalystId` is not for encryption
     ///
-    /// This method sets `IdUri` is not identifying an encryption key.
+    /// This method sets `CatalystId` is not identifying an encryption key.
     ///
     /// # Returns
     ///
@@ -296,15 +296,15 @@ impl IdUri {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::id_uri::IdUri;
+    /// use catalyst_types::catalyst_id::CatalystId;
     ///
-    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE#encrypt"
-    ///     .parse::<IdUri>()
+    /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE#encrypt"
+    ///     .parse::<CatalystId>()
     ///     .unwrap();
-    /// assert_eq!(id_uri.is_encryption_key(), true);
+    /// assert_eq!(catalyst_id.is_encryption_key(), true);
     ///
-    /// let id_uri = id_uri.without_encryption();
-    /// assert_eq!(id_uri.is_encryption_key(), false);
+    /// let catalyst_id = catalyst_id.without_encryption();
+    /// assert_eq!(catalyst_id.is_encryption_key(), false);
     /// ```
     #[must_use]
     pub fn without_encryption(self) -> Self {
@@ -329,14 +329,14 @@ impl IdUri {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::id_uri::{role_index::RoleIndex, IdUri};
+    /// use catalyst_types::catalyst_id::{role_index::RoleIndex, CatalystId};
     ///
-    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
-    ///     .parse::<IdUri>()
+    /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<CatalystId>()
     ///     .unwrap();
     /// let new_role: RoleIndex = 5.into();
-    /// let id_uri_with_role = id_uri.with_role(new_role);
-    /// let (role, _) = id_uri_with_role.role_and_rotation();
+    /// let catalyst_id_with_role = catalyst_id.with_role(new_role);
+    /// let (role, _) = catalyst_id_with_role.role_and_rotation();
     /// assert_eq!(role, new_role);
     /// ```
     #[must_use]
@@ -358,14 +358,14 @@ impl IdUri {
     ///
     /// # Examples
     /// ```rust
-    /// use catalyst_types::id_uri::{key_rotation::KeyRotation, IdUri};
+    /// use catalyst_types::catalyst_id::{key_rotation::KeyRotation, CatalystId};
     ///
-    /// let id_uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
-    ///     .parse::<IdUri>()
+    /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
+    ///     .parse::<CatalystId>()
     ///     .unwrap();
     /// let new_rotation: KeyRotation = 4.into();
-    /// let id_uri_with_rotation = id_uri.with_rotation(new_rotation);
-    /// let (_, rotation) = id_uri_with_rotation.role_and_rotation();
+    /// let catalyst_id_with_rotation = catalyst_id.with_rotation(new_rotation);
+    /// let (_, rotation) = catalyst_id_with_rotation.role_and_rotation();
     /// assert_eq!(rotation, new_rotation);
     /// ```
     #[must_use]
@@ -404,10 +404,10 @@ impl IdUri {
     /// # Examples
     ///
     /// ```
-    /// use catalyst_types::id_uri::IdUri;
+    /// use catalyst_types::catalyst_id::CatalystId;
     /// use chrono::{DateTime, Duration, Utc};
     /// let uri = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
-    ///     .parse::<IdUri>()
+    ///     .parse::<CatalystId>()
     ///     .unwrap()
     ///     .with_nonce();
     /// // true, within range
@@ -436,7 +436,7 @@ impl IdUri {
         }
     }
 
-    /// Converts the `IdUri` to its shortest form.
+    /// Converts the `CatalystId` to its shortest form.
     /// This method returns a new instance of the type with no role information, no
     /// scheme, no username, no nonce, and no encryption settings. It effectively
     /// strips away all additional metadata to provide a most generalized form of the
@@ -444,19 +444,22 @@ impl IdUri {
     ///
     /// # Returns
     ///
-    /// A new `IdUri` instance representing the shortest form of the current `IdUri`.
+    /// A new `CatalystId` instance representing the shortest form of the current
+    /// `CatalystId`.
     ///
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::id_uri::{key_rotation::KeyRotation, role_index::RoleIndex, IdUri};
+    /// use catalyst_types::catalyst_id::{
+    ///     key_rotation::KeyRotation, role_index::RoleIndex, CatalystId,
+    /// };
     ///
-    /// let id_uri =
+    /// let catalyst_id =
     ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"
-    ///         .parse::<IdUri>()
+    ///         .parse::<CatalystId>()
     ///         .unwrap();
     ///
-    /// let short_id = id_uri.as_short_id();
+    /// let short_id = catalyst_id.as_short_id();
     /// assert_eq!(
     ///     short_id.role_and_rotation(),
     ///     (RoleIndex::default(), KeyRotation::default())
@@ -483,8 +486,8 @@ impl IdUri {
     }
 }
 
-impl FromStr for IdUri {
-    type Err = errors::IdUriError;
+impl FromStr for CatalystId {
+    type Err = errors::CatalystIdError;
 
     /// This will parse a URI or a RAW ID.  
     /// The only difference between them is a URI has the scheme, a raw ID does not.
@@ -499,21 +502,21 @@ impl FromStr for IdUri {
             } else {
                 id = true;
                 // It might be a RAW ID, so try and parse with the correct scheme.
-                format!("{}://{}", IdUri::SCHEME, s)
+                format!("{}://{}", CatalystId::SCHEME, s)
             }
         };
 
         let uri = Uri::parse(raw_uri)?;
 
         // Check if its the correct scheme.
-        if uri.scheme() != IdUri::SCHEME {
-            return Err(errors::IdUriError::InvalidScheme);
+        if uri.scheme() != CatalystId::SCHEME {
+            return Err(errors::CatalystIdError::InvalidScheme);
         }
 
         // Decode the network and subnet
         let auth = uri
             .authority()
-            .ok_or(errors::IdUriError::NoDefinedNetwork)?;
+            .ok_or(errors::CatalystIdError::NoDefinedNetwork)?;
         let (subnet, network) = {
             let host = auth.host();
             if let Some((subnet, host)) = host.rsplit_once('.') {
@@ -531,9 +534,9 @@ impl FromStr for IdUri {
 
                     let nonce_val: i64 = nonce_str
                         .parse()
-                        .map_err(|_| errors::IdUriError::InvalidNonce)?;
-                    if !(IdUri::MIN_NONCE..=IdUri::MAX_NONCE).contains(&nonce_val) {
-                        return Err(errors::IdUriError::InvalidNonce);
+                        .map_err(|_| errors::CatalystIdError::InvalidNonce)?;
+                    if !(CatalystId::MIN_NONCE..=CatalystId::MAX_NONCE).contains(&nonce_val) {
+                        return Err(errors::CatalystIdError::InvalidNonce);
                     }
 
                     let nonce = DateTime::<Utc>::from_timestamp(nonce_val, 0);
@@ -553,15 +556,17 @@ impl FromStr for IdUri {
         // Can ONLY have 3 path components, no more and no less
         // Less than 3 handled by errors below (4 because of leading `/` in path).
         if path.len() > 4 {
-            return Err(errors::IdUriError::InvalidPath);
+            return Err(errors::CatalystIdError::InvalidPath);
         };
 
         // Decode and validate the Role0 Public key from the path
-        let encoded_role0_key = path.get(1).ok_or(errors::IdUriError::InvalidRole0Key)?;
+        let encoded_role0_key = path
+            .get(1)
+            .ok_or(errors::CatalystIdError::InvalidRole0Key)?;
         let decoded_role0_key =
             base64_url::decode(encoded_role0_key.decode().into_string_lossy().as_ref())?;
         let role0_pk = crate::conversion::vkey_from_bytes(&decoded_role0_key)
-            .or(Err(errors::IdUriError::InvalidRole0Key))?;
+            .or(Err(errors::CatalystIdError::InvalidRole0Key))?;
 
         // Decode and validate the Role Index from the path.
         let role_index: RoleIndex = {
@@ -592,7 +597,7 @@ impl FromStr for IdUri {
                 if uri.fragment() == Some(Self::ENCRYPTION_FRAGMENT) {
                     cat_id = cat_id.with_encryption();
                 } else {
-                    return Err(errors::IdUriError::InvalidEncryptionKeyFragment);
+                    return Err(errors::CatalystIdError::InvalidEncryptionKeyFragment);
                 }
             }
 
@@ -616,7 +621,7 @@ impl FromStr for IdUri {
     }
 }
 
-impl Display for IdUri {
+impl Display for CatalystId {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         if !self.id {
             write!(f, "{}://", Self::SCHEME.as_str())?;
@@ -664,12 +669,12 @@ impl Display for IdUri {
     }
 }
 
-impl TryFrom<&[u8]> for IdUri {
-    type Error = errors::IdUriError;
+impl TryFrom<&[u8]> for CatalystId {
+    type Error = errors::CatalystIdError;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
         let kid_str = String::from_utf8(value.to_vec())?;
-        IdUri::from_str(&kid_str)
+        CatalystId::from_str(&kid_str)
     }
 }
 
@@ -678,9 +683,9 @@ mod tests {
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;
 
-    use super::IdUri;
+    use super::CatalystId;
 
-    const ID_URI_TEST_VECTOR: [&str; 9] = [
+    const CATALYST_ID_TEST_VECTOR: [&str; 9] = [
         "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
         "user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
@@ -694,9 +699,9 @@ mod tests {
 
     #[test]
     /// Tests that deserialization and re-serialization round trip correctly
-    fn test_id_uri_from_str() {
-        for id_string in ID_URI_TEST_VECTOR {
-            let id = id_string.parse::<IdUri>().unwrap();
+    fn test_catalyst_id_from_str() {
+        for id_string in CATALYST_ID_TEST_VECTOR {
+            let id = id_string.parse::<CatalystId>().unwrap();
             assert_eq!(format!("{id}"), id_string);
         }
     }
@@ -707,8 +712,8 @@ mod tests {
         let test_uri = "id.catalyst://user:1735689600@preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/2/0#encrypt";
         let expected_id = "preview.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE";
 
-        let uri_id = test_uri.parse::<IdUri>().unwrap();
-        let short_id = expected_id.parse::<IdUri>().unwrap();
+        let uri_id = test_uri.parse::<CatalystId>().unwrap();
+        let short_id = expected_id.parse::<CatalystId>().unwrap();
 
         assert_eq!(uri_id.as_short_id(), short_id);
     }
