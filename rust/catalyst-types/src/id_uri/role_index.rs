@@ -23,7 +23,7 @@ pub enum RoleIdError {
 /// Project Catalyst User Role Index.
 ///
 /// <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-catalyst-role-definitions/CIP-XXXX/README.md>
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, strum::FromRepr)]
 #[repr(u8)]
 #[non_exhaustive]
 #[derive(strum::FromRepr)]
