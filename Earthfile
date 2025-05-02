@@ -56,3 +56,9 @@ sync-config:
     COPY --dir cat-ci+repo-config/repo .
 
     SAVE ARTIFACT /repo/ruff.toml AS LOCAL ruff.toml
+    
+# copy-specs : Copy the specs source folder.
+copy-specs:
+    FROM scratch
+    COPY --dir specs ./specs
+    SAVE ARTIFACT /specs specs
