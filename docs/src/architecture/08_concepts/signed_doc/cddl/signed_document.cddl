@@ -36,8 +36,9 @@ COSE_Document_Standard_Headers = (
   ?"content-encoding" => http_content_encoding
 )
 
-; Supported Content Media Types
-media_type = (
+; Supported Content Media Types.
+; If uint is used, only CoAP Content Formats that match the string format are allowed.
+media_type = uint / tstr .eq (
   "application/json" /
   "application/schema+json" /
   "application/cbor" /
@@ -45,7 +46,7 @@ media_type = (
 )
 
 ; Supported Content Encoding Types
-http_content_encoding = "br"
+http_content_encoding = tstr .eq "br"
 
 ; Generic definition (does not include metadata constraints)
 Signed_Document_Metadata_Headers = (

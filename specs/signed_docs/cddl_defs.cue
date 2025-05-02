@@ -112,16 +112,19 @@ cddlDefinitions: #cddlDefinitions & {
 		comment: "List of revoked versions of this document."
 	}
 	"media_type": {
-		def:     """
-			(
+		def: """
+			uint / tstr .eq (
 			  \(_cddlContentTypes)
 			)
 			"""
-		comment: "Supported Content Media Types"
+		comment: """
+			Supported Content Media Types.
+			If uint is used, only CoAP Content Formats that match the string format are allowed.
+			"""
 	}
 	"http_content_encoding": {
 		def: """
-			"br"
+			tstr .eq "br"
 			"""
 		comment: "Supported Content Encoding Types"
 	}

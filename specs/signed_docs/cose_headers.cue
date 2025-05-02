@@ -12,11 +12,13 @@ import (
 _contentTypes: {
 	[string]: {
 		description: string // description of the content type
+		coap_type?:  int
 	}
 }
 _contentTypes: {
 	"application/json": {
 		description: "JSON Document"
+		coap_type:   50
 	}
 	"application/schema+json": {
 		description: """
@@ -27,6 +29,7 @@ _contentTypes: {
 	}
 	"application/cbor": {
 		description: "RFC8949 Binary CBOR Encoded Document"
+		coap_type:   60
 	}
 	"application/cddl": {
 		description: """
@@ -117,8 +120,8 @@ _allCoseHeaderNames: or([
 ])
 
 coseHeaderFormats: #metadataFormats & {
-	"IANA Media Type": {
-		description: "An IANA Media Type string which identifies the payload."
+	"Media Type": {
+		description: "A Media Type string which identifies the payload."
 		cddl:        "media_type"
 	}
 	"HTTP Content Encoding": {
@@ -144,7 +147,7 @@ coseHeaderFormats: #metadataFormats & {
 	description: string
 	required:    optional.#field | *"yes"
 	format:      #coseHeaderTypesConstraint
-	if format == "IANA Media Type" {
+	if format == "Media Type" {
 		"value": #contentType | [...#contentType]
 	}
 
@@ -161,8 +164,8 @@ _coseHeaders: #coseHeaders & {
 	// Documents content type
 	"content type": #coseField & {
 		coseLabel:   3
-		format:      "IANA Media Type"
-		description: "IANA Media Type/s allowed in the Payload"
+		format:      "Media Type"
+		description: "Media Type/s allowed in the Payload"
 	}
 	// Documents Used content encodings
 	"content-encoding": #coseField & {

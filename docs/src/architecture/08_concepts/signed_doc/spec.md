@@ -58,11 +58,11 @@ The [COSE header parameters][RFC9052-HeaderParameters] defined and used by Catal
 
 #### `content type`
 
-IANA Media Type/s allowed in the Payload
+Media Type/s allowed in the Payload
 
 * Required : yes
 * [Cose][RFC9052] Label : 3
-* Format : IANA Media Type
+* Format : Media Type
   * Supported Values:
     * [application/json] : [JSON][RFC8259] Document
     * [application/schema+json] : [JSON Schema] Draft 7 Document; Note:

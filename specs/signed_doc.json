@@ -170,7 +170,7 @@
     },
     "http_content_encoding": {
       "comment": "Supported Content Encoding Types",
-      "def": "\"br\"",
+      "def": "tstr .eq \"br\"",
       "requires": []
     },
     "json_pointer": {
@@ -179,8 +179,8 @@
       "requires": []
     },
     "media_type": {
-      "comment": "Supported Content Media Types",
-      "def": "(\n  \"application/json\" /\n  \"application/schema+json\" /\n  \"application/cbor\" /\n  \"application/cddl\"\n)",
+      "comment": "Supported Content Media Types.\nIf uint is used, only CoAP Content Formats that match the string format are allowed.",
+      "def": "uint / tstr .eq (\n  \"application/json\" /\n  \"application/schema+json\" /\n  \"application/cbor\" /\n  \"application/cddl\"\n)",
       "requires": []
     },
     "revocations": {
@@ -220,12 +220,14 @@
   },
   "contentTypes": {
     "application/cbor": {
+      "coap_type": 60,
       "description": "RFC8949 Binary CBOR Encoded Document"
     },
     "application/cddl": {
       "description": "CDDL Document; Note: \n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
     },
     "application/json": {
+      "coap_type": 50,
       "description": "JSON Document"
     },
     "application/schema+json": {
@@ -258,16 +260,16 @@
       "cddl": "http_content_encoding",
       "description": "Encoding if any on the payload."
     },
-    "IANA Media Type": {
+    "Media Type": {
       "cddl": "media_type",
-      "description": "An IANA Media Type string which identifies the payload."
+      "description": "A Media Type string which identifies the payload."
     }
   },
   "cose_headers": {
     "content type": {
       "coseLabel": 3,
-      "description": "IANA Media Type/s allowed in the Payload",
-      "format": "IANA Media Type",
+      "description": "Media Type/s allowed in the Payload",
+      "format": "Media Type",
       "required": "yes",
       "value": [
         "application/json",
@@ -305,8 +307,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -450,8 +452,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -598,8 +600,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -746,8 +748,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -898,8 +900,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -1058,8 +1060,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -1230,8 +1232,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -1407,8 +1409,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -1564,8 +1566,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -1728,8 +1730,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -1884,8 +1886,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -2038,8 +2040,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -2195,6 +2197,7 @@
             "action"
           ],
           "title": "Proposal Submission Action Payload Schema",
+          "type": "object",
           "x-changelog": {
             "2025-03-01": [
               "First Version Created."
@@ -2234,8 +2237,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },

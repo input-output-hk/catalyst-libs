@@ -232,6 +232,7 @@ Schema :
     "action"
   ],
   "title": "Proposal Submission Action Payload Schema",
+  "type": "object",
   "x-changelog": {
     "2025-03-01": [
       "First Version Created."

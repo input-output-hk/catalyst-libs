@@ -1,12 +1,13 @@
 """Content Types Specification."""
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ContentTypes(BaseModel):
     """Content Types Deserialized Specification."""
 
     description: str
+    coap_type: int | None = Field(default = None)
 
     model_config = ConfigDict(extra="forbid")
 

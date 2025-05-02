@@ -30,7 +30,7 @@ class SpecMd(DocGenerator):
             for value in header_value:
                 value_entry = f"\n    * {value}"
                 description = None
-                if header_format == "IANA Media Type":
+                if header_format == "Media Type":
                     description = self._spec.content_type_description(value)
                 if header_format == "HTTP Content Encoding":
                     description = self._spec.encoding_type_description(value)
