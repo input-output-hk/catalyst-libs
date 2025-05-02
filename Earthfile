@@ -43,8 +43,8 @@ repo-docs:
 
     SAVE ARTIFACT /repo repo
     
-# copy-docs : Copy the docs source folder.
-copy-docs:
+# copy-specs : Copy the specs source folder.
+copy-specs:
     FROM scratch
-    COPY --dir docs/src ./docs/src
-    SAVE ARTIFACT /docs docs
+    COPY --dir specs ./specs
+    SAVE ARTIFACT /specs specs
