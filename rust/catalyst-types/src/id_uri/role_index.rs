@@ -26,7 +26,6 @@ pub enum RoleIdError {
 #[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, strum::FromRepr)]
 #[repr(u8)]
 #[non_exhaustive]
-#[derive(strum::FromRepr)]
 pub enum RoleId {
     /// Primary required role use for voting and commenting.
     Role0 = 0,
