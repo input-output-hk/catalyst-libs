@@ -2,6 +2,7 @@
 
 use std::collections::HashMap;
 
+use catalyst_types::id_uri::key_rotation::KeyRotation;
 use pallas::ledger::addresses::ShelleyAddress;
 
 use super::{CertOrPk, PointData, PointTxnIdx};
@@ -86,15 +87,15 @@ impl RoleDataRecord {
     /// The first signing key is at rotation 0, the second at rotation 1, and so on.
     /// Returns `None` if the given key rotation does not exist.
     #[must_use]
-    pub fn signing_key_from_rotation(&self, rotation: usize) -> Option<&CertOrPk> {
-        self.signing_keys.get(rotation).map(PointData::data)
+    pub fn signing_key_from_rotation(&self, rotation: &KeyRotation) -> Option<&CertOrPk> {
+        rotation.get_key(&self.signing_keys).map(PointData::data)
     }
 
     /// Get the encryption key data associated with this role and the given key rotation.
     /// The first encryption key is at rotation 0, the second at rotation 1, and so on.
     /// Returns `None` if the given key rotation does not exist.
     #[must_use]
-    pub fn encryption_key_from_rotation(&self, rotation: usize) -> Option<&CertOrPk> {
-        self.encryption_keys.get(rotation).map(PointData::data)
+    pub fn encryption_key_from_rotation(&self, rotation: &KeyRotation) -> Option<&CertOrPk> {
+        rotation.get_key(&self.encryption_keys).map(PointData::data)
     }
 }
