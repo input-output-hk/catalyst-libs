@@ -173,14 +173,14 @@
       "def": "\"br\"",
       "requires": []
     },
-    "iana_media_types": {
-      "comment": "Supported Content Media Types",
-      "def": "(\n  \"application/json\" /\n  \"application/schema+json\" /\n  \"application/cbor\" /\n  \"application/cddl\"\n)",
-      "requires": []
-    },
     "json_pointer": {
       "comment": "RFC6901 Standard JSON Pointer",
       "def": "text",
+      "requires": []
+    },
+    "media_type": {
+      "comment": "Supported Content Media Types",
+      "def": "(\n  \"application/json\" /\n  \"application/schema+json\" /\n  \"application/cbor\" /\n  \"application/cddl\"\n)",
       "requires": []
     },
     "revocations": {
@@ -259,7 +259,7 @@
       "description": "Encoding if any on the payload."
     },
     "IANA Media Type": {
-      "cddl": "iana_media_types",
+      "cddl": "media_type",
       "description": "An IANA Media Type string which identifies the payload."
     }
   },

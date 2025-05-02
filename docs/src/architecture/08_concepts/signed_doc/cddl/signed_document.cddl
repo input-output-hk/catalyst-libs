@@ -32,12 +32,12 @@ COSE_Document_Header_Map = {
 
 ; COSE Standard headers used by a Document
 COSE_Document_Standard_Headers = (
-  3 => iana_media_types
+  3 => media_type
   ?"content-encoding" => http_content_encoding
 )
 
 ; Supported Content Media Types
-iana_media_types = (
+media_type = (
   "application/json" /
   "application/schema+json" /
   "application/cbor" /

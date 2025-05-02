@@ -111,7 +111,7 @@ cddlDefinitions: #cddlDefinitions & {
 		requires: ["document_ver"]
 		comment: "List of revoked versions of this document."
 	}
-	"iana_media_types": {
+	"media_type": {
 		def:     """
 			(
 			  \(_cddlContentTypes)

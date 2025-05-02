@@ -119,7 +119,7 @@ _allCoseHeaderNames: or([
 coseHeaderFormats: #metadataFormats & {
 	"IANA Media Type": {
 		description: "An IANA Media Type string which identifies the payload."
-		cddl:        "iana_media_types"
+		cddl:        "media_type"
 	}
 	"HTTP Content Encoding": {
 		description: "Encoding if any on the payload."
