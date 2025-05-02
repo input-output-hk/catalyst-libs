@@ -21,7 +21,7 @@ pub(crate) use doc_ref::RefRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature_kid::SignatureKidRule;
-pub(crate) use template::TemplateRule;
+pub(crate) use template::{ContentRule, ContentSchema};
 
 /// Struct represented a full collection of rules for all fields
 pub(crate) struct Rules {
@@ -31,8 +31,8 @@ pub(crate) struct Rules {
     pub(crate) content_encoding: ContentEncodingRule,
     /// 'ref' field validation rule
     pub(crate) doc_ref: RefRule,
-    /// 'template' field validation rule
-    pub(crate) template: TemplateRule,
+    /// document's content validation rule
+    pub(crate) content: ContentRule,
     /// 'reply' field validation rule
     pub(crate) reply: ReplyRule,
     /// 'section' field validation rule
@@ -53,7 +53,7 @@ impl Rules {
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),
             self.doc_ref.check(doc, provider).boxed(),
-            self.template.check(doc, provider).boxed(),
+            self.content.check(doc, provider).boxed(),
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
             self.category.check(doc, provider).boxed(),
