@@ -75,16 +75,13 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 }
 
 pub fn create_dummy_signed_doc(
-    with_metadata: Option<serde_json::Value>, with_role_index: RoleId,
+    metadata: serde_json::Value, content: Vec<u8>, with_role_index: RoleId,
 ) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey, IdUri)> {
     let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
 
-    let content = serde_json::to_vec(&serde_json::Value::Null)?;
-    let (_, _, metadata) = test_metadata();
-
     let signed_doc = Builder::new()
         .with_decoded_content(content)
-        .with_json_metadata(with_metadata.unwrap_or(metadata))?
+        .with_json_metadata(metadata)?
         .add_signature(|m| sk.sign(&m).to_vec(), &kid)?
         .build();
 

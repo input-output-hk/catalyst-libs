@@ -17,8 +17,8 @@ use catalyst_types::{
 };
 use coset::{CoseSign, CoseSignature};
 use rules::{
-    CategoryRule, ContentEncodingRule, ContentTypeRule, RefRule, ReplyRule, Rules, SectionRule,
-    SignatureKidRule, TemplateRule,
+    CategoryRule, ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, RefRule,
+    ReplyRule, Rules, SectionRule, SignatureKidRule,
 };
 
 use crate::{
@@ -46,7 +46,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        template: TemplateRule::Specified {
+        content: ContentRule::Templated {
             exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE
                 .try_into()
                 .expect("Must be a valid UUID V4"),
@@ -69,7 +69,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        template: TemplateRule::Specified {
+        content: ContentRule::Templated {
             exp_template_type: COMMENT_TEMPLATE_UUID_TYPE
                 .try_into()
                 .expect("Must be a valid UUID V4"),
@@ -94,6 +94,15 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
 
+    let proposal_action_json_schema = jsonschema::options()
+        .with_draft(jsonschema::Draft::Draft7)
+        .build(
+            &serde_json::from_str(include_str!(
+                "./../../../../specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
+            ))
+            .expect("Must be a valid json file"),
+        )
+        .expect("Must be a valid json scheme file");
     let proposal_submission_action_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
@@ -102,7 +111,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: ContentEncoding::Brotli,
             optional: false,
         },
-        template: TemplateRule::NotSpecified,
+        content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         category: CategoryRule::Specified { optional: true },
         doc_ref: RefRule::Specified {
             exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE

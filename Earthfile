@@ -42,3 +42,9 @@ repo-docs:
     COPY --dir *.md LICENSE-APACHE LICENSE-MIT .
 
     SAVE ARTIFACT /repo repo
+    
+# copy-specs : Copy the specs source folder.
+copy-specs:
+    FROM scratch
+    COPY --dir specs ./specs
+    SAVE ARTIFACT /specs specs

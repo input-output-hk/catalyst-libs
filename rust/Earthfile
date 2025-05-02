@@ -1,6 +1,7 @@
 VERSION 0.8
 
 IMPORT github.com/input-output-hk/catalyst-ci/earthly/rust:v3.4.0 AS rust-ci
+IMPORT ../ AS repo-ci
 
 COPY_SRC:
     FUNCTION
@@ -22,6 +23,8 @@ COPY_SRC:
 # builder : Set up our target toolchains, and copy our files.
 builder:
     DO rust-ci+SETUP
+    # Copy specs where some document files are used inside cat-gateway
+    COPY repo-ci+copy-specs/specs ./specs
 
 # sync-cfg: Synchronize local config with CI version.
 # Must be run by the developer manually.
