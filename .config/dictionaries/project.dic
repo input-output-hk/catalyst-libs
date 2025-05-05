@@ -23,6 +23,7 @@ blosc
 bmac
 bootstrapper
 BROTLI
+Cabe
 cantopen
 cardano
 carryforward
@@ -30,6 +31,7 @@ CBOR
 cbork
 cddlc
 cdylib
+CELLBORDER
 CEST
 chacha
 CHAINCODE
@@ -60,10 +62,13 @@ dbsync
 dcbor
 decompressor
 delegators
+direnv
 displaydoc
 dleq
 dlog
 dockerhub
+docstrings
+doctests
 Dominik
 dotenv
 dotenvy
@@ -76,6 +81,7 @@ encryptor
 Errno
 Eternl
 excalidraw
+explicitely
 extn
 fadvise
 fcntl
@@ -90,6 +96,7 @@ fmmap
 fmtchk
 fmtfix
 fontawesome
+fontname
 fromfiledate
 fsgr
 fstat
@@ -102,10 +109,12 @@ getres
 giantstep
 gmtime
 gossipsub
+graphviz
 happ
 hardano
 Hardlink
 hasher
+headlabel
 heaptrack
 hexdigit
 highwater
@@ -120,6 +129,8 @@ ioerr
 iohk
 ipfs
 ipld
+ipynb
+isort
 jetbrains
 jorm
 jormungandr
@@ -127,6 +138,7 @@ Jörmungandr
 jsonschema
 Justfile
 kiduri
+labelloc
 lcov
 Leay
 Leshiy
@@ -168,6 +180,7 @@ MPMC
 msvc
 Multiaddr
 multiera
+mypy
 nanos
 netkey
 nextest
@@ -185,6 +198,7 @@ outlen
 Outparam
 outpubkey
 parameterises
+penwidth
 permissioned
 permissionless
 pg_isready
@@ -205,9 +219,17 @@ pubkey
 publickey
 pubspec
 pwrite
+pycodestyle
+pydantic
+pydot
+pyenv
+Pyflakes
+pypackages
 pytest
+pytype
 qpsg
 quic
+rankdir
 rapidoc
 readlinkat
 redoc
@@ -251,6 +273,7 @@ subsec
 symlinkat
 syscall
 tacho
+taillabel
 testcase
 testcov
 testdocs
@@ -267,6 +290,7 @@ tofiledate
 toobig
 toolsets
 Traceback
+tstr
 txmonitor
 txns
 typenum
@@ -282,6 +306,7 @@ utimensat
 UTXO
 uuidv4
 uuidv7
+venv
 vitss
 Vkey
 vkeywitness

@@ -31,7 +31,8 @@ documentationLinks: {
 	"RFC9562-V7":  "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7"   // UUID V7
 	"CC-BY-4.0":   "https://creativecommons.org/licenses/by/4.0/legalcode"             // CC BY 4.0
 	"IPFS-CID":    "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid" // IPFS Content Identifier
-	"CBOR-TAG-42": "https://github.com/ipld/cid-cbor/"                                 // IPLD content identifiers (CIDs) in CBOR
+	"CBOR-TAG-42": "https://github.com/ipld/cid-cbor/"
+	"CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md" // IPLD content identifiers (CIDs) in CBOR
 }
 
 #allLinkNames: or([

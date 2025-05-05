@@ -4,19 +4,13 @@
 
 Parameters which define a Category withing a Campaign under a Brand in the system.
 
-```d2 layout="elk"
-"Category Parameters": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": 818938c3-3139-4daa-afe6-974c78488e95
-  "id": UUIDv7
-  "ver": UUIDv7
-  "campaign_id": Campaign Parameters
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Category Parameters"."campaign_id"->"Campaign Parameters"
+```graphviz dot category_parameters.dot.svg
+{{ include_file('./../diagrams/category_parameters.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
@@ -49,6 +43,7 @@ This section will be included and updated in future iterations.
 ## Metadata
 
 ### [`type`](../metadata.md#type)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -58,41 +53,44 @@ This section will be included and updated in future iterations.
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### [`type`](../metadata.md#type) Validation
 
 **MUST** be a known document type.
 
 ### [`id`](../metadata.md#id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Id](../metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### [`id`](../metadata.md#id) Validation
 
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
 ### [`ver`](../metadata.md#ver)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Ver](../metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
-#### Validation
+#### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
 
 ### [`campaign_id`](../metadata.md#campaign_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -104,7 +102,7 @@ The document version must always be >= the document ID.
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
-#### Validation
+#### [`campaign_id`](../metadata.md#campaign_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -116,7 +114,10 @@ and [`category_id`](../metadata.md#category_id) metadata.
 
 ## Payload
 
-TODO
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ## Signers
 

@@ -9,85 +9,141 @@ All Metadata fields use one of these types.
 
 A list of collaborators who can participate in drafting and submitting a document
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-collaborators = [ * catalyst_id ]
-catalyst_id = text
-```
+    * [cddl/collaborators.cddl](cddl/collaborators.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/collaborators.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+### Document Id
+
+A unique document identifier
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
+
+    * [cddl/document_id.cddl](cddl/document_id.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/document_id.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Reference
 
 A document reference identifier
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-document_ref = [ 1* [ document_id, document_ver, document_locator ] ]
-document_id = uuid_v7
-uuid_v7 = 6.37(bytes .size 16)
-document_ver = uuid_v7
-document_locator = { "cid" => cid }
-cid = 6.42(bytes) ; TODO: add size limits if possible
-```
+    * [cddl/document_ref.cddl](cddl/document_ref.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/document_ref.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Type
 
 A document type identifier
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-document_type = [ 1* uuid_v4 ]
-uuid_v4 = 6.37(bytes .size 16)
-```
+    * [cddl/document_type.cddl](cddl/document_type.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/document_type.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
+### Document Ver
+
+A unique chronological document version
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
+
+    * [cddl/document_ver.cddl](cddl/document_ver.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/document_ver.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Section Reference
 
 A document section reference identifier
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-section_ref = json_pointer
-json_pointer = text
-```
+    * [cddl/section_ref.cddl](cddl/section_ref.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/section_ref.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv4][RFC9562-V4]
 
 Version 4 formatted [UUID][RFC9562]
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-uuid_v4 = 6.37(bytes .size 16)
-```
+    * [cddl/uuid_v4.cddl](cddl/uuid_v4.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv7][RFC9562-V7]
 
 Version 7 formatted [UUID][RFC9562]
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-uuid_v7 = 6.37(bytes .size 16)
-```
+    * [cddl/uuid_v7.cddl](cddl/uuid_v7.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Version Revocations
 
 A list of all versions of this document which are 'revoked'.
 
-#### [CDDL][RFC8610] Specification
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
 
-```cddl
-revocations = [ * document_ver ] / true
-document_ver = uuid_v7
-uuid_v7 = 6.37(bytes .size 16)
-```
+    * [cddl/revocations.cddl](cddl/revocations.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/revocations.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Individual Metadata field definitions
 
 ### `type`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -96,41 +152,44 @@ uuid_v7 = 6.37(bytes .size 16)
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### `type` Validation
 
 **MUST** be a known document type.
 
 ### `id`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](metadata.md#uuidv7) |
+| Format | [Document Id](metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### `id` Validation
 
 IF [`ver`](metadata.md#ver) does not == [`id`](metadata.md#id) then a document with
 [`id`](metadata.md#id) and [`ver`](metadata.md#ver) being equal *MUST* exist.
 
 ### `ver`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](metadata.md#uuidv7) |
+| Format | [Document Ver](metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](metadata.md#ver) == [`id`](metadata.md#id)
 
-#### Validation
+#### `ver` Validation
 
 The document version must always be >= the document ID.
 
 ### `ref`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -153,35 +212,28 @@ The document version must always be >= the document ID.
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
-This is an Array of the format:
-
-```cddl
-[ 1* [ document_id, document_ver, document_locator ] ]
-```
-
 If a reference is defined as required, there must be at least 1 reference specified.
 Some documents allow multiple references, and they are documented as required.
 
-* `document_id` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
-* `document_ver` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `document_locator` is a content unique locator for the document.
-  This serves two purposes.
+The document reference serves two purposes:
 
-  1. It ensures that the document referenced by an ID/Version is not substituted.
-     In other words, that the document intended to be referenced, is actually referenced.
-  2. Allow the document to be unambiguously located in decentralized storage systems.
+1. It ensures that the document referenced by an ID/Version is not substituted.
+    In other words, that the document intended to be referenced, is actually referenced.
+2. It Allows the document to be unambiguously located in decentralized storage systems.
 
-  There can be any number of Document Locations in any reference.
-  The currently defined locations are:
+There can be any number of Document Locations in any reference.
+The currently defined locations are:
 
-  * `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
-  * Others may be added when further storage mechanisms are defined.
+* `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+* Others may be added when further storage mechanisms are defined.
 
-  The value set here does not guarantee that the document is actually stored.
-  It only defines that if it were stored, this is the identifier that
-  that is required to retrieve it.
+The document location does not guarantee that the document is actually stored.
+It only defines that if it were stored, this is the identifier
+that is required to retrieve it.
+Therefore it is required that Document References
+are unique and reproducible, given a documents contents.
 
-#### Validation
+#### `ref` Validation
 
 The following must be true for a valid reference:
 
@@ -190,6 +242,7 @@ The following must be true for a valid reference:
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
 ### `template`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -202,12 +255,13 @@ The following must be true for a valid reference:
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
-#### Validation
+#### `template` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
 ### `reply`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -217,13 +271,14 @@ The document payload is not valid if it does not validate completely against the
 <!-- markdownlint-enable MD033 -->
 Reference to a Comment document type being referred to.
 
-#### Validation
+#### `reply` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
 The [`ref`](metadata.md#ref) of the [`reply`](metadata.md#reply) document must be the same as
 the original comment document.
 
 ### `section`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -232,12 +287,13 @@ the original comment document.
 <!-- markdownlint-enable MD033 -->
 A Reference to the original document, or the comment being replied to.
 
-#### Validation
+#### `section` Validation
 
 For a non-reply this must be a valid section reference into the referenced document.
 For a reply, this must be a valid section reference into the comment being replied to.
 
 ### `collaborators`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -251,7 +307,7 @@ Every subsequent version can amend the collaborators list.
 However, the initial Author can never be removed from being able to
 publish a new version of the document.
 
-#### Validation
+#### `collaborators` Validation
 
 This list does not imply these collaborators have consented to collaborate, only that the author/s
 are permitting these potential collaborators to participate in the drafting and submission process.
@@ -259,12 +315,14 @@ However, any document submission referencing a proposal MUST be signed by all co
 addition to the author.
 
 ### `revocations`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | excluded |
 
 ### `brand_id`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -276,7 +334,7 @@ addition to the author.
 <!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
 
-#### Validation
+#### `brand_id` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
 
@@ -287,6 +345,7 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 and [`category_id`](metadata.md#category_id) metadata.
 
 ### `campaign_id`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -298,7 +357,7 @@ and [`category_id`](metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
-#### Validation
+#### `campaign_id` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
 
@@ -309,6 +368,7 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 and [`category_id`](metadata.md#category_id) metadata.
 
 ### `category_id`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -320,7 +380,7 @@ and [`category_id`](metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
-#### Validation
+#### `category_id` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
 
@@ -331,6 +391,7 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 and [`campaign_id`](metadata.md#campaign_id) metadata.
 
 ### `election_id`
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -340,7 +401,7 @@ and [`campaign_id`](metadata.md#campaign_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Election Parameters Document this document lies under.
 
-#### Validation
+#### `election_id` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
 Any referenced document that includes a [`election_id`](metadata.md#election_id) must match the
@@ -363,5 +424,4 @@ optional for the referenced document.
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V4]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [RFC9562]: https://www.rfc-editor.org/rfc/rfc9562.html

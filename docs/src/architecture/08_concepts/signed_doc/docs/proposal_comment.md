@@ -9,32 +9,13 @@ linked to a brand/campaign or category via the template used by the proposal.
 
 The payload of a proposal comment is controlled by its template.
 
-```d2 layout="elk"
-"Proposal Comment": {
-  shape: sql_table
-  "content type": application/json
-  "type [0]": b679ded3-0e7c-41ba-89f8-da62a17898ea
-  "type [1]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": UUIDv7
-  "ver": UUIDv7
-  "ref": Proposal
-  "template": Proposal Comment Template
-  "reply": Proposal Comment (Optional)
-  "section": Section Reference
-  "revocations": Version Revocations
-  "brand_id": Brand Parameters (Optional)
-  "campaign_id": Campaign Parameters (Optional)
-  "category_id": Category Parameters (Optional)
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Comment"."ref"->"Proposal"
-"Proposal Comment"."template"->"Proposal Comment Template"
-"Proposal Comment"."reply"->"Proposal Comment": <reply> Optional
-"Proposal Comment"."brand_id"->"Brand Parameters": Optional
-"Proposal Comment"."campaign_id"->"Campaign Parameters": Optional
-"Proposal Comment"."category_id"->"Category Parameters": Optional
+```graphviz dot proposal_comment.dot.svg
+{{ include_file('./../diagrams/proposal_comment.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
@@ -69,6 +50,7 @@ and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.m
 ## Metadata
 
 ### [`type`](../metadata.md#type)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -78,41 +60,44 @@ and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.m
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### [`type`](../metadata.md#type) Validation
 
 **MUST** be a known document type.
 
 ### [`id`](../metadata.md#id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Id](../metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### [`id`](../metadata.md#id) Validation
 
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
 ### [`ver`](../metadata.md#ver)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Ver](../metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
-#### Validation
+#### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
 
 ### [`ref`](../metadata.md#ref)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -123,35 +108,28 @@ The document version must always be >= the document ID.
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
 
-This is an Array of the format:
-
-```cddl
-[ 1* [ document_id, document_ver, document_locator ] ]
-```
-
 If a reference is defined as required, there must be at least 1 reference specified.
 Some documents allow multiple references, and they are documented as required.
 
-* `document_id` is the [UUIDv7][RFC9562-V7] ID of the Document being referenced.
-* `document_ver` is the [UUIDv7][RFC9562-V7] Version of the Document being referenced.
-* `document_locator` is a content unique locator for the document.
-  This serves two purposes.
+The document reference serves two purposes:
 
-  1. It ensures that the document referenced by an ID/Version is not substituted.
-     In other words, that the document intended to be referenced, is actually referenced.
-  2. Allow the document to be unambiguously located in decentralized storage systems.
+1. It ensures that the document referenced by an ID/Version is not substituted.
+ In other words, that the document intended to be referenced, is actually referenced.
+2. It Allows the document to be unambiguously located in decentralized storage systems.
 
-  There can be any number of Document Locations in any reference.
-  The currently defined locations are:
+There can be any number of Document Locations in any reference.
+The currently defined locations are:
 
-  * `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
-  * Others may be added when further storage mechanisms are defined.
+* `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+* Others may be added when further storage mechanisms are defined.
 
-  The value set here does not guarantee that the document is actually stored.
-  It only defines that if it were stored, this is the identifier that
-  that is required to retrieve it.
+The document location does not guarantee that the document is actually stored.
+It only defines that if it were stored, this is the identifier
+that is required to retrieve it.
+Therefore it is required that Document References
+are unique and reproducible, given a documents contents.
 
-#### Validation
+#### [`ref`](../metadata.md#ref) Validation
 
 The following must be true for a valid reference:
 
@@ -160,6 +138,7 @@ The following must be true for a valid reference:
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
 ### [`template`](../metadata.md#template)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -169,12 +148,13 @@ The following must be true for a valid reference:
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
-#### Validation
+#### [`template`](../metadata.md#template) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
 ### [`reply`](../metadata.md#reply)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -184,13 +164,14 @@ The document payload is not valid if it does not validate completely against the
 <!-- markdownlint-enable MD033 -->
 Reference to a Comment document type being referred to.
 
-#### Validation
+#### [`reply`](../metadata.md#reply) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The [`ref`](../metadata.md#ref) of the [`reply`](../metadata.md#reply) document must be the same as
 the original comment document.
 
 ### [`section`](../metadata.md#section)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -199,12 +180,13 @@ the original comment document.
 <!-- markdownlint-enable MD033 -->
 A Reference to the original document, or the comment being replied to.
 
-#### Validation
+#### [`section`](../metadata.md#section) Validation
 
 For a non-reply this must be a valid section reference into the referenced document.
 For a reply, this must be a valid section reference into the comment being replied to.
 
 ### [`revocations`](../metadata.md#revocations)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -226,12 +208,13 @@ A new version of the document that is published after this, may reinstate prior
 document versions, by not listing them as revoked.
 However, any document where revocations was set `true` can never be reinstated.
 
-#### Validation
+#### [`revocations`](../metadata.md#revocations) Validation
 
 If the field is `true` the payload may be absent or invalid.
 Such documents may never be submitted.
 
 ### [`brand_id`](../metadata.md#brand_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -245,7 +228,7 @@ Such documents may never be submitted.
 <!-- markdownlint-enable MD033 -->
 A reference to the Brand Parameters Document this document lies under.
 
-#### Validation
+#### [`brand_id`](../metadata.md#brand_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -262,6 +245,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
   * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
 
 ### [`campaign_id`](../metadata.md#campaign_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -275,7 +259,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Campaign Parameters Document this document lies under.
 
-#### Validation
+#### [`campaign_id`](../metadata.md#campaign_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -292,6 +276,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
   * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
 
 ### [`category_id`](../metadata.md#category_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -305,7 +290,7 @@ and [`category_id`](../metadata.md#category_id) metadata.
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
-#### Validation
+#### [`category_id`](../metadata.md#category_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 

@@ -9,21 +9,13 @@ are met in any Proposal Template.
 
 The payload of a proposal template is controlled by its meta template.
 
-```d2 layout="elk"
-"Proposal Meta Template": {
-  shape: sql_table
-  "content type": application/schema+json
-  "type [0]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [1]": 0ce8ab38-9258-4fbc-a62e-7faa6e58318f
-  "type [2]": 7808d2ba-d511-40af-84e8-c0d1625fdfdc
-  "id": UUIDv7
-  "ver": UUIDv7
-  "category_id": Category Parameters (Optional)
+<!-- markdownlint-disable max-one-sentence-per-line -->
 
-}
-
-"Proposal Meta Template"."category_id"->"Category Parameters": Optional
+```graphviz dot proposal_meta_template.dot.svg
+{{ include_file('./../diagrams/proposal_meta_template.dot', indent=4) }}
 ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
@@ -56,6 +48,7 @@ This section will be included and updated in future iterations.
 ## Metadata
 
 ### [`type`](../metadata.md#type)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -65,41 +58,44 @@ This section will be included and updated in future iterations.
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
-#### Validation
+#### [`type`](../metadata.md#type) Validation
 
 **MUST** be a known document type.
 
 ### [`id`](../metadata.md#id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Id](../metadata.md#document-id) |
 <!-- markdownlint-enable MD033 -->
 Document ID, created the first time the document is created.
 This must be a properly created [UUIDv7][RFC9562-V7] which contains the
 timestamp of when the document was created.
 
-#### Validation
+#### [`id`](../metadata.md#id) Validation
 
 IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a document with
 [`id`](../metadata.md#id) and [`ver`](../metadata.md#ver) being equal *MUST* exist.
 
 ### [`ver`](../metadata.md#ver)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
-| Format | [UUIDv7](../metadata.md#uuidv7) |
+| Format | [Document Ver](../metadata.md#document-ver) |
 <!-- markdownlint-enable MD033 -->
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
-#### Validation
+#### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
 
 ### [`category_id`](../metadata.md#category_id)
+
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
@@ -111,7 +107,7 @@ The document version must always be >= the document ID.
 <!-- markdownlint-enable MD033 -->
 A reference to the Category Parameters Document this document lies under.
 
-#### Validation
+#### [`category_id`](../metadata.md#category_id) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
@@ -129,7 +125,7 @@ of the Proposal Template are met.
 This ensures that payloads can be reliably interpreted by business logic processes,
 while allowing for flexibility to capture extended information.
 
-**Must be a valid [JSON Schema] Draft 7 document.**
+Must be a valid according to <https://json-schema.org/draft-07/schema>.
 
 ## Signers
 

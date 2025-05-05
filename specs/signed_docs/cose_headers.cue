@@ -6,18 +6,19 @@ package signed_docs
 import (
 	"list"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
-
 )
 
 // Content Type name : Description
 _contentTypes: {
 	[string]: {
 		description: string // description of the content type
+		coap_type?:  int
 	}
 }
 _contentTypes: {
 	"application/json": {
 		description: "JSON Document"
+		coap_type:   50
 	}
 	"application/schema+json": {
 		description: """
@@ -28,6 +29,7 @@ _contentTypes: {
 	}
 	"application/cbor": {
 		description: "RFC8949 Binary CBOR Encoded Document"
+		coap_type:   60
 	}
 	"application/cddl": {
 		description: """
@@ -87,6 +89,16 @@ linkAKA: {
 	for k, _ in _contentTypes {k},
 ]
 
+_allCoapTypes: [
+	for _, v in _contentTypes if v.coap_type != _|_ {v.coap_type},
+]
+
+_allCoapTypesStr: [
+	for v in _allCoapTypes {"\(v)"},
+]
+
+_allCoapTypes: list.UniqueItems
+
 #contentTypesConstraint: or(#allContentTypes)
 
 // Supported Content Types (list of values)
@@ -117,17 +129,35 @@ _allCoseHeaderNames: or([
 	for k in _coseHeaderNames {k},
 ])
 
-#coseHeaderFormat:
-	"COSE Algorithm" |
-	"IANA Media Type" |
-	"HTTP Content Encoding"
+coseHeaderFormats: #metadataFormats & {
+	"Media Type": {
+		description: "A Media Type string which identifies the payload."
+		cddl:        "media_type"
+	}
+	"HTTP Content Encoding": {
+		description: "Encoding if any on the payload."
+		cddl:        "http_content_encoding"
+	}
+	"Catalyst ID": {
+		description: "KID (Catalyst ID URI)"
+		cddl:        "catalyst_id_kid"
+	}
+}
+
+// Types of a Metadata Fields
+#coseHeaderTypes: [
+	for k, _ in coseHeaderFormats {k},
+]
+
+// Constraint of Types of Cose Header Fields
+#coseHeaderTypesConstraint: or(#coseHeaderTypes)
 
 #coseField: {
 	coseLabel:   int | string
 	description: string
 	required:    optional.#field | *"yes"
-	format:      #coseHeaderFormat
-	if format == "IANA Media Type" {
+	format:      #coseHeaderTypesConstraint
+	if format == "Media Type" {
 		"value": #contentType | [...#contentType]
 	}
 
@@ -144,10 +174,10 @@ _coseHeaders: #coseHeaders & {
 	// Documents content type
 	"content type": #coseField & {
 		coseLabel:   3
-		format:      "IANA Media Type"
-		description: "IANA Media Type/s allowed in the Payload"
+		format:      "Media Type"
+		description: "Media Type/s allowed in the Payload"
 	}
-	// Allowed content encodings
+	// Documents Used content encodings
 	"content-encoding": #coseField & {
 		coseLabel: "content-encoding"
 		format:    "HTTP Content Encoding"
@@ -155,6 +185,22 @@ _coseHeaders: #coseHeaders & {
 		description: """
 			Supported HTTP Encodings of the Payload.
 			If no compression or encoding is used, then this field must not be present.
+			"""
+	}
+}
+
+_coseSignatureHeaders: #coseHeaders & {
+	// Key identifier
+	"kid": #coseField & {
+		coseLabel: 4
+		format:    "Catalyst ID"
+		description: """
+			Catalyst ID URI identifying the Public Key.
+
+			The `kid` is a UTF-8 encoded Catalyst ID URI.
+			Any `kid` URI which conforms to the Catalyst ID specification may be used.
+			The Catalyst ID unambiguously defines both the signing keys and signing algorithm
+			used to sign the protected portion of the document.			
 			"""
 	}
 }
@@ -171,3 +217,6 @@ cose_headers_order: [
 	"content type",
 	"content-encoding",
 ]
+
+// Headers defined for signatures.
+cose_signature_headers: _coseSignatureHeaders

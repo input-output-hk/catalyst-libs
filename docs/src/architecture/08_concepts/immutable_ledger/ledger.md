@@ -114,7 +114,7 @@ so its fully follows the structure of the [Catalyst Signed Document] specificati
 ??? note "Block CDDL definition: `block.cddl`"
 
     ```CDDL
-    {{ include_file('src/architecture/08_concepts/immutable_ledger/cddl/block.cddl', indent=4) }}
+    {{ include_file('./cddl/block.cddl', indent=4) }}
     ```
 <!-- markdownlint-enable max-one-sentence-per-line code-block-style -->
 
