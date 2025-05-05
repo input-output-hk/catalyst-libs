@@ -37,7 +37,7 @@ pub enum RoleId {
     Proposer = 3,
 
     /// A custom role.
-    Custom(u8),
+    Unknown(u8),
 }
 
 impl RoleId {
