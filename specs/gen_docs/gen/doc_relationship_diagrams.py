@@ -7,7 +7,7 @@ from gen.doc_generator import DocGenerator
 from gen.graphviz_doc_diagram import DotFile, DotLink, DotSignedDoc, TableRow
 from spec.metadata import Metadata
 from spec.optional import OptionalField
-from spec.signed_doc import HeaderType, SignedDocSpec
+from spec.signed_doc import HeaderType, SignedDoc
 
 
 class DocRelationshipFile(DocGenerator):
@@ -15,9 +15,7 @@ class DocRelationshipFile(DocGenerator):
 
     DIAGRAM_PATH: str = "diagrams/"
 
-    def __init__(
-        self, args: argparse.Namespace, spec: SignedDocSpec, doc_name: str | None = None, depth: int = 0
-    ) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDoc, doc_name: str | None = None, depth: int = 0) -> None:
         """Document Relationship Diagram File Generator."""
         file_name = doc_name.lower().replace(" ", "_").replace("-", "_") if doc_name is not None else "all"
         file_name = f"{self.DIAGRAM_PATH}{file_name}.dot"

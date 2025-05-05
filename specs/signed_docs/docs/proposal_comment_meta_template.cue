@@ -22,11 +22,7 @@ docs: #DocumentDefinitions & {
 		metadata: {
 			parameters: {
 				required: "yes"
-				type: [
-					"Brand Parameters",
-					"Campaign Parameters",
-					"Category Parameters",
-				]
+				type:     doc_clusters."System Parameters".docs
 			}
 		}
 

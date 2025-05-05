@@ -71,11 +71,7 @@ docs: #DocumentDefinitions & {
 
 			parameters: {
 				required: "yes"
-				type: [
-					"Brand Parameters",
-					"Campaign Parameters",
-					"Category Parameters",
-				]
+				type:     doc_clusters."System Parameters".docs
 				linked_refs: [
 					"ref",
 				]

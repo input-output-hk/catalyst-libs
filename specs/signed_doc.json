@@ -305,6 +305,15 @@
       "required": "yes"
     }
   },
+  "doc_clusters": {
+    "System Parameters": {
+      "docs": [
+        "Brand Parameters",
+        "Campaign Parameters",
+        "Category Parameters"
+      ]
+    }
+  },
   "docs": {
     "Brand Parameters": {
       "authors": {},

@@ -4,13 +4,13 @@ import argparse
 
 from gen.doc_generator import DocGenerator
 from gen.doc_relationship_diagrams import DocRelationshipFile
-from spec.signed_doc import SignedDocSpec
+from spec.signed_doc import SignedDoc
 
 
 class TypesMd(DocGenerator):
     """Generate the `types.md` File."""
 
-    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
         super().__init__(args, spec, "types.md")
 

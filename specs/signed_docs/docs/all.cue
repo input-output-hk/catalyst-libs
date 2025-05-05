@@ -1,6 +1,10 @@
 // Master list of all document types.
 package signed_docs
 
+import (
+	"list"
+)
+
 // Named Type UUIDs for easier definitions/references
 _allDocTypes: {
 	"Template":         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
@@ -76,3 +80,30 @@ _allDocs: {
 	]
 
 }
+
+// Document Cluster Definition
+#DocumentCluster: {
+	docs: [..._allDocNames]
+}
+
+#DocClusters: {
+	[string]: #DocumentCluster
+}
+
+doc_clusters: #DocClusters & {
+	// System parameters define the system, excludes Elections.
+	"System Parameters": {
+		docs: [
+			"Brand Parameters",
+			"Campaign Parameters",
+			"Category Parameters",
+		]
+	}
+}
+
+// A Doc can only be in 1 cluster.
+#allDocClusterDocs: list.UniqueItems
+#allDocClusterDocs: [...string] & [
+	for cluster in doc_clusters
+	for doc in cluster.docs {doc},
+]
