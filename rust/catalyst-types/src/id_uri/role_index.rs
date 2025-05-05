@@ -15,9 +15,6 @@ use thiserror::Error;
 pub enum RoleIdError {
     /// Invalid parse
     Parse(#[from] ParseIntError),
-
-    /// Invalid Role Index
-    InvalidRole(u8),
 }
 
 /// Project Catalyst User Role Index.
@@ -54,7 +51,7 @@ impl RoleId {
             RoleId::Role0 => 0,
             RoleId::DelegatedRepresentative => 1,
             RoleId::Proposer => 3,
-            RoleId::Custom(b) => b,
+            RoleId::Unknown(b) => b,
         }
     }
 
@@ -80,8 +77,14 @@ impl From<u8> for RoleId {
             0 => Self::Role0,
             1 => Self::DelegatedRepresentative,
             3 => Self::Proposer,
-            b => Self::Custom(b),
+            b => Self::Unknown(b),
         }
+    }
+}
+
+impl From<RoleId> for u8 {
+    fn from(role: RoleId) -> u8 {
+        role.as_u8()
     }
 }
 
@@ -110,13 +113,13 @@ impl<'a, C> minicbor::Decode<'a, C> for RoleId {
 #[cfg(test)]
 mod tests {
     use minicbor::{Decoder, Encoder};
-    use proptest::{num, prelude::*};
+    use proptest::prelude::*;
 
     use super::*;
 
     proptest! {
-        #[test]
-        fn role_encode(i in num::u16::ANY) {
+        #[proptest::property_test]
+        fn role_encode(i: u16) {
             let mut buffer = vec![0u8; 16];
 
             let mut encoder = Encoder::new(buffer.as_mut_slice());
