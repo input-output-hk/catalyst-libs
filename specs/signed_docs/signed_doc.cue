@@ -32,6 +32,8 @@ import (
 		back_end?:  string
 	}
 
+	notes: [...string] | *[]
+
 	// Fixed headers in every document
 	headers: _coseHeaders
 

@@ -1,6 +1,6 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.4.0 AS python-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/python:v3.4.1 AS python-ci
 
 IMPORT ../docs AS docs
 
@@ -41,7 +41,7 @@ check-docs-generation:
     COPY --dir docs+generated-signed-docs-pages/signed_doc signed_doc
      # Check our validation code actually works properly
     RUN cd gen_docs; \
-        ./generate_docs.py -o "../signed_doc" ../signed_doc.json 
+        ./main.py -o "../signed_doc" ../signed_doc.json 
 
 
 #  Regenerate - using the builder

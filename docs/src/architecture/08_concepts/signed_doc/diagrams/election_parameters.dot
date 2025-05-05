@@ -1,0 +1,147 @@
+digraph "Election Parameters" {
+    rankdir="LR"
+        graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+        node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+        edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+
+    labelloc="t"
+    label="Election Parameters Document
+Relationships"
+    fontcolor="#1d71b8"
+    fontsize=50
+
+
+    "Brand Parameters" [
+        id="Brand Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters/">
+                    <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Campaign Parameters" [
+        id="Campaign Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
+                    <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Category Parameters" [
+        id="Category Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                    <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Election Parameters" [
+        id="Election Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../election_parameters/">
+                    <FONT COLOR="#ffffff"><B> Election Parameters </B></FONT>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>788ff4c6-d65a-451f-bb33-575fe056b411</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Election Parameters":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Election Parameters":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Election Parameters":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+}

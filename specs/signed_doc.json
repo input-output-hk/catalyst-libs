@@ -16,38 +16,136 @@
     "Template": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
   },
   "cddlDefinitions": {
-    "blake2b_256": {
-      "def": "bytes .size 32",
+    "COSE_Document_Header_Map": {
+      "comment": "COSE Document Header Map",
+      "def": "{\n  COSE_Document_Standard_Headers,\n  Signed_Document_Metadata_Headers,\n  COSE_Generic_Headers\n}",
+      "requires": [
+        "COSE_Document_Standard_Headers",
+        "Signed_Document_Metadata_Headers",
+        "COSE_Generic_Headers"
+      ]
+    },
+    "COSE_Document_Headers": {
+      "comment": "COSE Document headers (only protected headers are used)",
+      "def": "(\n  protected   : bstr .cbor COSE_Document_Header_Map,\n  unprotected : { COSE_Generic_Headers } ; Unused and ignored\n)",
+      "requires": [
+        "COSE_Document_Header_Map",
+        "COSE_Generic_Headers"
+      ]
+    },
+    "COSE_Document_Standard_Headers": {
+      "comment": "COSE Standard headers used by a Document",
+      "def": "(\n\t? 1 => int / tstr,  ; algorithm identifier\n\t? 2 => [+COSE_label],    ; criticality\n\t? 3 => tstr / int,  ; content type\n\t? 4 => bstr,        ; key identifier\n\t? ( 5 => bstr //    ; IV\n\t\t6 => bstr )     ; Partial IV\n)\t\t",
+      "requires": [
+        "COSE_label"
+      ]
+    },
+    "COSE_Generic_Headers": {
+      "comment": "Generic Header definition",
+      "def": "( * COSE_label => COSE_values )",
+      "requires": [
+        "COSE_label",
+        "COSE_values"
+      ]
+    },
+    "COSE_Sign": {
+      "comment": "COSE-SIGN data object",
+      "def": "[\n  COSE_Document_Headers,\n  payload : bstr / nil,\n  signatures : [+ COSE_Signature]\n]\t\t",
+      "requires": [
+        "COSE_Document_Headers",
+        "COSE_Signature"
+      ]
+    },
+    "COSE_Signature": {
+      "comment": "An Individual Document Signature",
+      "def": "[\n  COSE_Signature_Headers,\n  signature : bstr\n]",
+      "requires": [
+        "COSE_Signature_Headers"
+      ]
+    },
+    "COSE_Signature_Header_Map": {
+      "comment": "COSE Signature Header Map",
+      "def": "{\n  COSE_Signature_Standard_Headers,\n  COSE_Generic_Headers\n}",
+      "requires": [
+        "COSE_Signature_Standard_Headers",
+        "COSE_Generic_Headers"
+      ]
+    },
+    "COSE_Signature_Headers": {
+      "comment": "COSE Signature headers (only protected headers are used)",
+      "def": "(\n  protected   : bstr .cbor COSE_Signature_Header_Map,\n  unprotected : { COSE_Generic_Headers } ; Unused and ignored\n)",
+      "requires": [
+        "COSE_Signature_Header_Map",
+        "COSE_Generic_Headers"
+      ]
+    },
+    "COSE_Signature_Standard_Headers": {
+      "comment": "COSE Signature headers",
+      "def": "(\n\t? 1 => int / tstr,  ; algorithm identifier\n\t? 2 => [+COSE_label],    ; criticality\n\t? 3 => tstr / int,  ; content type\n\t? 4 => bstr,        ; key identifier\n\t? ( 5 => bstr //    ; IV\n\t\t6 => bstr )     ; Partial IV\n),\nCOSE_Generic_Headers\n",
+      "requires": [
+        "COSE_label",
+        "COSE_Generic_Headers"
+      ]
+    },
+    "COSE_label": {
+      "comment": "COSE Map Generic Label",
+      "def": "int / tstr",
       "requires": []
     },
-    "catalyst_id": {
-      "def": "text",
+    "COSE_values": {
+      "comment": "COSE Map Generic Value",
+      "def": "any",
+      "requires": []
+    },
+    "Signed_Document_Metadata_Headers": {
+      "comment": "Generic definition (does not include metadata constraints)",
+      "def": "COSE_Generic_Headers",
+      "requires": [
+        "COSE_Generic_Headers"
+      ]
+    },
+    "blake2b_256": {
+      "comment": "Blake2B-256",
+      "def": "bytes .size 32",
+      "description": "Blake2b Hash (256 bits)",
+      "requires": []
+    },
+    "catalyst_id_kid": {
+      "comment": "UTF8 Catalyst ID URI encoded as a bytes string.",
+      "def": "bytes",
       "requires": []
     },
     "cid": {
-      "def": "6.42(bytes) ; TODO: add size limits if possible",
+      "comment": "IPLD content identifier\nTODO: add size limits if possible",
+      "def": "#6.42(bytes)",
+      "description": "IPLD content identifier.\nAlso known as an IPFS CID\nSee: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid\n     https://github.com/ipld/cid-cbor/",
       "requires": []
     },
     "collaborators": {
-      "def": "[ * catalyst_id ]",
+      "comment": "Allowed Collaborators on the next subsequent version of a document.",
+      "def": "[ * catalyst_id_kid ]",
       "requires": [
-        "catalyst_id"
+        "catalyst_id_kid"
       ]
     },
     "document_id": {
+      "comment": "Document ID",
       "def": "uuid_v7",
+      "description": "Unique Document Identifier",
       "requires": [
         "uuid_v7"
       ]
     },
     "document_locator": {
-      "def": "{ \"cid\" => cid }",
+      "comment": "Where a document can be located, must be a unique identifier.",
+      "def": "{ \n  \"cid\" => cid\n}",
       "requires": [
         "cid"
       ]
     },
     "document_ref": {
-      "def": "[ 1* [ document_id, document_ver, document_locator ] ]",
+      "comment": "Reference to another Signed Document",
+      "def": "[ 1* [\n  document_id, \n  document_ver, \n  document_locator\n] ]",
       "requires": [
         "document_id",
         "document_ver",
@@ -55,50 +153,81 @@
       ]
     },
     "document_type": {
+      "comment": "Document Type",
       "def": "[ 1* uuid_v4 ]",
+      "description": "Unique Document Type Identifier",
       "requires": [
         "uuid_v4"
       ]
     },
     "document_ver": {
+      "comment": "Document Version",
       "def": "uuid_v7",
+      "description": "Unique Chronological Document Version Identifier",
       "requires": [
         "uuid_v7"
       ]
     },
+    "http_content_encoding": {
+      "comment": "Supported Content Encoding Types",
+      "def": "tstr .eq \"br\"",
+      "requires": []
+    },
     "json_pointer": {
+      "comment": "RFC6901 Standard JSON Pointer",
       "def": "text",
       "requires": []
     },
+    "media_type": {
+      "comment": "Supported Content Media Types.\nIf uint is used, only CoAP Content Formats that match the string format are allowed.",
+      "def": "(\n    (uint .eq (50 / 60)) / \n    (tstr .eq (\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"application/cbor\" /\n        \"application/cddl\"\n    ))\n)",
+      "requires": []
+    },
     "revocations": {
+      "comment": "List of revoked versions of this document.",
       "def": "[ * document_ver ] / true ",
       "requires": [
         "document_ver"
       ]
     },
     "section_ref": {
+      "comment": "Reference to a section in a referenced document.",
       "def": "json_pointer",
       "requires": [
         "json_pointer"
       ]
     },
+    "signed_document": {
+      "comment": "Catalyst Signed Document data object.",
+      "def": "COSE_Sign",
+      "description": "Catalyst Signed Document.\n\nA specific implementation of a COSE-SIGN data objects\nused by the Catalyst project to encapsulate and authenticate\ndocuments used within the system.\n\nSee: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si",
+      "requires": [
+        "COSE_Sign"
+      ]
+    },
     "uuid_v4": {
-      "def": "6.37(bytes .size 16)",
+      "comment": "UUIDv4",
+      "def": "#6.37(bytes .size 16)",
+      "description": "Version 4 UUID\nSee: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4\n     https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
       "requires": []
     },
     "uuid_v7": {
-      "def": "6.37(bytes .size 16)",
+      "comment": "UUIDv7",
+      "def": "#6.37(bytes .size 16)",
+      "description": "Version 7 UUID\nSee: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7\n     https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
       "requires": []
     }
   },
   "contentTypes": {
     "application/cbor": {
+      "coap_type": 60,
       "description": "RFC8949 Binary CBOR Encoded Document"
     },
     "application/cddl": {
       "description": "CDDL Document; Note: \n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
     },
     "application/json": {
+      "coap_type": 50,
       "description": "JSON Document"
     },
     "application/schema+json": {
@@ -122,11 +251,25 @@
       }
     ]
   },
+  "coseHeaderFormats": {
+    "Catalyst ID": {
+      "cddl": "catalyst_id_kid",
+      "description": "KID (Catalyst ID URI)"
+    },
+    "HTTP Content Encoding": {
+      "cddl": "http_content_encoding",
+      "description": "Encoding if any on the payload."
+    },
+    "Media Type": {
+      "cddl": "media_type",
+      "description": "A Media Type string which identifies the payload."
+    }
+  },
   "cose_headers": {
     "content type": {
       "coseLabel": 3,
-      "description": "IANA Media Type/s allowed in the Payload",
-      "format": "IANA Media Type",
+      "description": "Media Type/s allowed in the Payload",
+      "format": "Media Type",
       "required": "yes",
       "value": [
         "application/json",
@@ -149,6 +292,14 @@
     "content type",
     "content-encoding"
   ],
+  "cose_signature_headers": {
+    "kid": {
+      "coseLabel": 4,
+      "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
+      "format": "Catalyst ID",
+      "required": "yes"
+    }
+  },
   "docs": {
     "Brand Parameters": {
       "authors": {},
@@ -156,8 +307,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -219,12 +370,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -268,11 +419,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -300,8 +452,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -366,12 +518,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -415,11 +567,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -447,8 +600,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -513,12 +666,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -562,11 +715,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -594,8 +748,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -657,12 +811,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -711,11 +865,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -745,8 +900,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -817,12 +972,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -866,11 +1021,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -904,8 +1060,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -982,12 +1138,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1034,11 +1190,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "Proposal Document drafted for submission to a category of a campaign.\n\nMust be valid according to the schema contained within the \n`Document Reference` from the `template` metadata."
       },
@@ -1075,8 +1232,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -1156,12 +1313,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -1214,11 +1371,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Document which must validate against the referenced template."
       },
@@ -1251,8 +1409,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -1317,12 +1475,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1366,11 +1524,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Comment Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
         "schema": "https://json-schema.org/draft-07/schema"
@@ -1407,8 +1566,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -1479,12 +1638,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1531,11 +1690,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the content of the Proposal Comments."
       },
@@ -1570,8 +1730,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -1636,12 +1796,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -1685,11 +1845,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
         "schema": "https://json-schema.org/draft-07/schema"
@@ -1725,8 +1886,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -1788,12 +1949,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -1840,11 +2001,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "signers": {
         "roles": {
           "user": [
@@ -1878,8 +2040,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/json"
         },
@@ -1944,12 +2106,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
@@ -1996,11 +2158,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
         "schema": {
@@ -2034,6 +2197,7 @@
             "action"
           ],
           "title": "Proposal Submission Action Payload Schema",
+          "type": "object",
           "x-changelog": {
             "2025-03-01": [
               "First Version Created."
@@ -2073,8 +2237,8 @@
       "headers": {
         "content type": {
           "coseLabel": 3,
-          "description": "IANA Media Type/s allowed in the Payload",
-          "format": "IANA Media Type",
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
           "required": "yes",
           "value": "application/schema+json"
         },
@@ -2145,12 +2309,12 @@
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
           "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
@@ -2197,11 +2361,12 @@
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
           "exclusive": null,
-          "format": "UUIDv7",
+          "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
         }
       },
+      "notes": [],
       "payload": {
         "description": "JSON Schema document which defines the valid contents of a proposal document."
       },
@@ -2231,6 +2396,7 @@
     }
   },
   "documentationLinks": {
+    "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
     "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
     "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
@@ -2335,12 +2501,12 @@
     "id": {
       "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
       "exclusive": null,
-      "format": "UUIDv7",
+      "format": "Document Id",
       "required": "yes",
       "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
     },
     "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nThis is an Array of the format:\n\n```cddl\n[ 1* [ document_id, document_ver, document_locator ] ]\n```\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\n* `document_id` is the UUIDv7 ID of the Document being referenced.\n* `document_ver` is the UUIDv7 Version of the Document being referenced.\n* `document_locator` is a content unique locator for the document.\n  This serves two purposes.\n  \n  1. It ensures that the document referenced by an ID/Version is not substituted.\n     In other words, that the document intended to be referenced, is actually referenced.\n  2. Allow the document to be unambiguously located in decentralized storage systems.\n  \n  There can be any number of Document Locations in any reference.\n  The currently defined locations are:\n  \n  * `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n  * Others may be added when further storage mechanisms are defined.\n\n  The value set here does not guarantee that the document is actually stored.\n  It only defines that if it were stored, this is the identifier that\n  that is required to retrieve it.",
+      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
       "exclusive": null,
       "format": "Document Reference",
       "linked_refs": null,
@@ -2414,7 +2580,7 @@
     "ver": {
       "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
       "exclusive": null,
-      "format": "UUIDv7",
+      "format": "Document Ver",
       "required": "yes",
       "validation": "The document version must always be >= the document ID."
     }
@@ -2424,6 +2590,10 @@
       "cddl": "collaborators",
       "description": "A list of collaborators who can participate in drafting and submitting a document"
     },
+    "Document Id": {
+      "cddl": "document_id",
+      "description": "A unique document identifier"
+    },
     "Document Reference": {
       "cddl": "document_ref",
       "description": "A document reference identifier"
@@ -2431,6 +2601,10 @@
     "Document Type": {
       "cddl": "document_type",
       "description": "A document type identifier"
+    },
+    "Document Ver": {
+      "cddl": "document_ver",
+      "description": "A unique chronological document version"
     },
     "Section Reference": {
       "cddl": "section_ref",

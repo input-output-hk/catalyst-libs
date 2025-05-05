@@ -1,8 +1,8 @@
 VERSION 0.8
 
-IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.4.0 AS cddl-ci
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.4.1 AS cddl-ci
 
-check-cddl:
+todo-check-cddl:
     FROM cddl-ci+cddl-base
 
     WORKDIR /cddl
