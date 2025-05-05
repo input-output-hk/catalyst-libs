@@ -94,28 +94,25 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`category_id`](../metadata.md#category_id)
+### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
-| Required | optional |
+| Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`campaign_id`](../metadata.md#campaign_id) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+|  | [Campaign Parameters](campaign_parameters.md) |
+|  | [Category Parameters](category_parameters.md) |
 <!-- markdownlint-enable MD033 -->
-A reference to the Category Parameters Document this document lies under.
+A reference to the Parameters Document this document lies under.
 
-#### [`category_id`](../metadata.md#category_id) Validation
+#### [`parameters`](../metadata.md#parameters) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
-* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
-[`category_id`](../metadata.md#category_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`campaign_id`](../metadata.md#campaign_id) metadata.
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document.
 
 ## Payload
 
@@ -144,7 +141,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-09 |
+| Modified | 2025-05-05 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -153,6 +150,10 @@ New versions of this document may be published by:
 #### 0.01 (2025-04-04)
 
 * First Published Version
+
+#### 0.03 (2025-05-05)
+
+* Use generalized parameters.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema]: https://json-schema.org/draft-07

@@ -151,31 +151,11 @@ Relationships"
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -232,9 +212,9 @@ Relationships"
 
 
     "Proposal":"template":e -> "Proposal Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"title":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Moderation Action":"title":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Submission Action":"title":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]

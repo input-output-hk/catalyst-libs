@@ -77,10 +77,7 @@ _metadataNames: [
 	"section",
 	"collaborators",
 	"revocations",
-	"brand_id",
-	"campaign_id",
-	"election_id",
-	"category_id",
+	"parameters",
 ]
 
 _allMetadataNames: or([
@@ -258,59 +255,15 @@ _metadata: #metadataStruct & {
 			"""
 	}
 
-	brand_id: {
-		description: "A reference to the Brand Parameters Document this document lies under."
+	parameters: {
+		description: "A reference to the Parameters Document this document lies under."
 		validation: """
 			In addition to the validation performed for `Document Reference` type fields: 
 
-			* Any linked referenced document that includes a `brand_id` must match the 
-			`brand_id` of the referencing document.
-			"""
-		exclusive: [
-			"campaign_id",
-			"category_id",
-		]
-	}
-
-	campaign_id: {
-		description: "A reference to the Campaign Parameters Document this document lies under."
-		validation: """
-			In addition to the validation performed for `Document Reference` type fields: 
-
-			* Any linked referenced document that includes a `campaign_id` must match the 
-			`campaign_id` of the referencing document.
-			"""
-		exclusive: [
-			"brand_id",
-			"category_id",
-		]
-	}
-
-	election_id: {
-		description: "A reference to the Election Parameters Document this document lies under."
-		validation: """
-			In addition to the validation performed for `Document Reference` type fields, 
-			Any referenced document that includes a `election_id` must match the 
-			`election_id` of the referencing document.
-			It is also valid for the referenced document to not include this field, if it is 
-			optional for the referenced document.
+			* Any linked referenced document that includes a `parameters` metadata must match the 
+			`parameters` of the referencing document.
 			"""
 	}
-
-	category_id: {
-		description: "A reference to the Category Parameters Document this document lies under."
-		validation: """
-			In addition to the validation performed for `Document Reference` type fields: 
-
-			* Any linked referenced document that includes a `category_id` must match the 
-			`category_id` of the referencing document.
-			"""
-		exclusive: [
-			"brand_id",
-			"campaign_id",
-		]
-	}
-
 }
 
 // Note: we make all normally excluded fields optional at the global level, because they are globally optional
@@ -324,14 +277,8 @@ metadata: {
 	reply: type:             #commentDocNamesList
 	section: required:       "optional"
 	collaborators: required: "optional"
-	brand_id: required:      "optional"
-	brand_id: type:          "Brand Parameters"
-	campaign_id: required:   "optional"
-	campaign_id: type:       "Campaign Parameters"
-	election_id: required:   "optional"
-	election_id: type:       "Election Parameters"
-	category_id: required:   "optional"
-	category_id: type:       "Category Parameters"
+	parameters: required:    "optional"
+	parameters: type:        #parameterDocNamesList
 }
 
 // Preferred display order
@@ -347,8 +294,5 @@ metadata_order: [..._allMetadataNames] & [
 	"section",
 	"collaborators",
 	"revocations",
-	"brand_id",
-	"campaign_id",
-	"category_id",
-	"election_id",
+	"parameters",
 ]

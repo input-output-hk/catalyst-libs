@@ -162,28 +162,29 @@ The following must be true for a valid reference:
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
-### [`category_id`](../metadata.md#category_id)
+### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`campaign_id`](../metadata.md#campaign_id) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+|  | [Campaign Parameters](campaign_parameters.md) |
+|  | [Category Parameters](category_parameters.md) |
+| Linked Reference Metadata | [`ref`](#ref) |
 <!-- markdownlint-enable MD033 -->
-A reference to the Category Parameters Document this document lies under.
+A reference to the Parameters Document this document lies under.
 
-#### [`category_id`](../metadata.md#category_id) Validation
+#### [`parameters`](../metadata.md#parameters) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
-* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
-[`category_id`](../metadata.md#category_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`campaign_id`](../metadata.md#campaign_id) metadata.
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document.
+* The Document referenced by [`ref`](../metadata.md#ref)
+  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -195,8 +196,8 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-         `hide` is only actioned if sent by the author,
-        for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+      `hide` is only actioned if sent by the author,
+         for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 Schema :
 <!-- markdownlint-disable MD013 -->
@@ -259,7 +260,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-09 |
+| Modified | 2025-05-05 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -268,6 +269,10 @@ New versions of this document may be published by:
 #### 0.01 (2025-04-04)
 
 * First Published Version
+
+#### 0.03 (2025-05-05)
+
+* Use generalized parameters.
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

@@ -11,6 +11,36 @@ Document Relationships"
     fontsize=50
 
 
+    "Brand Parameters" [
+        id="Brand Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters/">
+                    <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Campaign Parameters" [
+        id="Campaign Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
+                    <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
     "Category Parameters" [
         id="Category Parameters";
         label=<
@@ -76,11 +106,11 @@ Document Relationships"
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -106,6 +136,8 @@ Document Relationships"
     ];
 
 
-    "Proposal Comment Meta Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Meta Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Meta Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Meta Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment Template":"title":e -> "Proposal Comment Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

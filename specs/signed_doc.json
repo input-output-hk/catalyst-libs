@@ -248,6 +248,11 @@
         "changes": "* Add version control changelogs to the specification.",
         "modified": "2025-04-09",
         "version": "0.02"
+      },
+      {
+        "changes": "* Use generalized parameters.",
+        "modified": "2025-05-05",
+        "version": "0.03"
       }
     ]
   },
@@ -323,36 +328,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -360,19 +335,19 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -468,39 +443,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Brand Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -508,19 +450,22 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Brand Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -591,6 +536,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -616,39 +566,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Campaign Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -656,19 +573,22 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Campaign Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -739,6 +659,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -764,36 +689,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -801,19 +696,19 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -916,45 +811,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Brand Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Campaign Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -962,19 +818,26 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1045,6 +908,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -1076,51 +944,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": [
-            "template"
-          ],
-          "multiple": false,
-          "required": "optional",
-          "type": "Brand Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": [
-            "template"
-          ],
-          "multiple": false,
-          "required": "optional",
-          "type": "Campaign Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": [
-            "template"
-          ],
-          "multiple": false,
-          "required": "optional",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -1128,19 +951,29 @@
           "required": "optional",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref",
+            "template"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1219,6 +1052,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -1248,54 +1086,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": [
-            "ref",
-            "template"
-          ],
-          "multiple": false,
-          "required": "optional",
-          "type": "Brand Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": [
-            "ref",
-            "template"
-          ],
-          "multiple": false,
-          "required": "optional",
-          "type": "Campaign Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": [
-            "ref",
-            "template"
-          ],
-          "multiple": false,
-          "required": "optional",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -1303,19 +1093,29 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref",
+            "template"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1400,6 +1200,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -1425,39 +1230,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -1465,19 +1237,29 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref",
+            "template"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1557,6 +1339,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -1582,45 +1369,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Brand Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Campaign Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -1628,19 +1376,26 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1721,6 +1476,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -1746,39 +1506,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -1786,19 +1513,26 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -1877,6 +1611,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -1902,36 +1641,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -1939,19 +1648,19 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -2056,39 +1765,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -2096,19 +1772,28 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -2228,6 +1913,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     },
@@ -2253,45 +1943,6 @@
         }
       },
       "metadata": {
-        "brand_id": {
-          "description": "A reference to the Brand Parameters Document this document lies under.",
-          "exclusive": [
-            "campaign_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Brand Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-        },
-        "campaign_id": {
-          "description": "A reference to the Campaign Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "category_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Campaign Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-        },
-        "category_id": {
-          "description": "A reference to the Category Parameters Document this document lies under.",
-          "exclusive": [
-            "brand_id",
-            "campaign_id"
-          ],
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Category Parameters",
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
@@ -2299,19 +1950,29 @@
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
-        "election_id": {
-          "description": "A reference to the Election Parameters Document this document lies under.",
-          "exclusive": null,
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-        },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
           "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": [
+            "ref",
+            "template"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -2391,6 +2052,11 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        },
+        {
+          "changes": "* Use generalized parameters.",
+          "modified": "2025-05-05",
+          "version": "0.03"
         }
       ]
     }
@@ -2442,45 +2108,6 @@
     "UUIDv7": "RFC9562-V7"
   },
   "metadata": {
-    "brand_id": {
-      "description": "A reference to the Brand Parameters Document this document lies under.",
-      "exclusive": [
-        "campaign_id",
-        "category_id"
-      ],
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": "Brand Parameters",
-      "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `brand_id` must match the \n`brand_id` of the referencing document."
-    },
-    "campaign_id": {
-      "description": "A reference to the Campaign Parameters Document this document lies under.",
-      "exclusive": [
-        "brand_id",
-        "category_id"
-      ],
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": "Campaign Parameters",
-      "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `campaign_id` must match the \n`campaign_id` of the referencing document."
-    },
-    "category_id": {
-      "description": "A reference to the Category Parameters Document this document lies under.",
-      "exclusive": [
-        "brand_id",
-        "campaign_id"
-      ],
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": "Category Parameters",
-      "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `category_id` must match the \n`category_id` of the referencing document."
-    },
     "collaborators": {
       "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
       "exclusive": null,
@@ -2488,22 +2115,27 @@
       "required": "optional",
       "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
     },
-    "election_id": {
-      "description": "A reference to the Election Parameters Document this document lies under.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": "Election Parameters",
-      "validation": "In addition to the validation performed for `Document Reference` type fields, \nAny referenced document that includes a `election_id` must match the \n`election_id` of the referencing document.\nIt is also valid for the referenced document to not include this field, if it is \noptional for the referenced document."
-    },
     "id": {
       "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
       "exclusive": null,
       "format": "Document Id",
       "required": "yes",
       "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+    },
+    "parameters": {
+      "description": "A reference to the Parameters Document this document lies under.",
+      "exclusive": null,
+      "format": "Document Reference",
+      "linked_refs": null,
+      "multiple": false,
+      "required": "optional",
+      "type": [
+        "Brand Parameters",
+        "Campaign Parameters",
+        "Category Parameters",
+        "Election Parameters"
+      ],
+      "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
     },
     "ref": {
       "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
@@ -2633,9 +2265,6 @@
     "section",
     "collaborators",
     "revocations",
-    "brand_id",
-    "campaign_id",
-    "category_id",
-    "election_id"
+    "parameters"
   ]
 }

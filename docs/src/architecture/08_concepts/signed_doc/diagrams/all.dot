@@ -115,10 +115,10 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
                             <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
@@ -180,10 +180,10 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
                             <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
@@ -295,31 +295,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -445,31 +425,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -540,31 +500,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -655,31 +595,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -750,31 +670,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -835,11 +735,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -900,11 +800,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#e7e2dd">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -1040,11 +940,11 @@ digraph "None" {
                 </TD>
             </TR>
             <TR>
-                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -1055,33 +955,39 @@ digraph "None" {
     ];
 
 
-    "Campaign Parameters":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Category Parameters":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Campaign Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Category Parameters":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Comment Moderation Action":"ref":e -> "Proposal Comment":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Election Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Election Parameters":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Election Parameters":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal":"template":e -> "Proposal Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"template":e -> "Proposal Comment Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"reply":e -> "Proposal Comment":"title":n [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Meta Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Meta Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Meta Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Meta Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment Template":"template":e -> "Proposal Comment Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Template":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Template":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Meta Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Meta Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Meta Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Meta Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Moderation Action":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Submission Action":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Submission Action":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Submission Action":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Submission Action":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Submission Action":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Template":"template":e -> "Proposal Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

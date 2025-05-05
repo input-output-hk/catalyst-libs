@@ -28,17 +28,13 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Comment Meta Template"
 			}
 
-			brand_id: {
-				required: "optional"
-				type:     "Brand Parameters"
-			}
-			campaign_id: {
-				required: "optional"
-				type:     "Campaign Parameters"
-			}
-			category_id: {
-				required: "optional"
-				type:     "Category Parameters"
+			parameters: {
+				required: "yes"
+				type: [
+					"Brand Parameters",
+					"Campaign Parameters",
+					"Category Parameters",
+				]
 			}
 		}
 
@@ -67,6 +63,13 @@ docs: #DocumentDefinitions & {
 				modified: "2025-04-04"
 				changes: """
 					* First Published Version
+					"""
+			},
+			{
+				version:  "0.03"
+				modified: "2025-05-05"
+				changes: """
+					* Use generalized parameters.
 					"""
 			},
 		]}
