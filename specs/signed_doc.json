@@ -963,7 +963,6 @@
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
-            "ref",
             "template"
           ],
           "multiple": false,
@@ -1248,10 +1247,7 @@
           "description": "A reference to the Parameters Document this document lies under.",
           "exclusive": null,
           "format": "Document Reference",
-          "linked_refs": [
-            "ref",
-            "template"
-          ],
+          "linked_refs": null,
           "multiple": false,
           "required": "yes",
           "type": [
@@ -1962,7 +1958,6 @@
           "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
-            "ref",
             "template"
           ],
           "multiple": false,

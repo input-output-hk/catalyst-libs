@@ -77,7 +77,6 @@ docs: #DocumentDefinitions & {
 					"Category Parameters",
 				]
 				linked_refs: [
-					"ref",
 					"template",
 				]
 			}

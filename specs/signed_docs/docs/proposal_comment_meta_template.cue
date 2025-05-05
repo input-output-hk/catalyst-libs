@@ -27,10 +27,6 @@ docs: #DocumentDefinitions & {
 					"Campaign Parameters",
 					"Category Parameters",
 				]
-				linked_refs: [
-					"ref",
-					"template",
-				]
 			}
 		}
 

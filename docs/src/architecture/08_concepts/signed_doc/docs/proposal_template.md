@@ -123,8 +123,7 @@ The document payload is not valid if it does not validate completely against the
 | Valid References | [Brand Parameters](brand_parameters.md) |
 |  | [Campaign Parameters](campaign_parameters.md) |
 |  | [Category Parameters](category_parameters.md) |
-| Linked Reference Metadata | [`ref`](#ref) |
-|  | [`template`](#template) |
+| Linked Reference Metadata | [`template`](#template) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -134,9 +133,6 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 * Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
 [`parameters`](../metadata.md#parameters) of the referencing document.
-* The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
-  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 * The Document referenced by [`template`](../metadata.md#template)
   * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
   * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
