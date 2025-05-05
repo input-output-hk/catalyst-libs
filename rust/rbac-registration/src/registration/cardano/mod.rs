@@ -2,7 +2,10 @@
 
 mod update_rbac;
 
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
@@ -209,10 +212,10 @@ impl RegistrationChain {
             .and_then(|rdr| rdr.encryption_key_from_rotation(rotation))
     }
 
-    /// Returns a list of role 0 stake addresses.
+    /// Returns a set of role 0 stake addresses.
     #[must_use]
-    pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
-        let mut result = Vec::new();
+    pub fn role_0_stake_addresses(&self) -> HashSet<StakeAddress> {
+        let mut result = HashSet::new();
 
         if let Some(uris) = self.inner.certificate_uris.x_uris().get(&0) {
             result.extend(convert_stake_addresses(uris));
