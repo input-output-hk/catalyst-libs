@@ -5,7 +5,9 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionId, TxnIndex};
+use cardano_blockchain_types::{
+    MetadatumLabel, MultiEraBlock, StakeAddress, TransactionId, TxnIndex,
+};
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
@@ -255,6 +257,15 @@ impl Cip509 {
     #[must_use]
     pub fn catalyst_id(&self) -> Option<&IdUri> {
         self.catalyst_id.as_ref()
+    }
+
+    /// Returns a list of role 0 stake addresses.
+    #[must_use]
+    pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
+        self.metadata
+            .as_ref()
+            .map(|m| m.certificate_uris.stake_addresses(0))
+            .unwrap_or_default()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
