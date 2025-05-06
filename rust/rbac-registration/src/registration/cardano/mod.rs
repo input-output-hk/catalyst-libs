@@ -445,6 +445,18 @@ mod test {
         assert_eq!(origin.point().slot_or_default(), data.slot);
         assert_eq!(origin.txn_index(), data.txn_index);
 
+        // no encryption key is included for the role
+        assert!(chain
+            .get_encryption_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::default())
+            .is_none());
+
+        assert!(chain
+            .get_encryption_key_cert_or_key_for_role_at_rotation(
+                &RoleId::Role0,
+                &KeyRotation::default()
+            )
+            .is_none());
+
         // Try to add an invalid registration.
         let data = test::block_2();
         let registration = Cip509::new(&data.block, data.txn_index, &[])
