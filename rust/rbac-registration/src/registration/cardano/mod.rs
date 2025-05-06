@@ -6,13 +6,12 @@ use std::{collections::HashMap, sync::Arc};
 
 use anyhow::bail;
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{Cip0134Uri, StakeAddress, TransactionId};
+use cardano_blockchain_types::{StakeAddress, TransactionId};
 use catalyst_types::{
     id_uri::{key_rotation::KeyRotation, IdUri},
     uuid::UuidV4,
 };
 use ed25519_dalek::VerifyingKey;
-use pallas::ledger::addresses::Address;
 use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
@@ -212,16 +211,7 @@ impl RegistrationChain {
     /// Returns a list of role 0 stake addresses.
     #[must_use]
     pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
-        let mut result = Vec::new();
-
-        if let Some(uris) = self.inner.certificate_uris.x_uris().get(&0) {
-            result.extend(convert_stake_addresses(uris));
-        }
-        if let Some(uris) = self.inner.certificate_uris.c_uris().get(&0) {
-            result.extend(convert_stake_addresses(uris));
-        }
-
-        result
+        self.inner.certificate_uris.stake_addresses(0)
     }
 }
 
@@ -408,18 +398,6 @@ impl RegistrationChainInner {
 
         Ok(new_inner)
     }
-}
-
-/// Converts a list of `Cip0134Uri` to a list of stake addresses.
-fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
-    uris.iter()
-        .filter_map(|uri| {
-            match uri.address() {
-                Address::Stake(a) => Some(a.clone().into()),
-                _ => None,
-            }
-        })
-        .collect()
 }
 
 #[cfg(test)]
