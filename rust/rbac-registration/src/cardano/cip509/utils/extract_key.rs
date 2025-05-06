@@ -21,13 +21,13 @@ pub enum Error {
         /// An OID of unsupported signature algorithm.
         oid: String,
     },
-    /// Incorrect public key byte length.
+    /// Incorrect extended public key byte length.
     #[error("Unexpected extended public key length in certificate: {0}, expected {EXTENDED_PUBLIC_KEY_LENGTH}")]
     InvalidExtendedPublicKeyLength(usize),
-    /// Public key values with unused bits in a bit string.
+    /// Public key has unused bits in a bit string.
     #[error("Invalid subject_public_key value (has unused bits)")]
     PublicKeyHasUnusedBits,
-    /// Unexpected signature errors.
+    /// Public key cannot be converted into a [`VerifyingKey`].
     #[error("Cannot create verifying key from subject_public_key: {0}")]
     PublicKeyIsNotVerifyingKey(#[from] SignatureError),
     /// Unexpected error.
