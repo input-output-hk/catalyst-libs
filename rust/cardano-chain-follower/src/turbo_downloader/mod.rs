@@ -379,7 +379,6 @@ impl ParallelDownloadProcessor {
     ///
     /// Can Fail IF there is no HTTP client provided or the URL does not support getting
     /// the content length.
-    #[allow(dead_code)]
     pub(crate) async fn new(url: &str, mut cfg: DlConfig, chain: Network) -> Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
             bail!(

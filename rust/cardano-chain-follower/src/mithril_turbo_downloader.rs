@@ -305,12 +305,29 @@ impl MithrilTurboDownloader {
     }
 
     /// Parallel Download, Extract and Dedup the Mithril Archive.
-    async fn dl_and_dedup(&self) -> anyhow::Result<()> {
+    async fn dl_and_dedup(&self, location: &str) -> anyhow::Result<()> {
         // Get a copy of the inner data to use in the sync download task.
         let inner = self.inner.clone();
 
+        debug!("Probe Snapshot location='{location}'.");
+        let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
+        let dl_processor =
+            ParallelDownloadProcessor::new(location, dl_config, inner.cfg.chain).await?;
+
+        // Decompress and extract and de-dupe each file in the archive.
+        stats::mithril_extract_started(inner.cfg.chain);
+
+        // We also immediately start downloading now.
+        stats::mithril_dl_started(inner.cfg.chain);
+
+        // Save the DownloadProcessor in the inner struct for use to process the downloaded data.
+        self.inner
+            .dl_handler
+            .set(dl_processor)
+            .map_err(|_| anyhow!("Failed to set the inner dl_handler. Must already be set?"))?;
+
         // This is fully synchronous IO, so do it on a sync thread.
-        let result = spawn_blocking(move || {
+        spawn_blocking(move || {
             stats::start_thread(
                 inner.cfg.chain,
                 stats::thread::name::MITHRIL_DL_DEDUP,
@@ -320,14 +337,28 @@ impl MithrilTurboDownloader {
             stats::stop_thread(inner.cfg.chain, stats::thread::name::MITHRIL_DL_DEDUP);
             result
         })
-        .await;
+        .await
+        .map_err(|_| {
+            stats::mithril_dl_finished(self.inner.cfg.chain, None);
+            anyhow!("Download and Dedup task failed")
+        })??;
 
-        if let Ok(result) = result {
-            return result;
-        }
+        let tot_files = self.inner.tot_files.load(Ordering::SeqCst);
+        let chg_files = self.inner.chg_files.load(Ordering::SeqCst);
+        let new_files = self.inner.new_files.load(Ordering::SeqCst);
 
-        stats::mithril_dl_finished(self.inner.cfg.chain, None);
-        bail!("Download and Dedup task failed");
+        stats::mithril_extract_finished(
+            self.inner.cfg.chain,
+            Some(self.inner.ext_size.load(Ordering::SeqCst)),
+            self.inner.dedup_size.load(Ordering::SeqCst),
+            tot_files
+                .saturating_sub(chg_files)
+                .saturating_sub(new_files),
+            chg_files,
+            new_files,
+        );
+
+        Ok(())
     }
 }
 
@@ -347,25 +378,10 @@ impl FileDownloader for MithrilTurboDownloader {
     ) -> anyhow::Result<()> {
         self.create_directories(target_dir).await?;
 
-        // DL Start stats set after DL actually started inside the probe call.
-        self.dl_and_dedup().await?;
+        let location = location.as_str();
+        self.dl_and_dedup(location).await?;
 
-        let tot_files = self.inner.tot_files.load(Ordering::SeqCst);
-        let chg_files = self.inner.chg_files.load(Ordering::SeqCst);
-        let new_files = self.inner.new_files.load(Ordering::SeqCst);
-
-        stats::mithril_extract_finished(
-            self.inner.cfg.chain,
-            Some(self.inner.ext_size.load(Ordering::SeqCst)),
-            self.inner.dedup_size.load(Ordering::SeqCst),
-            tot_files
-                .saturating_sub(chg_files)
-                .saturating_sub(new_files),
-            chg_files,
-            new_files,
-        );
-
-        debug!("Download and Unpack finished='{location:?}' to '{target_dir:?}'.");
+        debug!("Download and Unpack finished='{location}' to '{target_dir:?}'.");
 
         Ok(())
     }
@@ -395,6 +411,27 @@ impl FileDownloader for MithrilTurboDownloader {
     //     );
 
     //     debug!("Download and Unpack finished='{location}' to '{target_dir:?}'.");
+
+    //     Ok(())
+    // }
+
+    // async fn probe(&self, location: &str) -> MithrilResult<()> {
+    //     debug!("Probe Snapshot location='{location}'.");
+    //     let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
+    //     let dl_processor =
+    //         ParallelDownloadProcessor::new(location, dl_config,
+    // self.inner.cfg.chain).await?;
+
+    //     // Decompress and extract and de-dupe each file in the archive.
+    //     stats::mithril_extract_started(self.inner.cfg.chain);
+
+    //     // We also immediately start downloading now.
+    //     stats::mithril_dl_started(self.inner.cfg.chain);
+
+    //     // Save the DownloadProcessor in the inner struct for use to process the downloaded
+    // data.     if let Err(_error) = self.inner.dl_handler.set(dl_processor) {
+    //         bail!("Failed to set the inner dl_handler. Must already be set?");
+    //     }
 
     //     Ok(())
     // }
