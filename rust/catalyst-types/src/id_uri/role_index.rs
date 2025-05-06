@@ -7,6 +7,7 @@ use std::{
 };
 
 use displaydoc::Display;
+use strum::EnumIs;
 use thiserror::Error;
 
 /// Role Index parsing error
@@ -19,8 +20,12 @@ pub enum RoleIdError {
 
 /// Project Catalyst User Role Index.
 ///
+/// The canonical list of role indexes is statically defined. Users are allowed to parse
+/// custom roles, which will be interpreted as [`Self::Unknown`], and they can verify this
+/// using the [`RoleId::is_unknown`] helper function.
+///
 /// <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-catalyst-role-definitions/CIP-XXXX/README.md>
-#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, EnumIs)]
 #[repr(u8)]
 #[non_exhaustive]
 pub enum RoleId {
@@ -53,15 +58,6 @@ impl RoleId {
             RoleId::Proposer => 3,
             RoleId::Unknown(b) => b,
         }
-    }
-
-    /// Returns `true` if the role belongs to the canonical set of known roles.
-    #[must_use]
-    pub const fn is_known(self) -> bool {
-        matches!(
-            self,
-            Self::Role0 | Self::DelegatedRepresentative | Self::Proposer
-        )
     }
 }
 
@@ -113,37 +109,34 @@ impl<'a, C> minicbor::Decode<'a, C> for RoleId {
 #[cfg(test)]
 mod tests {
     use minicbor::{Decoder, Encoder};
-    use proptest::prelude::*;
 
     use super::*;
 
-    proptest! {
-        #[proptest::property_test]
-        fn role_encode(i: u16) {
-            let mut buffer = vec![0u8; 16];
+    #[proptest::property_test]
+    fn role_encode(i: u16) {
+        let mut buffer = vec![0u8; 16];
 
-            let mut encoder = Encoder::new(buffer.as_mut_slice());
+        let mut encoder = Encoder::new(buffer.as_mut_slice());
 
-            encoder.int(i.into()).unwrap();
+        encoder.int(i.into()).unwrap();
 
-            let mut decoder = Decoder::new(buffer.as_slice());
-            let i_str = i.to_string();
+        let mut decoder = Decoder::new(buffer.as_slice());
+        let i_str = i.to_string();
 
-            if i > u16::from(u8::MAX) {
-                assert!(RoleId::from_str(&i_str).is_err());
-                assert!(decoder.decode::<RoleId>().is_err());
-            } else {
-                let i = u8::try_from(i).unwrap();
+        if i > u16::from(u8::MAX) {
+            assert!(RoleId::from_str(&i_str).is_err());
+            assert!(decoder.decode::<RoleId>().is_err());
+        } else {
+            let i = u8::try_from(i).unwrap();
 
-                let r = RoleId::from(i);
-                let r_str = RoleId::from_str(&i_str).unwrap();
-                let r_display = r.to_string();
-                let r_dec: RoleId = decoder.decode().unwrap();
+            let r = RoleId::from(i);
+            let r_str = RoleId::from_str(&i_str).unwrap();
+            let r_display = r.to_string();
+            let r_dec: RoleId = decoder.decode().unwrap();
 
-                assert_eq!(r, r_str);
-                assert_eq!(r, r_dec);
-                assert_eq!(i_str, r_display);
-            }
+            assert_eq!(r, r_str);
+            assert_eq!(r, r_dec);
+            assert_eq!(i_str, r_display);
         }
     }
 }

@@ -365,7 +365,7 @@ pub fn validate_role_data(
         );
     }
 
-    for unknown_role in metadata.role_data.keys().filter(|role| !role.is_known()) {
+    for unknown_role in metadata.role_data.keys().filter(|r| r.is_unknown()) {
         report.other(&format!("Unknown role found: {unknown_role}"), context);
     }
 
