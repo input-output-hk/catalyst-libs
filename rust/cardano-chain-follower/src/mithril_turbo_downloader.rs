@@ -309,7 +309,7 @@ impl MithrilTurboDownloader {
         // Get a copy of the inner data to use in the sync download task.
         let inner = self.inner.clone();
 
-        debug!("Probe Snapshot location='{location}'.");
+        debug!("Download Snapshot location='{location}'.");
         let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
         let dl_processor =
             ParallelDownloadProcessor::new(location, dl_config, inner.cfg.chain).await?;
