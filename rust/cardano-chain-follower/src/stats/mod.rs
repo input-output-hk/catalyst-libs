@@ -302,6 +302,7 @@ pub(crate) fn tip_reached(chain: Network) {
 }
 
 /// Record that a Mithril snapshot Download has started.
+#[allow(dead_code)]
 pub(crate) fn mithril_dl_started(chain: Network) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
@@ -347,6 +348,7 @@ pub(crate) fn mithril_dl_finished(chain: Network, dl_size: Option<u64>) {
 }
 
 /// Record that extracting the mithril snapshot archive has started.
+#[allow(dead_code)]
 pub(crate) fn mithril_extract_started(chain: Network) {
     // This will actually always succeed.
     let Some(stats) = lookup_stats(chain) else {
