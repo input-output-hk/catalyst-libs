@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use catalyst_signed_doc::*;
-use catalyst_types::id_uri::role_index::RoleIndex;
+use catalyst_types::id_uri::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
 pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
@@ -31,7 +31,7 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
 }
 
 pub fn create_dummy_key_pair(
-    role_index: RoleIndex,
+    role_index: RoleId,
 ) -> anyhow::Result<(
     ed25519_dalek::SigningKey,
     ed25519_dalek::VerifyingKey,
@@ -75,7 +75,7 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 }
 
 pub fn create_dummy_signed_doc(
-    metadata: serde_json::Value, content: Vec<u8>, with_role_index: RoleIndex,
+    metadata: serde_json::Value, content: Vec<u8>, with_role_index: RoleId,
 ) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey, IdUri)> {
     let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
 
