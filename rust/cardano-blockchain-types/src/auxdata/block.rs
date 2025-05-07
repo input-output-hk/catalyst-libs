@@ -12,13 +12,19 @@ use crate::txn_index::TxnIndex;
 /// Auxiliary data for every transaction within a block.
 #[derive(Debug)]
 #[allow(clippy::module_name_repetitions)]
-pub struct BlockAuxData(Arc<dashmap::ReadOnlyView<TxnIndex, TransactionAuxData>>);
+pub struct BlockAuxData(Arc<dashmap::ReadOnlyView<TxnIndex, (TransactionAuxData, Vec<u8>)>>);
 
 impl BlockAuxData {
     /// Get `TransactionAuxData` for the given `TxnIndex` if any.
     #[must_use]
     pub fn get(&self, txn_idx: TxnIndex) -> Option<&TransactionAuxData> {
-        self.0.get(&txn_idx)
+        self.0.get(&txn_idx).map(|x| &x.0)
+    }
+
+    /// Get the raw auxiliary data for the given `TxnIndex`.
+    #[must_use]
+    pub fn get_raw(&self, txn_idx: TxnIndex) -> Option<&Vec<u8>> {
+        self.0.get(&txn_idx).map(|x| &x.1)
     }
 }
 
@@ -32,7 +38,7 @@ impl TryFrom<&MultiEraBlock<'_>> for BlockAuxData {
     type Error = anyhow::Error;
 
     fn try_from(block: &MultiEraBlock) -> Result<Self, Self::Error> {
-        let aux_data = DashMap::<TxnIndex, TransactionAuxData>::new();
+        let aux_data = DashMap::<TxnIndex, (TransactionAuxData, Vec<u8>)>::new();
         // Note, while this code looks redundant, it is not because all the types are not
         // compatible Even though they have similar names, and ultimately the same inner
         // functionality. This means we need to distinctly encode the three different
@@ -42,21 +48,24 @@ impl TryFrom<&MultiEraBlock<'_>> for BlockAuxData {
                 // Nothing to do here.
             } else if let Some(alonzo_block) = block.as_alonzo() {
                 for (txn_idx, metadata) in alonzo_block.auxiliary_data_set.iter() {
-                    let mut d = minicbor::Decoder::new(metadata.raw_cbor());
+                    let raw = metadata.raw_cbor();
+                    let mut d = minicbor::Decoder::new(raw);
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
-                    aux_data.insert((*txn_idx).into(), txn_aux_data);
+                    aux_data.insert((*txn_idx).into(), (txn_aux_data, raw.to_vec()));
                 }
             } else if let Some(babbage_block) = block.as_babbage() {
                 for (txn_idx, metadata) in babbage_block.auxiliary_data_set.iter() {
-                    let mut d = minicbor::Decoder::new(metadata.raw_cbor());
+                    let raw = metadata.raw_cbor();
+                    let mut d = minicbor::Decoder::new(raw);
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
-                    aux_data.insert((*txn_idx).into(), txn_aux_data);
+                    aux_data.insert((*txn_idx).into(), (txn_aux_data, raw.to_vec()));
                 }
             } else if let Some(conway_block) = block.as_conway() {
                 for (txn_idx, metadata) in conway_block.auxiliary_data_set.iter() {
-                    let mut d = minicbor::Decoder::new(metadata.raw_cbor());
+                    let raw = metadata.raw_cbor();
+                    let mut d = minicbor::Decoder::new(raw);
                     let txn_aux_data = d.decode::<TransactionAuxData>()?;
-                    aux_data.insert((*txn_idx).into(), txn_aux_data);
+                    aux_data.insert((*txn_idx).into(), (txn_aux_data, raw.to_vec()));
                 }
             } else {
                 bail!("Undecodable metadata, unknown Era");
