@@ -2,7 +2,7 @@
 
 use std::{future::Future, time::Duration};
 
-use catalyst_types::id_uri::IdUri;
+use catalyst_types::catalyst_id::CatalystId;
 use ed25519_dalek::VerifyingKey;
 
 use crate::{CatalystSignedDocument, DocumentRef};
@@ -11,7 +11,7 @@ use crate::{CatalystSignedDocument, DocumentRef};
 pub trait VerifyingKeyProvider {
     /// Try to get `VerifyingKey`
     fn try_get_key(
-        &self, kid: &IdUri,
+        &self, kid: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<Option<VerifyingKey>>>;
 }
 
@@ -41,8 +41,8 @@ pub mod tests {
     use catalyst_types::uuid::Uuid;
 
     use super::{
-        CatalystSignedDocument, CatalystSignedDocumentProvider, DocumentRef, IdUri, VerifyingKey,
-        VerifyingKeyProvider,
+        CatalystId, CatalystSignedDocument, CatalystSignedDocumentProvider, DocumentRef,
+        VerifyingKey, VerifyingKeyProvider,
     };
 
     ///  Simple testing implementation of `CatalystSignedDocumentProvider`
@@ -78,17 +78,17 @@ pub mod tests {
 
     /// Simple testing implementation of `VerifyingKeyProvider`
     #[derive(Default)]
-    pub struct TestVerifyingKeyProvider(HashMap<IdUri, VerifyingKey>);
+    pub struct TestVerifyingKeyProvider(HashMap<CatalystId, VerifyingKey>);
 
     impl TestVerifyingKeyProvider {
         /// Inserts public key into the `TestVerifyingKeyProvider`
-        pub fn add_pk(&mut self, kid: IdUri, pk: VerifyingKey) {
+        pub fn add_pk(&mut self, kid: CatalystId, pk: VerifyingKey) {
             self.0.insert(kid, pk);
         }
     }
 
     impl VerifyingKeyProvider for TestVerifyingKeyProvider {
-        async fn try_get_key(&self, kid: &IdUri) -> anyhow::Result<Option<VerifyingKey>> {
+        async fn try_get_key(&self, kid: &CatalystId) -> anyhow::Result<Option<VerifyingKey>> {
             Ok(self.0.get(kid).copied())
         }
     }
