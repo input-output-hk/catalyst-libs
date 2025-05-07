@@ -11,7 +11,7 @@ use std::{
 
 use anyhow::Context;
 use catalyst_types::{
-    id_uri::{role_index::RoleIndex, IdUri},
+    catalyst_id::{role_index::RoleId, CatalystId},
     problem_report::ProblemReport,
     uuid::Uuid,
 };
@@ -56,7 +56,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
         kid: SignatureKidRule {
-            exp: &[RoleIndex::PROPOSER],
+            exp: &[RoleId::Proposer],
         },
     };
     document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
@@ -89,7 +89,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         section: SectionRule::Specified { optional: true },
         category: CategoryRule::NotSpecified,
         kid: SignatureKidRule {
-            exp: &[RoleIndex::ROLE_0],
+            exp: &[RoleId::Role0],
         },
     };
     document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
@@ -122,7 +122,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
         kid: SignatureKidRule {
-            exp: &[RoleIndex::PROPOSER],
+            exp: &[RoleId::Proposer],
         },
     };
 
@@ -301,7 +301,7 @@ pub async fn validate_signatures(
 
 /// A single signature validation function
 async fn validate_signature<Provider>(
-    cose_sign: &CoseSign, signature: &CoseSignature, kid: &IdUri, provider: &Provider,
+    cose_sign: &CoseSign, signature: &CoseSignature, kid: &CatalystId, provider: &Provider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
 where

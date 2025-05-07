@@ -8,8 +8,8 @@ use anyhow::{bail, Context};
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{StakeAddress, TransactionId};
 use catalyst_types::{
+    catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
-    id_uri::{key_rotation::KeyRotation, IdUri},
     uuid::UuidV4,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
@@ -21,7 +21,7 @@ use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
     CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
-    RoleDataRecord, RoleNumber, ValidationSignature,
+    RoleDataRecord, ValidationSignature,
 };
 
 /// Registration chains.
@@ -37,8 +37,9 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `raw_aux_data`: The raw auxiliary data from the transaction containing this `cip509`.
-    /// 
+    /// - `raw_aux_data`: The raw auxiliary data from the transaction containing this
+    ///   `cip509`.
+    ///
     /// # Errors
     ///
     /// Returns an error if data is invalid
@@ -59,7 +60,7 @@ impl RegistrationChain {
     ///
     /// Returns an error if data is invalid
     pub fn update(&self, cip509: Cip509, raw_aux_data: &[u8]) -> anyhow::Result<Self> {
-        let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleNumber::ROLE_0);
+        let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
         let new_inner = match latest_signing_pk {
             Some((signing_pk, _)) => self.inner.update(cip509, signing_pk, raw_aux_data)?,
             None => {
@@ -73,7 +74,7 @@ impl RegistrationChain {
 
     /// Returns a Catalyst ID.
     #[must_use]
-    pub fn catalyst_id(&self) -> &IdUri {
+    pub fn catalyst_id(&self) -> &CatalystId {
         &self.inner.catalyst_id
     }
 
@@ -120,14 +121,14 @@ impl RegistrationChain {
     /// record has it own record of its value and its associated point and transaction
     /// index.
     #[must_use]
-    pub fn role_data_record(&self) -> &HashMap<RoleNumber, RoleDataRecord> {
+    pub fn role_data_record(&self) -> &HashMap<RoleId, RoleDataRecord> {
         &self.inner.role_data_record
     }
 
     /// Get the map of role number to list of history data of point + transaction index,
     /// and role data.
     #[must_use]
-    pub fn role_data_history(&self) -> &HashMap<RoleNumber, Vec<PointData<RoleData>>> {
+    pub fn role_data_history(&self) -> &HashMap<RoleId, Vec<PointData<RoleData>>> {
         &self.inner.role_data_history
     }
 
@@ -141,7 +142,7 @@ impl RegistrationChain {
     /// Returns the public key and the rotation,`None` if not found.
     #[must_use]
     pub fn get_latest_signing_pk_for_role(
-        &self, role: &RoleNumber,
+        &self, role: &RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
@@ -156,7 +157,7 @@ impl RegistrationChain {
     /// Returns the public key and the rotation, `None` if not found.
     #[must_use]
     pub fn get_latest_encryption_pk_for_role(
-        &self, role: &RoleNumber,
+        &self, role: &RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
@@ -171,7 +172,7 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_signing_pk_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: &KeyRotation,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
@@ -183,7 +184,7 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_encryption_pk_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: &KeyRotation,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
@@ -195,7 +196,7 @@ impl RegistrationChain {
     /// given rotation.
     #[must_use]
     pub fn get_singing_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: &KeyRotation,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -207,7 +208,7 @@ impl RegistrationChain {
     /// with given rotation.
     #[must_use]
     pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleNumber, rotation: &KeyRotation,
+        &self, role: &RoleId, rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -226,7 +227,7 @@ impl RegistrationChain {
 #[derive(Debug, Clone)]
 struct RegistrationChainInner {
     /// A Catalyst ID.
-    catalyst_id: IdUri,
+    catalyst_id: CatalystId,
     /// The current transaction ID hash (32 bytes)
     current_tx_id_hash: TransactionId,
     /// List of purpose for this registration chain
@@ -250,10 +251,10 @@ struct RegistrationChainInner {
     // Role
     /// Map of role number to list point + transaction index, and role data.
     /// Record history of the whole role data in point in time.
-    role_data_history: HashMap<RoleNumber, Vec<PointData<RoleData>>>,
+    role_data_history: HashMap<RoleId, Vec<PointData<RoleData>>>,
     /// Map of role number role data record where each field in role data record
     /// has it own record of its value and its associated point and transaction index.
-    role_data_record: HashMap<RoleNumber, RoleDataRecord>,
+    role_data_record: HashMap<RoleId, RoleDataRecord>,
     /// Map of tracked payment key to its history.
     payment_history: PaymentHistory,
 }
@@ -264,7 +265,8 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `raw_aux_data`: The raw auxiliary data from the transaction containing this `cip509`.
+    /// - `raw_aux_data`: The raw auxiliary data from the transaction containing this
+    ///   `cip509`.
     ///
     /// # Errors
     ///
@@ -304,7 +306,7 @@ impl RegistrationChainInner {
         // There should be role 0 since we already check that the chain root (no previous tx id)
         // must contain role 0
         let signing_pk = role_data_record
-            .get(&RoleNumber::ROLE_0)
+            .get(&RoleId::Role0)
             .ok_or_else(|| anyhow::anyhow!("No role 0 found"))?
             .signing_keys()
             .last()
@@ -456,6 +458,8 @@ fn check_validation_signature(
 
 #[cfg(test)]
 mod test {
+    use catalyst_types::catalyst_id::role_index::RoleId;
+
     use super::*;
     use crate::utils::test;
 
@@ -474,6 +478,18 @@ mod test {
         let origin = &chain.x509_certs().get(&0).unwrap().first().unwrap();
         assert_eq!(origin.point().slot_or_default(), data.slot);
         assert_eq!(origin.txn_index(), data.txn_index);
+
+        // no encryption key is included for the role
+        assert!(chain
+            .get_encryption_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::default())
+            .is_none());
+
+        assert!(chain
+            .get_encryption_key_cert_or_key_for_role_at_rotation(
+                &RoleId::Role0,
+                &KeyRotation::default()
+            )
+            .is_none());
 
         // Try to add an invalid registration.
         let data = test::block_2();
@@ -507,30 +523,27 @@ mod test {
         assert_eq!(
             update
                 .role_data_history()
-                .get(&RoleNumber::ROLE_0)
+                .get(&RoleId::Role0)
                 .unwrap()
                 .len(),
             2
         );
 
-        let role_0_data = update.role_data_record().get(&RoleNumber::ROLE_0).unwrap();
+        let role_0_data = update.role_data_record().get(&RoleId::Role0).unwrap();
         assert_eq!(role_0_data.signing_keys().len(), 2);
         assert_eq!(role_0_data.encryption_keys().len(), 0);
         assert_eq!(role_0_data.payment_keys().len(), 2);
         assert_eq!(role_0_data.extended_data().len(), 2);
 
         let (_k, r) = update
-            .get_latest_signing_pk_for_role(&RoleNumber::ROLE_0)
+            .get_latest_signing_pk_for_role(&RoleId::Role0)
             .unwrap();
         assert_eq!(r, KeyRotation::from(1));
         assert!(update
-            .get_signing_pk_for_role_at_rotation(&RoleNumber::ROLE_0, &KeyRotation::from(2))
+            .get_signing_pk_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(2))
             .is_none());
         assert!(update
-            .get_singing_key_cert_or_key_for_role_at_rotation(
-                &RoleNumber::ROLE_0,
-                &KeyRotation::from(0)
-            )
+            .get_singing_key_cert_or_key_for_role_at_rotation(&RoleId::Role0, &KeyRotation::from(0))
             .is_some());
     }
 }
