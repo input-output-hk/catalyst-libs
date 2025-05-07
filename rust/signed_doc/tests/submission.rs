@@ -1,7 +1,7 @@
 //! Test for proposal submission action.
 
 use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
-use catalyst_types::catalyst_id::role_index::RoleIndex;
+use catalyst_types::catalyst_id::role_index::RoleId;
 
 mod common;
 
@@ -27,7 +27,7 @@ async fn test_valid_submission_action() {
             "action": "final"
         }))
         .unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -59,7 +59,7 @@ async fn test_valid_submission_action_with_empty_provider() {
             "action": "final"
         }))
         .unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -88,7 +88,7 @@ async fn test_invalid_submission_action() {
             "action": "final"
         }))
         .unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -113,7 +113,7 @@ async fn test_invalid_submission_action() {
             },
         }),
         serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -139,7 +139,7 @@ async fn test_invalid_submission_action() {
             },
         }),
         vec![],
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 

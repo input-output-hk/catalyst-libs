@@ -1,13 +1,13 @@
 //! Catalyst Signed Document COSE signature `kid` (Catalyst Id) role validation
 
-use catalyst_types::catalyst_id::role_index::RoleIndex;
+use catalyst_types::catalyst_id::role_index::RoleId;
 
 use crate::CatalystSignedDocument;
 
 ///  COSE signature `kid` (Catalyst Id) role validation
 pub(crate) struct SignatureKidRule {
-    /// expected `RoleIndex` values for the `kid` field
-    pub(crate) exp: &'static [RoleIndex],
+    /// expected `RoleId` values for the `kid` field
+    pub(crate) exp: &'static [RoleId],
 }
 
 impl SignatureKidRule {
@@ -52,12 +52,12 @@ mod tests {
     #[tokio::test]
     async fn signature_kid_rule_test() {
         let mut rule = SignatureKidRule {
-            exp: &[RoleIndex::ROLE_0],
+            exp: &[RoleId::Role0, RoleId::DelegatedRepresentative],
         };
 
         let sk = ed25519_dalek::SigningKey::generate(&mut rand::rngs::OsRng);
         let pk = sk.verifying_key();
-        let kid = CatalystId::new("cardano", None, pk).with_role(RoleIndex::ROLE_0);
+        let kid = CatalystId::new("cardano", None, pk).with_role(RoleId::Role0);
 
         let doc = Builder::new()
             .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
@@ -74,7 +74,7 @@ mod tests {
 
         assert!(rule.check(&doc).await.unwrap());
 
-        rule.exp = &[RoleIndex::PROPOSER];
+        rule.exp = &[RoleId::Proposer];
         assert!(!rule.check(&doc).await.unwrap());
     }
 }

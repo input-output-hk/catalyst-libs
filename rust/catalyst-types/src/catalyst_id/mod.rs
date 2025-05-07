@@ -23,7 +23,7 @@ use fluent_uri::{
     Uri,
 };
 use key_rotation::KeyRotation;
-use role_index::RoleIndex;
+use role_index::RoleId;
 
 /// Catalyst ID
 /// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_catalyst_id/catalyst-id/>
@@ -44,7 +44,7 @@ pub struct CatalystId {
     /// Role0 Public Key.
     role0_pk: VerifyingKey,
     /// User Role specified for the current document.
-    role: RoleIndex,
+    role: RoleId,
     /// Role Key Rotation count
     rotation: KeyRotation,
     /// Indicates whether this key is an encryption key.
@@ -108,7 +108,7 @@ impl CatalystId {
 
     /// Get the role index and its rotation count
     #[must_use]
-    pub fn role_and_rotation(&self) -> (RoleIndex, KeyRotation) {
+    pub fn role_and_rotation(&self) -> (RoleId, KeyRotation) {
         (self.role, self.rotation)
     }
 
@@ -121,10 +121,10 @@ impl CatalystId {
             network: network.to_string(),
             subnet: subnet.map(str::to_string),
             role0_pk,
-            role: RoleIndex::default(), // Defaulted, use `with_role()` to change it.
+            role: RoleId::default(), // Defaulted, use `with_role()` to change it.
             rotation: KeyRotation::default(), // Defaulted, use `with_rotation()` to change it.
-            encryption: false,          // Defaulted, use `with_encryption()` to change it.
-            id: false,                  // Default to `URI` formatted.
+            encryption: false,       // Defaulted, use `with_encryption()` to change it.
+            id: false,               // Default to `URI` formatted.
         }
     }
 
@@ -329,18 +329,18 @@ impl CatalystId {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::catalyst_id::{role_index::RoleIndex, CatalystId};
+    /// use catalyst_types::catalyst_id::{role_index::RoleId, CatalystId};
     ///
     /// let catalyst_id = "id.catalyst://cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE"
     ///     .parse::<CatalystId>()
     ///     .unwrap();
-    /// let new_role: RoleIndex = 5.into();
+    /// let new_role = RoleId::Proposer;
     /// let catalyst_id_with_role = catalyst_id.with_role(new_role);
     /// let (role, _) = catalyst_id_with_role.role_and_rotation();
     /// assert_eq!(role, new_role);
     /// ```
     #[must_use]
-    pub fn with_role(self, role: RoleIndex) -> Self {
+    pub fn with_role(self, role: RoleId) -> Self {
         Self { role, ..self }
     }
 
@@ -450,9 +450,7 @@ impl CatalystId {
     /// # Examples
     ///
     /// ```rust
-    /// use catalyst_types::catalyst_id::{
-    ///     key_rotation::KeyRotation, role_index::RoleIndex, CatalystId,
-    /// };
+    /// use catalyst_types::catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId};
     ///
     /// let catalyst_id =
     ///     "id.catalyst://user:1735689600@cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/5"
@@ -462,7 +460,7 @@ impl CatalystId {
     /// let short_id = catalyst_id.as_short_id();
     /// assert_eq!(
     ///     short_id.role_and_rotation(),
-    ///     (RoleIndex::default(), KeyRotation::default())
+    ///     (RoleId::default(), KeyRotation::default())
     /// );
     /// assert_eq!(short_id.username(), None);
     /// assert_eq!(short_id.nonce(), None);
@@ -477,7 +475,7 @@ impl CatalystId {
     #[must_use]
     pub fn as_short_id(&self) -> Self {
         self.clone()
-            .with_role(RoleIndex::default())
+            .with_role(RoleId::default())
             .with_rotation(KeyRotation::default())
             .without_username()
             .without_nonce()
@@ -569,12 +567,12 @@ impl FromStr for CatalystId {
             .or(Err(errors::CatalystIdError::InvalidRole0Key))?;
 
         // Decode and validate the Role Index from the path.
-        let role_index: RoleIndex = {
+        let role_index: RoleId = {
             if let Some(encoded_role_index) = path.get(2) {
                 let decoded_role_index = encoded_role_index.decode().into_string_lossy();
-                decoded_role_index.parse::<RoleIndex>()?
+                decoded_role_index.parse::<RoleId>()?
             } else {
-                RoleIndex::default()
+                RoleId::default()
             }
         };
 

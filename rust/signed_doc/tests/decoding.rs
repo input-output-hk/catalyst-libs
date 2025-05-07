@@ -1,7 +1,7 @@
 //! Integration test for COSE decoding part.
 
 use catalyst_signed_doc::*;
-use catalyst_types::catalyst_id::role_index::RoleIndex;
+use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use ed25519_dalek::ed25519::signature::Signer;
 
@@ -10,7 +10,7 @@ mod common;
 #[test]
 fn catalyst_signed_doc_cbor_roundtrip_test() {
     let (uuid_v7, uuid_v4, metadata_fields) = common::test_metadata();
-    let (sk, _, kid) = create_dummy_key_pair(RoleIndex::ROLE_0).unwrap();
+    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
@@ -38,8 +38,8 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
 #[test]
 fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
     let (_, _, metadata_fields) = common::test_metadata();
-    let (sk, _, kid) = create_dummy_key_pair(RoleIndex::ROLE_0).unwrap();
-    // transform Catalyst ID form to the ID form
+    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+    // transform Catalyst ID URI form to the ID form
     let kid = kid.as_id();
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();

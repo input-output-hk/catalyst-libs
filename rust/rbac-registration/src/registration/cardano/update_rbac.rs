@@ -3,13 +3,14 @@
 use std::collections::HashMap;
 
 use c509_certificate::c509::C509;
+use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::VerifyingKey;
 use tracing::warn;
 use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
     C509Cert, CertKeyHash, CertOrPk, Cip509RbacMetadata, KeyLocalRef, LocalRefInt, PointData,
-    PointTxnIdx, RoleData, RoleDataRecord, RoleNumber, SimplePublicKeyType, X509DerCert,
+    PointTxnIdx, RoleData, RoleDataRecord, SimplePublicKeyType, X509DerCert,
 };
 
 /// Update x509 certificates in the registration chain.
@@ -139,8 +140,8 @@ pub(crate) fn revocations_list(
 /// Update the role data related fields in the registration chain.
 pub(crate) fn update_role_data(
     registration: &Cip509RbacMetadata,
-    role_data_history: &mut HashMap<RoleNumber, Vec<PointData<RoleData>>>,
-    role_data_record: &mut HashMap<RoleNumber, RoleDataRecord>, point_tx_idx: &PointTxnIdx,
+    role_data_history: &mut HashMap<RoleId, Vec<PointData<RoleData>>>,
+    role_data_record: &mut HashMap<RoleId, RoleDataRecord>, point_tx_idx: &PointTxnIdx,
 ) {
     for (number, data) in registration.clone().role_data {
         // Update role data history, put the whole role data

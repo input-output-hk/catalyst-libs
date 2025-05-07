@@ -1,7 +1,7 @@
 //! Integration test for proposal document validation part.
 
 use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
-use catalyst_types::catalyst_id::role_index::RoleIndex;
+use catalyst_types::catalyst_id::role_index::RoleId;
 
 mod common;
 
@@ -24,7 +24,7 @@ async fn test_valid_proposal_doc() {
             },
         }),
         serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -56,7 +56,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
             },
         }),
         serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
@@ -81,7 +81,7 @@ async fn test_invalid_proposal_doc() {
             "template": serde_json::Value::Null,
         }),
         serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleIndex::PROPOSER,
+        RoleId::Proposer,
     )
     .unwrap();
 
