@@ -327,7 +327,7 @@ impl MithrilTurboDownloader {
             .map_err(|_| anyhow!("Failed to set the inner dl_handler. Must already be set?"))?;
 
         // This is fully synchronous IO, so do it on a sync thread.
-        spawn_blocking(move || {
+        let result = spawn_blocking(move || {
             stats::start_thread(
                 inner.cfg.chain,
                 stats::thread::name::MITHRIL_DL_DEDUP,
@@ -338,10 +338,11 @@ impl MithrilTurboDownloader {
             result
         })
         .await
-        .map_err(|_| {
-            stats::mithril_dl_finished(self.inner.cfg.chain, None);
-            anyhow!("Download and Dedup task failed")
-        })??;
+        .map_err(|_| anyhow!("Download and Dedup task failed"));
+
+        // recording stats before returning
+        stats::mithril_dl_finished(self.inner.cfg.chain, None);
+        result??;
 
         let tot_files = self.inner.tot_files.load(Ordering::SeqCst);
         let chg_files = self.inner.chg_files.load(Ordering::SeqCst);
