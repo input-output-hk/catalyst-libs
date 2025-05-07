@@ -117,6 +117,13 @@ class SignedDoc(BaseModel):
                 return cluster
         return None
 
+    def doc_in_cluster_name(self, doc_name: str) -> str | None:
+        """Is the named document in a cluster of what name."""
+        for cluster in self.doc_clusters.values():
+            if cluster.is_in_cluster(doc_name):
+                return cluster.name
+        return None
+
     def data(self) -> dict:
         """Return the raw spec data."""
         return self._data

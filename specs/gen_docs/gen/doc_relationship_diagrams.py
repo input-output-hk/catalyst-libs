@@ -4,7 +4,7 @@ import argparse
 import textwrap
 
 from gen.doc_generator import DocGenerator
-from gen.graphviz_doc_diagram import DotFile, DotLink, DotSignedDoc, TableRow
+from gen.graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, TableRow
 from spec.metadata import Metadata
 from spec.optional import OptionalField
 from spec.signed_doc import HeaderType, SignedDoc
@@ -58,7 +58,14 @@ class DocRelationshipFile(DocGenerator):
 
         for doc in doc_names:
             doc_type = self.add_doc_ref_links
-            doc_table = DotSignedDoc(table_id=doc, title_href=Metadata.doc_ref_link(doc, self._depth, html=True))
+            cluster = self._spec.doc_in_cluster_name(doc)
+            if cluster is not None:
+                cluster = Cluster(name=cluster)
+            doc_table = DotSignedDoc(
+                table_id=doc,
+                title_href=Metadata.doc_ref_link(doc, self._depth, html=True),
+                cluster=cluster,
+            )
             doc_data = self._spec.get_document(doc)
 
             # Add content type explicitely to table.
@@ -77,10 +84,32 @@ class DocRelationshipFile(DocGenerator):
 
                 if doc_metadata.format == "Document Reference":
                     doc_type = doc_metadata.type
-                    for link_dst in doc_type:
+                    cluster = self._spec.ref_in_cluster(doc_type)
+                    doc_type_links = doc_type
+                    if cluster is not None:
+                        # Clusters only need a single reference link.
+                        cluster = Cluster(name=cluster.name)
+                        doc_type_links = [doc_type[0]]
+                    for link_dst in doc_type_links:
                         dst_dir = "n" if doc == link_dst else "w"
+
+                        # Add dummy destination table, in case we don't have it in our docs.
+                        dummy_table = DotSignedDoc(
+                            table_id=link_dst,
+                            title_href=Metadata.doc_ref_link(
+                                link_dst,
+                                depth=self._depth,
+                                html=True,
+                            ),
+                            cluster=cluster,
+                        )
+                        dot_file.add_table(dummy_table)
+
                         dot_file.add_link(
-                            DotLink(src_id=doc, src_port=meta, dst_dir=dst_dir, dst_id=link_dst, dst_port="title")
+                            DotLink(
+                                src=DotLinkEnd(id=doc, port=meta),
+                                dst=DotLinkEnd(id=link_dst, port="title" if cluster is None else cluster, dir=dst_dir),
+                            )
                         )
                         all_dst_refs.append(link_dst)
                     if len(doc_type) == 0:
@@ -96,15 +125,26 @@ class DocRelationshipFile(DocGenerator):
             if doc_name not in doc_names:
                 # Add any documents as dummies with links, if they reference any docs in our doc_names.
                 doc = self._spec.get_document(doc_name)
+                cluster = self._spec.doc_in_cluster_name(doc_name)
+                if cluster is not None:
+                    print(f"{doc_name} in cluster {cluster} for {doc_names}")
+                    cluster = Cluster(name=cluster)
                 refs = doc.all_references()
                 for ref in refs:
                     if ref in doc_names:
+                        if cluster is not None:
+                            print(f"{doc_name} in cluster {cluster} for {doc_names}")
                         dummy_src_table = DotSignedDoc(
-                            table_id=doc_name, title_href=Metadata.doc_ref_link(doc_name, depth=self._depth, html=True)
+                            table_id=doc_name,
+                            title_href=Metadata.doc_ref_link(doc_name, depth=self._depth, html=True),
+                            cluster=cluster,
                         )
                         dot_file.add_table(dummy_src_table)
                         dot_file.add_link(
-                            DotLink(src_id=doc_name, src_port="title", dst_id=ref, dst_port="title", dst_dir="w")
+                            DotLink(
+                                src=DotLinkEnd(id=doc_name, port="title"),
+                                dst=DotLinkEnd(id=ref, port="title" if cluster is None else cluster, dir="w"),
+                            )
                         )
 
         self._filedata = f"{dot_file}"

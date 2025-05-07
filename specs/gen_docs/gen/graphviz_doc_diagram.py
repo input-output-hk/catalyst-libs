@@ -1,5 +1,7 @@
 """Graphviz DOT file generation functions."""
 
+import typing
+from functools import cached_property
 from textwrap import indent
 
 from pydantic import BaseModel, Field
@@ -91,14 +93,45 @@ class TableTheme(BaseModel):
         return next_bg
 
 
+class Cluster(BaseModel):
+    """Represents a single cluster."""
+
+    name: str
+
+    def label(self) -> str:
+        """Transform the name into a label."""
+        return "cluster_" + self.name.lower().replace(" ", "_").replace("-", "_")
+
+    def start(self) -> str:
+        """Start a new cluster."""
+        return f"""
+subgraph {self.label()} {{
+    label = "{self.name}";
+    color=blue
+    penwidth=20
+"""
+
+    def end(self) -> str:
+        """End the cluster."""
+        return "}\n"
+
+    def __eq__(self, other: "Cluster") -> bool:
+        """Eq."""
+        if not isinstance(other, Cluster):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return self.name == other.name
+
+
 class DotSignedDoc(BaseModel):
     """Table representing a single signed document."""
 
     table_id: str
     title_port: str = Field(default="title")
-    title_href: str | None = None
+    title_href: str | None = Field(default=None)
     theme: TableTheme = Field(default_factory=TableTheme)
     rows: list[TableRow] = Field(default_factory=list)
+    cluster: Cluster | None = Field(default=None)
 
     def add_row(self, row: TableRow) -> None:
         """Add a row of data to the table."""
@@ -149,6 +182,8 @@ class DotLinkTheme(BaseModel):
     headlabel: str | None = Field(default="1")
     taillabel: str | None = Field(default="*")
     direction: str = Field(default="forward")
+    lhead: str | None = Field(default=None)
+    ltail: str | None = Field(default=None)
 
     def __str__(self) -> str:
         """Str."""
@@ -162,19 +197,65 @@ class DotLinkTheme(BaseModel):
         if self.taillabel is not None:
             options.append(f'taillabel="{self.taillabel}"')
 
+        if self.lhead is not None:
+            options.append(f'lhead="{self.lhead}"')
+        if self.ltail is not None:
+            options.append(f'ltail="{self.ltail}"')
+
         return f" [{', '.join(options)}]"
+
+
+class DotLinkEnd(BaseModel):
+    """Represents an end of a Link between documents."""
+
+    id: str
+    port: str | Cluster | None = Field(default=None)
+    dir: str | None = Field(default="e")
+
+    @cached_property
+    def is_cluster(self) -> bool:
+        """Is the link to a cluster."""
+        return isinstance(self.port, Cluster)
+
+    def __str__(self) -> str:
+        """Str."""
+        name = f'"{self.id}"'
+        if self.port is not None and not self.is_cluster:
+            name += f':"{self.port}"'
+            if self.dir is not None:
+                name += f":{self.dir}"
+        return name
+
+    def __eq__(self, other: "DotLinkEnd") -> bool:
+        """Eq."""
+        if not isinstance(other, DotLinkEnd):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+
+        return self.id == other.id and self.port == other.port
+
+    def __repr__(self) -> str:
+        """Repr."""
+        return "DotLinkEnd()"
 
 
 class DotLink(BaseModel):
     """Represents a Link between documents."""
 
-    src_id: str
-    src_port: str | None = Field(default=None)
-    src_dir: str | None = Field(default="e")
-    dst_id: str
-    dst_port: str | None = Field(default=None)
-    dst_dir: str | None = Field(default="w")
+    src: DotLinkEnd
+    dst: DotLinkEnd
+    directed: bool = Field(default=True)
     theme: DotLinkTheme = Field(default_factory=DotLinkTheme)
+
+    def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
+        """Extra setup after we deserialize."""
+        super().model_post_init(context)
+
+        # Add cluster parameters to the theme.
+        if self.src.is_cluster:
+            self.theme.lhead = self.src.port.label()
+        if self.dst.is_cluster:
+            self.theme.ltail = self.dst.port.label()
 
     def __eq__(self, other: "DotLink") -> bool:
         """Eq."""
@@ -182,38 +263,16 @@ class DotLink(BaseModel):
             # don't attempt to compare against unrelated types
             return NotImplemented
 
-        return (
-            self.src_id == other.src_id
-            and self.src_port == other.src_port
-            and self.dst_id == other.dst_id
-            and self.dst_port == other.dst_port
-        )
+        return self.src == other.src and self.dst == other.dst
 
     def __repr__(self) -> str:
         """Repr."""
         return "DotLink()"
 
-    @staticmethod
-    def mk_link_name(name: str, port: str | None, direction: str | None) -> str:
-        """Make a graphviz link name."""
-        name = f'"{name}"'
-        if port is not None:
-            name += f':"{port}"'
-            if direction is not None:
-                name += f":{direction}"
-        return name
-
-    def src(self) -> str:
-        """Return the source."""
-        return self.mk_link_name(self.src_id, self.src_port, self.src_dir)
-
-    def dst(self) -> str:
-        """Return the destination."""
-        return self.mk_link_name(self.dst_id, self.dst_port, self.dst_dir)
-
     def __str__(self) -> str:
         """Str."""
-        return f"{self.src()} -> {self.dst()}{self.theme}"
+        direction = "->" if self.directed else "--"
+        return f"{self.src} {direction} {self.dst}{self.theme}"
 
 
 class DotFile:
@@ -246,8 +305,9 @@ class DotFile:
         }
         self.depth = depth
 
-        self.tables = {}
-        self.links = []
+        self.tables: dict[str | None, dict[str, DotSignedDoc]] = {}
+        self.links: list[DotLink] = []
+        self.clusters: dict[str, Cluster] = {}
 
     def add_table(self, table: DotSignedDoc) -> None:
         """Add a table to the graph.
@@ -255,28 +315,45 @@ class DotFile:
         Will always add a table if it doesn't already exist.
         Only replace existing tables if the new table has rows.
         """
-        if table.table_id not in self.tables or table.has_rows():
-            self.tables[table.table_id] = table
+        cluster_name = None
+        if table.cluster is not None:
+            cluster_name = table.cluster.name
+        if cluster_name is not None and cluster_name not in self.clusters:
+            self.clusters[cluster_name] = table.cluster
+        if cluster_name not in self.tables:
+            self.tables[cluster_name] = {}
+        if table.table_id not in self.tables[cluster_name] or table.has_rows():
+            self.tables[cluster_name][table.table_id] = table
 
     def add_link(self, link: DotLink) -> None:
-        """Add a link to the graph.
-
-        Will add an empty Table if the destination port is None and
-        destination does not exist.
-        Src is assumed to always exist.
-        """
-        # Add a dummy table, so the link has something to anchor on.
-        # Won't add anything if it exists, and will get replaced
-        # if the real table gets added later (has any rows).
-        dummy_dst_table = DotSignedDoc(
-            table_id=link.dst_id, title_href=Metadata.doc_ref_link(link.dst_id, depth=self.depth, html=True)
-        )
-        self.add_table(dummy_dst_table)  # Wont add if already exists.
-        self.links.append(link)
+        """Add a link to the graph."""
+        if link not in self.links:
+            self.links.append(link)
 
     def __repr__(self) -> str:
         """Repr."""
         return "DotFile()"
+
+    def clustered_tables(self) -> str:
+        """Dump out the table definitions, with clusters."""
+
+        print(self.clusters)
+
+        table_graph = ""
+        for cluster, tables in self.tables.items():
+            indent_spaces = ""
+            if cluster is not None:
+                table_graph += f"{self.clusters[cluster].start()}"
+                indent_spaces = "    "
+
+            for table in tables.values():
+                table_entry = f"{table}"
+                table_graph += f"{indent(table_entry, indent_spaces)}\n"
+
+            if cluster is not None:
+                table_graph += f"{self.clusters[cluster].end()}"
+
+        return table_graph
 
     def __str__(self) -> str:
         """Generate the DOT file."""
@@ -286,7 +363,7 @@ class DotFile:
             defaults = []
             for default, value in settings.items():
                 defaults.append(f'{default}="{value}"')
-            return f"    {name} [{', '.join(defaults)}];"
+            return f"{name} [{', '.join(defaults)}];"
 
         return f"""digraph "{self.id}" {{
     rankdir="{self.rankdir}"
@@ -298,9 +375,10 @@ class DotFile:
     label="{self.title}"
     fontcolor="#1d71b8"
     fontsize={self.title_size}
+    compound=true
 
-{indent("\n".join(map(str, self.tables.values())), "    ")}
 
+{indent(self.clustered_tables(), "    ")}
 {indent("\n".join(map(str, self.links)), "    ")}
 }}
 """

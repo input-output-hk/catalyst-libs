@@ -1,6 +1,7 @@
 """CDDL Definition Specification."""
 
 from collections import Counter
+from functools import cached_property
 
 from pydantic import BaseModel, ConfigDict, PrivateAttr
 
@@ -24,3 +25,8 @@ class DocCluster(BaseModel):
     def set_name(self, name: str) -> None:
         """Set the clusters name."""
         self._name = name
+
+    @cached_property
+    def name(self) -> str:
+        """Name."""
+        return self._name
