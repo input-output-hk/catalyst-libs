@@ -6,7 +6,7 @@ from textwrap import indent
 
 from pydantic import BaseModel, Field
 
-from spec.metadata import Metadata
+from spec.doc_clusters import DocCluster
 
 DEFAULT_FONT_NAME = "helvetica"
 DEFAULT_FONT_SIZE = 32
@@ -97,6 +97,13 @@ class Cluster(BaseModel):
     """Represents a single cluster."""
 
     name: str
+
+    @classmethod
+    def from_doc_cluster(cls, cluster: DocCluster | None) -> "Cluster | None":
+        """Convert the DocCluster to a Cluster."""
+        if cluster is None:
+            return None
+        return cls(name=cluster.name)
 
     def label(self) -> str:
         """Transform the name into a label."""
@@ -232,6 +239,10 @@ class DotLinkEnd(BaseModel):
             # don't attempt to compare against unrelated types
             return NotImplemented
 
+        # If the link is a cluster, we only care if the clusters are the same.
+        if isinstance(self.port, Cluster):
+            return self.port == other.port
+
         return self.id == other.id and self.port == other.port
 
     def __repr__(self) -> str:
@@ -253,9 +264,9 @@ class DotLink(BaseModel):
 
         # Add cluster parameters to the theme.
         if self.src.is_cluster:
-            self.theme.lhead = self.src.port.label()
+            self.theme.ltail = self.src.port.label()
         if self.dst.is_cluster:
-            self.theme.ltail = self.dst.port.label()
+            self.theme.lhead = self.dst.port.label()
 
     def __eq__(self, other: "DotLink") -> bool:
         """Eq."""
@@ -336,9 +347,6 @@ class DotFile:
 
     def clustered_tables(self) -> str:
         """Dump out the table definitions, with clusters."""
-
-        print(self.clusters)
-
         table_graph = ""
         for cluster, tables in self.tables.items():
             indent_spaces = ""

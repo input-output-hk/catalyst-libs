@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from spec.cddl_definitions import CDDLDefinition
 from spec.change_log_entry import ChangeLogEntry
@@ -102,6 +102,12 @@ class SignedDoc(BaseModel):
         # Set the name in each cluster.
         for cluster, value in self.doc_clusters.items():
             value.set_name(cluster)
+
+        # Set the name and references for each document.
+        for name, doc in self.docs.items():
+            doc.set_name(name)
+            for ref_doc in doc.all_references:
+                self.docs[ref_doc].add_referer(name)
 
     def ref_in_cluster(self, ref: list[str]) -> DocCluster | None:
         """Get the cluster a document is in, if any."""

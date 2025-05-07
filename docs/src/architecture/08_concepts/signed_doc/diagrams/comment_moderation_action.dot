@@ -1,14 +1,16 @@
 digraph "Comment Moderation Action" {
     rankdir="LR"
-        graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
-        node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
-        edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+    graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+    node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+    edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
     label="Comment Moderation Action
 Document Relationships"
     fontcolor="#1d71b8"
     fontsize=50
+    compound=true
+
 
 
     "Proposal Comment" [

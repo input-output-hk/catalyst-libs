@@ -1,199 +1,207 @@
 digraph "None" {
     rankdir="LR"
-        graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
-        node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
-        edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+    graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+    node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+    edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
     label="All Document Relationships"
     fontcolor="#1d71b8"
     fontsize=150
+    compound=true
 
 
-    "Brand Parameters" [
-        id="Brand Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/brand_parameters/">
-                    <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>ebcabeeb-5bc5-4f95-91e8-cab8ca724172</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
 
-            </TABLE>
-        >
-    ];
+    subgraph cluster_system_parameters {
+        label = "System Parameters";
+        color=blue
+        penwidth=20
 
+        "Brand Parameters" [
+            id="Brand Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/brand_parameters/">
+                        <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>ebcabeeb-5bc5-4f95-91e8-cab8ca724172</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
 
-    "Campaign Parameters" [
-        id="Campaign Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/campaign_parameters/">
-                    <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>5ef32d5d-f240-462c-a7a4-ba4af221fa23</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
+                </TABLE>
+            >
+        ];
 
 
-    "Category Parameters" [
-        id="Category Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/category_parameters/">
-                    <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>818938c3-3139-4daa-afe6-974c78488e95</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
+        "Campaign Parameters" [
+            id="Campaign Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/campaign_parameters/">
+                        <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>5ef32d5d-f240-462c-a7a4-ba4af221fa23</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
 
-            </TABLE>
-        >
-    ];
+                </TABLE>
+            >
+        ];
 
+
+        "Category Parameters" [
+            id="Category Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/category_parameters/">
+                        <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>application/json</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>818938c3-3139-4daa-afe6-974c78488e95</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>parameters</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+
+                </TABLE>
+            >
+        ];
+
+    }
 
     "Proposal Comment" [
         id="Proposal Comment";
@@ -958,36 +966,20 @@ digraph "None" {
     "Campaign Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Category Parameters":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Comment Moderation Action":"ref":e -> "Proposal Comment":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Election Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"template":e -> "Proposal Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"template":e -> "Proposal Comment Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"reply":e -> "Proposal Comment":"title":n [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Meta Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Meta Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Meta Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Proposal Comment Meta Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment Template":"template":e -> "Proposal Comment Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Meta Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Meta Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Meta Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Proposal Meta Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Moderation Action":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Submission Action":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Submission Action":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Submission Action":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Submission Action":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Submission Action":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Template":"template":e -> "Proposal Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
 }

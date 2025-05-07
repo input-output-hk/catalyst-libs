@@ -1,14 +1,16 @@
 digraph "Proposal Template" {
     rankdir="LR"
-        graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
-        node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
-        edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+    graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+    node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+    edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
     label="Proposal Template Document
 Relationships"
     fontcolor="#1d71b8"
     fontsize=50
+    compound=true
+
 
 
     "Proposal Meta Template" [
@@ -18,51 +20,6 @@ Relationships"
             <TR>
                 <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_meta_template/">
                     <FONT COLOR="#ffffff"><B> Proposal Meta Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Brand Parameters" [
-        id="Brand Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters/">
-                    <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Campaign Parameters" [
-        id="Campaign Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
-                    <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Category Parameters" [
-        id="Category Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
-                    <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
                 </TD>
             </TR>
 
@@ -151,7 +108,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_template/">
                     <FONT COLOR="#ffffff"><B> Proposal </B></FONT>
                 </TD>
             </TR>
@@ -161,9 +118,58 @@ Relationships"
     ];
 
 
+    subgraph cluster_system_parameters {
+        label = "System Parameters";
+        color=blue
+        penwidth=20
+
+        "Brand Parameters" [
+            id="Brand Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters/">
+                        <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
+                    </TD>
+                </TR>
+
+                </TABLE>
+            >
+        ];
+
+
+        "Campaign Parameters" [
+            id="Campaign Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
+                        <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
+                    </TD>
+                </TR>
+
+                </TABLE>
+            >
+        ];
+
+
+        "Category Parameters" [
+            id="Category Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                        <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
+                    </TD>
+                </TR>
+
+                </TABLE>
+            >
+        ];
+
+    }
+
     "Proposal Template":"template":e -> "Proposal Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Template":"parameters":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"title":e -> "Proposal Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }
