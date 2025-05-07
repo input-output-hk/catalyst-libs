@@ -1,5 +1,5 @@
-//! Catalyst ID.
-//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_catalyst_id/catalyst-id/>
+//! Catalyst ID URI.
+//! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/>
 
 // cspell: words userinfo rngs Fftx csprng
 
@@ -152,7 +152,7 @@ impl CatalystId {
         !self.id
     }
 
-    /// Add or change the username in a Catalyst ID.
+    /// Add or change the username in a Catalyst ID URI.
     #[must_use]
     pub fn with_username(self, name: &str) -> Self {
         Self {
@@ -161,7 +161,7 @@ impl CatalystId {
         }
     }
 
-    /// Add or change the username in a Catalyst ID.
+    /// Add or change the username in a Catalyst ID URI.
     #[must_use]
     pub fn without_username(self) -> Self {
         Self {
@@ -207,7 +207,7 @@ impl CatalystId {
         Self { nonce, ..self }
     }
 
-    /// Add or change the nonce in a Catalyst ID. The nonce will be set to the current
+    /// Add or change the nonce in a Catalyst ID URI. The nonce will be set to the current
     /// UTC time when this method is called.
     ///
     /// This function returns a new instance of the type with the nonce field updated to

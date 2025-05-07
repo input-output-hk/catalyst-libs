@@ -23,7 +23,7 @@ cargo run -p catalyst-signed-doc build signed_doc/doc.json signed_doc/doc.cose s
 
 ### Sign document
 
-`KID` is a valid Catalyst ID.
+`KID` is a valid Catalyst ID URI.
 
 ```shell
 cargo run -p catalyst-signed-doc sign signed_doc/doc.cose signed_doc/meta.json <KID>

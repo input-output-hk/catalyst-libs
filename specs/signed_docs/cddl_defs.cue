@@ -133,7 +133,7 @@ cddlDefinitions: #cddlDefinitions & {
 	}
 	"catalyst_id_kid": {
 		def:     "bytes"
-		comment: "UTF8 Catalyst ID encoded as a bytes string."
+		comment: "UTF8 Catalyst ID URI encoded as a bytes string."
 	}
 	"revocations": {
 		def: "[ * document_ver ] / true "
