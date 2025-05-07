@@ -340,7 +340,7 @@ impl MithrilTurboDownloader {
         .await
         .map_err(|_| anyhow!("Download and Dedup task failed"));
 
-        // recording stats before returning
+        // recording stats before returning errors
         stats::mithril_dl_finished(self.inner.cfg.chain, None);
         result??;
 
