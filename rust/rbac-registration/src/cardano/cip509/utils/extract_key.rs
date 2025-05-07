@@ -1,38 +1,43 @@
 //! Functions for extracting public key from X509 and C509 certificates with additional
 //! verification.
 
-use anyhow::anyhow;
+use std::borrow::Cow;
+
 use c509_certificate::c509::C509;
 use catalyst_types::problem_report::ProblemReport;
 use ed25519_dalek::{SignatureError, VerifyingKey, PUBLIC_KEY_LENGTH};
 use oid_registry::{Oid, OID_SIG_ED25519};
 use thiserror::Error;
-use x509_cert::Certificate as X509Certificate;
-
-/// An extended public key length in bytes.
-const EXTENDED_PUBLIC_KEY_LENGTH: usize = 64;
+use x509_cert::{spki, Certificate as X509Certificate};
 
 /// Common error type.
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum Error {
     /// Unsupported signature algorithms.
-    #[error("Unsupported signature algorithm: {oid}")]
+    #[error("Unsupported signature algorithm (oid: {oid})")]
     UnsupportedSignatureAlgo {
         /// An OID of unsupported signature algorithm.
-        oid: String,
+        oid: Oid<'static>,
     },
-    /// Incorrect extended public key byte length.
-    #[error("Unexpected extended public key length in certificate: {0}, expected {EXTENDED_PUBLIC_KEY_LENGTH}")]
-    InvalidExtendedPublicKeyLength(usize),
-    /// Public key has unused bits in a bit string.
-    #[error("Invalid subject_public_key value (has unused bits)")]
-    PublicKeyHasUnusedBits,
-    /// Public key cannot be converted into a [`VerifyingKey`].
-    #[error("Cannot create verifying key from subject_public_key: {0}")]
-    PublicKeyIsNotVerifyingKey(#[from] SignatureError),
-    /// Unexpected error.
-    #[error("Unexpected error: {0}")]
-    Unexpected(#[source] anyhow::Error),
+    /// Public key has invalid length.
+    #[error(
+        "Invalid public key length (found {bits} bits, but expected {PUBLIC_KEY_LENGTH} bytes)"
+    )]
+    InvalidPublicKeyLength {
+        /// Number of the bits found.
+        ///
+        /// # Note
+        // Counting bits instead of bytes here, because of [`X509Certificate`] implementation of
+        // the public key storage.
+        bits: usize,
+    },
+    /// Public key doesn't pass [`ed25519_dalek`] constraint check.
+    #[error("Invalid public key ({source})")]
+    PublicKeyIsNotEd25519 {
+        /// Underlying [`ed25519_dalek`] error.
+        #[source]
+        source: SignatureError,
+    },
 }
 
 impl Error {
@@ -42,36 +47,27 @@ impl Error {
             Error::UnsupportedSignatureAlgo { oid } => {
                 report.invalid_value(
                     "subject_public_key_algorithm",
-                    oid,
+                    &oid.to_id_string(),
                     "Currently the only supported signature algorithm is ED25519",
                     context,
                 );
             },
-            Error::InvalidExtendedPublicKeyLength(found) => {
+            Error::InvalidPublicKeyLength { bits } => {
                 report.invalid_value(
                     "subject_public_key",
-                    &format!("{found} bytes"),
-                    &format!("Must be {EXTENDED_PUBLIC_KEY_LENGTH} bytes"),
+                    &format!("{bits} bits"),
+                    &format!("Must be {PUBLIC_KEY_LENGTH} bytes long"),
                     context,
                 );
             },
-            Error::PublicKeyHasUnusedBits => {
+            Error::PublicKeyIsNotEd25519 { source } => {
                 report.invalid_value(
                     "subject_public_key",
-                    "is not octet aligned",
-                    "Must not have unused bits",
+                    &source.to_string(),
+                    "Must be an Ed25519 public key",
                     context,
                 );
             },
-            Error::PublicKeyIsNotVerifyingKey(error) => {
-                report.invalid_value(
-                    "subject_public_key",
-                    &error.to_string(),
-                    "Must be a verifying key",
-                    context,
-                );
-            },
-            Error::Unexpected(error) => report.other(&error.to_string(), context),
         }
     }
 }
@@ -85,23 +81,16 @@ impl Error {
 ///
 /// Returns an error if public key has unexpected value.
 pub fn x509_key(cert: &X509Certificate) -> Result<VerifyingKey, Error> {
-    let oid_string = cert
+    let oid = &cert.tbs_certificate.subject_public_key_info.algorithm.oid;
+    check_signature_algorithm(&spki_oid_as_asn1_rs_oid(oid))?;
+    let public_key = &cert
         .tbs_certificate
         .subject_public_key_info
-        .algorithm
-        .oid
-        .to_string();
-    let oid: Oid = oid_string
-        .parse()
-        .map_err(|_| Error::UnsupportedSignatureAlgo { oid: oid_string })?;
-    check_signature_algorithm(&oid)?;
-    let extended_public_key = cert
-        .tbs_certificate
-        .subject_public_key_info
-        .subject_public_key
-        .as_bytes()
-        .ok_or(Error::PublicKeyHasUnusedBits)?;
-    verifying_key(extended_public_key)
+        .subject_public_key;
+    let public_key_bytes = public_key.as_bytes().ok_or(Error::InvalidPublicKeyLength {
+        bits: public_key.bit_len(),
+    })?;
+    verifying_key(public_key_bytes)
 }
 
 /// Returns `VerifyingKey` from the given C509 certificate.
@@ -119,36 +108,61 @@ pub fn c509_key(cert: &C509) -> Result<VerifyingKey, Error> {
         .algo_identifier()
         .oid();
     check_signature_algorithm(oid)?;
-    verifying_key(cert.tbs_cert().subject_public_key())
+    let public_key = cert.tbs_cert().subject_public_key();
+    verifying_key(public_key)
 }
 
-/// Checks that the signature algorithm is supported.
+/// Checks that the signature algorithm with the given [`spki::ObjectIdentifier`] is
+/// supported.
 fn check_signature_algorithm(oid: &Oid) -> Result<(), Error> {
     // Currently the only supported signature algorithm is ED25519.
-    if *oid != OID_SIG_ED25519 {
-        return Err(Error::UnsupportedSignatureAlgo {
-            oid: oid.to_id_string(),
-        });
+    if *oid == OID_SIG_ED25519 {
+        Ok(())
+    } else {
+        Err(Error::UnsupportedSignatureAlgo {
+            oid: oid.to_owned(),
+        })
     }
-    Ok(())
 }
 
-/// Creates `VerifyingKey` from the given extended public key.
-fn verifying_key(extended_public_key: &[u8]) -> Result<VerifyingKey, Error> {
-    if extended_public_key.len() != EXTENDED_PUBLIC_KEY_LENGTH {
-        return Err(Error::InvalidExtendedPublicKeyLength(
-            extended_public_key.len(),
-        ));
-    }
-    // This should never fail because of the check above.
-    let bytes = extended_public_key
-        .first_chunk::<PUBLIC_KEY_LENGTH>()
-        .ok_or_else(|| {
-            Error::Unexpected(anyhow!(
-                "Public key part length {PUBLIC_KEY_LENGTH} must be less \
-                than the extended length {EXTENDED_PUBLIC_KEY_LENGTH}"
-            ))
-        })?;
+/// Converts [`spki::ObjectIdentifier`] ref to an [`Oid`].
+fn spki_oid_as_asn1_rs_oid(oid: &'_ spki::ObjectIdentifier) -> Oid<'_> {
+    // Note that this conversion always succeeds as both crates omit header.
+    Oid::new(Cow::Borrowed(oid.as_bytes()))
+}
 
-    VerifyingKey::from_bytes(bytes).map_err(Error::PublicKeyIsNotVerifyingKey)
+/// Creates [`VerifyingKey`] from the given public key.
+///
+/// Returns [`None`] if public key is incorrect in that context.
+fn verifying_key(public_key: &[u8]) -> Result<VerifyingKey, Error> {
+    public_key
+        .first_chunk()
+        // Public key is too short.
+        .ok_or_else(|| {
+            Error::InvalidPublicKeyLength {
+                // Converting from bytes to bits.
+                bits: public_key.len().saturating_mul(size_of::<u8>()),
+            }
+        })
+        .and_then(|bytes| {
+            VerifyingKey::from_bytes(bytes)
+                .map_err(|source| Error::PublicKeyIsNotEd25519 { source })
+        })
+}
+
+#[cfg(test)]
+mod tests {
+    use oid_registry::{asn1_rs, OID_SIG_ED25519};
+    use x509_cert::spki;
+
+    #[test]
+    fn spki_oid_as_asn1_rs_oid() {
+        let spki_oid = spki::ObjectIdentifier::new_unwrap("1.3.101.112");
+        let asn1_rs_oid = asn1_rs::oid!(1.3.101 .112);
+        assert_eq!(spki_oid.to_string(), asn1_rs_oid.to_id_string());
+
+        let converted_spki_oid = super::spki_oid_as_asn1_rs_oid(&spki_oid);
+        assert_eq!(converted_spki_oid.to_string(), asn1_rs_oid.to_id_string());
+        assert_eq!(converted_spki_oid, OID_SIG_ED25519);
+    }
 }
