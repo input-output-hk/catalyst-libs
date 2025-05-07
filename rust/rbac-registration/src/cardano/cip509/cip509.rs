@@ -151,6 +151,15 @@ impl Cip509 {
             Cip509::decode(&mut decoder, &mut decode_context).context("Failed to decode Cip509")?;
 
         // Perform the validation.
+
+        // Chain root (no previous transaction ID) must contain Role 0
+        if cip509.previous_transaction().is_none() && cip509.role_data(RoleNumber::ROLE_0).is_none()
+        {
+            cip509
+                .report
+                .missing_field("Chain root role data", "Missing Role 0");
+        }
+
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
             validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
         };
@@ -266,6 +275,12 @@ impl Cip509 {
             .as_ref()
             .map(|m| m.certificate_uris.stake_addresses(0))
             .unwrap_or_default()
+    }
+
+    /// Return validation signature.
+    #[must_use]
+    pub fn validation_signature(&self) -> Option<&ValidationSignature> {
+        self.validation_signature.as_ref()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
