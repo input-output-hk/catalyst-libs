@@ -1,6 +1,9 @@
 //! A set of [`Cip0134Uri`].
 
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use c509_certificate::{
     extensions::{alt_name::GeneralNamesOrText, extension::ExtensionValue},
@@ -70,8 +73,8 @@ impl Cip0134UriSet {
 
     /// Returns a list of stake addresses by the given index.
     #[must_use]
-    pub fn stake_addresses(&self, index: usize) -> Vec<StakeAddress> {
-        let mut result = Vec::new();
+    pub fn stake_addresses(&self, index: usize) -> HashSet<StakeAddress> {
+        let mut result = HashSet::new();
 
         if let Some(uris) = self.x_uris().get(&index) {
             result.extend(convert_stake_addresses(uris));
