@@ -7,9 +7,10 @@ use c509_certificate::{
     general_names::general_name::{GeneralNameTypeRegistry, GeneralNameValue},
     C509ExtensionType,
 };
-use cardano_blockchain_types::Cip0134Uri;
+use cardano_blockchain_types::{Cip0134Uri, StakeAddress};
 use catalyst_types::problem_report::ProblemReport;
 use der_parser::der::parse_der_sequence;
+use pallas::ledger::addresses::Address;
 use tracing::debug;
 use x509_cert::der::oid::db::rfc5912::ID_CE_SUBJECT_ALT_NAME;
 
@@ -67,10 +68,25 @@ impl Cip0134UriSet {
         self.x_uris().is_empty() && self.c_uris().is_empty()
     }
 
+    /// Returns a list of stake addresses by the given index.
+    #[must_use]
+    pub fn stake_addresses(&self, index: usize) -> Vec<StakeAddress> {
+        let mut result = Vec::new();
+
+        if let Some(uris) = self.x_uris().get(&index) {
+            result.extend(convert_stake_addresses(uris));
+        }
+        if let Some(uris) = self.c_uris().get(&index) {
+            result.extend(convert_stake_addresses(uris));
+        }
+
+        result
+    }
+
     /// Return the updated URIs set.
     ///
     /// The resulting set includes all the data from both the original and a new one. In
-    /// the following example for brevity we only consider ony type of uris:
+    /// the following example for brevity we only consider one type of uris:
     /// ```text
     /// // Original data:
     /// 0: [uri_1]
@@ -257,6 +273,18 @@ fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisM
     }
 
     result
+}
+
+/// Converts a list of `Cip0134Uri` to a list of stake addresses.
+fn convert_stake_addresses(uris: &[Cip0134Uri]) -> Vec<StakeAddress> {
+    uris.iter()
+        .filter_map(|uri| {
+            match uri.address() {
+                Address::Stake(a) => Some(a.clone().into()),
+                _ => None,
+            }
+        })
+        .collect()
 }
 
 #[cfg(test)]
