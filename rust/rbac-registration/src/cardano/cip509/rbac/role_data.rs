@@ -4,20 +4,21 @@ use std::collections::HashMap;
 
 use catalyst_types::{
     cbor_utils::{report_duplicated_key, report_missing_keys},
+    id_uri::role_index::RoleId,
     problem_report::ProblemReport,
 };
 use cbork_utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len};
 use minicbor::{decode, Decode, Decoder};
 use strum_macros::FromRepr;
 
-use crate::cardano::cip509::{KeyLocalRef, RoleNumber};
+use crate::cardano::cip509::KeyLocalRef;
 
 /// Role data as encoded in CBOR.
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, PartialEq, Clone, Default)]
 pub struct CborRoleData {
     /// A role number.
-    pub number: Option<RoleNumber>,
+    pub number: Option<RoleId>,
     /// Optional role signing key.
     pub signing_key: Option<KeyLocalRef>,
     /// Optional role encryption key.
@@ -40,7 +41,7 @@ const LAST_ROLE_EXT_KEY: u8 = 99;
 #[repr(u8)]
 pub enum RoleDataInt {
     /// Role number.
-    RoleNumber = 0,
+    RoleId = 0,
     /// Role signing key.
     RoleSigningKey = 1,
     /// Role encryption key.
@@ -67,9 +68,9 @@ impl Decode<'_, ProblemReport> for CborRoleData {
                 found_keys.push(key);
 
                 match key {
-                    RoleDataInt::RoleNumber => {
-                        match decode_helper::<u8, _>(d, "RoleNumber in RoleData", &mut ()) {
-                            Ok(v) => data.number = Some(v.into()),
+                    RoleDataInt::RoleId => {
+                        match decode_helper::<RoleId, _>(d, "RoleId in RoleData", &mut ()) {
+                            Ok(v) => data.number = Some(v),
                             Err(e) => {
                                 report.other(
                                     &format!("Unable to decode role number: {e:?}"),
@@ -128,7 +129,7 @@ impl Decode<'_, ProblemReport> for CborRoleData {
             }
         }
 
-        let required_keys = [RoleDataInt::RoleNumber];
+        let required_keys = [RoleDataInt::RoleId];
         report_missing_keys(&found_keys, &required_keys, context, report);
 
         Ok(data)
