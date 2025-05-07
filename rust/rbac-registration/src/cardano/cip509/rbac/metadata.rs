@@ -2,7 +2,9 @@
 
 use std::collections::{HashMap, HashSet};
 
-use catalyst_types::{cbor_utils::report_duplicated_key, problem_report::ProblemReport};
+use catalyst_types::{
+    cbor_utils::report_duplicated_key, id_uri::role_index::RoleId, problem_report::ProblemReport,
+};
 use cbork_utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
 };
@@ -13,7 +15,7 @@ use crate::cardano::cip509::{
     decode_context::DecodeContext,
     rbac::{role_data::CborRoleData, C509Cert, SimplePublicKeyType, X509DerCert},
     utils::Cip0134UriSet,
-    CertKeyHash, RoleData, RoleNumber,
+    CertKeyHash, RoleData,
 };
 
 /// Cip509 RBAC metadata.
@@ -46,7 +48,7 @@ pub struct Cip509RbacMetadata {
     /// A potentially empty list of revoked certificates.
     pub revocation_list: Vec<CertKeyHash>,
     /// A potentially empty role data.
-    pub role_data: HashMap<RoleNumber, RoleData>,
+    pub role_data: HashMap<RoleId, RoleData>,
     /// Optional map of purpose key data.
     /// Empty map if no purpose key data is present.
     pub purpose_key_data: HashMap<u16, Vec<u8>>,
@@ -273,7 +275,7 @@ fn report_duplicated_roles(data: &[CborRoleData], context: &str, report: &Proble
 /// Decodes and converts a role data.
 fn decode_role_data(
     d: &mut Decoder, context: &str, decode_context: &mut DecodeContext,
-) -> Option<HashMap<RoleNumber, RoleData>> {
+) -> Option<HashMap<RoleId, RoleData>> {
     let roles = decode_array(d, "Cip509RbacMetadata role set", decode_context.report)?;
     report_duplicated_roles(&roles, context, decode_context.report);
     let roles = roles
