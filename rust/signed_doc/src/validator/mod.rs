@@ -11,7 +11,7 @@ use std::{
 
 use anyhow::Context;
 use catalyst_types::{
-    id_uri::{role_index::RoleId, IdUri},
+    catalyst_id::{role_index::RoleId, CatalystId},
     problem_report::ProblemReport,
     uuid::Uuid,
 };
@@ -301,7 +301,7 @@ pub async fn validate_signatures(
 
 /// A single signature validation function
 async fn validate_signature<Provider>(
-    cose_sign: &CoseSign, signature: &CoseSignature, kid: &IdUri, provider: &Provider,
+    cose_sign: &CoseSign, signature: &CoseSignature, kid: &CatalystId, provider: &Provider,
     report: &ProblemReport,
 ) -> anyhow::Result<bool>
 where

@@ -1,7 +1,7 @@
 //! Integration test for signature validation part.
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
-use catalyst_types::id_uri::role_index::RoleId;
+use catalyst_types::catalyst_id::role_index::RoleId;
 use common::test_metadata;
 use ed25519_dalek::ed25519::signature::Signer;
 
