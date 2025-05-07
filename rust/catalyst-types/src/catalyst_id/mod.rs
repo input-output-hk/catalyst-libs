@@ -26,7 +26,7 @@ use key_rotation::KeyRotation;
 use role_index::RoleId;
 
 /// Catalyst ID
-/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_catalyst_id/catalyst-id/>
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/>
 ///
 /// Identity of Catalyst Registration.
 /// Optionally also identifies a specific Signed Document Key
