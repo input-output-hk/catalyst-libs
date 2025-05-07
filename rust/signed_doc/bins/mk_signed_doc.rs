@@ -9,7 +9,7 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_signed_doc::{Builder, CatalystSignedDocument, IdUri};
+use catalyst_signed_doc::{Builder, CatalystId, CatalystSignedDocument};
 use clap::Parser;
 
 fn main() {
@@ -39,7 +39,7 @@ enum Cli {
         /// Bip32 extended secret key hex bytes (includes `chain_code`)
         sk_hex: String,
         /// Signer kid
-        kid: IdUri,
+        kid: CatalystId,
     },
     /// Inspects Catalyst Signed Document
     Inspect {

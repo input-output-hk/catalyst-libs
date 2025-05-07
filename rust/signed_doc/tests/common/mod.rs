@@ -3,7 +3,7 @@
 use std::str::FromStr;
 
 use catalyst_signed_doc::*;
-use catalyst_types::id_uri::role_index::RoleId;
+use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
 
 pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
@@ -35,11 +35,11 @@ pub fn create_dummy_key_pair(
 ) -> anyhow::Result<(
     ed25519_dalek::SigningKey,
     ed25519_dalek::VerifyingKey,
-    IdUri,
+    CatalystId,
 )> {
     let sk = create_signing_key();
     let pk = sk.verifying_key();
-    let kid = IdUri::from_str(&format!(
+    let kid = CatalystId::from_str(&format!(
         "id.catalyst://cardano/{}/{role_index}/0",
         base64_url::encode(pk.as_bytes())
     ))?;
@@ -76,7 +76,11 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 
 pub fn create_dummy_signed_doc(
     metadata: serde_json::Value, content: Vec<u8>, with_role_index: RoleId,
-) -> anyhow::Result<(CatalystSignedDocument, ed25519_dalek::VerifyingKey, IdUri)> {
+) -> anyhow::Result<(
+    CatalystSignedDocument,
+    ed25519_dalek::VerifyingKey,
+    CatalystId,
+)> {
     let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
 
     let signed_doc = Builder::new()

@@ -1,6 +1,6 @@
 //! Catalyst Signed Document COSE Signature information.
 
-pub use catalyst_types::id_uri::IdUri;
+pub use catalyst_types::catalyst_id::CatalystId;
 use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
 
@@ -8,7 +8,7 @@ use coset::CoseSignature;
 #[derive(Debug, Clone)]
 pub struct Signature {
     /// Key ID
-    kid: IdUri,
+    kid: CatalystId,
     /// COSE Signature
     signature: CoseSignature,
 }
@@ -16,16 +16,16 @@ pub struct Signature {
 impl Signature {
     /// Convert COSE Signature to `Signature`.
     pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
-        match IdUri::try_from(signature.protected.header.key_id.as_ref()) {
+        match CatalystId::try_from(signature.protected.header.key_id.as_ref()) {
             Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
             Ok(kid) => {
                 report.invalid_value(
                     "COSE signature protected header key ID",
                     &kid.to_string(),
                     &format!(
-                        "COSE signature protected header key ID must be a Catalyst Id URI, missing URI schema {}", IdUri::SCHEME
+                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}", CatalystId::SCHEME
                     ),
-                    "Converting COSE signature header key ID to IdUri",
+                    "Converting COSE signature header key ID to CatalystId",
                 );
                 None
             },
@@ -34,7 +34,7 @@ impl Signature {
                     "COSE signature protected header key ID",
                     &format!("{:?}", &signature.protected.header.key_id),
                     &format!("{e:?}"),
-                    "Converting COSE signature header key ID to IdUri",
+                    "Converting COSE signature header key ID to CatalystId",
                 );
                 None
             },
@@ -49,20 +49,20 @@ pub struct Signatures(Vec<Signature>);
 impl Signatures {
     /// Return a list of author IDs (short form of Catalyst IDs).
     #[must_use]
-    pub(crate) fn authors(&self) -> Vec<IdUri> {
+    pub(crate) fn authors(&self) -> Vec<CatalystId> {
         self.kids().into_iter().map(|k| k.as_short_id()).collect()
     }
 
     /// Return a list of Document's Catalyst IDs.
     #[must_use]
-    pub(crate) fn kids(&self) -> Vec<IdUri> {
+    pub(crate) fn kids(&self) -> Vec<CatalystId> {
         self.0.iter().map(|sig| sig.kid.clone()).collect()
     }
 
     /// Iterator of COSE signatures object with kids.
     pub(crate) fn cose_signatures_with_kids(
         &self,
-    ) -> impl Iterator<Item = (&CoseSignature, &IdUri)> + use<'_> {
+    ) -> impl Iterator<Item = (&CoseSignature, &CatalystId)> + use<'_> {
         self.0.iter().map(|sig| (&sig.signature, &sig.kid))
     }
 

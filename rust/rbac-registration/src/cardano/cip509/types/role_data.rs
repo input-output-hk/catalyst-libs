@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use cardano_blockchain_types::TxnWitness;
-use catalyst_types::{id_uri::role_index::RoleId, problem_report::ProblemReport};
+use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 use pallas::ledger::{
     addresses::{Address, ShelleyAddress},
     primitives::conway,

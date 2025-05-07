@@ -3,7 +3,7 @@
 // cspell: words stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr
 
 use cardano_blockchain_types::{MultiEraBlock, Network, Point, Slot, TransactionId, TxnIndex};
-use catalyst_types::{id_uri::role_index::RoleId, uuid::UuidV4};
+use catalyst_types::{catalyst_id::role_index::RoleId, uuid::UuidV4};
 use uuid::Uuid;
 
 use crate::cardano::cip509::Cip509;

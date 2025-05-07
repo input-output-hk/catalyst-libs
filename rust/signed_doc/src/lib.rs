@@ -24,7 +24,7 @@ pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
 pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
-pub use signature::{IdUri, Signatures};
+pub use signature::{CatalystId, Signatures};
 
 /// A problem report content string
 const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
@@ -138,13 +138,13 @@ impl CatalystSignedDocument {
 
     /// Return a list of Document's Catalyst IDs.
     #[must_use]
-    pub fn kids(&self) -> Vec<IdUri> {
+    pub fn kids(&self) -> Vec<CatalystId> {
         self.inner.signatures.kids()
     }
 
     /// Return a list of Document's author IDs (short form of Catalyst IDs).
     #[must_use]
-    pub fn authors(&self) -> Vec<IdUri> {
+    pub fn authors(&self) -> Vec<CatalystId> {
         self.inner.signatures.authors()
     }
 
