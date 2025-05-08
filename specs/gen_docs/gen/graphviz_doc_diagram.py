@@ -4,13 +4,59 @@ import typing
 from functools import cached_property
 from textwrap import indent
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from spec.doc_clusters import DocCluster
 
 DEFAULT_FONT_NAME = "helvetica"
 DEFAULT_FONT_SIZE = 32
 DEFAULT_FONT_COLOR = "#29235c"
+
+
+class FontTheme(BaseModel):
+    """Theme for a font in a row."""
+
+    face: str | None = Field(default=None)
+    color: str | None = Field(default="#7706E5")
+    bold: bool = Field(default=False)
+    italic: bool = Field(default=False)
+
+    model_config = ConfigDict(extra="forbid")
+
+    def __str__(self) -> str:
+        """Get the theme string for a font."""
+        font_value = ""
+        font_value += "" if self.face is None else f' FACE="{self.face}"'
+        font_value += "" if self.color is None else f' COLOR="{self.color}"'
+        return font_value
+
+    def start_emphasis(self) -> str:
+        """Start Emphasis."""
+        emphasis = ""
+        if self.bold:
+            emphasis += "<B>"
+        if self.italic:
+            emphasis += "<I>"
+        return emphasis
+
+    def end_emphasis(self) -> str:
+        """End Emphasis."""
+        emphasis = ""
+        if self.italic:
+            emphasis += "</I>"
+        if self.bold:
+            emphasis += "</B>"
+        return emphasis
+
+    @classmethod
+    def default_name_theme(cls) -> "FontTheme":
+        """Get Default Theme for Names."""
+        return FontTheme()
+
+    @classmethod
+    def default_value_theme(cls) -> "FontTheme":
+        """Get Default Theme for Values."""
+        return FontTheme(italic=True)
 
 
 class TableRow(BaseModel):
@@ -20,8 +66,10 @@ class TableRow(BaseModel):
     value: str | list[str]
     link: str | None = Field(default=None)
     tooltip: str | None = Field(default=None)
-    name_font: str | None = Field(default=None)
-    value_font: str | None = Field(default=None)
+    name_theme: FontTheme = Field(default_factory=FontTheme.default_name_theme)
+    value_theme: FontTheme = Field(default_factory=FontTheme.default_value_theme)
+
+    model_config = ConfigDict(extra="forbid")
 
     def generate(self, bgcolor: str) -> str:
         """Generate a single row of the table."""
@@ -31,15 +79,29 @@ class TableRow(BaseModel):
 
         link = "" if self.link is None else f' HREF="{self.link}"'
         tooltip = "" if self.tooltip is None else f' TITLE="{self.tooltip}"'
-        value_font = "" if self.value_font is None else f' FACE="{self.value_font}"'
-        name_font = "" if self.name_font is None else f' FACE="{self.name_font}"'
+
+        name = (
+            f"<FONT{self.name_theme}>"
+            f"{self.name_theme.start_emphasis()}"
+            f"{self.name}"
+            f"{self.name_theme.end_emphasis()}"
+            "</FONT>"
+        )
+
+        value = (
+            f"<FONT{self.value_theme}>"
+            f"{self.value_theme.start_emphasis()}"
+            f"{value}"
+            f"{self.value_theme.end_emphasis()}"
+            "</FONT>"
+        )
 
         return f"""        <TR>
             <TD ALIGN="LEFT" PORT="{self.name}" BGCOLOR="{bgcolor}"{link}{tooltip}>
                 <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                     <TR>
-                        <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT{name_font}>{self.name}</FONT></TD>
-                        <TD ALIGN="RIGHT"><FONT{value_font}><I>{value}</I></FONT></TD>
+                        <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200">{name}</TD>
+                        <TD ALIGN="RIGHT">{value}</TD>
                     </TR>
                 </TABLE>
             </TD>
@@ -64,6 +126,8 @@ class TableTheme(BaseModel):
     title_color: str = Field(default="#ffffff")
     row_bg_color: list[str] = Field(default_factory=default_row_bg_color)
     row_bg_color_offset: int = Field(default=0)
+
+    model_config = ConfigDict(extra="forbid")
 
     def table(self) -> str:
         """Generate the set table options."""
@@ -97,6 +161,8 @@ class Cluster(BaseModel):
     """Represents a single cluster."""
 
     name: str
+
+    model_config = ConfigDict(extra="forbid")
 
     @classmethod
     def from_doc_cluster(cls, cluster: DocCluster | None) -> "Cluster | None":
@@ -139,6 +205,8 @@ class DotSignedDoc(BaseModel):
     theme: TableTheme = Field(default_factory=TableTheme)
     rows: list[TableRow] = Field(default_factory=list)
     cluster: Cluster | None = Field(default=None)
+
+    model_config = ConfigDict(extra="forbid")
 
     def add_row(self, row: TableRow) -> None:
         """Add a row of data to the table."""
@@ -192,6 +260,8 @@ class DotLinkTheme(BaseModel):
     lhead: str | None = Field(default=None)
     ltail: str | None = Field(default=None)
 
+    model_config = ConfigDict(extra="forbid")
+
     def __str__(self) -> str:
         """Str."""
         options: list[str] = [
@@ -218,6 +288,8 @@ class DotLinkEnd(BaseModel):
     id: str
     port: str | Cluster | None = Field(default=None)
     dir: str | None = Field(default="e")
+
+    model_config = ConfigDict(extra="forbid")
 
     @cached_property
     def is_cluster(self) -> bool:

@@ -4,7 +4,7 @@ import argparse
 import textwrap
 
 from gen.doc_generator import DocGenerator
-from gen.graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, TableRow
+from gen.graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, FontTheme, TableRow
 from spec.metadata import Metadata
 from spec.optional import OptionalField
 from spec.signed_doc import HeaderType, SignedDoc
@@ -76,7 +76,13 @@ class DocRelationshipFile(DocGenerator):
                     continue
 
                 if meta == "type":
-                    doc_table.add_row(TableRow(name=meta, value=doc_data.type, value_font="Courier"))
+                    doc_table.add_row(
+                        TableRow(
+                            name=meta,
+                            value=doc_data.type,
+                            value_theme=FontTheme(face="Courier", bold=True, italic=True),
+                        )
+                    )
                     continue
 
                 if doc_metadata.format == "Document Reference":
