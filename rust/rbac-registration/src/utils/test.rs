@@ -11,8 +11,6 @@ use crate::cardano::cip509::Cip509;
 /// Test data expected from block.
 #[allow(dead_code)]
 pub struct BlockTestData {
-    /// Auxiliary data of the associated transaction index.
-    pub aux: Vec<u8>,
     /// Block data.
     pub block: MultiEraBlock,
     /// Slot number.
@@ -62,11 +60,8 @@ impl BlockTestData {
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
 pub fn block_1() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_1.block")).unwrap();
-    let txn_index = 0.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 82_004_293.into(),
         role: RoleId::Role0,
         txn_index: 0.into(),
@@ -98,11 +93,8 @@ pub fn block_1() -> BlockTestData {
 /// purpose: ca7a1457-ef9f-4c7f-9c74-7f8c4a4cfa6c
 pub fn block_2() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_2.block")).unwrap();
-    let txn_index = 0.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 77_171_632.into(),
         role: RoleId::Role0,
         txn_index: 0.into(),
@@ -136,11 +128,8 @@ pub fn block_2() -> BlockTestData {
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
 pub fn block_3() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_3.block")).unwrap();
-    let txn_index = 0.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 77_170_639.into(),
         role: RoleId::Role0,
         txn_index: 0.into(),
@@ -177,14 +166,11 @@ pub fn block_3() -> BlockTestData {
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
 pub fn block_4() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_4.block")).unwrap();
-    let txn_index = 1.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 82_004_569.into(),
         role: 4.into(),
-        txn_index,
+        txn_index: 1.into(),
         txn_hash: "eef40a97a4ed1e40c3febd05a84b3ffaa191141b60806c2bba85d9c6879fb378"
             .parse()
             .unwrap(),
@@ -212,11 +198,8 @@ pub fn block_4() -> BlockTestData {
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
 pub fn block_5() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_5.block")).unwrap();
-    let txn_index = 1.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 87_374_283.into(),
         role: RoleId::Role0,
         txn_index: 1.into(),
@@ -247,11 +230,8 @@ pub fn block_5() -> BlockTestData {
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
 pub fn block_6() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_6.block")).unwrap();
-    let txn_index = 4.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 87_374_696.into(),
         role: RoleId::Role0,
         txn_index: 4.into(),
@@ -282,11 +262,8 @@ pub fn block_6() -> BlockTestData {
 /// stake addr: `stake_test1urs8t0ssa3w9wh90ld5tprp3gurxd487rth2qlqk6ernjqcef4ugr`
 pub fn block_7() -> BlockTestData {
     let data = hex::decode(include_str!("../test_data/cardano/conway_7.block")).unwrap();
-    let txn_index = 2.into();
-    let block = block(data);
     BlockTestData {
-        aux: tx_aux(txn_index, &block),
-        block,
+        block: block(data),
         slot: 89_726_597.into(),
         role: RoleId::Role0,
         txn_index: 2.into(),
@@ -310,9 +287,4 @@ fn block(data: Vec<u8>) -> MultiEraBlock {
     // This point is used to bypass validation in the block constructor.
     let previous = Point::fuzzy(0.into());
     MultiEraBlock::new(Network::Preprod, data, &previous, 0.into()).unwrap()
-}
-
-/// Get the transaction auxiliary data.
-fn tx_aux(txn_index: TxnIndex, block: &MultiEraBlock) -> Vec<u8> {
-    block.aux_data().get_raw(txn_index).unwrap().clone()
 }

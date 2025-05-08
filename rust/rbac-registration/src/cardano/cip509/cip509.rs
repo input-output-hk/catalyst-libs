@@ -84,6 +84,8 @@ pub struct Cip509 {
     ///
     /// This field is only present in role 0 registrations.
     catalyst_id: Option<CatalystId>,
+    /// Raw aux data associated with the transaction that CIP509 is attached to,
+    raw_aux_data: Vec<u8>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -133,6 +135,7 @@ impl Cip509 {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
+
         let Some(metadata) = block.txn_metadata(index, MetadatumLabel::CIP509_RBAC) else {
             return Ok(None);
         };
@@ -149,6 +152,8 @@ impl Cip509 {
         };
         let mut cip509 =
             Cip509::decode(&mut decoder, &mut decode_context).context("Failed to decode Cip509")?;
+
+        cip509.raw_aux_data = raw_aux_data.to_vec();
 
         // Perform the validation.
 
@@ -280,6 +285,12 @@ impl Cip509 {
     #[must_use]
     pub fn validation_signature(&self) -> Option<&ValidationSignature> {
         self.validation_signature.as_ref()
+    }
+
+    /// Raw aux data associated with the transaction that CIP509 is attached to,
+    #[must_use]
+    pub fn raw_aux_data(&self) -> &[u8] {
+        self.raw_aux_data.as_ref()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
@@ -422,6 +433,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             txn_hash,
             origin: decode_context.origin.clone(),
             catalyst_id: None,
+            raw_aux_data: Vec::new(),
             report: decode_context.report.clone(),
         })
     }

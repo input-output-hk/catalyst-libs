@@ -37,14 +37,12 @@ impl RegistrationChain {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `raw_aux_data`: The raw auxiliary data from the transaction containing this
-    ///   `cip509`.
     ///
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn new(cip509: Cip509, raw_aux_data: &[u8]) -> anyhow::Result<Self> {
-        let inner = RegistrationChainInner::new(cip509, raw_aux_data)?;
+    pub fn new(cip509: Cip509) -> anyhow::Result<Self> {
+        let inner = RegistrationChainInner::new(cip509)?;
 
         Ok(Self {
             inner: Arc::new(inner),
@@ -59,10 +57,10 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn update(&self, cip509: Cip509, raw_aux_data: &[u8]) -> anyhow::Result<Self> {
+    pub fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
         let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
         let new_inner = match latest_signing_pk {
-            Some((signing_pk, _)) => self.inner.update(cip509, signing_pk, raw_aux_data)?,
+            Some((signing_pk, _)) => self.inner.update(cip509, signing_pk)?,
             None => {
                 bail!("No latest signing key found for role 0, cannot perform signature validation")
             },
@@ -265,13 +263,11 @@ impl RegistrationChainInner {
     ///
     /// # Arguments
     /// - `cip509` - The CIP509.
-    /// - `raw_aux_data`: The raw auxiliary data from the transaction containing this
-    ///   `cip509`.
     ///
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn new(cip509: Cip509, raw_aux_data: &[u8]) -> anyhow::Result<Self> {
+    fn new(cip509: Cip509) -> anyhow::Result<Self> {
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
             bail!("Invalid chain root, previous transaction ID should be None.");
@@ -283,6 +279,7 @@ impl RegistrationChainInner {
         let point_tx_idx = cip509.origin().clone();
         let current_tx_id_hash = cip509.txn_hash();
         let validation_signature = cip509.validation_signature().cloned();
+        let raw_aux_data = cip509.raw_aux_data().to_vec();
         let (purpose, registration, payment_history) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
@@ -313,7 +310,7 @@ impl RegistrationChainInner {
             .and_then(|key| key.data().extract_pk())
             .ok_or_else(|| anyhow::anyhow!("No valid signing key found for role 0"))?;
 
-        check_validation_signature(validation_signature, raw_aux_data, signing_pk)?;
+        check_validation_signature(validation_signature, &raw_aux_data, signing_pk)?;
 
         let purpose = vec![purpose];
         let certificate_uris = registration.certificate_uris.clone();
@@ -360,9 +357,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn update(
-        &self, cip509: Cip509, signing_pk: VerifyingKey, raw_aux_data: &[u8],
-    ) -> anyhow::Result<Self> {
+    fn update(&self, cip509: Cip509, signing_pk: VerifyingKey) -> anyhow::Result<Self> {
         let mut new_inner = self.clone();
 
         let Some(prv_tx_id) = cip509.previous_transaction() else {
@@ -375,7 +370,7 @@ impl RegistrationChainInner {
             // This should be done before updating the signing key
             check_validation_signature(
                 cip509.validation_signature().cloned(),
-                raw_aux_data,
+                cip509.raw_aux_data(),
                 signing_pk,
             )?;
 
@@ -472,7 +467,7 @@ mod test {
         data.assert_valid(&registration);
 
         // Create a chain with the first registration.
-        let chain = RegistrationChain::new(registration, &data.aux).unwrap();
+        let chain = RegistrationChain::new(registration).unwrap();
         assert_eq!(chain.purpose(), &[data.purpose]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().first().unwrap();
@@ -498,7 +493,7 @@ mod test {
             .unwrap();
         assert!(registration.report().is_problematic());
 
-        let error = chain.update(registration, &data.aux).unwrap_err();
+        let error = chain.update(registration).unwrap_err();
         let error = format!("{error:?}");
         assert!(
             error.contains("Invalid previous transaction ID"),
@@ -512,7 +507,7 @@ mod test {
             .unwrap()
             .unwrap();
         data.assert_valid(&registration);
-        let update = chain.update(registration, &data.aux).unwrap();
+        let update = chain.update(registration).unwrap();
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
         assert!(update.role_data_record().contains_key(&data.role));
