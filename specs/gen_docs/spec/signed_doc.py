@@ -6,7 +6,6 @@ import datetime
 import json
 import textwrap
 import typing
-from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
 
@@ -30,14 +29,6 @@ class HeaderType(Enum):
     DOCUMENT = 1
     SIGNATURE = 2
     METADATA = 3
-
-
-@dataclass(kw_only=True, frozen=True)
-class MetadataFormatx:
-    """Metadata Formats Data Definition."""
-
-    cddl: str
-    description: str
 
 
 HEADERS: typing.ClassVar[dict[str, dict[str, str]]] = {
