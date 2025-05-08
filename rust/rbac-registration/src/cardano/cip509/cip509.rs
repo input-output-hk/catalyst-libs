@@ -2,7 +2,10 @@
 //! Doc Reference: <https://github.com/input-output-hk/catalyst-CIPs/tree/x509-envelope-metadata/CIP-XXXX>
 //! CDDL Reference: <https://github.com/input-output-hk/catalyst-CIPs/blob/x509-envelope-metadata/CIP-XXXX/x509-envelope.cddl>
 
-use std::{borrow::Cow, collections::HashMap};
+use std::{
+    borrow::Cow,
+    collections::{HashMap, HashSet},
+};
 
 use anyhow::{anyhow, Context};
 use cardano_blockchain_types::{
@@ -274,7 +277,7 @@ impl Cip509 {
 
     /// Returns a list of role 0 stake addresses.
     #[must_use]
-    pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
+    pub fn role_0_stake_addresses(&self) -> HashSet<StakeAddress> {
         self.metadata
             .as_ref()
             .map(|m| m.certificate_uris.stake_addresses(0))
