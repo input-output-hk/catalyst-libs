@@ -132,8 +132,6 @@ fn spki_oid_as_asn1_rs_oid(oid: &'_ spki::ObjectIdentifier) -> Oid<'_> {
 }
 
 /// Creates [`VerifyingKey`] from the given public key.
-///
-/// Returns [`None`] if public key is incorrect in that context.
 fn verifying_key(public_key: &[u8]) -> Result<VerifyingKey, Error> {
     public_key
         .first_chunk()
