@@ -18,7 +18,9 @@ use catalyst_types::{conversion::from_saturating, mmap_file::MemoryMapFile};
 use dashmap::DashSet;
 use memx::memcmp;
 use mithril_client::{
-    common::CompressionAlgorithm, snapshot_downloader::SnapshotDownloader, MithrilResult,
+    common::CompressionAlgorithm,
+    file_downloader::{DownloadEvent, FileDownloader, FileDownloaderUri},
+    MithrilResult,
 };
 use tar::{Archive, EntryType};
 use tokio::{fs::create_dir_all, task::spawn_blocking};
@@ -323,11 +325,13 @@ impl MithrilTurboDownloader {
         })
         .await;
 
+        // Must always be called when download ends, regardless of the reason.
+        stats::mithril_dl_finished(self.inner.cfg.chain, None);
+
         if let Ok(result) = result {
             return result;
         }
 
-        stats::mithril_dl_finished(self.inner.cfg.chain, None);
         bail!("Download and Dedup task failed");
     }
 }
@@ -341,11 +345,33 @@ fn get_file_size_sync(file: &Path) -> Option<u64> {
 }
 
 #[async_trait]
-impl SnapshotDownloader for MithrilTurboDownloader {
+impl FileDownloader for MithrilTurboDownloader {
     async fn download_unpack(
-        &self, location: &str, target_dir: &Path, _compression_algorithm: CompressionAlgorithm,
-        _download_id: &str, _snapshot_size: u64,
+        &self, location: &FileDownloaderUri, file_size: u64, target_dir: &Path,
+        compression_algorithm: Option<CompressionAlgorithm>, download_event_type: DownloadEvent,
     ) -> MithrilResult<()> {
+        debug!(
+            location=?location,
+            file_size=file_size,
+            target_dir=?target_dir,
+            compression_algorithm=?compression_algorithm,
+            download_event_type=?download_event_type,
+            "Download And Unpack Mithril."
+        );
+
+        // We only support full downloads for now.
+        if !matches!(download_event_type, DownloadEvent::Full {
+            download_id: _,
+            digest: _
+        }) {
+            bail!("Unsupported Download Event Type: {:?}", download_event_type);
+        }
+
+        let location = location.as_str();
+
+        // Probe was removed in FileDownloader, so call it directly
+        self.probe(location).await?;
+
         self.create_directories(target_dir).await?;
 
         // DL Start stats set after DL actually started inside the probe call.
@@ -370,7 +396,9 @@ impl SnapshotDownloader for MithrilTurboDownloader {
 
         Ok(())
     }
+}
 
+impl MithrilTurboDownloader {
     async fn probe(&self, location: &str) -> MithrilResult<()> {
         debug!("Probe Snapshot location='{location}'.");
         let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
