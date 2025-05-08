@@ -31,7 +31,7 @@ class HeaderType(Enum):
     METADATA = 3
 
 
-HEADERS: typing.ClassVar[dict[str, dict[str, str]]] = {
+HEADERS: dict[str, dict[str, str]] = {
     HeaderType.DOCUMENT: {
         "headers": "cose_headers",
         "order": "cose_headers_order",
