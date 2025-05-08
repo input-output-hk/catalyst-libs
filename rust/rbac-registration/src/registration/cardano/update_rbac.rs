@@ -3,7 +3,7 @@
 use std::collections::HashMap;
 
 use c509_certificate::c509::C509;
-use catalyst_types::id_uri::role_index::RoleId;
+use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::VerifyingKey;
 use tracing::warn;
 use x509_cert::certificate::Certificate as X509Certificate;

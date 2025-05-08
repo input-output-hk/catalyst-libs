@@ -1,7 +1,7 @@
 //! Integration test for COSE decoding part.
 
 use catalyst_signed_doc::*;
-use catalyst_types::id_uri::role_index::RoleId;
+use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use ed25519_dalek::ed25519::signature::Signer;
 

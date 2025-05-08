@@ -3,8 +3,8 @@
 use std::collections::HashMap;
 
 use catalyst_types::{
+    catalyst_id::role_index::RoleId,
     cbor_utils::{report_duplicated_key, report_missing_keys},
-    id_uri::role_index::RoleId,
     problem_report::ProblemReport,
 };
 use cbork_utils::decode_helper::{decode_any, decode_array_len, decode_helper, decode_map_len};

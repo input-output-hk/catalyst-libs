@@ -3,7 +3,8 @@
 use std::collections::{HashMap, HashSet};
 
 use catalyst_types::{
-    cbor_utils::report_duplicated_key, id_uri::role_index::RoleId, problem_report::ProblemReport,
+    catalyst_id::role_index::RoleId, cbor_utils::report_duplicated_key,
+    problem_report::ProblemReport,
 };
 use cbork_utils::decode_helper::{
     decode_any, decode_array_len, decode_bytes, decode_helper, decode_map_len,
