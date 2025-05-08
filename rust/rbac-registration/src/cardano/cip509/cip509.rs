@@ -5,11 +5,13 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use anyhow::{anyhow, Context};
-use cardano_blockchain_types::{MetadatumLabel, MultiEraBlock, TransactionId, TxnIndex};
+use cardano_blockchain_types::{
+    MetadatumLabel, MultiEraBlock, StakeAddress, TransactionId, TxnIndex,
+};
 use catalyst_types::{
+    catalyst_id::{role_index::RoleId, CatalystId},
     cbor_utils::{report_duplicated_key, report_missing_keys},
     hashes::{Blake2b256Hash, BLAKE_2B256_SIZE},
-    id_uri::IdUri,
     problem_report::ProblemReport,
     uuid::UuidV4,
 };
@@ -33,7 +35,7 @@ use uuid::Uuid;
 use crate::cardano::cip509::{
     decode_context::DecodeContext,
     rbac::Cip509RbacMetadata,
-    types::{PaymentHistory, RoleNumber, TxInputHash, ValidationSignature},
+    types::{PaymentHistory, TxInputHash, ValidationSignature},
     utils::Cip0134UriSet,
     validation::{
         validate_aux, validate_role_data, validate_self_sign_cert, validate_stake_public_key,
@@ -81,7 +83,7 @@ pub struct Cip509 {
     /// A catalyst ID.
     ///
     /// This field is only present in role 0 registrations.
-    catalyst_id: Option<IdUri>,
+    catalyst_id: Option<CatalystId>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -157,7 +159,7 @@ impl Cip509 {
             txn.transaction_body.auxiliary_data_hash.as_ref(),
             &cip509.report,
         );
-        if cip509.role_data(RoleNumber::ROLE_0).is_some() {
+        if cip509.role_data(RoleId::Role0).is_some() {
             // The following check is only performed for the role 0.
             validate_stake_public_key(txn, cip509.certificate_uris(), &cip509.report);
         }
@@ -195,7 +197,7 @@ impl Cip509 {
 
     /// Returns all role numbers present in this `Cip509` instance.
     #[must_use]
-    pub fn all_roles(&self) -> Vec<RoleNumber> {
+    pub fn all_roles(&self) -> Vec<RoleId> {
         if let Some(metadata) = &self.metadata {
             metadata.role_data.keys().copied().collect()
         } else {
@@ -205,7 +207,7 @@ impl Cip509 {
 
     /// Returns a role data for the given role if it is present.
     #[must_use]
-    pub fn role_data(&self, role: RoleNumber) -> Option<&RoleData> {
+    pub fn role_data(&self, role: RoleId) -> Option<&RoleData> {
         self.metadata.as_ref().and_then(|m| m.role_data.get(&role))
     }
 
@@ -253,8 +255,17 @@ impl Cip509 {
 
     /// Returns a Catalyst ID of this registration if role 0 is present.
     #[must_use]
-    pub fn catalyst_id(&self) -> Option<&IdUri> {
+    pub fn catalyst_id(&self) -> Option<&CatalystId> {
         self.catalyst_id.as_ref()
+    }
+
+    /// Returns a list of role 0 stake addresses.
+    #[must_use]
+    pub fn role_0_stake_addresses(&self) -> Vec<StakeAddress> {
+        self.metadata
+            .as_ref()
+            .map(|m| m.certificate_uris.stake_addresses(0))
+            .unwrap_or_default()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and

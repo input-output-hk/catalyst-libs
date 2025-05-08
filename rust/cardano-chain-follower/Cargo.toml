@@ -58,6 +58,14 @@ hickory-resolver = { version = "0.24.2", features = ["dns-over-rustls"] }
 moka = { version = "0.12.9", features = ["sync"] }
 cpu-time = "1.0.0"
 
+# Its a transitive dependency of the "mithril-client" crate,
+# but its breaks API after version "0.2.21".
+mithril-build-script = { version = "=0.2.19" }
+
+[package.metadata.cargo-machete]
+# remove that after fixing issues with latest crates
+ignored = ["mithril-build-script"]
+
 [dev-dependencies]
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
 test-log = { version = "0.2.16", default-features = false, features = [

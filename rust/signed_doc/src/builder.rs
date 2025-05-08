@@ -1,5 +1,5 @@
 //! Catalyst Signed Document Builder.
-use catalyst_types::{id_uri::IdUri, problem_report::ProblemReport};
+use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
 
 use crate::{
     signature::Signature, CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata,
@@ -55,7 +55,7 @@ impl Builder {
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
-        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: &IdUri,
+        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: &CatalystId,
     ) -> anyhow::Result<Self> {
         let cose_sign = self
             .0
