@@ -678,6 +678,7 @@ impl TryFrom<&[u8]> for CatalystId {
 
 #[cfg(test)]
 mod tests {
+    use chrono::{DateTime, Utc};
     use ed25519_dalek::SigningKey;
     use rand::rngs::OsRng;
 
@@ -699,8 +700,28 @@ mod tests {
     /// Tests that deserialization and re-serialization round trip correctly
     fn test_catalyst_id_from_str() {
         for id_string in CATALYST_ID_TEST_VECTOR {
+            let username = id_string.split_once('@').map(|s| s.0);
+            let (username, nonce) = username
+                .and_then(|s| s.split_once(':').map(|(u, n)| (u, Some(n))))
+                .or_else(|| username.map(|u| (u, None)))
+                .unzip();
+
+            let nonce = nonce.flatten();
+            let username = username.map(String::from);
+            let nonce = nonce
+                .map(|n| n.parse::<i64>().unwrap())
+                .map(|n| DateTime::<Utc>::from_timestamp(n, 0).unwrap());
+
+            let encryption =
+                id_string.contains(format!("#{}", CatalystId::ENCRYPTION_FRAGMENT).as_str());
+
             let id = id_string.parse::<CatalystId>().unwrap();
+
             assert_eq!(format!("{id}"), id_string);
+            assert_eq!(username, id.username());
+            assert_eq!(nonce, id.nonce());
+            assert!(id.is_signature_key() ^ encryption);
+            assert!(id.is_encryption_key() ^ !encryption);
         }
     }
 
