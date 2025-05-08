@@ -18,8 +18,7 @@ use catalyst_types::{conversion::from_saturating, mmap_file::MemoryMapFile};
 use dashmap::DashSet;
 use memx::memcmp;
 use mithril_client::{
-    common::CompressionAlgorithm,
-    file_downloader::{DownloadEvent, FileDownloader, FileDownloaderUri},
+    common::CompressionAlgorithm, snapshot_downloader::SnapshotDownloader, MithrilResult,
 };
 use tar::{Archive, EntryType};
 use tokio::{fs::create_dir_all, task::spawn_blocking};
@@ -89,7 +88,7 @@ impl Inner {
     /// The new file is extracted to an in-memory buffer.
     /// If they compare the same, the original file is `HardLinked` to the new file name.
     /// Otherwise the new file buffer is saved to disk with the new file name.
-    fn dl_and_dedup(&self) -> anyhow::Result<()> {
+    fn dl_and_dedup(&self, _location: &str, _target_dir: &Path) -> MithrilResult<()> {
         let mut archive = self.create_archive_extractor()?;
 
         // Iterate the files in the archive.
@@ -188,7 +187,7 @@ impl Inner {
     /// Create a TAR archive extractor from the downloading file and a zstd decompressor.
     fn create_archive_extractor(
         &self,
-    ) -> anyhow::Result<Archive<Decoder<'static, BufReader<BufReader<ParallelDownloadProcessor>>>>>
+    ) -> MithrilResult<Archive<Decoder<'static, BufReader<BufReader<ParallelDownloadProcessor>>>>>
     {
         let Some(dl_handler) = self.dl_handler.get() else {
             bail!("Failed to get the Parallel Download processor!");
@@ -224,7 +223,7 @@ impl Inner {
     /// Check if a given path from the archive is able to be deduplicated.
     fn can_deduplicate(
         rel_file: &Path, file_size: u64, prev_file: Option<&PathBuf>,
-    ) -> anyhow::Result<MemoryMapFile> {
+    ) -> MithrilResult<MemoryMapFile> {
         // Can't dedup if the current file is not de-dupable (must be immutable)
         if rel_file.starts_with("immutable") {
             // Can't dedup if we don't have a previous file to dedup against.
@@ -246,7 +245,7 @@ impl Inner {
     }
 
     /// Open a file using mmap for performance.
-    fn mmap_open_sync(path: &Path) -> anyhow::Result<MemoryMapFile> {
+    fn mmap_open_sync(path: &Path) -> MithrilResult<MemoryMapFile> {
         match MemoryMapFile::try_from(path) {
             Ok(mmap_file) => Ok(mmap_file),
             Err(error) => {
@@ -291,7 +290,7 @@ impl MithrilTurboDownloader {
     }
 
     /// Create directories required to exist for download to succeed.
-    async fn create_directories(&self, target_dir: &Path) -> anyhow::Result<()> {
+    async fn create_directories(&self, target_dir: &Path) -> MithrilResult<()> {
         if let Err(error) = create_dir_all(target_dir).await {
             let msg = format!(
                 "Target directory {} could not be created: {}",
@@ -305,26 +304,11 @@ impl MithrilTurboDownloader {
     }
 
     /// Parallel Download, Extract and Dedup the Mithril Archive.
-    async fn dl_and_dedup(&self, location: &str) -> anyhow::Result<()> {
+    async fn dl_and_dedup(&self, location: &str, target_dir: &Path) -> MithrilResult<()> {
         // Get a copy of the inner data to use in the sync download task.
         let inner = self.inner.clone();
-
-        debug!("Download Snapshot location='{location}'.");
-        let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
-        let dl_processor =
-            ParallelDownloadProcessor::new(location, dl_config, inner.cfg.chain).await?;
-
-        // Decompress and extract and de-dupe each file in the archive.
-        stats::mithril_extract_started(inner.cfg.chain);
-
-        // We also immediately start downloading now.
-        stats::mithril_dl_started(inner.cfg.chain);
-
-        // Save the DownloadProcessor in the inner struct for use to process the downloaded data.
-        self.inner
-            .dl_handler
-            .set(dl_processor)
-            .map_err(|_| anyhow!("Failed to set the inner dl_handler. Must already be set?"))?;
+        let location = location.to_owned();
+        let target_dir = target_dir.to_owned();
 
         // This is fully synchronous IO, so do it on a sync thread.
         let result = spawn_blocking(move || {
@@ -333,16 +317,39 @@ impl MithrilTurboDownloader {
                 stats::thread::name::MITHRIL_DL_DEDUP,
                 false,
             );
-            let result = inner.dl_and_dedup();
+            let result = inner.dl_and_dedup(&location, &target_dir);
             stats::stop_thread(inner.cfg.chain, stats::thread::name::MITHRIL_DL_DEDUP);
             result
         })
-        .await
-        .map_err(|_| anyhow!("Download and Dedup task failed"));
+        .await;
 
-        // recording stats before returning errors
+        if let Ok(result) = result {
+            return result;
+        }
+
         stats::mithril_dl_finished(self.inner.cfg.chain, None);
-        result??;
+        bail!("Download and Dedup task failed");
+    }
+}
+
+/// Get the size of a particular file.  None = failed to get size (doesn't matter why).
+fn get_file_size_sync(file: &Path) -> Option<u64> {
+    let Ok(metadata) = file.metadata() else {
+        return None;
+    };
+    Some(metadata.len())
+}
+
+#[async_trait]
+impl SnapshotDownloader for MithrilTurboDownloader {
+    async fn download_unpack(
+        &self, location: &str, target_dir: &Path, _compression_algorithm: CompressionAlgorithm,
+        _download_id: &str, _snapshot_size: u64,
+    ) -> MithrilResult<()> {
+        self.create_directories(target_dir).await?;
+
+        // DL Start stats set after DL actually started inside the probe call.
+        self.dl_and_dedup(location, target_dir).await?;
 
         let tot_files = self.inner.tot_files.load(Ordering::SeqCst);
         let chg_files = self.inner.chg_files.load(Ordering::SeqCst);
@@ -359,30 +366,27 @@ impl MithrilTurboDownloader {
             new_files,
         );
 
+        debug!("Download and Unpack finished='{location}' to '{target_dir:?}'.");
+
         Ok(())
     }
-}
 
-/// Get the size of a particular file.  None = failed to get size (doesn't matter why).
-fn get_file_size_sync(file: &Path) -> Option<u64> {
-    let Ok(metadata) = file.metadata() else {
-        return None;
-    };
-    Some(metadata.len())
-}
+    async fn probe(&self, location: &str) -> MithrilResult<()> {
+        debug!("Probe Snapshot location='{location}'.");
+        let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
+        let dl_processor =
+            ParallelDownloadProcessor::new(location, dl_config, self.inner.cfg.chain).await?;
 
-#[async_trait]
-impl FileDownloader for MithrilTurboDownloader {
-    async fn download_unpack(
-        &self, location: &FileDownloaderUri, _file_size: u64, target_dir: &Path,
-        _compression_algorithm: Option<CompressionAlgorithm>, _download_event_type: DownloadEvent,
-    ) -> anyhow::Result<()> {
-        self.create_directories(target_dir).await?;
+        // Decompress and extract and de-dupe each file in the archive.
+        stats::mithril_extract_started(self.inner.cfg.chain);
 
-        let location = location.as_str();
-        self.dl_and_dedup(location).await?;
+        // We also immediately start downloading now.
+        stats::mithril_dl_started(self.inner.cfg.chain);
 
-        debug!("Download and Unpack finished='{location}' to '{target_dir:?}'.");
+        // Save the DownloadProcessor in the inner struct for use to process the downloaded data.
+        if let Err(_error) = self.inner.dl_handler.set(dl_processor) {
+            bail!("Failed to set the inner dl_handler. Must already be set?");
+        }
 
         Ok(())
     }
