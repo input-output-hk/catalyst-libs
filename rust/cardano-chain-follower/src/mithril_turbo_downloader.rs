@@ -351,11 +351,11 @@ impl FileDownloader for MithrilTurboDownloader {
         compression_algorithm: Option<CompressionAlgorithm>, download_event_type: DownloadEvent,
     ) -> MithrilResult<()> {
         debug!(
-            location=?location,
-            file_size=file_size,
-            target_dir=?target_dir,
-            compression_algorithm=?compression_algorithm,
-            download_event_type=?download_event_type,
+            ?location,
+            file_size,
+            ?target_dir,
+            ?compression_algorithm,
+            ?download_event_type,
             "Download And Unpack Mithril."
         );
 
