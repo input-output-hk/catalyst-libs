@@ -3,7 +3,7 @@ package signed_docs
 // Proposal Document Definition
 
 docs: #DocumentDefinitions & {
-	"Election Parameters": {
+	"Decision Parameters": {
 		description: """
 			Parameters which define an individual voting event.
 			"""

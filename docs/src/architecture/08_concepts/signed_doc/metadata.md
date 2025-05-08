@@ -207,7 +207,7 @@ The document version must always be >= the document ID.
 |  | [Brand Parameters](./docs/brand_parameters.md) |
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
-|  | [Election Parameters](./docs/election_parameters.md) |
+|  | [Decision Parameters](./docs/decision_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -331,7 +331,7 @@ addition to the author.
 | Valid References | [Brand Parameters](./docs/brand_parameters.md) |
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
-|  | [Election Parameters](./docs/election_parameters.md) |
+|  | [Decision Parameters](./docs/decision_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 

@@ -1,11 +1,11 @@
-digraph "Election Parameters" {
+digraph "Decision Parameters" {
     rankdir="LR"
     graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
     node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
     edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
-    label="Election Parameters Document
+    label="Decision Parameters Document
 Relationships"
     fontcolor="#1d71b8"
     fontsize=50
@@ -64,13 +64,13 @@ Relationships"
 
     }
 
-    "Election Parameters" [
-        id="Election Parameters";
+    "Decision Parameters" [
+        id="Decision Parameters";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../election_parameters/">
-                    <FONT COLOR="#ffffff"><B> Election Parameters </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../decision_parameters/">
+                    <FONT COLOR="#ffffff"><B> Decision Parameters </B></FONT>
                 </TD>
             </TR>
             <TR>
@@ -129,5 +129,5 @@ Relationships"
     ];
 
 
-    "Election Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Decision Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
 }

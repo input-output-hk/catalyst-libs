@@ -99,13 +99,13 @@ Relationships"
 
     }
 
-    "Election Parameters" [
-        id="Election Parameters";
+    "Decision Parameters" [
+        id="Decision Parameters";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../election_parameters/">
-                    <FONT COLOR="#ffffff"><B> Election Parameters </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../decision_parameters/">
+                    <FONT COLOR="#ffffff"><B> Decision Parameters </B></FONT>
                 </TD>
             </TR>
 
@@ -220,7 +220,7 @@ Relationships"
 
 
     "Category Parameters":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Election Parameters":"title":e -> "Category Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Decision Parameters":"title":e -> "Category Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"title":e -> "Category Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"title":e -> "Category Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment Meta Template":"title":e -> "Category Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]

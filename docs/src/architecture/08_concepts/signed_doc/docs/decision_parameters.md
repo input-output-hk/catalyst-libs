@@ -1,4 +1,4 @@
-# Election Parameters
+# Decision Parameters
 
 ## Description
 
@@ -6,8 +6,8 @@ Parameters which define an individual voting event.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot election_parameters.dot.svg
-{{ include_file('./../diagrams/election_parameters.dot', indent=4) }}
+```graphviz dot decision_parameters.dot.svg
+{{ include_file('./../diagrams/decision_parameters.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->

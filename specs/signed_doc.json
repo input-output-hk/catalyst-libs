@@ -9,7 +9,7 @@
     "Campaign": "5ef32d5d-f240-462c-a7a4-ba4af221fa23",
     "Category": "818938c3-3139-4daa-afe6-974c78488e95",
     "Comment": "b679ded3-0e7c-41ba-89f8-da62a17898ea",
-    "Election": "788ff4c6-d65a-451f-bb33-575fe056b411",
+    "Decision": "788ff4c6-d65a-451f-bb33-575fe056b411",
     "ModerationAction": "a5d232b8-5e03-4117-9afd-be32b878fcdd",
     "Proposal": "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
     "SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65",
@@ -798,7 +798,7 @@
         }
       ]
     },
-    "Election Parameters": {
+    "Decision Parameters": {
       "authors": {},
       "description": "Parameters which define an individual voting event.",
       "headers": {
@@ -2137,7 +2137,7 @@
         "Brand Parameters",
         "Campaign Parameters",
         "Category Parameters",
-        "Election Parameters"
+        "Decision Parameters"
       ],
       "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
     },
@@ -2161,7 +2161,7 @@
         "Brand Parameters",
         "Campaign Parameters",
         "Category Parameters",
-        "Election Parameters"
+        "Decision Parameters"
       ],
       "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
     },
