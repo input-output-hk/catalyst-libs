@@ -360,10 +360,7 @@ impl FileDownloader for MithrilTurboDownloader {
         );
 
         // We only support full downloads for now.
-        if !matches!(download_event_type, DownloadEvent::Full {
-            download_id: _,
-            digest: _
-        }) {
+        if !matches!(download_event_type, DownloadEvent::Full { .. }) {
             bail!("Unsupported Download Event Type: {:?}", download_event_type);
         }
 
