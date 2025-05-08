@@ -9,8 +9,8 @@ use std::borrow::Cow;
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Network, TxnWitness, VKeyHash};
 use catalyst_types::{
+    catalyst_id::{role_index::RoleId, CatalystId},
     hashes::{Blake2b128Hash, Blake2b256Hash},
-    id_uri::IdUri,
     problem_report::ProblemReport,
 };
 use ed25519_dalek::{Signature, VerifyingKey, PUBLIC_KEY_LENGTH};
@@ -29,7 +29,7 @@ use super::{
 };
 use crate::cardano::cip509::{
     rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    RoleNumber, SimplePublicKeyType, X509DerCert,
+    SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -297,12 +297,12 @@ fn validate_x509_self_signed_cert(c: &X509, index: usize, report: &ProblemReport
 #[allow(clippy::similar_names)]
 pub fn validate_role_data(
     metadata: &Cip509RbacMetadata, subnet: Network, report: &ProblemReport,
-) -> Option<IdUri> {
+) -> Option<CatalystId> {
     let context = "Role data validation";
 
     // There should be some role data
     if !metadata.role_data.is_empty() {
-        if metadata.role_data.contains_key(&RoleNumber::ROLE_0) {
+        if metadata.role_data.contains_key(&RoleId::Role0) {
             // For the role 0 there must be exactly once certificate and it must not have `deleted`,
             // `undefined` or `C509CertInMetadatumReference` values.
             if matches!(metadata.x509_certs.first(), Some(X509DerCert::X509Cert(_)))
@@ -365,11 +365,13 @@ pub fn validate_role_data(
         );
     }
 
-    validate_role_numbers(metadata.role_data.keys(), context, report);
+    for unknown_role in metadata.role_data.keys().filter(|r| r.is_unknown()) {
+        report.other(&format!("Unknown role found: {unknown_role}"), context);
+    }
 
     let mut catalyst_id = None;
     for (number, data) in &metadata.role_data {
-        if number == &RoleNumber::ROLE_0 {
+        if number == &RoleId::Role0 {
             catalyst_id = validate_role_0(data, metadata, subnet, context, report);
         } else {
             if let Some(signing_key) = data.signing_key() {
@@ -397,24 +399,11 @@ pub fn validate_role_data(
     catalyst_id
 }
 
-/// Checks that there are no unknown roles.
-fn validate_role_numbers<'a>(
-    roles: impl Iterator<Item = &'a RoleNumber> + 'a, context: &str, report: &ProblemReport,
-) {
-    let known_roles = &[RoleNumber::ROLE_0, 3.into()];
-
-    for role in roles {
-        if !known_roles.contains(role) {
-            report.other(&format!("Unknown role found: {role:?}"), context);
-        }
-    }
-}
-
 /// Checks that the role 0 data is correct.
 fn validate_role_0(
     role: &RoleData, metadata: &Cip509RbacMetadata, subnet: Network, context: &str,
     report: &ProblemReport,
-) -> Option<IdUri> {
+) -> Option<CatalystId> {
     if let Some(key) = role.encryption_key() {
         report.invalid_value(
             "Role 0 encryption key",
@@ -445,7 +434,7 @@ fn validate_role_0(
             match metadata.x509_certs.first() {
                 Some(X509DerCert::X509Cert(cert)) => {
                     // All good: role 0 references a valid X509 certificate.
-                    catalyst_id = x509_cert_key(cert, context, report).map(|k| IdUri::new(network, Some(&subnet.to_string()), k));
+                    catalyst_id = x509_cert_key(cert, context, report).map(|k| CatalystId::new(network, Some(&subnet.to_string()), k));
                 }
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
@@ -455,7 +444,7 @@ fn validate_role_0(
             match metadata.c509_certs.first() {
                 Some(C509Cert::C509Certificate(cert)) => {
                     // All good: role 0 references a valid C509 certificate.
-                    catalyst_id = c509_cert_key(cert, context, report).map(|k| IdUri::new(network, Some(&subnet.to_string()), k));
+                    catalyst_id = c509_cert_key(cert, context, report).map(|k| CatalystId::new(network, Some(&subnet.to_string()), k));
                 }
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),
@@ -619,7 +608,7 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report.contains("Unknown role found: RoleNumber(4)"));
+        assert!(report.contains("Unknown role found: 4"));
     }
 
     #[test]

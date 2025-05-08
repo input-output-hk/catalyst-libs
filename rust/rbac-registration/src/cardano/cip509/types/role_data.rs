@@ -3,7 +3,7 @@
 use std::{borrow::Cow, collections::HashMap};
 
 use cardano_blockchain_types::TxnWitness;
-use catalyst_types::problem_report::ProblemReport;
+use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 use pallas::ledger::{
     addresses::{Address, ShelleyAddress},
     primitives::conway,
@@ -13,7 +13,7 @@ use pallas::ledger::{
 use crate::cardano::cip509::{
     rbac::role_data::CborRoleData,
     utils::cip19::{compare_key_hash, extract_key_hash},
-    KeyLocalRef, RoleNumber,
+    KeyLocalRef,
 };
 
 /// A role data.
@@ -33,7 +33,7 @@ impl RoleData {
     /// Create an instance of role data.
     #[must_use]
     pub fn new(data: CborRoleData, txn: &conway::MintedTx, report: &ProblemReport) -> Self {
-        let payment_key = if data.number == Some(RoleNumber::ROLE_0) && data.payment_key.is_none() {
+        let payment_key = if data.number == Some(RoleId::Role0) && data.payment_key.is_none() {
             report.other(
                 "Missing payment key in role0",
                 "Role data payment key validation",
