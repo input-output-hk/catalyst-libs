@@ -353,7 +353,7 @@ impl MithrilSnapshotConfig {
             .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;
 
         let snapshots = client
-            .cardano_database()
+            .snapshot()
             .list()
             .await
             .map_err(|e| Error::MithrilClient(self.chain, url.clone(), e))?;

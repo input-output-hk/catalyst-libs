@@ -52,7 +52,7 @@ async fn get_latest_snapshots(
     client: &Client, network: Network,
 ) -> Option<(SnapshotListItem, SnapshotListItem)> {
     // Get current latest snapshot from the aggregator
-    let snapshots = match client.cardano_database().list().await {
+    let snapshots = match client.snapshot().list().await {
         Ok(s) => s,
         Err(e) => {
             error!("Unexpected Error [{}]: Unable to get Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping.", network, e);
@@ -75,7 +75,7 @@ async fn get_latest_snapshots(
 async fn get_snapshot_by_id(
     client: &Client, network: Network, snapshot_id: &SnapshotId,
 ) -> Option<SnapshotListItem> {
-    let snapshots = match client.cardano_database().list().await {
+    let snapshots = match client.snapshot().list().await {
         Ok(s) => s,
         Err(e) => {
             error!("Unexpected Error [{}]: Unable to get Snapshot List from Aggregator for {}.  Mithril Snapshots can not update. Sleeping.", network, e);
@@ -105,7 +105,7 @@ fn create_client(cfg: &MithrilSnapshotConfig) -> Option<(Client, Arc<MithrilTurb
         &cfg.genesis_key,
     )
     //.add_feedback_receiver(receiver)
-    .with_http_file_downloader(downloader.clone())
+    .with_snapshot_downloader(downloader.clone())
     .build()
     {
         Ok(c) => c,
@@ -165,7 +165,7 @@ async fn get_snapshot(
     client: &Client, snapshot_item: &SnapshotListItem, network: Network,
 ) -> Option<Snapshot> {
     let latest_digest = snapshot_item.digest.as_ref();
-    let snapshot = match client.cardano_database().get(latest_digest).await {
+    let snapshot = match client.snapshot().get(latest_digest).await {
         Ok(snapshot) => {
             if let Some(snapshot) = snapshot {
                 snapshot
@@ -598,7 +598,7 @@ async fn download_and_validate_snapshot(
 
     // Download and unpack the actual snapshot archive.
     if let Err(error) = client
-        .cardano_database()
+        .snapshot()
         .download_unpack(snapshot, &cfg.tmp_path())
         .await
     {
@@ -612,7 +612,7 @@ async fn download_and_validate_snapshot(
         cfg.chain
     );
 
-    if let Err(error) = client.cardano_database().add_statistics(snapshot).await {
+    if let Err(error) = client.snapshot().add_statistics(snapshot).await {
         // Just log not fatal to anything.
         error!(
             "Could not increment snapshot download statistics for {}: {error}",
