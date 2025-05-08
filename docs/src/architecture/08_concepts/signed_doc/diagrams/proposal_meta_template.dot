@@ -134,7 +134,7 @@ Document Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_meta_template/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_template/">
                     <FONT COLOR="#ffffff"><B> Proposal Template </B></FONT>
                 </TD>
             </TR>

@@ -128,7 +128,7 @@ class DocRelationshipFile(DocGenerator):
                     ref_cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(ref_doc))
                     ref_doc_table = DotSignedDoc(
                         table_id=ref_doc,
-                        title_href=Metadata.doc_ref_link(doc, self._depth, html=True),
+                        title_href=Metadata.doc_ref_link(ref_doc, self._depth, html=True),
                         cluster=ref_cluster,
                     )
                     dot_file.add_table(ref_doc_table)

@@ -104,7 +104,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../election_parameters/">
                     <FONT COLOR="#ffffff"><B> Election Parameters </B></FONT>
                 </TD>
             </TR>
@@ -119,7 +119,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal/">
                     <FONT COLOR="#ffffff"><B> Proposal </B></FONT>
                 </TD>
             </TR>
@@ -134,7 +134,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment/">
                     <FONT COLOR="#ffffff"><B> Proposal Comment </B></FONT>
                 </TD>
             </TR>
@@ -149,7 +149,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_meta_template/">
                     <FONT COLOR="#ffffff"><B> Proposal Comment Meta Template </B></FONT>
                 </TD>
             </TR>
@@ -164,7 +164,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_template/">
                     <FONT COLOR="#ffffff"><B> Proposal Comment Template </B></FONT>
                 </TD>
             </TR>
@@ -179,7 +179,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_meta_template/">
                     <FONT COLOR="#ffffff"><B> Proposal Meta Template </B></FONT>
                 </TD>
             </TR>
@@ -194,7 +194,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_submission_action/">
                     <FONT COLOR="#ffffff"><B> Proposal Submission Action </B></FONT>
                 </TD>
             </TR>
@@ -209,7 +209,7 @@ Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_template/">
                     <FONT COLOR="#ffffff"><B> Proposal Template </B></FONT>
                 </TD>
             </TR>

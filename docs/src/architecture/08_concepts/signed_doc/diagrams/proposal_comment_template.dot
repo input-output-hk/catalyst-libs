@@ -108,7 +108,7 @@ Document Relationships"
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_template/">
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment/">
                     <FONT COLOR="#ffffff"><B> Proposal Comment </B></FONT>
                 </TD>
             </TR>
