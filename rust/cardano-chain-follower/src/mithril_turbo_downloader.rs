@@ -399,6 +399,8 @@ impl FileDownloader for MithrilTurboDownloader {
 }
 
 impl MithrilTurboDownloader {
+    /// Set up the download.  
+    /// Called `probe` as this used to exist in an earlier trait which was removed.
     async fn probe(&self, location: &str) -> MithrilResult<()> {
         debug!("Probe Snapshot location='{location}'.");
         let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
