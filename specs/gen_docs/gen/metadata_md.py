@@ -7,7 +7,7 @@ from rich.console import Console
 
 from gen.cddl_file import CDDLFile
 from gen.doc_generator import DocGenerator
-from spec.signed_doc import SignedDocSpec
+from spec.signed_doc import SignedDoc
 
 console = Console()
 
@@ -15,7 +15,7 @@ console = Console()
 class MetadataMd(DocGenerator):
     """Generate the metadata.md file."""
 
-    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialise metadata.md generator."""
         super().__init__(
             args,

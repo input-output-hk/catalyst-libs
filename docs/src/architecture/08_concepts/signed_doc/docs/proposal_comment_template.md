@@ -113,74 +113,25 @@ Reference to the template used to create and/or validate this document.
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
 
-### [`brand_id`](../metadata.md#brand_id)
+### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
-| Required | optional |
+| Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Brand Parameters](brand_parameters.md) |
-| Exclusive | [`campaign_id`](../metadata.md#campaign_id) |
-|  | [`category_id`](../metadata.md#category_id) |
+|  | [Campaign Parameters](campaign_parameters.md) |
+|  | [Category Parameters](category_parameters.md) |
 <!-- markdownlint-enable MD033 -->
-A reference to the Brand Parameters Document this document lies under.
+A reference to the Parameters Document this document lies under.
 
-#### [`brand_id`](../metadata.md#brand_id) Validation
+#### [`parameters`](../metadata.md#parameters) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
-* Any linked referenced document that includes a [`brand_id`](../metadata.md#brand_id) must match the
-[`brand_id`](../metadata.md#brand_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`campaign_id`](../metadata.md#campaign_id)
-and [`category_id`](../metadata.md#category_id) metadata.
-
-### [`campaign_id`](../metadata.md#campaign_id)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Campaign Parameters](campaign_parameters.md) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`category_id`](../metadata.md#category_id) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Campaign Parameters Document this document lies under.
-
-#### [`campaign_id`](../metadata.md#campaign_id) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
-[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`category_id`](../metadata.md#category_id) metadata.
-
-### [`category_id`](../metadata.md#category_id)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Category Parameters](category_parameters.md) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`campaign_id`](../metadata.md#campaign_id) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Category Parameters Document this document lies under.
-
-#### [`category_id`](../metadata.md#category_id) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
-[`category_id`](../metadata.md#category_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`campaign_id`](../metadata.md#campaign_id) metadata.
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document.
 
 ## Payload
 
@@ -203,7 +154,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-09 |
+| Modified | 2025-05-05 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -212,6 +163,10 @@ New versions of this document may be published by:
 #### 0.01 (2025-04-04)
 
 * First Published Version
+
+#### 0.03 (2025-05-05)
+
+* Use generalized parameters.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema]: https://json-schema.org/draft-07

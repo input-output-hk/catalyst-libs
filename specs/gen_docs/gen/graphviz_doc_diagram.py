@@ -1,14 +1,62 @@
 """Graphviz DOT file generation functions."""
 
+import typing
+from functools import cached_property
 from textwrap import indent
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-from spec.metadata import Metadata
+from spec.doc_clusters import DocCluster
 
 DEFAULT_FONT_NAME = "helvetica"
 DEFAULT_FONT_SIZE = 32
 DEFAULT_FONT_COLOR = "#29235c"
+
+
+class FontTheme(BaseModel):
+    """Theme for a font in a row."""
+
+    face: str | None = Field(default=None)
+    color: str | None = Field(default="#7706E5")
+    bold: bool = Field(default=False)
+    italic: bool = Field(default=False)
+
+    model_config = ConfigDict(extra="forbid")
+
+    def __str__(self) -> str:
+        """Get the theme string for a font."""
+        font_value = ""
+        font_value += "" if self.face is None else f' FACE="{self.face}"'
+        font_value += "" if self.color is None else f' COLOR="{self.color}"'
+        return font_value
+
+    def start_emphasis(self) -> str:
+        """Start Emphasis."""
+        emphasis = ""
+        if self.bold:
+            emphasis += "<B>"
+        if self.italic:
+            emphasis += "<I>"
+        return emphasis
+
+    def end_emphasis(self) -> str:
+        """End Emphasis."""
+        emphasis = ""
+        if self.italic:
+            emphasis += "</I>"
+        if self.bold:
+            emphasis += "</B>"
+        return emphasis
+
+    @classmethod
+    def default_name_theme(cls) -> "FontTheme":
+        """Get Default Theme for Names."""
+        return FontTheme()
+
+    @classmethod
+    def default_value_theme(cls) -> "FontTheme":
+        """Get Default Theme for Values."""
+        return FontTheme(italic=True)
 
 
 class TableRow(BaseModel):
@@ -18,8 +66,10 @@ class TableRow(BaseModel):
     value: str | list[str]
     link: str | None = Field(default=None)
     tooltip: str | None = Field(default=None)
-    name_font: str | None = Field(default=None)
-    value_font: str | None = Field(default=None)
+    name_theme: FontTheme = Field(default_factory=FontTheme.default_name_theme)
+    value_theme: FontTheme = Field(default_factory=FontTheme.default_value_theme)
+
+    model_config = ConfigDict(extra="forbid")
 
     def generate(self, bgcolor: str) -> str:
         """Generate a single row of the table."""
@@ -29,15 +79,29 @@ class TableRow(BaseModel):
 
         link = "" if self.link is None else f' HREF="{self.link}"'
         tooltip = "" if self.tooltip is None else f' TITLE="{self.tooltip}"'
-        value_font = "" if self.value_font is None else f' FACE="{self.value_font}"'
-        name_font = "" if self.name_font is None else f' FACE="{self.name_font}"'
+
+        name = (
+            f"<FONT{self.name_theme}>"
+            f"{self.name_theme.start_emphasis()}"
+            f"{self.name}"
+            f"{self.name_theme.end_emphasis()}"
+            "</FONT>"
+        )
+
+        value = (
+            f"<FONT{self.value_theme}>"
+            f"{self.value_theme.start_emphasis()}"
+            f"{value}"
+            f"{self.value_theme.end_emphasis()}"
+            "</FONT>"
+        )
 
         return f"""        <TR>
             <TD ALIGN="LEFT" PORT="{self.name}" BGCOLOR="{bgcolor}"{link}{tooltip}>
                 <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                     <TR>
-                        <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT{name_font}>{self.name}</FONT></TD>
-                        <TD ALIGN="RIGHT"><FONT{value_font}><I>{value}</I></FONT></TD>
+                        <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200">{name}</TD>
+                        <TD ALIGN="RIGHT">{value}</TD>
                     </TR>
                 </TABLE>
             </TD>
@@ -62,6 +126,8 @@ class TableTheme(BaseModel):
     title_color: str = Field(default="#ffffff")
     row_bg_color: list[str] = Field(default_factory=default_row_bg_color)
     row_bg_color_offset: int = Field(default=0)
+
+    model_config = ConfigDict(extra="forbid")
 
     def table(self) -> str:
         """Generate the set table options."""
@@ -91,14 +157,56 @@ class TableTheme(BaseModel):
         return next_bg
 
 
+class Cluster(BaseModel):
+    """Represents a single cluster."""
+
+    name: str
+
+    model_config = ConfigDict(extra="forbid")
+
+    @classmethod
+    def from_doc_cluster(cls, cluster: DocCluster | None) -> "Cluster | None":
+        """Convert the DocCluster to a Cluster."""
+        if cluster is None:
+            return None
+        return cls(name=cluster.name)
+
+    def label(self) -> str:
+        """Transform the name into a label."""
+        return "cluster_" + self.name.lower().replace(" ", "_").replace("-", "_")
+
+    def start(self) -> str:
+        """Start a new cluster."""
+        return f"""
+subgraph {self.label()} {{
+    label = "{self.name}";
+    color=blue
+    penwidth=20
+"""
+
+    def end(self) -> str:
+        """End the cluster."""
+        return "}\n"
+
+    def __eq__(self, other: "Cluster") -> bool:
+        """Eq."""
+        if not isinstance(other, Cluster):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+        return self.name == other.name
+
+
 class DotSignedDoc(BaseModel):
     """Table representing a single signed document."""
 
     table_id: str
     title_port: str = Field(default="title")
-    title_href: str | None = None
+    title_href: str | None = Field(default=None)
     theme: TableTheme = Field(default_factory=TableTheme)
     rows: list[TableRow] = Field(default_factory=list)
+    cluster: Cluster | None = Field(default=None)
+
+    model_config = ConfigDict(extra="forbid")
 
     def add_row(self, row: TableRow) -> None:
         """Add a row of data to the table."""
@@ -149,6 +257,10 @@ class DotLinkTheme(BaseModel):
     headlabel: str | None = Field(default="1")
     taillabel: str | None = Field(default="*")
     direction: str = Field(default="forward")
+    lhead: str | None = Field(default=None)
+    ltail: str | None = Field(default=None)
+
+    model_config = ConfigDict(extra="forbid")
 
     def __str__(self) -> str:
         """Str."""
@@ -162,19 +274,71 @@ class DotLinkTheme(BaseModel):
         if self.taillabel is not None:
             options.append(f'taillabel="{self.taillabel}"')
 
+        if self.lhead is not None:
+            options.append(f'lhead="{self.lhead}"')
+        if self.ltail is not None:
+            options.append(f'ltail="{self.ltail}"')
+
         return f" [{', '.join(options)}]"
+
+
+class DotLinkEnd(BaseModel):
+    """Represents an end of a Link between documents."""
+
+    id: str
+    port: str | Cluster | None = Field(default=None)
+    dir: str | None = Field(default="e")
+
+    model_config = ConfigDict(extra="forbid")
+
+    @cached_property
+    def is_cluster(self) -> bool:
+        """Is the link to a cluster."""
+        return isinstance(self.port, Cluster)
+
+    def __str__(self) -> str:
+        """Str."""
+        name = f'"{self.id}"'
+        if self.port is not None and not self.is_cluster:
+            name += f':"{self.port}"'
+            if self.dir is not None:
+                name += f":{self.dir}"
+        return name
+
+    def __eq__(self, other: "DotLinkEnd") -> bool:
+        """Eq."""
+        if not isinstance(other, DotLinkEnd):
+            # don't attempt to compare against unrelated types
+            return NotImplemented
+
+        # If the link is a cluster, we only care if the clusters are the same.
+        if isinstance(self.port, Cluster):
+            return self.port == other.port
+
+        return self.id == other.id and self.port == other.port
+
+    def __repr__(self) -> str:
+        """Repr."""
+        return "DotLinkEnd()"
 
 
 class DotLink(BaseModel):
     """Represents a Link between documents."""
 
-    src_id: str
-    src_port: str | None = Field(default=None)
-    src_dir: str | None = Field(default="e")
-    dst_id: str
-    dst_port: str | None = Field(default=None)
-    dst_dir: str | None = Field(default="w")
+    src: DotLinkEnd
+    dst: DotLinkEnd
+    directed: bool = Field(default=True)
     theme: DotLinkTheme = Field(default_factory=DotLinkTheme)
+
+    def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
+        """Extra setup after we deserialize."""
+        super().model_post_init(context)
+
+        # Add cluster parameters to the theme.
+        if self.src.is_cluster:
+            self.theme.ltail = self.src.port.label()
+        if self.dst.is_cluster:
+            self.theme.lhead = self.dst.port.label()
 
     def __eq__(self, other: "DotLink") -> bool:
         """Eq."""
@@ -182,38 +346,16 @@ class DotLink(BaseModel):
             # don't attempt to compare against unrelated types
             return NotImplemented
 
-        return (
-            self.src_id == other.src_id
-            and self.src_port == other.src_port
-            and self.dst_id == other.dst_id
-            and self.dst_port == other.dst_port
-        )
+        return self.src == other.src and self.dst == other.dst
 
     def __repr__(self) -> str:
         """Repr."""
         return "DotLink()"
 
-    @staticmethod
-    def mk_link_name(name: str, port: str | None, direction: str | None) -> str:
-        """Make a graphviz link name."""
-        name = f'"{name}"'
-        if port is not None:
-            name += f':"{port}"'
-            if direction is not None:
-                name += f":{direction}"
-        return name
-
-    def src(self) -> str:
-        """Return the source."""
-        return self.mk_link_name(self.src_id, self.src_port, self.src_dir)
-
-    def dst(self) -> str:
-        """Return the destination."""
-        return self.mk_link_name(self.dst_id, self.dst_port, self.dst_dir)
-
     def __str__(self) -> str:
         """Str."""
-        return f"{self.src()} -> {self.dst()}{self.theme}"
+        direction = "->" if self.directed else "--"
+        return f"{self.src} {direction} {self.dst}{self.theme}"
 
 
 class DotFile:
@@ -246,8 +388,9 @@ class DotFile:
         }
         self.depth = depth
 
-        self.tables = {}
-        self.links = []
+        self.tables: dict[str | None, dict[str, DotSignedDoc]] = {}
+        self.links: list[DotLink] = []
+        self.clusters: dict[str, Cluster] = {}
 
     def add_table(self, table: DotSignedDoc) -> None:
         """Add a table to the graph.
@@ -255,28 +398,42 @@ class DotFile:
         Will always add a table if it doesn't already exist.
         Only replace existing tables if the new table has rows.
         """
-        if table.table_id not in self.tables or table.has_rows():
-            self.tables[table.table_id] = table
+        cluster_name = None
+        if table.cluster is not None:
+            cluster_name = table.cluster.name
+        if cluster_name is not None and cluster_name not in self.clusters:
+            self.clusters[cluster_name] = table.cluster
+        if cluster_name not in self.tables:
+            self.tables[cluster_name] = {}
+        if table.table_id not in self.tables[cluster_name] or table.has_rows():
+            self.tables[cluster_name][table.table_id] = table
 
     def add_link(self, link: DotLink) -> None:
-        """Add a link to the graph.
-
-        Will add an empty Table if the destination port is None and
-        destination does not exist.
-        Src is assumed to always exist.
-        """
-        # Add a dummy table, so the link has something to anchor on.
-        # Won't add anything if it exists, and will get replaced
-        # if the real table gets added later (has any rows).
-        dummy_dst_table = DotSignedDoc(
-            table_id=link.dst_id, title_href=Metadata.doc_ref_link(link.dst_id, depth=self.depth, html=True)
-        )
-        self.add_table(dummy_dst_table)  # Wont add if already exists.
-        self.links.append(link)
+        """Add a link to the graph."""
+        if link not in self.links:
+            self.links.append(link)
 
     def __repr__(self) -> str:
         """Repr."""
         return "DotFile()"
+
+    def clustered_tables(self) -> str:
+        """Dump out the table definitions, with clusters."""
+        table_graph = ""
+        for cluster, tables in self.tables.items():
+            indent_spaces = ""
+            if cluster is not None:
+                table_graph += f"{self.clusters[cluster].start()}"
+                indent_spaces = "    "
+
+            for table in tables.values():
+                table_entry = f"{table}"
+                table_graph += f"{indent(table_entry, indent_spaces)}\n"
+
+            if cluster is not None:
+                table_graph += f"{self.clusters[cluster].end()}"
+
+        return table_graph
 
     def __str__(self) -> str:
         """Generate the DOT file."""
@@ -286,7 +443,7 @@ class DotFile:
             defaults = []
             for default, value in settings.items():
                 defaults.append(f'{default}="{value}"')
-            return f"    {name} [{', '.join(defaults)}];"
+            return f"{name} [{', '.join(defaults)}];"
 
         return f"""digraph "{self.id}" {{
     rankdir="{self.rankdir}"
@@ -298,9 +455,10 @@ class DotFile:
     label="{self.title}"
     fontcolor="#1d71b8"
     fontsize={self.title_size}
+    compound=true
 
-{indent("\n".join(map(str, self.tables.values())), "    ")}
 
+{indent(self.clustered_tables(), "    ")}
 {indent("\n".join(map(str, self.links)), "    ")}
 }}
 """

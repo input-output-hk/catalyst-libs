@@ -3,23 +3,15 @@ package signed_docs
 // Proposal Document Definition
 
 docs: #DocumentDefinitions & {
-	"Election Parameters": {
+	"Decision Parameters": {
 		description: """
 			Parameters which define an individual voting event.
 			"""
 
 		metadata: {
-			brand_id: {
+			parameters: {
 				required: "yes"
-				type:     "Brand Parameters"
-			}
-			campaign_id: {
-				required: "yes"
-				type:     "Campaign Parameters"
-			}
-			category_id: {
-				required: "yes"
-				type:     "Category Parameters"
+				type:     doc_clusters."System Parameters".docs
 			}
 		}
 
@@ -29,6 +21,13 @@ docs: #DocumentDefinitions & {
 				modified: "2025-04-04"
 				changes: """
 					* First Published Version
+					"""
+			},
+			{
+				version:  "0.03"
+				modified: "2025-05-05"
+				changes: """
+					* Use generalized parameters.
 					"""
 			},
 		]}

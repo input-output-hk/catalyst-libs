@@ -8,7 +8,7 @@ from pydantic import HttpUrl
 
 from gen.doc_generator import DocGenerator
 from gen.doc_relationship_diagrams import DocRelationshipFile
-from spec.signed_doc import SignedDocSpec
+from spec.signed_doc import SignedDoc
 
 
 class IndividualDocMd(DocGenerator):
@@ -21,7 +21,7 @@ and features are added.
 This section will be included and updated in future iterations.
 """.strip()
 
-    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec, doc_name: str) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDoc, doc_name: str) -> None:
         """Generate the individual pages docs/<doc_name>.md file."""
         file_name = "docs/" + doc_name.lower().replace(" ", "_") + ".md"
         super().__init__(args, spec, file_name, flags=self.HAS_MARKDOWN_LINKS)
@@ -31,7 +31,7 @@ This section will be included and updated in future iterations.
         self._depth = 1
 
     @classmethod
-    def save_or_validate_all(cls, args: argparse.Namespace, spec: SignedDocSpec) -> bool:
+    def save_or_validate_all(cls, args: argparse.Namespace, spec: SignedDoc) -> bool:
         """Save or Validate all documentation pages."""
         good = True
         for doc_name in spec.document_names():

@@ -213,98 +213,33 @@ However, any document where revocations was set `true` can never be reinstated.
 If the field is `true` the payload may be absent or invalid.
 Such documents may never be submitted.
 
-### [`brand_id`](../metadata.md#brand_id)
+### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
 | --- | --- |
-| Required | optional |
+| Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Brand Parameters](brand_parameters.md) |
+|  | [Campaign Parameters](campaign_parameters.md) |
+|  | [Category Parameters](category_parameters.md) |
 | Linked Reference Metadata | [`ref`](#ref) |
 |  | [`template`](#template) |
-| Exclusive | [`campaign_id`](../metadata.md#campaign_id) |
-|  | [`category_id`](../metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
-A reference to the Brand Parameters Document this document lies under.
+A reference to the Parameters Document this document lies under.
 
-#### [`brand_id`](../metadata.md#brand_id) Validation
+#### [`parameters`](../metadata.md#parameters) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
-* Any linked referenced document that includes a [`brand_id`](../metadata.md#brand_id) must match the
-[`brand_id`](../metadata.md#brand_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`campaign_id`](../metadata.md#campaign_id)
-and [`category_id`](../metadata.md#category_id) metadata.
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document.
 * The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`brand_id`](../metadata.md#brand_id) metadata; AND
-  * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
+  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 * The Document referenced by [`template`](../metadata.md#template)
-  * MUST contain [`brand_id`](../metadata.md#brand_id) metadata; AND
-  * MUST match the referencing documents [`brand_id`](../metadata.md#brand_id) value.
-
-### [`campaign_id`](../metadata.md#campaign_id)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Campaign Parameters](campaign_parameters.md) |
-| Linked Reference Metadata | [`ref`](#ref) |
-|  | [`template`](#template) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`category_id`](../metadata.md#category_id) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Campaign Parameters Document this document lies under.
-
-#### [`campaign_id`](../metadata.md#campaign_id) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
-[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`category_id`](../metadata.md#category_id) metadata.
-* The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`campaign_id`](../metadata.md#campaign_id) metadata; AND
-  * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
-* The Document referenced by [`template`](../metadata.md#template)
-  * MUST contain [`campaign_id`](../metadata.md#campaign_id) metadata; AND
-  * MUST match the referencing documents [`campaign_id`](../metadata.md#campaign_id) value.
-
-### [`category_id`](../metadata.md#category_id)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Category Parameters](category_parameters.md) |
-| Linked Reference Metadata | [`ref`](#ref) |
-|  | [`template`](#template) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`campaign_id`](../metadata.md#campaign_id) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Category Parameters Document this document lies under.
-
-#### [`category_id`](../metadata.md#category_id) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`category_id`](../metadata.md#category_id) must match the
-[`category_id`](../metadata.md#category_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`campaign_id`](../metadata.md#campaign_id) metadata.
-* The Document referenced by [`ref`](../metadata.md#ref)
-  * MUST contain [`category_id`](../metadata.md#category_id) metadata; AND
-  * MUST match the referencing documents [`category_id`](../metadata.md#category_id) value.
-* The Document referenced by [`template`](../metadata.md#template)
-  * MUST contain [`category_id`](../metadata.md#category_id) metadata; AND
-  * MUST match the referencing documents [`category_id`](../metadata.md#category_id) value.
+  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
@@ -326,7 +261,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-09 |
+| Modified | 2025-05-05 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -335,6 +270,10 @@ New versions of this document may be published by:
 #### 0.01 (2025-04-04)
 
 * First Published Version
+
+#### 0.03 (2025-05-05)
+
+* Use generalized parameters.
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

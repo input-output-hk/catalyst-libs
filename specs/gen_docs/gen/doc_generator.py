@@ -12,7 +12,7 @@ import rich
 import rich.markdown
 
 from spec.metadata import Metadata
-from spec.signed_doc import HeaderType, SignedDocSpec
+from spec.signed_doc import HeaderType, SignedDoc
 
 
 class DocGenerator:
@@ -25,7 +25,7 @@ class DocGenerator:
     def __init__(
         self,
         args: argparse.Namespace,
-        spec: SignedDocSpec,
+        spec: SignedDoc,
         filename: str,
         depth: int = 0,
         flags: int = HAS_MARKDOWN_LINKS,
@@ -174,7 +174,7 @@ class DocGenerator:
         for link_name in actual_link_names:
             esc_link_name = re.escape(link_name)
             link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
-            aka = self._spec.link_aka(link_name)
+            aka = self._spec.link_name_aka(link_name)
             if aka is not None:
                 replacement = f"\\1[\\2][{aka}]\\3"
                 link_name = aka  # noqa: PLW2901
@@ -219,7 +219,7 @@ class DocGenerator:
 
         document_name: Name of the signed document we also get copyright info from.
         """
-        (authors, copyright_data, versions, global_last_modified) = self._spec.copyright(self._document_name)
+        (authors, copyright_data, versions, global_last_modified) = self._spec.get_copyright(self._document_name)
 
         copyright_year = copyright_data.created.year
         last_modified_year = global_last_modified.year

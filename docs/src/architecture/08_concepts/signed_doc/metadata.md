@@ -207,7 +207,7 @@ The document version must always be >= the document ID.
 |  | [Brand Parameters](./docs/brand_parameters.md) |
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
-|  | [Election Parameters](./docs/election_parameters.md) |
+|  | [Decision Parameters](./docs/decision_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -321,7 +321,7 @@ addition to the author.
 | --- | --- |
 | Required | excluded |
 
-### `brand_id`
+### `parameters`
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
@@ -329,85 +329,18 @@ addition to the author.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Brand Parameters](./docs/brand_parameters.md) |
-| Exclusive | [`campaign_id`](metadata.md#campaign_id) |
-|  | [`category_id`](metadata.md#category_id) |
+|  | [Campaign Parameters](./docs/campaign_parameters.md) |
+|  | [Category Parameters](./docs/category_parameters.md) |
+|  | [Decision Parameters](./docs/decision_parameters.md) |
 <!-- markdownlint-enable MD033 -->
-A reference to the Brand Parameters Document this document lies under.
+A reference to the Parameters Document this document lies under.
 
-#### `brand_id` Validation
+#### `parameters` Validation
 
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
 
-* Any linked referenced document that includes a [`brand_id`](metadata.md#brand_id) must match the
-[`brand_id`](metadata.md#brand_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`campaign_id`](metadata.md#campaign_id)
-and [`category_id`](metadata.md#category_id) metadata.
-
-### `campaign_id`
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | [Campaign Parameters](./docs/campaign_parameters.md) |
-| Exclusive | [`brand_id`](metadata.md#brand_id) |
-|  | [`category_id`](metadata.md#category_id) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Campaign Parameters Document this document lies under.
-
-#### `campaign_id` Validation
-
-In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`campaign_id`](metadata.md#campaign_id) must match the
-[`campaign_id`](metadata.md#campaign_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](metadata.md#brand_id)
-and [`category_id`](metadata.md#category_id) metadata.
-
-### `category_id`
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | [Category Parameters](./docs/category_parameters.md) |
-| Exclusive | [`brand_id`](metadata.md#brand_id) |
-|  | [`campaign_id`](metadata.md#campaign_id) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Category Parameters Document this document lies under.
-
-#### `category_id` Validation
-
-In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`category_id`](metadata.md#category_id) must match the
-[`category_id`](metadata.md#category_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](metadata.md#brand_id)
-and [`campaign_id`](metadata.md#campaign_id) metadata.
-
-### `election_id`
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | [Election Parameters](./docs/election_parameters.md) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Election Parameters Document this document lies under.
-
-#### `election_id` Validation
-
-In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields,
-Any referenced document that includes a [`election_id`](metadata.md#election_id) must match the
-[`election_id`](metadata.md#election_id) of the referencing document.
-It is also valid for the referenced document to not include this field, if it is
-optional for the referenced document.
+* Any linked referenced document that includes a [`parameters`](metadata.md#parameters) metadata must match the
+[`parameters`](metadata.md#parameters) of the referencing document.
 
 ## Copyright
 
@@ -415,7 +348,7 @@ optional for the referenced document.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-09 |
+| Modified | 2025-05-05 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
