@@ -53,5 +53,12 @@ copyright: #copyrightNotice & {
 				* Add version control changelogs to the specification.
 				"""
 		},
+		{
+			version:  "0.03"
+			modified: "2025-05-05"
+			changes: """
+				* Use generalized parameters.
+				"""
+		},
 	]
 }

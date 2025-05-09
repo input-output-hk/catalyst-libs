@@ -98,6 +98,14 @@ _allDocNamesList: [...string] & [
 		!strings.Contains(k, "Action") {k},
 ]
 
+// List of all Parameters Docs (not templates or actions)
+#parameterDocNamesList: [...string] & [
+	for k, _ in _allDocs
+	if strings.Contains(k, "Parameter") &&
+		!strings.Contains(k, "Template") &&
+		!strings.Contains(k, "Action") {k},
+]
+
 // List of all Template Docs (not actions)
 #templateDocNamesList: [...string] & [
 	for k, _ in _allDocs

@@ -1,6 +1,10 @@
 // Master list of all document types.
 package signed_docs
 
+import (
+	"list"
+)
+
 // Named Type UUIDs for easier definitions/references
 _allDocTypes: {
 	"Template":         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
@@ -12,7 +16,7 @@ _allDocTypes: {
 	"Brand":            "ebcabeeb-5bc5-4f95-91e8-cab8ca724172"
 	"Campaign":         "5ef32d5d-f240-462c-a7a4-ba4af221fa23"
 	"Category":         "818938c3-3139-4daa-afe6-974c78488e95"
-	"Election":         "788ff4c6-d65a-451f-bb33-575fe056b411"
+	"Decision":         "788ff4c6-d65a-451f-bb33-575fe056b411"
 }
 
 // Source of truth for ALL Document Types and their matching UUID's.
@@ -71,8 +75,35 @@ _allDocs: {
 	"Category Parameters": [
 		_allDocTypes["Category"],
 	]
-	"Election Parameters": [
-		_allDocTypes["Election"],
+	"Decision Parameters": [
+		_allDocTypes["Decision"],
 	]
 
 }
+
+// Document Cluster Definition
+#DocumentCluster: {
+	docs: [..._allDocNames]
+}
+
+#DocClusters: {
+	[string]: #DocumentCluster
+}
+
+doc_clusters: #DocClusters & {
+	// System parameters define the system, excludes Decisions.
+	"System Parameters": {
+		docs: [
+			"Brand Parameters",
+			"Campaign Parameters",
+			"Category Parameters",
+		]
+	}
+}
+
+// A Doc can only be in 1 cluster.
+#allDocClusterDocs: list.UniqueItems
+#allDocClusterDocs: [...string] & [
+	for cluster in doc_clusters
+	for doc in cluster.docs {doc},
+]

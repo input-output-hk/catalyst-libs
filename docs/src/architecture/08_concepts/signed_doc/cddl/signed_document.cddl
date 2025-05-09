@@ -62,12 +62,8 @@ Signed_Document_Metadata_Headers = (
   ?"section" => section_ref
   ?"collaborators" => collaborators
   ?"revocations" => revocations
-  ?"election_id" => document_ref
-  ? (
-      "brand_id" => document_ref //
-      "campaign_id" => document_ref //
-      "category_id" => document_ref
-  ))
+  ?"parameters" => document_ref
+)
 
 ; Document Type
 document_type = [ 1* uuid_v4 ]

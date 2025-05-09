@@ -69,9 +69,12 @@ docs: #DocumentDefinitions & {
 				multiple: true
 			}
 
-			category_id: {
+			parameters: {
 				required: "yes"
-				type:     "Category Parameters"
+				type:     doc_clusters."System Parameters".docs
+				linked_refs: [
+					"ref",
+				]
 			}
 		}
 
@@ -112,6 +115,13 @@ docs: #DocumentDefinitions & {
 				modified: "2025-04-04"
 				changes: """
 					* First Published Version
+					"""
+			},
+			{
+				version:  "0.03"
+				modified: "2025-05-05"
+				changes: """
+					* Use generalized parameters.
 					"""
 			},
 		]

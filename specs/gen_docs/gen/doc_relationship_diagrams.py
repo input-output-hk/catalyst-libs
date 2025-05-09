@@ -4,10 +4,10 @@ import argparse
 import textwrap
 
 from gen.doc_generator import DocGenerator
-from gen.graphviz_doc_diagram import DotFile, DotLink, DotSignedDoc, TableRow
+from gen.graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, FontTheme, TableRow
 from spec.metadata import Metadata
 from spec.optional import OptionalField
-from spec.signed_doc import HeaderType, SignedDocSpec
+from spec.signed_doc import HeaderType, SignedDoc
 
 
 class DocRelationshipFile(DocGenerator):
@@ -15,9 +15,7 @@ class DocRelationshipFile(DocGenerator):
 
     DIAGRAM_PATH: str = "diagrams/"
 
-    def __init__(
-        self, args: argparse.Namespace, spec: SignedDocSpec, doc_name: str | None = None, depth: int = 0
-    ) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDoc, doc_name: str | None = None, depth: int = 0) -> None:
         """Document Relationship Diagram File Generator."""
         file_name = doc_name.lower().replace(" ", "_").replace("-", "_") if doc_name is not None else "all"
         file_name = f"{self.DIAGRAM_PATH}{file_name}.dot"
@@ -59,8 +57,12 @@ class DocRelationshipFile(DocGenerator):
         all_dst_refs: list[str] = []
 
         for doc in doc_names:
-            doc_type = self.add_doc_ref_links
-            doc_table = DotSignedDoc(table_id=doc, title_href=Metadata.doc_ref_link(doc, self._depth, html=True))
+            cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(doc))
+            doc_table = DotSignedDoc(
+                table_id=doc,
+                title_href=Metadata.doc_ref_link(doc, self._depth, html=True),
+                cluster=cluster,
+            )
             doc_data = self._spec.get_document(doc)
 
             # Add content type explicitely to table.
@@ -74,15 +76,46 @@ class DocRelationshipFile(DocGenerator):
                     continue
 
                 if meta == "type":
-                    doc_table.add_row(TableRow(name=meta, value=doc_data.type, value_font="Courier"))
+                    doc_table.add_row(
+                        TableRow(
+                            name=meta,
+                            value=doc_data.type,
+                            value_theme=FontTheme(face="Courier", bold=True, italic=True),
+                        )
+                    )
                     continue
 
                 if doc_metadata.format == "Document Reference":
                     doc_type = doc_metadata.type
                     for link_dst in doc_type:
+                        # If we link to ourselves,
+                        # link through the top of the table (E to N)
+                        # Creates better self references.
+                        # Otherwise links flow from E to W
                         dst_dir = "n" if doc == link_dst else "w"
+
+                        # Add dummy destination table, in case we don't have it in our docs.
+                        ref_cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(link_dst))
+                        dummy_table = DotSignedDoc(
+                            table_id=link_dst,
+                            title_href=Metadata.doc_ref_link(
+                                link_dst,
+                                depth=self._depth,
+                                html=True,
+                            ),
+                            cluster=ref_cluster,
+                        )
+                        dot_file.add_table(dummy_table)
+
+                        dst_port = "title"
+                        if ref_cluster is not None and ref_cluster != cluster:
+                            dst_port = ref_cluster
+
                         dot_file.add_link(
-                            DotLink(src_id=doc, src_port=meta, dst_dir=dst_dir, dst_id=link_dst, dst_port="title")
+                            DotLink(
+                                src=DotLinkEnd(id=doc, port=meta),
+                                dst=DotLinkEnd(id=link_dst, port=dst_port, dir=dst_dir),
+                            )
                         )
                         all_dst_refs.append(link_dst)
                     if len(doc_type) == 0:
@@ -94,20 +127,26 @@ class DocRelationshipFile(DocGenerator):
                 doc_table.add_row(TableRow(name=meta, value=doc_metadata.format))
             dot_file.add_table(doc_table)
 
-        for doc_name in self._spec.document_names():
-            if doc_name not in doc_names:
-                # Add any documents as dummies with links, if they reference any docs in our doc_names.
-                doc = self._spec.get_document(doc_name)
-                refs = doc.all_references()
-                for ref in refs:
-                    if ref in doc_names:
-                        dummy_src_table = DotSignedDoc(
-                            table_id=doc_name, title_href=Metadata.doc_ref_link(doc_name, depth=self._depth, html=True)
+            # If we are referenced by any doc thats not in our doc list, create a dummy doc and link.
+            for ref_doc in doc_data.all_docs_referencing:
+                if ref_doc not in doc_names:
+                    # Then we need to create a dummy doc and link.
+                    ref_cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(ref_doc))
+                    ref_doc_table = DotSignedDoc(
+                        table_id=ref_doc,
+                        title_href=Metadata.doc_ref_link(ref_doc, self._depth, html=True),
+                        cluster=ref_cluster,
+                    )
+                    dot_file.add_table(ref_doc_table)
+                    dst_port = "title"
+                    if cluster is not None and ref_cluster != cluster:
+                        dst_port = cluster
+                    dot_file.add_link(
+                        DotLink(
+                            src=DotLinkEnd(id=ref_doc, port="title"),
+                            dst=DotLinkEnd(id=doc, port=dst_port, dir="w"),
                         )
-                        dot_file.add_table(dummy_src_table)
-                        dot_file.add_link(
-                            DotLink(src_id=doc_name, src_port="title", dst_id=ref, dst_port="title", dst_dir="w")
-                        )
+                    )
 
         self._filedata = f"{dot_file}"
 

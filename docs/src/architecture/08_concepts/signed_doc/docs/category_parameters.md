@@ -89,7 +89,7 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`campaign_id`](../metadata.md#campaign_id)
+### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
@@ -97,20 +97,15 @@ The document version must always be >= the document ID.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Campaign Parameters](campaign_parameters.md) |
-| Exclusive | [`brand_id`](../metadata.md#brand_id) |
-|  | [`category_id`](../metadata.md#category_id) |
 <!-- markdownlint-enable MD033 -->
-A reference to the Campaign Parameters Document this document lies under.
+A reference to the Parameters Document this document lies under.
 
-#### [`campaign_id`](../metadata.md#campaign_id) Validation
+#### [`parameters`](../metadata.md#parameters) Validation
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
-* Any linked referenced document that includes a [`campaign_id`](../metadata.md#campaign_id) must match the
-[`campaign_id`](../metadata.md#campaign_id) of the referencing document.
-* MUST NOT be present in any document that contains
-[`brand_id`](../metadata.md#brand_id)
-and [`category_id`](../metadata.md#category_id) metadata.
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document.
 
 ## Payload
 
@@ -135,7 +130,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-04-09 |
+| Modified | 2025-05-05 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -144,6 +139,10 @@ New versions of this document may be published by:
 #### 0.01 (2025-04-04)
 
 * First Published Version
+
+#### 0.03 (2025-05-05)
+
+* Use generalized parameters.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

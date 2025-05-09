@@ -9,7 +9,7 @@ docs: #DocumentDefinitions & {
 			"""
 
 		metadata: {
-			brand_id: {
+			parameters: {
 				required: "yes"
 				type:     "Brand Parameters"
 			}
@@ -21,6 +21,13 @@ docs: #DocumentDefinitions & {
 				modified: "2025-04-04"
 				changes: """
 					* First Published Version
+					"""
+			},
+			{
+				version:  "0.03"
+				modified: "2025-05-05"
+				changes: """
+					* Use generalized parameters.
 					"""
 			},
 		]}

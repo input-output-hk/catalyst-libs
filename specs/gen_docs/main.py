@@ -13,7 +13,7 @@ from gen.metadata_md import MetadataMd
 from gen.spec_index import SpecIndex
 from gen.spec_md import SpecMd
 from gen.types_md import TypesMd
-from spec.signed_doc import SignedDocSpec
+from spec.signed_doc import SignedDoc
 
 
 def check_is_dir(base_path: Path) -> bool:
@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
 def main(args: argparse.Namespace) -> None:
     """Generate Signed Document Specification documentation."""
     # Get the compiled documentation json file
-    spec = SignedDocSpec(args.spec)
+    spec = SignedDoc.load(args.spec)
 
     # We start out hoping everything is OK.
     good = True
