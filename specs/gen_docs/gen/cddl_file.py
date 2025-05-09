@@ -5,7 +5,7 @@ import re
 import textwrap
 
 from gen.doc_generator import DocGenerator
-from spec.signed_doc import SignedDocSpec
+from spec.signed_doc import SignedDoc
 
 
 def add_cddl_comments(comment: str) -> tuple[str, bool]:
@@ -26,7 +26,7 @@ def add_cddl_comments(comment: str) -> tuple[str, bool]:
 class CDDLFile(DocGenerator):
     """Generate a CDDL File."""
 
-    def __init__(self, args: argparse.Namespace, spec: SignedDocSpec, cddl_root: str) -> None:
+    def __init__(self, args: argparse.Namespace, spec: SignedDoc, cddl_root: str) -> None:
         """CDDL File Generator."""
         file_name = "cddl/" + cddl_root.lower().replace(" ", "_").replace("-", "_") + ".cddl"
 

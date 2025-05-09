@@ -142,6 +142,7 @@ labelloc
 lcov
 Leay
 Leshiy
+lhead
 libipld
 libp2p
 libsqlite
@@ -155,6 +156,7 @@ livedocs
 localizable
 logcall
 lookaside
+ltail
 maindbname
 mapref
 markdownlint
