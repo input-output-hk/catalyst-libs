@@ -13,7 +13,7 @@ use catalyst_types::{
     hashes::{Blake2b128Hash, Blake2b256Hash},
     problem_report::ProblemReport,
 };
-use ed25519_dalek::{Signature, VerifyingKey, PUBLIC_KEY_LENGTH};
+use ed25519_dalek::{Signature, VerifyingKey};
 use pallas::{
     codec::{
         minicbor::{Encode, Encoder},
@@ -464,70 +464,16 @@ fn validate_role_0(
 
 /// Extracts `VerifyingKey` from the given `X509` certificate.
 fn x509_cert_key(cert: &X509, context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
-    let Some(extended_public_key) = cert
-        .tbs_certificate
-        .subject_public_key_info
-        .subject_public_key
-        .as_bytes()
-    else {
-        report.invalid_value(
-            "subject_public_key",
-            "is not octet aligned",
-            "Must not have unused bits",
-            context,
-        );
-        return None;
-    };
-    verifying_key(extended_public_key, context, report)
+    x509_key(cert)
+        .inspect_err(|err| err.report_problem(context, report))
+        .ok()
 }
 
 /// Extracts `VerifyingKey` from the given `C509` certificate.
 fn c509_cert_key(cert: &C509, context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
-    verifying_key(cert.tbs_cert().subject_public_key(), context, report)
-}
-
-/// Creates `VerifyingKey` from the given extended public key.
-fn verifying_key(
-    extended_public_key: &[u8], context: &str, report: &ProblemReport,
-) -> Option<VerifyingKey> {
-    /// An extender public key length in bytes.
-    const EXTENDED_PUBLIC_KEY_LENGTH: usize = 64;
-
-    if extended_public_key.len() != EXTENDED_PUBLIC_KEY_LENGTH {
-        report.other(
-            &format!("Unexpected extended public key length in certificate: {}, expected {EXTENDED_PUBLIC_KEY_LENGTH}",
-                extended_public_key.len()),
-            context,
-        );
-        return None;
-    }
-
-    // This should never fail because of the check above.
-    let Some(public_key) = extended_public_key.get(0..PUBLIC_KEY_LENGTH) else {
-        report.other("Unable to get public key part", context);
-        return None;
-    };
-
-    let bytes: &[u8; PUBLIC_KEY_LENGTH] = match public_key.try_into() {
-        Ok(v) => v,
-        Err(e) => {
-            report.other(
-                &format!("Invalid public key length in X509 certificate: {e:?}"),
-                context,
-            );
-            return None;
-        },
-    };
-    match VerifyingKey::from_bytes(bytes) {
-        Ok(k) => Some(k),
-        Err(e) => {
-            report.other(
-                &format!("Invalid public key in C509 certificate: {e:?}"),
-                context,
-            );
-            None
-        },
-    }
+    c509_key(cert)
+        .inspect_err(|err| err.report_problem(context, report))
+        .ok()
 }
 
 #[cfg(test)]
