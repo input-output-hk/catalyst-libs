@@ -145,7 +145,7 @@ in the `Chain1` chain.
 It is worth noting that while it is allowed to reuse a public key there is no practical reason to do so.
 The existing chain can be updated instead.
 
-### Restarting a chain
+### Restarting a chain {#restarting-chain}
 
 ```mermaid
 flowchart LR
@@ -185,6 +185,37 @@ because it has the same stake address (`Stake2`).
 This can be useful if a user lost his private key while maintaining access to his Cardano wallet (and the stake address
 used in that registration chain).
 After that `Chain1` is considered no longer valid and must not be used.
+
+### Restarting multiple chains
+
+```mermaid
+flowchart LR
+    A[Stake1\nPubKey1]
+    B[Stake2\nPubKey2]
+    A ~~~ C[Stake1, Stake2\nPubKey3]
+    B ~~~ C
+```
+
+It is possible to restart/override multiple chains with one new registration.
+In the example above there are two chains with stake addresses `Stake1` and `Stake2` correspondingly.
+The new root registration contains both of these addresses, so assuming it is valid, it replaces both two previous
+registrations.
+
+As explained in the [restarting a chain](#restarting-chain) example, a new registration must use a different public key,
+so using both `PubKey1` and `PubKey2` isn't allowed.
+
+### Restarting chain(s) with multiple stake addresses
+
+```mermaid
+flowchart LR
+    A[A, B]
+    B[C, D]
+    A ~~~ C[A, B, C]
+    B ~~~ C
+```
+
+It isn't required for a new chain to use all stake addresses of a previous one.
+In the example above the new registration used on three addresses of four used in two previous chains.
 
 ### Multiple stake addresses
 
