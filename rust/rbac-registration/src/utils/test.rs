@@ -169,7 +169,7 @@ pub fn block_4() -> BlockTestData {
     BlockTestData {
         block: block(data),
         slot: 82_004_569.into(),
-        role: RoleId::Role0,
+        role: 4.into(),
         txn_index: 1.into(),
         txn_hash: "eef40a97a4ed1e40c3febd05a84b3ffaa191141b60806c2bba85d9c6879fb378"
             .parse()

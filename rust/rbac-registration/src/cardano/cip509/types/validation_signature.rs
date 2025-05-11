@@ -1,6 +1,7 @@
 //! A validation signature wrapper.
 
 use anyhow::{anyhow, Error};
+use ed25519_dalek::Signature;
 
 /// A validation signature.
 ///
@@ -17,6 +18,18 @@ impl TryFrom<Vec<u8>> for ValidationSignature {
         }
 
         Ok(Self(value))
+    }
+}
+
+impl TryInto<Signature> for ValidationSignature {
+    type Error = Error;
+
+    fn try_into(self) -> Result<Signature, Self::Error> {
+        let sig_bytes: [u8; 64] = self
+            .0
+            .try_into()
+            .map_err(|_| anyhow!("Invalid Ed25519 signature length, expect 64"))?;
+        Ok(Signature::from_bytes(&sig_bytes))
     }
 }
 
