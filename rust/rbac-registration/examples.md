@@ -208,14 +208,14 @@ so using both `PubKey1` and `PubKey2` isn't allowed.
 
 ```mermaid
 flowchart LR
-    A[A, B]
-    B[C, D]
-    A ~~~ C[A, B, C]
+    A[Stake1, Stake2]
+    B[Stake3, Stake4]
+    A ~~~ C[Stake1, Stake2, Stake3]
     B ~~~ C
 ```
 
 It isn't required for a new chain to use all stake addresses of a previous one.
-In the example above the new registration used on three addresses of four used in two previous chains.
+In the example above the new registration uses only three addresses of four used in two previous chains.
 
 ### Multiple stake addresses
 
