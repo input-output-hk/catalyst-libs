@@ -87,6 +87,8 @@ pub struct Cip509 {
     ///
     /// This field is only present in role 0 registrations.
     catalyst_id: Option<CatalystId>,
+    /// Raw aux data associated with the transaction that CIP509 is attached to,
+    raw_aux_data: Vec<u8>,
     /// A report potentially containing all the issues occurred during `Cip509` decoding
     /// and validation.
     ///
@@ -136,6 +138,7 @@ impl Cip509 {
             Nullable::Some(v) => v.raw_cbor(),
             _ => return Ok(None),
         };
+
         let Some(metadata) = block.txn_metadata(index, MetadatumLabel::CIP509_RBAC) else {
             return Ok(None);
         };
@@ -153,7 +156,17 @@ impl Cip509 {
         let mut cip509 =
             Cip509::decode(&mut decoder, &mut decode_context).context("Failed to decode Cip509")?;
 
+        cip509.raw_aux_data = raw_aux_data.to_vec();
+
         // Perform the validation.
+
+        // Chain root (no previous transaction ID) must contain Role 0
+        if cip509.previous_transaction().is_none() && cip509.role_data(RoleId::Role0).is_none() {
+            cip509
+                .report
+                .missing_field("Chain root role data", "Missing Role 0");
+        }
+
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
             validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
         };
@@ -269,6 +282,18 @@ impl Cip509 {
             .as_ref()
             .map(|m| m.certificate_uris.stake_addresses(0))
             .unwrap_or_default()
+    }
+
+    /// Return validation signature.
+    #[must_use]
+    pub fn validation_signature(&self) -> Option<&ValidationSignature> {
+        self.validation_signature.as_ref()
+    }
+
+    /// Raw aux data associated with the transaction that CIP509 is attached to,
+    #[must_use]
+    pub fn raw_aux_data(&self) -> &[u8] {
+        self.raw_aux_data.as_ref()
     }
 
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
@@ -411,6 +436,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
             txn_hash,
             origin: decode_context.origin.clone(),
             catalyst_id: None,
+            raw_aux_data: Vec::new(),
             report: decode_context.report.clone(),
         })
     }
