@@ -35,7 +35,7 @@ pub enum Error {
     #[error("Invalid public key ({source})")]
     PublicKeyIsNotEd25519 {
         /// Underlying [`ed25519_dalek`] error.
-        #[source]
+        #[from]
         source: SignatureError,
     },
 }
