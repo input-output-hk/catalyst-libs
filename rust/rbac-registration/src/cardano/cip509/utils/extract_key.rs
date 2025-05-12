@@ -27,7 +27,8 @@ pub enum Error {
         /// Number of bytes found.
         bytes: usize,
     },
-    /// Public key is stored in a bit string, where number of unused bits is *not* equal to zero.
+    /// Public key is stored in a bit string, where number of unused bits is *not* equal
+    /// to zero.
     #[error("Invalid public key is not octet aligned (found {bits} bits)")]
     PublicKeyIsNotOctetAligned {
         /// Number of bits found.
@@ -97,9 +98,11 @@ pub fn x509_key(cert: &X509Certificate) -> Result<VerifyingKey, Error> {
         .tbs_certificate
         .subject_public_key_info
         .subject_public_key;
-    let public_key_bytes = public_key.as_bytes().ok_or(Error::InvalidPublicKeyLength {
-        bytes: public_key.bit_len(),
-    })?;
+    let public_key_bytes = public_key
+        .as_bytes()
+        .ok_or(Error::PublicKeyIsNotOctetAligned {
+            bits: public_key.bit_len(),
+        })?;
     verifying_key(public_key_bytes)
 }
 
@@ -142,22 +145,17 @@ fn spki_oid_as_asn1_rs_oid(oid: &'_ spki::ObjectIdentifier) -> Oid<'_> {
 }
 
 /// Creates [`VerifyingKey`] from the first 32 bytes in a slice.
-/// Since only prefix bytes are used, both extended and common public keys are supported here.
+/// Since only prefix bytes are used, both extended and common public keys are supported
+/// here.
 fn verifying_key(public_key: &[u8]) -> Result<VerifyingKey, Error> {
     public_key
         // TODO: replace with checked `[u8; 32]` conversion once we only support common ed25119.
         .first_chunk()
         // Public key is too short.
-        .ok_or_else(|| {
-            Error::InvalidPublicKeyLength {
-                // Converting from bytes to bits.
-                bytes: public_key.len().saturating_mul(size_of::<u8>()),
-            }
+        .ok_or(Error::InvalidPublicKeyLength {
+            bytes: public_key.len(),
         })
-        .and_then(|bytes| {
-            VerifyingKey::from_bytes(bytes)
-                .map_err(|source| Error::PublicKeyIsNotEd25519 { source })
-        })
+        .and_then(|bytes| VerifyingKey::from_bytes(bytes).map_err(Error::from))
 }
 
 #[cfg(test)]
