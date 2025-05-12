@@ -68,3 +68,13 @@ pub fn vkey_from_bytes(bytes: &[u8]) -> Result<ed25519_dalek::VerifyingKey, VKey
     ed25519_dalek::VerifyingKey::from_bytes(&ed25519)
         .map_err(|source| VKeyFromBytesError::ParseError { source })
 }
+
+/// Zero out the last n bytes
+#[must_use]
+pub fn zero_out_last_n_bytes(data: &[u8], n: usize) -> Vec<u8> {
+    let mut vec = data.to_vec();
+    if let Some(slice) = vec.get_mut(data.len().saturating_sub(n)..) {
+        slice.fill(0);
+    }
+    vec
+}

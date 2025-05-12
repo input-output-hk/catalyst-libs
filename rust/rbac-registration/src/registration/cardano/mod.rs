@@ -7,14 +7,16 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::bail;
+use anyhow::{bail, Context};
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{StakeAddress, TransactionId};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
+    conversion::zero_out_last_n_bytes,
+    problem_report::ProblemReport,
     uuid::UuidV4,
 };
-use ed25519_dalek::VerifyingKey;
+use ed25519_dalek::{Signature, VerifyingKey};
 use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
@@ -23,7 +25,7 @@ use x509_cert::certificate::Certificate as X509Certificate;
 
 use crate::cardano::cip509::{
     CertKeyHash, CertOrPk, Cip0134UriSet, Cip509, PaymentHistory, PointData, RoleData,
-    RoleDataRecord,
+    RoleDataRecord, ValidationSignature,
 };
 
 /// Registration chains.
@@ -43,7 +45,7 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn new(cip509: Cip509) -> anyhow::Result<Self> {
+    pub fn new(cip509: &Cip509) -> anyhow::Result<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
 
         Ok(Self {
@@ -59,9 +61,17 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
-        let new_inner = self.inner.update(cip509)?;
-
+    pub fn update(&self, cip509: &Cip509) -> anyhow::Result<Self> {
+        let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
+        let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
+            self.inner.update(cip509, signing_pk)?
+        } else {
+            cip509.report().missing_field(
+                "latest signing key for role 0",
+                "cannot perform signature validation during Registration Chain update",
+            );
+            bail!("No latest signing key found for role 0, cannot perform signature validation")
+        };
         Ok(Self {
             inner: Arc::new(new_inner),
         })
@@ -264,18 +274,25 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn new(cip509: Cip509) -> anyhow::Result<Self> {
+    fn new(cip509: &Cip509) -> anyhow::Result<Self> {
+        let context = "Registration Chain new";
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
+            cip509
+                .report()
+                .invalid_value("previous transaction ID", "None", "Some", context);
             bail!("Invalid chain root, previous transaction ID should be None.");
         }
         let Some(catalyst_id) = cip509.catalyst_id().cloned() else {
+            cip509.report().missing_field("catalyst id", context);
             bail!("Invalid chain root, catalyst id should be present.");
         };
 
         let point_tx_idx = cip509.origin().clone();
         let current_tx_id_hash = cip509.txn_hash();
-        let (purpose, registration, payment_history) = match cip509.consume() {
+        let validation_signature = cip509.validation_signature().cloned();
+        let raw_aux_data = cip509.raw_aux_data().to_vec();
+        let (purpose, registration, payment_history) = match cip509.clone().consume() {
             Ok(v) => v,
             Err(e) => {
                 let error = format!("Invalid Cip509: {e:?}");
@@ -283,6 +300,42 @@ impl RegistrationChainInner {
                 bail!(error);
             },
         };
+
+        // Role data
+        let mut role_data_history = HashMap::new();
+        let mut role_data_record = HashMap::new();
+
+        update_role_data(
+            &registration,
+            &mut role_data_history,
+            &mut role_data_record,
+            &point_tx_idx,
+        );
+
+        // There should be role 0 since we already check that the chain root (no previous tx id)
+        // must contain role 0
+        let Some(role0_data) = role_data_record.get(&RoleId::Role0) else {
+            cip509.report().missing_field("Role 0", context);
+            bail!("Role 0 not found");
+        };
+        let Some(signing_pk) = role0_data
+            .signing_keys()
+            .last()
+            .and_then(|key| key.data().extract_pk())
+        else {
+            cip509
+                .report()
+                .missing_field("Signing pk for role 0 not found", context);
+            bail!("No valid signing key found for role 0");
+        };
+
+        check_validation_signature(
+            validation_signature,
+            &raw_aux_data,
+            signing_pk,
+            cip509.report(),
+            context,
+        )?;
 
         let purpose = vec![purpose];
         let certificate_uris = registration.certificate_uris.clone();
@@ -305,17 +358,6 @@ impl RegistrationChainInner {
             &point_tx_idx,
         );
         let revocations = revocations_list(registration.revocation_list.clone(), &point_tx_idx);
-
-        // Role data
-        let mut role_data_history = HashMap::new();
-        let mut role_data_record = HashMap::new();
-
-        update_role_data(
-            &registration,
-            &mut role_data_history,
-            &mut role_data_record,
-            &point_tx_idx,
-        );
 
         Ok(Self {
             catalyst_id,
@@ -340,23 +382,43 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
+    fn update(&self, cip509: &Cip509, signing_pk: VerifyingKey) -> anyhow::Result<Self> {
+        let context = "Registration Chain update";
         let mut new_inner = self.clone();
 
         let Some(prv_tx_id) = cip509.previous_transaction() else {
-            bail!("Empty previous transaction ID");
+            cip509
+                .report()
+                .missing_field("previous transaction ID", context);
+            bail!("Missing previous transaction ID");
         };
+
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
-        // or else it is not a part of the chain
         if prv_tx_id == self.current_tx_id_hash {
-            // Update the current transaction ID hash
+            // Perform signature validation
+            // This should be done before updating the signing key
+            check_validation_signature(
+                cip509.validation_signature().cloned(),
+                cip509.raw_aux_data(),
+                signing_pk,
+                cip509.report(),
+                context,
+            )?;
+
+            // If successful, update the chain current transaction ID hash
             new_inner.current_tx_id_hash = cip509.txn_hash();
         } else {
+            cip509.report().invalid_value(
+                "previous transaction ID",
+                &format!("{prv_tx_id:?}"),
+                &format!("{:?}", self.current_tx_id_hash),
+                context,
+            );
             bail!("Invalid previous transaction ID, not a part of this registration chain");
         }
 
         let point_tx_idx = cip509.origin().clone();
-        let (purpose, registration, payment_history) = match cip509.consume() {
+        let (purpose, registration, payment_history) = match cip509.clone().consume() {
             Ok(v) => v,
             Err(e) => {
                 let error = format!("Invalid Cip509: {e:?}");
@@ -403,6 +465,41 @@ impl RegistrationChainInner {
     }
 }
 
+/// Perform a check on the validation signature.
+/// The auxiliary data should be sign with the latest signing public key.
+fn check_validation_signature(
+    validation_signature: Option<ValidationSignature>, raw_aux_data: &[u8],
+    signing_pk: VerifyingKey, report: &ProblemReport, context: &str,
+) -> anyhow::Result<()> {
+    let context = &format!("Check Validation Signature in {context}");
+    // Note that the validation signature can be in the range of 1 - 64 bytes
+    // But since we allow only Ed25519, it should be 64 bytes
+    let unsigned_aux = zero_out_last_n_bytes(raw_aux_data, Signature::BYTE_SIZE);
+
+    let validation_sig = validation_signature.with_context(|| {
+        report.missing_field("validation signature", context);
+        "Missing validation signature"
+    })?;
+
+    let sig: Signature = validation_sig.clone().try_into().with_context(|| {
+        report.conversion_error(
+            "validation signature",
+            &format!("{validation_sig:?}"),
+            "Ed25519 signature",
+            context,
+        );
+        "Failed to convert validation signature to Ed25519 Signature"
+    })?;
+
+    // Verify the signature using the latest signing public key
+    signing_pk
+        .verify_strict(&unsigned_aux, &sig)
+        .with_context(|| {
+            report.other("Signature validation failed", context);
+            "Signature verification failed"
+        })
+}
+
 #[cfg(test)]
 mod test {
     use catalyst_types::catalyst_id::role_index::RoleId;
@@ -419,7 +516,7 @@ mod test {
         data.assert_valid(&registration);
 
         // Create a chain with the first registration.
-        let chain = RegistrationChain::new(registration).unwrap();
+        let chain = RegistrationChain::new(&registration).unwrap();
         assert_eq!(chain.purpose(), &[data.purpose]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().first().unwrap();
@@ -445,7 +542,7 @@ mod test {
             .unwrap();
         assert!(registration.report().is_problematic());
 
-        let error = chain.update(registration).unwrap_err();
+        let error = chain.update(&registration).unwrap_err();
         let error = format!("{error:?}");
         assert!(
             error.contains("Invalid previous transaction ID"),
@@ -459,7 +556,7 @@ mod test {
             .unwrap()
             .unwrap();
         data.assert_valid(&registration);
-        let update = chain.update(registration).unwrap();
+        let update = chain.update(&registration).unwrap();
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
         assert!(update.role_data_record().contains_key(&data.role));
