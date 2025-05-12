@@ -21,14 +21,16 @@ pub enum Error {
     },
     /// Public key has invalid length.
     #[error(
-        "Invalid public key length (found {bits} bits, but expected {PUBLIC_KEY_LENGTH} bytes)"
+        "Invalid public key length (found {bytes} bytes, but expected {PUBLIC_KEY_LENGTH} bytes)"
     )]
     InvalidPublicKeyLength {
-        /// Number of the bits found.
-        ///
-        /// # Note
-        // Counting bits instead of bytes here, because of [`X509Certificate`] implementation of
-        // the public key storage.
+        /// Number of bytes found.
+        bytes: usize,
+    },
+    /// Public key is stored in a bit string, where number of unused bits is *not* equal to zero.
+    #[error("Invalid public key is not octet aligned (found {bits} bits)")]
+    PublicKeyIsNotOctetAligned {
+        /// Number of bits found.
         bits: usize,
     },
     /// Public key doesn't pass [`ed25519_dalek`] constraint check.
@@ -52,11 +54,19 @@ impl Error {
                     context,
                 );
             },
-            Error::InvalidPublicKeyLength { bits } => {
+            Error::InvalidPublicKeyLength { bytes } => {
+                report.invalid_value(
+                    "subject_public_key",
+                    &format!("{bytes} bytes"),
+                    &format!("Must be {PUBLIC_KEY_LENGTH} bytes long"),
+                    context,
+                );
+            },
+            Error::PublicKeyIsNotOctetAligned { bits } => {
                 report.invalid_value(
                     "subject_public_key",
                     &format!("{bits} bits"),
-                    &format!("Must be {PUBLIC_KEY_LENGTH} bytes long"),
+                    "Bit string must be octet aligned having no unused bits",
                     context,
                 );
             },
@@ -88,7 +98,7 @@ pub fn x509_key(cert: &X509Certificate) -> Result<VerifyingKey, Error> {
         .subject_public_key_info
         .subject_public_key;
     let public_key_bytes = public_key.as_bytes().ok_or(Error::InvalidPublicKeyLength {
-        bits: public_key.bit_len(),
+        bytes: public_key.bit_len(),
     })?;
     verifying_key(public_key_bytes)
 }
@@ -131,15 +141,17 @@ fn spki_oid_as_asn1_rs_oid(oid: &'_ spki::ObjectIdentifier) -> Oid<'_> {
     Oid::new(Cow::Borrowed(oid.as_bytes()))
 }
 
-/// Creates [`VerifyingKey`] from the given public key.
+/// Creates [`VerifyingKey`] from the first 32 bytes in a slice.
+/// Since only prefix bytes are used, both extended and common public keys are supported here.
 fn verifying_key(public_key: &[u8]) -> Result<VerifyingKey, Error> {
     public_key
+        // TODO: replace with checked `[u8; 32]` conversion once we only support common ed25119.
         .first_chunk()
         // Public key is too short.
         .ok_or_else(|| {
             Error::InvalidPublicKeyLength {
                 // Converting from bytes to bits.
-                bits: public_key.len().saturating_mul(size_of::<u8>()),
+                bytes: public_key.len().saturating_mul(size_of::<u8>()),
             }
         })
         .and_then(|bytes| {
