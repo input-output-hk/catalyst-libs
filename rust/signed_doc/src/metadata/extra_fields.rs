@@ -1,12 +1,11 @@
 //! Catalyst Signed Document Extra Fields.
 
-use catalyst_types::{problem_report::ProblemReport, uuid::UuidV4};
+use catalyst_types::problem_report::ProblemReport;
 use coset::{cbor::Value, Label, ProtectedHeader};
 
 use super::{
-    cose_protected_header_find,
-    utils::{decode_document_field_from_protected_header, CborUuidV4},
-    DocumentRef, Section,
+    cose_protected_header_find, utils::decode_document_field_from_protected_header, DocumentRef,
+    Section,
 };
 
 /// `ref` field COSE key value
@@ -19,14 +18,8 @@ const REPLY_KEY: &str = "reply";
 const SECTION_KEY: &str = "section";
 /// `collabs` field COSE key value
 const COLLABS_KEY: &str = "collabs";
-/// `brand_id` field COSE key value
-const BRAND_ID_KEY: &str = "brand_id";
-/// `campaign_id` field COSE key value
-const CAMPAIGN_ID_KEY: &str = "campaign_id";
-/// `election_id` field COSE key value
-const ELECTION_ID_KEY: &str = "election_id";
-/// `category_id` field COSE key value
-const CATEGORY_ID_KEY: &str = "category_id";
+/// `parameters` field COSE key value
+const PARAMETERS_KEY: &str = "parameters";
 
 /// Extra Metadata Fields.
 ///
@@ -48,18 +41,9 @@ pub struct ExtraFields {
     /// Reference to the document collaborators. Collaborator type is TBD.
     #[serde(default = "Vec::new", skip_serializing_if = "Vec::is_empty")]
     collabs: Vec<String>,
-    /// Unique identifier for the brand that is running the voting.
+    /// Reference to the parameters document.
     #[serde(skip_serializing_if = "Option::is_none")]
-    brand_id: Option<DocumentRef>,
-    /// Unique identifier for the campaign of voting.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    campaign_id: Option<DocumentRef>,
-    /// Unique identifier for the election.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    election_id: Option<UuidV4>,
-    /// Unique identifier for the voting category as a collection of proposals.
-    #[serde(skip_serializing_if = "Option::is_none")]
-    category_id: Option<DocumentRef>,
+    parameters: Option<DocumentRef>,
 }
 
 impl ExtraFields {
@@ -93,28 +77,10 @@ impl ExtraFields {
         &self.collabs
     }
 
-    /// Return `brand_id` field.
+    /// Return `parameters` field.
     #[must_use]
-    pub fn brand_id(&self) -> Option<DocumentRef> {
-        self.brand_id
-    }
-
-    /// Return `campaign_id` field.
-    #[must_use]
-    pub fn campaign_id(&self) -> Option<DocumentRef> {
-        self.campaign_id
-    }
-
-    /// Return `election_id` field.
-    #[must_use]
-    pub fn election_id(&self) -> Option<UuidV4> {
-        self.election_id
-    }
-
-    /// Return `category_id` field.
-    #[must_use]
-    pub fn category_id(&self) -> Option<DocumentRef> {
-        self.category_id
+    pub fn parameters(&self) -> Option<DocumentRef> {
+        self.parameters
     }
 
     /// Fill the COSE header `ExtraFields` data into the header builder.
@@ -141,26 +107,11 @@ impl ExtraFields {
                 Value::Array(self.collabs.iter().cloned().map(Value::Text).collect()),
             );
         }
-        if let Some(brand_id) = &self.brand_id {
-            builder = builder.text_value(BRAND_ID_KEY.to_string(), Value::try_from(*brand_id)?);
+
+        if let Some(parameters) = &self.parameters {
+            builder = builder.text_value(PARAMETERS_KEY.to_string(), Value::try_from(*parameters)?);
         }
 
-        if let Some(campaign_id) = &self.campaign_id {
-            builder =
-                builder.text_value(CAMPAIGN_ID_KEY.to_string(), Value::try_from(*campaign_id)?);
-        }
-
-        if let Some(election_id) = &self.election_id {
-            builder = builder.text_value(
-                ELECTION_ID_KEY.to_string(),
-                Value::try_from(CborUuidV4(*election_id))?,
-            );
-        }
-
-        if let Some(category_id) = &self.category_id {
-            builder =
-                builder.text_value(CATEGORY_ID_KEY.to_string(), Value::try_from(*category_id)?);
-        }
         Ok(builder)
     }
 
@@ -196,28 +147,9 @@ impl ExtraFields {
             COSE_DECODING_CONTEXT,
             error_report,
         );
-        let brand_id = decode_document_field_from_protected_header(
+        let parameters = decode_document_field_from_protected_header(
             protected,
-            BRAND_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        );
-        let campaign_id = decode_document_field_from_protected_header(
-            protected,
-            CAMPAIGN_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        );
-        let election_id = decode_document_field_from_protected_header::<CborUuidV4>(
-            protected,
-            ELECTION_ID_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        )
-        .map(|v| v.0);
-        let category_id = decode_document_field_from_protected_header(
-            protected,
-            CATEGORY_ID_KEY,
+            PARAMETERS_KEY,
             COSE_DECODING_CONTEXT,
             error_report,
         );
@@ -227,10 +159,7 @@ impl ExtraFields {
             template,
             reply,
             section,
-            brand_id,
-            campaign_id,
-            election_id,
-            category_id,
+            parameters,
             ..Default::default()
         };
 

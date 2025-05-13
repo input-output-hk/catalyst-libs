@@ -5,6 +5,7 @@ pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
+    fmt,
     sync::LazyLock,
     time::{Duration, SystemTime},
 };
@@ -13,18 +14,19 @@ use anyhow::Context;
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
     problem_report::ProblemReport,
-    uuid::Uuid,
+    uuid::{Uuid, UuidV4},
 };
 use coset::{CoseSign, CoseSignature};
 use rules::{
-    CategoryRule, ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, RefRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
     ReplyRule, Rules, SectionRule, SignatureKidRule,
 };
 
 use crate::{
     doc_types::{
-        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-        PROPOSAL_DOCUMENT_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE,
+        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PARAMETERS_TEMPLATE_UUID_TYPE,
+        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
+        PROPOSAL_TEMPLATE_UUID_TYPE,
     },
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     CatalystSignedDocument, ContentEncoding, ContentType,
@@ -32,6 +34,17 @@ use crate::{
 
 /// A table representing a full set or validation rules per document id.
 static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
+
+/// Returns an [`UuidV4`] from the provided argument, panicking if the argument is
+/// invalid.
+#[allow(clippy::expect_used)]
+fn expect_uuidv4<T>(t: T) -> UuidV4
+where
+    T: TryInto<UuidV4>,
+    <T as TryInto<UuidV4>>::Error: fmt::Debug,
+{
+    t.try_into().expect("Must be a valid UUID V4")
+}
 
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
@@ -47,11 +60,12 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: PROPOSAL_TEMPLATE_UUID_TYPE
-                .try_into()
-                .expect("Must be a valid UUID V4"),
+            exp_template_type: expect_uuidv4(PROPOSAL_TEMPLATE_UUID_TYPE),
         },
-        category: CategoryRule::Specified { optional: true },
+        parameters: ParametersRule::Specified {
+            exp_parameters_type: expect_uuidv4(PARAMETERS_TEMPLATE_UUID_TYPE),
+            optional: true,
+        },
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
         section: SectionRule::NotSpecified,
@@ -59,6 +73,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: &[RoleId::Proposer],
         },
     };
+
     document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
 
     let comment_document_rules = Rules {
@@ -70,24 +85,18 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: COMMENT_TEMPLATE_UUID_TYPE
-                .try_into()
-                .expect("Must be a valid UUID V4"),
+            exp_template_type: expect_uuidv4(COMMENT_TEMPLATE_UUID_TYPE),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE
-                .try_into()
-                .expect("Must be a valid UUID V4"),
+            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: COMMENT_DOCUMENT_UUID_TYPE
-                .try_into()
-                .expect("Must be a valid UUID V4"),
+            exp_reply_type: expect_uuidv4(COMMENT_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },
-        category: CategoryRule::NotSpecified,
+        parameters: ParametersRule::NotSpecified,
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
@@ -112,11 +121,12 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
-        category: CategoryRule::Specified { optional: true },
+        parameters: ParametersRule::Specified {
+            exp_parameters_type: expect_uuidv4(PARAMETERS_TEMPLATE_UUID_TYPE),
+            optional: true,
+        },
         doc_ref: RefRule::Specified {
-            exp_ref_type: PROPOSAL_DOCUMENT_UUID_TYPE
-                .try_into()
-                .expect("Must be a valid UUID V4"),
+            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
