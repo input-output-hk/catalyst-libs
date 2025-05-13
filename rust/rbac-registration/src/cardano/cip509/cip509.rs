@@ -296,6 +296,12 @@ impl Cip509 {
         self.raw_aux_data.as_ref()
     }
 
+    /// Returns a `Cip509` RBAC metadata.
+    #[must_use]
+    pub fn metadata(&self) -> Option<&Cip509RbacMetadata> {
+        self.metadata.as_ref()
+    }
+
     /// Returns `Cip509` fields consuming the structure if it was successfully decoded and
     /// validated otherwise return the problem report that contains all the encountered
     /// issues.
