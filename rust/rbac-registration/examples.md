@@ -100,10 +100,10 @@ flowchart LR
     style R4 fill: yellow
 ```
 
-It isn't allowed to reference not the latest valid registration in the chain.
-In the example the registration in the slot number 130 would be ignored because it references the root registration, but
-the latest transaction is the one in the slot number 120.
-The registration in the slot number 140 is ignored because it references an invalid transaction.
+Only the latest valid registration in the chain can be referenced.
+In the example the registration at slot 130 is ignored because it references the root registration, while the most
+recent valid transaction is the one at slot 120.
+The registration at slot 140 is also ignored because it references an invalid transaction.
 
 ### Updating a stake address
 
@@ -188,8 +188,8 @@ The `Chain2` registration is invalid because it uses the same stake address and 
 There are no reason to start a new registration chain with the same data already registered and not to update the
 existing one, so this isn't allowed.
 
-The `Chain3` registration is valid because the `PubKey2` key wasn't used before to start a chain and the `Stake1` stake
-address isn't currently used by `Chain1`.
+The `Chain3` registration is valid because the `PubKey2` key (a Catalyst ID for the new chain would be based on it)
+wasn't used before to start a chain and the `Stake1` stake address isn't currently used by `Chain1`.
 
 The `Chain4` registration is valid, but it takes ownership over the `Stake2` stake address of the first chain.
 It is allowed because the new chain uses a new public key.
@@ -198,6 +198,7 @@ used in that registration chain).
 This can also be referred as "restarting" or "overriding" a chain.
 After that `Chain1` is still valid and can be potentially continued, but as for now it has zero voting power because it
 has no active stake address.
+It is allowed to use a RBAC token based on that chain and perform actions such as submitting a proposal.
 
 ### Restarting multiple chains
 
@@ -207,7 +208,7 @@ block-beta
     space s1["slot 1"] s2["slot 2"] s3["slot 3"] space res["result"]
     c1["chain 1"] A0["..."] A1["Stake1\nPubKey1"] space space AF["\nPubKey1"]
     c2["chain 2"] B0["..."] B1["Stake2\nPubKey2"] space space BF["\nPubKey2"]
-    c3["chain 3"] space space C0["Stake1, Stake2\nPubKey3"] space CF["Stake1, Stake2\nPubKey2"]
+    c3["chain 3"] space space C0["Stake1, Stake2\nPubKey3"] space CF["Stake1, Stake2\nPubKey3"]
     style A0 fill: green
     style A1 fill: green
     style AF fill: gray
