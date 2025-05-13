@@ -282,6 +282,14 @@ pub async fn validate_signatures(
         return Ok(false);
     };
 
+    if doc.signatures().is_empty() {
+        doc.report().other(
+            "Catalyst Signed Document is unsigned",
+            "During Catalyst Signed Document signature validation",
+        );
+        return Ok(false);
+    }
+
     let sign_rules = doc
         .signatures()
         .cose_signatures_with_kids()

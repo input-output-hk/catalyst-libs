@@ -23,14 +23,20 @@ async fn single_signature_validation_test() {
     provider.add_pk(kid.clone(), pk);
     assert!(validator::validate_signatures(&signed_doc, &provider)
         .await
-        .is_ok_and(|v| v));
+        .unwrap());
 
     // case: empty provider
     assert!(
-        validator::validate_signatures(&signed_doc, &TestVerifyingKeyProvider::default())
+        !validator::validate_signatures(&signed_doc, &TestVerifyingKeyProvider::default())
             .await
-            .is_ok_and(|v| !v)
+            .unwrap()
     );
+
+    // case: missing signatures
+    let (unsigned_doc, ..) = common::create_dummy_doc(UuidV4::new().into()).unwrap();
+    assert!(!validator::validate_signatures(&unsigned_doc, &provider)
+        .await
+        .unwrap());
 }
 
 #[tokio::test]
