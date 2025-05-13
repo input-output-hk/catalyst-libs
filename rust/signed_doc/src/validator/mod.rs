@@ -322,7 +322,7 @@ where
         );
         return Ok(false);
     };
-    
+
     let tbs_data = cose_sign.tbs_data(&[], signature);
     let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
         report.invalid_value(
