@@ -282,6 +282,14 @@ pub async fn validate_signatures(
         return Ok(false);
     };
 
+    if doc.signatures().is_empty() {
+        doc.report().other(
+            "Catalyst Signed Document is unsigned",
+            "During Catalyst Signed Document signature validation",
+        );
+        return Ok(false);
+    }
+
     let sign_rules = doc
         .signatures()
         .cose_signatures_with_kids()
@@ -314,7 +322,7 @@ where
         );
         return Ok(false);
     };
-
+    
     let tbs_data = cose_sign.tbs_data(&[], signature);
     let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
         report.invalid_value(
