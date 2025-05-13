@@ -45,7 +45,7 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn new(cip509: &Cip509) -> anyhow::Result<Self> {
+    pub fn new(cip509: Cip509) -> anyhow::Result<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
 
         Ok(Self {
@@ -61,7 +61,7 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn update(&self, cip509: &Cip509) -> anyhow::Result<Self> {
+    pub fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
         let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
             self.inner.update(cip509, signing_pk)?
@@ -274,7 +274,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn new(cip509: &Cip509) -> anyhow::Result<Self> {
+    fn new(cip509: Cip509) -> anyhow::Result<Self> {
         let context = "Registration Chain new";
         // Should be chain root, return immediately if not
         if cip509.previous_transaction().is_some() {
@@ -292,25 +292,19 @@ impl RegistrationChainInner {
         let current_tx_id_hash = cip509.txn_hash();
         let validation_signature = cip509.validation_signature().cloned();
         let raw_aux_data = cip509.raw_aux_data().to_vec();
-        let (purpose, registration, payment_history) = match cip509.clone().consume() {
-            Ok(v) => v,
-            Err(e) => {
-                let error = format!("Invalid Cip509: {e:?}");
-                error!(error);
-                bail!(error);
-            },
-        };
 
         // Role data
         let mut role_data_history = HashMap::new();
         let mut role_data_record = HashMap::new();
 
-        update_role_data(
-            &registration,
-            &mut role_data_history,
-            &mut role_data_record,
-            &point_tx_idx,
-        );
+        if let Some(registration) = cip509.metadata() {
+            update_role_data(
+                registration,
+                &mut role_data_history,
+                &mut role_data_record,
+                &point_tx_idx,
+            );
+        }
 
         // There should be role 0 since we already check that the chain root (no previous tx id)
         // must contain role 0
@@ -336,6 +330,15 @@ impl RegistrationChainInner {
             cip509.report(),
             context,
         )?;
+
+        let (purpose, registration, payment_history) = match cip509.consume() {
+            Ok(v) => v,
+            Err(e) => {
+                let error = format!("Invalid Cip509: {e:?}");
+                error!(error);
+                bail!(error);
+            },
+        };
 
         let purpose = vec![purpose];
         let certificate_uris = registration.certificate_uris.clone();
@@ -382,7 +385,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn update(&self, cip509: &Cip509, signing_pk: VerifyingKey) -> anyhow::Result<Self> {
+    fn update(&self, cip509: Cip509, signing_pk: VerifyingKey) -> anyhow::Result<Self> {
         let context = "Registration Chain update";
         let mut new_inner = self.clone();
 
@@ -418,7 +421,7 @@ impl RegistrationChainInner {
         }
 
         let point_tx_idx = cip509.origin().clone();
-        let (purpose, registration, payment_history) = match cip509.clone().consume() {
+        let (purpose, registration, payment_history) = match cip509.consume() {
             Ok(v) => v,
             Err(e) => {
                 let error = format!("Invalid Cip509: {e:?}");
@@ -516,7 +519,7 @@ mod test {
         data.assert_valid(&registration);
 
         // Create a chain with the first registration.
-        let chain = RegistrationChain::new(&registration).unwrap();
+        let chain = RegistrationChain::new(registration).unwrap();
         assert_eq!(chain.purpose(), &[data.purpose]);
         assert_eq!(1, chain.x509_certs().len());
         let origin = &chain.x509_certs().get(&0).unwrap().first().unwrap();
@@ -542,7 +545,7 @@ mod test {
             .unwrap();
         assert!(registration.report().is_problematic());
 
-        let error = chain.update(&registration).unwrap_err();
+        let error = chain.update(registration).unwrap_err();
         let error = format!("{error:?}");
         assert!(
             error.contains("Invalid previous transaction ID"),
@@ -556,7 +559,7 @@ mod test {
             .unwrap()
             .unwrap();
         data.assert_valid(&registration);
-        let update = chain.update(&registration).unwrap();
+        let update = chain.update(registration).unwrap();
         // Current tx hash should be equal to the hash from block 4.
         assert_eq!(update.current_tx_id_hash(), data.txn_hash);
         assert!(update.role_data_record().contains_key(&data.role));
