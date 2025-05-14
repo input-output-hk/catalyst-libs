@@ -81,7 +81,7 @@ Therefore, one should normally wait for the previous transaction to be processed
 In the example above there are three transactions: `A`, `B` and `C`.
 If all of them reference the root registration and are included into the same block then only one of them will be
 applied to the registration chain and the other two will be considered invalid.
-If these transactions reference each other (`A - B - C`) then the order is entirely depends on Cardano blockchain and
+If these transactions reference each other (`A - B - C`) then the order entirely depends on Cardano blockchain and
 cannot be predicted.
 It is possible that transactions `B` and `C` would be executed first and rejected as invalid and only `A` will be
 applied.
