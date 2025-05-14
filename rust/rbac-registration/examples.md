@@ -221,7 +221,7 @@ block-beta
 
 It is possible to restart/override multiple chains with one new registration.
 In the example above there are two chains with stake addresses `Stake1` and `Stake2` correspondingly.
-The new root registration contains both of these addresses, so assuming it is valid, it "restarts" both two previous
+The new root registration contains both of these addresses, so assuming it is valid, it "restarts" both previous
 registrations.
 
 As explained in the [restarting a chain](#restarting-a-chain) example, a new registration must use a different public
