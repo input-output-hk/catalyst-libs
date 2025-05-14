@@ -134,8 +134,24 @@ impl Metadata {
         protected: &coset::ProtectedHeader, report: &ProblemReport,
     ) -> Self {
         let metadata = InnerMetadata::from_protected_header(protected, report);
+        let unsupported = count_unsupported_cose_keys(&protected.header, &metadata);
+        if unsupported != 0 {
+            report.functional_validation(
+                &format!("Unsupported protected fields are not allowed ({unsupported} found)"),
+                "When deserializing protected header",
+            );
+        }
         Self::from_metadata_fields(metadata, report)
     }
+}
+
+/// Counts how many COSE keys header contains that weren't deserialized into
+/// [`InnerMetadata`].
+fn count_unsupported_cose_keys(
+    original_header: &coset::Header, deserialized_metadata: &InnerMetadata,
+) -> usize {
+    count_relevant_cose_keys(original_header)
+        .saturating_sub(usize::from(deserialized_metadata.count_serialized_fields()))
 }
 
 impl InnerMetadata {
@@ -211,6 +227,31 @@ impl InnerMetadata {
 
         metadata
     }
+
+    /// Counts non empty fields. These fields reflect what the
+    /// serialized/deserialized object would look like, as the empty ones are skipped.
+    ///
+    /// Includes [`ExtraFields::count_serialized_fields`].
+    #[must_use]
+    fn count_serialized_fields(&self) -> u8 {
+        [
+            self.doc_type.is_some(),
+            self.id.is_some(),
+            self.ver.is_some(),
+            self.content_type.is_some(),
+            self.content_encoding.is_some(),
+        ]
+        .into_iter()
+        .map(u8::from)
+        .sum::<u8>()
+        .saturating_add(self.extra.count_serialized_fields())
+    }
+}
+
+/// Counts non empty fields, excluding those that are **not** used when deserializing
+/// [`Metadata`].
+fn count_relevant_cose_keys(header: &coset::Header) -> usize {
+    usize::from(header.content_type.is_some()).saturating_add(header.rest.len())
 }
 
 impl Display for Metadata {

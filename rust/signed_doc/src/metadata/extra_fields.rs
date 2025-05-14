@@ -117,6 +117,25 @@ impl ExtraFields {
         self.category_id
     }
 
+    /// Returns count of non empty fields. These fields reflect what the
+    /// serialized/deserialized object would look like, as the empty ones are skipped.
+    #[must_use]
+    pub(super) fn count_serialized_fields(&self) -> u8 {
+        [
+            self.doc_ref().is_some(),
+            self.template().is_some(),
+            self.reply().is_some(),
+            self.section().is_some(),
+            !self.collabs().is_empty(),
+            self.brand_id().is_some(),
+            self.election_id().is_some(),
+            self.category_id().is_some(),
+        ]
+        .into_iter()
+        .map(u8::from)
+        .sum()
+    }
+
     /// Fill the COSE header `ExtraFields` data into the header builder.
     pub(super) fn fill_cose_header_fields(
         &self, mut builder: coset::HeaderBuilder,
