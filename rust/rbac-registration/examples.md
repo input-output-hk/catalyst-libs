@@ -195,7 +195,7 @@ The `Chain4` registration is valid, but it takes ownership over the `Stake2` sta
 It is allowed because the new chain uses a new public key.
 This can be useful if a user lost his private key while maintaining access to his Cardano wallet (and the stake address
 used in that registration chain).
-This can also be referred as "restarting" or "overriding" a chain.
+This can also be referred to as "restarting" or "overriding" a chain.
 After that `Chain1` is still valid and can be potentially continued, but as for now it has zero voting power because it
 has no active stake address.
 It is allowed to use a RBAC token based on that chain and perform actions such as submitting a proposal.
