@@ -198,7 +198,7 @@ used in that registration chain).
 This can also be referred to as "restarting" or "overriding" a chain.
 After that `Chain1` is still valid and can be potentially continued, but as for now it has zero voting power because it
 has no active stake address.
-It is allowed to use a RBAC token based on that chain and perform actions such as submitting a proposal.
+It is allowed to use an RBAC token based on that chain and perform actions such as submitting a proposal.
 
 ### Restarting multiple chains
 
