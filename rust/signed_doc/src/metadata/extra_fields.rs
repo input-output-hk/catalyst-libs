@@ -117,7 +117,7 @@ impl ExtraFields {
         self.category_id
     }
 
-    /// Returns count of non empty fields. These fields reflect what the
+    /// Counts non empty fields. These fields reflect what the
     /// serialized/deserialized object would look like, as the empty ones are skipped.
     #[must_use]
     pub(super) fn count_serialized_fields(&self) -> u8 {
