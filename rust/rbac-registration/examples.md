@@ -144,22 +144,18 @@ block-beta
     c4["chain 4"] space space space D0["Stake4\nPubKey3"]
     style A0 fill: green
     style A1 fill: green
-    style A2 fill: green
+    style A2 fill: red
     style B0 fill: red
-    style C0 fill: green
+    style C0 fill: red
     style D0 fill: green
 ```
 
-It isn't allowed to use the key that was already used to start any of existing chains because it would result in the
-same Catalyst ID.
-In the example above the `Chain1` chain consists of the initial registration with the `PubKey1` key (therefore the
-Catalyst ID is based on it) with two subject public key updates (`PubKey2` and `PubKey3`).
-The `Chain2` chain is invalid because it uses the same `PubKey1` and would have the same Catalyst ID.
-Both `Chain3` and `Chain4` chains are valid even though they use the `PubKey2` and `PubKey3` keys that are already used
-in the `Chain1` chain.
+It isn't allowed to use a role 0 public key that was used in any of the other registration chains.
 
-It is worth noting that while it is allowed to reuse a public key there is no practical reason to do so.
-The existing chain can be updated instead.
+In the example above the third registration in the first chain is invalid, so `PubKey3` that is used in that transaction
+can be used in the fourth chain.
+Both second and third chain are invalid because they use `PubKey1` and `PubKey2` keys that are already used in the first
+chain.
 
 ### Restarting a chain
 
