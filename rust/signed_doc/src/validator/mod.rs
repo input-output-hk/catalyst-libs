@@ -24,7 +24,7 @@ use rules::{
 
 use crate::{
     doc_types::{
-        COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PARAMETERS_TEMPLATE_UUID_TYPE,
+        CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE,
         PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
         PROPOSAL_TEMPLATE_UUID_TYPE,
     },
@@ -62,7 +62,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp_template_type: expect_uuidv4(PROPOSAL_TEMPLATE_UUID_TYPE),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(PARAMETERS_TEMPLATE_UUID_TYPE),
+            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::NotSpecified,
@@ -121,7 +121,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(PARAMETERS_TEMPLATE_UUID_TYPE),
+            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::Specified {
