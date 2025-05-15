@@ -305,7 +305,7 @@ class DotLinkEnd(BaseModel):
     @property
     def port_label(self) -> str | None:
         """Get label of the port."""
-        return self.port.label if self.is_cluster else None # type: ignore  # noqa: PGH003
+        return self.port.label if self.is_cluster else None  # type: ignore  # noqa: PGH003
 
     def __str__(self) -> str:
         """Str."""
@@ -376,20 +376,20 @@ class DotFile:
         self.title = title
         self.title_size = title_size
         self.rankdir = "LR"
-        self.graph = {
+        self.graph: dict[str, str | int] = {
             "fontname": DEFAULT_FONT_NAME,
             "fontsize": DEFAULT_FONT_SIZE,
             "fontcolor": DEFAULT_FONT_COLOR,
             "bgcolor": "white",
         }
-        self.node = {
+        self.node: dict[str, str | int] = {
             "penwidth": 0,
             "margin": 0,
             "fontname": DEFAULT_FONT_NAME,
             "fontsize": DEFAULT_FONT_SIZE,
             "fontcolor": DEFAULT_FONT_COLOR,
         }
-        self.edge = {
+        self.edge: dict[str, str | int] = {
             "fontname": DEFAULT_FONT_NAME,
             "fontsize": DEFAULT_FONT_SIZE,
             "fontcolor": "red",
@@ -410,7 +410,7 @@ class DotFile:
         cluster_name = None
         if table.cluster is not None:
             cluster_name = table.cluster.name
-        if cluster_name is not None and cluster_name not in self.clusters:
+        if cluster_name is not None and cluster_name not in self.clusters and table.cluster is not None:
             self.clusters[cluster_name] = table.cluster
         if cluster_name not in self.tables:
             self.tables[cluster_name] = {}
@@ -447,9 +447,9 @@ class DotFile:
     def __str__(self) -> str:
         """Generate the DOT file."""
 
-        def defaults(name: str, settings: dict) -> str:
+        def defaults(name: str, settings: dict[str, str | int]) -> str:
             """Expand the defaults."""
-            defaults = []
+            defaults: list[str] = []
             for default, value in settings.items():
                 defaults.append(f'{default}="{value}"')
             return f"{name} [{', '.join(defaults)}];"

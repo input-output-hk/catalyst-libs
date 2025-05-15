@@ -170,7 +170,7 @@ class DocGenerator:
 
         actual_link_names = self._spec.link_names()
 
-        actual_links_used = {}
+        actual_links_used: dict[str, str] = {}
         for link_name in actual_link_names:
             esc_link_name = re.escape(link_name)
             link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
@@ -190,7 +190,7 @@ class DocGenerator:
         for link, actual in actual_links_used.items():
             self._filedata += f"\n[{link}]: {actual}"
 
-    def remove_tabs(self, tabstop: int = 4) -> str:
+    def remove_tabs(self, tabstop: int = 4) -> None:
         """Replace tabs in the input text with spaces so that the text aligns on tab stops.
 
         Args:
