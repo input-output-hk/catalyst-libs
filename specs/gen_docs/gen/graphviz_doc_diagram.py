@@ -71,6 +71,11 @@ class TableRow(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    @classmethod
+    def default_list(cls) -> list["TableRow"]:
+        """Return a default list of this class."""
+        return []
+
     def generate(self, bgcolor: str) -> str:
         """Generate a single row of the table."""
         value = self.value
@@ -171,6 +176,7 @@ class Cluster(BaseModel):
             return None
         return cls(name=cluster.name)
 
+    @property
     def label(self) -> str:
         """Transform the name into a label."""
         return "cluster_" + self.name.lower().replace(" ", "_").replace("-", "_")
@@ -178,7 +184,7 @@ class Cluster(BaseModel):
     def start(self) -> str:
         """Start a new cluster."""
         return f"""
-subgraph {self.label()} {{
+subgraph {self.label} {{
     label = "{self.name}";
     color=blue
     penwidth=20
@@ -188,7 +194,7 @@ subgraph {self.label()} {{
         """End the cluster."""
         return "}\n"
 
-    def __eq__(self, other: "Cluster") -> bool:
+    def __eq__(self, other: object) -> bool:
         """Eq."""
         if not isinstance(other, Cluster):
             # don't attempt to compare against unrelated types
@@ -203,7 +209,7 @@ class DotSignedDoc(BaseModel):
     title_port: str = Field(default="title")
     title_href: str | None = Field(default=None)
     theme: TableTheme = Field(default_factory=TableTheme)
-    rows: list[TableRow] = Field(default_factory=list)
+    rows: list[TableRow] = Field(default_factory=TableRow.default_list)
     cluster: Cluster | None = Field(default=None)
 
     model_config = ConfigDict(extra="forbid")
@@ -296,6 +302,11 @@ class DotLinkEnd(BaseModel):
         """Is the link to a cluster."""
         return isinstance(self.port, Cluster)
 
+    @property
+    def port_label(self) -> str | None:
+        """Get label of the port."""
+        return self.port.label if self.is_cluster else None # type: ignore  # noqa: PGH003
+
     def __str__(self) -> str:
         """Str."""
         name = f'"{self.id}"'
@@ -305,7 +316,7 @@ class DotLinkEnd(BaseModel):
                 name += f":{self.dir}"
         return name
 
-    def __eq__(self, other: "DotLinkEnd") -> bool:
+    def __eq__(self, other: object) -> bool:
         """Eq."""
         if not isinstance(other, DotLinkEnd):
             # don't attempt to compare against unrelated types
@@ -335,12 +346,10 @@ class DotLink(BaseModel):
         super().model_post_init(context)
 
         # Add cluster parameters to the theme.
-        if self.src.is_cluster:
-            self.theme.ltail = self.src.port.label()
-        if self.dst.is_cluster:
-            self.theme.lhead = self.dst.port.label()
+        self.theme.ltail = self.src.port_label
+        self.theme.lhead = self.dst.port_label
 
-    def __eq__(self, other: "DotLink") -> bool:
+    def __eq__(self, other: object) -> bool:
         """Eq."""
         if not isinstance(other, DotLink):
             # don't attempt to compare against unrelated types
