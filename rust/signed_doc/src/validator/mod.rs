@@ -44,6 +44,7 @@ where T: TryInto<UuidV4, Error: fmt::Debug> {
 }
 
 /// `DOCUMENT_RULES` initialization function
+#[allow(clippy::expect_used)]
 fn document_rules_init() -> HashMap<Uuid, Rules> {
     let mut document_rules_map = HashMap::new();
 

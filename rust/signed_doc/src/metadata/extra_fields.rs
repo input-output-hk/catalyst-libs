@@ -122,6 +122,7 @@ impl ExtraFields {
     }
 
     /// Converting COSE Protected Header to `ExtraFields`.
+    #[allow(clippy::too_many_lines)]
     pub(crate) fn from_protected_header(
         protected: &ProtectedHeader, error_report: &ProblemReport,
     ) -> Self {
