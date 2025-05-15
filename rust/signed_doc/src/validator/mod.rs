@@ -39,10 +39,7 @@ static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_r
 /// invalid.
 #[allow(clippy::expect_used)]
 fn expect_uuidv4<T>(t: T) -> UuidV4
-where
-    T: TryInto<UuidV4>,
-    <T as TryInto<UuidV4>>::Error: fmt::Debug,
-{
+where T: TryInto<UuidV4, Error: fmt::Debug> {
     t.try_into().expect("Must be a valid UUID V4")
 }
 
