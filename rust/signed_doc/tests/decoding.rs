@@ -71,7 +71,7 @@ fn catalyst_signed_doc_parameters_aliases_test() {
 
     let parameters_val = doc.doc_meta().parameters().unwrap();
     let parameters_val_cbor: coset::cbor::Value = parameters_val.try_into().unwrap();
-    // replace parameters with the aliase values `category_id`, `brand_id`, `campaign_id`.
+    // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
     let bytes: Vec<u8> = doc.try_into().unwrap();
     let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();
     cose.protected.original_data = None;
@@ -138,7 +138,7 @@ fn catalyst_signed_doc_parameters_aliases_test() {
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
 
-    // `parameters` value along with its alises are not allowed to be present at the
+    // `parameters` value along with its aliases are not allowed to be present at the
     let mut cose_with_category_id = cose.clone();
     cose_with_category_id.protected.header.rest.push((
         coset::Label::Text("parameters".to_string()),
