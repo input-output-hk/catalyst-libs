@@ -20,6 +20,12 @@ const SECTION_KEY: &str = "section";
 const COLLABS_KEY: &str = "collabs";
 /// `parameters` field COSE key value
 const PARAMETERS_KEY: &str = "parameters";
+/// `brand_id` field COSE key value (alias of the `parameters` field)
+const BRAND_ID_KEY: &str = "brand_id";
+/// `campaign_id` field COSE key value (alias of the `parameters` field)
+const CAMPAIGN_ID_KEY: &str = "campaign_id";
+/// `category_id` field COSE key value (alias of the `parameters` field)
+const CATEGORY_ID_KEY: &str = "category_id";
 
 /// Extra Metadata Fields.
 ///
@@ -147,12 +153,50 @@ impl ExtraFields {
             COSE_DECODING_CONTEXT,
             error_report,
         );
-        let parameters = decode_document_field_from_protected_header(
-            protected,
-            PARAMETERS_KEY,
-            COSE_DECODING_CONTEXT,
-            error_report,
-        );
+        let parameters = {
+            // process `parameters` field and all its aliases
+            let parameters: Option<DocumentRef> = decode_document_field_from_protected_header(
+                protected,
+                PARAMETERS_KEY,
+                COSE_DECODING_CONTEXT,
+                error_report,
+            );
+
+            let brand_id: Option<DocumentRef> = decode_document_field_from_protected_header(
+                protected,
+                BRAND_ID_KEY,
+                COSE_DECODING_CONTEXT,
+                error_report,
+            );
+
+            let campaign_id: Option<DocumentRef> = decode_document_field_from_protected_header(
+                protected,
+                CAMPAIGN_ID_KEY,
+                COSE_DECODING_CONTEXT,
+                error_report,
+            );
+
+            let category_id: Option<DocumentRef> = decode_document_field_from_protected_header(
+                protected,
+                CATEGORY_ID_KEY,
+                COSE_DECODING_CONTEXT,
+                error_report,
+            );
+
+            let count = [parameters, brand_id, campaign_id, category_id]
+                .iter()
+                .filter(|x| x.is_some())
+                .count();
+            if count > 1 {
+                error_report.duplicate_field(
+                    "brand_id, campaign_id, category_id", 
+                    "Only value at the same time is allowed parameters, brand_id, campaign_id, category_id", 
+                    "Validation of parameters field aliases"
+                );
+            }
+
+            parameters.or(brand_id).or(campaign_id).or(category_id)
+        };
 
         let mut extra = ExtraFields {
             doc_ref,
