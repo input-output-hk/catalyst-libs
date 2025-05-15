@@ -169,18 +169,16 @@ block-beta
     space s1["slot 1"] s2["slot 2"] s3["slot 3"] s4["slot 4"] space res["result"]
     c1["chain 1"] A0["Stake1\nPubKey1"] A1["Stake2\nPubKey2"] space space space AF["\nPubKey2"]
     c2["chain 2"] space space B0["Stake2\nPubKey2"] space space space
-    c3["chain 3"] space space space C0["Stake1\nPubKey2"] space space
-    c3["chain 3"] space space space D0["Stake1\nPubKey3"] space DF["Stake1\nPubKey3"]
-    c4["chain 5"] space space space E0["Stake2\nPubKey4"] space EF["Stake2\nPubKey4"]
+    c3["chain 4"] space space space C0["Stake1\nPubKey3"] space CF["Stake1\nPubKey3"]
+    c4["chain 5"] space space space D0["Stake2\nPubKey4"] space DF["Stake2\nPubKey4"]
     style A0 fill: green
     style A1 fill: green
-    style B0 fill: red
-    style C0 fill: red
-    style D0 fill: green
     style AF fill: gray
+    style B0 fill: red
+    style C0 fill: green
     style CF fill: green
+    style D0 fill: green
     style DF fill: green
-    style EF fill: green
 ```
 
 In the example above there is the `Chain1` registration chain that was created with some `Stake1` stake address and
@@ -190,11 +188,9 @@ The `Chain2` registration is invalid because it uses the same stake address and 
 There are no reason to start a new registration chain with the same data already registered and not to update the
 existing one, so this isn't allowed.
 
-The `Chain3` registration is invalid because it uses `PubKey2` that is already used by `Chain1`.
+The `Chain3` is valid because it uses a new public key and the `Stake1` stake address isn't currently used by `Chain1`.
 
-The `Chain4` is valid because it uses a new public key the `Stake1` stake address isn't currently used by `Chain1`.
-
-The `Chain5` registration is valid, but it takes ownership over the `Stake2` stake address of the first chain.
+The `Chain4` registration is valid, but it takes ownership over the `Stake2` stake address of the first chain.
 It is allowed because the new chain uses a new public key.
 This can be useful if a user lost his private key while maintaining access to his Cardano wallet (and the stake address
 used in that registration chain).
