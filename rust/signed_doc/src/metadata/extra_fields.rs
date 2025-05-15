@@ -122,7 +122,6 @@ impl ExtraFields {
     }
 
     /// Converting COSE Protected Header to `ExtraFields`.
-    #[allow(clippy::too_many_lines)]
     pub(crate) fn from_protected_header(
         protected: &ProtectedHeader, error_report: &ProblemReport,
     ) -> Self {
@@ -154,50 +153,40 @@ impl ExtraFields {
             COSE_DECODING_CONTEXT,
             error_report,
         );
-        let parameters = {
-            // process `parameters` field and all its aliases
-            let parameters: Option<DocumentRef> = decode_document_field_from_protected_header(
+
+        // process `parameters` field and all its aliases
+        let (parameters, count) = [
+            PARAMETERS_KEY,
+            BRAND_ID_KEY,
+            CAMPAIGN_ID_KEY,
+            CATEGORY_ID_KEY,
+        ]
+        .iter()
+        .map(|field_name| -> Option<DocumentRef> {
+            decode_document_field_from_protected_header(
                 protected,
-                PARAMETERS_KEY,
+                field_name,
                 COSE_DECODING_CONTEXT,
                 error_report,
-            );
-
-            let brand_id: Option<DocumentRef> = decode_document_field_from_protected_header(
-                protected,
-                BRAND_ID_KEY,
-                COSE_DECODING_CONTEXT,
-                error_report,
-            );
-
-            let campaign_id: Option<DocumentRef> = decode_document_field_from_protected_header(
-                protected,
-                CAMPAIGN_ID_KEY,
-                COSE_DECODING_CONTEXT,
-                error_report,
-            );
-
-            let category_id: Option<DocumentRef> = decode_document_field_from_protected_header(
-                protected,
-                CATEGORY_ID_KEY,
-                COSE_DECODING_CONTEXT,
-                error_report,
-            );
-
-            let count = [parameters, brand_id, campaign_id, category_id]
-                .iter()
-                .filter(|x| x.is_some())
-                .count();
-            if count > 1 {
-                error_report.duplicate_field(
+            )
+        })
+        .fold((None, 0_u32), |(res, count), v| {
+            (
+                res.or(v),
+                if v.is_some() {
+                    count.saturating_add(1)
+                } else {
+                    count
+                },
+            )
+        });
+        if count > 1 {
+            error_report.duplicate_field(
                     "brand_id, campaign_id, category_id", 
                     "Only value at the same time is allowed parameters, brand_id, campaign_id, category_id", 
                     "Validation of parameters field aliases"
                 );
-            }
-
-            parameters.or(brand_id).or(campaign_id).or(category_id)
-        };
+        }
 
         let mut extra = ExtraFields {
             doc_ref,
