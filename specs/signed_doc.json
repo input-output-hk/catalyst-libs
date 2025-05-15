@@ -253,6 +253,11 @@
         "changes": "* Use generalized parameters.",
         "modified": "2025-05-05",
         "version": "0.03"
+      },
+      {
+        "changes": "* Improve and make document serialization more repeatable, and stricter.\n* TODO: Define Systems parameters\n* TODO: Define DReps documents.\n* TODO: Define Proposer Profiles.\n* TODO: Define Role 0 Profile.",
+        "modified": "2025-05-30",
+        "version": "0.04"
       }
     ]
   },
@@ -2066,6 +2071,7 @@
     }
   },
   "documentationLinks": {
+    "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
     "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
     "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
@@ -2097,6 +2103,7 @@
   "linkAKA": {
     "BROTLI": "RFC7932",
     "CBOR": "RFC8949",
+    "CBOR Deterministic Encoding": "CBOR-LFD-ENCODING",
     "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
     "CDDL": "RFC8610",
     "COSE": "RFC9052",

@@ -24,15 +24,16 @@ import (
 
 documentationLinks: #namedLink
 documentationLinks: {
-	"RFC3629":     "https://datatracker.ietf.org/doc/html/rfc3629"                     // UTF-8
-	"RFC3986":     "https://datatracker.ietf.org/doc/html/rfc3986"                     // URI
-	"RFC9562":     "https://www.rfc-editor.org/rfc/rfc9562.html"                       // UUID
-	"RFC9562-V4":  "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4"   // UUID V4
-	"RFC9562-V7":  "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7"   // UUID V7
-	"CC-BY-4.0":   "https://creativecommons.org/licenses/by/4.0/legalcode"             // CC BY 4.0
-	"IPFS-CID":    "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid" // IPFS Content Identifier
-	"CBOR-TAG-42": "https://github.com/ipld/cid-cbor/"
-	"CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md" // IPLD content identifiers (CIDs) in CBOR
+	"RFC3629":           "https://datatracker.ietf.org/doc/html/rfc3629"                     // UTF-8
+	"RFC3986":           "https://datatracker.ietf.org/doc/html/rfc3986"                     // URI
+	"RFC9562":           "https://www.rfc-editor.org/rfc/rfc9562.html"                       // UUID
+	"RFC9562-V4":        "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4"   // UUID V4
+	"RFC9562-V7":        "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7"   // UUID V7
+	"CC-BY-4.0":         "https://creativecommons.org/licenses/by/4.0/legalcode"             // CC BY 4.0
+	"IPFS-CID":          "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid" // IPFS Content Identifier
+	"CBOR-TAG-42":       "https://github.com/ipld/cid-cbor/"                                 // IPLD content identifiers (CIDs) in CBOR
+	"CBOR-TAG-37":       "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md"  // UUID Tag for CBOR
+	"CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3"         // CBOR length-first core deterministic encoding requirements
 }
 
 #allLinkNames: or([
@@ -52,4 +53,5 @@ linkAKA: {
 	"UTF-8":                                "RFC3629"
 	"CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42"
 	"IPFS CID":                             "IPFS-CID"
+	"CBOR Deterministic Encoding":          "CBOR-LFD-ENCODING"
 }

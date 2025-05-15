@@ -23,7 +23,7 @@ class SpecMd(DocGenerator):
         if not isinstance(label, str):
             custom_header = ""
         header_format = options["format"]
-        header_value = options.get("value", None)
+        header_value: str | list[str] | None = options.get("value", None)
         header_format_display = f"{header_format}"
         if isinstance(header_value, list) and len(header_value) > 0:
             header_format_display += "\n  * Supported Values:"
@@ -92,6 +92,40 @@ and for documents to be able to securely reference one another.
 Catalyst Signed Documents are based on COSE.
 Specifically, the COSE Sign format is used.
 This allows one or more signatures to be attached to the same document.
+
+While every Catalyst Signed Document is a valid COSE Sign format document,
+not every COSE Sign format document is a valid Catalyst Signed Document.
+The following restrictions apply:
+
+### Unprotected Headers are not permitted
+
+It is a requirement that any document that contains exactly the same data, must produce the same
+catalyst signed document.
+This means that unprotected headers, which do not form part of the data protected by
+the signature are not permitted.
+Any document which contains any unprotected headers is not a valid Catalyst Signed Document,
+even though it may be a valid COSE Sign formatted document.
+
+### Only defined metadata and COSE Headers are allowed
+
+Each document type, defines a set of metadata and the COSE Headers which are allowed in that document type.
+Even if the Catalyst Signed document metadata exists in this specification, IF it is not defined as
+a valid metadata or COSE Header field for that particular document it may not be present.
+Unexpected but otherwise valid Metadata or COSE Header fields invalidate the Catalyst Signed Document.
+
+### No undefined metadata or unused COSE Headers may be present
+
+COSE Header Fields which are defined by the COSE Specification, but are NOT defined as part of a
+Catalyst Signed Document may not be present.
+Any such COSE Header Fields present in the document render it an invalid Catalyst Signed Document.
+
+Any metadata field that is not defined in this specification may not be present in any protected header.
+Unrecognized metadata fields in a document render it an invalid Catalyst Signed Document.
+
+### CBOR Deterministic Encoding MUST be used
+
+The Catalyst Signed Document **MUST** be encoded using CBOR Deterministic Encoding.
+The "length-first core deterministic encoding requirements" variant of deterministic encoding *MUST* be used.
 
 ### Signed Document CDDL Definition
 
