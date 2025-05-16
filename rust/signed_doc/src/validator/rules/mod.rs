@@ -5,19 +5,19 @@ use futures::FutureExt;
 
 use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument};
 
-mod category;
 mod content_encoding;
 mod content_type;
 mod doc_ref;
+mod parameters;
 mod reply;
 mod section;
 mod signature_kid;
 mod template;
 
-pub(crate) use category::CategoryRule;
 pub(crate) use content_encoding::ContentEncodingRule;
 pub(crate) use content_type::ContentTypeRule;
 pub(crate) use doc_ref::RefRule;
+pub(crate) use parameters::ParametersRule;
 pub(crate) use reply::ReplyRule;
 pub(crate) use section::SectionRule;
 pub(crate) use signature_kid::SignatureKidRule;
@@ -37,8 +37,8 @@ pub(crate) struct Rules {
     pub(crate) reply: ReplyRule,
     /// 'section' field validation rule
     pub(crate) section: SectionRule,
-    /// 'category' field validation rule
-    pub(crate) category: CategoryRule,
+    /// 'parameters' field validation rule
+    pub(crate) parameters: ParametersRule,
     /// `kid` field validation rule
     pub(crate) kid: SignatureKidRule,
 }
@@ -56,7 +56,7 @@ impl Rules {
             self.content.check(doc, provider).boxed(),
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
-            self.category.check(doc, provider).boxed(),
+            self.parameters.check(doc, provider).boxed(),
             self.kid.check(doc).boxed(),
         ];
 
