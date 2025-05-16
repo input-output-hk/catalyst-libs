@@ -25,6 +25,40 @@ Catalyst Signed Documents are based on [COSE][RFC9052].
 Specifically, the [COSE Sign][RFC9052-CoseSign] format is used.
 This allows one or more signatures to be attached to the same document.
 
+While every Catalyst Signed Document is a valid [COSE Sign][RFC9052-CoseSign] format document,
+not every [COSE Sign][RFC9052-CoseSign] format document is a valid Catalyst Signed Document.
+The following restrictions apply:
+
+### Unprotected Headers are not permitted
+
+It is a requirement that any document that contains exactly the same data, must produce the same
+catalyst signed document.
+This means that unprotected headers, which do not form part of the data protected by
+the signature are not permitted.
+Any document which contains any unprotected headers is not a valid Catalyst Signed Document,
+even though it may be a valid [COSE Sign][RFC9052-CoseSign] formatted document.
+
+### Only defined metadata and [COSE][RFC9052] Headers are allowed
+
+Each document type, defines a set of metadata and the [COSE][RFC9052] Headers which are allowed in that document type.
+Even if the Catalyst Signed document metadata exists in this specification, IF it is not defined as
+a valid metadata or [COSE][RFC9052] Header field for that particular document it may not be present.
+Unexpected but otherwise valid Metadata or [COSE][RFC9052] Header fields invalidate the Catalyst Signed Document.
+
+### No undefined metadata or unused [COSE][RFC9052] Headers may be present
+
+[COSE][RFC9052] Header Fields which are defined by the [COSE][RFC9052] Specification, but are NOT defined as part of a
+Catalyst Signed Document may not be present.
+Any such [COSE][RFC9052] Header Fields present in the document render it an invalid Catalyst Signed Document.
+
+Any metadata field that is not defined in this specification may not be present in any protected header.
+Unrecognized metadata fields in a document render it an invalid Catalyst Signed Document.
+
+### [CBOR Deterministic Encoding][CBOR-LFD-ENCODING] MUST be used
+
+The Catalyst Signed Document **MUST** be encoded using [CBOR Deterministic Encoding][CBOR-LFD-ENCODING].
+The "length-first core deterministic encoding requirements" variant of deterministic encoding *MUST* be used.
+
 ### Signed Document [CDDL][RFC8610] Definition
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
@@ -120,7 +154,7 @@ used to sign the protected portion of the document.
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-05 |
+| Modified | 2025-05-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -138,6 +172,15 @@ used to sign the protected portion of the document.
 
 * Use generalized parameters.
 
+#### 0.04 (2025-05-30)
+
+* Improve and make document serialization more repeatable, and stricter.
+* TODO: Define Systems parameters
+* TODO: Define DReps documents.
+* TODO: Define Proposer Profiles.
+* TODO: Define Role 0 Profile.
+
+[CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [application/schema+json]: https://datatracker.ietf.org/doc/draft-bhutton-json-schema/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [application/cbor]: https://www.iana.org/assignments/media-types/application/cbor

@@ -60,5 +60,16 @@ copyright: #copyrightNotice & {
 				* Use generalized parameters.
 				"""
 		},
+		{
+			version:  "0.04"
+			modified: "2025-05-30"
+			changes: """
+				* Improve and make document serialization more repeatable, and stricter.
+				* TODO: Define Systems parameters
+				* TODO: Define DReps documents.
+				* TODO: Define Proposer Profiles.
+				* TODO: Define Role 0 Profile.
+				"""
+		},
 	]
 }
