@@ -259,3 +259,4 @@ impl TryFrom<&Metadata> for coset::Header {
         Ok(builder.build())
     }
 }
+
