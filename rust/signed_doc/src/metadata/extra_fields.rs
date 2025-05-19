@@ -155,14 +155,14 @@ impl ExtraFields {
         );
 
         // process `parameters` field and all its aliases
-        let (parameters, count) = [
+        let (parameters, has_multiple_fields) = [
             PARAMETERS_KEY,
             BRAND_ID_KEY,
             CAMPAIGN_ID_KEY,
             CATEGORY_ID_KEY,
         ]
         .iter()
-        .map(|field_name| -> Option<DocumentRef> {
+        .filter_map(|field_name| -> Option<DocumentRef> {
             decode_document_field_from_protected_header(
                 protected,
                 field_name,
@@ -170,17 +170,8 @@ impl ExtraFields {
                 error_report,
             )
         })
-        .fold((None, 0_u32), |(res, count), v| {
-            (
-                res.or(v),
-                if v.is_some() {
-                    count.saturating_add(1)
-                } else {
-                    count
-                },
-            )
-        });
-        if count > 1 {
+        .fold((None, false), |(res, _), v| (Some(v), res.is_some()));
+        if has_multiple_fields {
             error_report.duplicate_field(
                     "brand_id, campaign_id, category_id", 
                     "Only value at the same time is allowed parameters, brand_id, campaign_id, category_id", 
