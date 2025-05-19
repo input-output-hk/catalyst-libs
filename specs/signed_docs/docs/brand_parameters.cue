@@ -12,11 +12,10 @@ docs: #DocumentDefinitions & {
 		metadata: {
 			parameters: {
 				required: "optional"
-				type:     "Decision Parameters"
+				type:     "Brand Reference"
 				validation: """
-					In addition to the validation performed for `Document Reference` type fields: 
-					* Any linked referenced document that includes a `parameters` metadata must match the 
-					  `parameters` of the referencing document.
+					Decisions reference brands, not the other way around. Ensure that any decision referencing this brand
+					is consistent with the brand's parameters.
 				"""
 			}
 			collaborators: {
@@ -28,6 +27,10 @@ docs: #DocumentDefinitions & {
 					addition to the author.
 				"""
 			}
+		}
+		signers: {
+			role: "admin"
+			description: "Only users with the admin role are authorized to publish brand parameters."
 		}
 		versions: [
 			{
