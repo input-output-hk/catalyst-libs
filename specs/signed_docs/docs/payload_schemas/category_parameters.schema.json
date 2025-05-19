@@ -1,0 +1,80 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "Category Parameters",
+    "description": "Parameters applicable at the category/challenge level, defining specific configurations for challenges.",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "parameter": {
+                "type": "string",
+                "description": "The name or description of the parameter."
+            },
+            "dataType": {
+                "type": "string",
+                "description": "The expected data type of the parameter's value.",
+                "enum": [
+                    "Boolean",
+                    "String",
+                    "ADA Amount",
+                    "ADA Amount (Variable per Challenge/Category)",
+                    "Lovelace Amount",
+                    "Integer",
+                    "Date",
+                    "Datetime",
+                    "Ratio / Formula",
+                    "Percentage",
+                    "Currency Amount / String",
+                    "String / Rule",
+                    "List"
+                ]
+            },
+            "defaultValue": {
+                "type": "string",
+                "description": "The default value for the parameter, if applicable."
+            },
+            "isRequired": {
+                "type": "boolean",
+                "description": "Indicates whether the parameter is mandatory."
+            }
+        },
+        "required": ["parameter", "dataType"]
+    },
+    "category_parameters": [{
+            "parameter": "Campaign (Challenge) Title",
+            "dataType": "String",
+            "defaultValue": "Innovation Challenge",
+            "isRequired": true
+        },
+        {
+            "parameter": "Minimum Budget Request Per Proposal",
+            "dataType": "ADA Amount",
+            "defaultValue": "0",
+            "isRequired": true
+        },
+        {
+            "parameter": "Maximum Budget Request Per Proposal",
+            "dataType": "ADA Amount (Variable per Challenge/Category)",
+            "defaultValue": "20000",
+            "isRequired": true
+        },
+        {
+            "parameter": "Proposal Funding logic (winner selection)",
+            "dataType": "String / Rule",
+            "defaultValue": "Highest Score",
+            "isRequired": true
+        },
+        {
+            "parameter": "Proposal acceptance threshold",
+            "dataType": "Percentage",
+            "defaultValue": "50",
+            "isRequired": true
+        },
+        {
+            "parameter": "Voting options",
+            "dataType": "List",
+            "defaultValue": "['Yes', 'No']",
+            "isRequired": true
+        }
+    ]
+}
