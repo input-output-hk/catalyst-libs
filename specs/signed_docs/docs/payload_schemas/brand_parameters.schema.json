@@ -2,97 +2,48 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Brand Parameters",
     "description": "Parameters applicable at the brand level, defining the brand's identity and configuration.",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "parameter": {
-                "type": "string",
-                "description": "The name or description of the parameter."
-            },
-            "dataType": {
-                "type": "string",
-                "description": "The expected data type of the parameter's value.",
-                "enum": [
-                    "Boolean",
-                    "String",
-                    "ADA Amount",
-                    "ADA Amount (Variable per Challenge/Category)",
-                    "Lovelace Amount",
-                    "Integer",
-                    "Date",
-                    "Datetime",
-                    "Ratio / Formula",
-                    "Percentage",
-                    "Currency Amount / String",
-                    "String / Rule",
-                    "List"
-                ]
-            },
-            "defaultValue": {
-                "type": "string",
-                "description": "The default value for the parameter, if applicable."
-            },
-            "isRequired": {
-                "type": "boolean",
-                "description": "Indicates whether the parameter is mandatory."
+    "type": "object",
+    "properties": {
+        "parameters": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "parameter": {
+                        "type": "string",
+                        "description": "The name or description of the parameter."
+                    },
+                    "dataType": {
+                        "type": "string",
+                        "description": "The expected data type of the parameter's value.",
+                        "enum": [
+                            "Boolean",
+                            "String",
+                            "ADA Amount",
+                            "ADA Amount (Variable per Challenge/Category)",
+                            "Lovelace Amount",
+                            "Integer",
+                            "Date",
+                            "Datetime",
+                            "Ratio / Formula",
+                            "Percentage",
+                            "Currency Amount / String",
+                            "String / Rule",
+                            "List"
+                        ]
+                    },
+                    "defaultValue": {
+                        "type": ["string", "boolean", "number"],
+                        "description": "The default value for the parameter, if applicable."
+                    },
+                    "isRequired": {
+                        "type": "boolean",
+                        "description": "Indicates whether the parameter is mandatory."
+                    }
+                },
+                "required": ["parameter", "dataType"]
             }
-        },
-        "required": ["parameter", "dataType"]
-    },
-    "brand_parameters": [{
-            "parameter": "Direct Voting privacy state",
-            "dataType": "Boolean",
-            "defaultValue": "false",
-            "isRequired": true
-        },
-        {
-            "parameter": "Brand Name",
-            "dataType": "String",
-            "defaultValue": "Default Brand",
-            "isRequired": true
-        },
-        {
-            "parameter": "Minimum Budget Request Per Proposal",
-            "dataType": "ADA Amount",
-            "defaultValue": "1000",
-            "isRequired": true
-        },
-        {
-            "parameter": "Maximum Budget Request Per Proposal",
-            "dataType": "ADA Amount (Variable per Challenge/Category)",
-            "defaultValue": "10000",
-            "isRequired": true
-        },
-        {
-            "parameter": "Maximum proposals per Proposer/co-proposer",
-            "dataType": "Integer",
-            "defaultValue": "5",
-            "isRequired": false
-        },
-        {
-            "parameter": "Community Reviewer registration",
-            "dataType": "String",
-            "defaultValue": "Open",
-            "isRequired": true
-        },
-        {
-            "parameter": "Voting power threshold",
-            "dataType": "Lovelace Amount",
-            "defaultValue": "1000000",
-            "isRequired": true
-        },
-        {
-            "parameter": "Tallying optimization",
-            "dataType": "Ratio / Formula",
-            "defaultValue": "50:50",
-            "isRequired": false
-        },
-        {
-            "parameter": "Proposal acceptance threshold",
-            "dataType": "Percentage",
-            "defaultValue": "60",
-            "isRequired": true
         }
-    ]
+    },
+    "required": ["parameters"]
 }

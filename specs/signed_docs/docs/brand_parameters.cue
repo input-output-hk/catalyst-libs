@@ -44,5 +44,14 @@ docs: #DocumentDefinitions & {
 			// Updated to reference the Brand type from signed_doc.json
 			type: "Brand"
 		}
+		example: {
+			// Example payload for documentation purposes
+			payload: {
+				parameter: "example_brand"
+				dataType: "String"
+				defaultValue: "example_value"
+				isRequired: true
+			}
+		}
 	}
 }

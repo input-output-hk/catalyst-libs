@@ -31,6 +31,15 @@ docs: #DocumentDefinitions & {
 			// Updated to reference the Campaign type from signed_doc.json
 			type: "Campaign"
 		}
+		example: {
+			// Example payload for documentation purposes
+			payload: {
+				parameter: "example_campaign"
+				dataType: "String"
+				defaultValue: "example_value"
+				isRequired: true
+			}
+		}
 		versions: [
 			{
 				version:  "0.01"

@@ -31,6 +31,15 @@ docs: #DocumentDefinitions & {
 			// Updated to reference the Category type from signed_doc.json
 			type: "Category"
 		}
+		example: {
+			// Example payload for documentation purposes
+			payload: {
+				parameter: "example_parameter"
+				dataType: "String"
+				defaultValue: "example_value"
+				isRequired: true
+			}
+		}
 		versions: [
 			{
 				version:  "0.01"

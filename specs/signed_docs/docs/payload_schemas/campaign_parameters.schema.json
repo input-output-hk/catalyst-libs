@@ -2,162 +2,48 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "title": "Campaign Parameters",
     "description": "Parameters applicable at the campaign level, defining campaign-specific configurations.",
-    "type": "array",
-    "items": {
-        "type": "object",
-        "properties": {
-            "parameter": {
-                "type": "string",
-                "description": "The name or description of the parameter."
-            },
-            "dataType": {
-                "type": "string",
-                "description": "The expected data type of the parameter's value.",
-                "enum": [
-                    "Boolean",
-                    "String",
-                    "ADA Amount",
-                    "ADA Amount (Variable per Challenge/Category)",
-                    "Lovelace Amount",
-                    "Integer",
-                    "Date",
-                    "Datetime",
-                    "Ratio / Formula",
-                    "Percentage",
-                    "Currency Amount / String",
-                    "String / Rule",
-                    "List"
-                ]
-            },
-            "defaultValue": {
-                "type": "string",
-                "description": "The default value for the parameter, if applicable."
-            },
-            "isRequired": {
-                "type": "boolean",
-                "description": "Indicates whether the parameter is mandatory."
+    "type": "object",
+    "properties": {
+        "parameters": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "parameter": {
+                        "type": "string",
+                        "description": "The name or description of the parameter."
+                    },
+                    "dataType": {
+                        "type": "string",
+                        "description": "The expected data type of the parameter's value.",
+                        "enum": [
+                            "Boolean",
+                            "String",
+                            "ADA Amount",
+                            "ADA Amount (Variable per Challenge/Category)",
+                            "Lovelace Amount",
+                            "Integer",
+                            "Date",
+                            "Datetime",
+                            "Ratio / Formula",
+                            "Percentage",
+                            "Currency Amount / String",
+                            "String / Rule",
+                            "List"
+                        ]
+                    },
+                    "defaultValue": {
+                        "type": ["string", "boolean", "number"],
+                        "description": "The default value for the parameter, if applicable."
+                    },
+                    "isRequired": {
+                        "type": "boolean",
+                        "description": "Indicates whether the parameter is mandatory."
+                    }
+                },
+                "required": ["parameter", "dataType"]
             }
-        },
-        "required": ["parameter", "dataType"]
-    },
-    "campaign_parameters": [{
-            "parameter": "Fund/Campaign Name",
-            "dataType": "String",
-            "defaultValue": "General Fund",
-            "isRequired": true
-        },
-        {
-            "parameter": "Fund/Campaign Size",
-            "dataType": "ADA Amount",
-            "defaultValue": "500000",
-            "isRequired": true
-        },
-        {
-            "parameter": "Campaign (Challenge) Title",
-            "dataType": "String",
-            "defaultValue": "Sustainability Challenge",
-            "isRequired": true
-        },
-        {
-            "parameter": "Campaign (Challenge) Budget",
-            "dataType": "ADA Amount",
-            "defaultValue": "100000",
-            "isRequired": true
-        },
-        {
-            "parameter": "Proposal Submission Fee",
-            "dataType": "Currency Amount / String",
-            "defaultValue": "50",
-            "isRequired": false
-        },
-        {
-            "parameter": "Compensations and funds distribution target date",
-            "dataType": "Date",
-            "isRequired": true
-        },
-        {
-            "parameter": "Proposals registration on the blockchain",
-            "dataType": "Date",
-            "isRequired": true
-        },
-        {
-            "parameter": "Drep deadline date",
-            "dataType": "Date",
-            "isRequired": true
-        },
-        {
-            "parameter": "Registration deadline date",
-            "dataType": "Datetime",
-            "isRequired": true
-        },
-        {
-            "parameter": "Voting period start time",
-            "dataType": "Datetime",
-            "isRequired": true
-        },
-        {
-            "parameter": "Voting period end time",
-            "dataType": "Datetime",
-            "defaultValue": "2025-01-15T00:00:00Z",
-            "isRequired": true
-        },
-        {
-            "parameter": "Start of tallying",
-            "dataType": "Date",
-            "isRequired": true
-        },
-        {
-            "parameter": "End of tallying",
-            "dataType": "Date",
-            "isRequired": true
-        },
-        {
-            "parameter": "Proposal Funding logic (winner selection)",
-            "dataType": "String / Rule"
-        },
-        {
-            "parameter": "Voter Compensations (Vrtotal)",
-            "dataType": "Percentage / ADA Amount"
-        },
-        {
-            "parameter": "Community Review Compensations",
-            "dataType": "Percentage / ADA Amount"
-        },
-        {
-            "parameter": "Community Moderator Compensations (AArtotal)",
-            "dataType": "Percentage / ADA Amount"
-        },
-        {
-            "parameter": "Onboarding compensations (Cttotal)",
-            "dataType": "Percentage / ADA Amount"
-        },
-        {
-            "parameter": "Project Accountability Management Comp.",
-            "dataType": "Percentage / ADA Amount"
-        },
-        {
-            "parameter": "current_insight_sharing_start",
-            "dataType": "Date"
-        },
-        {
-            "parameter": "current_proposal_submission_start",
-            "dataType": "Date"
-        },
-        {
-            "parameter": "current_refine_proposals_start",
-            "dataType": "Date"
-        },
-        {
-            "parameter": "current_finalize_proposals_start",
-            "dataType": "Date"
-        },
-        {
-            "parameter": "current_proposal_assessment",
-            "dataType": "Date"
-        },
-        {
-            "parameter": "current_assessment_qa_start",
-            "dataType": "Date"
         }
-    ]
+    },
+    "required": ["parameters"]
 }

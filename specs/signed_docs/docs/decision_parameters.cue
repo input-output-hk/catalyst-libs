@@ -15,6 +15,12 @@ docs: #DocumentDefinitions & {
 		payload: {
 			schema: _ @embed(file="payload_schemas/decision_parameters.schema.json")
 		}
+		example: {
+			// Example payload for documentation purposes
+			payload: {
+				action: "final"
+			}
+		}
 		versions: [
 			{
 				version:  "0.01"
