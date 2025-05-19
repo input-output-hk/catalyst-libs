@@ -81,7 +81,7 @@ mod tests {
     async fn ref_rule_specified_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        let exp_parameter_type = UuidV4::new();
+        let exp_parameters_type = UuidV4::new();
 
         let valid_category_doc_id = UuidV7::new();
         let valid_category_doc_ver = UuidV7::new();
@@ -96,7 +96,7 @@ mod tests {
                 .with_json_metadata(serde_json::json!({
                     "id": valid_category_doc_id.to_string(),
                     "ver": valid_category_doc_ver.to_string(),
-                    "type": exp_parameter_type.to_string()
+                    "type": exp_parameters_type.to_string()
                 }))
                 .unwrap()
                 .build();
@@ -126,7 +126,7 @@ mod tests {
 
         // all correct
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameter_type.clone(),
+            exp_parameters_type,
             optional: false,
         };
         let doc = Builder::new()
@@ -139,7 +139,7 @@ mod tests {
 
         // all correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameter_type.clone(),
+            exp_parameters_type,
             optional: true,
         };
         let doc = Builder::new().build();
@@ -147,7 +147,7 @@ mod tests {
 
         // missing `parameters` field, but its required
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameter_type.clone(),
+            exp_parameters_type,
             optional: false,
         };
         let doc = Builder::new().build();
