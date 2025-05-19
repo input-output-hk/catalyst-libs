@@ -35,37 +35,12 @@ impl ParametersRule {
         {
             if let Some(parameters) = doc.doc_meta().parameters() {
                 let parameters_validator = |replied_doc: CatalystSignedDocument| {
-                    if !referenced_doc_check(
+                    referenced_doc_check(
                         &replied_doc,
                         exp_parameters_type.uuid(),
                         "parameters",
                         doc.report(),
-                    ) {
-                        return false;
-                    }
-                    let Some(doc_ref) = doc.doc_meta().doc_ref() else {
-                        doc.report()
-                            .missing_field("ref", "Document must have a ref field");
-                        return false;
-                    };
-
-                    let Some(replied_doc_ref) = replied_doc.doc_meta().doc_ref() else {
-                        doc.report()
-                            .missing_field("ref", "Referenced document must have ref field");
-                        return false;
-                    };
-
-                    if replied_doc_ref.id != doc_ref.id {
-                        doc.report().invalid_value(
-                                "parameters",
-                                doc_ref.id .to_string().as_str(),
-                                replied_doc_ref.id.to_string().as_str(),
-                                "Invalid referenced document. Document ID should aligned with the replied document.",
-                            );
-                        return false;
-                    }
-
-                    true
+                    )
                 };
                 return validate_provided_doc(
                     &parameters,
@@ -102,55 +77,37 @@ mod tests {
     use super::*;
     use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
-    #[allow(clippy::too_many_lines)]
     #[tokio::test]
     async fn ref_rule_specified_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        let exp_parameters_type = UuidV4::new();
-        let common_ref_id = UuidV7::new();
-        let common_ref_ver = UuidV7::new();
+        let exp_parameter_type = UuidV4::new();
 
-        let valid_replied_doc_id = UuidV7::new();
-        let valid_replied_doc_ver = UuidV7::new();
-        let another_type_replied_doc_ver = UuidV7::new();
-        let another_type_replied_doc_id = UuidV7::new();
-        let missing_ref_replied_doc_ver = UuidV7::new();
-        let missing_ref_replied_doc_id = UuidV7::new();
-        let missing_type_replied_doc_ver = UuidV7::new();
-        let missing_type_replied_doc_id = UuidV7::new();
+        let valid_category_doc_id = UuidV7::new();
+        let valid_category_doc_ver = UuidV7::new();
+        let another_type_category_doc_id = UuidV7::new();
+        let another_type_category_doc_ver = UuidV7::new();
+        let missing_type_category_doc_id = UuidV7::new();
+        let missing_type_category_doc_ver = UuidV7::new();
 
         // prepare replied documents
         {
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
-                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                    "id": valid_replied_doc_id.to_string(),
-                    "ver": valid_replied_doc_ver.to_string(),
-                    "type": exp_parameters_type.to_string()
+                    "id": valid_category_doc_id.to_string(),
+                    "ver": valid_category_doc_ver.to_string(),
+                    "type": exp_parameter_type.to_string()
                 }))
                 .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
-            // parameters doc with other `type` field
+            // reply doc with other `type` field
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
-                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                    "id": another_type_replied_doc_id.to_string(),
-                    "ver": another_type_replied_doc_ver.to_string(),
+                    "id": another_type_category_doc_id.to_string(),
+                    "ver": another_type_category_doc_ver.to_string(),
                     "type": UuidV4::new().to_string()
-                }))
-                .unwrap()
-                .build();
-            provider.add_document(ref_doc).unwrap();
-
-            // missing `ref` field in the referenced document
-            let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": missing_ref_replied_doc_id.to_string(),
-                    "ver": missing_ref_replied_doc_ver.to_string(),
-                    "type": exp_parameters_type.to_string()
                 }))
                 .unwrap()
                 .build();
@@ -159,9 +116,8 @@ mod tests {
             // missing `type` field in the referenced document
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
-                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                    "id": missing_type_replied_doc_id.to_string(),
-                    "ver": missing_type_replied_doc_ver.to_string(),
+                    "id": missing_type_category_doc_id.to_string(),
+                    "ver": missing_type_category_doc_ver.to_string(),
                 }))
                 .unwrap()
                 .build();
@@ -170,13 +126,12 @@ mod tests {
 
         // all correct
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameter_type.clone(),
             optional: false,
         };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                "parameters": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
+                "parameters": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
             }))
             .unwrap()
             .build();
@@ -184,7 +139,7 @@ mod tests {
 
         // all correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameter_type.clone(),
             optional: true,
         };
         let doc = Builder::new().build();
@@ -192,41 +147,16 @@ mod tests {
 
         // missing `parameters` field, but its required
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameter_type.clone(),
             optional: false,
         };
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-            }))
-            .unwrap()
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing `ref` field
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
-            }))
-            .unwrap()
-            .build();
+        let doc = Builder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                "parameters": { "id": another_type_replied_doc_id.to_string(), "ver": another_type_replied_doc_ver.to_string() }
-            }))
-            .unwrap()
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // missing `ref` field in the referenced document
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                "parameters": { "id": missing_ref_replied_doc_id.to_string(), "ver": missing_type_replied_doc_ver.to_string() }
+                "parameters": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -235,18 +165,7 @@ mod tests {
         // missing `type` field in the referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                "parameters": { "id": missing_type_replied_doc_id.to_string(), "ver": missing_type_replied_doc_ver.to_string() }
-            }))
-            .unwrap()
-            .build();
-        assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // `ref` field does not align with the referenced document
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "ref": { "id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() },
-                "parameters": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
+                "parameters": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -255,7 +174,6 @@ mod tests {
         // cannot find a referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                 "parameters": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
             .unwrap()
