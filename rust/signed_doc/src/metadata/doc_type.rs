@@ -1,15 +1,20 @@
 //! Document Type.
 
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    hash::Hasher,
+};
 
 use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{CborContext, Uuid, UuidV4},
 };
-use minicbor::{Decode, Decoder, Encode};
+use coset::{cbor::Value, CborSerializable};
+use minicbor::{Decode, Decoder, Encode, Encoder};
+use std::hash::Hash;
 
 /// List of `UUIDv4` document type.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, Eq)]
 pub struct DocType(Vec<UuidV4>);
 
 impl DocType {
@@ -17,6 +22,37 @@ impl DocType {
     #[allow(dead_code)]
     pub fn doc_types(&self) -> &Vec<UuidV4> {
         &self.0
+    }
+
+    pub fn to_value(&self, report: &mut ProblemReport) -> anyhow::Result<coset::cbor::Value> {
+        let mut buffer = Vec::new();
+        let mut encoder = Encoder::new(&mut buffer);
+        self.encode(&mut encoder, report)?;
+        Value::from_slice(&buffer)
+            .map_err(|e| anyhow::anyhow!("Failed to convert DocType to Value: {e}"))
+    }
+}
+
+/// Returns an `DocType` from the provided argument.
+/// Reduce redundant conversion.
+/// This function should be used for hardcoded values, panic if conversion fail.
+#[allow(clippy::expect_used)]
+pub(crate) fn expect_doc_type<T>(t: T) -> DocType
+where
+    T: TryInto<DocType>,
+    T::Error: std::fmt::Debug,
+{
+    t.try_into().expect("Failed to convert to DocType")
+}
+
+impl Hash for DocType {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let list = self
+            .0
+            .iter()
+            .map(|uuid| uuid.to_string())
+            .collect::<Vec<_>>();
+        list.hash(state);
     }
 }
 
@@ -144,6 +180,7 @@ impl Encode<ProblemReport> for DocType {
 #[cfg(test)]
 mod tests {
 
+    use catalyst_types::uuid::UUID_CBOR_TAG;
     use minicbor::Encoder;
 
     use super::*;
@@ -164,6 +201,18 @@ mod tests {
         let decoded_doc_type =
             DocType::decode(&mut decoder, &mut report).expect("Failed to decode Doc Type");
         assert_eq!(decoded_doc_type, doc_type_list);
+
+        // Convert `DocType` to `Value`
+        let value = doc_type_list
+            .to_value(&mut report)
+            .expect("Failed to convert to Value");
+        assert_eq!(value.as_array().unwrap().len(), 2);
+        for v in value.as_array().unwrap() {
+            let (tag, v) = v.as_tag().unwrap();
+            assert_eq!(tag, UUID_CBOR_TAG);
+            let bytes = v.as_bytes().unwrap();
+            assert_eq!(bytes.len(), 16);
+        }
 
         // Singer doc type
         // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>

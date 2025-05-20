@@ -1,11 +1,8 @@
 //! `reply` rule type impl.
 
-use catalyst_types::uuid::UuidV4;
-
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
-    CatalystSignedDocument,
+    metadata::DocType, providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc, CatalystSignedDocument
 };
 
 /// `reply` field validation rule
@@ -14,7 +11,7 @@ pub(crate) enum ReplyRule {
     /// Is 'reply' specified
     Specified {
         /// expected `type` field of the replied doc
-        exp_reply_type: UuidV4,
+        exp_reply_type: DocType,
         /// optional flag for the `ref` field
         optional: bool,
     },
@@ -37,7 +34,7 @@ impl ReplyRule {
                 let reply_validator = |replied_doc: CatalystSignedDocument| {
                     if !referenced_doc_check(
                         &replied_doc,
-                        exp_reply_type.uuid(),
+                        exp_reply_type,
                         "reply",
                         doc.report(),
                     ) {

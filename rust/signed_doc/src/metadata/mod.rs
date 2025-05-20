@@ -9,19 +9,17 @@ mod extra_fields;
 mod section;
 pub(crate) mod utils;
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{UuidV4, UuidV7},
-};
+use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat};
+use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
+pub(crate) use doc_type::expect_doc_type;
+pub use doc_type::{DocType};
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
+use minicbor::{Decode, Decoder};
 pub use section::Section;
-use utils::{
-    cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV4, CborUuidV7,
-};
+use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -41,9 +39,9 @@ pub struct Metadata(InnerMetadata);
 /// An actual representation of all metadata fields.
 #[derive(Clone, Debug, PartialEq, serde::Deserialize, Default)]
 pub(crate) struct InnerMetadata {
-    /// Document Type `UUIDv4`.
+    /// Document Type, list of `UUIDv4`.
     #[serde(rename = "type")]
-    doc_type: Option<UuidV4>,
+    doc_type: Option<DocType>,
     /// Document ID `UUIDv7`.
     id: Option<UuidV7>,
     /// Document Version `UUIDv7`.
@@ -60,13 +58,14 @@ pub(crate) struct InnerMetadata {
 }
 
 impl Metadata {
-    /// Return Document Type `UUIDv4`.
+    /// Return Document Type `DocType` - a list of `UUIDv4`.
     ///
     /// # Errors
     /// - Missing 'type' field.
-    pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
+    pub fn doc_type(&self) -> anyhow::Result<&DocType> {
         self.0
             .doc_type
+            .as_ref()
             .ok_or(anyhow::anyhow!("Missing 'type' field"))
     }
 
@@ -132,7 +131,7 @@ impl Metadata {
 
     /// Converting COSE Protected Header to Metadata.
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, report: &ProblemReport,
+        protected: &coset::ProtectedHeader, report: &mut ProblemReport,
     ) -> Self {
         let metadata = InnerMetadata::from_protected_header(protected, report);
         Self::from_metadata_fields(metadata, report)
@@ -143,7 +142,7 @@ impl InnerMetadata {
     /// Converting COSE Protected Header to Metadata fields, collecting decoding report
     /// issues.
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, report: &ProblemReport,
+        protected: &coset::ProtectedHeader, report: &mut ProblemReport,
     ) -> Self {
         /// Context for problem report messages during decoding from COSE protected
         /// header.
@@ -186,13 +185,17 @@ impl InnerMetadata {
             }
         }
 
-        metadata.doc_type = decode_document_field_from_protected_header::<CborUuidV4>(
+        metadata.doc_type = cose_protected_header_find(
             protected,
-            TYPE_KEY,
-            COSE_DECODING_CONTEXT,
-            report,
+            |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(TYPE_KEY)),
         )
-        .map(|v| v.0);
+        .and_then(|value| {
+            DocType::decode(
+                &mut Decoder::new(&value.clone().to_vec().unwrap_or_default()),
+                report,
+            )
+            .ok()
+        });
 
         metadata.id = decode_document_field_from_protected_header::<CborUuidV7>(
             protected,
@@ -241,11 +244,10 @@ impl TryFrom<&Metadata> for coset::Header {
             );
         }
 
+        // Dummy report, use just to pass the encoder
+        let mut report = ProblemReport::new("TryFrom Metadata to COSE Header");
         builder = builder
-            .text_value(
-                TYPE_KEY.to_string(),
-                Value::try_from(CborUuidV4(meta.doc_type()?))?,
-            )
+            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value(&mut report)?)
             .text_value(
                 ID_KEY.to_string(),
                 Value::try_from(CborUuidV7(meta.doc_id()?))?,

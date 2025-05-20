@@ -6,7 +6,7 @@ use catalyst_types::uuid::UuidV4;
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::ContentType, providers::CatalystSignedDocumentProvider,
+    metadata::{ContentType, DocType}, providers::CatalystSignedDocumentProvider,
     validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
@@ -23,7 +23,7 @@ pub(crate) enum ContentRule {
     /// Based on the 'template' field and loaded corresponding template document
     Templated {
         /// expected `type` field of the template
-        exp_template_type: UuidV4,
+        exp_template_type: DocType,
     },
     /// Statically defined document's content schema.
     /// `template` field should not been specified

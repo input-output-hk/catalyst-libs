@@ -22,6 +22,7 @@ pub use catalyst_types::{
 };
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
+use metadata::DocType;
 pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
@@ -84,7 +85,7 @@ impl CatalystSignedDocument {
     ///
     /// # Errors
     /// - Missing 'type' field.
-    pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
+    pub fn doc_type(&self) -> anyhow::Result<&DocType> {
         self.inner.metadata.doc_type()
     }
 
@@ -221,12 +222,12 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
             })?;
 
-        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        let metadata = Metadata::from_protected_header(&cose_sign.protected, &report);
-        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
+        let mut report = ProblemReport::new(PROBLEM_REPORT_CTX);
+        let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut report);
+        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &mut report);
 
         let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(payload, metadata.content_encoding(), &report)
+            Content::from_encoded(payload, metadata.content_encoding(), &mut report)
         } else {
             report.missing_field("COSE Sign Payload", "Missing document content (payload)");
             Content::default()
