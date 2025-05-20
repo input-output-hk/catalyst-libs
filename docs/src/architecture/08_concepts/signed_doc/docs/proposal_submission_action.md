@@ -199,49 +199,106 @@ States:
       `hide` is only actioned if sent by the author,
          for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
-Schema :
-<!-- markdownlint-disable MD013 -->
-```json
-{
-  "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
-  "definitions": {
-    "action": {
-      "description": "The action being performed on the Proposal.",
-      "enum": [
-        "final",
-        "draft",
-        "hide"
-      ],
-      "type": "string"
-    }
-  },
-  "description": "Structure of the payload of a Proposal Submission Action.",
-  "maintainers": [
+### Schema
+
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? abstract
+
+    The kind of action is controlled by this payload.
+    The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
+
+    States:
+
+    * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
+    * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
+    * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
+          `hide` is only actioned if sent by the author,
+             for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+
+    ```json
     {
-      "name": "Catalyst Team",
-      "url": "https://projectcatalyst.io/"
+      "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "additionalProperties": false,
+      "definitions": {
+        "action": {
+          "description": "The action being performed on the Proposal.",
+          "enum": [
+            "final",
+            "draft",
+            "hide"
+          ],
+          "type": "string"
+        }
+      },
+      "description": "Structure of the payload of a Proposal Submission Action.",
+      "maintainers": [
+        {
+          "name": "Catalyst Team",
+          "url": "https://projectcatalyst.io/"
+        }
+      ],
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/action"
+        }
+      },
+      "required": [
+        "action"
+      ],
+      "title": "Proposal Submission Action Payload Schema",
+      "type": "object",
+      "x-changelog": {
+        "2025-03-01": [
+          "First Version Created."
+        ]
+      }
     }
-  ],
-  "properties": {
-    "action": {
-      "$ref": "#/definitions/action"
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+
+### Examples
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: Final Proposal Submission"
+
+    This document indicates the linked proposal is final and requested to proceed for further consideration.
+
+    ```json
+    {
+      "action": "final"
     }
-  },
-  "required": [
-    "action"
-  ],
-  "title": "Proposal Submission Action Payload Schema",
-  "type": "object",
-  "x-changelog": {
-    "2025-03-01": [
-      "First Version Created."
-    ]
-  }
-}
-```
-<!-- markdownlint-enable MD013 -->
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: Draft Proposal Submission"
+
+    This document indicates the linked proposal is no longer final and should not proceed for further consideration.
+    It is also used by collaborators to accept that they are a collaborator on a document.
+
+    ```json
+    {
+      "action": "draft"
+    }
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: Hidden Proposal Submission"
+
+    If submitted by the proposal author the document is hidden, it is still public but not shown as
+    a proposal being drafted.
+    If submitted by a collaborator, that collaborator is declaring they do not wish to be listed as
+    a collaborator on the proposal.
+
+    ```json
+    {
+      "action": "hide"
+    }
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 ## Signers
 
