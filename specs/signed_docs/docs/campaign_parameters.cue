@@ -18,7 +18,7 @@ docs: #DocumentDefinitions & {
 
 		payload: {
 			description: "Payload for Campaign Parameters document."
-			schema:      _ @embed(file="./payload_schemas/campaign_parameters.schema.json")
+			schema: {} @embed(file="./payload_schemas/campaign_parameters.schema.json")
 		}
 		versions: [
 			{

@@ -17,7 +17,7 @@ docs: #DocumentDefinitions & {
 		}
 		payload: {
 			description: "Payload for Category Parameters document."
-			schema:      _ @embed(file="./payload_schemas/category_parameters.schema.json")
+			schema: {} @embed(file="./payload_schemas/category_parameters.schema.json")
 		}
 		versions: [
 			{

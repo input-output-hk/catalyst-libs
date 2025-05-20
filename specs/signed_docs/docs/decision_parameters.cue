@@ -14,7 +14,7 @@ docs: #DocumentDefinitions & {
 		}
 		payload: {
 			description: "Payload for Decision Parameters document."
-			schema:      _ @embed(file="./payload_schemas/decision_parameters.schema.json")
+			schema: {} @embed(file="./payload_schemas/decision_parameters.schema.json")
 		}
 		versions: [
 			{

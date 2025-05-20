@@ -28,7 +28,7 @@ docs: #DocumentDefinitions & {
 		]
 		payload: {
 			description: "Payload for Brand Parameters document."
-			schema:      _ @embed(file="./payload_schemas/brand_parameters.schema.json")
+			schema: {} @embed(file="./payload_schemas/brand_parameters.schema.json")
 		}
 	}
 }
