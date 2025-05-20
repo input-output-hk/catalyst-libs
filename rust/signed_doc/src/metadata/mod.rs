@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 
 mod content_encoding;
 mod content_type;
+mod doc_type;
 mod document_ref;
 mod extra_fields;
 mod section;
