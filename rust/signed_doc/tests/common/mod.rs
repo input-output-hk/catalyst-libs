@@ -21,10 +21,7 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
         "template": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
         "section": "$".to_string(),
         "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
-        "campaign_id": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-        "election_id":  uuid_v4.to_string(),
-        "brand_id":  {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-        "category_id": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+        "parameters": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
     });
 
     (uuid_v7, uuid_v4, metadata_fields)

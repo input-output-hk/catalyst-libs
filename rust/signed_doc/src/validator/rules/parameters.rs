@@ -1,54 +1,66 @@
-//! `content-type` rule type impl.
+//! `parameters` rule type impl.
+
+use catalyst_types::uuid::UuidV4;
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    doc_types::CATEGORY_DOCUMENT_UUID_TYPE, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    CatalystSignedDocument,
 };
 
-/// `category_id` field validation rule
+/// `parameters` field validation rule
 #[derive(Clone, Debug, PartialEq)]
-pub(crate) enum CategoryRule {
-    /// Is `category_id` specified
+pub(crate) enum ParametersRule {
+    /// Is `parameters` specified
     Specified {
-        /// optional flag for the `category_id` field
+        /// expected `type` field of the parameter doc
+        exp_parameters_type: UuidV4,
+        /// optional flag for the `parameters` field
         optional: bool,
     },
-    /// `category_id` is not specified
+    /// `parameters` is not specified
     NotSpecified,
 }
 
-impl CategoryRule {
+impl ParametersRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: CatalystSignedDocumentProvider {
-        if let Self::Specified { optional } = self {
-            if let Some(category) = &doc.doc_meta().category_id() {
-                let category_validator = |category_doc: CatalystSignedDocument| {
+        if let Self::Specified {
+            exp_parameters_type,
+            optional,
+        } = self
+        {
+            if let Some(parameters) = doc.doc_meta().parameters() {
+                let parameters_validator = |replied_doc: CatalystSignedDocument| {
                     referenced_doc_check(
-                        &category_doc,
-                        CATEGORY_DOCUMENT_UUID_TYPE,
-                        "category_id",
+                        &replied_doc,
+                        exp_parameters_type.uuid(),
+                        "parameters",
                         doc.report(),
                     )
                 };
-
-                return validate_provided_doc(category, provider, doc.report(), category_validator)
-                    .await;
+                return validate_provided_doc(
+                    &parameters,
+                    provider,
+                    doc.report(),
+                    parameters_validator,
+                )
+                .await;
             } else if !optional {
                 doc.report()
-                    .missing_field("category_id", "Document must have a category field");
+                    .missing_field("parameters", "Document must have a parameters field");
                 return Ok(false);
             }
         }
-        if &Self::NotSpecified == self {
-            if let Some(category) = doc.doc_meta().category_id() {
+        if let Self::NotSpecified = self {
+            if let Some(parameters) = doc.doc_meta().parameters() {
                 doc.report().unknown_field(
-                    "category_id",
-                    &category.to_string(),
-                    "Document does not expect to have a category field",
+                    "parameters",
+                    &parameters.to_string(),
+                    "Document does not expect to have a parameters field",
                 );
                 return Ok(false);
             }
@@ -66,8 +78,10 @@ mod tests {
     use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
     #[tokio::test]
-    async fn category_rule_specified_test() {
+    async fn ref_rule_specified_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
+
+        let exp_parameters_type = UuidV4::new();
 
         let valid_category_doc_id = UuidV7::new();
         let valid_category_doc_ver = UuidV7::new();
@@ -82,7 +96,7 @@ mod tests {
                 .with_json_metadata(serde_json::json!({
                     "id": valid_category_doc_id.to_string(),
                     "ver": valid_category_doc_ver.to_string(),
-                    "type": CATEGORY_DOCUMENT_UUID_TYPE.to_string()
+                    "type": exp_parameters_type.to_string()
                 }))
                 .unwrap()
                 .build();
@@ -111,29 +125,38 @@ mod tests {
         }
 
         // all correct
-        let rule = CategoryRule::Specified { optional: false };
+        let rule = ParametersRule::Specified {
+            exp_parameters_type,
+            optional: false,
+        };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
+                "parameters": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
             }))
             .unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        // all correct, `category_id` field is missing, but its optional
-        let rule = CategoryRule::Specified { optional: true };
+        // all correct, `parameters` field is missing, but its optional
+        let rule = ParametersRule::Specified {
+            exp_parameters_type,
+            optional: true,
+        };
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        // missing `category_id` field, but its required
-        let rule = CategoryRule::Specified { optional: false };
+        // missing `parameters` field, but its required
+        let rule = ParametersRule::Specified {
+            exp_parameters_type,
+            optional: false,
+        };
         let doc = Builder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
+                "parameters": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -142,7 +165,7 @@ mod tests {
         // missing `type` field in the referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
+                "parameters": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
             }))
             .unwrap()
             .build();
@@ -151,7 +174,7 @@ mod tests {
         // cannot find a referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "category_id": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
+                "parameters": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
             .unwrap()
             .build();
@@ -159,10 +182,9 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn category_rule_not_specified_test() {
+    async fn parameters_rule_not_specified_test() {
+        let rule = ParametersRule::NotSpecified;
         let provider = TestCatalystSignedDocumentProvider::default();
-
-        let rule = CategoryRule::NotSpecified;
 
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
@@ -170,9 +192,7 @@ mod tests {
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "category_id": {"id": ref_id.to_string(), "ver": ref_ver.to_string(), }
-            }))
+            .with_json_metadata(serde_json::json!({"parameters": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
