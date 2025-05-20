@@ -7,6 +7,9 @@ use catalyst_types::{
     uuid::{CborContext, Uuid, UuidV4},
 };
 use minicbor::{Decode, Decoder, Encode};
+use tracing::warn;
+
+use crate::decode_context::{ConversionPolicy, DecodeContext};
 
 /// List of `UUIDv4` document type.
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -59,9 +62,9 @@ impl Display for DocType {
 // document_type = [ 1* uuid_v4 ]
 // ; UUIDv4
 // uuid_v4 = #6.37(bytes .size 16)
-impl Decode<'_, ProblemReport> for DocType {
+impl Decode<'_, DecodeContext<'_>> for DocType {
     fn decode(
-        d: &mut Decoder, report: &mut ProblemReport,
+        d: &mut Decoder, decode_context: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocType decoding";
         let parse_uuid = |d: &mut Decoder| UuidV4::decode(d, &mut CborContext::Tagged);
@@ -69,14 +72,16 @@ impl Decode<'_, ProblemReport> for DocType {
         match d.datatype()? {
             minicbor::data::Type::Array => {
                 let len = d.array()?.ok_or_else(|| {
-                    report.other("Unable to decode array length", CONTEXT);
+                    decode_context
+                        .report
+                        .other("Unable to decode array length", CONTEXT);
                     minicbor::decode::Error::message(format!(
                         "{CONTEXT}: Unable to decode array length"
                     ))
                 })?;
 
                 if len == 0 {
-                    report.invalid_value(
+                    decode_context.report.invalid_value(
                         "array length",
                         "0",
                         "must contain at least one UUIDv4",
@@ -92,7 +97,9 @@ impl Decode<'_, ProblemReport> for DocType {
                     .collect::<Result<Vec<_>, _>>()
                     .map(Self)
                     .map_err(|e| {
-                        report.other(&format!("Invalid UUIDv4 in array: {e}"), CONTEXT);
+                        decode_context
+                            .report
+                            .other(&format!("Invalid UUIDv4 in array: {e}"), CONTEXT);
                         minicbor::decode::Error::message(format!(
                             "{CONTEXT}: Invalid UUIDv4 in array: {e}"
                         ))
@@ -100,15 +107,30 @@ impl Decode<'_, ProblemReport> for DocType {
             },
             minicbor::data::Type::Tag => {
                 // Handle single tagged UUID
-                parse_uuid(d).map(|uuid| Self(vec![uuid])).map_err(|e| {
-                    report.other(&format!("Invalid single UUIDv4: {e}"), CONTEXT);
-                    minicbor::decode::Error::message(format!(
-                        "{CONTEXT}: Invalid single UUIDv4: {e}"
-                    ))
-                })
+                match decode_context.conversion_policy {
+                    ConversionPolicy::Accept | ConversionPolicy::Warn => {
+                        if matches!(decode_context.conversion_policy, ConversionPolicy::Warn) {
+                            warn!("{CONTEXT}: Conversion of document type single UUID to type DocType");
+                        }
+
+                        parse_uuid(d).map(|uuid| Self(vec![uuid])).map_err(|e| {
+                            let msg = format!("Invalid single UUIDv4: {e}");
+                            decode_context.report.other(&msg, CONTEXT);
+                            minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
+                        })
+                    },
+
+                    ConversionPolicy::Fail => {
+                        let msg = "Conversion of document type single UUID to type DocType is not allowed";
+                        decode_context.report.other(msg, CONTEXT);
+                        Err(minicbor::decode::Error::message(format!(
+                            "{CONTEXT}: {msg}"
+                        )))
+                    },
+                }
             },
             other => {
-                report.invalid_value(
+                decode_context.report.invalid_value(
                     "decoding type",
                     &format!("{other:?}"),
                     "array or tag cbor",
@@ -150,10 +172,11 @@ mod tests {
 
     #[test]
     fn test_doc_type() {
-        let mut report = ProblemReport::new("test doc type");
         let uuidv4 = UuidV4::new();
         assert_eq!(DocType::from(uuidv4).0.len(), 1);
-        // Multiple doc types
+
+        let mut report = ProblemReport::new("test doc type");
+        // ----- Multiple doc types -----
         let doc_type_list: DocType = vec![uuidv4, uuidv4].into();
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
@@ -161,21 +184,42 @@ mod tests {
             .encode(&mut encoder, &mut report)
             .expect("Failed to encode Doc Type");
         let mut decoder = Decoder::new(&buffer);
-        let decoded_doc_type =
-            DocType::decode(&mut decoder, &mut report).expect("Failed to decode Doc Type");
+        let mut decoded_context = DecodeContext {
+            conversion_policy: ConversionPolicy::Accept,
+            report: &mut report.clone(),
+        };
+        let decoded_doc_type = DocType::decode(&mut decoder, &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_type, doc_type_list);
 
-        // Singer doc type
+        // ----- Singer doc type -----
         // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
         // 37(h'5e60e623ad024a1ba1ac406db978ee48')
-        let single_uuid = hex::decode("D825505E60E623AD024A1BA1AC406DB978EE48")
-            .expect("Failed to decode single UUID");
-        let decoded_doc_type = DocType::decode(&mut Decoder::new(&single_uuid), &mut report)
-            .expect("Failed to decode Doc Type");
-        assert_eq!(decoded_doc_type.0.len(), 1);
+        let single_uuid = hex::decode("D825505E60E623AD024A1BA1AC406DB978EE48").unwrap();
+        let uuid = Uuid::parse_str("5e60e623-ad02-4a1b-a1ac-406db978ee48").unwrap();
+        let decoder = Decoder::new(&single_uuid);
+        // Failing Policy
+        let mut decoded_context = DecodeContext {
+            conversion_policy: ConversionPolicy::Fail,
+            report: &mut report.clone(),
+        };
+        assert!(DocType::decode(&mut decoder.clone(), &mut decoded_context).is_err());
+        // Warning Policy
+        let mut decoded_context = DecodeContext {
+            conversion_policy: ConversionPolicy::Warn,
+            report: &mut report.clone(),
+        };
+        let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
+        assert_eq!(decoded_doc_type, uuid.try_into().unwrap());
+        // Accept Policy
+        let mut decoded_context = DecodeContext {
+            conversion_policy: ConversionPolicy::Accept,
+            report: &mut report.clone(),
+        };
+        let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
+        assert_eq!(decoded_doc_type, uuid.try_into().unwrap());
 
-        // Empty doc type
+        // ----- Empty doc type -----
         let mut decoder = Decoder::new(&[]);
-        assert!(DocType::decode(&mut decoder, &mut report).is_err());
+        assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
     }
 }

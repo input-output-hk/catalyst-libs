@@ -2,6 +2,7 @@
 
 mod builder;
 mod content;
+mod decode_context;
 pub mod doc_types;
 mod metadata;
 pub mod providers;
