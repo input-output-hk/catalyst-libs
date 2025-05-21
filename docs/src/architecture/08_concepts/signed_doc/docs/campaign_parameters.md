@@ -89,6 +89,28 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
+### [`collaborators`](../metadata.md#collaborators)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Collaborators Reference List](../metadata.md#collaborators-reference-list) |
+<!-- markdownlint-enable MD033 -->
+A list of collaborators who may also publish updates to versions of this document.
+This should include all parties who have not signed this document directly.
+
+Every subsequent version can amend the collaborators list.
+However, the initial Author can never be removed from being able to
+publish a new version of the document.
+
+#### [`collaborators`](../metadata.md#collaborators) Validation
+
+This list does not imply these collaborators have consented to collaborate, only that the author/s
+are permitting these potential collaborators to participate in the drafting and submission process.
+However, any document submission referencing a proposal MUST be signed by all collaborators in
+addition to the author.
+
 ### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
@@ -96,7 +118,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Brand Parameters](brand_parameters.md) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -109,10 +131,20 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Payload
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+Payload for Campaign Parameters document.
+
+### Schema
+
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? abstract
+
+    Payload for Campaign Parameters document.
+
+    ```json
+    {}
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 ## Signers
 
@@ -138,11 +170,11 @@ New versions of this document may be published by:
 
 #### 0.01 (2025-04-04)
 
-* First Published Version
+    * First Published Version
 
 #### 0.03 (2025-05-05)
 
-* Use generalized parameters.
+    * Use generalized parameters.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

@@ -3,7 +3,7 @@ name = "gen-docs"
 version = "0.1.0"
 description = "Generate Signed Document documentation files."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.10"
 dependencies = [
     "jsonschema[format]>=4.23.0",
     "pydantic>=2.11.4",
