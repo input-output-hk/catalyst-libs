@@ -92,6 +92,33 @@ docs: #DocumentDefinitions & {
 							for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 				"""
 			schema: _ @embed(file="payload_schemas/proposal_submission_action.schema.json")
+			examples: [
+				{
+					title: "Final Proposal Submission"
+					description: """
+						This document indicates the linked proposal is final and requested to proceed for further consideration.
+						"""
+					example: _ @embed(file="payload_schemas/proposal_submission_action.final.example.json")
+				},
+				{
+					title: "Draft Proposal Submission"
+					description: """
+						This document indicates the linked proposal is no longer final and should not proceed for further consideration.
+						It is also used by collaborators to accept that they are a collaborator on a document.
+						"""
+					example: _ @embed(file="payload_schemas/proposal_submission_action.draft.example.json")
+				},
+				{
+					title: "Hidden Proposal Submission"
+					description: """
+						If submitted by the proposal author the document is hidden, it is still public but not shown as
+						a proposal being drafted.
+						If submitted by a collaborator, that collaborator is declaring they do not wish to be listed as
+						a collaborator on the proposal.
+						"""
+					example: _ @embed(file="payload_schemas/proposal_submission_action.hide.example.json")
+				},
+			]
 		}
 
 		"signers": {

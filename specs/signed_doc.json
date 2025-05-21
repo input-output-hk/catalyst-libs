@@ -253,6 +253,11 @@
         "changes": "* Use generalized parameters.",
         "modified": "2025-05-05",
         "version": "0.03"
+      },
+      {
+        "changes": "* Improve and make document serialization more repeatable, and stricter.\n* TODO: Define Systems parameters\n* TODO: Define DReps documents.\n* TODO: Define Proposer Profiles.\n* TODO: Define Role 0 Profile.",
+        "modified": "2025-05-30",
+        "version": "0.04"
       }
     ]
   },
@@ -1876,6 +1881,29 @@
       "notes": [],
       "payload": {
         "description": "The kind of action is controlled by this payload.\nThe Payload is a JSON Document, and must conform to this schema.\n\nStates:\n\n* `final` : All collaborators must publish a `final` status for the proposal to be `final`.\n* `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.  \n* `hide`  : Requests the proposal be hidden (not final, but a hidden draft).  \n\t\t\t`hide` is only actioned if sent by the author, \n\t\t\tfor a collaborator it identified that they do not wish to be listed as a `collaborator`.",
+        "examples": [
+          {
+            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
+            "example": {
+              "action": "final"
+            },
+            "title": "Final Proposal Submission"
+          },
+          {
+            "description": "This document indicates the linked proposal is no longer final and should not proceed for further consideration.\nIt is also used by collaborators to accept that they are a collaborator on a document.",
+            "example": {
+              "action": "draft"
+            },
+            "title": "Draft Proposal Submission"
+          },
+          {
+            "description": "If submitted by the proposal author the document is hidden, it is still public but not shown as\na proposal being drafted.\nIf submitted by a collaborator, that collaborator is declaring they do not wish to be listed as\na collaborator on the proposal.",
+            "example": {
+              "action": "hide"
+            },
+            "title": "Hidden Proposal Submission"
+          }
+        ],
         "schema": {
           "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
           "$schema": "http://json-schema.org/draft-07/schema#",
@@ -2086,6 +2114,7 @@
     }
   },
   "documentationLinks": {
+    "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
     "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
     "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
     "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
@@ -2117,6 +2146,7 @@
   "linkAKA": {
     "BROTLI": "RFC7932",
     "CBOR": "RFC8949",
+    "CBOR Deterministic Encoding": "CBOR-LFD-ENCODING",
     "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
     "CDDL": "RFC8610",
     "COSE": "RFC9052",
