@@ -1,6 +1,6 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::*;
+use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::TaggedCborSerializable;
@@ -56,9 +56,13 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
     assert!(doc.problem_report().is_problematic());
 }
 
-#[test]
-fn catalyst_signed_doc_parameters_aliases_test() {
+#[tokio::test]
+#[allow(clippy::too_many_lines)]
+async fn catalyst_signed_doc_parameters_aliases_test() {
     let (_, _, metadata_fields) = common::test_metadata();
+    let (sk, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
+    let mut provider = TestVerifyingKeyProvider::default();
+    provider.add_pk(kid.clone(), pk);
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
@@ -97,46 +101,58 @@ fn catalyst_signed_doc_parameters_aliases_test() {
         parameters_val_cbor.clone(),
     ));
 
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
+    let cbor_bytes = cose_with_category_id.to_tagged_vec().unwrap();
+    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
+    let doc = doc
+        .into_builder()
+        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
         .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+        .build();
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
+    assert!(validator::validate_signatures(&doc, &provider)
+        .await
+        .unwrap());
 
     // case: `brand_id`.
-    let mut cose_with_category_id = cose.clone();
-    cose_with_category_id.protected.header.rest.push((
+    let mut cose_with_brand_id = cose.clone();
+    cose_with_brand_id.protected.header.rest.push((
         coset::Label::Text("brand_id".to_string()),
         parameters_val_cbor.clone(),
     ));
 
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
+    let cbor_bytes = cose_with_brand_id.to_tagged_vec().unwrap();
+    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
+    let doc = doc
+        .into_builder()
+        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
         .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+        .build();
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
+    assert!(validator::validate_signatures(&doc, &provider)
+        .await
+        .unwrap());
 
     // case: `campaign_id`.
-    let mut cose_with_category_id = cose.clone();
-    cose_with_category_id.protected.header.rest.push((
+    let mut cose_with_campaign_id = cose.clone();
+    cose_with_campaign_id.protected.header.rest.push((
         coset::Label::Text("campaign_id".to_string()),
         parameters_val_cbor.clone(),
     ));
 
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
+    let cbor_bytes = cose_with_campaign_id.to_tagged_vec().unwrap();
+    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
+    let doc = doc
+        .into_builder()
+        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
         .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+        .build();
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
+    assert!(validator::validate_signatures(&doc, &provider)
+        .await
+        .unwrap());
 
     // `parameters` value along with its aliases are not allowed to be present at the
     let mut cose_with_category_id = cose.clone();
