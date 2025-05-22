@@ -192,21 +192,30 @@ impl InnerCatalystSignedDocument {
     /// # Errors
     /// Could fails if the `CatalystSignedDocument` object is not valid.
     fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        let protected_header =
-            Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
+        if let Some(raw_bytes) = self.raw_bytes.clone() {
+            let cose_sign = coset::CoseSign::from_tagged_slice(raw_bytes.as_slice())
+                .or_else(|_| coset::CoseSign::from_slice(raw_bytes.as_slice()))
+                .map_err(|e| {
+                    minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
+                })?;
+            Ok(cose_sign)
+        } else {
+            let protected_header =
+                Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
 
-        let content = self
-            .content
-            .encoded_bytes(self.metadata.content_encoding())?;
+            let content = self
+                .content
+                .encoded_bytes(self.metadata.content_encoding())?;
 
-        let mut builder = coset::CoseSignBuilder::new()
-            .protected(protected_header)
-            .payload(content);
+            let mut builder = coset::CoseSignBuilder::new()
+                .protected(protected_header)
+                .payload(content);
 
-        for signature in self.signatures.cose_signatures() {
-            builder = builder.add_signature(signature);
+            for signature in self.signatures.cose_signatures() {
+                builder = builder.add_signature(signature);
+            }
+            Ok(builder.build())
         }
-        Ok(builder.build())
     }
 }
 
@@ -252,20 +261,13 @@ impl Encode<()> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
-        let bytes = if let Some(raw_bytes) = self.inner.raw_bytes.clone() {
-            raw_bytes
-        } else {
-            let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-            let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
-                minicbor::encode::Error::message(format!(
-                    "Failed to encode COSE Sign document: {e}"
-                ))
-            })?;
-            cose_bytes
-        };
+        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
+        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
+            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
+        })?;
 
         e.writer_mut()
-            .write_all(&bytes)
+            .write_all(&cose_bytes)
             .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
     }
 }
