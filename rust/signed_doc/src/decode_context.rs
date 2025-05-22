@@ -2,21 +2,23 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-/// Conversion policy
+/// Compatibility policy
 #[allow(dead_code)]
-pub(crate) enum ConversionPolicy {
-    /// Allow conversion.
+pub(crate) enum CompatibilityPolicy {
+    /// Silently allow obsoleted type conversions or non deterministic encoding.
     Accept,
-    /// Allow conversion but log warning.
+    /// Allow but log Warnings for all obsoleted type conversions or non deterministic
+    /// encoding.
     Warn,
-    /// Fail when there is conversion.
+    /// Fail and update problem report when an obsolete type is encountered or the data is
+    /// not deterministically encoded.
     Fail,
 }
 
 /// A context use to pass to decoder.
 pub(crate) struct DecodeContext<'r> {
-    /// Conversion policy.
-    pub conversion_policy: ConversionPolicy,
+    /// Compatibility policy.
+    pub compatibility_policy: CompatibilityPolicy,
     /// Problem report.
     pub report: &'r mut ProblemReport,
 }
