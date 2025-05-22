@@ -259,7 +259,8 @@ mod tests {
 
     // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
     // Proposal Submission Action = 37(h'5e60e623ad024a1ba1ac406db978ee48') should map to
-    // [37(h'5e60e623ad024a1ba1ac406db978ee48'), 37(h'7808d2bad51140af84e8c0d1625fdfdc'), 37(h'78927329cfd94ea19c710e019b126a65')]
+    // [37(h'5e60e623ad024a1ba1ac406db978ee48'), 37(h'7808d2bad51140af84e8c0d1625fdfdc'),
+    // 37(h'78927329cfd94ea19c710e019b126a65')]
     const PSA: &str = "D825505E60E623AD024A1BA1AC406DB978EE48";
 
     #[test]
