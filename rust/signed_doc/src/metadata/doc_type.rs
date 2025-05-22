@@ -257,6 +257,11 @@ mod tests {
 
     use super::*;
 
+    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
+    // Proposal Submission Action = 37(h'5e60e623ad024a1ba1ac406db978ee48') should map to
+    // [37(h'5e60e623ad024a1ba1ac406db978ee48'), 37(h'7808d2bad51140af84e8c0d1625fdfdc'), 37(h'78927329cfd94ea19c710e019b126a65')]
+    const PSA: &str = "D825505E60E623AD024A1BA1AC406DB978EE48";
+
     #[test]
     fn test_empty_doc_type() {
         assert!(<DocType as TryFrom<Vec<UuidV4>>>::try_from(vec![]).is_err());
@@ -271,26 +276,35 @@ mod tests {
     }
 
     #[test]
-    fn test_single_uuid_doc_type() {
-        // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
-        // Action = 37(h'5e60e623ad024a1ba1ac406db978ee48')
-        let proposal_uuid = hex::decode("D825505E60E623AD024A1BA1AC406DB978EE48").unwrap();
-        let mut report = ProblemReport::new("Test single uuid doc type");
-        let decoder = Decoder::new(&proposal_uuid);
-        // Failing Policy
+    fn test_single_uuid_doc_type_fail_policy() {
+        let mut report = ProblemReport::new("Test single uuid doc type - fail");
+        let data = hex::decode(PSA).unwrap();
+        let decoder = Decoder::new(&data);
         let mut decoded_context = DecodeContext {
             compatibility_policy: CompatibilityPolicy::Fail,
             report: &mut report,
         };
         assert!(DocType::decode(&mut decoder.clone(), &mut decoded_context).is_err());
-        // Warning Policy
+    }
+
+    #[test]
+    fn test_single_uuid_doc_type_warn_policy() {
+        let mut report = ProblemReport::new("Test single uuid doc type - warn");
+        let data = hex::decode(PSA).unwrap();
+        let decoder = Decoder::new(&data);
         let mut decoded_context = DecodeContext {
             compatibility_policy: CompatibilityPolicy::Warn,
             report: &mut report,
         };
         let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_type.doc_types().len(), 3);
-        // Accept Policy
+    }
+
+    #[test]
+    fn test_single_uuid_doc_type_accept_policy() {
+        let mut report = ProblemReport::new("Test single uuid doc type - accept");
+        let data = hex::decode(PSA).unwrap();
+        let decoder = Decoder::new(&data);
         let mut decoded_context = DecodeContext {
             compatibility_policy: CompatibilityPolicy::Accept,
             report: &mut report,
@@ -306,9 +320,7 @@ mod tests {
         let doc_type_list: DocType = vec![uuidv4, uuidv4].try_into().unwrap();
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        doc_type_list
-            .encode(&mut encoder, &mut report)
-            .expect("Failed to encode Doc Type");
+        doc_type_list.encode(&mut encoder, &mut report).unwrap();
         let mut decoder = Decoder::new(&buffer);
         let mut decoded_context = DecodeContext {
             compatibility_policy: CompatibilityPolicy::Accept,
