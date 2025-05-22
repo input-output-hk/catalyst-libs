@@ -57,6 +57,7 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
 }
 
 #[tokio::test]
+#[allow(clippy::too_many_lines)]
 async fn catalyst_signed_doc_parameters_aliases_test() {
     let (_, _, metadata_fields) = common::test_metadata();
     let (sk, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
