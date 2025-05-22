@@ -43,7 +43,7 @@ struct InnerCatalystSignedDocument {
     report: ProblemReport,
 
     /// raw CBOR bytes of the `CatalystSignedDocument` object.
-    /// It is improtant to keep them to have a consistency what comes from the decoding
+    /// It is important to keep them to have a consistency what comes from the decoding
     /// process, so we would return the same data again
     raw_bytes: Option<Vec<u8>>,
 }
