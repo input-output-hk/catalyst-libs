@@ -1,49 +1,62 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/main/specs/signed_docs/docs/payload_schemas/category_parameters.schema.json",
     "title": "Category Parameters",
-    "description": "Parameters applicable at the category/challenge level, defining specific configurations for challenges.",
+    "description": "Schema for defining Catalyst category-level parameters, with UI/UX metadata and logical grouping.",
     "type": "object",
-    "properties": {
-        "parameters": {
+    "definitions": {
+        "stringParameter": { "type": "string", "title": "String Parameter" },
+        "adaAmount": { "type": "integer", "title": "ADA Amount" },
+        "percentageParameter": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "title": "Percentage Parameter"
+        },
+        "stringRule": { "type": "string", "title": "String / Rule" },
+        "listParameter": {
             "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "parameter": {
-                        "type": "string",
-                        "description": "The name or description of the parameter."
-                    },
-                    "dataType": {
-                        "type": "string",
-                        "description": "The expected data type of the parameter's value.",
-                        "enum": [
-                            "Boolean",
-                            "String",
-                            "ADA Amount",
-                            "ADA Amount (Variable per Challenge/Category)",
-                            "Lovelace Amount",
-                            "Integer",
-                            "Date",
-                            "Datetime",
-                            "Ratio / Formula",
-                            "Percentage",
-                            "Currency Amount / String",
-                            "String / Rule",
-                            "List"
-                        ]
-                    },
-                    "defaultValue": {
-                        "type": ["string", "boolean", "number"],
-                        "description": "The default value for the parameter, if applicable."
-                    },
-                    "isRequired": {
-                        "type": "boolean",
-                        "description": "Indicates whether the parameter is mandatory."
-                    }
-                },
-                "required": ["parameter", "dataType"]
-            }
+            "items": { "type": "string" },
+            "title": "List Parameter"
         }
     },
-    "required": ["parameters"]
+    "properties": {
+        "campaignTitle": {
+            "$ref": "#/definitions/stringParameter",
+            "title": "Campaign (Challenge) Title"
+        },
+        "minimumBudgetRequestPerProposal": {
+            "$ref": "#/definitions/adaAmount",
+            "title": "Minimum Budget Request Per Proposal"
+        },
+        "maximumBudgetRequestPerProposal": {
+            "$ref": "#/definitions/stringParameter",
+            "title": "Maximum Budget Request Per Proposal"
+        },
+        "proposalFundingLogic": {
+            "$ref": "#/definitions/stringRule",
+            "title": "Proposal Funding logic (winner selection)"
+        },
+        "proposalAcceptanceThreshold": {
+            "$ref": "#/definitions/percentageParameter",
+            "title": "Proposal acceptance threshold"
+        },
+        "votingOptions": {
+            "$ref": "#/definitions/listParameter",
+            "title": "Voting options"
+        }
+    },
+    "required": [
+        "campaignTitle",
+        "minimumBudgetRequestPerProposal",
+        "maximumBudgetRequestPerProposal"
+    ],
+    "x-order": [
+        "campaignTitle",
+        "minimumBudgetRequestPerProposal",
+        "maximumBudgetRequestPerProposal",
+        "proposalFundingLogic",
+        "proposalAcceptanceThreshold",
+        "votingOptions"
+    ]
 }

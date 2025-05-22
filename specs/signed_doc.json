@@ -419,6 +419,13 @@
       "notes": [],
       "payload": {
         "description": "Payload for Brand Parameters document.",
+        "examples": [
+          {
+            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
+            "example": {},
+            "title": "Final Proposal Submission"
+          }
+        ],
         "schema": {}
       },
       "signers": {
@@ -541,6 +548,13 @@
       "notes": [],
       "payload": {
         "description": "Payload for Campaign Parameters document.",
+        "examples": [
+          {
+            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
+            "example": {},
+            "title": "Final Proposal Submission"
+          }
+        ],
         "schema": {}
       },
       "signers": {
@@ -668,6 +682,13 @@
       "notes": [],
       "payload": {
         "description": "Payload for Category Parameters document.",
+        "examples": [
+          {
+            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
+            "example": {},
+            "title": "Final Proposal Submission"
+          }
+        ],
         "schema": {}
       },
       "signers": {
@@ -917,6 +938,13 @@
       "notes": [],
       "payload": {
         "description": "Payload for Decision Parameters document.",
+        "examples": [
+          {
+            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
+            "example": {},
+            "title": "Final Proposal Submission"
+          }
+        ],
         "schema": {}
       },
       "signers": {

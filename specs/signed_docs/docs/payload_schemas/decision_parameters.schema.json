@@ -1,49 +1,31 @@
 {
     "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/main/specs/signed_docs/docs/payload_schemas/decision_parameters.schema.json",
     "title": "Decision Parameters",
-    "description": "Parameters that are key decision-making points, defining voting and decision configurations.",
+    "description": "Schema for defining Catalyst decision parameters (key decision points), with UI/UX metadata and logical grouping.",
     "type": "object",
-    "properties": {
-        "parameters": {
+    "definitions": {
+        "datetimeParameter": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Datetime Parameter"
+        },
+        "listParameter": {
             "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "parameter": {
-                        "type": "string",
-                        "description": "The name or description of the parameter."
-                    },
-                    "dataType": {
-                        "type": "string",
-                        "description": "The expected data type of the parameter's value.",
-                        "enum": [
-                            "Boolean",
-                            "String",
-                            "ADA Amount",
-                            "ADA Amount (Variable per Challenge/Category)",
-                            "Lovelace Amount",
-                            "Integer",
-                            "Date",
-                            "Datetime",
-                            "Ratio / Formula",
-                            "Percentage",
-                            "Currency Amount / String",
-                            "String / Rule",
-                            "List"
-                        ]
-                    },
-                    "defaultValue": {
-                        "type": ["string", "boolean", "number"],
-                        "description": "The default value for the parameter, if applicable."
-                    },
-                    "isRequired": {
-                        "type": "boolean",
-                        "description": "Indicates whether the parameter is mandatory."
-                    }
-                },
-                "required": ["parameter", "dataType"]
-            }
+            "items": { "type": "string" },
+            "title": "List Parameter"
         }
     },
-    "required": ["parameters"]
+    "properties": {
+        "votingPeriodStart": {
+            "$ref": "#/definitions/datetimeParameter",
+            "title": "Voting period start time"
+        },
+        "votingOptions": {
+            "$ref": "#/definitions/listParameter",
+            "title": "Voting options"
+        }
+    },
+    "required": ["votingPeriodStart", "votingOptions"],
+    "x-order": ["votingPeriodStart", "votingOptions"]
 }

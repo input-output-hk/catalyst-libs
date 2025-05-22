@@ -146,6 +146,18 @@ Payload for Category Parameters document.
 
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
+### Example
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: Final Proposal Submission"
+
+    This document indicates the linked proposal is final and requested to proceed for further consideration.
+
+    ```json
+    {}
+    ```
+
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+
 ## Signers
 
 The following user roles may sign documents of this type:
