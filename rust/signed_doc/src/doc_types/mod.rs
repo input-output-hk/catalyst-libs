@@ -51,3 +51,5 @@ pub const PRIVATE_VOTE_TX_V2_UUID_TYPE: Uuid =
 /// Immutable ledger block `UuidV4` type.
 pub const IMMUTABLE_LEDGER_BLOCK_UUID_TYPE: Uuid =
     Uuid::from_u128(0xD9E7_E6CE_2401_4D7D_9492_F4F7_C642_41C3);
+/// Submission Action `UuidV4` type.
+pub const SUBMISSION_ACTION: Uuid = Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0E01_9B12_6A65);

@@ -2,6 +2,7 @@
 
 mod builder;
 mod content;
+mod decode_context;
 pub mod doc_types;
 mod metadata;
 pub mod providers;
@@ -22,7 +23,9 @@ pub use catalyst_types::{
 };
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
-pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
+pub use metadata::{
+    ContentEncoding, ContentType, DocType, DocumentRef, ExtraFields, Metadata, Section,
+};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
