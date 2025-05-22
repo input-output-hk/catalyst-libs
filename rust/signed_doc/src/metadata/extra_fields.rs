@@ -47,9 +47,21 @@ pub struct ExtraFields {
     /// Reference to the document collaborators. Collaborator type is TBD.
     #[serde(default = "Vec::new", skip_serializing_if = "Vec::is_empty")]
     collabs: Vec<String>,
+
     /// Reference to the parameters document.
     #[serde(skip_serializing_if = "Option::is_none")]
     parameters: Option<DocumentRef>,
+    // TODO: get rid of these fields after `CatalystSignedDocument` would preserv original cbor
+    // bytes
+    /// Reference to the parameters document.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    category_id: Option<DocumentRef>,
+    /// Reference to the parameters document.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    campaign_id: Option<DocumentRef>,
+    /// Reference to the parameters document.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    brand_id: Option<DocumentRef>,
 }
 
 impl ExtraFields {
@@ -87,6 +99,9 @@ impl ExtraFields {
     #[must_use]
     pub fn parameters(&self) -> Option<DocumentRef> {
         self.parameters
+            .or(self.category_id)
+            .or(self.campaign_id)
+            .or(self.brand_id)
     }
 
     /// Fill the COSE header `ExtraFields` data into the header builder.
@@ -116,6 +131,17 @@ impl ExtraFields {
 
         if let Some(parameters) = &self.parameters {
             builder = builder.text_value(PARAMETERS_KEY.to_string(), Value::try_from(*parameters)?);
+        }
+        if let Some(category_id) = &self.category_id {
+            builder =
+                builder.text_value(CATEGORY_ID_KEY.to_string(), Value::try_from(*category_id)?);
+        }
+        if let Some(campaign_id) = &self.campaign_id {
+            builder =
+                builder.text_value(CAMPAIGN_ID_KEY.to_string(), Value::try_from(*campaign_id)?);
+        }
+        if let Some(brand_id) = &self.brand_id {
+            builder = builder.text_value(BRAND_ID_KEY.to_string(), Value::try_from(*brand_id)?);
         }
 
         Ok(builder)
@@ -155,23 +181,37 @@ impl ExtraFields {
         );
 
         // process `parameters` field and all its aliases
-        let (parameters, has_multiple_fields) = [
+        let parameters = decode_document_field_from_protected_header(
+            protected,
             PARAMETERS_KEY,
-            BRAND_ID_KEY,
-            CAMPAIGN_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let category_id = decode_document_field_from_protected_header(
+            protected,
             CATEGORY_ID_KEY,
-        ]
-        .iter()
-        .filter_map(|field_name| -> Option<DocumentRef> {
-            decode_document_field_from_protected_header(
-                protected,
-                field_name,
-                COSE_DECODING_CONTEXT,
-                error_report,
-            )
-        })
-        .fold((None, false), |(res, _), v| (Some(v), res.is_some()));
-        if has_multiple_fields {
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let campaign_id = decode_document_field_from_protected_header(
+            protected,
+            CAMPAIGN_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+        let brand_id = decode_document_field_from_protected_header(
+            protected,
+            BRAND_ID_KEY,
+            COSE_DECODING_CONTEXT,
+            error_report,
+        );
+
+        if [&parameters, &category_id, &campaign_id, &brand_id]
+            .iter()
+            .filter(|v| v.is_some())
+            .count()
+            > 1
+        {
             error_report.duplicate_field(
                     "brand_id, campaign_id, category_id", 
                     "Only value at the same time is allowed parameters, brand_id, campaign_id, category_id", 
@@ -185,6 +225,9 @@ impl ExtraFields {
             reply,
             section,
             parameters,
+            category_id,
+            campaign_id,
+            brand_id,
             ..Default::default()
         };
 
