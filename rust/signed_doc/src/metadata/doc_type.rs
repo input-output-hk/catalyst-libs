@@ -21,6 +21,17 @@ use crate::{
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct DocType(Vec<UuidV4>);
 
+/// `DocType` Errors.
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum DocTypeError {
+    /// Invalid UUID.
+    #[error("Invalid UUID: {0}")]
+    InvalidUuid(Uuid),
+    /// `DocType` cannot be empty.
+    #[error("DocType cannot be empty")]
+    Empty,
+}
+
 impl DocType {
     /// Get a list of `UUIDv4` document types.
     #[must_use]
@@ -36,37 +47,37 @@ impl From<UuidV4> for DocType {
 }
 
 impl TryFrom<Uuid> for DocType {
-    type Error = anyhow::Error;
+    type Error = DocTypeError;
 
     fn try_from(value: Uuid) -> Result<Self, Self::Error> {
-        let uuid_v4 = UuidV4::try_from(value)?;
+        let uuid_v4 = UuidV4::try_from(value).map_err(|_| DocTypeError::InvalidUuid(value))?;
         Ok(DocType(vec![uuid_v4]))
     }
 }
 
 impl TryFrom<Vec<Uuid>> for DocType {
-    type Error = anyhow::Error;
+    type Error = DocTypeError;
 
-    fn try_from(value: Vec<Uuid>) -> anyhow::Result<Self> {
+    fn try_from(value: Vec<Uuid>) -> Result<Self, Self::Error> {
         if value.is_empty() {
-            anyhow::bail!("DocType cannot be empty");
+            return Err(DocTypeError::Empty);
         }
 
-        let converted: Vec<UuidV4> = value
+        let converted = value
             .into_iter()
-            .map(UuidV4::try_from)
-            .collect::<Result<_, _>>()?;
+            .map(|u| UuidV4::try_from(u).map_err(|_| DocTypeError::InvalidUuid(u)))
+            .collect::<Result<Vec<UuidV4>, DocTypeError>>()?;
 
         DocType::try_from(converted)
     }
 }
 
 impl TryFrom<Vec<UuidV4>> for DocType {
-    type Error = anyhow::Error;
+    type Error = DocTypeError;
 
     fn try_from(value: Vec<UuidV4>) -> Result<Self, Self::Error> {
         if value.is_empty() {
-            anyhow::bail!("DocType cannot be empty")
+            return Err(DocTypeError::Empty);
         }
         Ok(DocType(value))
     }
@@ -137,22 +148,35 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                 // Handle single tagged UUID
                 match decode_context.compatibility_policy {
                     CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(decode_context.compatibility_policy, CompatibilityPolicy::Warn) {
+                        if matches!(
+                            decode_context.compatibility_policy,
+                            CompatibilityPolicy::Warn
+                        ) {
                             warn!("{CONTEXT}: Conversion of document type single UUID to type DocType");
                         }
 
                         let uuid = parse_uuid(d).map_err(|e| {
-                            let msg = format!("Cannot decode UUIDv4: {e}");
-                            decode_context.report.invalid_value("Decode UUIDv4", &e.to_string(), &msg, CONTEXT);
+                            let msg = format!("Cannot decode single UUIDv4: {e}");
+                            decode_context.report.invalid_value(
+                                "Decode single UUIDv4",
+                                &e.to_string(),
+                                &msg,
+                                CONTEXT,
+                            );
                             minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
                         })?;
 
-                        map_doc_type(uuid.into())
-                            .and_then(|ids| ids.to_vec().try_into())
-                            .map_err(|e| {
-                                decode_context.report.other(&e.to_string(), CONTEXT);
-                                minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
-                            })
+                        let ids = map_doc_type(uuid.into()).map_err(|e| {
+                            decode_context.report.other(&e.to_string(), CONTEXT);
+                            minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
+                        })?;
+
+                        let doc_type = ids.to_vec().try_into().map_err(|e: DocTypeError| {
+                            decode_context.report.other(&e.to_string(), CONTEXT);
+                            minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
+                        })?;
+
+                        Ok(doc_type)
                     },
 
                     CompatibilityPolicy::Fail => {
