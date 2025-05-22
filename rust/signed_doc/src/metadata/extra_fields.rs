@@ -51,7 +51,7 @@ pub struct ExtraFields {
     /// Reference to the parameters document.
     #[serde(skip_serializing_if = "Option::is_none")]
     parameters: Option<DocumentRef>,
-    // TODO: get rid of these fields after `CatalystSignedDocument` would preserv original cbor
+    // TODO: get rid of these fields after `CatalystSignedDocument` would preserve original cbor
     // bytes
     /// Reference to the parameters document.
     #[serde(skip_serializing_if = "Option::is_none")]
