@@ -97,14 +97,11 @@ fn catalyst_signed_doc_parameters_aliases_test() {
         parameters_val_cbor.clone(),
     ));
 
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
-        .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+    let cbor_bytes = cose_with_category_id.to_tagged_vec().unwrap();
+    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
+    assert_eq!(cbor_bytes, Vec::try_from(doc).unwrap().as_slice());
 
     // case: `brand_id`.
     let mut cose_with_category_id = cose.clone();
@@ -113,14 +110,11 @@ fn catalyst_signed_doc_parameters_aliases_test() {
         parameters_val_cbor.clone(),
     ));
 
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
-        .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+    let cbor_bytes = cose_with_category_id.to_tagged_vec().unwrap();
+    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
+    assert_eq!(cbor_bytes, Vec::try_from(doc).unwrap().as_slice());
 
     // case: `campaign_id`.
     let mut cose_with_category_id = cose.clone();
@@ -129,14 +123,11 @@ fn catalyst_signed_doc_parameters_aliases_test() {
         parameters_val_cbor.clone(),
     ));
 
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
-        .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+    let cbor_bytes = cose_with_category_id.to_tagged_vec().unwrap();
+    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     assert!(!doc.problem_report().is_problematic());
     assert!(doc.doc_meta().parameters().is_some());
+    assert_eq!(cbor_bytes, Vec::try_from(doc).unwrap().as_slice());
 
     // `parameters` value along with its aliases are not allowed to be present at the
     let mut cose_with_category_id = cose.clone();
