@@ -41,6 +41,11 @@ struct InnerCatalystSignedDocument {
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
+
+    /// raw CBOR bytes of the `CatalystSignedDocument` object.
+    /// It is improtant to keep them to have a consistency what comes from the decoding
+    /// process, so we would return the same data again
+    raw_bytes: Option<Vec<u8>>,
 }
 
 /// Keep all the contents private.
@@ -237,6 +242,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             content,
             signatures,
             report,
+            raw_bytes: Some(cose_bytes.to_vec()),
         }
         .into())
     }
@@ -246,14 +252,20 @@ impl Encode<()> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
-        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-
-        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
-            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
-        })?;
+        let bytes = if let Some(raw_bytes) = self.inner.raw_bytes.clone() {
+            raw_bytes
+        } else {
+            let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
+            let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
+                minicbor::encode::Error::message(format!(
+                    "Failed to encode COSE Sign document: {e}"
+                ))
+            })?;
+            cose_bytes
+        };
 
         e.writer_mut()
-            .write_all(&cose_bytes)
+            .write_all(&bytes)
             .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
     }
 }

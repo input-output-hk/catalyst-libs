@@ -26,6 +26,7 @@ impl Builder {
             metadata: Metadata::default(),
             content: Content::default(),
             signatures: Signatures::default(),
+            raw_bytes: None,
         })
     }
 
@@ -91,6 +92,7 @@ impl From<&CatalystSignedDocument> for Builder {
             content: value.inner.content.clone(),
             signatures: value.inner.signatures.clone(),
             report: value.inner.report.clone(),
+            raw_bytes: None,
         })
     }
 }
