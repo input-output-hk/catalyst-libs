@@ -12,12 +12,13 @@ workspace = true
 
 [dependencies]
 catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
+cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
 
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
+serde_json = { version = "1.0.134", features = ["raw_value"] }
 coset = "0.3.8"
-minicbor = { version = "0.25.1", features = ["half"] }
+minicbor = "0.25.1"
 brotli = "7.0.0"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core", "pem"] }
 hex = "0.4.3"

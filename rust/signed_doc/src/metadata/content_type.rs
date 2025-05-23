@@ -1,20 +1,17 @@
 //! Document Payload Content Type.
 
-use std::{
-    fmt::{Display, Formatter},
-    str::FromStr,
-};
-
-use coset::iana::CoapContentFormat;
-use serde::{de, Deserialize, Deserializer};
-use strum::VariantArray;
+use cbork_utils::decode_helper::decode_any_to_end;
+use strum::{AsRefStr, Display as EnumDisplay, EnumString, VariantArray};
 
 /// Payload Content Type.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray)]
+// TODO: add custom parse error type when the [strum issue]([`issue`](https://github.com/Peternator7/strum/issues/430)) fix is merged.
+#[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray, EnumString, EnumDisplay, AsRefStr)]
 pub enum ContentType {
     /// 'application/cbor'
+    #[strum(to_string = "application/cbor")]
     Cbor,
     /// 'application/json'
+    #[strum(to_string = "application/json")]
     Json,
 }
 
@@ -23,90 +20,53 @@ impl ContentType {
     pub(crate) fn validate(self, content: &[u8]) -> anyhow::Result<()> {
         match self {
             Self::Json => {
-                if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
+                if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content) {
                     anyhow::bail!("Invalid {self} content: {e}")
                 }
             },
             Self::Cbor => {
-                if let Err(e) = minicbor::decode::<minicbor::data::Token>(content) {
+                if let Err(e) =
+                    decode_any_to_end(&mut minicbor::Decoder::new(content), "signed doc content")
+                {
                     anyhow::bail!("Invalid {self} content: {e}")
                 }
             },
         }
         Ok(())
     }
-}
 
-impl Display for ContentType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        match self {
-            Self::Cbor => write!(f, "application/cbor"),
-            Self::Json => write!(f, "application/json"),
-        }
+    fn decode_error(input: &str) -> minicbor::decode::Error {
+        minicbor::decode::Error::message(format!(
+            "Unsupported Content Type {input:?}, Supported only: {:?}",
+            ContentType::VARIANTS
+                .iter()
+                .map(AsRef::as_ref)
+                .collect::<Vec<_>>()
+        ))
     }
 }
 
-impl FromStr for ContentType {
-    type Err = anyhow::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "application/cbor" => Ok(Self::Cbor),
-            "application/json" => Ok(Self::Json),
-            _ => {
-                anyhow::bail!(
-                    "Unsupported Content Type: {s:?}, Supported only: {:?}",
-                    ContentType::VARIANTS
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                )
-            },
-        }
+impl<C> minicbor::Encode<C> for ContentType {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.str(self.as_ref())?;
+        Ok(())
     }
 }
 
-impl<'de> Deserialize<'de> for ContentType {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
-        let s = String::deserialize(deserializer)?;
-        FromStr::from_str(&s).map_err(de::Error::custom)
-    }
-}
-
-impl From<ContentType> for CoapContentFormat {
-    fn from(value: ContentType) -> Self {
-        match value {
-            ContentType::Cbor => Self::Cbor,
-            ContentType::Json => Self::Json,
-        }
-    }
-}
-
-impl TryFrom<&coset::ContentType> for ContentType {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &coset::ContentType) -> Result<Self, Self::Error> {
-        let content_type = match value {
-            coset::ContentType::Assigned(CoapContentFormat::Json) => ContentType::Json,
-            coset::ContentType::Assigned(CoapContentFormat::Cbor) => ContentType::Cbor,
-            _ => {
-                anyhow::bail!(
-                    "Unsupported Content Type {value:?}, Supported only: {:?}",
-                    ContentType::VARIANTS
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                )
-            },
-        };
-        Ok(content_type)
+impl<'b, C> minicbor::Decode<'b, C> for ContentType {
+    fn decode(d: &mut minicbor::Decoder<'b>, _: &mut C) -> Result<Self, minicbor::decode::Error> {
+        let s = d.str()?;
+        let decoded = s.parse().map_err(|_| Self::decode_error(s))?;
+        Ok(decoded)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::str::FromStr as _;
 
     #[test]
     fn content_type_validate_test() {

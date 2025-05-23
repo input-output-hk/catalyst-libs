@@ -14,7 +14,7 @@ use catalyst_types::{
 };
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat};
+use coset::cbor::Value;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
 pub use section::Section;
@@ -154,19 +154,19 @@ impl InnerMetadata {
             ..Self::default()
         };
 
-        if let Some(value) = protected.header.content_type.as_ref() {
-            match ContentType::try_from(value) {
-                Ok(ct) => metadata.content_type = Some(ct),
-                Err(e) => {
-                    report.conversion_error(
-                        "COSE protected header content type",
-                        &format!("{value:?}"),
-                        &format!("Expected ContentType: {e}"),
-                        &format!("{COSE_DECODING_CONTEXT}, ContentType"),
-                    );
-                },
-            }
-        }
+        // if let Some(value) = protected.header.content_type.as_ref() {
+        //     match ContentType::try_from(value) {
+        //         Ok(ct) => metadata.content_type = Some(ct),
+        //         Err(e) => {
+        //             report.conversion_error(
+        //                 "COSE protected header content type",
+        //                 &format!("{value:?}"),
+        //                 &format!("Expected ContentType: {e}"),
+        //                 &format!("{COSE_DECODING_CONTEXT}, ContentType"),
+        //             );
+        //         },
+        //     }
+        // }
 
         if let Some(value) = cose_protected_header_find(
             protected,
@@ -230,8 +230,9 @@ impl TryFrom<&Metadata> for coset::Header {
     type Error = anyhow::Error;
 
     fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
-        let mut builder = coset::HeaderBuilder::new()
-            .content_format(CoapContentFormat::from(meta.content_type()?));
+        // let mut builder = coset::HeaderBuilder::new()
+        //     .content_format(CoapContentFormat::from(meta.content_type()?));
+        let mut builder = coset::HeaderBuilder::new();
 
         if let Some(content_encoding) = meta.content_encoding() {
             builder = builder.text_value(
