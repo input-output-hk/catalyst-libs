@@ -35,6 +35,7 @@ impl ContentType {
         Ok(())
     }
 
+    /// An error returned on [`minicbor::Decode::decode`] failure.
     fn decode_error(input: &str) -> minicbor::decode::Error {
         minicbor::decode::Error::message(format!(
             "Unsupported Content Type {input:?}, Supported only: {:?}",
@@ -65,8 +66,9 @@ impl<'b, C> minicbor::Decode<'b, C> for ContentType {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::str::FromStr as _;
+
+    use super::*;
 
     #[test]
     fn content_type_validate_test() {
