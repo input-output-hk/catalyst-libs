@@ -531,7 +531,17 @@ mod tests {
 
     #[test]
     fn test_string_length_encoding() {
-        // Test that string lengths are encoded minimally
+        // RFC 8949 Section 4.2 requires lengths in major types 2-5 (including strings) 
+        // to be encoded in their shortest form. This means:
+        // - Lengths 0-23 must use the direct encoding (major type | length)
+        // - Lengths 24-255 must use 1 additional byte
+        // - Lengths 256-65535 must use 2 additional bytes
+        // - Lengths 65536-4294967295 must use 4 additional bytes
+        // - Lengths above 4294967295 must use 8 additional bytes
+
+        // Test case with valid minimal encoding:
+        // 0x62 = major type 3 (text string) with additional info 2 (length)
+        // This is correct for a 2-byte string since 2 < 24
         let valid_bytes = &[
             0x62, // text string of length 2 (minimal encoding)
             0x61, 0x62, // "ab"
@@ -539,13 +549,19 @@ mod tests {
         let mut dec = DeterministicDecoder::new(valid_bytes);
         assert!(dec.validate_next().is_ok());
 
-        // Non-minimal string length encoding
+        // Test case with invalid non-minimal encoding:
+        // 0x78 = major type 3 with additional info 24 (1-byte length follows)
+        // 0x02 = length value of 2
+        // This is incorrect because length 2 should use direct encoding (as above)
         let invalid_bytes = &[
             0x78, 0x02, // text string of length 2 (non-minimal encoding)
             0x61, 0x62, // "ab"
         ];
         let mut dec = DeterministicDecoder::new(invalid_bytes);
         assert!(matches!(dec.validate_next(), Err(DeterministicError::NonMinimalInt)));
+
+        // The same rules apply to byte strings (major type 2) and other major types
+        // that use length encoding (arrays - type 4, maps - type 5)
     }
 
     #[test]
