@@ -31,10 +31,11 @@ use minicbor::{data::Type, Decoder};
 /// Core requirements for deterministic encoding:
 /// 1. Integer encoding must be minimal length:
 ///    - Values 0 through 23 and -1 through -24 must be expressed in a single byte
-///    - Values 24 through 255 and -25 through -256 must use an additional uint8_t
-///    - Values 256 through 65535 and -257 through -65536 must use uint16_t
-///    - Values 65536 through 4294967295 and -65537 through -4294967296 must use uint32_t
-///    - All other integers must use uint64_t
+///    - Values 24 through 255 and -25 through -256 must use an additional `uint8_t`
+///    - Values 256 through 65535 and -257 through -65536 must use `uint16_t`
+///    - Values 65536 through 4294967295 and -65537 through -4294967296 must use
+///      `uint32_t`
+///    - All other integers must use `uint64_t`
 /// 2. No indefinite-length items are permitted
 /// 3. The expression of lengths in major types 2 through 5 must be minimal
 /// 4. The keys in maps must be sorted as specified above
@@ -89,6 +90,7 @@ impl<'b> DeterministicDecoder<'b> {
     ///
     /// # Arguments
     /// * `bytes` - The CBOR-encoded data to validate
+    #[must_use]
     pub fn new(bytes: &'b [u8]) -> Self {
         Self {
             decoder: Decoder::new(bytes),
@@ -307,7 +309,7 @@ impl<'b> DeterministicDecoder<'b> {
     }
 }
 
-/// Implements conversion from minicbor decode errors to DeterministicError
+/// Implements conversion from minicbor decode errors to `DeterministicError`
 impl From<minicbor::decode::Error> for DeterministicError {
     fn from(error: minicbor::decode::Error) -> Self {
         DeterministicError::DecoderError(error)
