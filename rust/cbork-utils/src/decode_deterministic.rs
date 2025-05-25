@@ -88,6 +88,41 @@ impl<'b> DeterministicDecoder<'b> {
         }
     }
 
+    fn check_minimal_length(&self, pos: usize, length: u64) -> Result<(), DeterministicError> {
+        let initial_byte = self.decoder.input()[pos];
+       
+        let additional_info = initial_byte & 0x1f;
+
+        match length {
+            0..=23 => {
+                if additional_info != length as u8 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            }
+            24..=255 => {
+                if additional_info != 24 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            }
+            256..=65535 => {
+                if additional_info != 25 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            }
+            65536..=4294967295 => {
+                if additional_info != 26 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            }
+            _ => {
+                if additional_info != 27 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// Validates the next CBOR item in the input stream according to deterministic encoding rules.
     ///
     /// This method advances through the input checking each item against the deterministic encoding rules:
@@ -179,6 +214,11 @@ impl<'b> DeterministicDecoder<'b> {
                     }
 
                     let size = self.decoder.array()?;
+                    
+                    // Check for minimal length encoding of array size
+                    if let Some(len) = size {
+                        self.check_minimal_length(pos, len)?;
+                    }
 
                     for _ in 0..size.unwrap_or(0) {
                         match self.validate_next()? {
@@ -187,6 +227,25 @@ impl<'b> DeterministicDecoder<'b> {
                         }
                     }
 
+                    Ok(Some(datatype))
+                },
+                Type::String | Type::Bytes => {
+                    let pos = self.decoder.position();
+                    let initial_byte = self.decoder.input()[pos];
+                    
+                    if initial_byte == 0x7f || initial_byte == 0x5f {
+                        return Err(DeterministicError::IndefiniteLength);
+                    }
+
+                    let len = if matches!(datatype, Type::String) {
+                        let s = self.decoder.str()?;
+                        s.len() as u64
+                    } else {
+                        let b = self.decoder.bytes()?;
+                        b.len() as u64
+                    };
+
+                    self.check_minimal_length(pos, len)?;
                     Ok(Some(datatype))
                 },
                 Type::Map => {
@@ -226,17 +285,7 @@ impl<'b> DeterministicDecoder<'b> {
 
                     Ok(Some(datatype))
                 },
-                Type::String | Type::Bytes => {
-                    let pos = self.decoder.position();
-                    let initial_byte = self.decoder.input()[pos];
-
-                    if initial_byte == 0x7f || initial_byte == 0x5f {
-                        return Err(DeterministicError::IndefiniteLength);
-                    }
-
-                    self.decoder.skip()?;
-                    Ok(Some(datatype))
-                },
+                
                 _ => {
                     self.decoder.skip()?;
                     Ok(Some(datatype))
@@ -258,7 +307,7 @@ impl From<minicbor::decode::Error> for DeterministicError {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use minicbor::Encoder;
+    
 
     #[test]
     fn test_non_minimal_direct() {
@@ -313,7 +362,7 @@ mod tests {
 
         for value in test_values {
             let mut bytes = vec![];
-            let mut enc = Encoder::new(&mut bytes);
+            let mut enc = minicbor::Encoder::new(&mut bytes);
             enc.encode(value).unwrap();
 
             let mut dec = DeterministicDecoder::new(&bytes);
@@ -324,7 +373,7 @@ mod tests {
     #[test]
     fn test_valid_nested_structure() {
         let mut bytes = vec![];
-        let mut enc = Encoder::new(&mut bytes);
+        let mut enc = minicbor::Encoder::new(&mut bytes);
         enc.map(1)
             .unwrap()
             .encode("key")
@@ -381,6 +430,153 @@ mod tests {
         assert!(matches!(
             dec.validate_next(),
             Err(DeterministicError::DuplicateMapKey)
+        ));
+    }
+
+    #[test]
+    fn test_float_deterministic_encoding() {
+        // In deterministic encoding, floating point values must be encoded in their shortest form
+        let mut bytes = vec![];
+        let mut enc = minicbor::Encoder::new(&mut bytes);
+        
+        // Encode as float64 since that's what's available
+        enc.f64(1.5).unwrap();
+        let mut dec = DeterministicDecoder::new(&bytes);
+        assert!(dec.validate_next().is_ok());
+
+        // Test encoding of integer-valued float
+        let mut bytes = vec![];
+        let mut enc = minicbor::Encoder::new(&mut bytes);
+        enc.f64(42.0).unwrap();
+        let mut dec = DeterministicDecoder::new(&bytes);
+        assert!(dec.validate_next().is_ok());
+    }
+
+    #[test]
+    fn test_map_key_length_ordering() {
+        // According to RFC 8949 4.2.1: shorter keys must come before longer keys
+        let valid_bytes = &[
+            0xa2, // map of 2 pairs
+            0x61, 0x78, // "x"
+            0x01, // 1
+            0x62, 0x78, 0x79, // "xy"
+            0x02, // 2
+        ];
+        let mut dec = DeterministicDecoder::new(valid_bytes);
+        assert!(dec.validate_next().is_ok());
+
+        // Invalid order - longer key before shorter key
+        let invalid_bytes = &[
+            0xa2, // map of 2 pairs
+            0x62, 0x78, 0x79, // "xy"
+            0x02, // 2
+            0x61, 0x78, // "x"
+            0x01, // 1
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        assert!(matches!(
+            dec.validate_next(),
+            Err(DeterministicError::UnorderedMapKeys)
+        ));
+    }
+
+    #[test]
+    fn test_map_key_lexicographic_ordering() {
+        // Test lexicographic ordering of equal-length keys
+        let valid_bytes = &[
+            0xa2, // map of 2 pairs
+            0x62, 0x61, 0x61, // "aa"
+            0x01, // 1
+            0x62, 0x62, 0x62, // "bb"
+            0x02, // 2
+        ];
+        let mut dec = DeterministicDecoder::new(valid_bytes);
+        assert!(dec.validate_next().is_ok());
+
+        // Invalid lexicographic order
+        let invalid_bytes = &[
+            0xa2, // map of 2 pairs
+            0x62, 0x62, 0x62, // "bb"
+            0x02, // 2
+            0x62, 0x61, 0x61, // "aa"
+            0x01, // 1
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        assert!(matches!(
+            dec.validate_next(),
+            Err(DeterministicError::UnorderedMapKeys)
+        ));
+    }
+
+    #[test]
+    fn test_minimal_length_array() {
+        // Test that array lengths are encoded minimally
+        let valid_bytes = &[
+            0x82, // array of 2 elements (minimal encoding)
+            0x01, // 1
+            0x02, // 2
+        ];
+        let mut dec = DeterministicDecoder::new(valid_bytes);
+        assert!(dec.validate_next().is_ok());
+
+        // Non-minimal array length encoding
+        let invalid_bytes = &[
+            0x98, 0x02, // array of 2 elements (non-minimal encoding)
+            0x01, // 1
+            0x02, // 2
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        assert!(matches!(dec.validate_next(), Err(DeterministicError::NonMinimalInt)));
+    }
+
+    #[test]
+    fn test_string_length_encoding() {
+        // Test that string lengths are encoded minimally
+        let valid_bytes = &[
+            0x62, // text string of length 2 (minimal encoding)
+            0x61, 0x62, // "ab"
+        ];
+        let mut dec = DeterministicDecoder::new(valid_bytes);
+        assert!(dec.validate_next().is_ok());
+
+        // Non-minimal string length encoding
+        let invalid_bytes = &[
+            0x78, 0x02, // text string of length 2 (non-minimal encoding)
+            0x61, 0x62, // "ab"
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        assert!(matches!(dec.validate_next(), Err(DeterministicError::NonMinimalInt)));
+    }
+
+    #[test]
+    fn test_nested_map_key_ordering() {
+        // Test ordering in nested maps
+        let valid_bytes = &[
+            0xa1, // outer map of 1 pair
+            0x61, 0x61, // "a"
+            0xa2, // inner map of 2 pairs
+            0x61, 0x78, // "x"
+            0x01, // 1
+            0x62, 0x78, 0x79, // "xy"
+            0x02, // 2
+        ];
+        let mut dec = DeterministicDecoder::new(valid_bytes);
+        assert!(dec.validate_next().is_ok());
+
+        // Invalid ordering in inner map
+        let invalid_bytes = &[
+            0xa1, // outer map of 1 pair
+            0x61, 0x61, // "a"
+            0xa2, // inner map of 2 pairs
+            0x62, 0x78, 0x79, // "xy"
+            0x02, // 2
+            0x61, 0x78, // "x"
+            0x01, // 1
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        assert!(matches!(
+            dec.validate_next(),
+            Err(DeterministicError::UnorderedMapKeys)
         ));
     }
 }
