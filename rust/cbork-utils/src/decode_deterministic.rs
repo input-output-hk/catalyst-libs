@@ -1218,7 +1218,10 @@ mod tests {
             0x02,
         ];
         let mut dec = DeterministicDecoder::new(invalid_order_bytes);
-        assert!(matches!(dec.validate_next(), Err(DeterministicError::UnorderedMapKeys)));
+        assert!(matches!(
+            dec.validate_next(),
+            Err(DeterministicError::UnorderedMapKeys)
+        ));
 
         // Test violation with duplicate keys
         let duplicate_keys_bytes = &[
@@ -1228,7 +1231,10 @@ mod tests {
             0x02,
         ];
         let mut dec = DeterministicDecoder::new(duplicate_keys_bytes);
-        assert!(matches!(dec.validate_next(), Err(DeterministicError::DuplicateMapKey)));
+        assert!(matches!(
+            dec.validate_next(),
+            Err(DeterministicError::DuplicateMapKey)
+        ));
 
         // Test violation with UTF-8 ordering
         let invalid_utf8_order_bytes = &[
@@ -1238,7 +1244,10 @@ mod tests {
             0x02,
         ];
         let mut dec = DeterministicDecoder::new(invalid_utf8_order_bytes);
-        assert!(matches!(dec.validate_next(), Err(DeterministicError::UnorderedMapKeys)));
+        assert!(matches!(
+            dec.validate_next(),
+            Err(DeterministicError::UnorderedMapKeys)
+        ));
     }
 
     #[test]
