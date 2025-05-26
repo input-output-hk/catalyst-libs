@@ -168,27 +168,180 @@ impl<'b> DeterministicDecoder<'b> {
         Ok(())
     }
 
-    /// Validates the next CBOR item in the input stream according to deterministic
-    /// encoding rules.
+    fn validate_integer(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
+        let pos = self.decoder.position();
+        let bytes = self.decoder.input();
+
+        match bytes[pos] {
+            _first @ 0x00..=0x17 => {
+                if !matches!(datatype, Type::U8) {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            0x18 => {
+                if bytes[pos + 1] < 0x18 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            0x19 => {
+                if bytes[pos + 1..pos + 3]
+                    .try_into()
+                    .map(u16::from_be_bytes)
+                    .unwrap()
+                    < 0x100
+                {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            0x1A => {
+                if bytes[pos + 1..pos + 5]
+                    .try_into()
+                    .map(u32::from_be_bytes)
+                    .unwrap()
+                    < 0x10000
+                {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            0x1B => {
+                if bytes[pos + 1..pos + 9]
+                    .try_into()
+                    .map(u64::from_be_bytes)
+                    .unwrap()
+                    < 0x100000000
+                {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            _ => {},
+        }
+
+        self.decoder.skip()?;
+        Ok(Some(datatype))
+    }
+
+    fn validate_array(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
+        let pos = self.decoder.position();
+        let initial_byte = self.decoder.input()[pos];
+
+        if initial_byte == 0x9F {
+            return Err(DeterministicError::IndefiniteLength);
+        }
+
+        let size = self.decoder.array()?;
+
+        if let Some(len) = size {
+            self.check_minimal_length(pos, len)?;
+        }
+
+        for _ in 0..size.unwrap_or(0) {
+            match self.validate_next()? {
+                Some(_) => (),
+                None => break,
+            }
+        }
+
+        Ok(Some(datatype))
+    }
+
+    fn validate_string(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
+        let pos = self.decoder.position();
+        let initial_byte = self.decoder.input()[pos];
+
+        if initial_byte == 0x7F || initial_byte == 0x5F {
+            return Err(DeterministicError::IndefiniteLength);
+        }
+
+        let len = if matches!(datatype, Type::String) {
+            let s = self.decoder.str()?;
+            s.len() as u64
+        } else {
+            let b = self.decoder.bytes()?;
+            b.len() as u64
+        };
+
+        self.check_minimal_length(pos, len)?;
+        Ok(Some(datatype))
+    }
+
+    fn validate_map(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
+        let pos = self.decoder.position();
+        let initial_byte = self.decoder.input()[pos];
+
+        if initial_byte == 0xBF {
+            return Err(DeterministicError::IndefiniteLength);
+        }
+
+        let size = self.decoder.map()?;
+        let mut keys = Vec::new();
+
+        for _ in 0..size.unwrap_or(0) {
+            let key_start = self.decoder.position();
+            self.validate_next()?;
+            let key_end = self.decoder.position();
+            let current_key = self.decoder.input()[key_start..key_end].to_vec();
+
+            if keys.contains(&current_key) {
+                return Err(DeterministicError::DuplicateMapKey);
+            }
+
+            if let Some(last) = keys.last() {
+                if &current_key <= last {
+                    return Err(DeterministicError::UnorderedMapKeys);
+                }
+            }
+            keys.push(current_key);
+
+            self.validate_next()?;
+        }
+
+        Ok(Some(datatype))
+    }
+
+    /// Validates the next CBOR item according to RFC 8949 § 4.2 deterministic encoding
+    /// rules.
     ///
-    /// This method advances through the input checking each item against the
-    /// deterministic encoding rules:
-    /// - For integers: ensures they use minimal encoding length
-    /// - For arrays and maps: validates they don't use indefinite length encoding
-    /// - For strings and byte strings: validates they don't use indefinite length
-    ///   encoding
-    /// - For maps: ensures keys are in ascending byte-wise lexicographic order
+    /// According to RFC 8949, deterministically encoded CBOR follows these rules:
+    ///
+    /// 1. Integer encoding must be as short as possible:
+    ///    - Integers 0 through 23 must be expressed in a single byte
+    ///    - Integers 24 through 255 must use one-byte uint8_t encoding
+    ///    - Integers 256 through 65535 must use two-byte uint16_t encoding
+    ///    - Integers 65536 through 4294967295 must use four-byte uint32_t encoding
+    ///    - Integers above 4294967295 must use eight-byte uint64_t encoding
+    ///
+    /// 2. The expression of lengths in major types 2 through 5 must be as short as
+    ///    possible
+    ///    - No indefinite lengths are allowed
+    ///    - The rules for integers apply to the length fields
+    ///
+    /// 3. Indefinite-length items must be made into definite-length items:
+    ///    - The implementations must NOT generate indefinite-length strings, arrays, or
+    ///      maps
+    ///    - The implementations must NOT generate indefinite-length data items
+    ///
+    /// 4. Maps must have keys sorted in bytewise lexicographic order:
+    ///    - All map keys must be sorted in length-first, bytewise lexicographic order
+    ///    - Duplicate keys in a map are not valid
+    ///    - The sorting rules apply after the keys are encoded
     ///
     /// # Returns
-    /// - `Ok(Some(Type))` if a valid item was found, with its CBOR type
-    /// - `Ok(None)` if the end of input was reached
-    /// - `Err(DeterministicError)` if any deterministic encoding rule was violated
+    /// - `Ok(Some(Type))` - Successfully validated item of the given CBOR type
+    /// - `Ok(None)` - End of input reached
+    /// - `Err(DeterministicError)` - Validation error due to:
+    ///   - Non-minimal integer encoding
+    ///   - Indefinite length items
+    ///   - Unsorted or duplicate map keys
+    ///   - Invalid CBOR encoding
     ///
-    /// # Errors
-    /// Returns `DeterministicError` if:
-    /// - An indefinite length item is encountered
-    /// - An integer is not encoded in its shortest form
-    /// - Map keys are not in ascending order
+    /// # Examples
+    /// Minimal integer encoding:
+    /// - ✓ Value 0: Encoded as 0x00
+    /// - ✗ Value 0: Encoded as 0x1800 (non-minimal)
+    ///
+    /// Map key ordering:
+    /// - ✓ Keys: [0x01, 0x0203, 0x030405]
+    /// - ✗ Keys: [0x0203, 0x01, 0x030405] (incorrect order)
     pub fn validate_next(&mut self) -> Result<Option<Type>, DeterministicError> {
         if let Ok(datatype) = self.decoder.datatype() {
             match datatype {
@@ -199,141 +352,10 @@ impl<'b> DeterministicDecoder<'b> {
                 | Type::I8
                 | Type::I16
                 | Type::I32
-                | Type::I64 => {
-                    let pos = self.decoder.position();
-                    let bytes = self.decoder.input();
-
-                    // Check for canonical form of integers
-                    match bytes[pos] {
-                        // Major type 0 (unsigned)
-                        _first @ 0x00..=0x17 => {
-                            if !matches!(datatype, Type::U8) {
-                                return Err(DeterministicError::NonMinimalInt);
-                            }
-                        },
-                        0x18 => {
-                            if bytes[pos + 1] < 0x18 {
-                                return Err(DeterministicError::NonMinimalInt);
-                            }
-                        },
-                        0x19 => {
-                            if bytes[pos + 1..pos + 3]
-                                .try_into()
-                                .map(u16::from_be_bytes)
-                                .unwrap()
-                                < 0x100
-                            {
-                                return Err(DeterministicError::NonMinimalInt);
-                            }
-                        },
-                        0x1A => {
-                            if bytes[pos + 1..pos + 5]
-                                .try_into()
-                                .map(u32::from_be_bytes)
-                                .unwrap()
-                                < 0x10000
-                            {
-                                return Err(DeterministicError::NonMinimalInt);
-                            }
-                        },
-                        0x1B => {
-                            if bytes[pos + 1..pos + 9]
-                                .try_into()
-                                .map(u64::from_be_bytes)
-                                .unwrap()
-                                < 0x100000000
-                            {
-                                return Err(DeterministicError::NonMinimalInt);
-                            }
-                        },
-                        // Add similar checks for negative integers if needed
-                        _ => {},
-                    }
-
-                    self.decoder.skip()?;
-                    Ok(Some(datatype))
-                },
-                Type::Array => {
-                    let pos = self.decoder.position();
-                    let initial_byte = self.decoder.input()[pos];
-
-                    if initial_byte == 0x9F {
-                        return Err(DeterministicError::IndefiniteLength);
-                    }
-
-                    let size = self.decoder.array()?;
-
-                    // Check for minimal length encoding of array size
-                    if let Some(len) = size {
-                        self.check_minimal_length(pos, len)?;
-                    }
-
-                    for _ in 0..size.unwrap_or(0) {
-                        match self.validate_next()? {
-                            Some(_) => (),
-                            None => break,
-                        }
-                    }
-
-                    Ok(Some(datatype))
-                },
-                Type::String | Type::Bytes => {
-                    let pos = self.decoder.position();
-                    let initial_byte = self.decoder.input()[pos];
-
-                    if initial_byte == 0x7F || initial_byte == 0x5F {
-                        return Err(DeterministicError::IndefiniteLength);
-                    }
-
-                    let len = if matches!(datatype, Type::String) {
-                        let s = self.decoder.str()?;
-                        s.len() as u64
-                    } else {
-                        let b = self.decoder.bytes()?;
-                        b.len() as u64
-                    };
-
-                    self.check_minimal_length(pos, len)?;
-                    Ok(Some(datatype))
-                },
-                Type::Map => {
-                    let pos = self.decoder.position();
-                    let initial_byte = self.decoder.input()[pos];
-
-                    if initial_byte == 0xBF {
-                        return Err(DeterministicError::IndefiniteLength);
-                    }
-
-                    let size = self.decoder.map()?;
-                    let mut keys = Vec::new();
-
-                    for _ in 0..size.unwrap_or(0) {
-                        // Validate and store the key
-                        let key_start = self.decoder.position();
-                        self.validate_next()?;
-                        let key_end = self.decoder.position();
-                        let current_key = self.decoder.input()[key_start..key_end].to_vec();
-
-                        // Check for duplicate keys
-                        if keys.contains(&current_key) {
-                            return Err(DeterministicError::DuplicateMapKey);
-                        }
-
-                        // Check if keys are in ascending order
-                        if let Some(last) = keys.last() {
-                            if &current_key <= last {
-                                return Err(DeterministicError::UnorderedMapKeys);
-                            }
-                        }
-                        keys.push(current_key);
-
-                        // Validate the value
-                        self.validate_next()?;
-                    }
-
-                    Ok(Some(datatype))
-                },
-
+                | Type::I64 => self.validate_integer(datatype),
+                Type::Array => self.validate_array(datatype),
+                Type::String | Type::Bytes => self.validate_string(datatype),
+                Type::Map => self.validate_map(datatype),
                 _ => {
                     self.decoder.skip()?;
                     Ok(Some(datatype))
