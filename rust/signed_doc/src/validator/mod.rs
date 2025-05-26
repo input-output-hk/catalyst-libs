@@ -23,16 +23,28 @@ use rules::{
 use crate::{
     doc_types::{
         CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE,
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
+        PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOCUMENT_UUID_TYPE, PROPOSAL_DOC_TYPE,
         PROPOSAL_TEMPLATE_UUID_TYPE,
     },
-    metadata::{expect_doc_type, DocType},
+    metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.
 static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
+
+/// Returns an `DocType` from the provided argument.
+/// Reduce redundant conversion.
+/// This function should be used for hardcoded values, panic if conversion fail.
+#[allow(clippy::expect_used)]
+pub(crate) fn expect_doc_type<T>(t: T) -> DocType
+where
+    T: TryInto<DocType>,
+    T::Error: std::fmt::Debug,
+{
+    t.try_into().expect("Failed to convert to DocType")
+}
 
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
@@ -62,10 +74,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         },
     };
 
-    document_rules_map.insert(
-        expect_doc_type(PROPOSAL_DOCUMENT_UUID_TYPE),
-        proposal_document_rules,
-    );
+    document_rules_map.insert(PROPOSAL_DOC_TYPE.clone(), proposal_document_rules);
 
     let comment_document_rules = Rules {
         content_type: ContentTypeRule {
@@ -92,10 +101,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             exp: &[RoleId::Role0],
         },
     };
-    document_rules_map.insert(
-        expect_doc_type(COMMENT_DOCUMENT_UUID_TYPE),
-        comment_document_rules,
-    );
+    document_rules_map.insert(PROPOSAL_COMMENT_DOC.clone(), comment_document_rules);
 
     let proposal_action_json_schema = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft7)
@@ -131,7 +137,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
     };
 
     document_rules_map.insert(
-        expect_doc_type(PROPOSAL_ACTION_DOCUMENT_UUID_TYPE),
+        PROPOSAL_ACTION_DOC.clone(),
         proposal_submission_action_rules,
     );
 
@@ -148,9 +154,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
 pub async fn validate<Provider>(
     doc: &CatalystSignedDocument, provider: &Provider,
 ) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+where Provider: CatalystSignedDocumentProvider {
     let Ok(doc_type) = doc.doc_type() else {
         doc.report().missing_field(
             "type",
@@ -163,7 +167,7 @@ where
         return Ok(false);
     }
 
-    let Some(rules) = DOCUMENT_RULES.get(&doc_type) else {
+    let Some(rules) = DOCUMENT_RULES.get(doc_type) else {
         doc.report().invalid_value(
             "`type`",
             &doc.doc_type()?.to_string(),
@@ -185,9 +189,7 @@ where
 fn validate_id_and_ver<Provider>(
     doc: &CatalystSignedDocument, provider: &Provider,
 ) -> anyhow::Result<bool>
-where
-    Provider: CatalystSignedDocumentProvider,
-{
+where Provider: CatalystSignedDocumentProvider {
     let id = doc.doc_id().ok();
     let ver = doc.doc_ver().ok();
     if id.is_none() {
