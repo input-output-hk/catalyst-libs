@@ -1207,6 +1207,40 @@ mod tests {
         let mut dec = DeterministicDecoder::new(valid_utf8_bytes);
         assert!(dec.validate_next().is_ok());
     }
+
+    #[test]
+    fn test_string_comparison_ordering_violations() {
+        // Test violation of lexicographic ordering
+        let invalid_order_bytes = &[
+            0xA2, // map of 2 pairs
+            0x61, 0x7A, // "z" (ASCII 122)
+            0x01, 0x61, 0x61, // "a" (ASCII 97)
+            0x02,
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_order_bytes);
+        assert!(matches!(dec.validate_next(), Err(DeterministicError::UnorderedMapKeys)));
+
+        // Test violation with duplicate keys
+        let duplicate_keys_bytes = &[
+            0xA2, // map of 2 pairs
+            0x61, 0x61, // "a" (ASCII 97)
+            0x01, 0x61, 0x61, // "a" (ASCII 97)
+            0x02,
+        ];
+        let mut dec = DeterministicDecoder::new(duplicate_keys_bytes);
+        assert!(matches!(dec.validate_next(), Err(DeterministicError::DuplicateMapKey)));
+
+        // Test violation with UTF-8 ordering
+        let invalid_utf8_order_bytes = &[
+            0xA2, // map of 2 pairs
+            0x62, 0xC3, 0xB6, // "ö" (UTF-8: C3 B6)
+            0x01, 0x62, 0xC3, 0xA4, // "ä" (UTF-8: C3 A4)
+            0x02,
+        ];
+        let mut dec = DeterministicDecoder::new(invalid_utf8_order_bytes);
+        assert!(matches!(dec.validate_next(), Err(DeterministicError::UnorderedMapKeys)));
+    }
+
     #[test]
     fn test_nested_structures_length_encoding() {
         // RFC 8949 4.2.1 requires minimal length encoding for all items:
