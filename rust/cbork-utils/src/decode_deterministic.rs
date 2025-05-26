@@ -97,6 +97,38 @@ impl<'b> DeterministicDecoder<'b> {
         }
     }
 
+    /// Validates that a length encoding follows the deterministic encoding rules from RFC 8949 § 4.2.1.
+    ///
+    /// According to RFC 8949 § 4.2.1 "Core Deterministic Encoding Requirements", length encoding 
+    /// must be minimal for the following CBOR data items:
+    /// * Major type 2: byte strings 
+    /// * Major type 3: text strings
+    /// * Major type 4: arrays  
+    /// * Major type 5: maps
+    ///
+    /// The length encoding is minimal if and only if:
+    /// * Values 0 through 23 are expressed in a single byte using the direct value 
+    /// * Values 24 through 255 use the one-byte uint8_t encoding (additional info = 24)
+    /// * Values 256 through 65535 use the two-byte uint16_t encoding (additional info = 25)
+    /// * Values 65536 through 4294967295 use the four-byte uint32_t encoding (additional info = 26)
+    /// * Values above 4294967295 use the eight-byte uint64_t encoding (additional info = 27)
+    ///
+    /// # Arguments
+    /// * `pos` - Position in the input buffer where the length encoding starts
+    /// * `length` - The decoded length value being validated
+    ///
+    /// # Returns
+    /// * `Ok(())` if the length encoding is minimal according to RFC 8949
+    /// * `Err(DeterministicError::NonMinimalInt)` if non-minimal encoding is detected
+    ///
+    /// # Examples
+    /// For length value 5:
+    /// * ✓ Minimal encoding: 0x05 (direct value)
+    /// * ✗ Non-minimal encoding: 0x18 0x05 (using one-byte uint8_t unnecessarily)
+    ///
+    /// For length value 200:  
+    /// * ✓ Minimal encoding: 0x18 0xC8 (one-byte uint8_t)
+    /// * ✗ Non-minimal encoding: 0x19 0x00 0xC8 (using two-byte uint16_t unnecessarily)
     fn check_minimal_length(&self, pos: usize, length: u64) -> Result<(), DeterministicError> {
         let initial_byte = self.decoder.input()[pos];
 
