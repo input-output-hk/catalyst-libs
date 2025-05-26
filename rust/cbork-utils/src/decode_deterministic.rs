@@ -165,6 +165,123 @@ impl<'b> DeterministicDecoder<'b> {
         }
     }
 
+    /// Validates that a CBOR integer follows the deterministic encoding rules as
+    /// specified in RFC 8949.
+    ///
+    /// # Deterministic Encoding Requirements for Integers
+    ///
+    /// The function ensures the following requirements are met:
+    ///
+    /// 1. Integers MUST be as small as possible:
+    ///    - Unsigned integers 0 through 23 and negative integers -1 through -24 must use
+    ///      the direct value encoding in the initial byte
+    ///    - For other values, the minimal length encoding must be used:
+    ///      * 24..=255: one byte (type 24)
+    ///      * 256..=65535: two bytes (type 25)
+    ///      * 65536..=4294967295: four bytes (type 26)
+    ///      * Above 4294967295: eight bytes (type 27)
+    ///    - No leading zeroes are allowed in the encoded bytes
+    ///    - Returns `DeterministicError::NonMinimalInt` for non-minimal encodings
+    ///
+    /// 2. Major type selection:
+    ///    - Non-negative integers must use major type 0
+    ///    - Negative integers must use major type 1
+    ///    - The value -1 must be encoded as major type 1, not as a negative zero
+    ///
+    /// # Arguments
+    ///
+    /// * `datatype` - The CBOR Type of the integer being validated (Type::U8, Type::U16,
+    ///   etc., or Type::I8, Type::I16, etc.)
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Option<Type>)` - Returns the next type after the integer if validation
+    ///   succeeds
+    /// * `Err(DeterministicError)` - Returns an error if any deterministic encoding rule
+    ///   is violated
+    ///
+    /// # Errors
+    ///
+    /// * `DeterministicError::NonMinimalInt` - If the integer is not encoded using the
+    ///   smallest possible representation or contains leading zeros
+    /// * `DeterministicError::DecoderError` - If any underlying CBOR decoding error
+    ///   occurs
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use your_crate::{DeterministicDecoder, Type};
+    ///
+    /// // Example 1: Valid minimal encoding for small numbers
+    /// let bytes = [0x17]; // Integer 23 (direct encoding)
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_integer(Type::U8).is_ok());
+    ///
+    /// // Example 2: Valid minimal encoding for negative numbers
+    /// let bytes = [0x20]; // Integer -1 (direct encoding)
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_integer(Type::I8).is_ok());
+    ///
+    /// // Example 3: Valid minimal encoding for larger numbers
+    /// let bytes = [0x18, 0x18]; // Integer 24 (one-byte encoding)
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_integer(Type::U8).is_ok());
+    /// ```
+    ///
+    /// # Invalid Examples
+    ///
+    /// ```rust
+    /// # use your_crate::{DeterministicDecoder, Type};
+    /// // Non-minimal encoding (using one byte when direct encoding would suffice)
+    /// let bytes = [0x18, 0x17]; // Non-minimal encoding of 23
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(matches!(
+    ///     decoder.validate_integer(Type::U8),
+    ///     Err(DeterministicError::NonMinimalInt)
+    /// ));
+    ///
+    /// // Non-minimal encoding with leading zeros
+    /// let bytes = [0x19, 0x00, 0x80]; // Two-byte encoding with leading zero
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(matches!(
+    ///     decoder.validate_integer(Type::U16),
+    ///     Err(DeterministicError::NonMinimalInt)
+    /// ));
+    /// ```
+    ///
+    /// # Additional Examples
+    ///
+    /// ```rust
+    /// # use your_crate::{DeterministicDecoder, Type};
+    /// // Valid encodings for different ranges
+    /// let examples = [
+    ///     // Small positive integers (0-23)
+    ///     [0x00], // 0
+    ///     [0x17], // 23
+    ///     // Small negative integers (-1 to -24)
+    ///     [0x20], // -1
+    ///     [0x37], // -24
+    ///     // One-byte encodings
+    ///     [0x18, 0x18], // 24
+    ///     [0x18, 0xFF], // 255
+    ///     // Two-byte encodings
+    ///     [0x19, 0x01, 0x00], // 256
+    ///     // Four-byte encodings
+    ///     [0x1A, 0x00, 0x01, 0x00, 0x00], // 65536
+    /// ];
+    /// ```
+    ///
+    /// This implementation aligns with RFC 8949 Section 4.2.1 requirements for
+    /// deterministically encoded CBOR integers [[1]](https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c).
+    ///
+    /// # Notes
+    ///
+    /// - The encoding must be minimal even when encoding numbers within a nested
+    ///   structure
+    /// - This validation is crucial for ensuring consistent hash values and for ensuring
+    ///   interoperability with other CBOR implementations
+    /// - The function handles both positive and negative integers with their respective
+    ///   major types (0 and 1)
     fn validate_integer(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
         let pos = self.decoder.position();
         let bytes = self.decoder.input();
@@ -217,6 +334,126 @@ impl<'b> DeterministicDecoder<'b> {
         Ok(Some(datatype))
     }
 
+    /// Validates that a CBOR array follows the deterministic encoding rules as specified
+    /// in RFC 8949.
+    ///
+    /// # Deterministic Encoding Requirements for Arrays
+    ///
+    /// The function ensures the following requirements are met:
+    ///
+    /// 1. Array length must be encoded in the smallest possible representation:
+    ///    - For lengths 0-23, the length must be included in the initial byte
+    ///    - For lengths 24-255, one byte is used (type 24)
+    ///    - For lengths 256-65535, two bytes are used (type 25)
+    ///    - For lengths 65536-4294967295, four bytes are used (type 26)
+    ///    - For lengths above 4294967295, eight bytes are used (type 27)
+    ///    - Returns `DeterministicError::NonMinimalInt` for non-minimal length encodings
+    ///
+    /// 2. Indefinite-length arrays are not allowed:
+    ///    - All arrays must use definite length encoding
+    ///    - Returns `DeterministicError::IndefiniteLength` for indefinite-length arrays
+    ///
+    /// 3. Each element within the array must also follow deterministic encoding rules:
+    ///    - Recursively validates each array element
+    ///    - All nested data items must comply with deterministic encoding requirements
+    ///    - Validation continues until all elements are processed or an error is
+    ///      encountered
+    ///
+    /// # Arguments
+    ///
+    /// * `datatype` - The CBOR Type of the array being validated
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Option<Type>)` - Returns the next type after the array if validation
+    ///   succeeds
+    /// * `Err(DeterministicError)` - Returns an error if any deterministic encoding rule
+    ///   is violated
+    ///
+    /// # Errors
+    ///
+    /// The function may return the following errors:
+    /// * `DeterministicError::NonMinimalInt` - If array length is not encoded using the
+    ///   smallest possible representation
+    /// * `DeterministicError::IndefiniteLength` - If the array uses indefinite-length
+    ///   encoding
+    /// * `DeterministicError::DecoderError` - If any underlying CBOR decoding error
+    ///   occurs
+    /// * Any error that can occur while validating nested elements
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use your_crate::{DeterministicDecoder, Type};
+    ///
+    /// // Example 1: Valid minimal encoding for small array
+    /// let bytes = [
+    ///     0x83, // Array of length 3
+    ///     0x01, // First element: 1
+    ///     0x02, // Second element: 2
+    ///     0x03, // Third element: 3
+    /// ];
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_array(Type::Array).is_ok());
+    ///
+    /// // Example 2: Valid minimal encoding for nested array
+    /// let bytes = [
+    ///     0x82, // Array of length 2
+    ///     0x82, // Nested array of length 2
+    ///     0x01, 0x02, // Elements: 1, 2
+    ///     0x03, // Last element of outer array: 3
+    /// ];
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_array(Type::Array).is_ok());
+    /// ```
+    ///
+    /// # Invalid Examples
+    ///
+    /// ```rust
+    /// # use your_crate::{DeterministicDecoder, Type};
+    /// // Non-minimal length encoding
+    /// let bytes = [
+    ///     0x18, 0x03, // Non-minimal encoding of length 3 (should be 0x83)
+    ///     0x01, 0x02, 0x03,
+    /// ];
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(matches!(
+    ///     decoder.validate_array(Type::Array),
+    ///     Err(DeterministicError::NonMinimalInt)
+    /// ));
+    ///
+    /// // Indefinite length encoding (not allowed)
+    /// let bytes = [
+    ///     0x9F, // Indefinite-length array
+    ///     0x01, 0x02, 0x03, 0xFF, // Break
+    /// ];
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(matches!(
+    ///     decoder.validate_array(Type::Array),
+    ///     Err(DeterministicError::IndefiniteLength)
+    /// ));
+    /// ```
+    ///
+    /// # Recursive Validation
+    ///
+    /// The function performs recursive validation for nested structures. For example:
+    ///
+    /// ```rust
+    /// # use your_crate::{DeterministicDecoder, Type};
+    /// // Complex nested structure
+    /// let bytes = [
+    ///     0x82, // Array of length 2
+    ///     0x83, // Nested array of length 3
+    ///     0x01, 0x02, 0x03, // Elements of nested array
+    ///     0x82, // Another nested array of length 2
+    ///     0x04, 0x05, // Elements of second nested array
+    /// ];
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_array(Type::Array).is_ok());
+    /// ```
+    ///
+    /// This implementation aligns with RFC 8949 Section 4.2.1 requirements for
+    /// deterministically encoded CBOR arrays [[1]](https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c).
     fn validate_array(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
         let pos = self.decoder.position();
         let initial_byte = self.decoder.input()[pos];
@@ -241,6 +478,98 @@ impl<'b> DeterministicDecoder<'b> {
         Ok(Some(datatype))
     }
 
+    /// Validates that a CBOR string (text or byte string) follows the deterministic
+    /// encoding rules as specified in RFC 8949.
+    ///
+    /// # Deterministic Encoding Requirements for Strings
+    ///
+    /// The function ensures the following requirements are met:
+    ///
+    /// 1. String length must be encoded in the smallest possible representation
+    ///    - For lengths 0-23, the length must be included in the initial byte
+    ///    - For lengths 24-255, one byte is used (type 24)
+    ///    - For lengths 256-65535, two bytes are used (type 25)
+    ///    - For lengths 65536-4294967295, four bytes are used (type 26)
+    ///    - For lengths above 4294967295, eight bytes are used (type 27)
+    ///    - Returns `DeterministicError::NonMinimalInt` for non-minimal length encodings
+    ///
+    /// 2. Indefinite-length strings are not allowed
+    ///    - All strings must use definite length encoding
+    ///    - Returns `DeterministicError::IndefiniteLength` for indefinite-length strings
+    ///
+    /// # Arguments
+    ///
+    /// * `datatype` - The CBOR Type of the string being validated (either Type::Text or
+    ///   Type::Bytes)
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Option<Type>)` - Returns the next type after the string if validation
+    ///   succeeds
+    /// * `Err(DeterministicError)` - Returns an error if any deterministic encoding rule
+    ///   is violated
+    ///
+    /// # Errors
+    ///
+    /// The function may return the following errors:
+    /// * `DeterministicError::NonMinimalInt` - If string length is not encoded using the
+    ///   smallest possible representation
+    /// * `DeterministicError::IndefiniteLength` - If the string uses indefinite-length
+    ///   encoding
+    /// * `DeterministicError::DecoderError` - If any underlying CBOR decoding error
+    ///   occurs
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use your_crate::{DeterministicDecoder, Type};
+    ///
+    /// // Example 1: Valid minimal encoding for short string
+    /// let bytes = [
+    ///     0x65, // Text string of length 5
+    ///     0x68, 0x65, 0x6C, 0x6C, 0x6F,
+    /// ]; // "hello"
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_string(Type::Text).is_ok());
+    ///
+    /// // Example 2: Valid minimal encoding for byte string
+    /// let bytes = [
+    ///     0x43, // Byte string of length 3
+    ///     0x01, 0x02, 0x03,
+    /// ];
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_string(Type::Bytes).is_ok());
+    /// ```
+    ///
+    /// # Invalid Examples
+    ///
+    /// ```rust
+    /// # use your_crate::{DeterministicDecoder, Type};
+    /// // Non-minimal length encoding (using one byte when initial byte would suffice)
+    /// let bytes = [
+    ///     0x18, 0x05, // Non-minimal encoding of length 5
+    ///     0x68, 0x65, 0x6C, 0x6C, 0x6F,
+    /// ]; // "hello"
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(matches!(
+    ///     decoder.validate_string(Type::Text),
+    ///     Err(DeterministicError::NonMinimalInt)
+    /// ));
+    ///
+    /// // Indefinite length encoding (not allowed)
+    /// let bytes = [
+    ///     0x7F, // Indefinite length text string
+    ///     0x65, 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0xFF,
+    /// ]; // Break
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(matches!(
+    ///     decoder.validate_string(Type::Text),
+    ///     Err(DeterministicError::IndefiniteLength)
+    /// ));
+    /// ```
+    ///
+    /// This implementation aligns with RFC 8949 Section 4.2.1 requirements for
+    /// deterministically encoded CBOR strings [[1]](https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c).
     fn validate_string(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
         let pos = self.decoder.position();
         let initial_byte = self.decoder.input()[pos];
@@ -261,6 +590,68 @@ impl<'b> DeterministicDecoder<'b> {
         Ok(Some(datatype))
     }
 
+    /// Validates that a CBOR map follows the deterministic encoding rules as specified in
+    /// RFC 8949.
+    ///
+    /// # Deterministic Encoding Requirements for Maps
+    ///
+    /// The function ensures the following requirements are met:
+    ///
+    /// 1. Map keys must be in order according to their encoded byte sequences
+    ///    - Keys are compared byte-by-byte in lexicographic order
+    ///    - Shorter keys are considered less than longer keys when comparing equal
+    ///      prefixes
+    ///
+    /// 2. No duplicate keys are allowed in the map
+    ///    - Each key must appear exactly once
+    ///    - Returns `DeterministicError::DuplicateMapKey` if duplicates are found
+    ///
+    /// 3. Map length must be encoded in the smallest possible representation
+    ///    - Uses `check_minimal_length` to verify minimal encoding
+    ///    - Returns `DeterministicError::NonMinimalInt` for non-minimal length encodings
+    ///
+    /// 4. Indefinite-length maps are not allowed
+    ///    - Returns `DeterministicError::IndefiniteLength` for indefinite-length maps
+    ///
+    /// # Arguments
+    ///
+    /// * `datatype` - The CBOR Type of the map being validated
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Option<Type>)` - Returns the next type after the map if validation succeeds
+    /// * `Err(DeterministicError)` - Returns an error if any deterministic encoding rule
+    ///   is violated
+    ///
+    /// # Errors
+    ///
+    /// The function may return the following errors:
+    /// * `DeterministicError::UnorderedMapKeys` - If map keys are not in lexicographic
+    ///   order
+    /// * `DeterministicError::DuplicateMapKey` - If duplicate keys are found in the map
+    /// * `DeterministicError::NonMinimalInt` - If map length is not encoded minimally
+    /// * `DeterministicError::IndefiniteLength` - If the map uses indefinite-length
+    ///   encoding
+    /// * `DeterministicError::DecoderError` - If any underlying CBOR decoding error
+    ///   occurs
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use your_crate::{DeterministicDecoder, Type};
+    ///
+    /// // Example of validating a deterministically encoded map
+    /// let bytes = [
+    ///     0xA2, // Map of 2 pairs
+    ///     0x01, 0x20, // Key: 1, Value: 32
+    ///     0x02, 0x40,
+    /// ]; // Key: 2, Value: 64
+    /// let mut decoder = DeterministicDecoder::new(&bytes);
+    /// assert!(decoder.validate_map(Type::Map).is_ok());
+    /// ```
+    ///
+    /// This implementation aligns with RFC 8949 Section 4.2.1 requirements for
+    /// deterministically encoded CBOR maps [[1]](https://datatracker.ietf.org/doc/html/rfc8949#name-deterministically-encoded-c).
     fn validate_map(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
         let pos = self.decoder.position();
         let initial_byte = self.decoder.input()[pos];
