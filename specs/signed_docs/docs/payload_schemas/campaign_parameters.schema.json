@@ -4,144 +4,105 @@
     "title": "Campaign Parameters",
     "description": "Schema for defining Catalyst campaign-level parameters, with UI/UX metadata and logical grouping.",
     "type": "object",
-    "definitions": {
-        "booleanParameter": { "type": "boolean", "title": "Boolean Parameter" },
-        "stringParameter": { "type": "string", "title": "String Parameter" },
-        "adaAmount": { "type": "integer", "title": "ADA Amount" },
-        "currencyAmount": {
-            "type": ["string", "number"],
-            "title": "Currency Amount or String"
-        },
-        "dateParameter": {
-            "type": "string",
-            "format": "date",
-            "title": "Date Parameter"
-        },
-        "datetimeParameter": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Datetime Parameter"
-        },
-        "integerParameter": { "type": "integer", "title": "Integer Parameter" },
-        "percentageParameter": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100,
-            "title": "Percentage Parameter"
-        },
-        "stringRule": { "type": "string", "title": "String / Rule" },
-        "percentageOrAda": {
-            "oneOf": [
-                { "$ref": "#/definitions/percentageParameter" },
-                { "$ref": "#/definitions/adaAmount" }
-            ],
-            "title": "Percentage or ADA Amount"
-        },
-        "listParameter": {
-            "type": "array",
-            "items": { "type": "string" },
-            "title": "List Parameter"
-        }
-    },
     "properties": {
         "fundName": {
-            "$ref": "#/definitions/stringParameter",
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
             "title": "Fund/Campaign Name"
         },
         "fundSize": {
-            "$ref": "#/definitions/adaAmount",
+            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
             "title": "Fund/Campaign Size"
         },
         "campaignTitle": {
-            "$ref": "#/definitions/stringParameter",
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
             "title": "Campaign (Challenge) Title"
         },
         "campaignBudget": {
-            "$ref": "#/definitions/adaAmount",
+            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
             "title": "Campaign (Challenge) Budget"
         },
         "proposalSubmissionFee": {
-            "$ref": "#/definitions/currencyAmount",
+            "$ref": "common_definitions.schema.json#/definitions/currencyAmount",
             "title": "Proposal Submission Fee"
         },
         "compensationsDistributionDate": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "Compensations and funds distribution target date"
         },
         "proposalsRegistrationOnChain": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "Proposals registration on the blockchain"
         },
         "drepDeadlineDate": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "Drep deadline date"
         },
         "registrationDeadlineDate": {
-            "$ref": "#/definitions/datetimeParameter",
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
             "title": "Registration deadline date"
         },
         "votingPeriodStart": {
-            "$ref": "#/definitions/datetimeParameter",
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
             "title": "Voting period start time"
         },
         "votingPeriodEnd": {
-            "$ref": "#/definitions/datetimeParameter",
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
             "title": "Voting period end time"
         },
         "startOfTallying": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "Start of tallying"
         },
         "endOfTallying": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "End of tallying"
         },
         "proposalFundingLogic": {
-            "$ref": "#/definitions/stringRule",
+            "$ref": "common_definitions.schema.json#/definitions/stringRule",
             "title": "Proposal Funding logic (winner selection)"
         },
         "voterCompensations": {
-            "$ref": "#/definitions/percentageOrAda",
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
             "title": "Voter Compensations (Vrtotal)"
         },
         "communityReviewCompensations": {
-            "$ref": "#/definitions/percentageOrAda",
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
             "title": "Community Review Compensations"
         },
         "communityModeratorCompensations": {
-            "$ref": "#/definitions/percentageOrAda",
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
             "title": "Community Moderator Compensations (AArtotal)"
         },
         "onboardingCompensations": {
-            "$ref": "#/definitions/percentageOrAda",
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
             "title": "Onboarding compensations (Cttotal)"
         },
         "projectAccountabilityManagementComp": {
-            "$ref": "#/definitions/percentageOrAda",
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
             "title": "Project Accountability Management Comp."
         },
         "currentInsightSharingStart": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "current_insight_sharing_start"
         },
         "currentProposalSubmissionStart": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "current_proposal_submission_start"
         },
         "currentRefineProposalsStart": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "current_refine_proposals_start"
         },
         "currentFinalizeProposalsStart": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "current_finalize_proposals_start"
         },
         "currentProposalAssessment": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "current_proposal_assessment"
         },
         "currentAssessmentQaStart": {
-            "$ref": "#/definitions/dateParameter",
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
             "title": "current_assessment_qa_start"
         }
     },

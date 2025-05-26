@@ -4,25 +4,13 @@
     "title": "Decision Parameters",
     "description": "Schema for defining Catalyst decision parameters (key decision points), with UI/UX metadata and logical grouping.",
     "type": "object",
-    "definitions": {
-        "datetimeParameter": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Datetime Parameter"
-        },
-        "listParameter": {
-            "type": "array",
-            "items": { "type": "string" },
-            "title": "List Parameter"
-        }
-    },
     "properties": {
         "votingPeriodStart": {
-            "$ref": "#/definitions/datetimeParameter",
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
             "title": "Voting period start time"
         },
         "votingOptions": {
-            "$ref": "#/definitions/listParameter",
+            "$ref": "common_definitions.schema.json#/definitions/listParameter",
             "title": "Voting options"
         }
     },

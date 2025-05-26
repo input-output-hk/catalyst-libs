@@ -4,108 +4,57 @@
     "title": "Brand Parameters",
     "description": "Schema for defining Catalyst brand-level parameters, with UI/UX metadata and logical grouping.",
     "type": "object",
-    "definitions": {
-        "booleanParameter": {
-            "type": "boolean",
-            "title": "Boolean Parameter",
-            "x-note": "A true/false value."
-        },
-        "stringParameter": {
-            "type": "string",
-            "title": "String Parameter",
-            "x-note": "A plain text value."
-        },
-        "adaAmount": {
-            "type": "integer",
-            "title": "ADA Amount",
-            "x-note": "Amount in ADA."
-        },
-        "lovelaceAmount": {
-            "type": "integer",
-            "title": "Lovelace Amount",
-            "x-note": "Amount in Lovelace."
-        },
-        "integerParameter": {
-            "type": "integer",
-            "title": "Integer Parameter",
-            "x-note": "An integer value."
-        },
-        "dateParameter": {
-            "type": "string",
-            "format": "date",
-            "title": "Date Parameter",
-            "x-note": "A date value (YYYY-MM-DD)."
-        },
-        "datetimeParameter": {
-            "type": "string",
-            "format": "date-time",
-            "title": "Datetime Parameter",
-            "x-note": "A datetime value (ISO 8601)."
-        },
-        "ratioFormula": {
-            "type": "string",
-            "title": "Ratio / Formula",
-            "x-note": "A ratio or formula expression."
-        },
-        "percentageParameter": {
-            "type": "number",
-            "minimum": 0,
-            "maximum": 100,
-            "title": "Percentage Parameter",
-            "x-note": "A percentage value (0-100)."
-        }
-    },
     "properties": {
         "directVotingPrivacyState": {
-            "$ref": "#/definitions/booleanParameter",
+            "$ref": "common_definitions.schema.json#/definitions/booleanParameter",
             "title": "Direct Voting Privacy State",
             "description": "Whether direct voting privacy is enabled.",
             "x-guidance": "Set to true if direct voting privacy is required."
         },
         "brandName": {
-            "$ref": "#/definitions/stringParameter",
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
             "title": "Brand Name",
             "description": "The name of the brand.",
             "x-guidance": "Enter the official brand name."
         },
         "minimumBudgetRequestPerProposal": {
-            "$ref": "#/definitions/adaAmount",
+            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
             "title": "Minimum Budget Request Per Proposal",
             "description": "The minimum ADA amount that can be requested per proposal.",
             "x-guidance": "Specify the minimum allowed budget per proposal in ADA."
         },
         "maximumBudgetRequestPerProposal": {
-            "$ref": "#/definitions/stringParameter",
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
             "title": "Maximum Budget Request Per Proposal",
             "description": "The maximum ADA amount (variable per challenge/category) that can be requested per proposal.",
             "x-guidance": "Specify the maximum allowed budget per proposal."
         },
         "maximumProposalsPerProposer": {
-            "$ref": "#/definitions/integerParameter",
+            "$ref": "common_definitions.schema.json#/definitions/integerParameter",
             "title": "Maximum Proposals per Proposer/co-proposer",
             "description": "The maximum number of proposals a proposer or co-proposer can submit.",
             "x-guidance": "Set the limit for proposals per proposer/co-proposer."
         },
         "communityReviewerRegistration": {
-            "$ref": "#/definitions/stringParameter",
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
             "title": "Community Reviewer Registration",
             "description": "Information or rules about community reviewer registration.",
             "x-guidance": "Describe the process or requirements for community reviewer registration."
         },
         "votingPowerThreshold": {
-            "$ref": "#/definitions/lovelaceAmount",
+            "$ref": "common_definitions.schema.json#/definitions/lovelaceAmount",
             "title": "Voting Power Threshold",
             "description": "The minimum Lovelace required to participate in voting.",
             "x-guidance": "Specify the minimum voting power threshold in Lovelace."
         },
         "tallyingOptimization": {
-            "$ref": "#/definitions/ratioFormula",
+            "$ref": "common_definitions.schema.json#/definitions/ratioFormula",
             "title": "Tallying Optimization",
             "description": "The ratio or formula used for tallying optimization.",
             "x-guidance": "Provide the formula or ratio for tallying optimization."
         },
         "proposalAcceptanceThreshold": {
-            "$ref": "#/definitions/percentageParameter",
+            "$ref": "common_definitions.schema.json#/definitions/percentageParameter",
             "title": "Proposal Acceptance Threshold",
             "description": "The percentage threshold for proposal acceptance.",
             "x-guidance": "Set the acceptance threshold as a percentage."
