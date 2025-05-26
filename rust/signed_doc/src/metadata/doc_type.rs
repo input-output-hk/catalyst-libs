@@ -1,24 +1,28 @@
 //! Document Type.
 
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    hash::{Hash, Hasher},
+};
 
 use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{CborContext, Uuid, UuidV4},
 };
-use minicbor::{Decode, Decoder, Encode};
+use coset::cbor::Value;
+use minicbor::{Decode, Decoder, Encode, Encoder};
 use tracing::warn;
 
 use crate::{
     decode_context::{CompatibilityPolicy, DecodeContext},
     doc_types::{
-        COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-        PROPOSAL_DOCUMENT_UUID_TYPE, SUBMISSION_ACTION,
+        COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+        PROPOSAL_COMMENT_DOC, PROPOSAL_DOCUMENT_UUID_TYPE, PROPOSAL_DOC_TYPE,
     },
 };
 
 /// List of `UUIDv4` document type.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct DocType(Vec<UuidV4>);
 
 /// `DocType` Errors.
@@ -37,6 +41,25 @@ impl DocType {
     #[must_use]
     pub fn doc_types(&self) -> &Vec<UuidV4> {
         &self.0
+    }
+
+    /// Convert `DocType` to coset `Value`.
+    pub(crate) fn to_value(&self, report: &mut ProblemReport) -> anyhow::Result<Value> {
+        let mut buffer = Vec::new();
+        let mut encoder = Encoder::new(&mut buffer);
+        self.encode(&mut encoder, report)?;
+        Ok(Value::from(buffer.clone()))
+    }
+}
+
+impl Hash for DocType {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let list = self
+            .0
+            .iter()
+            .map(std::string::ToString::to_string)
+            .collect::<Vec<_>>();
+        list.hash(state);
     }
 }
 
@@ -166,12 +189,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                             minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
                         })?;
 
-                        let ids = map_doc_type(uuid.into()).map_err(|e| {
-                            decode_context.report.other(&e.to_string(), CONTEXT);
-                            minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
-                        })?;
-
-                        let doc_type = ids.to_vec().try_into().map_err(|e: DocTypeError| {
+                        let doc_type = map_doc_type(uuid.into()).map_err(|e| {
                             decode_context.report.other(&e.to_string(), CONTEXT);
                             minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
                         })?;
@@ -205,20 +223,11 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
 
 /// Map single UUID doc type to new list of doc types
 /// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
-fn map_doc_type(uuid: Uuid) -> anyhow::Result<&'static [Uuid]> {
-    const PROPOSAL_DOC: &[Uuid] = &[PROPOSAL_DOCUMENT_UUID_TYPE];
-    const PROPOSAL_COMMENT_DOC: &[Uuid] =
-        &[COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE];
-    const PROPOSAL_ACTION_DOC: &[Uuid] = &[
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-        PROPOSAL_DOCUMENT_UUID_TYPE,
-        SUBMISSION_ACTION,
-    ];
-
+fn map_doc_type(uuid: Uuid) -> anyhow::Result<DocType> {
     match uuid {
-        id if id == PROPOSAL_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_DOC),
-        id if id == COMMENT_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT_DOC),
-        id if id == PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_ACTION_DOC),
+        id if id == PROPOSAL_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_DOC_TYPE.clone()),
+        id if id == COMMENT_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT_DOC.clone()),
+        id if id == PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_ACTION_DOC.clone()),
         _ => anyhow::bail!("Unknown document type: {uuid}"),
     }
 }
