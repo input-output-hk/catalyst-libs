@@ -1,0 +1,137 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/main/specs/signed_docs/docs/payload_schemas/campaign_parameters.schema.json",
+    "title": "Campaign Parameters",
+    "description": "Schema for defining Catalyst campaign-level parameters, with UI/UX metadata and logical grouping.",
+    "type": "object",
+    "properties": {
+        "fundName": {
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "title": "Fund/Campaign Name"
+        },
+        "fundSize": {
+            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
+            "title": "Fund/Campaign Size"
+        },
+        "campaignTitle": {
+            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "title": "Campaign (Challenge) Title"
+        },
+        "campaignBudget": {
+            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
+            "title": "Campaign (Challenge) Budget"
+        },
+        "proposalSubmissionFee": {
+            "$ref": "common_definitions.schema.json#/definitions/currencyAmount",
+            "title": "Proposal Submission Fee"
+        },
+        "compensationsDistributionDate": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "Compensations and funds distribution target date"
+        },
+        "proposalsRegistrationOnChain": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "Proposals registration on the blockchain"
+        },
+        "drepDeadlineDate": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "Drep deadline date"
+        },
+        "registrationDeadlineDate": {
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
+            "title": "Registration deadline date"
+        },
+        "votingPeriodStart": {
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
+            "title": "Voting period start time"
+        },
+        "votingPeriodEnd": {
+            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
+            "title": "Voting period end time"
+        },
+        "startOfTallying": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "Start of tallying"
+        },
+        "endOfTallying": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "End of tallying"
+        },
+        "proposalFundingLogic": {
+            "$ref": "common_definitions.schema.json#/definitions/stringRule",
+            "title": "Proposal Funding logic (winner selection)"
+        },
+        "voterCompensations": {
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "title": "Voter Compensations (Vrtotal)"
+        },
+        "communityReviewCompensations": {
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "title": "Community Review Compensations"
+        },
+        "communityModeratorCompensations": {
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "title": "Community Moderator Compensations (AArtotal)"
+        },
+        "onboardingCompensations": {
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "title": "Onboarding compensations (Cttotal)"
+        },
+        "projectAccountabilityManagementComp": {
+            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "title": "Project Accountability Management Comp."
+        },
+        "currentInsightSharingStart": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "current_insight_sharing_start"
+        },
+        "currentProposalSubmissionStart": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "current_proposal_submission_start"
+        },
+        "currentRefineProposalsStart": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "current_refine_proposals_start"
+        },
+        "currentFinalizeProposalsStart": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "current_finalize_proposals_start"
+        },
+        "currentProposalAssessment": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "current_proposal_assessment"
+        },
+        "currentAssessmentQaStart": {
+            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "title": "current_assessment_qa_start"
+        }
+    },
+    "required": ["fundName", "fundSize", "campaignTitle", "campaignBudget"],
+    "x-order": [
+        "fundName",
+        "fundSize",
+        "campaignTitle",
+        "campaignBudget",
+        "proposalSubmissionFee",
+        "compensationsDistributionDate",
+        "proposalsRegistrationOnChain",
+        "drepDeadlineDate",
+        "registrationDeadlineDate",
+        "votingPeriodStart",
+        "votingPeriodEnd",
+        "startOfTallying",
+        "endOfTallying",
+        "proposalFundingLogic",
+        "voterCompensations",
+        "communityReviewCompensations",
+        "communityModeratorCompensations",
+        "onboardingCompensations",
+        "projectAccountabilityManagementComp",
+        "currentInsightSharingStart",
+        "currentProposalSubmissionStart",
+        "currentRefineProposalsStart",
+        "currentFinalizeProposalsStart",
+        "currentProposalAssessment",
+        "currentAssessmentQaStart"
+    ]
+}
