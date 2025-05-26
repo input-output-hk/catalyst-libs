@@ -97,75 +97,72 @@ impl<'b> DeterministicDecoder<'b> {
         }
     }
 
-    /// Validates that a length encoding follows the deterministic encoding rules from RFC
-    /// 8949 § 4.2.1.
+    /// Validates the next CBOR item according to RFC 8949 § 4.2 deterministic encoding
+    /// rules.
     ///
-    /// According to RFC 8949 § 4.2.1 "Core Deterministic Encoding Requirements", length
-    /// encoding must be minimal for the following CBOR data items:
-    /// * Major type 2: byte strings
-    /// * Major type 3: text strings
-    /// * Major type 4: arrays
-    /// * Major type 5: maps
+    /// According to RFC 8949, deterministically encoded CBOR follows these rules:
     ///
-    /// The length encoding is minimal if and only if:
-    /// * Values 0 through 23 are expressed in a single byte using the direct value
-    /// * Values 24 through 255 use the one-byte uint8_t encoding (additional info = 24)
-    /// * Values 256 through 65535 use the two-byte uint16_t encoding (additional info =
-    ///   25)
-    /// * Values 65536 through 4294967295 use the four-byte uint32_t encoding (additional
-    ///   info = 26)
-    /// * Values above 4294967295 use the eight-byte uint64_t encoding (additional info =
-    ///   27)
+    /// 1. Integer encoding must be as short as possible:
+    ///    - Integers 0 through 23 must be expressed in a single byte
+    ///    - Integers 24 through 255 must use one-byte uint8_t encoding
+    ///    - Integers 256 through 65535 must use two-byte uint16_t encoding
+    ///    - Integers 65536 through 4294967295 must use four-byte uint32_t encoding
+    ///    - Integers above 4294967295 must use eight-byte uint64_t encoding
     ///
-    /// # Arguments
-    /// * `pos` - Position in the input buffer where the length encoding starts
-    /// * `length` - The decoded length value being validated
+    /// 2. The expression of lengths in major types 2 through 5 must be as short as
+    ///    possible
+    ///    - No indefinite lengths are allowed
+    ///    - The rules for integers apply to the length fields
+    ///
+    /// 3. Indefinite-length items must be made into definite-length items:
+    ///    - The implementations must NOT generate indefinite-length strings, arrays, or
+    ///      maps
+    ///    - The implementations must NOT generate indefinite-length data items
+    ///
+    /// 4. Maps must have keys sorted in bytewise lexicographic order:
+    ///    - All map keys must be sorted in length-first, bytewise lexicographic order
+    ///    - Duplicate keys in a map are not valid
+    ///    - The sorting rules apply after the keys are encoded
     ///
     /// # Returns
-    /// * `Ok(())` if the length encoding is minimal according to RFC 8949
-    /// * `Err(DeterministicError::NonMinimalInt)` if non-minimal encoding is detected
+    /// - `Ok(Some(Type))` - Successfully validated item of the given CBOR type
+    /// - `Ok(None)` - End of input reached
+    /// - `Err(DeterministicError)` - Validation error due to:
+    ///   - Non-minimal integer encoding
+    ///   - Indefinite length items
+    ///   - Unsorted or duplicate map keys
+    ///   - Invalid CBOR encoding
     ///
     /// # Examples
-    /// For length value 5:
-    /// * ✓ Minimal encoding: 0x05 (direct value)
-    /// * ✗ Non-minimal encoding: 0x18 0x05 (using one-byte uint8_t unnecessarily)
+    /// Minimal integer encoding:
+    /// - ✓ Value 0: Encoded as 0x00
+    /// - ✗ Value 0: Encoded as 0x1800 (non-minimal)
     ///
-    /// For length value 200:  
-    /// * ✓ Minimal encoding: 0x18 0xC8 (one-byte uint8_t)
-    /// * ✗ Non-minimal encoding: 0x19 0x00 0xC8 (using two-byte uint16_t unnecessarily)
-    fn check_minimal_length(&self, pos: usize, length: u64) -> Result<(), DeterministicError> {
-        let initial_byte = self.decoder.input()[pos];
-
-        let additional_info = initial_byte & 0x1F;
-
-        match length {
-            0..=23 => {
-                if additional_info != length as u8 {
-                    return Err(DeterministicError::NonMinimalInt);
-                }
-            },
-            24..=255 => {
-                if additional_info != 24 {
-                    return Err(DeterministicError::NonMinimalInt);
-                }
-            },
-            256..=65535 => {
-                if additional_info != 25 {
-                    return Err(DeterministicError::NonMinimalInt);
-                }
-            },
-            65536..=4294967295 => {
-                if additional_info != 26 {
-                    return Err(DeterministicError::NonMinimalInt);
-                }
-            },
-            _ => {
-                if additional_info != 27 {
-                    return Err(DeterministicError::NonMinimalInt);
-                }
-            },
+    /// Map key ordering:
+    /// - ✓ Keys: [0x01, 0x0203, 0x030405]
+    /// - ✗ Keys: [0x0203, 0x01, 0x030405] (incorrect order)
+    pub fn validate_next(&mut self) -> Result<Option<Type>, DeterministicError> {
+        if let Ok(datatype) = self.decoder.datatype() {
+            match datatype {
+                Type::U8
+                | Type::U16
+                | Type::U32
+                | Type::U64
+                | Type::I8
+                | Type::I16
+                | Type::I32
+                | Type::I64 => self.validate_integer(datatype),
+                Type::Array => self.validate_array(datatype),
+                Type::String | Type::Bytes => self.validate_string(datatype),
+                Type::Map => self.validate_map(datatype),
+                _ => {
+                    self.decoder.skip()?;
+                    Ok(Some(datatype))
+                },
+            }
+        } else {
+            Ok(None)
         }
-        Ok(())
     }
 
     fn validate_integer(&mut self, datatype: Type) -> Result<Option<Type>, DeterministicError> {
@@ -298,72 +295,75 @@ impl<'b> DeterministicDecoder<'b> {
         Ok(Some(datatype))
     }
 
-    /// Validates the next CBOR item according to RFC 8949 § 4.2 deterministic encoding
-    /// rules.
+    /// Validates that a length encoding follows the deterministic encoding rules from RFC
+    /// 8949 § 4.2.1.
     ///
-    /// According to RFC 8949, deterministically encoded CBOR follows these rules:
+    /// According to RFC 8949 § 4.2.1 "Core Deterministic Encoding Requirements", length
+    /// encoding must be minimal for the following CBOR data items:
+    /// * Major type 2: byte strings
+    /// * Major type 3: text strings
+    /// * Major type 4: arrays
+    /// * Major type 5: maps
     ///
-    /// 1. Integer encoding must be as short as possible:
-    ///    - Integers 0 through 23 must be expressed in a single byte
-    ///    - Integers 24 through 255 must use one-byte uint8_t encoding
-    ///    - Integers 256 through 65535 must use two-byte uint16_t encoding
-    ///    - Integers 65536 through 4294967295 must use four-byte uint32_t encoding
-    ///    - Integers above 4294967295 must use eight-byte uint64_t encoding
+    /// The length encoding is minimal if and only if:
+    /// * Values 0 through 23 are expressed in a single byte using the direct value
+    /// * Values 24 through 255 use the one-byte uint8_t encoding (additional info = 24)
+    /// * Values 256 through 65535 use the two-byte uint16_t encoding (additional info =
+    ///   25)
+    /// * Values 65536 through 4294967295 use the four-byte uint32_t encoding (additional
+    ///   info = 26)
+    /// * Values above 4294967295 use the eight-byte uint64_t encoding (additional info =
+    ///   27)
     ///
-    /// 2. The expression of lengths in major types 2 through 5 must be as short as
-    ///    possible
-    ///    - No indefinite lengths are allowed
-    ///    - The rules for integers apply to the length fields
-    ///
-    /// 3. Indefinite-length items must be made into definite-length items:
-    ///    - The implementations must NOT generate indefinite-length strings, arrays, or
-    ///      maps
-    ///    - The implementations must NOT generate indefinite-length data items
-    ///
-    /// 4. Maps must have keys sorted in bytewise lexicographic order:
-    ///    - All map keys must be sorted in length-first, bytewise lexicographic order
-    ///    - Duplicate keys in a map are not valid
-    ///    - The sorting rules apply after the keys are encoded
+    /// # Arguments
+    /// * `pos` - Position in the input buffer where the length encoding starts
+    /// * `length` - The decoded length value being validated
     ///
     /// # Returns
-    /// - `Ok(Some(Type))` - Successfully validated item of the given CBOR type
-    /// - `Ok(None)` - End of input reached
-    /// - `Err(DeterministicError)` - Validation error due to:
-    ///   - Non-minimal integer encoding
-    ///   - Indefinite length items
-    ///   - Unsorted or duplicate map keys
-    ///   - Invalid CBOR encoding
+    /// * `Ok(())` if the length encoding is minimal according to RFC 8949
+    /// * `Err(DeterministicError::NonMinimalInt)` if non-minimal encoding is detected
     ///
     /// # Examples
-    /// Minimal integer encoding:
-    /// - ✓ Value 0: Encoded as 0x00
-    /// - ✗ Value 0: Encoded as 0x1800 (non-minimal)
+    /// For length value 5:
+    /// * ✓ Minimal encoding: 0x05 (direct value)
+    /// * ✗ Non-minimal encoding: 0x18 0x05 (using one-byte uint8_t unnecessarily)
     ///
-    /// Map key ordering:
-    /// - ✓ Keys: [0x01, 0x0203, 0x030405]
-    /// - ✗ Keys: [0x0203, 0x01, 0x030405] (incorrect order)
-    pub fn validate_next(&mut self) -> Result<Option<Type>, DeterministicError> {
-        if let Ok(datatype) = self.decoder.datatype() {
-            match datatype {
-                Type::U8
-                | Type::U16
-                | Type::U32
-                | Type::U64
-                | Type::I8
-                | Type::I16
-                | Type::I32
-                | Type::I64 => self.validate_integer(datatype),
-                Type::Array => self.validate_array(datatype),
-                Type::String | Type::Bytes => self.validate_string(datatype),
-                Type::Map => self.validate_map(datatype),
-                _ => {
-                    self.decoder.skip()?;
-                    Ok(Some(datatype))
-                },
-            }
-        } else {
-            Ok(None)
+    /// For length value 200:  
+    /// * ✓ Minimal encoding: 0x18 0xC8 (one-byte uint8_t)
+    /// * ✗ Non-minimal encoding: 0x19 0x00 0xC8 (using two-byte uint16_t unnecessarily)
+    fn check_minimal_length(&self, pos: usize, length: u64) -> Result<(), DeterministicError> {
+        let initial_byte = self.decoder.input()[pos];
+
+        let additional_info = initial_byte & 0x1F;
+
+        match length {
+            0..=23 => {
+                if additional_info != length as u8 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            24..=255 => {
+                if additional_info != 24 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            256..=65535 => {
+                if additional_info != 25 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            65536..=4294967295 => {
+                if additional_info != 26 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
+            _ => {
+                if additional_info != 27 {
+                    return Err(DeterministicError::NonMinimalInt);
+                }
+            },
         }
+        Ok(())
     }
 }
 
