@@ -23,6 +23,7 @@ pub use catalyst_types::{
 };
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
+use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
     ContentEncoding, ContentType, DocType, DocumentRef, ExtraFields, Metadata, Section,
 };
@@ -83,7 +84,7 @@ impl From<InnerCatalystSignedDocument> for CatalystSignedDocument {
 impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
 
-    /// Return Document Type `UUIDv4`.
+    /// Return Document Type `DocType` - List of `UUIDv4`.
     ///
     /// # Errors
     /// - Missing 'type' field.
@@ -225,8 +226,12 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             })?;
 
         let mut report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut report);
-        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &mut report);
+        let mut ctx = DecodeContext {
+            compatibility_policy: CompatibilityPolicy::Accept,
+            report: &mut report,
+        };
+        let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut ctx);
+        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
             Content::from_encoded(payload, metadata.content_encoding(), &mut report)

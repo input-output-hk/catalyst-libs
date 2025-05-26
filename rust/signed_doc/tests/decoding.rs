@@ -29,7 +29,8 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
     let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
     let extra_fields: ExtraFields = serde_json::from_value(metadata_fields).unwrap();
 
-    assert_eq!(decoded.doc_type().unwrap(), uuid_v4);
+    let doc_type: DocType = uuid_v4.into();
+    assert_eq!(decoded.doc_type().unwrap(), &doc_type);
     assert_eq!(decoded.doc_id().unwrap(), uuid_v7);
     assert_eq!(decoded.doc_ver().unwrap(), uuid_v7);
     assert_eq!(decoded.doc_content().decoded_bytes().unwrap(), &content);

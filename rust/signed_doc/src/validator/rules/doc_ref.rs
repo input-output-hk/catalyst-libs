@@ -1,9 +1,10 @@
 //! `ref` rule type impl.
 
-use catalyst_types::{problem_report::ProblemReport};
+use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    metadata::DocType, providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc, CatalystSignedDocument
+    metadata::DocType, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
 /// `ref` field validation rule
@@ -24,9 +25,7 @@ impl RefRule {
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Specified {
             exp_ref_type,
             optional,
@@ -61,7 +60,8 @@ impl RefRule {
 
 /// A generic implementation of the referenced document validation.
 pub(crate) fn referenced_doc_check(
-    ref_doc: &CatalystSignedDocument, exp_ref_type: &DocType, field_name: &str, report: &ProblemReport,
+    ref_doc: &CatalystSignedDocument, exp_ref_type: &DocType, field_name: &str,
+    report: &ProblemReport,
 ) -> bool {
     let Ok(ref_doc_type) = ref_doc.doc_type() else {
         report.missing_field("type", "Referenced document must have type field");
@@ -81,7 +81,7 @@ pub(crate) fn referenced_doc_check(
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::uuid::UuidV7;
+    use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
     use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
@@ -135,7 +135,7 @@ mod tests {
 
         // all correct
         let rule = RefRule::Specified {
-            exp_ref_type,
+            exp_ref_type: exp_ref_type.into(),
             optional: false,
         };
         let doc = Builder::new()
@@ -148,7 +148,7 @@ mod tests {
 
         // all correct, `ref` field is missing, but its optional
         let rule = RefRule::Specified {
-            exp_ref_type,
+            exp_ref_type: exp_ref_type.into(),
             optional: true,
         };
         let doc = Builder::new().build();
@@ -156,7 +156,7 @@ mod tests {
 
         // missing `ref` field, but its required
         let rule = RefRule::Specified {
-            exp_ref_type,
+            exp_ref_type: exp_ref_type.into(),
             optional: false,
         };
         let doc = Builder::new().build();

@@ -3,7 +3,7 @@ use std::fmt::{Display, Formatter};
 
 mod content_encoding;
 mod content_type;
-mod doc_type;
+pub(crate) mod doc_type;
 mod document_ref;
 mod extra_fields;
 mod section;
@@ -12,13 +12,15 @@ pub(crate) mod utils;
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat};
-pub use doc_type::{DocType};
+use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
+pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
 use minicbor::{Decode, Decoder};
 pub use section::Section;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
+
+use crate::decode_context::DecodeContext;
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -130,10 +132,10 @@ impl Metadata {
 
     /// Converting COSE Protected Header to Metadata.
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, report: &mut ProblemReport,
+        protected: &coset::ProtectedHeader, context: &mut DecodeContext,
     ) -> Self {
-        let metadata = InnerMetadata::from_protected_header(protected, report);
-        Self::from_metadata_fields(metadata, report)
+        let metadata = InnerMetadata::from_protected_header(protected, context);
+        Self::from_metadata_fields(metadata, context.report)
     }
 }
 
@@ -141,13 +143,13 @@ impl InnerMetadata {
     /// Converting COSE Protected Header to Metadata fields, collecting decoding report
     /// issues.
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, report: &mut ProblemReport,
+        protected: &coset::ProtectedHeader, context: &mut DecodeContext,
     ) -> Self {
         /// Context for problem report messages during decoding from COSE protected
         /// header.
         const COSE_DECODING_CONTEXT: &str = "COSE Protected Header to Metadata";
 
-        let extra = ExtraFields::from_protected_header(protected, report);
+        let extra = ExtraFields::from_protected_header(protected, context.report);
         let mut metadata = Self {
             extra,
             ..Self::default()
@@ -157,7 +159,7 @@ impl InnerMetadata {
             match ContentType::try_from(value) {
                 Ok(ct) => metadata.content_type = Some(ct),
                 Err(e) => {
-                    report.conversion_error(
+                    context.report.conversion_error(
                         "COSE protected header content type",
                         &format!("{value:?}"),
                         &format!("Expected ContentType: {e}"),
@@ -174,7 +176,7 @@ impl InnerMetadata {
             match ContentEncoding::try_from(value) {
                 Ok(ce) => metadata.content_encoding = Some(ce),
                 Err(e) => {
-                    report.conversion_error(
+                    context.report.conversion_error(
                         "COSE protected header content encoding",
                         &format!("{value:?}"),
                         &format!("Expected ContentEncoding: {e}"),
@@ -191,7 +193,7 @@ impl InnerMetadata {
         .and_then(|value| {
             DocType::decode(
                 &mut Decoder::new(&value.clone().to_vec().unwrap_or_default()),
-                report,
+                context,
             )
             .ok()
         });
@@ -200,7 +202,7 @@ impl InnerMetadata {
             protected,
             ID_KEY,
             COSE_DECODING_CONTEXT,
-            report,
+            context.report,
         )
         .map(|v| v.0);
 
@@ -208,7 +210,7 @@ impl InnerMetadata {
             protected,
             VER_KEY,
             COSE_DECODING_CONTEXT,
-            report,
+            context.report,
         )
         .map(|v| v.0);
 
@@ -246,7 +248,10 @@ impl TryFrom<&Metadata> for coset::Header {
         // Dummy report, use just to pass the encoder
         let mut report = ProblemReport::new("TryFrom Metadata to COSE Header");
         builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value(&mut report)?)
+            .text_value(
+                TYPE_KEY.to_string(),
+                meta.doc_type()?.to_value(&mut report)?,
+            )
             .text_value(
                 ID_KEY.to_string(),
                 Value::try_from(CborUuidV7(meta.doc_id()?))?,

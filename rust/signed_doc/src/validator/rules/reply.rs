@@ -2,7 +2,8 @@
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::DocType, providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc, CatalystSignedDocument
+    metadata::DocType, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
 /// `reply` field validation rule
@@ -32,12 +33,7 @@ impl ReplyRule {
         {
             if let Some(reply) = doc.doc_meta().reply() {
                 let reply_validator = |replied_doc: CatalystSignedDocument| {
-                    if !referenced_doc_check(
-                        &replied_doc,
-                        exp_reply_type,
-                        "reply",
-                        doc.report(),
-                    ) {
+                    if !referenced_doc_check(&replied_doc, exp_reply_type, "reply", doc.report()) {
                         return false;
                     }
                     let Some(doc_ref) = doc.doc_meta().doc_ref() else {
@@ -162,7 +158,7 @@ mod tests {
 
         // all correct
         let rule = ReplyRule::Specified {
-            exp_reply_type,
+            exp_reply_type: exp_reply_type.into(),
             optional: false,
         };
         let doc = Builder::new()
@@ -176,7 +172,7 @@ mod tests {
 
         // all correct, `reply` field is missing, but its optional
         let rule = ReplyRule::Specified {
-            exp_reply_type,
+            exp_reply_type: exp_reply_type.into(),
             optional: true,
         };
         let doc = Builder::new().build();
@@ -184,7 +180,7 @@ mod tests {
 
         // missing `reply` field, but its required
         let rule = ReplyRule::Specified {
-            exp_reply_type,
+            exp_reply_type: exp_reply_type.into(),
             optional: false,
         };
         let doc = Builder::new()

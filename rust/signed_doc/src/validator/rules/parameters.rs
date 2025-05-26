@@ -2,7 +2,8 @@
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::DocType, providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc, CatalystSignedDocument
+    metadata::DocType, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
 /// `parameters` field validation rule
@@ -123,7 +124,7 @@ mod tests {
 
         // all correct
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameters_type.into(),
             optional: false,
         };
         let doc = Builder::new()
@@ -136,7 +137,7 @@ mod tests {
 
         // all correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameters_type.into(),
             optional: true,
         };
         let doc = Builder::new().build();
@@ -144,7 +145,7 @@ mod tests {
 
         // missing `parameters` field, but its required
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameters_type.into(),
             optional: false,
         };
         let doc = Builder::new().build();
