@@ -1,7 +1,11 @@
 //! An implementation of different defined document types
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
 
+use std::sync::LazyLock;
+
 use catalyst_types::uuid::Uuid;
+
+use crate::DocType;
 
 /// Proposal document `UuidV4` type.
 pub const PROPOSAL_DOCUMENT_UUID_TYPE: Uuid =
@@ -53,3 +57,36 @@ pub const IMMUTABLE_LEDGER_BLOCK_UUID_TYPE: Uuid =
     Uuid::from_u128(0xD9E7_E6CE_2401_4D7D_9492_F4F7_C642_41C3);
 /// Submission Action `UuidV4` type.
 pub const SUBMISSION_ACTION: Uuid = Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0E01_9B12_6A65);
+
+// -------- Mapping old document types to new document types --------
+
+/// Map proposal document type to new doc type list.
+#[allow(clippy::expect_used)]
+pub(crate) static PROPOSAL_DOC_TYPE: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[PROPOSAL_DOCUMENT_UUID_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal document Uuid to DocType")
+});
+
+/// Map proposal comment document type to new doc type list.
+#[allow(clippy::expect_used)]
+pub(crate) static PROPOSAL_COMMENT_DOC: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal comment document Uuid to DocType")
+});
+
+/// Map proposal action document type to new doc type list.
+#[allow(clippy::expect_used)]
+pub(crate) static PROPOSAL_ACTION_DOC: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[
+        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+        PROPOSAL_DOCUMENT_UUID_TYPE,
+        SUBMISSION_ACTION,
+    ];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal action document Uuid to DocType")
+});
