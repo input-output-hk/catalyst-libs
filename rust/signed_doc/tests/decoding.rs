@@ -1,6 +1,6 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::*;
+use catalyst_signed_doc::{doc_types::PROPOSAL_DOCUMENT_UUID_TYPE, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::TaggedCborSerializable;
@@ -10,7 +10,16 @@ mod common;
 
 #[test]
 fn catalyst_signed_doc_cbor_roundtrip_test() {
-    let (uuid_v7, uuid_v4, metadata_fields) = common::test_metadata();
+    catalyst_signed_doc_cbor_roundtrip(common::test_metadata());
+    catalyst_signed_doc_cbor_roundtrip(common::test_metadata_specific_type(
+        Some(PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
+        None,
+    ));
+}
+
+#[allow(clippy::unwrap_used)]
+fn catalyst_signed_doc_cbor_roundtrip(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (uuid_v7, uuid_v4, metadata_fields) = data;
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
@@ -39,7 +48,16 @@ fn catalyst_signed_doc_cbor_roundtrip_test() {
 
 #[test]
 fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
-    let (_, _, metadata_fields) = common::test_metadata();
+    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
+    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
+        Some(PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
+        None,
+    ));
+}
+
+#[allow(clippy::unwrap_used)]
+fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (_, _, metadata_fields) = data;
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
     // transform Catalyst ID URI form to the ID form
     let kid = kid.as_id();
@@ -59,7 +77,16 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
 
 #[test]
 fn catalyst_signed_doc_parameters_aliases_test() {
-    let (_, _, metadata_fields) = common::test_metadata();
+    catalyst_signed_doc_parameters_aliases(common::test_metadata());
+    catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
+        Some(PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
+        None,
+    ));
+}
+
+#[allow(clippy::unwrap_used)]
+fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (_, _, metadata_fields) = data;
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
