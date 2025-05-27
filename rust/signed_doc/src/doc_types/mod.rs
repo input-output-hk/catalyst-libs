@@ -59,6 +59,7 @@ pub const IMMUTABLE_LEDGER_BLOCK_UUID_TYPE: Uuid =
 pub const SUBMISSION_ACTION: Uuid = Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0E01_9B12_6A65);
 
 // -------- Mapping old document types to new document types --------
+// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
 
 /// Map proposal document type to new doc type list.
 #[allow(clippy::expect_used)]

@@ -298,7 +298,7 @@ impl<'de> Deserialize<'de> for DocType {
         enum DocTypeInput {
             /// Single UUID string.
             Single(String),
-            /// UUID string in a list.
+            /// List of UUID string.
             Multiple(Vec<String>),
         }
 
@@ -321,6 +321,7 @@ impl<'de> Deserialize<'de> for DocType {
 impl PartialEq for DocType {
     fn eq(&self, other: &Self) -> bool {
         // List of special-case (single UUID) -> new DocType
+        // The old one should equal to the new one
         let special_cases = [
             (PROPOSAL_DOCUMENT_UUID_TYPE, &*PROPOSAL_DOC_TYPE),
             (COMMENT_DOCUMENT_UUID_TYPE, &*PROPOSAL_COMMENT_DOC),
