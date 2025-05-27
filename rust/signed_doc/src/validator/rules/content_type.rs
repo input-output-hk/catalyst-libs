@@ -36,7 +36,7 @@ impl ContentTypeRule {
             );
             return Ok(false);
         };
-        if content_type.validate(content).is_err() {
+        if self.validate(content).is_err() {
             doc.report().invalid_value(
                 "payload",
                 &hex::encode(content),
@@ -48,12 +48,51 @@ impl ContentTypeRule {
 
         Ok(true)
     }
+
+    /// Validates the provided `content` bytes to be a defined `ContentType`.
+    pub(crate) fn validate(&self, content: &[u8]) -> anyhow::Result<()> {
+        match self.exp {
+            ContentType::Json => {
+                if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
+                    anyhow::bail!("Invalid {} content: {e}", self.exp)
+                }
+            },
+            ContentType::Cbor => {
+                let mut decoder = minicbor::Decoder::new(content);
+
+                decoder.skip()?;
+
+                if decoder.position() != content.len() {
+                    anyhow::bail!("Unused bytes remain in the input after decoding")
+                }
+            },
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::Builder;
+
+    #[test]
+    fn content_type_validate_test() {
+        let json_rule = ContentTypeRule {
+            exp: ContentType::Json,
+        };
+        let cbor_rule = ContentTypeRule {
+            exp: ContentType::Cbor,
+        };
+
+        let json_bytes = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+        assert!(json_rule.validate(&json_bytes).is_ok());
+        assert!(cbor_rule.validate(&json_bytes).is_err());
+
+        let cbor_bytes = minicbor::to_vec(minicbor::data::Token::Null).unwrap();
+        assert!(json_rule.validate(&cbor_bytes).is_err());
+        assert!(cbor_rule.validate(&cbor_bytes).is_ok());
+    }
 
     #[tokio::test]
     async fn content_type_rule_test() {
