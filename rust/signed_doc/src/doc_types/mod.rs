@@ -62,7 +62,7 @@ pub const SUBMISSION_ACTION: Uuid = Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0
 
 /// Map proposal document type to new doc type list.
 #[allow(clippy::expect_used)]
-pub(crate) static PROPOSAL_DOC_TYPE: LazyLock<DocType> = LazyLock::new(|| {
+pub static PROPOSAL_DOC_TYPE: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[PROPOSAL_DOCUMENT_UUID_TYPE];
     ids.to_vec()
         .try_into()
@@ -71,7 +71,7 @@ pub(crate) static PROPOSAL_DOC_TYPE: LazyLock<DocType> = LazyLock::new(|| {
 
 /// Map proposal comment document type to new doc type list.
 #[allow(clippy::expect_used)]
-pub(crate) static PROPOSAL_COMMENT_DOC: LazyLock<DocType> = LazyLock::new(|| {
+pub static PROPOSAL_COMMENT_DOC: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE];
     ids.to_vec()
         .try_into()
@@ -80,7 +80,7 @@ pub(crate) static PROPOSAL_COMMENT_DOC: LazyLock<DocType> = LazyLock::new(|| {
 
 /// Map proposal action document type to new doc type list.
 #[allow(clippy::expect_used)]
-pub(crate) static PROPOSAL_ACTION_DOC: LazyLock<DocType> = LazyLock::new(|| {
+pub static PROPOSAL_ACTION_DOC: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[
         PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
         PROPOSAL_DOCUMENT_UUID_TYPE,

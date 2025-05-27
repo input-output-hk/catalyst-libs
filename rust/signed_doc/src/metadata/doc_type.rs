@@ -3,14 +3,16 @@
 use std::{
     fmt::{Display, Formatter},
     hash::{Hash, Hasher},
+    str::FromStr,
 };
 
 use catalyst_types::{
     problem_report::ProblemReport,
-    uuid::{CborContext, Uuid, UuidV4},
+    uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG},
 };
 use coset::cbor::Value;
-use minicbor::{Decode, Decoder, Encode, Encoder};
+use minicbor::{Decode, Decoder, Encode};
+use serde::{Deserialize, Deserializer};
 use tracing::warn;
 
 use crate::{
@@ -22,7 +24,7 @@ use crate::{
 };
 
 /// List of `UUIDv4` document type.
-#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, serde::Serialize, Eq)]
 pub struct DocType(Vec<UuidV4>);
 
 /// `DocType` Errors.
@@ -34,6 +36,9 @@ pub enum DocTypeError {
     /// `DocType` cannot be empty.
     #[error("DocType cannot be empty")]
     Empty,
+    /// Invalid string conversion
+    #[error("Invalid string conversion: {0}")]
+    StringConversion(String),
 }
 
 impl DocType {
@@ -44,11 +49,18 @@ impl DocType {
     }
 
     /// Convert `DocType` to coset `Value`.
-    pub(crate) fn to_value(&self, report: &mut ProblemReport) -> anyhow::Result<Value> {
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        self.encode(&mut encoder, report)?;
-        Ok(Value::from(buffer.clone()))
+    pub(crate) fn to_value(&self) -> Value {
+        Value::Array(
+            self.0
+                .iter()
+                .map(|uuidv4| {
+                    Value::Tag(
+                        UUID_CBOR_TAG,
+                        Box::new(Value::Bytes(uuidv4.uuid().as_bytes().to_vec())),
+                    )
+                })
+                .collect(),
+        )
     }
 }
 
@@ -103,6 +115,25 @@ impl TryFrom<Vec<UuidV4>> for DocType {
             return Err(DocTypeError::Empty);
         }
         Ok(DocType(value))
+    }
+}
+
+impl TryFrom<Vec<String>> for DocType {
+    type Error = DocTypeError;
+
+    fn try_from(value: Vec<String>) -> Result<Self, Self::Error> {
+        if value.is_empty() {
+            return Err(DocTypeError::Empty);
+        }
+        let converted = value
+            .into_iter()
+            .map(|s| {
+                let parsed = Uuid::from_str(&s).map_err(|_| DocTypeError::StringConversion(s))?;
+                UuidV4::try_from(parsed).map_err(|_| DocTypeError::InvalidUuid(parsed))
+            })
+            .collect::<Result<Vec<UuidV4>, DocTypeError>>()?;
+
+        Ok(DocType(converted))
     }
 }
 
@@ -259,10 +290,63 @@ impl Encode<ProblemReport> for DocType {
     }
 }
 
+impl<'de> Deserialize<'de> for DocType {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de> {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum DocTypeInput {
+            /// Single UUID string.
+            Single(String),
+            /// UUID string in a list.
+            Multiple(Vec<String>),
+        }
+
+        let input = DocTypeInput::deserialize(deserializer)?;
+        let dt = match input {
+            DocTypeInput::Single(s) => {
+                let uuid = Uuid::parse_str(&s).map_err(|_| {
+                    serde::de::Error::custom(DocTypeError::StringConversion(s.clone()))
+                })?;
+                // If there is a map from old (single uuid) to new use that list, else convert that
+                // single uuid to [uuid] - of type DocType
+                map_doc_type(uuid).unwrap_or(uuid.try_into().map_err(serde::de::Error::custom)?)
+            },
+            DocTypeInput::Multiple(v) => v.try_into().map_err(serde::de::Error::custom)?,
+        };
+        Ok(dt)
+    }
+}
+
+impl PartialEq for DocType {
+    fn eq(&self, other: &Self) -> bool {
+        // List of special-case (single UUID) -> new DocType
+        let special_cases = [
+            (PROPOSAL_DOCUMENT_UUID_TYPE, &*PROPOSAL_DOC_TYPE),
+            (COMMENT_DOCUMENT_UUID_TYPE, &*PROPOSAL_COMMENT_DOC),
+            (PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, &*PROPOSAL_ACTION_DOC),
+        ];
+        for (uuid, expected) in special_cases {
+            match DocType::try_from(uuid) {
+                Ok(single) => {
+                    if (self.0 == single.0 && other.0 == expected.0)
+                        || (other.0 == single.0 && self.0 == expected.0)
+                    {
+                        return true;
+                    }
+                },
+                Err(_) => return false,
+            }
+        }
+        self.0 == other.0
+    }
+}
+
 #[cfg(test)]
 mod tests {
 
     use minicbor::Encoder;
+    use serde_json::json;
 
     use super::*;
 
@@ -273,7 +357,7 @@ mod tests {
     const PSA: &str = "D825505E60E623AD024A1BA1AC406DB978EE48";
 
     #[test]
-    fn test_empty_doc_type() {
+    fn test_empty_doc_type_cbor_decode() {
         assert!(<DocType as TryFrom<Vec<UuidV4>>>::try_from(vec![]).is_err());
 
         let mut report = ProblemReport::new("Test empty doc type");
@@ -286,7 +370,7 @@ mod tests {
     }
 
     #[test]
-    fn test_single_uuid_doc_type_fail_policy() {
+    fn test_single_uuid_doc_type_fail_policy_cbor_decode() {
         let mut report = ProblemReport::new("Test single uuid doc type - fail");
         let data = hex::decode(PSA).unwrap();
         let decoder = Decoder::new(&data);
@@ -298,7 +382,7 @@ mod tests {
     }
 
     #[test]
-    fn test_single_uuid_doc_type_warn_policy() {
+    fn test_single_uuid_doc_type_warn_policy_cbor_decode() {
         let mut report = ProblemReport::new("Test single uuid doc type - warn");
         let data = hex::decode(PSA).unwrap();
         let decoder = Decoder::new(&data);
@@ -311,7 +395,7 @@ mod tests {
     }
 
     #[test]
-    fn test_single_uuid_doc_type_accept_policy() {
+    fn test_single_uuid_doc_type_accept_policy_cbor_decode() {
         let mut report = ProblemReport::new("Test single uuid doc type - accept");
         let data = hex::decode(PSA).unwrap();
         let decoder = Decoder::new(&data);
@@ -324,7 +408,7 @@ mod tests {
     }
 
     #[test]
-    fn test_multi_uuid_doc_type() {
+    fn test_multi_uuid_doc_type_cbor_decode_encode() {
         let uuidv4 = UuidV4::new();
         let mut report = ProblemReport::new("Test multi uuid doc type");
         let doc_type_list: DocType = vec![uuidv4, uuidv4].try_into().unwrap();
@@ -338,5 +422,91 @@ mod tests {
         };
         let decoded_doc_type = DocType::decode(&mut decoder, &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_type, doc_type_list);
+    }
+
+    #[test]
+    fn test_valid_vec_string() {
+        let uuid = Uuid::new_v4().to_string();
+        let input = vec![uuid.clone()];
+        let doc_type = DocType::try_from(input).expect("should succeed");
+
+        assert_eq!(doc_type.0.len(), 1);
+        assert_eq!(doc_type.0.first().unwrap().to_string(), uuid);
+    }
+
+    #[test]
+    fn test_empty_vec_string_fails() {
+        let input: Vec<String> = vec![];
+        let result = DocType::try_from(input);
+        assert!(matches!(result, Err(DocTypeError::Empty)));
+    }
+
+    #[test]
+    fn test_invalid_uuid_vec_string() {
+        let input = vec!["not-a-uuid".to_string()];
+        let result = DocType::try_from(input);
+        assert!(matches!(result, Err(DocTypeError::StringConversion(s)) if s == "not-a-uuid"));
+    }
+
+    #[test]
+    fn test_doc_type_to_value() {
+        let uuid = uuid::Uuid::new_v4();
+        let doc_type = DocType(vec![UuidV4::try_from(uuid).unwrap()]);
+
+        for d in &doc_type.to_value().into_array().unwrap() {
+            let t = d.clone().into_tag().unwrap();
+            assert_eq!(t.0, UUID_CBOR_TAG);
+            assert_eq!(t.1.as_bytes().unwrap().len(), 16);
+        }
+    }
+
+    #[test]
+    fn test_doctype_equal_special_cases() {
+        // Direct equal
+        let uuid = PROPOSAL_DOCUMENT_UUID_TYPE;
+        let dt1 = DocType::try_from(vec![uuid]).unwrap();
+        let dt2 = DocType::try_from(vec![uuid]).unwrap();
+        assert_eq!(dt1, dt2);
+
+        // single -> special mapped type
+        let single = DocType::try_from(PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_DOC_TYPE);
+        let single = DocType::try_from(COMMENT_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_COMMENT_DOC);
+        let single = DocType::try_from(PROPOSAL_ACTION_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_ACTION_DOC);
+    }
+
+    #[test]
+    fn test_deserialize_single_uuid_normal() {
+        let uuid = uuid::Uuid::new_v4().to_string();
+        let json = json!(uuid);
+        let dt: DocType = serde_json::from_value(json).unwrap();
+
+        assert_eq!(dt.0.len(), 1);
+        assert_eq!(dt.0.first().unwrap().to_string(), uuid);
+    }
+
+    #[test]
+    fn test_deserialize_multiple_uuids() {
+        let uuid1 = uuid::Uuid::new_v4().to_string();
+        let uuid2 = uuid::Uuid::new_v4().to_string();
+        let json = json!([uuid1.clone(), uuid2.clone()]);
+
+        let dt: DocType = serde_json::from_value(json).unwrap();
+        let actual =
+            dt.0.iter()
+                .map(std::string::ToString::to_string)
+                .collect::<Vec<_>>();
+        assert_eq!(actual, vec![uuid1, uuid2]);
+    }
+
+    #[test]
+    fn test_deserialize_special_case() {
+        let uuid = PROPOSAL_DOCUMENT_UUID_TYPE.to_string();
+        let json = json!(uuid);
+        let dt: DocType = serde_json::from_value(json).unwrap();
+
+        assert_eq!(dt, *PROPOSAL_DOC_TYPE);
     }
 }
