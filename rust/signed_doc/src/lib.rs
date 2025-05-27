@@ -234,7 +234,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(payload, metadata.content_encoding(), &mut report)
+            Content::from_encoded(payload, metadata.content_encoding(), &report)
         } else {
             report.missing_field("COSE Sign Payload", "Missing document content (payload)");
             Content::default()

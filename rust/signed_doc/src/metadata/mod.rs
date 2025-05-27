@@ -245,13 +245,8 @@ impl TryFrom<&Metadata> for coset::Header {
             );
         }
 
-        // Dummy report, use just to pass the encoder
-        let mut report = ProblemReport::new("TryFrom Metadata to COSE Header");
         builder = builder
-            .text_value(
-                TYPE_KEY.to_string(),
-                meta.doc_type()?.to_value(&mut report)?,
-            )
+            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value())
             .text_value(
                 ID_KEY.to_string(),
                 Value::try_from(CborUuidV7(meta.doc_id()?))?,
