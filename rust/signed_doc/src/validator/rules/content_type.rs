@@ -73,6 +73,8 @@ impl ContentTypeRule {
 
 #[cfg(test)]
 mod tests {
+    use proptest::prelude::*;
+
     use super::*;
     use crate::Builder;
 
@@ -95,7 +97,7 @@ mod tests {
     }
 
     #[test]
-    fn cbor_with_trailing_bytes_fails_test() {
+    fn cbor_with_trailing_bytes_test() {
         // Valid CBOR: {1: 2} but with trailing 0xff
         let mut buf = Vec::new();
         let mut enc = minicbor::Encoder::new(&mut buf);
@@ -110,14 +112,27 @@ mod tests {
     }
 
     #[test]
-    fn invalid_cbor_fails_test() {
-        let invalid_bytes = &[0x1F, 0x00, 0x00];
+    fn malformed_cbor_bytes_test() {
+        // 0xa2 means a map with 2 key-value pairs, but we only give 1 key
+        let invalid_bytes = &[0xA2, 0x01];
 
         let cbor_rule = ContentTypeRule {
             exp: ContentType::Cbor,
         };
 
         assert!(cbor_rule.validate(invalid_bytes).is_err());
+    }
+
+    proptest! {
+        #[test]
+        fn invalid_cbor_from_random_data_test(ref data in proptest::collection::vec(any::<u8>(), 1..100)) {
+            let cbor_rule = ContentTypeRule {
+                exp: ContentType::Cbor,
+            };
+
+            // allow any result; we just want to ensure no panic
+            drop(cbor_rule.validate(data));
+        }
     }
 
     #[tokio::test]
