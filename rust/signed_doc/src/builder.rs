@@ -1,49 +1,61 @@
 //! Catalyst Signed Document Builder.
+
+/// An implementation of [`CborMap`].
+mod cbor_map;
+/// Signed payload with signatures as described in
+/// [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
+/// Specialized for Catalyst Signed Document (e.g. no support for unprotected headers).
+mod cose_sign;
+/// COSE protected header as per [RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#autoid-8),
+/// but with some fields omitted when unused by Catalyst and some fields specialized for
+/// it.
+mod protected_header;
+
+use std::convert::Infallible;
+
 use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
+use cbor_map::CborMap;
+use minicbor::{bytes::ByteVec, data::Tag};
 
 use crate::{
-    signature::Signature, CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata,
-    Signatures, PROBLEM_REPORT_CTX,
+    signature::Signature, CatalystSignedDocument, Content, ContentEncoding,
+    InnerCatalystSignedDocument, Metadata, PROBLEM_REPORT_CTX,
 };
 
-/// Catalyst Signed Document Builder.
-#[derive(Debug)]
-pub struct Builder(InnerCatalystSignedDocument);
+pub type EncodeError = minicbor::encode::Error<Infallible>;
 
-impl Default for Builder {
-    fn default() -> Self {
-        Self::new()
-    }
+/// Catalyst Signed Document Builder.
+#[derive(Debug, Default)]
+pub struct Builder {
+    metadata: CborMap,
+    content: Option<ByteVec>,
+    signatures: Vec<(CatalystId, ByteVec)>,
 }
 
 impl Builder {
     /// Start building a signed document
     #[must_use]
     pub fn new() -> Self {
-        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        Self(InnerCatalystSignedDocument {
-            report,
-            metadata: Metadata::default(),
-            content: Content::default(),
-            signatures: Signatures::default(),
-        })
+        Self::default()
     }
 
-    /// Set document metadata in JSON format
-    /// Collect problem report if some fields are missing.
+    /// Set document field metadata.
     ///
     /// # Errors
-    /// - Fails if it is invalid metadata fields JSON object.
-    pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
-        let metadata = serde_json::from_value(json)?;
-        self.0.metadata = Metadata::from_metadata_fields(metadata, &self.0.report);
+    /// - Fails if it the CBOR encoding fails.
+    pub fn add_metadata_field<C, K: minicbor::Encode<C>, V: minicbor::Encode<C>>(
+        mut self, ctx: &mut C, key: K, v: V,
+    ) -> Result<Self, EncodeError> {
+        // Ignoring pre-insert existence of the key.
+        let _: Option<_> = self.metadata.encode_and_insert(ctx, key, v)?;
         Ok(self)
     }
 
-    /// Set decoded (original) document content bytes
+    /// Set document content bytes (if content is encoded, it should be aligned with the
+    /// encoding algorithm from the `content-encoding` field.
     #[must_use]
-    pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
-        self.0.content = Content::from_decoded(content);
+    pub fn with_content(mut self, content: Vec<u8>) -> Self {
+        self.content = Some(content.into());
         self
     }
 

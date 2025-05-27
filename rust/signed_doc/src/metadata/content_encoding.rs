@@ -57,15 +57,13 @@ impl<C> minicbor::Encode<C> for ContentEncoding {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.str(self.as_ref())?;
-        Ok(())
+        e.str(self.as_ref())?.ok()
     }
 }
 
 impl<'b, C> minicbor::Decode<'b, C> for ContentEncoding {
     fn decode(d: &mut minicbor::Decoder<'b>, _: &mut C) -> Result<Self, minicbor::decode::Error> {
         let s = d.str()?;
-        let decoded = s.parse().map_err(|_| Self::decode_error(s))?;
-        Ok(decoded)
+        s.parse().map_err(|_| Self::decode_error(s))
     }
 }

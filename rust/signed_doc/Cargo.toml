@@ -18,7 +18,7 @@ anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
 serde_json = { version = "1.0.134", features = ["raw_value"] }
 coset = "0.3.8"
-minicbor = "0.25.1"
+minicbor = { version = "0.25.1", features = ["std"] }
 brotli = "7.0.0"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core", "pem"] }
 hex = "0.4.3"
