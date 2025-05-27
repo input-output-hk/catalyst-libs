@@ -98,7 +98,7 @@ mod tests {
 
     #[test]
     fn cbor_with_trailing_bytes_test() {
-        // Valid CBOR: {1: 2} but with trailing 0xff
+        // valid cbor: {1: 2} but with trailing 0xff
         let mut buf = Vec::new();
         let mut enc = minicbor::Encoder::new(&mut buf);
         enc.map(1).unwrap().u8(1).unwrap().u8(2).unwrap();
