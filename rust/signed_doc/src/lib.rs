@@ -45,6 +45,11 @@ struct InnerCatalystSignedDocument {
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
+
+    /// raw CBOR bytes of the `CatalystSignedDocument` object.
+    /// It is important to keep them to have a consistency what comes from the decoding
+    /// process, so we would return the same data again
+    raw_bytes: Option<Vec<u8>>,
 }
 
 /// Keep all the contents private.
@@ -191,21 +196,30 @@ impl InnerCatalystSignedDocument {
     /// # Errors
     /// Could fails if the `CatalystSignedDocument` object is not valid.
     fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        let protected_header =
-            Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
+        if let Some(raw_bytes) = self.raw_bytes.clone() {
+            let cose_sign = coset::CoseSign::from_tagged_slice(raw_bytes.as_slice())
+                .or_else(|_| coset::CoseSign::from_slice(raw_bytes.as_slice()))
+                .map_err(|e| {
+                    minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
+                })?;
+            Ok(cose_sign)
+        } else {
+            let protected_header =
+                Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
 
-        let content = self
-            .content
-            .encoded_bytes(self.metadata.content_encoding())?;
+            let content = self
+                .content
+                .encoded_bytes(self.metadata.content_encoding())?;
 
-        let mut builder = coset::CoseSignBuilder::new()
-            .protected(protected_header)
-            .payload(content);
+            let mut builder = coset::CoseSignBuilder::new()
+                .protected(protected_header)
+                .payload(content);
 
-        for signature in self.signatures.cose_signatures() {
-            builder = builder.add_signature(signature);
+            for signature in self.signatures.cose_signatures() {
+                builder = builder.add_signature(signature);
+            }
+            Ok(builder.build())
         }
-        Ok(builder.build())
     }
 }
 
@@ -245,6 +259,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             content,
             signatures,
             report,
+            raw_bytes: Some(cose_bytes.to_vec()),
         }
         .into())
     }
@@ -255,7 +270,6 @@ impl Encode<()> for CatalystSignedDocument {
         &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
         let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-
         let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
             minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
         })?;

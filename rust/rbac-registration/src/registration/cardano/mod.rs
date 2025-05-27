@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::{bail, Context};
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{StakeAddress, TransactionId};
+use cardano_blockchain_types::{Point, StakeAddress, TransactionId};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
@@ -86,7 +86,14 @@ impl RegistrationChain {
     /// Get the current transaction ID hash.
     #[must_use]
     pub fn current_tx_id_hash(&self) -> TransactionId {
-        self.inner.current_tx_id_hash
+        *self.inner.current_tx_id_hash.data()
+    }
+
+    /// Returns a point (slot and transaction index) of the latest transaction in the
+    /// registration chain.
+    #[must_use]
+    pub fn current_point(&self) -> &Point {
+        self.inner.current_tx_id_hash.point()
     }
 
     /// Get a list of purpose for this registration chain.
@@ -234,7 +241,7 @@ struct RegistrationChainInner {
     /// A Catalyst ID.
     catalyst_id: CatalystId,
     /// The current transaction ID hash (32 bytes)
-    current_tx_id_hash: TransactionId,
+    current_tx_id_hash: PointData<TransactionId>,
     /// List of purpose for this registration chain
     purpose: Vec<UuidV4>,
 
@@ -289,7 +296,7 @@ impl RegistrationChainInner {
         };
 
         let point_tx_idx = cip509.origin().clone();
-        let current_tx_id_hash = cip509.txn_hash();
+        let current_tx_id_hash = PointData::new(point_tx_idx.clone(), cip509.txn_hash());
         let validation_signature = cip509.validation_signature().cloned();
         let raw_aux_data = cip509.raw_aux_data().to_vec();
 
@@ -397,7 +404,7 @@ impl RegistrationChainInner {
         };
 
         // Previous transaction ID in the CIP509 should equal to the current transaction ID
-        if prv_tx_id == self.current_tx_id_hash {
+        if &prv_tx_id == self.current_tx_id_hash.data() {
             // Perform signature validation
             // This should be done before updating the signing key
             check_validation_signature(
@@ -409,7 +416,8 @@ impl RegistrationChainInner {
             )?;
 
             // If successful, update the chain current transaction ID hash
-            new_inner.current_tx_id_hash = cip509.txn_hash();
+            new_inner.current_tx_id_hash =
+                PointData::new(cip509.origin().clone(), cip509.txn_hash());
         } else {
             cip509.report().invalid_value(
                 "previous transaction ID",
