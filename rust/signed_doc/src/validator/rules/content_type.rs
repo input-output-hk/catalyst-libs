@@ -94,6 +94,32 @@ mod tests {
         assert!(cbor_rule.validate(&cbor_bytes).is_ok());
     }
 
+    #[test]
+    fn cbor_with_trailing_bytes_fails_test() {
+        // Valid CBOR: {1: 2} but with trailing 0xff
+        let mut buf = Vec::new();
+        let mut enc = minicbor::Encoder::new(&mut buf);
+        enc.map(1).unwrap().u8(1).unwrap().u8(2).unwrap();
+        buf.push(0xFF); // extra byte
+
+        let cbor_rule = ContentTypeRule {
+            exp: ContentType::Cbor,
+        };
+
+        assert!(cbor_rule.validate(&buf).is_err());
+    }
+
+    #[test]
+    fn invalid_cbor_fails_test() {
+        let invalid_bytes = &[0x1F, 0x00, 0x00];
+
+        let cbor_rule = ContentTypeRule {
+            exp: ContentType::Cbor,
+        };
+
+        assert!(cbor_rule.validate(invalid_bytes).is_err());
+    }
+
     #[tokio::test]
     async fn content_type_rule_test() {
         let content_type = ContentType::Json;
