@@ -154,6 +154,8 @@ async fn catalyst_signed_doc_parameters_aliases_test() {
     assert!(doc.problem_report().is_problematic());
 }
 
+type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
+
 struct TestCase {
     name: &'static str,
     bytes_gen: Box<dyn Fn() -> Vec<u8>>,
@@ -162,19 +164,20 @@ struct TestCase {
     can_decode: bool,
     // If the decoded doc is a valid `CatalystSignedDocument`, underlying problem report is empty.
     valid_doc: bool,
-    post_checks: Option<Box<dyn Fn(&CatalystSignedDocument) -> bool>>,
+    post_checks: Option<Box<PostCheck>>,
 }
 
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes",
-        bytes_gen: Box::new(|| vec![]),
+        bytes_gen: Box::new(Vec::new),
         can_decode: false,
         valid_doc: false,
         post_checks: None,
     }
 }
 
+#[allow(clippy::unwrap_used)]
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -238,7 +241,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                             ver: uuid_v7,
                         })
                     && (doc.doc_meta().section().unwrap() == &"$".parse::<Section>().unwrap())
-                    && (doc.doc_meta().collabs() == &["Alex1".to_string(), "Alex2".to_string()])
+                    && (doc.doc_meta().collabs() == ["Alex1".to_string(), "Alex2".to_string()])
                     && (doc.doc_content().decoded_bytes().unwrap()
                         == serde_json::to_vec(&serde_json::Value::Null).unwrap())
                     && (doc.kids() == vec![kid.clone()])
@@ -249,12 +252,12 @@ fn signed_doc_with_all_fields_case() -> TestCase {
 
 #[test]
 fn catalyst_signed_doc_decoding_test() {
-    let test_cases = vec![
+    let test_cases = [
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
     ];
 
-    for case in test_cases.iter() {
+    for case in test_cases {
         let bytes = case.bytes_gen.as_ref()();
         let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
         assert_eq!(doc_res.is_ok(), case.can_decode, "Case: [{}]", case.name);
