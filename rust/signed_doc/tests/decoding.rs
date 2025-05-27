@@ -175,7 +175,7 @@ fn decoding_empty_bytes_case() -> TestCase {
     }
 }
 
-fn signed_doc_with_all_fields() -> TestCase {
+fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
@@ -249,7 +249,7 @@ fn signed_doc_with_all_fields() -> TestCase {
 
 #[test]
 fn catalyst_signed_doc_decoding_test() {
-    let test_cases = vec![decoding_empty_bytes_case(), signed_doc_with_all_fields()];
+    let test_cases = vec![decoding_empty_bytes_case(), signed_doc_with_all_fields_case()];
 
     for case in test_cases.iter() {
         let bytes = case.bytes_gen.as_ref()();
