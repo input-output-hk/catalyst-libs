@@ -158,7 +158,7 @@ struct TestCase {
     name: &'static str,
     bytes_gen: Box<dyn Fn() -> Vec<u8>>,
     // If the provided bytes can be even decoded without error (valid COSE or not).
-    // If set to `false` all futher checks will not even happen.
+    // If set to `false` all further checks will not even happen.
     can_decode: bool,
     // If the decoded doc is a valid `CatalystSignedDocument`, underlying problem report is empty.
     valid_doc: bool,
@@ -274,7 +274,7 @@ fn catalyst_signed_doc_decoding_test() {
             assert_eq!(
                 bytes,
                 Vec::<u8>::try_from(doc).unwrap(),
-                "Case: [{}]. Asymetric encoding and decoding procedure",
+                "Case: [{}]. Asymmetric encoding and decoding procedure",
                 case.name
             );
         }
