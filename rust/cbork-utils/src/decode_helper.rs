@@ -10,13 +10,37 @@ use minicbor::{data::Tag, decode, Decoder};
 pub fn decode_helper<'a, T, C>(
     d: &mut Decoder<'a>, from: &str, context: &mut C,
 ) -> Result<T, decode::Error>
-where T: minicbor::Decode<'a, C> {
+where
+    T: minicbor::Decode<'a, C>,
+{
     T::decode(d, context).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode {:?} in {from}: {e}",
             std::any::type_name::<T>()
         ))
     })
+}
+
+/// Generic helper function for decoding different types.
+///
+/// # Errors
+///
+/// Error if the decoding fails.
+pub fn decode_to_end_helper<'a, T, C>(
+    d: &mut Decoder<'a>, from: &str, context: &mut C,
+) -> Result<T, decode::Error>
+where
+    T: minicbor::Decode<'a, C>,
+{
+    let decoded = decode_helper(d, from, context)?;
+    if d.position() == d.input().len() {
+        Ok(decoded)
+    } else {
+        Err(decode::Error::message(format!(
+            "Unused bytes remain in the input after decoding {:?} in {from}",
+            std::any::type_name::<T>()
+        )))
+    }
 }
 
 /// Helper function for decoding bytes.

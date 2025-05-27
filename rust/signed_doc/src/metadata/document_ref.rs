@@ -2,6 +2,8 @@
 
 use std::fmt::Display;
 
+use catalyst_types::uuid::CborContext;
+use cbork_utils::decode_helper;
 use coset::cbor::Value;
 
 use super::{utils::CborUuidV7, UuidV7};
@@ -18,6 +20,31 @@ pub struct DocumentRef {
 impl Display for DocumentRef {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "id: {}, ver: {}", self.id, self.ver)
+    }
+}
+
+impl minicbor::Encode<CborContext> for DocumentRef {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut CborContext,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        [self.id, self.ver].encode(e, ctx)
+    }
+}
+
+impl minicbor::Decode<'_, CborContext> for DocumentRef {
+    fn decode(
+        d: &mut minicbor::Decoder, ctx: &mut CborContext,
+    ) -> Result<Self, minicbor::decode::Error> {
+        let (id, ver): (UuidV7, UuidV7) =
+            decode_helper::decode_to_end_helper(d, "document reference", ctx).map_err(|err| {
+                err.with_message("Document Reference array of two UUIDs was expected")
+            })?;
+        if ver < id {
+            return Err(minicbor::decode::Error::message(
+                "Document Reference Version can never be smaller than its ID",
+            ));
+        }
+        Ok(Self { id, ver })
     }
 }
 
