@@ -821,7 +821,7 @@ mod tests {
         //   0x0a - the value 10 in hex
         // This is non-minimal because 10 could be encoded as just [0x0a]
         // according to RFC 8949 Section 4.2
-        let non_minimal_input = [0x18, 0x0a];
+        let non_minimal_input = [0x18, 0x0A];
 
         // First test phase: Decoding with validation disabled
         {
@@ -879,7 +879,7 @@ mod tests {
         //   0x18 - indicates the following byte contains an unsigned integer
         //   0x2a - the value 42 in hex
         // This is minimal encoding for 42 since it requires the full byte
-        let input = [0x18, 0x2a];
+        let input = [0x18, 0x2A];
 
         // Create decoder and test validation state transitions
         let mut decoder = CborDecoder::new_without_validation(&input);
