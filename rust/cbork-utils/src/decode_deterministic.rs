@@ -41,14 +41,16 @@ use minicbor::{data::Type, Decoder};
 /// 4. The keys in maps must be sorted as specified above
 /// 5. Floating-point values must use their shortest form that preserves value
 /// 6. Non-finite floating-point values are not permitted
-pub struct DeterministicDecoder<'b> {
+pub struct CborDecoder<'b> {
     decoder: Decoder<'b>,
+    validate: bool,
 }
 
 /// Error types that can occur during CBOR deterministic decoding validation.
 ///
 /// These errors indicate violations of the deterministic encoding rules
 /// as specified in RFC 8949 Section 4.2.
+#[derive(Debug)]
 pub enum DeterministicError {
     /// Indicates an integer is not encoded in its shortest possible representation,
     /// violating the core deterministic encoding requirement for minimal-length integers.
@@ -85,7 +87,7 @@ pub enum DeterministicError {
 /// - Lengths of arrays, maps, strings, and byte strings are encoded in their shortest
 ///   form
 /// - Keys in maps are in ascending byte-wise lexicographic order
-impl<'b> DeterministicDecoder<'b> {
+impl<'b> CborDecoder<'b> {
     /// Creates a new deterministic decoder for the given byte slice.
     ///
     /// # Arguments
@@ -94,7 +96,34 @@ impl<'b> DeterministicDecoder<'b> {
     pub fn new(bytes: &'b [u8]) -> Self {
         Self {
             decoder: Decoder::new(bytes),
+            validate: true,
         }
+    }
+
+    /// Creates a new `DeterministicDecoder` with validation disabled.
+    ///
+    /// # Arguments
+    ///
+    /// * `bytes` - The byte slice to decode
+    ///
+    /// # Returns
+    ///
+    /// Returns a new instance of `DeterministicDecoder` with validation turned off.
+    #[must_use]
+    pub fn new_without_validation(bytes: &'b [u8]) -> Self {
+        Self {
+            decoder: Decoder::new(bytes),
+            validate: false,
+        }
+    }
+
+    /// Sets whether validation should be performed during decoding.
+    ///
+    /// # Arguments
+    ///
+    /// * `validate` - If `true`, enables validation; if `false`, disables validation
+    pub fn set_validation(&mut self, validate: bool) {
+        self.validate = validate;
     }
 
     /// Validates the next CBOR item according to RFC 8949 § 4.2 deterministic encoding
@@ -141,27 +170,42 @@ impl<'b> DeterministicDecoder<'b> {
     /// Map key ordering:
     /// - ✓ Keys: [0x01, 0x0203, 0x030405]
     /// - ✗ Keys: [0x0203, 0x01, 0x030405] (incorrect order)
-    pub fn validate_next(&mut self) -> Result<Option<Type>, DeterministicError> {
-        if let Ok(datatype) = self.decoder.datatype() {
+    pub fn decode(&mut self) -> Result<Option<Type>, DeterministicError> {
+        let datatype = self.decoder.datatype()?;
+
+        if self.validate {
             match datatype {
-                Type::U8
-                | Type::U16
-                | Type::U32
-                | Type::U64
-                | Type::I8
+                Type::I8
                 | Type::I16
                 | Type::I32
-                | Type::I64 => self.validate_integer(datatype),
-                Type::Array => self.validate_array(datatype),
-                Type::String | Type::Bytes => self.validate_string(datatype),
-                Type::Map => self.validate_map(datatype),
+                | Type::I64
+                | Type::U8
+                | Type::U16
+                | Type::U32
+                | Type::U64 => {
+                    self.validate_integer(datatype)?;
+                    Ok(Some(datatype))
+                },
+                Type::Array => {
+                    self.validate_array(datatype)?;
+                    Ok(Some(datatype))
+                },
+                Type::String => {
+                    self.validate_string(datatype)?;
+                    Ok(Some(datatype))
+                },
+                Type::Map => {
+                    self.validate_map(datatype)?;
+                    Ok(Some(datatype))
+                },
                 _ => {
                     self.decoder.skip()?;
                     Ok(Some(datatype))
                 },
             }
         } else {
-            Ok(None)
+            self.decoder.skip()?;
+            Ok(Some(datatype))
         }
     }
 
@@ -469,7 +513,7 @@ impl<'b> DeterministicDecoder<'b> {
         }
 
         for _ in 0..size.unwrap_or(0) {
-            match self.validate_next()? {
+            match self.decode()? {
                 Some(_) => (),
                 None => break,
             }
@@ -665,7 +709,7 @@ impl<'b> DeterministicDecoder<'b> {
 
         for _ in 0..size.unwrap_or(0) {
             let key_start = self.decoder.position();
-            self.validate_next()?;
+            self.decode()?;
             let key_end = self.decoder.position();
             let current_key = self.decoder.input()[key_start..key_end].to_vec();
 
@@ -680,7 +724,7 @@ impl<'b> DeterministicDecoder<'b> {
             }
             keys.push(current_key);
 
-            self.validate_next()?;
+            self.decode()?;
         }
 
         Ok(Some(datatype))
@@ -770,10 +814,113 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_decoder_without_validation() {
+        // Create a simple CBOR integer (10) using non-minimal encoding
+        // [0x18, 0x0a] represents:
+        //   0x18 - indicates the following byte contains an unsigned integer
+        //   0x0a - the value 10 in hex
+        // This is non-minimal because 10 could be encoded as just [0x0a]
+        // according to RFC 8949 Section 4.2
+        let non_minimal_input = [0x18, 0x0a];
+
+        // First test phase: Decoding with validation disabled
+        {
+            // Create new decoder with validation off (default state)
+            let mut decoder = CborDecoder::new_without_validation(&non_minimal_input);
+
+            // Verify the initial validation state is disabled
+            assert!(
+                !decoder.validate,
+                "Validation should be disabled by default"
+            );
+
+            // Attempt to decode - should succeed because validation is off
+            // Even though encoding is non-minimal, decoder should accept it
+            let result = decoder.decode();
+            assert!(
+                result.is_ok(),
+                "Decoding should succeed with validation disabled"
+            );
+            assert!(
+                result.unwrap().is_some(),
+                "Should return Some value when data is present"
+            );
+        }
+
+        // Second test phase: Decoding with validation enabled
+        {
+            // Create new decoder and enable validation
+            let mut decoder = CborDecoder::new_without_validation(&non_minimal_input);
+
+            // Enable validation explicitly
+            decoder.set_validation(true);
+            assert!(
+                decoder.validate,
+                "Validation should be enabled after set_validation(true)"
+            );
+
+            // Attempt to decode - should fail because encoding is non-minimal
+            // RFC 8949 Section 4.2 requires minimal encoding for deterministic CBOR
+            let result = decoder.decode();
+            assert!(
+                result.is_err(),
+                "Decoding should fail with non-minimal encoding when validation is enabled"
+            );
+
+            // Note: The specific error type could be checked here if the implementation
+            // provides distinct error types for validation failures
+        }
+    }
+
+    #[test]
+    fn test_validation_toggle() {
+        // Create CBOR data with proper minimal encoding for integer 42
+        // [0x18, 0x2a] represents:
+        //   0x18 - indicates the following byte contains an unsigned integer
+        //   0x2a - the value 42 in hex
+        // This is minimal encoding for 42 since it requires the full byte
+        let input = [0x18, 0x2a];
+
+        // Create decoder and test validation state transitions
+        let mut decoder = CborDecoder::new_without_validation(&input);
+
+        // Check initial validation state
+        assert!(
+            !decoder.validate,
+            "Initial validation state should be disabled"
+        );
+
+        // Test validation enable
+        decoder.set_validation(true);
+        assert!(
+            decoder.validate,
+            "Validation should be enabled after explicit enable"
+        );
+
+        // Test validation disable
+        decoder.set_validation(false);
+        assert!(
+            !decoder.validate,
+            "Validation should be disabled after explicit disable"
+        );
+
+        // Verify decoding still works after toggling validation
+        let result = decoder.decode();
+        assert!(
+            result.is_ok(),
+            "Decoding should succeed after validation toggles"
+        );
+        assert!(
+            result.unwrap().is_some(),
+            "Should return Some value for valid input"
+        );
+    }
+
+    #[test]
     fn test_non_minimal_direct() {
         let bytes = &[0x18, 0x05]; // non-minimal encoding of 5
-        let mut dec = DeterministicDecoder::new(bytes);
-        let result = dec.validate_next();
+        let mut dec = CborDecoder::new(bytes);
+        let result = dec.decode();
         assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
     }
 
@@ -784,8 +931,8 @@ mod tests {
             0x18, 0x05, // non-minimal encoding of 5
             0x02, // valid encoding of 2
         ];
-        let mut dec = DeterministicDecoder::new(bytes);
-        let result = dec.validate_next();
+        let mut dec = CborDecoder::new(bytes);
+        let result = dec.decode();
         assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
     }
 
@@ -796,8 +943,8 @@ mod tests {
             0x61, 0x61, // "a"
             0x18, 0x05, // non-minimal encoding of 5
         ];
-        let mut dec = DeterministicDecoder::new(bytes);
-        let result = dec.validate_next();
+        let mut dec = CborDecoder::new(bytes);
+        let result = dec.decode();
         assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
     }
 
@@ -810,8 +957,8 @@ mod tests {
             0x18, 0x05, // non-minimal encoding of 5
             0x02, // valid encoding of 2
         ];
-        let mut dec = DeterministicDecoder::new(bytes);
-        let result = dec.validate_next();
+        let mut dec = CborDecoder::new(bytes);
+        let result = dec.decode();
         assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
     }
 
@@ -825,8 +972,8 @@ mod tests {
             let mut enc = minicbor::Encoder::new(&mut bytes);
             enc.encode(value).unwrap();
 
-            let mut dec = DeterministicDecoder::new(&bytes);
-            assert!(dec.validate_next().is_ok());
+            let mut dec = CborDecoder::new(&bytes);
+            assert!(dec.decode().is_ok());
         }
     }
 
@@ -845,8 +992,8 @@ mod tests {
             .encode(255u8)
             .unwrap(); // valid minimal encoding
 
-        let mut dec = DeterministicDecoder::new(&bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(&bytes);
+        assert!(dec.decode().is_ok());
     }
 
     #[test]
@@ -859,8 +1006,8 @@ mod tests {
             0x62, 0x62, 0x62, // "bb"
             0x02, // 2
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Incorrectly ordered keys
         let invalid_bytes = &[
@@ -870,9 +1017,9 @@ mod tests {
             0x61, 0x61, // "a"
             0x01, // 1
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
     }
@@ -885,15 +1032,15 @@ mod tests {
 
         // Encode as float64 since that's what's available
         enc.f64(1.5).unwrap();
-        let mut dec = DeterministicDecoder::new(&bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(&bytes);
+        assert!(dec.decode().is_ok());
 
         // Test encoding of integer-valued float
         let mut bytes = vec![];
         let mut enc = minicbor::Encoder::new(&mut bytes);
         enc.f64(42.0).unwrap();
-        let mut dec = DeterministicDecoder::new(&bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(&bytes);
+        assert!(dec.decode().is_ok());
     }
 
     #[test]
@@ -906,8 +1053,8 @@ mod tests {
             0x62, 0x78, 0x79, // "xy"
             0x02, // 2
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Invalid order - longer key before shorter key
         let invalid_bytes = &[
@@ -917,9 +1064,9 @@ mod tests {
             0x61, 0x78, // "x"
             0x01, // 1
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
     }
@@ -934,8 +1081,8 @@ mod tests {
             0x62, 0x62, 0x62, // "bb"
             0x02, // 2
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Invalid lexicographic order
         let invalid_bytes = &[
@@ -945,9 +1092,9 @@ mod tests {
             0x62, 0x61, 0x61, // "aa"
             0x01, // 1
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
     }
@@ -960,8 +1107,8 @@ mod tests {
             0x01, // 1
             0x02, // 2
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Non-minimal array length encoding
         let invalid_bytes = &[
@@ -969,9 +1116,9 @@ mod tests {
             0x01, // 1
             0x02, // 2
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::NonMinimalInt)
         ));
     }
@@ -993,8 +1140,8 @@ mod tests {
             0x62, // text string of length 2 (minimal encoding)
             0x61, 0x62, // "ab"
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Test case with invalid non-minimal encoding:
         // 0x78 = major type 3 with additional info 24 (1-byte length follows)
@@ -1004,9 +1151,9 @@ mod tests {
             0x78, 0x02, // text string of length 2 (non-minimal encoding)
             0x61, 0x62, // "ab"
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::NonMinimalInt)
         ));
 
@@ -1026,8 +1173,8 @@ mod tests {
             0x62, 0x78, 0x79, // "xy"
             0x02, // 2
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Invalid ordering in inner map
         let invalid_bytes = &[
@@ -1039,9 +1186,9 @@ mod tests {
             0x61, 0x78, // "x"
             0x01, // 1
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
     }
@@ -1064,16 +1211,16 @@ mod tests {
         ];
 
         for (value, encoding) in test_cases {
-            let mut dec = DeterministicDecoder::new(&encoding);
-            assert!(dec.validate_next().is_ok());
+            let mut dec = CborDecoder::new(&encoding);
+            assert!(dec.decode().is_ok());
 
             // Test non-minimal encoding violations
             if value <= 23 {
                 // RFC 8949 4.2.1: Values 0 through 23 MUST be expressed in a single byte
                 let non_minimal = vec![0x18, value as u8];
-                let mut dec = DeterministicDecoder::new(&non_minimal);
+                let mut dec = CborDecoder::new(&non_minimal);
                 assert!(matches!(
-                    dec.validate_next(),
+                    dec.decode(),
                     Err(DeterministicError::NonMinimalInt)
                 ));
             }
@@ -1096,8 +1243,8 @@ mod tests {
         ];
 
         for (_value, encoding) in test_cases {
-            let mut dec = DeterministicDecoder::new(&encoding);
-            assert!(dec.validate_next().is_ok());
+            let mut dec = CborDecoder::new(&encoding);
+            assert!(dec.decode().is_ok());
         }
     }
 
@@ -1115,8 +1262,9 @@ mod tests {
             0x03, 0x63, 0x61, 0x61, 0x61, // "aaa" (length 3)
             0x04,
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+
+        assert!(dec.decode().is_ok());
 
         // Test violation of length-first rule
         let invalid_bytes = &[
@@ -1125,9 +1273,9 @@ mod tests {
             0x01, 0x61, 0x61, // "a" (shorter key second - invalid)
             0x02,
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
     }
@@ -1151,9 +1299,9 @@ mod tests {
         ];
 
         for encoding in valid_test_cases {
-            let mut dec = DeterministicDecoder::new(&encoding);
+            let mut dec = CborDecoder::new(&encoding);
             assert!(
-                dec.validate_next().is_ok(),
+                dec.decode().is_ok(),
                 "Valid float encoding should be accepted"
             );
         }
@@ -1193,8 +1341,8 @@ mod tests {
             0x02, 0x61, 0x7A, // "z" (ASCII 122)
             0x03,
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Test UTF-8 ordering (raw bytes comparison)
         // Note: UTF-8 comparison is done byte by byte, not by Unicode code points
@@ -1204,8 +1352,8 @@ mod tests {
             0x01, 0x62, 0xC3, 0xB6, // "ö" (UTF-8: C3 B6)
             0x02,
         ];
-        let mut dec = DeterministicDecoder::new(valid_utf8_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_utf8_bytes);
+        assert!(dec.decode().is_ok());
     }
 
     #[test]
@@ -1217,9 +1365,9 @@ mod tests {
             0x01, 0x61, 0x61, // "a" (ASCII 97)
             0x02,
         ];
-        let mut dec = DeterministicDecoder::new(invalid_order_bytes);
+        let mut dec = CborDecoder::new(invalid_order_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
 
@@ -1230,9 +1378,9 @@ mod tests {
             0x01, 0x61, 0x61, // "a" (ASCII 97)
             0x02,
         ];
-        let mut dec = DeterministicDecoder::new(duplicate_keys_bytes);
+        let mut dec = CborDecoder::new(duplicate_keys_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::DuplicateMapKey)
         ));
 
@@ -1243,9 +1391,9 @@ mod tests {
             0x01, 0x62, 0xC3, 0xA4, // "ä" (UTF-8: C3 A4)
             0x02,
         ];
-        let mut dec = DeterministicDecoder::new(invalid_utf8_order_bytes);
+        let mut dec = CborDecoder::new(invalid_utf8_order_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::UnorderedMapKeys)
         ));
     }
@@ -1262,8 +1410,8 @@ mod tests {
             0x82, // array of 2 elements
             0x01, 0x02, 0x62, 0x62, 0x62, // "bb"
         ];
-        let mut dec = DeterministicDecoder::new(valid_bytes);
-        assert!(dec.validate_next().is_ok());
+        let mut dec = CborDecoder::new(valid_bytes);
+        assert!(dec.decode().is_ok());
 
         // Test violation of minimal length encoding in nested structure
         let invalid_bytes = &[
@@ -1271,9 +1419,9 @@ mod tests {
             0x02, // non-minimal array length encoding (using 1 byte when direct encoding possible)
             0x01, 0x02, 0x62, 0x62, 0x62,
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::NonMinimalInt)
         ));
     }
@@ -1287,9 +1435,9 @@ mod tests {
             0x01, 0x61, 0x61, // "a" (duplicate key)
             0x02,
         ];
-        let mut dec = DeterministicDecoder::new(invalid_bytes);
+        let mut dec = CborDecoder::new(invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::DuplicateMapKey)
         ));
     }
@@ -1317,15 +1465,15 @@ mod tests {
         ];
 
         for (_len, encoding) in test_cases {
-            let mut dec = DeterministicDecoder::new(&encoding);
-            assert!(dec.validate_next().is_ok());
+            let mut dec = CborDecoder::new(&encoding);
+            assert!(dec.decode().is_ok());
         }
 
         // Test non-minimal length encoding
         let invalid_bytes = vec![0x98, 0x01, 0x01]; // Using 1-byte length for single item
-        let mut dec = DeterministicDecoder::new(&invalid_bytes);
+        let mut dec = CborDecoder::new(&invalid_bytes);
         assert!(matches!(
-            dec.validate_next(),
+            dec.decode(),
             Err(DeterministicError::NonMinimalInt)
         ));
     }
