@@ -190,11 +190,11 @@ impl InnerCatalystSignedDocument {
         let protected_header =
             Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
 
-        let content = sself
+        let content = self
             .content
             .encoded_bytes(self.metadata.content_encoding())?;
 
-        let mut builder = coet::CoseSignBuilder::new()
+        let mut builder = coset::CoseSignBuilder::new()
             .protected(protected_header)
             .payload(content);
 
