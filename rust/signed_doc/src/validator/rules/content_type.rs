@@ -50,7 +50,7 @@ impl ContentTypeRule {
     }
 
     /// Validates the provided `content` bytes to be a defined `ContentType`.
-    pub(crate) fn validate(&self, content: &[u8]) -> anyhow::Result<()> {
+    fn validate(&self, content: &[u8]) -> anyhow::Result<()> {
         match self.exp {
             ContentType::Json => {
                 if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
