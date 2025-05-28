@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 
 mod content_encoding;
 mod content_type;
+mod doc_type;
 mod document_ref;
 mod extra_fields;
 mod section;
@@ -14,7 +15,8 @@ use catalyst_types::{
 };
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::cbor::Value;
+use coset::{cbor::Value, iana::CoapContentFormat};
+pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
 pub use section::Section;
