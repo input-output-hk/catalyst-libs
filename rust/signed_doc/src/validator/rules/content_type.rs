@@ -136,6 +136,21 @@ mod tests {
             .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(true)));
+
+        // without content
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
+            .build();
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
+
+        // with empty content
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(vec![])
+            .build();
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
     }
 
     #[tokio::test]
@@ -151,6 +166,14 @@ mod tests {
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(true)));
+
+        // with cbor bytes
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
+            .build();
+        assert!(matches!(json_rule.check(&doc).await, Ok(false)));
 
         // without content
         let doc = Builder::new()
