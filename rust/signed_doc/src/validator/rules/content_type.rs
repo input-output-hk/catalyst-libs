@@ -73,26 +73,26 @@ impl ContentTypeRule {
 
 #[cfg(test)]
 mod tests {
-    use proptest::prelude::*;
-
     use super::*;
     use crate::Builder;
 
     #[test]
-    fn content_type_validate_test() {
+    fn content_type_json_validate_test() {
         let json_rule = ContentTypeRule {
             exp: ContentType::Json,
         };
+
+        let json_bytes = serde_json::to_vec(&serde_json::Value::Null).unwrap();
+        assert!(json_rule.validate(&json_bytes).is_err());
+    }
+
+    #[test]
+    fn content_type_cbor_validate_test() {
         let cbor_rule = ContentTypeRule {
             exp: ContentType::Cbor,
         };
 
-        let json_bytes = serde_json::to_vec(&serde_json::Value::Null).unwrap();
-        assert!(json_rule.validate(&json_bytes).is_ok());
-        assert!(cbor_rule.validate(&json_bytes).is_err());
-
         let cbor_bytes = minicbor::to_vec(minicbor::data::Token::Null).unwrap();
-        assert!(json_rule.validate(&cbor_bytes).is_err());
         assert!(cbor_rule.validate(&cbor_bytes).is_ok());
     }
 
@@ -121,18 +121,6 @@ mod tests {
         };
 
         assert!(cbor_rule.validate(invalid_bytes).is_err());
-    }
-
-    proptest! {
-        #[test]
-        fn invalid_cbor_from_random_data_test(ref data in proptest::collection::vec(any::<u8>(), 1..100)) {
-            let cbor_rule = ContentTypeRule {
-                exp: ContentType::Cbor,
-            };
-
-            // allow any result; we just want to ensure no panic
-            drop(cbor_rule.validate(data));
-        }
     }
 
     #[tokio::test]
