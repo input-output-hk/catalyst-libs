@@ -22,9 +22,11 @@ use rules::{
 
 use crate::{
     doc_types::{
-        CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE,
-        PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOCUMENT_UUID_TYPE, PROPOSAL_DOC_TYPE,
-        PROPOSAL_TEMPLATE_UUID_TYPE,
+        deprecated::{
+            CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE,
+        },
+        COMMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOC_TYPE,
+        PROPOSAL_UUID_TYPE,
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
@@ -88,11 +90,11 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             exp_template_type: expect_doc_type(COMMENT_TEMPLATE_UUID_TYPE),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_doc_type(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: expect_doc_type(COMMENT_DOCUMENT_UUID_TYPE),
+            exp_reply_type: expect_doc_type(COMMENT_UUID_TYPE),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },
@@ -126,7 +128,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             optional: true,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_doc_type(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,

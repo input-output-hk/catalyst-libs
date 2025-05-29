@@ -1,8 +1,6 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::{
-    doc_types::PROPOSAL_DOCUMENT_UUID_TYPE, providers::tests::TestVerifyingKeyProvider, *,
-};
+use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::TaggedCborSerializable;
@@ -14,7 +12,7 @@ mod common;
 fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
     catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
     catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
-        Some(PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
+        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
         None,
     ));
 }
@@ -43,7 +41,7 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_jso
 async fn catalyst_signed_doc_parameters_aliases_test() {
     catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
     catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
-        Some(PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
+        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
         None,
     ))
     .await;
