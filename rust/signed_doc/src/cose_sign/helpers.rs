@@ -4,18 +4,17 @@ use minicbor::{
     Encode as _,
 };
 
-use super::EncodeError;
+use super::VecEncodeError;
 
-/// Make the header using the provided cbor-encoded key-value pairs representing
-/// fields, conforming to the header fields specification
-/// as per [RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#autoid-8).
-pub fn make_header<'a, I>(encoded_fields: I) -> Vec<u8>
+/// Encode headers using the provided cbor-encoded key-value pairs,
+/// conforming to the [RFC 8152 specification](https://datatracker.ietf.org/doc/html/rfc8152#autoid-8).
+pub fn encode_headers<'a, I>(iter: I) -> Vec<u8>
 where
     I: IntoIterator<Item = (&'a [u8], &'a [u8]), IntoIter: ExactSizeIterator>,
 {
     let mut encoder = minicbor::Encoder::new(vec![]);
 
-    let iter = encoded_fields.into_iter();
+    let iter = iter.into_iter();
     let map_len = u64::try_from(iter.len()).unwrap_or(u64::MAX);
     encoder.map(map_len);
 
@@ -28,12 +27,12 @@ where
     encoder.into_writer()
 }
 
-/// Make the protected header for the `Cose_signature`, conforming to the header fields specification.
+/// Encode a single protected `kid` header for the COSE Signature.
 ///
 /// # Errors
 ///
 /// - If encoding of the `kid` fails.
-pub fn make_signature_header(kid: &[u8]) -> Result<Vec<u8>, EncodeError> {
+pub fn encoed_kid_header(kid: &[u8]) -> Result<Vec<u8>, VecEncodeError> {
     /// The KID label as per [RFC 8152 3.1 section](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
     pub const KID_LABEL: u8 = 4;
 
@@ -43,39 +42,38 @@ pub fn make_signature_header(kid: &[u8]) -> Result<Vec<u8>, EncodeError> {
     Ok(encoder.into_writer())
 }
 
-/// Create a binary blob that will be signed and construct the to-be-signed data from it
-/// in-place. Specialized for Catalyst Signed Document (e.g. no support for unprotected headers).
+/// Create a binary blob that will be signed. No support for unprotected headers.
 ///
 /// Described in [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
-pub fn make_tbs_data(
-    metadata_header: &[u8], signature_header: &[u8], content: Option<&[u8]>,
-) -> Result<Vec<u8>, EncodeError> {
+pub fn encode_tbs_data(
+    protected_headers: &[u8], signature_header: &[u8], content: Option<&[u8]>,
+) -> Result<Vec<u8>, VecEncodeError> {
     /// The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
     const SIGNATURE_CONTEXT: &str = "Signature";
 
     minicbor::to_vec((
         SIGNATURE_CONTEXT,
-        <&ByteSlice>::from(metadata_header),
+        <&ByteSlice>::from(protected_headers),
         <&ByteSlice>::from(signature_header),
         ByteArray::from([]),                        // no aad.
         <&ByteSlice>::from(content.unwrap_or(&[])), // allowing no payload (i.e. no content).
     ))
 }
 
-/// Make `Cose_signature`.
+/// Encode COSE signature.
 ///
 /// Signature bytes should represent a cryptographic signature.
-pub fn make_cose_signature(
+pub fn encode_cose_signature(
     protected_header: &[u8], signature_bytes: &[u8],
-) -> Result<Vec<u8>, EncodeError> {
+) -> Result<Vec<u8>, VecEncodeError> {
     minicbor::to_vec([
         <&ByteSlice>::from(protected_header),
         <&ByteSlice>::from(signature_bytes),
     ])
 }
 
-/// Collect an array from an iterator of pre-encoded `Cose_signature` items.
-fn collect_cose_signature_array<S>(signatures: S) -> Result<Vec<u8>, EncodeError>
+/// Encode an array from an iterator of pre-encoded COSE Signature items.
+fn encode_cose_signature_array<S>(signatures: S) -> Result<Vec<u8>, VecEncodeError>
 where
     S: IntoIterator<Item: AsRef<[u8]>, IntoIter: ExactSizeIterator>,
 {
@@ -89,7 +87,7 @@ where
     Ok(encoder.into_writer())
 }
 
-/// Make cbor-encoded tagged `Cose_Sign`.
+/// Make cbor-encoded tagged [RFC9052-CoseSign](https://datatracker.ietf.org/doc/html/rfc9052).
 pub fn encode_cose_sign<W: minicbor::encode::Write, S>(
     e: &mut minicbor::encode::Encoder<W>, protected: &[u8], payload: Option<&[u8]>, signatures: S,
 ) -> Result<(), minicbor::encode::Error<W::Error>>
@@ -103,7 +101,7 @@ where
         <&ByteSlice>::from(protected),
         ByteArray::from([]),             // unprotected.
         payload.map(<&ByteSlice>::from), // allowing `NULL`.
-        collect_cose_signature_array(signatures).map_err(minicbor::encode::Error::custom)?,
+        encode_cose_signature_array(signatures).map_err(minicbor::encode::Error::custom)?,
     ));
     tagged_array.encode(e, &mut ())
 }

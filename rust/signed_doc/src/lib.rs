@@ -1,6 +1,6 @@
 //! Catalyst documents signing crate
 
-mod builder;
+mod cose_sign;
 mod content;
 mod decode_context;
 pub mod doc_types;
@@ -16,7 +16,7 @@ use std::{
 };
 
 use anyhow::Context;
-pub use builder::CoseSignBuilder;
+pub use cose_sign::CoseSignBuilder;
 pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},

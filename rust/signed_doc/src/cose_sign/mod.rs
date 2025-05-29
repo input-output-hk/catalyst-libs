@@ -1,22 +1,20 @@
 //! Catalyst Signed Document Builder.
 
-/// An implementation of [`CborMap`].
-mod cbor_map;
-/// COSE format utils.
-mod cose;
+/// Encoding helpers.
+mod helpers;
 
 use std::{convert::Infallible, fmt::Debug, sync::Arc};
 
 use catalyst_types::catalyst_id::CatalystId;
 
-use cose::{
-    encode_cose_sign, make_cose_signature, make_header, make_signature_header, make_tbs_data,
+use helpers::{
+    encode_cose_sign, encode_cose_signature, encode_headers, encode_tbs_data, encoed_kid_header,
 };
 use indexmap::IndexMap;
 
-pub type EncodeError = minicbor::encode::Error<Infallible>;
+pub type VecEncodeError = minicbor::encode::Error<Infallible>;
 
-/// [RFC9052-CoseSign] builder.
+/// [RFC9052-CoseSign] builder without unprotected fields.
 ///
 /// [RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
 #[derive(Debug, Default)]
@@ -28,7 +26,7 @@ pub struct CoseSignBuilder {
 }
 
 impl CoseSignBuilder {
-    /// Start building a signed document.
+    /// Start building a [`CoseSign`].
     #[must_use]
     pub fn new() -> Self {
         Self::default()
@@ -45,7 +43,7 @@ impl CoseSignBuilder {
         self
     }
 
-    /// Add a field to the protected header.
+    /// Add a protected header.
     ///
     /// If the key is already present, the value is updated.
     ///
@@ -53,9 +51,9 @@ impl CoseSignBuilder {
     ///
     /// - Fails if it the CBOR encoding fails.
     /// - Fails if the key is already present.
-    pub fn add_protected_field<C, K, V>(
+    pub fn add_protected_header<C, K, V>(
         &mut self, ctx: &mut C, key: K, v: V,
-    ) -> Result<&mut Self, EncodeError>
+    ) -> Result<&mut Self, VecEncodeError>
     where
         K: minicbor::Encode<C> + Debug,
         V: minicbor::Encode<C>,
@@ -65,8 +63,8 @@ impl CoseSignBuilder {
             minicbor::to_vec_with(v, ctx)?,
         );
         let indexmap::map::Entry::Vacant(entry) = self.protected.entry(encoded_key) else {
-            return Err(EncodeError::message(format!(
-                "Trying to build a CoseSign with duplicate metadata keys (key: {key:?})"
+            return Err(VecEncodeError::message(format!(
+                "Trying to build a CoseSign with duplicate protected keys (key: {key:?})"
             )));
         };
         entry.insert(encoded_v);
@@ -81,10 +79,10 @@ impl CoseSignBuilder {
             .protected
             .iter()
             .map(|(key, v)| (key.as_slice(), v.as_slice()));
-        make_header(metadata_fields)
+        encode_headers(metadata_fields)
     }
 
-    fn signer(&self) -> CoseSign {
+    fn to_cose_sign(&self) -> CoseSign {
         let protected = self.encode_protected_header();
         CoseSign {
             protected,
@@ -100,13 +98,11 @@ impl CoseSignBuilder {
     ///
     /// # Errors
     ///
-    /// Fails if a `CatalystSignedDocument` cannot be created due to missing metadata or
-    /// content, due to malformed data, or when the signed document cannot be
-    /// converted into `coset::CoseSign`.
+    /// - If CBOR encoding of the [`CatalystId`] fails.
     pub fn add_signature<F: FnOnce(Vec<u8>) -> Vec<u8>>(
         &self, kid: CatalystId, sign_fn: F,
-    ) -> Result<CoseSign, EncodeError> {
-        let mut signer = self.signer();
+    ) -> Result<CoseSign, VecEncodeError> {
+        let mut signer = self.to_cose_sign();
         signer.add_signature(kid, sign_fn)?;
         Ok(signer)
     }
@@ -123,6 +119,11 @@ pub struct CoseSign {
 }
 
 impl CoseSign {
+    /// Start building a [`CoseSign`]. Shortcut for the [`CoseSignBuilder::new`].
+    pub fn builder() -> CoseSignBuilder {
+        CoseSignBuilder::new()
+    }
+
     /// Add another signature to the [`CoseSign`].
     ///
     /// # Errors
@@ -130,15 +131,16 @@ impl CoseSign {
     /// - If CBOR encoding of the [`CatalystId`] fails.
     pub fn add_signature<F: FnOnce(Vec<u8>) -> Vec<u8>>(
         &mut self, kid: CatalystId, sign_fn: F,
-    ) -> Result<&mut Self, EncodeError> {
+    ) -> Result<&mut Self, VecEncodeError> {
         let kid_str = kid.to_string().into_bytes();
-        let signature_header = make_signature_header(kid_str.as_slice())?;
+        let signature_header = encoed_kid_header(kid_str.as_slice())?;
 
-        let tbs_data = make_tbs_data(&self.protected, &signature_header, self.payload.as_deref())?;
+        let tbs_data =
+            encode_tbs_data(&self.protected, &signature_header, self.payload.as_deref())?;
         let signature_bytes = sign_fn(tbs_data);
 
         // This shouldn't fail.
-        let signature = make_cose_signature(&signature_header, &signature_bytes)?;
+        let signature = encode_cose_signature(&signature_header, &signature_bytes)?;
         self.signatures.push(signature);
 
         Ok(self)
