@@ -53,7 +53,7 @@ impl ContentTypeRule {
     fn validate(&self, content: &[u8]) -> anyhow::Result<()> {
         match self.exp {
             ContentType::Json => {
-                if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
+                if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content) {
                     anyhow::bail!("Invalid {} content: {e}", self.exp)
                 }
             },
