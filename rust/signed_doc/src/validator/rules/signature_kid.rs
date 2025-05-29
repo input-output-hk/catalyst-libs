@@ -47,7 +47,7 @@ mod tests {
     use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
-    use crate::{CoseSignBuilder, ContentType};
+    use crate::{ContentType, CoseSignBuilder};
 
     #[tokio::test]
     async fn signature_kid_rule_test() {

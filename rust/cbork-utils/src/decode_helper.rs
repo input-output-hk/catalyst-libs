@@ -10,9 +10,7 @@ use minicbor::{data::Tag, decode, Decoder};
 pub fn decode_helper<'a, T, C>(
     d: &mut Decoder<'a>, from: &str, context: &mut C,
 ) -> Result<T, decode::Error>
-where
-    T: minicbor::Decode<'a, C>,
-{
+where T: minicbor::Decode<'a, C> {
     T::decode(d, context).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode {:?} in {from}: {e}",

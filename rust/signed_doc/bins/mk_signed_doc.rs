@@ -9,7 +9,7 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_signed_doc::{CoseSignBuilder, CatalystId, CatalystSignedDocument};
+use catalyst_signed_doc::{CatalystId, CatalystSignedDocument, CoseSignBuilder};
 use clap::Parser;
 
 fn main() {

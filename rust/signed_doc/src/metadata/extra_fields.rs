@@ -4,12 +4,11 @@ use catalyst_types::problem_report::ProblemReport;
 use coset::{Label, ProtectedHeader};
 use serde::{Deserialize, Serialize};
 
-use crate::cose_sign::VecEncodeError;
-
 use super::{
     cose_protected_header_find, utils::decode_document_field_from_protected_header, DocumentRef,
     Section,
 };
+use crate::cose_sign::VecEncodeError;
 
 /// `ref` field COSE key value
 const REF_KEY: &str = "ref";
@@ -199,7 +198,8 @@ impl ExtraFields {
     ///
     /// # Errors
     ///
-    /// - If encoding of one of the fields fails, [`crate::CoseSignBuilder`] becomes corrupt and an error is returned
+    /// - If encoding of one of the fields fails, [`crate::CoseSignBuilder`] becomes
+    ///   corrupt and an error is returned
     #[allow(const_item_mutation, reason = "expected")]
     pub(crate) fn fill_cose_sign_builder<'a>(
         &self, uuid_ctx: &mut catalyst_types::uuid::CborContext,

@@ -6,7 +6,6 @@ mod helpers;
 use std::{convert::Infallible, fmt::Debug, sync::Arc};
 
 use catalyst_types::catalyst_id::CatalystId;
-
 use helpers::{
     encode_cose_sign, encode_cose_signature, encode_headers, encode_tbs_data, encoed_kid_header,
 };
@@ -36,9 +35,7 @@ impl CoseSignBuilder {
     /// encoding algorithm from the `content-encoding` field.
     #[must_use]
     pub fn with_payload<T>(&mut self, payload: T) -> &mut Self
-    where
-        Arc<[u8]>: From<T>,
-    {
+    where Arc<[u8]>: From<T> {
         self.payload = Some(payload.into());
         self
     }
@@ -87,7 +84,8 @@ impl CoseSignBuilder {
         }
     }
 
-    /// Encode [`Self::metadata`] by [`make_metadata_header`] with fields in insertion order.
+    /// Encode [`Self::metadata`] by [`make_metadata_header`] with fields in insertion
+    /// order.
     // Question: maybe this should be cached (e.g. frozen once filled)?
     fn encode_protected_header(&self) -> Vec<u8> {
         // This iterates in insertion order.

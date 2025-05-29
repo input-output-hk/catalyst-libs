@@ -24,9 +24,7 @@ pub(crate) fn cose_protected_header_find(
 pub(crate) fn decode_document_field_from_protected_header<T>(
     protected: &ProtectedHeader, field_name: &str, report_content: &str, report: &ProblemReport,
 ) -> Option<T>
-where
-    T: for<'a> TryFrom<&'a coset::cbor::Value>,
-{
+where T: for<'a> TryFrom<&'a coset::cbor::Value> {
     if let Some(cbor_doc_field) =
         cose_protected_header_find(protected, |key| key == &Label::Text(field_name.to_string()))
     {
