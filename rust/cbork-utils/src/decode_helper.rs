@@ -10,33 +10,15 @@ use minicbor::{data::Tag, decode, Decoder};
 pub fn decode_helper<'a, T, C>(
     d: &mut Decoder<'a>, from: &str, context: &mut C,
 ) -> Result<T, decode::Error>
-where T: minicbor::Decode<'a, C> {
+where
+    T: minicbor::Decode<'a, C>,
+{
     T::decode(d, context).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode {:?} in {from}: {e}",
             std::any::type_name::<T>()
         ))
     })
-}
-
-/// Generic helper function for decoding different types.
-///
-/// # Errors
-///
-/// Error if the decoding fails.
-pub fn decode_to_end_helper<'a, T, C>(
-    d: &mut Decoder<'a>, from: &str, context: &mut C,
-) -> Result<T, decode::Error>
-where T: minicbor::Decode<'a, C> {
-    let decoded = decode_helper(d, from, context)?;
-    if d.position() == d.input().len() {
-        Ok(decoded)
-    } else {
-        Err(decode::Error::message(format!(
-            "Unused bytes remain in the input after decoding {:?} in {from}",
-            std::any::type_name::<T>()
-        )))
-    }
 }
 
 /// Helper function for decoding bytes.
@@ -95,9 +77,6 @@ pub fn decode_tag(d: &mut Decoder, from: &str) -> Result<Tag, decode::Error> {
 }
 
 /// Decode any in CDDL (any CBOR type) and return its bytes.
-/// This function **allows** unused remainder bytes, unlike [`decode_any_to_end`].
-/// Unless an element of the [RFC 8742 CBOR Sequence](https://datatracker.ietf.org/doc/rfc8742/)
-/// is expected to be decoded, the use of this function might cause invalid input to pass.
 ///
 /// # Errors
 ///
@@ -113,24 +92,6 @@ pub fn decode_any<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decod
             "Failed to get any CBOR bytes in {from}. Invalid CBOR bytes."
         )))?;
     Ok(bytes)
-}
-
-/// Decode any in CDDL (any CBOR type) and return its bytes. This function guarantees that
-/// no unused bytes remain in the [`Decoder`]. If unused remainder is expected, use
-/// [`decode_any`].
-///
-/// # Errors
-///
-/// Error if the decoding fails or if [`Decoder`] is not fully consumed.
-pub fn decode_any_to_end<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decode::Error> {
-    let decoded = decode_any(d, from)?;
-    if d.position() == d.input().len() {
-        Ok(decoded)
-    } else {
-        Err(decode::Error::message(format!(
-            "Unused bytes remain in the input after decoding in {from}"
-        )))
-    }
 }
 
 #[cfg(test)]
@@ -213,14 +174,6 @@ mod tests {
 
     #[test]
     fn test_decode_any_not_cbor() {
-        let mut d = Decoder::new(&[]);
-        let result = decode_any(&mut d, "test");
-        // Should print out the error message with the location of the error
-        assert!(result.is_err());
-    }
-
-    #[test]
-    fn test_decode_any_seq() {
         let mut d = Decoder::new(&[]);
         let result = decode_any(&mut d, "test");
         // Should print out the error message with the location of the error
