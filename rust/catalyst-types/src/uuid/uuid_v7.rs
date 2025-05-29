@@ -1,5 +1,8 @@
 //! `UUIDv7` Type.
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
 use minicbor::{Decode, Decoder, Encode};
 use uuid::Uuid;
@@ -103,6 +106,15 @@ impl<'de> serde::Deserialize<'de> for UuidV7 {
         } else {
             Err(serde::de::Error::custom(UuidError::InvalidUuidV7(uuid)))
         }
+    }
+}
+
+impl FromStr for UuidV7 {
+    type Err = UuidError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let uuid = Uuid::parse_str(s).map_err(|_| UuidError::StringConversion(s.to_string()))?;
+        UuidV7::try_from(uuid).map_err(|_| UuidError::InvalidUuidV7(uuid))
     }
 }
 

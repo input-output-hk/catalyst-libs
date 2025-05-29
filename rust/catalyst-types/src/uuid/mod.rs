@@ -28,6 +28,9 @@ pub enum UuidError {
     /// `UUIDv7` invalid error
     #[error("'{0}' is not a valid UUIDv7")]
     InvalidUuidV7(uuid::Uuid),
+    /// Invalid string conversion
+    #[error("Invalid string conversion: {0}")]
+    StringConversion(String),
 }
 
 /// Context for `CBOR` encoding and decoding
