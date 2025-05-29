@@ -38,7 +38,7 @@ impl ContentEncodingRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Builder;
+    use crate::CoseSignBuilder;
 
     #[tokio::test]
     async fn content_encoding_rule_test() {
@@ -49,7 +49,7 @@ mod tests {
             optional: true,
         };
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(
                 serde_json::json!({"content-encoding": content_encoding.to_string() }),
             )
@@ -57,7 +57,7 @@ mod tests {
             .build();
         assert!(rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({}))
             .unwrap()
             .build();

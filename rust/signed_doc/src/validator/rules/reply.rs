@@ -95,7 +95,7 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, CoseSignBuilder};
 
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
@@ -117,7 +117,7 @@ mod tests {
 
         // prepare replied documents
         {
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                     "id": valid_replied_doc_id.to_string(),
@@ -129,7 +129,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // reply doc with other `type` field
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                     "id": another_type_replied_doc_id.to_string(),
@@ -141,7 +141,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // missing `ref` field in the referenced document
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_ref_replied_doc_id.to_string(),
                     "ver": missing_ref_replied_doc_ver.to_string(),
@@ -152,7 +152,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                     "id": missing_type_replied_doc_id.to_string(),
@@ -168,7 +168,7 @@ mod tests {
             exp_reply_type,
             optional: false,
         };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                 "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
@@ -182,7 +182,7 @@ mod tests {
             exp_reply_type,
             optional: true,
         };
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing `reply` field, but its required
@@ -190,7 +190,7 @@ mod tests {
             exp_reply_type,
             optional: false,
         };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
             }))
@@ -199,7 +199,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
             }))
@@ -208,7 +208,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                 "reply": { "id": another_type_replied_doc_id.to_string(), "ver": another_type_replied_doc_ver.to_string() }
@@ -218,7 +218,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field in the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                 "reply": { "id": missing_ref_replied_doc_id.to_string(), "ver": missing_type_replied_doc_ver.to_string() }
@@ -228,7 +228,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                 "reply": { "id": missing_type_replied_doc_id.to_string(), "ver": missing_type_replied_doc_ver.to_string() }
@@ -238,7 +238,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // `ref` field does not align with the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() },
                 "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
@@ -248,7 +248,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                 "reply": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
@@ -263,12 +263,12 @@ mod tests {
         let rule = ReplyRule::NotSpecified;
         let provider = TestCatalystSignedDocumentProvider::default();
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"reply": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();

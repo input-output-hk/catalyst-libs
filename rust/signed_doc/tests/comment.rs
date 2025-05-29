@@ -54,7 +54,7 @@ async fn test_valid_comment_doc_with_reply() {
 
     let comment_doc_id = UuidV7::new();
     let comment_doc_ver = UuidV7::new();
-    let comment_doc = Builder::new()
+    let comment_doc = CoseSignBuilder::new()
         .with_json_metadata(serde_json::json!({
             "id": comment_doc_id,
             "ver": comment_doc_ver,

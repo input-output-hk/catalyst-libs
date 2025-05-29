@@ -53,7 +53,7 @@ impl ContentTypeRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Builder;
+    use crate::CoseSignBuilder;
 
     #[tokio::test]
     async fn content_type_rule_test() {
@@ -61,34 +61,34 @@ mod tests {
 
         let rule = ContentTypeRule { exp: content_type };
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
             .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
             .build();
         assert!(rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"content-type": ContentType::Cbor.to_string() }))
             .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
             .build();
         assert!(!rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
             .unwrap()
             .build();
         assert!(!rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
             .unwrap()
             .with_decoded_content(vec![])
             .build();
         assert!(!rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(!rule.check(&doc).await.unwrap());
     }
 }

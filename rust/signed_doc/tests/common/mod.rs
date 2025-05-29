@@ -52,7 +52,7 @@ pub fn create_dummy_doc(
     let doc_id = UuidV7::new();
     let doc_ver = UuidV7::new();
 
-    let doc = Builder::new()
+    let doc = CoseSignBuilder::new()
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "type": doc_type_id,
@@ -80,7 +80,7 @@ pub fn create_dummy_signed_doc(
 )> {
     let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
 
-    let signed_doc = Builder::new()
+    let signed_doc = CoseSignBuilder::new()
         .with_decoded_content(content)
         .with_json_metadata(metadata)?
         .add_signature(|m| sk.sign(&m).to_vec(), &kid)?

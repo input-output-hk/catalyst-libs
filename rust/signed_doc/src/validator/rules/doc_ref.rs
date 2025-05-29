@@ -86,7 +86,7 @@ mod tests {
     use catalyst_types::uuid::UuidV7;
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, CoseSignBuilder};
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
@@ -103,7 +103,7 @@ mod tests {
 
         // prepare replied documents
         {
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_referenced_doc_id.to_string(),
                     "ver": valid_referenced_doc_ver.to_string(),
@@ -114,7 +114,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // reply doc with other `type` field
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": another_type_referenced_doc_id.to_string(),
                     "ver": another_type_referenced_doc_ver.to_string(),
@@ -125,7 +125,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_type_referenced_doc_id.to_string(),
                     "ver": missing_type_referenced_doc_ver.to_string(),
@@ -140,7 +140,7 @@ mod tests {
             exp_ref_type,
             optional: false,
         };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": {"id": valid_referenced_doc_id.to_string(), "ver": valid_referenced_doc_ver.to_string() }
             }))
@@ -153,7 +153,7 @@ mod tests {
             exp_ref_type,
             optional: true,
         };
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field, but its required
@@ -161,11 +161,11 @@ mod tests {
             exp_ref_type,
             optional: false,
         };
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": {"id": another_type_referenced_doc_id.to_string(), "ver": another_type_referenced_doc_ver.to_string() }
             }))
@@ -174,7 +174,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": {"id": missing_type_referenced_doc_id.to_string(), "ver": missing_type_referenced_doc_ver.to_string() }
             }))
@@ -183,7 +183,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "ref": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
@@ -197,12 +197,12 @@ mod tests {
         let rule = RefRule::NotSpecified;
         let provider = TestCatalystSignedDocumentProvider::default();
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"ref": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();

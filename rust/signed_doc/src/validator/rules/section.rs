@@ -42,11 +42,11 @@ impl SectionRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Builder;
+    use crate::CoseSignBuilder;
 
     #[tokio::test]
     async fn section_rule_specified_test() {
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "section": "$".to_string()
             }))
@@ -55,11 +55,11 @@ mod tests {
         let rule = SectionRule::Specified { optional: false };
         assert!(rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         let rule = SectionRule::Specified { optional: true };
         assert!(rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         let rule = SectionRule::Specified { optional: false };
         assert!(!rule.check(&doc).await.unwrap());
     }
@@ -68,10 +68,10 @@ mod tests {
     async fn section_rule_not_specified_test() {
         let rule = SectionRule::NotSpecified;
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(rule.check(&doc).await.unwrap());
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "section": "$".to_string()
             }))

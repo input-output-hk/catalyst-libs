@@ -4,17 +4,22 @@ use minicbor::{
     Encode as _,
 };
 
-use super::{cbor_map::CborMap, EncodeError};
+use super::EncodeError;
 
 /// Make the header using the provided cbor-encoded key-value pairs representing
 /// fields, conforming to the header fields specification
 /// as per [RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#autoid-8).
-pub fn make_metadata_header(metadata_fields: &CborMap) -> Vec<u8> {
+pub fn make_header<'a, I>(encoded_fields: I) -> Vec<u8>
+where
+    I: IntoIterator<Item = (&'a [u8], &'a [u8]), IntoIter: ExactSizeIterator>,
+{
     let mut encoder = minicbor::Encoder::new(vec![]);
 
-    let map_len = u64::try_from(metadata_fields.len()).unwrap_or(u64::MAX);
+    let iter = encoded_fields.into_iter();
+    let map_len = u64::try_from(iter.len()).unwrap_or(u64::MAX);
     encoder.map(map_len);
-    for (encoded_key, encoded_v) in metadata_fields.iter() {
+
+    for (encoded_key, encoded_v) in iter {
         // Writing a pre-encoded field of the map.
         encoder.writer_mut().extend_from_slice(encoded_key);
         encoder.writer_mut().extend_from_slice(encoded_v);
@@ -43,7 +48,7 @@ pub fn make_signature_header(kid: &[u8]) -> Result<Vec<u8>, EncodeError> {
 ///
 /// Described in [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
 pub fn make_tbs_data(
-    metadata_header: &[u8], signature_header: &[u8], content: &[u8],
+    metadata_header: &[u8], signature_header: &[u8], content: Option<&[u8]>,
 ) -> Result<Vec<u8>, EncodeError> {
     /// The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
     const SIGNATURE_CONTEXT: &str = "Signature";
@@ -52,8 +57,8 @@ pub fn make_tbs_data(
         SIGNATURE_CONTEXT,
         <&ByteSlice>::from(metadata_header),
         <&ByteSlice>::from(signature_header),
-        ByteArray::from([]), // aad.
-        <&ByteSlice>::from(content),
+        ByteArray::from([]),                        // no aad.
+        <&ByteSlice>::from(content.unwrap_or(&[])), // allowing no payload (i.e. no content).
     ))
 }
 
@@ -86,7 +91,7 @@ where
 
 /// Make cbor-encoded tagged `Cose_Sign`.
 pub fn encode_cose_sign<W: minicbor::encode::Write, S>(
-    e: &mut minicbor::encode::Encoder<W>, metadata_header: &[u8], content: &[u8], signatures: S,
+    e: &mut minicbor::encode::Encoder<W>, protected: &[u8], payload: Option<&[u8]>, signatures: S,
 ) -> Result<(), minicbor::encode::Error<W::Error>>
 where
     S: IntoIterator<Item: AsRef<[u8]>, IntoIter: ExactSizeIterator>,
@@ -95,9 +100,9 @@ where
     const COSE_SIGN_TAG: u64 = 98;
 
     let tagged_array = Tagged::<COSE_SIGN_TAG, _>::new((
-        <&ByteSlice>::from(metadata_header),
-        ByteArray::from([]), // unprotected.
-        <&ByteSlice>::from(content),
+        <&ByteSlice>::from(protected),
+        ByteArray::from([]),             // unprotected.
+        payload.map(<&ByteSlice>::from), // allowing `NULL`.
         collect_cose_signature_array(signatures).map_err(minicbor::encode::Error::custom)?,
     ));
     tagged_array.encode(e, &mut ())

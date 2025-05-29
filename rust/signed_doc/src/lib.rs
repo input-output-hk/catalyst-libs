@@ -16,7 +16,7 @@ use std::{
 };
 
 use anyhow::Context;
-pub use builder::Builder;
+pub use builder::CoseSignBuilder;
 pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
@@ -184,7 +184,7 @@ impl CatalystSignedDocument {
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
     #[must_use]
-    pub fn into_builder(&self) -> Builder {
+    pub fn into_builder(&self) -> CoseSignBuilder {
         self.into()
     }
 }

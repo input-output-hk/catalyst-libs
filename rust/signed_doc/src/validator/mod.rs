@@ -362,7 +362,7 @@ mod tests {
     use crate::{
         providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
         validator::{document_rules_init, validate_id_and_ver},
-        Builder, UuidV7,
+        CoseSignBuilder, UuidV7,
     };
 
     #[test]
@@ -374,7 +374,7 @@ mod tests {
             .as_secs();
 
         let uuid_v7 = UuidV7::new();
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "id": uuid_v7.to_string(),
                 "ver": uuid_v7.to_string()
@@ -388,7 +388,7 @@ mod tests {
         let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0));
         let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0));
         assert!(ver < id);
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "id": id.to_string(),
                 "ver": ver.to_string()
@@ -405,7 +405,7 @@ mod tests {
             0,
             0,
         ));
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "id": to_far_in_past.to_string(),
                 "ver": to_far_in_past.to_string()
@@ -422,7 +422,7 @@ mod tests {
             0,
             0,
         ));
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "id": to_far_in_future.to_string(),
                 "ver": to_far_in_future.to_string()

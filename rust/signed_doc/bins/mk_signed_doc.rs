@@ -9,7 +9,7 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_signed_doc::{Builder, CatalystId, CatalystSignedDocument};
+use catalyst_signed_doc::{CoseSignBuilder, CatalystId, CatalystSignedDocument};
 use clap::Parser;
 
 fn main() {
@@ -66,7 +66,7 @@ impl Cli {
                 // Possibly encode if Metadata has an encoding set.
                 let payload = serde_json::to_vec(&json_doc)?;
                 // Start with no signatures.
-                let signed_doc = Builder::new()
+                let signed_doc = CoseSignBuilder::new()
                     .with_decoded_content(payload)
                     .with_json_metadata(metadata)?
                     .build();

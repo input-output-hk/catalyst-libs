@@ -47,7 +47,7 @@ mod tests {
     use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
-    use crate::{Builder, ContentType};
+    use crate::{CoseSignBuilder, ContentType};
 
     #[tokio::test]
     async fn signature_kid_rule_test() {
@@ -59,7 +59,7 @@ mod tests {
         let pk = sk.verifying_key();
         let kid = CatalystId::new("cardano", None, pk).with_role(RoleId::Role0);
 
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
             .with_json_metadata(serde_json::json!({
                 "type": UuidV4::new().to_string(),

@@ -17,7 +17,7 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
-    let doc = Builder::new()
+    let doc = CoseSignBuilder::new()
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
         .with_decoded_content(content.clone())
@@ -38,7 +38,7 @@ async fn catalyst_signed_doc_parameters_aliases_test() {
 
     let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
 
-    let doc = Builder::new()
+    let doc = CoseSignBuilder::new()
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
         .with_decoded_content(content.clone())
@@ -188,7 +188,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
         bytes_gen: Box::new({
             let kid = kid.clone();
             move || {
-                Builder::new()
+                CoseSignBuilder::new()
                     .with_json_metadata(serde_json::json!({
                         "content-type": ContentType::Json.to_string(),
                         "content-encoding": ContentEncoding::Brotli.to_string(),

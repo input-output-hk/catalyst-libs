@@ -46,7 +46,7 @@ async fn multiple_signatures_validation_test() {
     let (sk3, pk3, kid3) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
     let (_, pk_n, kid_n) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
 
-    let signed_doc = Builder::new()
+    let signed_doc = CoseSignBuilder::new()
         .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
         .with_json_metadata(common::test_metadata().2)
         .unwrap()

@@ -184,7 +184,7 @@ mod tests {
     use catalyst_types::uuid::UuidV7;
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, CoseSignBuilder};
 
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
@@ -205,7 +205,7 @@ mod tests {
 
         // prepare replied documents
         {
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_template_doc_id.to_string(),
                     "ver": valid_template_doc_id.to_string(),
@@ -218,7 +218,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // reply doc with other `type` field
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": another_type_template_doc_id.to_string(),
                     "ver": another_type_template_doc_id.to_string(),
@@ -231,7 +231,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_type_template_doc_id.to_string(),
                     "ver": missing_type_template_doc_id.to_string(),
@@ -243,7 +243,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // missing `content-type` field in the referenced document
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_content_type_template_doc_id.to_string(),
                     "ver": missing_content_type_template_doc_id.to_string(),
@@ -255,7 +255,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // missing content
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_content_template_doc_id.to_string(),
                     "ver": missing_content_template_doc_id.to_string(),
@@ -267,7 +267,7 @@ mod tests {
             provider.add_document(ref_doc).unwrap();
 
             // invalid content, must be json encoded
-            let ref_doc = Builder::new()
+            let ref_doc = CoseSignBuilder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": invalid_content_template_doc_id.to_string(),
                     "ver": invalid_content_template_doc_id.to_string(),
@@ -282,7 +282,7 @@ mod tests {
 
         // all correct
         let rule = ContentRule::Templated { exp_template_type };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
@@ -292,7 +292,7 @@ mod tests {
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing `template` field, but its required
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({}))
             .unwrap()
             .with_decoded_content(json_content.clone())
@@ -301,7 +301,7 @@ mod tests {
 
         // missing content
         let rule = ContentRule::Templated { exp_template_type };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
@@ -311,7 +311,7 @@ mod tests {
 
         // content not a json encoded
         let rule = ContentRule::Templated { exp_template_type };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
@@ -321,7 +321,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": another_type_template_doc_id.to_string(), "ver": another_type_template_doc_id.to_string() }
             }))
@@ -331,7 +331,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": missing_type_template_doc_id.to_string(), "ver": missing_type_template_doc_id.to_string() }
             }))
@@ -342,7 +342,7 @@ mod tests {
 
         // missing `content-type` field in the referenced doc
         let rule = ContentRule::Templated { exp_template_type };
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": missing_content_type_template_doc_id.to_string(), "ver": missing_content_type_template_doc_id.to_string() }
             }))
@@ -352,7 +352,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing content in the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": missing_content_template_doc_id.to_string(), "ver": missing_content_template_doc_id.to_string() }
             }))
@@ -362,7 +362,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded in the referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": invalid_content_template_doc_id.to_string(), "ver": invalid_content_template_doc_id.to_string() }
             }))
@@ -372,7 +372,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
@@ -397,23 +397,23 @@ mod tests {
 
         // all correct
         let rule = ContentRule::Static(json_schema);
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing content
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded
-        let doc = Builder::new().with_decoded_content(vec![]).build();
+        let doc = CoseSignBuilder::new().with_decoded_content(vec![]).build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // defined `template` field which should be absent
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
-        let doc =  Builder::new().with_decoded_content(json_content)
+        let doc =  CoseSignBuilder::new().with_decoded_content(json_content)
             .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();
@@ -425,13 +425,13 @@ mod tests {
         let rule = ContentRule::NotSpecified;
         let provider = TestCatalystSignedDocumentProvider::default();
 
-        let doc = Builder::new().build();
+        let doc = CoseSignBuilder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // defined `template` field which should be absent
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
-        let doc = Builder::new()
+        let doc = CoseSignBuilder::new()
             .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
             .build();
