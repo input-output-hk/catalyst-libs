@@ -1,10 +1,7 @@
 """Generate the individual pages docs/<doc_name>.md file."""
 
 import argparse
-import json
 import typing
-
-from pydantic import HttpUrl
 
 from gen.doc_generator import DocGenerator
 from gen.doc_relationship_diagrams import DocRelationshipFile
@@ -62,24 +59,7 @@ This section will be included and updated in future iterations.
         if self._doc.payload is None:
             return self.TODO_MSG
 
-        payload_docs = self._doc.payload.description + "\n"
-
-        schema = self._doc.payload.doc_schema
-        if schema is not None:
-            if isinstance(schema, HttpUrl):
-                if schema == "https://json-schema.org/draft-07/schema":
-                    payload_docs += "\n**Must be a valid JSON Schema Draft 7 document.**"
-                else:
-                    payload_docs += f"\nMust be a valid according to <{schema}>."
-            else:
-                payload_docs += f"""\nSchema :
-<!-- markdownlint-disable MD013 -->
-```json
-{json.dumps(schema, indent=2, sort_keys=True)}
-```
-<!-- markdownlint-enable MD013 -->
-"""
-        return payload_docs.strip()
+        return f"{self._doc.payload}"
 
     def document_signers(self) -> str:
         """Generate documentation about who may sign this documents."""

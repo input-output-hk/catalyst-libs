@@ -1,4 +1,4 @@
-digraph "None" {
+digraph "All" {
     rankdir="LR"
     graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
     node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];

@@ -51,7 +51,7 @@ class DocRelationshipFile(DocGenerator):
         file_title = textwrap.fill(f"{file_id} Document Relationships", width=30)
 
         dot_file = DotFile(
-            self._document_name, file_title, depth=self._depth, title_size=150 if self._document_name is None else 50
+            file_id, file_title, depth=self._depth, title_size=150 if self._document_name is None else 50
         )
 
         all_dst_refs: list[str] = []
@@ -66,7 +66,7 @@ class DocRelationshipFile(DocGenerator):
             doc_data = self._spec.get_document(doc)
 
             # Add content type explicitely to table.
-            doc_table.add_row(TableRow(name="content type", value=doc_data.headers["content type"].value))
+            doc_table.add_row(TableRow(name="content type", value=doc_data.content_type))
 
             # Add all used Metadata to table.
             for meta in self._spec.all_headers(HeaderType.METADATA):
