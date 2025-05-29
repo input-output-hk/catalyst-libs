@@ -56,7 +56,7 @@ async fn test_valid_comment_doc_old_type() {
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             // Using old (single uuid)
-            "type": doc_types::COMMENT_UUID_TYPE,
+            "type": doc_types::deprecated::COMMENT_DOCUMENT_UUID_TYPE,
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
