@@ -1,11 +1,9 @@
 //! `parameters` rule type impl.
 
-use catalyst_types::uuid::UuidV4;
-
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
-    CatalystSignedDocument,
+    metadata::DocType, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc, CatalystSignedDocument,
 };
 
 /// `parameters` field validation rule
@@ -14,7 +12,7 @@ pub(crate) enum ParametersRule {
     /// Is `parameters` specified
     Specified {
         /// expected `type` field of the parameter doc
-        exp_parameters_type: UuidV4,
+        exp_parameters_type: DocType,
         /// optional flag for the `parameters` field
         optional: bool,
     },
@@ -37,7 +35,7 @@ impl ParametersRule {
                 let parameters_validator = |replied_doc: CatalystSignedDocument| {
                     referenced_doc_check(
                         &replied_doc,
-                        exp_parameters_type.uuid(),
+                        exp_parameters_type,
                         "parameters",
                         doc.report(),
                     )
@@ -126,7 +124,7 @@ mod tests {
 
         // all correct
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameters_type.into(),
             optional: false,
         };
         let doc = Builder::new()
@@ -139,7 +137,7 @@ mod tests {
 
         // all correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameters_type.into(),
             optional: true,
         };
         let doc = Builder::new().build();
@@ -147,7 +145,7 @@ mod tests {
 
         // missing `parameters` field, but its required
         let rule = ParametersRule::Specified {
-            exp_parameters_type,
+            exp_parameters_type: exp_parameters_type.into(),
             optional: false,
         };
         let doc = Builder::new().build();

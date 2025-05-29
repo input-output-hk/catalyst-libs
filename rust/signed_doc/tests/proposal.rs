@@ -8,14 +8,46 @@ mod common;
 #[tokio::test]
 async fn test_valid_proposal_doc() {
     let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(doc_types::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
+        common::create_dummy_doc(doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
     let (doc, ..) = common::create_dummy_signed_doc(
         serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
+            "type": doc_types::PROPOSAL_DOC_TYPE.clone(),
+            "id": uuid_v7.to_string(),
+            "ver": uuid_v7.to_string(),
+            "template": {
+              "id": template_doc_id,
+              "ver": template_doc_ver
+            },
+        }),
+        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        RoleId::Proposer,
+    )
+    .unwrap();
+
+    let mut provider = TestCatalystSignedDocumentProvider::default();
+    provider.add_document(template_doc).unwrap();
+
+    let is_valid = validator::validate(&doc, &provider).await.unwrap();
+
+    assert!(is_valid);
+}
+
+#[tokio::test]
+async fn test_valid_proposal_doc_old_type() {
+    let (template_doc, template_doc_id, template_doc_ver) =
+        common::create_dummy_doc(doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
+
+    let uuid_v7 = UuidV7::new();
+    let (doc, ..) = common::create_dummy_signed_doc(
+        serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "content-encoding": ContentEncoding::Brotli.to_string(),
+            // Using old (single uuid)
+            "type": doc_types::deprecated::PROPOSAL_DOCUMENT_UUID_TYPE,
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
@@ -47,7 +79,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
         serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
+            "type": doc_types::PROPOSAL_DOC_TYPE.clone(),
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
@@ -74,7 +106,7 @@ async fn test_invalid_proposal_doc() {
         serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_DOCUMENT_UUID_TYPE,
+            "type": doc_types::PROPOSAL_DOC_TYPE.clone(),
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             // without specifying template id
