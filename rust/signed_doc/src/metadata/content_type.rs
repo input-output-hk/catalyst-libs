@@ -1,6 +1,5 @@
 //! Document Payload Content Type.
 
-use cbork_utils::decode_helper::decode_any_to_end;
 use strum::{AsRefStr, Display as EnumDisplay, EnumString, VariantArray};
 
 /// Payload Content Type.
