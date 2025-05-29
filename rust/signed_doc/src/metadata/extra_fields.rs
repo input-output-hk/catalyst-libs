@@ -30,7 +30,7 @@ const CATEGORY_ID_KEY: &str = "category_id";
 /// Extra Metadata Fields.
 ///
 /// These values are extracted from the COSE Sign protected header labels.
-#[derive(Clone, Default, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Default, Debug, PartialEq)]
 pub struct ExtraFields {
     /// Reference to the latest document.
     #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]

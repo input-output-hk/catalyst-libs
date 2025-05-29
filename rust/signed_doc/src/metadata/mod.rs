@@ -237,6 +237,7 @@ impl TryFrom<&Metadata> for coset::Header {
     fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
         let mut builder = coset::HeaderBuilder::new()
             .content_format(CoapContentFormat::from(meta.content_type()?));
+        let mut builder = coset::HeaderBuilder::new();
 
         if let Some(content_encoding) = meta.content_encoding() {
             builder = builder.text_value(
