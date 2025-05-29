@@ -5,6 +5,8 @@ use catalyst_types::{
     uuid::{CborContext, UuidV4, UuidV7},
 };
 use coset::{CborSerializable, Label, ProtectedHeader};
+use minicbor::decode::Decode;
+use serde::Serialize;
 
 /// Find a value for a predicate in the protected header.
 pub(crate) fn cose_protected_header_find(
@@ -22,7 +24,9 @@ pub(crate) fn cose_protected_header_find(
 pub(crate) fn decode_document_field_from_protected_header<T>(
     protected: &ProtectedHeader, field_name: &str, report_content: &str, report: &ProblemReport,
 ) -> Option<T>
-where T: for<'a> TryFrom<&'a coset::cbor::Value> {
+where
+    T: for<'a> TryFrom<&'a coset::cbor::Value>,
+{
     if let Some(cbor_doc_field) =
         cose_protected_header_find(protected, |key| key == &Label::Text(field_name.to_string()))
     {
@@ -91,7 +95,7 @@ fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
 /// Decode `From<uuid::Uuid>` type from `coset::cbor::Value`.
 ///
 /// This is used to decode `UuidV4` and `UuidV7` types.
-fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborContext>>(
+fn decode_cbor_uuid<T: for<'a> Decode<'a, CborContext>>(
     value: &coset::cbor::Value,
 ) -> anyhow::Result<T> {
     let mut cbor_bytes = Vec::new();
@@ -99,4 +103,34 @@ fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborContext>>(
         .map_err(|e| anyhow::anyhow!("Invalid CBOR value, err: {e}"))?;
     minicbor::decode_with(&cbor_bytes, &mut CborContext::Tagged)
         .map_err(|e| anyhow::anyhow!("Invalid UUID, err: {e}"))
+}
+
+/// Transcode [`ciborium`](coset::cbor) to a type implementing [`minicbor::Decode`].
+///
+/// This is rather inefficient, but allows to keep a single CBOR implementation.
+pub(crate) fn transcode_ciborium_with<C, T, U>(
+    value: &T, ctx: &mut C,
+) -> Result<U, minicbor::decode::Error>
+where
+    T: Serialize,
+    U: for<'a> Decode<'a, C>,
+{
+    let mut cbor_bytes = Vec::new();
+    coset::cbor::ser::into_writer(value, &mut cbor_bytes)
+        .map_err(minicbor::decode::Error::custom)?;
+    minicbor::decode_with(&cbor_bytes, ctx)
+}
+
+/// Transcode [`coset::CborSerializable`] to a type implementing [`minicbor::Decode`].
+///
+/// This is rather inefficient, but allows to keep a single CBOR implementation.
+pub(crate) fn transcode_coset_with<C, T, U>(
+    value: T, ctx: &mut C,
+) -> Result<U, minicbor::decode::Error>
+where
+    T: coset::CborSerializable,
+    U: for<'a> Decode<'a, C>,
+{
+    let cbor_bytes = value.to_vec().map_err(minicbor::decode::Error::custom)?;
+    minicbor::decode_with(&cbor_bytes, ctx)
 }

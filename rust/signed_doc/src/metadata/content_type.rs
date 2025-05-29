@@ -1,10 +1,26 @@
 //! Document Payload Content Type.
 
-use strum::{AsRefStr, Display as EnumDisplay, EnumString, VariantArray};
+use serde::{Deserialize, Serialize};
+use strum::{Display as EnumDisplay, EnumString, IntoStaticStr, VariantArray};
+
+use super::utils::{transcode_ciborium_with, transcode_coset_with};
 
 /// Payload Content Type.
 // TODO: add custom parse error type when the [strum issue]([`issue`](https://github.com/Peternator7/strum/issues/430)) fix is merged.
-#[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray, EnumString, EnumDisplay, AsRefStr)]
+#[derive(
+    Debug,
+    Copy,
+    Clone,
+    PartialEq,
+    Eq,
+    VariantArray,
+    EnumString,
+    EnumDisplay,
+    IntoStaticStr,
+    Serialize,
+    Deserialize,
+)]
+#[serde(try_from = "&str", into = "&str")]
 pub enum ContentType {
     /// 'application/cbor'
     #[strum(to_string = "application/cbor")]
@@ -19,14 +35,12 @@ impl ContentType {
     pub(crate) fn validate(self, content: &[u8]) -> anyhow::Result<()> {
         match self {
             Self::Json => {
-                if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content) {
+                if let Err(e) = serde_json::from_slice::<serde_json::Value>(content) {
                     anyhow::bail!("Invalid {self} content: {e}")
                 }
             },
             Self::Cbor => {
-                if let Err(e) =
-                    decode_any_to_end(&mut minicbor::Decoder::new(content), "signed doc content")
-                {
+                if let Err(e) = minicbor::decode::<minicbor::data::Token>(content) {
                     anyhow::bail!("Invalid {self} content: {e}")
                 }
             },
@@ -40,7 +54,7 @@ impl ContentType {
             "Unsupported Content Type {input:?}, Supported only: {:?}",
             ContentType::VARIANTS
                 .iter()
-                .map(AsRef::as_ref)
+                .map(<&str>::from)
                 .collect::<Vec<_>>()
         ))
     }
@@ -50,7 +64,7 @@ impl<C> minicbor::Encode<C> for ContentType {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.str(self.as_ref())?.ok()
+        e.str(<&str>::from(self))?.ok()
     }
 }
 
@@ -61,6 +75,23 @@ impl<'b, C> minicbor::Decode<'b, C> for ContentType {
     }
 }
 
+impl TryFrom<&coset::cbor::Value> for ContentType {
+    type Error = minicbor::decode::Error;
+
+    fn try_from(val: &coset::cbor::Value) -> Result<Self, minicbor::decode::Error> {
+        transcode_ciborium_with(val, &mut ())
+    }
+}
+
+type CosetLabel = coset::RegisteredLabel<coset::iana::CoapContentFormat>;
+
+impl TryFrom<&CosetLabel> for ContentType {
+    type Error = minicbor::decode::Error;
+
+    fn try_from(val: &CosetLabel) -> Result<Self, minicbor::decode::Error> {
+        transcode_coset_with(val.clone(), &mut ())
+    }
+}
 #[cfg(test)]
 mod tests {
     use std::str::FromStr as _;

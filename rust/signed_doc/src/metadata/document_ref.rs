@@ -5,10 +5,10 @@ use std::fmt::Display;
 use catalyst_types::uuid::CborContext;
 use cbork_utils::decode_helper;
 
-use super::UuidV7;
+use super::{utils::transcode_ciborium_with, UuidV7};
 
 /// Reference to a Document.
-#[derive(Copy, Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Copy, Clone, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
 pub struct DocumentRef {
     /// Reference to the Document Id
     pub id: UuidV7,
@@ -44,5 +44,13 @@ impl minicbor::Decode<'_, CborContext> for DocumentRef {
             ));
         }
         Ok(Self { id, ver })
+    }
+}
+
+impl TryFrom<&coset::cbor::Value> for DocumentRef {
+    type Error = minicbor::decode::Error;
+
+    fn try_from(val: &coset::cbor::Value) -> Result<Self, minicbor::decode::Error> {
+        transcode_ciborium_with(val, &mut CborContext::Tagged)
     }
 }

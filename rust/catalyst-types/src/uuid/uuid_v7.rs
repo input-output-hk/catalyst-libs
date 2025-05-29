@@ -7,7 +7,7 @@ use uuid::Uuid;
 use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
 
 /// Type representing a `UUIDv7`.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]
+#[derive(Copy, Clone, PartialEq, Debug, PartialOrd, serde::Serialize)]
 pub struct UuidV7(Uuid);
 
 impl UuidV7 {
@@ -96,7 +96,9 @@ impl From<UuidV7> for Uuid {
 
 impl<'de> serde::Deserialize<'de> for UuidV7 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: serde::Deserializer<'de> {
+    where
+        D: serde::Deserializer<'de>,
+    {
         let uuid = Uuid::deserialize(deserializer)?;
         if is_valid(&uuid) {
             Ok(Self(uuid))

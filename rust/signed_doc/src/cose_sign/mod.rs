@@ -71,6 +71,22 @@ impl CoseSignBuilder {
         Ok(self)
     }
 
+    /// Wraps around [`Self::add_protected_header`].
+    /// Doesn't add fields with values equal to [`Default::default`].
+    pub fn add_protected_header_if_not_default<C, K, V>(
+        &mut self, ctx: &mut C, key: K, v: V,
+    ) -> Result<&mut Self, VecEncodeError>
+    where
+        K: minicbor::Encode<C> + Debug,
+        V: minicbor::Encode<C> + Default + PartialEq,
+    {
+        if V::default() == v {
+            Ok(self)
+        } else {
+            self.add_protected_header(ctx, key, v)
+        }
+    }
+
     /// Encode [`Self::metadata`] by [`make_metadata_header`] with fields in insertion order.
     // Question: maybe this should be cached (e.g. frozen once filled)?
     fn encode_protected_header(&self) -> Vec<u8> {

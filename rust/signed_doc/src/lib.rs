@@ -1,7 +1,7 @@
 //! Catalyst documents signing crate
 
-mod cose_sign;
 mod content;
+mod cose_sign;
 mod decode_context;
 pub mod doc_types;
 mod metadata;
@@ -16,12 +16,13 @@ use std::{
 };
 
 use anyhow::Context;
-pub use cose_sign::CoseSignBuilder;
 pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
 pub use content::Content;
+use cose_sign::CoseSign;
+pub use cose_sign::CoseSignBuilder;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
 pub use metadata::{
     ContentEncoding, ContentType, DocType, DocumentRef, ExtraFields, Metadata, Section,
@@ -45,10 +46,10 @@ struct InnerCatalystSignedDocument {
     /// the other validation errors
     report: ProblemReport,
 
-    /// raw CBOR bytes of the `CatalystSignedDocument` object.
+    /// Raw CBOR bytes of the `CatalystSignedDocument` object.
     /// It is important to keep them to have a consistency what comes from the decoding
     /// process, so we would return the same data again
-    raw_bytes: Option<Vec<u8>>,
+    raw_bytes: Vec<u8>,
 }
 
 /// Keep all the contents private.
@@ -185,6 +186,8 @@ impl CatalystSignedDocument {
     /// data.
     #[must_use]
     pub fn into_builder(&self) -> CoseSignBuilder {
+        let mut builder = CoseSign::builder();
+        // TOOD!
         self.into()
     }
 }
@@ -254,7 +257,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             content,
             signatures,
             report,
-            raw_bytes: Some(cose_bytes.to_vec()),
+            raw_bytes: cose_bytes.to_vec(),
         }
         .into())
     }
@@ -264,13 +267,8 @@ impl Encode<()> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
-        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
-            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
-        })?;
-
         e.writer_mut()
-            .write_all(&cose_bytes)
+            .write_all(&self.inner.raw_bytes)
             .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
     }
 }

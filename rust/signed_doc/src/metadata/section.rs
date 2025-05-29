@@ -2,8 +2,13 @@
 
 use std::{fmt::Display, str::FromStr};
 
+use serde::{Deserialize, Serialize};
+
+use super::utils::transcode_ciborium_with;
+
 /// 'section' field type definition, which is a JSON path string
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(into = "String", try_from = "&str")]
 pub struct Section(jsonpath_rust::JsonPath<serde_json::Value>);
 
 impl Display for Section {
@@ -12,11 +17,25 @@ impl Display for Section {
     }
 }
 
+impl From<Section> for String {
+    fn from(value: Section) -> Self {
+        value.to_string()
+    }
+}
+
 impl FromStr for Section {
     type Err = jsonpath_rust::JsonPathParserError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        jsonpath_rust::JsonPath::<serde_json::Value>::from_str(s).map(Self)
+        s.parse().map(Self)
+    }
+}
+
+impl TryFrom<&str> for Section {
+    type Error = jsonpath_rust::JsonPathParserError;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        s.parse()
     }
 }
 
@@ -24,14 +43,20 @@ impl<C> minicbor::Encode<C> for Section {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.str(&self.0.to_string())?;
-        Ok(())
+        e.str(&self.0.to_string())?.ok()
     }
 }
 
 impl<'b, C> minicbor::Decode<'b, C> for Section {
     fn decode(d: &mut minicbor::Decoder<'b>, _: &mut C) -> Result<Self, minicbor::decode::Error> {
-        let s = d.str()?;
-        s.parse().map_err(minicbor::decode::Error::custom)
+        d.str()?.parse().map_err(minicbor::decode::Error::custom)
+    }
+}
+
+impl TryFrom<&coset::cbor::Value> for Section {
+    type Error = minicbor::decode::Error;
+
+    fn try_from(val: &coset::cbor::Value) -> Result<Self, minicbor::decode::Error> {
+        transcode_ciborium_with(val, &mut ())
     }
 }

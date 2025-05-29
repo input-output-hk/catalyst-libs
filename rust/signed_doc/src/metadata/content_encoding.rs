@@ -1,10 +1,26 @@
 //! Document Payload Content Encoding.
 
-use strum::{AsRefStr, Display as EnumDisplay, EnumString, VariantArray};
+use serde::{Deserialize, Serialize};
+use strum::{Display, EnumString, IntoStaticStr, VariantArray};
+
+use super::utils::transcode_ciborium_with;
 
 /// IANA `CoAP` Content Encoding.
-#[derive(Copy, Clone, Debug, PartialEq, Eq, VariantArray, EnumDisplay, EnumString, AsRefStr)]
 // TODO: add custom parse error type when the [strum issue]([`issue`](https://github.com/Peternator7/strum/issues/430)) fix is merged.
+#[derive(
+    Copy,
+    Clone,
+    Debug,
+    PartialEq,
+    Eq,
+    VariantArray,
+    EnumString,
+    Display,
+    IntoStaticStr,
+    Serialize,
+    Deserialize,
+)]
+#[serde(try_from = "&str", into = "&str")]
 pub enum ContentEncoding {
     /// Brotli compression.format.
     #[strum(to_string = "br")]
@@ -47,7 +63,7 @@ impl ContentEncoding {
             "Unsupported Content Type {input:?}, Supported only: {:?}",
             ContentEncoding::VARIANTS
                 .iter()
-                .map(AsRef::as_ref)
+                .map(<&str>::from)
                 .collect::<Vec<_>>()
         ))
     }
@@ -57,7 +73,7 @@ impl<C> minicbor::Encode<C> for ContentEncoding {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.str(self.as_ref())?.ok()
+        e.str(<&str>::from(self))?.ok()
     }
 }
 
@@ -65,5 +81,13 @@ impl<'b, C> minicbor::Decode<'b, C> for ContentEncoding {
     fn decode(d: &mut minicbor::Decoder<'b>, _: &mut C) -> Result<Self, minicbor::decode::Error> {
         let s = d.str()?;
         s.parse().map_err(|_| Self::decode_error(s))
+    }
+}
+
+impl TryFrom<&coset::cbor::Value> for ContentEncoding {
+    type Error = minicbor::decode::Error;
+
+    fn try_from(val: &coset::cbor::Value) -> Result<Self, minicbor::decode::Error> {
+        transcode_ciborium_with(val, &mut ())
     }
 }

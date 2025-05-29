@@ -15,7 +15,6 @@ use catalyst_types::{
 };
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat};
 pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
@@ -23,6 +22,8 @@ pub use section::Section;
 use utils::{
     cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV4, CborUuidV7,
 };
+
+use crate::cose_sign::VecEncodeError;
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -138,6 +139,42 @@ impl Metadata {
         let metadata = InnerMetadata::from_protected_header(protected, report);
         Self::from_metadata_fields(metadata, report)
     }
+
+    /// Add [`Self`] fields to the builder as protected headers.
+    pub(crate) fn fill_cose_sign_builder<'a>(
+        &self, uuid_ctx: &mut catalyst_types::uuid::CborContext,
+        builder: &'a mut crate::CoseSignBuilder,
+    ) -> Result<&'a mut crate::CoseSignBuilder, VecEncodeError> {
+        /// `content_encoding` field COSE key value
+        const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
+        /// `doc_type` field COSE key value
+        const TYPE_KEY: &str = "type";
+        /// `id` field COSE key value
+        const ID_KEY: &str = "id";
+        /// `ver` field COSE key value
+        const VER_KEY: &str = "ver";
+        builder.add_protected_header_if_not_default(
+            &mut (),
+            CONTENT_ENCODING_KEY,
+            self.content_encoding(),
+        )?;
+        builder.add_protected_header(
+            uuid_ctx,
+            TYPE_KEY,
+            self.doc_type().map_err(VecEncodeError::message)?,
+        )?;
+        builder.add_protected_header(
+            uuid_ctx,
+            ID_KEY,
+            self.doc_id().map_err(VecEncodeError::message)?,
+        )?;
+        builder.add_protected_header(
+            uuid_ctx,
+            VER_KEY,
+            self.doc_ver().map_err(VecEncodeError::message)?,
+        )?;
+        self.extra().fill_cose_sign_builder(uuid_ctx, builder)
+    }
 }
 
 impl InnerMetadata {
@@ -225,40 +262,5 @@ impl Display for Metadata {
         writeln!(f, "  content_encoding: {:?}", self.0.content_encoding)?;
         writeln!(f, "  additional_fields: {:?},", self.0.extra)?;
         writeln!(f, "}}")
-    }
-}
-
-impl TryFrom<&Metadata> for coset::Header {
-    type Error = anyhow::Error;
-
-    fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
-        let mut builder = coset::HeaderBuilder::new()
-            .content_format(CoapContentFormat::from(meta.content_type()?));
-        let mut builder = coset::HeaderBuilder::new();
-
-        if let Some(content_encoding) = meta.content_encoding() {
-            builder = builder.text_value(
-                CONTENT_ENCODING_KEY.to_string(),
-                format!("{content_encoding}").into(),
-            );
-        }
-
-        builder = builder
-            .text_value(
-                TYPE_KEY.to_string(),
-                Value::try_from(CborUuidV4(meta.doc_type()?))?,
-            )
-            .text_value(
-                ID_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_id()?))?,
-            )
-            .text_value(
-                VER_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_ver()?))?,
-            );
-
-        builder = meta.0.extra.fill_cose_header_fields(builder)?;
-
-        Ok(builder.build())
     }
 }

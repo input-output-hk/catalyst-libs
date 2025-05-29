@@ -1,7 +1,10 @@
 //! Catalyst Signed Document Extra Fields.
 
 use catalyst_types::problem_report::ProblemReport;
-use coset::{cbor::Value, Label, ProtectedHeader};
+use coset::{Label, ProtectedHeader};
+use serde::{Deserialize, Serialize};
+
+use crate::cose_sign::VecEncodeError;
 
 use super::{
     cose_protected_header_find, utils::decode_document_field_from_protected_header, DocumentRef,
@@ -30,7 +33,7 @@ const CATEGORY_ID_KEY: &str = "category_id";
 /// Extra Metadata Fields.
 ///
 /// These values are extracted from the COSE Sign protected header labels.
-#[derive(Clone, Default, Debug, PartialEq)]
+#[derive(Clone, Default, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ExtraFields {
     /// Reference to the latest document.
     #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
@@ -87,38 +90,6 @@ impl ExtraFields {
     #[must_use]
     pub fn parameters(&self) -> Option<DocumentRef> {
         self.parameters
-    }
-
-    /// Fill the COSE header `ExtraFields` data into the header builder.
-    pub(super) fn fill_cose_header_fields(
-        &self, mut builder: coset::HeaderBuilder,
-    ) -> anyhow::Result<coset::HeaderBuilder> {
-        if let Some(doc_ref) = &self.doc_ref {
-            builder = builder.text_value(REF_KEY.to_string(), Value::try_from(*doc_ref)?);
-        }
-        if let Some(template) = &self.template {
-            builder = builder.text_value(TEMPLATE_KEY.to_string(), Value::try_from(*template)?);
-        }
-        if let Some(reply) = &self.reply {
-            builder = builder.text_value(REPLY_KEY.to_string(), Value::try_from(*reply)?);
-        }
-
-        if let Some(section) = &self.section {
-            builder = builder.text_value(SECTION_KEY.to_string(), Value::from(section.clone()));
-        }
-
-        if !self.collabs.is_empty() {
-            builder = builder.text_value(
-                COLLABS_KEY.to_string(),
-                Value::Array(self.collabs.iter().cloned().map(Value::Text).collect()),
-            );
-        }
-
-        if let Some(parameters) = &self.parameters {
-            builder = builder.text_value(PARAMETERS_KEY.to_string(), Value::try_from(*parameters)?);
-        }
-
-        Ok(builder)
     }
 
     /// Converting COSE Protected Header to `ExtraFields`.
@@ -222,6 +193,25 @@ impl ExtraFields {
         }
 
         extra
+    }
+
+    /// Add [`Self`] fields to the builder as protected headers.
+    ///
+    /// # Errors
+    ///
+    /// - If encoding of one of the fields fails, [`crate::CoseSignBuilder`] becomes corrupt and an error is returned
+    #[allow(const_item_mutation, reason = "expected")]
+    pub(crate) fn fill_cose_sign_builder<'a>(
+        &self, uuid_ctx: &mut catalyst_types::uuid::CborContext,
+        builder: &'a mut crate::CoseSignBuilder,
+    ) -> Result<&'a mut crate::CoseSignBuilder, VecEncodeError> {
+        builder.add_protected_header_if_not_default(uuid_ctx, REF_KEY, self.doc_ref())?;
+        builder.add_protected_header_if_not_default(uuid_ctx, TEMPLATE_KEY, self.template())?;
+        builder.add_protected_header_if_not_default(uuid_ctx, REPLY_KEY, self.reply())?;
+        builder.add_protected_header_if_not_default(&mut (), SECTION_KEY, self.section())?;
+        builder.add_protected_header_if_not_default(&mut (), COLLABS_KEY, self.collabs())?;
+        builder.add_protected_header_if_not_default(uuid_ctx, PARAMETERS_KEY, self.parameters())?;
+        builder.add_protected_header_if_not_default(uuid_ctx, PARAMETERS_KEY, self.parameters())
     }
 }
 
