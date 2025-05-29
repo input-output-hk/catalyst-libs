@@ -10,7 +10,16 @@ mod common;
 
 #[test]
 fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
-    let (_, _, metadata_fields) = common::test_metadata();
+    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
+    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
+        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        None,
+    ));
+}
+
+#[allow(clippy::unwrap_used)]
+fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (_, _, metadata_fields) = data;
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
     // transform Catalyst ID URI form to the ID form
     let kid = kid.as_id();
@@ -29,9 +38,19 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
 }
 
 #[tokio::test]
-#[allow(clippy::too_many_lines)]
 async fn catalyst_signed_doc_parameters_aliases_test() {
-    let (_, _, metadata_fields) = common::test_metadata();
+    catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
+    catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
+        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        None,
+    ))
+    .await;
+}
+
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::too_many_lines)]
+async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (_, _, metadata_fields) = data;
     let (sk, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid.clone(), pk);
@@ -215,7 +234,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                (doc.doc_type().unwrap() == uuid_v4)
+                (doc.doc_type().unwrap() == &DocType::from(uuid_v4))
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
