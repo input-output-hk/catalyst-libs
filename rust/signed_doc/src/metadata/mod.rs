@@ -261,3 +261,50 @@ impl TryFrom<&Metadata> for coset::Header {
         Ok(builder.build())
     }
 }
+
+impl<C> minicbor::Encode<C> for Metadata {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        let number_of_fields = [
+            self.0.content_type.is_some(),
+            self.0.content_encoding.is_some(),
+            self.0.doc_type.is_some(),
+            self.0.id.is_some(),
+            self.0.ver.is_some(),
+            self.extra().doc_ref().is_some(),
+            self.extra().template().is_some(),
+            self.extra().reply().is_some(),
+            self.extra().section().is_some(),
+            !self.extra().collabs().is_empty(),
+            self.extra().parameters().is_some(),
+        ]
+        .iter()
+        .count();
+
+        e.map(
+            number_of_fields
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
+        if let Some(ref content_type) = self.0.content_type {
+            e.encode(3)?.encode(content_type)?;
+        }
+        if let Some(content_encoding) = self.0.content_encoding {
+            e.str(CONTENT_ENCODING_KEY)?.encode(content_encoding)?;
+        }
+        if let Some(ref doc_type) = self.0.doc_type {
+            e.str(TYPE_KEY)?.encode(doc_type)?;
+        }
+        if let Some(ref id) = self.0.id {
+            e.str(ID_KEY)?
+                .encode_with(id, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        }
+        if let Some(ref ver) = self.0.ver {
+            e.str(VER_KEY)?
+                .encode_with(ver, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        }
+
+        Ok(())
+    }
+}
