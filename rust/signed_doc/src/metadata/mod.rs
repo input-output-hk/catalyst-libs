@@ -33,6 +33,8 @@ const TYPE_KEY: &str = "type";
 const ID_KEY: &str = "id";
 /// `ver` field COSE key value
 const VER_KEY: &str = "ver";
+/// `content_type` field COSE key value
+const CONTENT_TYPE: u8 = 3;
 
 /// Document Metadata.
 ///
@@ -153,6 +155,11 @@ impl Metadata {
         const ID_KEY: &str = "id";
         /// `ver` field COSE key value
         const VER_KEY: &str = "ver";
+        builder.add_protected_header(
+            &mut (),
+            CONTENT_TYPE,
+            self.content_type().map_err(VecEncodeError::message)?,
+        )?;
         builder.add_protected_header_if_not_default(
             &mut (),
             CONTENT_ENCODING_KEY,

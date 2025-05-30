@@ -188,7 +188,7 @@ impl CatalystSignedDocument {
     pub fn into_builder(&self) -> CoseSignBuilder {
         let mut builder = CoseSign::builder();
         // TOOD!
-        self.into()
+        todo!()
     }
 }
 
