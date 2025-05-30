@@ -5,7 +5,6 @@ pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
-    fmt,
     sync::LazyLock,
     time::{Duration, SystemTime},
 };
@@ -14,7 +13,6 @@ use anyhow::Context;
 use catalyst_types::{
     catalyst_id::{role_index::RoleId, CatalystId},
     problem_report::ProblemReport,
-    uuid::{Uuid, UuidV4},
 };
 use coset::{CoseSign, CoseSignature};
 use rules::{
@@ -24,28 +22,35 @@ use rules::{
 
 use crate::{
     doc_types::{
-        CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE,
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
-        PROPOSAL_TEMPLATE_UUID_TYPE,
+        deprecated::{
+            CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE,
+        },
+        COMMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOC_TYPE,
+        PROPOSAL_UUID_TYPE,
     },
+    metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
 
-/// Returns an [`UuidV4`] from the provided argument, panicking if the argument is
-/// invalid.
+/// Returns an `DocType` from the provided argument.
+/// Reduce redundant conversion.
+/// This function should be used for hardcoded values, panic if conversion fail.
 #[allow(clippy::expect_used)]
-fn expect_uuidv4<T>(t: T) -> UuidV4
-where T: TryInto<UuidV4, Error: fmt::Debug> {
-    t.try_into().expect("Must be a valid UUID V4")
+pub(crate) fn expect_doc_type<T>(t: T) -> DocType
+where
+    T: TryInto<DocType>,
+    T::Error: std::fmt::Debug,
+{
+    t.try_into().expect("Failed to convert to DocType")
 }
 
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
-fn document_rules_init() -> HashMap<Uuid, Rules> {
+fn document_rules_init() -> HashMap<DocType, Rules> {
     let mut document_rules_map = HashMap::new();
 
     let proposal_document_rules = Rules {
@@ -57,10 +62,10 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_uuidv4(PROPOSAL_TEMPLATE_UUID_TYPE),
+            exp_template_type: expect_doc_type(PROPOSAL_TEMPLATE_UUID_TYPE),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: expect_doc_type(CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::NotSpecified,
@@ -71,7 +76,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
     };
 
-    document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
+    document_rules_map.insert(PROPOSAL_DOC_TYPE.clone(), proposal_document_rules);
 
     let comment_document_rules = Rules {
         content_type: ContentTypeRule {
@@ -82,14 +87,14 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_uuidv4(COMMENT_TEMPLATE_UUID_TYPE),
+            exp_template_type: expect_doc_type(COMMENT_TEMPLATE_UUID_TYPE),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: expect_uuidv4(COMMENT_DOCUMENT_UUID_TYPE),
+            exp_reply_type: expect_doc_type(COMMENT_UUID_TYPE),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },
@@ -98,7 +103,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: &[RoleId::Role0],
         },
     };
-    document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
+    document_rules_map.insert(PROPOSAL_COMMENT_DOC.clone(), comment_document_rules);
 
     let proposal_action_json_schema = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft7)
@@ -119,11 +124,11 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: expect_doc_type(CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
@@ -134,7 +139,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
     };
 
     document_rules_map.insert(
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+        PROPOSAL_ACTION_DOC.clone(),
         proposal_submission_action_rules,
     );
 
@@ -164,7 +169,7 @@ where Provider: CatalystSignedDocumentProvider {
         return Ok(false);
     }
 
-    let Some(rules) = DOCUMENT_RULES.get(&doc_type.uuid()) else {
+    let Some(rules) = DOCUMENT_RULES.get(doc_type) else {
         doc.report().invalid_value(
             "`type`",
             &doc.doc_type()?.to_string(),

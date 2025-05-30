@@ -36,7 +36,7 @@ impl ContentTypeRule {
             );
             return Ok(false);
         };
-        if content_type.validate(content).is_err() {
+        if self.validate(content).is_err() {
             doc.report().invalid_value(
                 "payload",
                 &hex::encode(content),
@@ -48,6 +48,27 @@ impl ContentTypeRule {
 
         Ok(true)
     }
+
+    /// Validates the provided `content` bytes to be a defined `ContentType`.
+    fn validate(&self, content: &[u8]) -> anyhow::Result<()> {
+        match self.exp {
+            ContentType::Json => {
+                if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content) {
+                    anyhow::bail!("Invalid {} content: {e}", self.exp)
+                }
+            },
+            ContentType::Cbor => {
+                let mut decoder = minicbor::Decoder::new(content);
+
+                decoder.skip()?;
+
+                if decoder.position() != content.len() {
+                    anyhow::bail!("Unused bytes remain in the input after decoding")
+                }
+            },
+        }
+        Ok(())
+    }
 }
 
 #[cfg(test)]
@@ -56,39 +77,120 @@ mod tests {
     use crate::Builder;
 
     #[tokio::test]
-    async fn content_type_rule_test() {
-        let content_type = ContentType::Json;
+    async fn cbor_with_trailing_bytes_test() {
+        // valid cbor: {1: 2} but with trailing 0xff
+        let mut buf = Vec::new();
+        let mut enc = minicbor::Encoder::new(&mut buf);
+        enc.map(1).unwrap().u8(1).unwrap().u8(2).unwrap();
+        buf.push(0xFF); // extra byte
 
-        let rule = ContentTypeRule { exp: content_type };
+        let cbor_rule = ContentTypeRule {
+            exp: ContentType::Cbor,
+        };
 
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
+            .with_json_metadata(serde_json::json!({ "content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(buf)
+            .build();
+
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
+    }
+
+    #[tokio::test]
+    async fn malformed_cbor_bytes_test() {
+        // 0xa2 means a map with 2 key-value pairs, but we only give 1 key
+        let invalid_bytes = &[0xA2, 0x01];
+
+        let cbor_rule = ContentTypeRule {
+            exp: ContentType::Cbor,
+        };
+
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({ "content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(invalid_bytes.into())
+            .build();
+
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
+    }
+
+    #[tokio::test]
+    async fn content_type_cbor_rule_test() {
+        let cbor_rule = ContentTypeRule {
+            exp: ContentType::Cbor,
+        };
+
+        // with json bytes
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
             .build();
-        assert!(rule.check(&doc).await.unwrap());
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
 
+        // with cbor bytes
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"content-type": ContentType::Cbor.to_string() }))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
-            .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
+            .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(true)));
 
+        // without content
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
 
+        // with empty content
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"content-type": content_type.to_string() }))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(vec![])
             .build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
+    }
+
+    #[tokio::test]
+    async fn content_type_json_rule_test() {
+        let json_rule = ContentTypeRule {
+            exp: ContentType::Json,
+        };
+
+        // with json bytes
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
+            .build();
+        assert!(matches!(json_rule.check(&doc).await, Ok(true)));
+
+        // with cbor bytes
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
+            .build();
+        assert!(matches!(json_rule.check(&doc).await, Ok(false)));
+
+        // without content
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
+            .build();
+        assert!(matches!(json_rule.check(&doc).await, Ok(false)));
+
+        // with empty content
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
+            .with_decoded_content(vec![])
+            .build();
+        assert!(matches!(json_rule.check(&doc).await, Ok(false)));
 
         let doc = Builder::new().build();
-        assert!(!rule.check(&doc).await.unwrap());
+        assert!(matches!(json_rule.check(&doc).await, Ok(false)));
     }
 }
