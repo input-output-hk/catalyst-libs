@@ -63,7 +63,7 @@ impl TryFrom<&coset::ContentType> for ContentType {
             coset::ContentType::Assigned(CoapContentFormat::Json) => Ok(ContentType::Json),
             coset::ContentType::Assigned(CoapContentFormat::Cbor) => Ok(ContentType::Cbor),
             coset::ContentType::Text(str) => str.parse(),
-            _ => {
+            coset::RegisteredLabel::Assigned(_) => {
                 anyhow::bail!(
                     "Unsupported Content Type: {value:?}, Supported only: {:?}",
                     ContentType::VARIANTS
