@@ -5,7 +5,7 @@ use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::{CborSerializable, TaggedCborSerializable};
 use ed25519_dalek::ed25519::signature::Signer;
-use minicbor::Encoder;
+use minicbor::{data::Tag, Encoder};
 
 mod common;
 
@@ -205,10 +205,11 @@ fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v4 = UuidV4::new();
 
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, without signatures (unsigned)",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, without signatures (unsigned), CBOR tagged.",
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
                 e.array(4)?;
                 // protected headers (metadata fields)
                 let mut p_headers = Encoder::new(Vec::new());
