@@ -12,10 +12,11 @@ pub(crate) mod utils;
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
+use coset::CborSerializable;
 pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
+use extra_fields::{COLLABS_KEY, PARAMETERS_KEY, REF_KEY, REPLY_KEY, SECTION_KEY, TEMPLATE_KEY};
 use minicbor::{Decode, Decoder};
 pub use section::Section;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
@@ -231,33 +232,77 @@ impl Display for Metadata {
     }
 }
 
-impl TryFrom<&Metadata> for coset::Header {
-    type Error = anyhow::Error;
+impl<C> minicbor::Encode<C> for Metadata {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        let number_of_fields = [
+            self.0.content_type.is_some(),
+            self.0.content_encoding.is_some(),
+            self.0.doc_type.is_some(),
+            self.0.id.is_some(),
+            self.0.ver.is_some(),
+            self.extra().doc_ref().is_some(),
+            self.extra().template().is_some(),
+            self.extra().reply().is_some(),
+            self.extra().section().is_some(),
+            !self.extra().collabs().is_empty(),
+            self.extra().parameters().is_some(),
+        ]
+        .iter()
+        .filter(|v| **v)
+        .count();
 
-    fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
-        let mut builder = coset::HeaderBuilder::new()
-            .content_format(CoapContentFormat::from(meta.content_type()?));
-
-        if let Some(content_encoding) = meta.content_encoding() {
-            builder = builder.text_value(
-                CONTENT_ENCODING_KEY.to_string(),
-                format!("{content_encoding}").into(),
-            );
+        e.map(
+            number_of_fields
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
+        if let Some(content_type) = &self.0.content_type {
+            e.encode(3)?.encode(content_type)?;
+        }
+        if let Some(content_encoding) = &self.0.content_encoding {
+            e.str(CONTENT_ENCODING_KEY)?.encode(content_encoding)?;
+        }
+        if let Some(doc_type) = &self.0.doc_type {
+            e.str(TYPE_KEY)?.encode(doc_type)?;
+        }
+        if let Some(id) = &self.0.id {
+            e.str(ID_KEY)?
+                .encode_with(id, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        }
+        if let Some(ver) = &self.0.ver {
+            e.str(VER_KEY)?
+                .encode_with(ver, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        }
+        if let Some(doc_ref) = &self.extra().doc_ref() {
+            e.str(REF_KEY)?.encode(doc_ref)?;
+        }
+        if let Some(template) = &self.extra().template() {
+            e.str(TEMPLATE_KEY)?.encode(template)?;
+        }
+        if let Some(reply) = &self.extra().reply() {
+            e.str(REPLY_KEY)?.encode(reply)?;
+        }
+        if let Some(section) = self.extra().section() {
+            e.str(SECTION_KEY)?.encode(section)?;
         }
 
-        builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value())
-            .text_value(
-                ID_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_id()?))?,
-            )
-            .text_value(
-                VER_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_ver()?))?,
-            );
-
-        builder = meta.0.extra.fill_cose_header_fields(builder)?;
-
-        Ok(builder.build())
+        if !self.extra().collabs().is_empty() {
+            e.str(COLLABS_KEY)?.array(
+                self.extra()
+                    .collabs()
+                    .len()
+                    .try_into()
+                    .map_err(minicbor::encode::Error::message)?,
+            )?;
+            for collab in self.extra().collabs() {
+                e.str(collab)?;
+            }
+        }
+        if let Some(parameters) = self.extra().parameters() {
+            e.str(PARAMETERS_KEY)?.encode(parameters)?;
+        }
+        Ok(())
     }
 }

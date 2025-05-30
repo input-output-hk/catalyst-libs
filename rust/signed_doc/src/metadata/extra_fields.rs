@@ -1,7 +1,7 @@
 //! Catalyst Signed Document Extra Fields.
 
 use catalyst_types::problem_report::ProblemReport;
-use coset::{cbor::Value, Label, ProtectedHeader};
+use coset::{Label, ProtectedHeader};
 
 use super::{
     cose_protected_header_find, utils::decode_document_field_from_protected_header, DocumentRef,
@@ -9,23 +9,23 @@ use super::{
 };
 
 /// `ref` field COSE key value
-const REF_KEY: &str = "ref";
+pub(crate) const REF_KEY: &str = "ref";
 /// `template` field COSE key value
-const TEMPLATE_KEY: &str = "template";
+pub(crate) const TEMPLATE_KEY: &str = "template";
 /// `reply` field COSE key value
-const REPLY_KEY: &str = "reply";
+pub(crate) const REPLY_KEY: &str = "reply";
 /// `section` field COSE key value
-const SECTION_KEY: &str = "section";
+pub(crate) const SECTION_KEY: &str = "section";
 /// `collabs` field COSE key value
-const COLLABS_KEY: &str = "collabs";
+pub(crate) const COLLABS_KEY: &str = "collabs";
 /// `parameters` field COSE key value
-const PARAMETERS_KEY: &str = "parameters";
+pub(crate) const PARAMETERS_KEY: &str = "parameters";
 /// `brand_id` field COSE key value (alias of the `parameters` field)
-const BRAND_ID_KEY: &str = "brand_id";
+pub(crate) const BRAND_ID_KEY: &str = "brand_id";
 /// `campaign_id` field COSE key value (alias of the `parameters` field)
-const CAMPAIGN_ID_KEY: &str = "campaign_id";
+pub(crate) const CAMPAIGN_ID_KEY: &str = "campaign_id";
 /// `category_id` field COSE key value (alias of the `parameters` field)
-const CATEGORY_ID_KEY: &str = "category_id";
+pub(crate) const CATEGORY_ID_KEY: &str = "category_id";
 
 /// Extra Metadata Fields.
 ///
@@ -87,38 +87,6 @@ impl ExtraFields {
     #[must_use]
     pub fn parameters(&self) -> Option<DocumentRef> {
         self.parameters
-    }
-
-    /// Fill the COSE header `ExtraFields` data into the header builder.
-    pub(super) fn fill_cose_header_fields(
-        &self, mut builder: coset::HeaderBuilder,
-    ) -> anyhow::Result<coset::HeaderBuilder> {
-        if let Some(doc_ref) = &self.doc_ref {
-            builder = builder.text_value(REF_KEY.to_string(), Value::try_from(*doc_ref)?);
-        }
-        if let Some(template) = &self.template {
-            builder = builder.text_value(TEMPLATE_KEY.to_string(), Value::try_from(*template)?);
-        }
-        if let Some(reply) = &self.reply {
-            builder = builder.text_value(REPLY_KEY.to_string(), Value::try_from(*reply)?);
-        }
-
-        if let Some(section) = &self.section {
-            builder = builder.text_value(SECTION_KEY.to_string(), Value::from(section.clone()));
-        }
-
-        if !self.collabs.is_empty() {
-            builder = builder.text_value(
-                COLLABS_KEY.to_string(),
-                Value::Array(self.collabs.iter().cloned().map(Value::Text).collect()),
-            );
-        }
-
-        if let Some(parameters) = &self.parameters {
-            builder = builder.text_value(PARAMETERS_KEY.to_string(), Value::try_from(*parameters)?);
-        }
-
-        Ok(builder)
     }
 
     /// Converting COSE Protected Header to `ExtraFields`.
