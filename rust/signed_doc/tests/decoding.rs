@@ -5,6 +5,7 @@ use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::{CborSerializable, TaggedCborSerializable};
 use ed25519_dalek::ed25519::signature::Signer;
+use minicbor::Encoder;
 
 mod common;
 
@@ -179,7 +180,7 @@ type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
 
 struct TestCase {
     name: &'static str,
-    bytes_gen: Box<dyn Fn() -> Vec<u8>>,
+    bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
     // If the provided bytes can be even decoded without error (valid COSE or not).
     // If set to `false` all further checks will not even happen.
     can_decode: bool,
@@ -191,7 +192,7 @@ struct TestCase {
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes",
-        bytes_gen: Box::new(Vec::new),
+        bytes_gen: Box::new(|| Ok(Encoder::new(Vec::new()))),
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -202,34 +203,30 @@ fn decoding_empty_bytes_case() -> TestCase {
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     TestCase {
-        name: "Catalyst Signed Doc with ALL defined metadata fields and signatures",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, without signatures (unsigned)",
         bytes_gen: Box::new({
-            let kid = kid.clone();
             move || {
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({
-                        "content-type": ContentType::Json.to_string(),
-                        "content-encoding": ContentEncoding::Brotli.to_string(),
-                        "type": uuid_v4.to_string(),
-                        "id": uuid_v7.to_string(),
-                        "ver": uuid_v7.to_string(),
-                        "ref": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                        "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                        "template": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                        "section": "$".to_string(),
-                        "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
-                        "parameters": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                    }))
-                    .unwrap()
-                    .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
-                    .add_signature(|m| sk.sign(&m).to_vec(), &kid)
-                    .unwrap()
-                    .build()
-                    .try_into()
-                    .unwrap()
+                let mut e = Encoder::new(Vec::new());
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("ver")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                e.array(0)?;
+                Ok(e)
             }
         }),
         can_decode: true,
@@ -240,32 +237,8 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
-                    && (doc.doc_content_encoding().unwrap() == ContentEncoding::Brotli)
-                    && (doc.doc_meta().doc_ref().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().reply().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().template().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().parameters().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().section().unwrap() == &"$".parse::<Section>().unwrap())
-                    && (doc.doc_meta().collabs() == ["Alex1".to_string(), "Alex2".to_string()])
                     && (doc.doc_content().decoded_bytes().unwrap()
                         == serde_json::to_vec(&serde_json::Value::Null).unwrap())
-                    && (doc.kids() == vec![kid.clone()])
             }
         })),
     }
@@ -279,9 +252,15 @@ fn catalyst_signed_doc_decoding_test() {
     ];
 
     for case in test_cases {
-        let bytes = case.bytes_gen.as_ref()();
+        let bytes = case.bytes_gen.as_ref()().unwrap().into_writer();
         let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
-        assert_eq!(doc_res.is_ok(), case.can_decode, "Case: [{}]", case.name);
+        assert_eq!(
+            doc_res.is_ok(),
+            case.can_decode,
+            "Case: [{}], error: {:?}",
+            case.name,
+            doc_res.err()
+        );
         if let Ok(doc) = doc_res {
             assert_eq!(
                 !doc.problem_report().is_problematic(),

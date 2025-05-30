@@ -200,12 +200,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                             minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
                         })?;
 
-                        let doc_type = map_doc_type(uuid.into()).map_err(|e| {
-                            decode_context.report.other(&e.to_string(), CONTEXT);
-                            minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
-                        })?;
-
-                        Ok(doc_type)
+                        Ok(map_doc_type(uuid))
                     },
 
                     CompatibilityPolicy::Fail => {
@@ -234,12 +229,12 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
 
 /// Map single UUID doc type to new list of doc types
 /// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
-fn map_doc_type(uuid: Uuid) -> anyhow::Result<DocType> {
+fn map_doc_type(uuid: UuidV4) -> DocType {
     match uuid {
-        id if id == PROPOSAL_UUID_TYPE => Ok(PROPOSAL_DOC_TYPE.clone()),
-        id if id == COMMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT_DOC.clone()),
-        id if id == ACTION_UUID_TYPE => Ok(PROPOSAL_ACTION_DOC.clone()),
-        _ => anyhow::bail!("Unknown document type: {uuid}"),
+        id if Uuid::from(id) == PROPOSAL_UUID_TYPE => PROPOSAL_DOC_TYPE.clone(),
+        id if Uuid::from(id) == COMMENT_UUID_TYPE => PROPOSAL_COMMENT_DOC.clone(),
+        id if Uuid::from(id) == ACTION_UUID_TYPE => PROPOSAL_ACTION_DOC.clone(),
+        id => DocType(vec![id]),
     }
 }
 
@@ -276,12 +271,12 @@ impl<'de> Deserialize<'de> for DocType {
         let input = DocTypeInput::deserialize(deserializer)?;
         let dt = match input {
             DocTypeInput::Single(s) => {
-                let uuid = Uuid::parse_str(&s).map_err(|_| {
+                let uuid = s.parse().map_err(|_| {
                     serde::de::Error::custom(DocTypeError::StringConversion(s.clone()))
                 })?;
                 // If there is a map from old (single uuid) to new use that list, else convert that
                 // single uuid to [uuid] - of type DocType
-                map_doc_type(uuid).unwrap_or(uuid.try_into().map_err(serde::de::Error::custom)?)
+                map_doc_type(uuid)
             },
             DocTypeInput::Multiple(v) => v.try_into().map_err(serde::de::Error::custom)?,
         };
@@ -424,7 +419,7 @@ mod tests {
     #[test]
     fn test_doctype_equal_special_cases() {
         // Direct equal
-        let uuid = PROPOSAL_UUID_TYPE;
+        let uuid: UuidV4 = PROPOSAL_UUID_TYPE.try_into().unwrap();
         let dt1 = DocType::try_from(vec![uuid]).unwrap();
         let dt2 = DocType::try_from(vec![uuid]).unwrap();
         assert_eq!(dt1, dt2);
