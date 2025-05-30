@@ -24,7 +24,9 @@ pub(crate) fn cose_protected_header_find(
 pub(crate) fn decode_document_field_from_protected_header<T>(
     protected: &ProtectedHeader, field_name: &str, report_content: &str, report: &ProblemReport,
 ) -> Option<T>
-where T: for<'a> TryFrom<&'a coset::cbor::Value> {
+where
+    T: for<'a> TryFrom<&'a coset::cbor::Value>,
+{
     if let Some(cbor_doc_field) =
         cose_protected_header_find(protected, |key| key == &Label::Text(field_name.to_string()))
     {
@@ -93,7 +95,7 @@ fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
 /// Decode `From<uuid::Uuid>` type from `coset::cbor::Value`.
 ///
 /// This is used to decode `UuidV4` and `UuidV7` types.
-fn decode_cbor_uuid<T: for<'a> Decode<'a, CborContext>>(
+fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborContext>>(
     value: &coset::cbor::Value,
 ) -> anyhow::Result<T> {
     let mut cbor_bytes = Vec::new();
@@ -127,7 +129,7 @@ pub(crate) fn transcode_coset_with<C, T, U>(
 ) -> Result<U, minicbor::decode::Error>
 where
     T: coset::CborSerializable,
-    U: for<'a> Decode<'a, C>,
+    U: for<'a> minicbor::decode::Decode<'a, C>,
 {
     let cbor_bytes = value.to_vec().map_err(minicbor::decode::Error::custom)?;
     minicbor::decode_with(&cbor_bytes, ctx)
