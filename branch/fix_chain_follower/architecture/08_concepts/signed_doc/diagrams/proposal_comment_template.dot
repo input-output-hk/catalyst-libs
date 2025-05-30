@@ -1,0 +1,189 @@
+digraph "Proposal Comment Template" {
+    rankdir="LR"
+        graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+        node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+        edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+
+    labelloc="t"
+    label="Proposal Comment Template
+Document Relationships"
+    fontcolor="#1d71b8"
+    fontsize=50
+
+
+    "Proposal Comment Meta Template" [
+        id="Proposal Comment Meta Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_meta_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment Meta Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Brand Parameters" [
+        id="Brand Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters/">
+                    <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Campaign Parameters" [
+        id="Campaign Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
+                    <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Category Parameters" [
+        id="Category Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                    <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Comment Template" [
+        id="Proposal Comment Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment Template </B></FONT>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>content type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>application/schema+json</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier"><I>0ce8ab38-9258-4fbc-a62e-7faa6e58318f<BR />b679ded3-0e7c-41ba-89f8-da62a17898ea<BR />7808d2ba-d511-40af-84e8-c0d1625fdfdc</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Document Id</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>ver</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Document Ver</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="template" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>template</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Proposal Comment Meta Template</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="brand_id" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>brand_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Brand Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="campaign_id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>campaign_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Campaign Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="category_id" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT>category_id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT><I>Category Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Comment" [
+        id="Proposal Comment";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Comment Template":"template":e -> "Proposal Comment Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"brand_id":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"campaign_id":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Template":"category_id":e -> "Category Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment":"title":e -> "Proposal Comment Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+}
