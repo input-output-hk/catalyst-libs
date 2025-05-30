@@ -56,3 +56,12 @@ impl TryFrom<&Value> for Section {
         Self::from_str(str)
     }
 }
+
+impl<C> minicbor::Encode<C> for Section {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.str(self.to_string().as_str())?;
+        Ok(())
+    }
+}

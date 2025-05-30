@@ -16,6 +16,7 @@ use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
 pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
+use extra_fields::{COLLABS_KEY, PARAMETERS_KEY, REF_KEY, REPLY_KEY, SECTION_KEY, TEMPLATE_KEY};
 use minicbor::{Decode, Decoder};
 pub use section::Section;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
@@ -287,22 +288,48 @@ impl<C> minicbor::Encode<C> for Metadata {
                 .try_into()
                 .map_err(minicbor::encode::Error::message)?,
         )?;
-        if let Some(ref content_type) = self.0.content_type {
+        if let Some(content_type) = &self.0.content_type {
             e.encode(3)?.encode(content_type)?;
         }
-        if let Some(content_encoding) = self.0.content_encoding {
+        if let Some(content_encoding) = &self.0.content_encoding {
             e.str(CONTENT_ENCODING_KEY)?.encode(content_encoding)?;
         }
-        if let Some(ref doc_type) = self.0.doc_type {
+        if let Some(doc_type) = &self.0.doc_type {
             e.str(TYPE_KEY)?.encode(doc_type)?;
         }
-        if let Some(ref id) = self.0.id {
+        if let Some(id) = &self.0.id {
             e.str(ID_KEY)?
                 .encode_with(id, &mut catalyst_types::uuid::CborContext::Tagged)?;
         }
-        if let Some(ref ver) = self.0.ver {
+        if let Some(ver) = &self.0.ver {
             e.str(VER_KEY)?
                 .encode_with(ver, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        }
+        if let Some(doc_ref) = &self.extra().doc_ref() {
+            e.str(REF_KEY)?.encode(doc_ref)?;
+        }
+        if let Some(template) = &self.extra().template() {
+            e.str(TEMPLATE_KEY)?.encode(template)?;
+        }
+        if let Some(reply) = &self.extra().reply() {
+            e.str(REPLY_KEY)?.encode(reply)?;
+        }
+        if let Some(section) = self.extra().section() {
+            e.str(SECTION_KEY)?.encode(section)?;
+        }
+
+        e.str(COLLABS_KEY)?.array(
+            self.extra()
+                .collabs()
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
+        for collab in self.extra().collabs() {
+            e.str(collab)?;
+        }
+        if let Some(parameters) = self.extra().parameters() {
+            e.str(PARAMETERS_KEY)?.encode(parameters)?;
         }
 
         Ok(())

@@ -53,3 +53,14 @@ impl TryFrom<&Value> for DocumentRef {
         Ok(DocumentRef { id, ver })
     }
 }
+
+impl<C> minicbor::Encode<C> for DocumentRef {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(2)?
+            .encode_with(self.id, &mut catalyst_types::uuid::CborContext::Tagged)?
+            .encode_with(self.ver, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        Ok(())
+    }
+}
