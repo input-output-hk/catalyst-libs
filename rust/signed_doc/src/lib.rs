@@ -22,7 +22,7 @@ pub use catalyst_types::{
     uuid::{Uuid, UuidV4, UuidV7},
 };
 pub use content::Content;
-use coset::{CborSerializable, Header, TaggedCborSerializable};
+use coset::{CborSerializable, CoseSignature, Header, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
     ContentEncoding, ContentType, DocType, DocumentRef, ExtraFields, Metadata, Section,
@@ -70,7 +70,7 @@ impl Display for CatalystSignedDocument {
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
         } else {
-            for kid in &self.inner.signatures.kids() {
+            for kid in &self.kids() {
                 writeln!(f, "  Signature Key ID: {kid}")?;
             }
         }
@@ -148,13 +148,21 @@ impl CatalystSignedDocument {
     /// Return a list of Document's Catalyst IDs.
     #[must_use]
     pub fn kids(&self) -> Vec<CatalystId> {
-        self.inner.signatures.kids()
+        self.inner
+            .signatures
+            .iter()
+            .map(|s| s.kid().clone())
+            .collect()
     }
 
     /// Return a list of Document's author IDs (short form of Catalyst IDs).
     #[must_use]
     pub fn authors(&self) -> Vec<CatalystId> {
-        self.inner.signatures.authors()
+        self.inner
+            .signatures
+            .iter()
+            .map(|s| s.kid().as_short_id())
+            .collect()
     }
 
     /// Returns a collected problem report for the document.
@@ -217,7 +225,10 @@ impl InnerCatalystSignedDocument {
                 .protected(protected_header)
                 .payload(content);
 
-            for signature in self.signatures.cose_signatures() {
+            for signature in self.signatures.iter() {
+                let bytes = minicbor::to_vec(signature)?;
+                let signature = CoseSignature::from_slice(bytes.as_slice())
+                    .map_err(|e| anyhow::anyhow!("{e} Failed to encode signature"))?;
                 builder = builder.add_signature(signature);
             }
             Ok(builder.build())

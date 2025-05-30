@@ -9,15 +9,30 @@ use coset::CoseSignature;
 pub struct Signature {
     /// Key ID
     kid: CatalystId,
-    /// COSE Signature
-    signature: CoseSignature,
+    /// Raw signature data
+    signature: Vec<u8>,
 }
 
 impl Signature {
+    /// Return `kid` field (`CatalystId`), identifier who made a signature
+    pub fn kid(&self) -> &CatalystId {
+        &self.kid
+    }
+
+    /// Return raw signature bytes itself
+    pub fn signature(&self) -> &[u8] {
+        &self.signature
+    }
+
     /// Convert COSE Signature to `Signature`.
     pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
         match CatalystId::try_from(signature.protected.header.key_id.as_ref()) {
-            Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
+            Ok(kid) if kid.is_uri() => {
+                Some(Self {
+                    kid,
+                    signature: signature.signature,
+                })
+            },
             Ok(kid) => {
                 report.invalid_value(
                     "COSE signature protected header key ID",
@@ -47,28 +62,9 @@ impl Signature {
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
-    /// Return a list of author IDs (short form of Catalyst IDs).
-    #[must_use]
-    pub(crate) fn authors(&self) -> Vec<CatalystId> {
-        self.kids().into_iter().map(|k| k.as_short_id()).collect()
-    }
-
-    /// Return a list of Document's Catalyst IDs.
-    #[must_use]
-    pub(crate) fn kids(&self) -> Vec<CatalystId> {
-        self.0.iter().map(|sig| sig.kid.clone()).collect()
-    }
-
-    /// Iterator of COSE signatures object with kids.
-    pub(crate) fn cose_signatures_with_kids(
-        &self,
-    ) -> impl Iterator<Item = (&CoseSignature, &CatalystId)> + use<'_> {
-        self.0.iter().map(|sig| (&sig.signature, &sig.kid))
-    }
-
-    /// List of COSE signatures object.
-    pub(crate) fn cose_signatures(&self) -> impl Iterator<Item = CoseSignature> + use<'_> {
-        self.0.iter().map(|sig| sig.signature.clone())
+    /// Return an iterator over the signatures
+    pub fn iter(&self) -> impl Iterator<Item = &Signature> + use<'_> {
+        self.0.iter()
     }
 
     /// Add a `Signature` object into the list
@@ -103,5 +99,27 @@ impl Signatures {
             }).collect();
 
         Self(res)
+    }
+}
+
+impl<C> minicbor::Encode<C> for Signature {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(3)?;
+        let mut p_headers = minicbor::Encoder::new(Vec::new());
+        // protected headers (kid field)
+        p_headers
+            .map(1)
+            .map_err(minicbor::encode::Error::message)?
+            .u8(4)
+            .map_err(minicbor::encode::Error::message)?
+            .bytes(Vec::<u8>::from(&self.kid).as_slice())
+            .map_err(minicbor::encode::Error::message)?;
+        e.bytes(p_headers.into_writer().as_slice())?;
+        // empty unprotected headers
+        e.map(0)?;
+        e.bytes(&self.signature)?;
+        Ok(())
     }
 }

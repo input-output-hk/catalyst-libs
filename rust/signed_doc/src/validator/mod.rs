@@ -10,11 +10,8 @@ use std::{
 };
 
 use anyhow::Context;
-use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
-    problem_report::ProblemReport,
-};
-use coset::{CoseSign, CoseSignature};
+use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
+use coset::{CborSerializable, CoseSign, CoseSignature};
 use rules::{
     ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
     ReplyRule, Rules, SectionRule, SignatureKidRule,
@@ -30,6 +27,7 @@ use crate::{
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    signature::Signature,
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
@@ -304,10 +302,8 @@ pub async fn validate_signatures(
 
     let sign_rules = doc
         .signatures()
-        .cose_signatures_with_kids()
-        .map(|(signature, kid)| {
-            validate_signature(&cose_sign, signature, kid, provider, doc.report())
-        });
+        .iter()
+        .map(|sign| validate_signature(&cose_sign, sign, provider, doc.report()));
 
     let res = futures::future::join_all(sign_rules)
         .await
@@ -321,12 +317,13 @@ pub async fn validate_signatures(
 
 /// A single signature validation function
 async fn validate_signature<Provider>(
-    cose_sign: &CoseSign, signature: &CoseSignature, kid: &CatalystId, provider: &Provider,
-    report: &ProblemReport,
+    cose_sign: &CoseSign, sign: &Signature, provider: &Provider, report: &ProblemReport,
 ) -> anyhow::Result<bool>
-where
-    Provider: VerifyingKeyProvider,
-{
+where Provider: VerifyingKeyProvider {
+    let kid = sign.kid();
+    let signature = CoseSignature::from_slice(minicbor::to_vec(sign)?.as_slice())
+        .map_err(|e| anyhow::anyhow!("{e}"))?;
+
     let Some(pk) = provider.try_get_key(kid).await? else {
         report.other(
             &format!("Missing public key for {kid}."),
@@ -335,7 +332,7 @@ where
         return Ok(false);
     };
 
-    let tbs_data = cose_sign.tbs_data(&[], signature);
+    let tbs_data = cose_sign.tbs_data(&[], &signature);
     let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
         report.invalid_value(
             "cose signature",
