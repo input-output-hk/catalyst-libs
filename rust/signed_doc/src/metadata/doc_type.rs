@@ -5,10 +5,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG},
-};
+use catalyst_types::uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG};
 use coset::cbor::Value;
 use minicbor::{Decode, Decoder, Encode};
 use serde::{Deserialize, Deserializer};
@@ -262,28 +259,19 @@ fn map_doc_type(uuid: Uuid) -> anyhow::Result<DocType> {
     }
 }
 
-impl Encode<ProblemReport> for DocType {
+impl<C> Encode<C> for DocType {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        const CONTEXT: &str = "DocType encoding";
-        if self.0.is_empty() {
-            report.invalid_value("DocType", "empty", "DocType cannot be empty", CONTEXT);
-            return Err(minicbor::encode::Error::message(format!(
-                "{CONTEXT}: DocType cannot be empty"
-            )));
-        }
-
-        e.array(self.0.len().try_into().map_err(|_| {
-            report.other("Unable to encode array length", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}, unable to encode array length"))
-        })?)?;
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
 
         for id in &self.0 {
-            id.encode(e, &mut CborContext::Tagged).map_err(|_| {
-                report.other("Failed to encode UUIDv4", CONTEXT);
-                minicbor::encode::Error::message(format!("{CONTEXT}: UUIDv4 encoding failed"))
-            })?;
+            id.encode(e, &mut CborContext::Tagged)?;
         }
         Ok(())
     }
@@ -345,7 +333,7 @@ impl PartialEq for DocType {
 
 #[cfg(test)]
 mod tests {
-
+    use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
 

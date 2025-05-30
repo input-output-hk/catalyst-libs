@@ -9,23 +9,23 @@ use super::{
 };
 
 /// `ref` field COSE key value
-const REF_KEY: &str = "ref";
+pub(crate) const REF_KEY: &str = "ref";
 /// `template` field COSE key value
-const TEMPLATE_KEY: &str = "template";
+pub(crate) const TEMPLATE_KEY: &str = "template";
 /// `reply` field COSE key value
-const REPLY_KEY: &str = "reply";
+pub(crate) const REPLY_KEY: &str = "reply";
 /// `section` field COSE key value
-const SECTION_KEY: &str = "section";
+pub(crate) const SECTION_KEY: &str = "section";
 /// `collabs` field COSE key value
-const COLLABS_KEY: &str = "collabs";
+pub(crate) const COLLABS_KEY: &str = "collabs";
 /// `parameters` field COSE key value
-const PARAMETERS_KEY: &str = "parameters";
+pub(crate) const PARAMETERS_KEY: &str = "parameters";
 /// `brand_id` field COSE key value (alias of the `parameters` field)
-const BRAND_ID_KEY: &str = "brand_id";
+pub(crate) const BRAND_ID_KEY: &str = "brand_id";
 /// `campaign_id` field COSE key value (alias of the `parameters` field)
-const CAMPAIGN_ID_KEY: &str = "campaign_id";
+pub(crate) const CAMPAIGN_ID_KEY: &str = "campaign_id";
 /// `category_id` field COSE key value (alias of the `parameters` field)
-const CATEGORY_ID_KEY: &str = "category_id";
+pub(crate) const CATEGORY_ID_KEY: &str = "category_id";
 
 /// Extra Metadata Fields.
 ///
