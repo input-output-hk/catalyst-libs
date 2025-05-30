@@ -21,17 +21,6 @@ impl Display for DocumentRef {
     }
 }
 
-impl TryFrom<DocumentRef> for Value {
-    type Error = anyhow::Error;
-
-    fn try_from(value: DocumentRef) -> Result<Self, Self::Error> {
-        Ok(Value::Array(vec![
-            Value::try_from(CborUuidV7(value.id))?,
-            Value::try_from(CborUuidV7(value.ver))?,
-        ]))
-    }
-}
-
 impl TryFrom<&Value> for DocumentRef {
     type Error = anyhow::Error;
 

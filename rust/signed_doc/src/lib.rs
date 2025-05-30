@@ -204,8 +204,10 @@ impl InnerCatalystSignedDocument {
                 })?;
             Ok(cose_sign)
         } else {
-            let protected_header =
-                Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
+            let protected_header_bytes =
+                minicbor::to_vec(&self.metadata).context("Failed to encode Document Metadata")?;
+            let protected_header = Header::from_slice(protected_header_bytes.as_slice())
+                .map_err(|e| anyhow::anyhow!("{e} Failed to encode Document Metadata"))?;
 
             let content = self
                 .content

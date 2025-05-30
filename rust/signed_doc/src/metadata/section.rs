@@ -40,12 +40,6 @@ impl FromStr for Section {
     }
 }
 
-impl From<Section> for Value {
-    fn from(value: Section) -> Self {
-        Value::Text(value.to_string())
-    }
-}
-
 impl TryFrom<&Value> for Section {
     type Error = anyhow::Error;
 

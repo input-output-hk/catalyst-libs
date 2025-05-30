@@ -12,7 +12,7 @@ pub(crate) mod utils;
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
+use coset::CborSerializable;
 pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 pub use extra_fields::ExtraFields;
@@ -232,37 +232,6 @@ impl Display for Metadata {
     }
 }
 
-impl TryFrom<&Metadata> for coset::Header {
-    type Error = anyhow::Error;
-
-    fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
-        let mut builder = coset::HeaderBuilder::new()
-            .content_format(CoapContentFormat::from(meta.content_type()?));
-
-        if let Some(content_encoding) = meta.content_encoding() {
-            builder = builder.text_value(
-                CONTENT_ENCODING_KEY.to_string(),
-                format!("{content_encoding}").into(),
-            );
-        }
-
-        builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value())
-            .text_value(
-                ID_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_id()?))?,
-            )
-            .text_value(
-                VER_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_ver()?))?,
-            );
-
-        builder = meta.0.extra.fill_cose_header_fields(builder)?;
-
-        Ok(builder.build())
-    }
-}
-
 impl<C> minicbor::Encode<C> for Metadata {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
@@ -281,6 +250,7 @@ impl<C> minicbor::Encode<C> for Metadata {
             self.extra().parameters().is_some(),
         ]
         .iter()
+        .filter(|v| **v)
         .count();
 
         e.map(
@@ -318,20 +288,21 @@ impl<C> minicbor::Encode<C> for Metadata {
             e.str(SECTION_KEY)?.encode(section)?;
         }
 
-        e.str(COLLABS_KEY)?.array(
-            self.extra()
-                .collabs()
-                .len()
-                .try_into()
-                .map_err(minicbor::encode::Error::message)?,
-        )?;
-        for collab in self.extra().collabs() {
-            e.str(collab)?;
+        if !self.extra().collabs().is_empty() {
+            e.str(COLLABS_KEY)?.array(
+                self.extra()
+                    .collabs()
+                    .len()
+                    .try_into()
+                    .map_err(minicbor::encode::Error::message)?,
+            )?;
+            for collab in self.extra().collabs() {
+                e.str(collab)?;
+            }
         }
         if let Some(parameters) = self.extra().parameters() {
             e.str(PARAMETERS_KEY)?.encode(parameters)?;
         }
-
         Ok(())
     }
 }

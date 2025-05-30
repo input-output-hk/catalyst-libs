@@ -3,7 +3,7 @@
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
-use coset::TaggedCborSerializable;
+use coset::{CborSerializable, TaggedCborSerializable};
 use ed25519_dalek::ed25519::signature::Signer;
 
 mod common;
@@ -65,7 +65,9 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     assert!(!doc.problem_report().is_problematic());
 
     let parameters_val = doc.doc_meta().parameters().unwrap();
-    let parameters_val_cbor: coset::cbor::Value = parameters_val.try_into().unwrap();
+    let parameters_val_cbor =
+        coset::cbor::Value::from_slice(minicbor::to_vec(parameters_val).unwrap().as_slice())
+            .unwrap();
     // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
     let bytes: Vec<u8> = doc.try_into().unwrap();
     let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();

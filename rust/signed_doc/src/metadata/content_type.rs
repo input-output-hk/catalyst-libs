@@ -55,15 +55,6 @@ impl<'de> Deserialize<'de> for ContentType {
     }
 }
 
-impl From<ContentType> for CoapContentFormat {
-    fn from(value: ContentType) -> Self {
-        match value {
-            ContentType::Cbor => Self::Cbor,
-            ContentType::Json => Self::Json,
-        }
-    }
-}
-
 impl TryFrom<&coset::ContentType> for ContentType {
     type Error = anyhow::Error;
 
