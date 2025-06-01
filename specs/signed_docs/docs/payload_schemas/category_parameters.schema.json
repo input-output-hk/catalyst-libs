@@ -6,27 +6,27 @@
     "type": "object",
     "properties": {
         "campaignTitle": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Campaign (Challenge) Title"
         },
         "minimumBudgetRequestPerProposal": {
-            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
+            "$ref": "#/definitions/adaAmount",
             "title": "Minimum Budget Request Per Proposal"
         },
         "maximumBudgetRequestPerProposal": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Maximum Budget Request Per Proposal"
         },
         "proposalFundingLogic": {
-            "$ref": "common_definitions.schema.json#/definitions/stringRule",
+            "$ref": "#/definitions/stringRule",
             "title": "Proposal Funding logic (winner selection)"
         },
         "proposalAcceptanceThreshold": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageParameter",
+            "$ref": "#/definitions/percentageParameter",
             "title": "Proposal acceptance threshold"
         },
         "votingOptions": {
-            "$ref": "common_definitions.schema.json#/definitions/listParameter",
+            "$ref": "#/definitions/listParameter",
             "title": "Voting options"
         }
     },
@@ -42,5 +42,76 @@
         "proposalFundingLogic",
         "proposalAcceptanceThreshold",
         "votingOptions"
-    ]
+    ],
+    "definitions": {
+        "booleanParameter": {
+            "type": "boolean",
+            "title": "Boolean Parameter",
+            "x-note": "A true/false value."
+        },
+        "stringParameter": {
+            "type": "string",
+            "title": "String Parameter",
+            "x-note": "A plain text value."
+        },
+        "adaAmount": {
+            "type": "integer",
+            "title": "ADA Amount",
+            "x-note": "Amount in ADA."
+        },
+        "lovelaceAmount": {
+            "type": "integer",
+            "title": "Lovelace Amount",
+            "x-note": "Amount in Lovelace."
+        },
+        "integerParameter": {
+            "type": "integer",
+            "title": "Integer Parameter",
+            "x-note": "An integer value."
+        },
+        "dateParameter": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Parameter",
+            "x-note": "A date value (YYYY-MM-DD)."
+        },
+        "datetimeParameter": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Datetime Parameter",
+            "x-note": "A datetime value (ISO 8601)."
+        },
+        "ratioFormula": {
+            "type": "string",
+            "title": "Ratio / Formula",
+            "x-note": "A ratio or formula expression."
+        },
+        "percentageParameter": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "title": "Percentage Parameter",
+            "x-note": "A percentage value (0-100)."
+        },
+        "currencyAmount": {
+            "type": ["string", "number"],
+            "title": "Currency Amount or String"
+        },
+        "stringRule": {
+            "type": "string",
+            "title": "String / Rule"
+        },
+        "percentageOrAda": {
+            "oneOf": [
+                { "$ref": "#/definitions/percentageParameter" },
+                { "$ref": "#/definitions/adaAmount" }
+            ],
+            "title": "Percentage or ADA Amount"
+        },
+        "listParameter": {
+            "type": "array",
+            "items": { "type": "string" },
+            "title": "List Parameter"
+        }
+    }
 }

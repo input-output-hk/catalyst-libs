@@ -6,55 +6,55 @@
     "type": "object",
     "properties": {
         "directVotingPrivacyState": {
-            "$ref": "common_definitions.schema.json#/definitions/booleanParameter",
+            "$ref": "#/definitions/booleanParameter",
             "title": "Direct Voting Privacy State",
             "description": "Whether direct voting privacy is enabled.",
             "x-guidance": "Set to true if direct voting privacy is required."
         },
         "brandName": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Brand Name",
             "description": "The name of the brand.",
             "x-guidance": "Enter the official brand name."
         },
         "minimumBudgetRequestPerProposal": {
-            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
+            "$ref": "#/definitions/adaAmount",
             "title": "Minimum Budget Request Per Proposal",
             "description": "The minimum ADA amount that can be requested per proposal.",
             "x-guidance": "Specify the minimum allowed budget per proposal in ADA."
         },
         "maximumBudgetRequestPerProposal": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Maximum Budget Request Per Proposal",
             "description": "The maximum ADA amount (variable per challenge/category) that can be requested per proposal.",
             "x-guidance": "Specify the maximum allowed budget per proposal."
         },
         "maximumProposalsPerProposer": {
-            "$ref": "common_definitions.schema.json#/definitions/integerParameter",
+            "$ref": "#/definitions/integerParameter",
             "title": "Maximum Proposals per Proposer/co-proposer",
             "description": "The maximum number of proposals a proposer or co-proposer can submit.",
             "x-guidance": "Set the limit for proposals per proposer/co-proposer."
         },
         "communityReviewerRegistration": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Community Reviewer Registration",
             "description": "Information or rules about community reviewer registration.",
             "x-guidance": "Describe the process or requirements for community reviewer registration."
         },
         "votingPowerThreshold": {
-            "$ref": "common_definitions.schema.json#/definitions/lovelaceAmount",
+            "$ref": "#/definitions/lovelaceAmount",
             "title": "Voting Power Threshold",
             "description": "The minimum Lovelace required to participate in voting.",
             "x-guidance": "Specify the minimum voting power threshold in Lovelace."
         },
         "tallyingOptimization": {
-            "$ref": "common_definitions.schema.json#/definitions/ratioFormula",
+            "$ref": "#/definitions/ratioFormula",
             "title": "Tallying Optimization",
             "description": "The ratio or formula used for tallying optimization.",
             "x-guidance": "Provide the formula or ratio for tallying optimization."
         },
         "proposalAcceptanceThreshold": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageParameter",
+            "$ref": "#/definitions/percentageParameter",
             "title": "Proposal Acceptance Threshold",
             "description": "The percentage threshold for proposal acceptance.",
             "x-guidance": "Set the acceptance threshold as a percentage."

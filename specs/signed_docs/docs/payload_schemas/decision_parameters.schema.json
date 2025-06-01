@@ -2,18 +2,111 @@
     "$schema": "http://json-schema.org/draft-07/schema#",
     "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/main/specs/signed_docs/docs/payload_schemas/decision_parameters.schema.json",
     "title": "Decision Parameters",
-    "description": "Schema for defining Catalyst decision parameters (key decision points), with UI/UX metadata and logical grouping.",
+    "description": "Schema for defining Catalyst decision-level parameters, with UI/UX metadata and logical grouping.",
     "type": "object",
     "properties": {
-        "votingPeriodStart": {
-            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
-            "title": "Voting period start time"
+        "decisionTitle": {
+            "$ref": "#/definitions/stringParameter",
+            "title": "Decision Title"
+        },
+        "decisionType": {
+            "$ref": "#/definitions/stringParameter",
+            "title": "Decision Type"
+        },
+        "decisionDate": {
+            "$ref": "#/definitions/dateParameter",
+            "title": "Decision Date"
         },
         "votingOptions": {
-            "$ref": "common_definitions.schema.json#/definitions/listParameter",
-            "title": "Voting options"
+            "$ref": "#/definitions/listParameter",
+            "title": "Voting Options"
+        },
+        "acceptanceThreshold": {
+            "$ref": "#/definitions/percentageParameter",
+            "title": "Acceptance Threshold"
         }
     },
-    "required": ["votingPeriodStart", "votingOptions"],
-    "x-order": ["votingPeriodStart", "votingOptions"]
+    "required": [
+        "decisionTitle",
+        "decisionType",
+        "decisionDate"
+    ],
+    "x-order": [
+        "decisionTitle",
+        "decisionType",
+        "decisionDate",
+        "votingOptions",
+        "acceptanceThreshold"
+    ],
+    "definitions": {
+        "booleanParameter": {
+            "type": "boolean",
+            "title": "Boolean Parameter",
+            "x-note": "A true/false value."
+        },
+        "stringParameter": {
+            "type": "string",
+            "title": "String Parameter",
+            "x-note": "A plain text value."
+        },
+        "adaAmount": {
+            "type": "integer",
+            "title": "ADA Amount",
+            "x-note": "Amount in ADA."
+        },
+        "lovelaceAmount": {
+            "type": "integer",
+            "title": "Lovelace Amount",
+            "x-note": "Amount in Lovelace."
+        },
+        "integerParameter": {
+            "type": "integer",
+            "title": "Integer Parameter",
+            "x-note": "An integer value."
+        },
+        "dateParameter": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Parameter",
+            "x-note": "A date value (YYYY-MM-DD)."
+        },
+        "datetimeParameter": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Datetime Parameter",
+            "x-note": "A datetime value (ISO 8601)."
+        },
+        "ratioFormula": {
+            "type": "string",
+            "title": "Ratio / Formula",
+            "x-note": "A ratio or formula expression."
+        },
+        "percentageParameter": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "title": "Percentage Parameter",
+            "x-note": "A percentage value (0-100)."
+        },
+        "currencyAmount": {
+            "type": ["string", "number"],
+            "title": "Currency Amount or String"
+        },
+        "stringRule": {
+            "type": "string",
+            "title": "String / Rule"
+        },
+        "percentageOrAda": {
+            "oneOf": [
+                { "$ref": "#/definitions/percentageParameter" },
+                { "$ref": "#/definitions/adaAmount" }
+            ],
+            "title": "Percentage or ADA Amount"
+        },
+        "listParameter": {
+            "type": "array",
+            "items": { "type": "string" },
+            "title": "List Parameter"
+        }
+    }
 }

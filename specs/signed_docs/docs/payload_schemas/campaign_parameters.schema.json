@@ -6,103 +6,103 @@
     "type": "object",
     "properties": {
         "fundName": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Fund/Campaign Name"
         },
         "fundSize": {
-            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
+            "$ref": "#/definitions/adaAmount",
             "title": "Fund/Campaign Size"
         },
         "campaignTitle": {
-            "$ref": "common_definitions.schema.json#/definitions/stringParameter",
+            "$ref": "#/definitions/stringParameter",
             "title": "Campaign (Challenge) Title"
         },
         "campaignBudget": {
-            "$ref": "common_definitions.schema.json#/definitions/adaAmount",
+            "$ref": "#/definitions/adaAmount",
             "title": "Campaign (Challenge) Budget"
         },
         "proposalSubmissionFee": {
-            "$ref": "common_definitions.schema.json#/definitions/currencyAmount",
+            "$ref": "#/definitions/currencyAmount",
             "title": "Proposal Submission Fee"
         },
         "compensationsDistributionDate": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "Compensations and funds distribution target date"
         },
         "proposalsRegistrationOnChain": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "Proposals registration on the blockchain"
         },
         "drepDeadlineDate": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "Drep deadline date"
         },
         "registrationDeadlineDate": {
-            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
+            "$ref": "#/definitions/datetimeParameter",
             "title": "Registration deadline date"
         },
         "votingPeriodStart": {
-            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
+            "$ref": "#/definitions/datetimeParameter",
             "title": "Voting period start time"
         },
         "votingPeriodEnd": {
-            "$ref": "common_definitions.schema.json#/definitions/datetimeParameter",
+            "$ref": "#/definitions/datetimeParameter",
             "title": "Voting period end time"
         },
         "startOfTallying": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "Start of tallying"
         },
         "endOfTallying": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "End of tallying"
         },
         "proposalFundingLogic": {
-            "$ref": "common_definitions.schema.json#/definitions/stringRule",
+            "$ref": "#/definitions/stringRule",
             "title": "Proposal Funding logic (winner selection)"
         },
         "voterCompensations": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "$ref": "#/definitions/percentageOrAda",
             "title": "Voter Compensations (Vrtotal)"
         },
         "communityReviewCompensations": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "$ref": "#/definitions/percentageOrAda",
             "title": "Community Review Compensations"
         },
         "communityModeratorCompensations": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "$ref": "#/definitions/percentageOrAda",
             "title": "Community Moderator Compensations (AArtotal)"
         },
         "onboardingCompensations": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "$ref": "#/definitions/percentageOrAda",
             "title": "Onboarding compensations (Cttotal)"
         },
         "projectAccountabilityManagementComp": {
-            "$ref": "common_definitions.schema.json#/definitions/percentageOrAda",
+            "$ref": "#/definitions/percentageOrAda",
             "title": "Project Accountability Management Comp."
         },
         "currentInsightSharingStart": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "current_insight_sharing_start"
         },
         "currentProposalSubmissionStart": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "current_proposal_submission_start"
         },
         "currentRefineProposalsStart": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "current_refine_proposals_start"
         },
         "currentFinalizeProposalsStart": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "current_finalize_proposals_start"
         },
         "currentProposalAssessment": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "current_proposal_assessment"
         },
         "currentAssessmentQaStart": {
-            "$ref": "common_definitions.schema.json#/definitions/dateParameter",
+            "$ref": "#/definitions/dateParameter",
             "title": "current_assessment_qa_start"
         }
     },
@@ -133,5 +133,76 @@
         "currentFinalizeProposalsStart",
         "currentProposalAssessment",
         "currentAssessmentQaStart"
-    ]
+    ],
+    "definitions": {
+        "booleanParameter": {
+            "type": "boolean",
+            "title": "Boolean Parameter",
+            "x-note": "A true/false value."
+        },
+        "stringParameter": {
+            "type": "string",
+            "title": "String Parameter",
+            "x-note": "A plain text value."
+        },
+        "adaAmount": {
+            "type": "integer",
+            "title": "ADA Amount",
+            "x-note": "Amount in ADA."
+        },
+        "lovelaceAmount": {
+            "type": "integer",
+            "title": "Lovelace Amount",
+            "x-note": "Amount in Lovelace."
+        },
+        "integerParameter": {
+            "type": "integer",
+            "title": "Integer Parameter",
+            "x-note": "An integer value."
+        },
+        "dateParameter": {
+            "type": "string",
+            "format": "date",
+            "title": "Date Parameter",
+            "x-note": "A date value (YYYY-MM-DD)."
+        },
+        "datetimeParameter": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Datetime Parameter",
+            "x-note": "A datetime value (ISO 8601)."
+        },
+        "ratioFormula": {
+            "type": "string",
+            "title": "Ratio / Formula",
+            "x-note": "A ratio or formula expression."
+        },
+        "percentageParameter": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 100,
+            "title": "Percentage Parameter",
+            "x-note": "A percentage value (0-100)."
+        },
+        "currencyAmount": {
+            "type": ["string", "number"],
+            "title": "Currency Amount or String"
+        },
+        "stringRule": {
+            "type": "string",
+            "title": "String / Rule"
+        },
+        "percentageOrAda": {
+            "oneOf": [
+                { "$ref": "#/definitions/percentageParameter" },
+                { "$ref": "#/definitions/adaAmount" }
+            ],
+            "title": "Percentage or ADA Amount"
+        },
+        "listParameter": {
+            "type": "array",
+            "items": { "type": "string" },
+            "title": "List Parameter"
+        }
+    }
 }

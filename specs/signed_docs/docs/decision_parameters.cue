@@ -1,5 +1,8 @@
 package signed_docs
 
+// Import common definitions JSON schema for use in embedded schemas
+_common_defs: {} @embed(file="./payload_schemas/common_definitions.schema.json")
+
 // Decision Parameters Document Definition
 docs: #DocumentDefinitions & {
 	"Decision Parameters": {
