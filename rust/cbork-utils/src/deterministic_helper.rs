@@ -119,6 +119,60 @@ impl From<minicbor::decode::Error> for DeterministicError {
     }
 }
 
+/// Decodes a CBOR array with deterministic encoding validation (RFC 8949 Section 4.2)
+///
+/// # Errors
+///
+/// Returns `DeterministicError` if:
+/// - Input is empty (UnexpectedEof)
+/// - Array uses indefinite-length encoding (IndefiniteLength)
+/// - Array length is not encoded minimally (NonMinimalInt)
+/// - Array element decoding fails (ArrayElementDecoding)
+pub fn decode_array_deterministcally(d: &mut Decoder) -> Result<Vec<u8>, DeterministicError> {
+    validate_input_not_empty(d)?;
+    validate_not_indefinite_length(d)?;
+
+    let start_pos = d.position();
+    let array_length = d.array()?;
+
+    match array_length {
+        None => Ok(Vec::new()),
+        Some(length) => {
+            check_minimal_length(d, start_pos, length)?;
+            decode_array_elements(d, length)
+        },
+    }
+}
+
+/// Ensures the decoder has remaining input data
+fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
+    if d.position() >= d.input().len() {
+        return Err(DeterministicError::UnexpectedEof);
+    }
+    Ok(())
+}
+
+/// Checks if array uses indefinite-length encoding (forbidden by RFC 8949)
+fn validate_not_indefinite_length(d: &Decoder) -> Result<(), DeterministicError> {
+    let initial_byte = d.input()[d.position()];
+    if initial_byte == CBOR_INDEFINITE_ARRAY {
+        return Err(DeterministicError::IndefiniteLength);
+    }
+    Ok(())
+}
+
+/// Decodes array elements into a vector
+fn decode_array_elements(d: &mut Decoder, length: u64) -> Result<Vec<u8>, DeterministicError> {
+    let mut result = Vec::with_capacity(length as usize);
+    for _ in 0..length {
+        let element = d
+            .decode()
+            .map_err(|_| DeterministicError::ArrayElementDecoding)?;
+        result.push(element);
+    }
+    Ok(result)
+}
+
 /// Validates that a CBOR array length is encoded using the minimal number of bytes
 /// as required by RFC 8949 Section 4.2.1.
 ///
@@ -189,60 +243,6 @@ fn check_minimal_length(
     }
 
     Ok(())
-}
-
-/// Decodes a CBOR array with deterministic encoding validation (RFC 8949 Section 4.2)
-///
-/// # Errors
-///
-/// Returns `DeterministicError` if:
-/// - Input is empty (UnexpectedEof)
-/// - Array uses indefinite-length encoding (IndefiniteLength)
-/// - Array length is not encoded minimally (NonMinimalInt)
-/// - Array element decoding fails (ArrayElementDecoding)
-pub fn decode_array_deterministcally(d: &mut Decoder) -> Result<Vec<u8>, DeterministicError> {
-    validate_input_not_empty(d)?;
-    validate_not_indefinite_length(d)?;
-
-    let start_pos = d.position();
-    let array_length = d.array()?;
-
-    match array_length {
-        None => Ok(Vec::new()),
-        Some(length) => {
-            check_minimal_length(d, start_pos, length)?;
-            decode_array_elements(d, length)
-        },
-    }
-}
-
-/// Ensures the decoder has remaining input data
-fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
-    if d.position() >= d.input().len() {
-        return Err(DeterministicError::UnexpectedEof);
-    }
-    Ok(())
-}
-
-/// Checks if array uses indefinite-length encoding (forbidden by RFC 8949)
-fn validate_not_indefinite_length(d: &Decoder) -> Result<(), DeterministicError> {
-    let initial_byte = d.input()[d.position()];
-    if initial_byte == CBOR_INDEFINITE_ARRAY {
-        return Err(DeterministicError::IndefiniteLength);
-    }
-    Ok(())
-}
-
-/// Decodes array elements into a vector
-fn decode_array_elements(d: &mut Decoder, length: u64) -> Result<Vec<u8>, DeterministicError> {
-    let mut result = Vec::with_capacity(length as usize);
-    for _ in 0..length {
-        let element = d
-            .decode()
-            .map_err(|_| DeterministicError::ArrayElementDecoding)?;
-        result.push(element);
-    }
-    Ok(result)
 }
 
 #[cfg(test)]
