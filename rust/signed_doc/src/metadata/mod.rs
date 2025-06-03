@@ -4,7 +4,7 @@ use std::fmt::{Display, Formatter};
 mod content_encoding;
 mod content_type;
 pub(crate) mod doc_type;
-mod document_ref;
+mod document_refs;
 mod extra_fields;
 mod section;
 pub(crate) mod utils;
@@ -14,7 +14,7 @@ pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
 pub use doc_type::DocType;
-pub use document_ref::DocumentRef;
+pub use document_refs::{DocLocator, DocumentRef, DocumentRefs};
 pub use extra_fields::ExtraFields;
 use minicbor::{Decode, Decoder};
 pub use section::Section;
@@ -149,7 +149,7 @@ impl InnerMetadata {
         /// header.
         const COSE_DECODING_CONTEXT: &str = "COSE Protected Header to Metadata";
 
-        let extra = ExtraFields::from_protected_header(protected, context.report);
+        let extra = ExtraFields::from_protected_header(protected, context);
         let mut metadata = Self {
             extra,
             ..Self::default()
