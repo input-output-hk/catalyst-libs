@@ -116,6 +116,51 @@ const CBOR_MAX_UINT32_VALUE: u64 = u32::MAX as u64;
 
 const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length encoding
 
+const MAP_TYPE_MASK: u8 = 0xE0; // Mask for extracting major type (top 3 bits)
+
+/// A configurable CBOR decoder that can operate in either deterministic or
+/// non-deterministic mode
+pub struct CborDecoder {
+    deterministic: bool,
+}
+
+impl CborDecoder {
+    /// Creates a new CborDecoder with specified deterministic mode
+    pub fn new(deterministic: bool) -> Self {
+        Self { deterministic }
+    }
+
+    /// Decodes CBOR data from the given decoder
+    /// Decodes CBOR data with optional deterministic validation.
+    /// Returns the raw bytes of the decoded data.
+    pub fn decode(&self, decoder: &mut Decoder<'_>) -> Result<Vec<u8>, DeterministicError> {
+        let start_position = decoder.position();
+
+        // Early return if input is empty
+        let first_byte = decoder
+            .input()
+            .get(start_position)
+            .ok_or(DeterministicError::UnexpectedEof)?;
+
+        // Check if we need deterministic map decoding
+        let is_map_type = (first_byte & MAP_TYPE_MASK) == CBOR_MAJOR_TYPE_MAP;
+        if is_map_type && self.deterministic {
+            return decode_map_deterministically(decoder);
+        }
+
+        // For non-map types or non-deterministic decoding, skip and return raw bytes
+        decoder.skip()?;
+        let decoded_bytes = self.extract_decoded_bytes(decoder, start_position);
+        Ok(decoded_bytes)
+    }
+
+    /// Extracts the decoded bytes from the decoder's input
+    #[inline]
+    fn extract_decoded_bytes(&self, decoder: &Decoder<'_>, start_pos: usize) -> Vec<u8> {
+        decoder.input()[start_pos..decoder.position()].to_vec()
+    }
+}
+
 /// Represents a CBOR map key-value pair where the key must be deterministically encoded
 /// according to RFC 8949 Section 4.2.3.
 ///
@@ -555,6 +600,8 @@ fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), Dete
 
 #[cfg(test)]
 mod tests {
+    use minicbor::encode::Encoder;
+
     use super::*;
 
     /// Test the deterministic map validation rules from RFC 8949 Section 4.2.3.
@@ -747,11 +794,6 @@ mod tests {
     /// in the initial byte."
     #[test]
     fn test_map_minimal_length_encoding() {
-        // Print constants for debugging
-        println!("CBOR_ARRAY_LENGTH_UINT8: 0x{:02x}", CBOR_ARRAY_LENGTH_UINT8);
-        println!("CBOR_MAP_LENGTH_UINT8: 0x{:02x}", CBOR_MAP_LENGTH_UINT8); // If this exists
-        println!("CBOR_MAX_TINY_VALUE: {}", CBOR_MAX_TINY_VALUE);
-
         // Test case 1: Valid minimal encoding (length = 1)
         let valid_small = vec![
             0xA1, // Map, length 1 (major type 5 with immediate value 1)
@@ -870,5 +912,52 @@ mod tests {
             decode_map_deterministically(&mut decoder),
             Err(DeterministicError::DuplicateMapKey)
         ));
+    }
+
+    #[test]
+    fn test_decoder_modes() {
+        // Create a CBOR map with sorted keys
+        let mut data = Vec::new();
+        let mut enc = Encoder::new(&mut data);
+
+        // Create a sorted map with definite length
+        enc.map(2).unwrap(); // Map with 2 pairs
+        enc.str("a").unwrap(); // Key 1 (alphabetically first)
+        enc.u32(1).unwrap(); // Value 1
+        enc.str("b").unwrap(); // Key 2
+        enc.u32(2).unwrap(); // Value 2
+
+        // Test non-deterministic mode
+        let non_det_decoder = CborDecoder::new(false);
+        let mut dec = Decoder::new(&data);
+        let result = non_det_decoder.decode(&mut dec).unwrap();
+        // Should preserve original bytes
+        assert_eq!(result, data);
+
+        // Test deterministic mode with sorted input
+        let det_decoder = CborDecoder::new(true);
+        let mut dec = Decoder::new(&data);
+        let result = det_decoder.decode(&mut dec).unwrap();
+        // Should accept already sorted map
+        assert_eq!(result, data);
+
+        // Now test with unsorted keys
+        let mut unsorted_data = Vec::new();
+        let mut enc = Encoder::new(&mut unsorted_data);
+        enc.map(2).unwrap();
+        enc.str("b").unwrap(); // Key 1 (unsorted)
+        enc.u32(2).unwrap(); // Value 1
+        enc.str("a").unwrap(); // Key 2
+        enc.u32(1).unwrap(); // Value 2
+
+        // Non-deterministic mode should still work with unsorted
+        let mut dec = Decoder::new(&unsorted_data);
+        let result = non_det_decoder.decode(&mut dec).unwrap();
+        assert_eq!(result, unsorted_data);
+
+        // Deterministic mode should reject unsorted keys
+        let mut dec = Decoder::new(&unsorted_data);
+        let result = det_decoder.decode(&mut dec);
+        assert!(matches!(result, Err(DeterministicError::UnorderedMapKeys)));
     }
 }
