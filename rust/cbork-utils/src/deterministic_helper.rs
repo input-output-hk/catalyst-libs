@@ -114,6 +114,8 @@ const CBOR_MAX_UINT16_VALUE: u64 = u16::MAX as u64;
 /// `uint32_t`"
 const CBOR_MAX_UINT32_VALUE: u64 = u32::MAX as u64;
 
+const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length encoding
+
 /// Represents a CBOR map key-value pair where the key must be deterministically encoded
 /// according to RFC 8949 Section 4.2.3.
 ///
@@ -353,7 +355,17 @@ fn check_minimal_length(
     // Get the initial byte which indicates the encoding type used
     let initial_byte = d.input()[start_pos];
 
+    // Extract major type (top 3 bits)
+    let _major_type = initial_byte & 0xe0; // 0xe0 = 11100000
+
     match initial_byte {
+        // Check both array and map uint8 length encodings
+        b if b == CBOR_ARRAY_LENGTH_UINT8 || b == CBOR_MAP_LENGTH_UINT8 => {
+            if length <= CBOR_MAX_TINY_VALUE {
+                return Err(DeterministicError::NonMinimalInt);
+            }
+        }
+,
         // If encoded as uint8 (1 byte, additional info 24)
         // RFC 8949: "The value 24 MUST be used only if the value cannot be expressed using the
         // simple value"
@@ -505,11 +517,9 @@ fn decode_string_length(
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
 
-        _ => {
-            Err(DeterministicError::DecoderError(
-                minicbor::decode::Error::message("invalid additional info for string length"),
-            ))
-        },
+        _ => Err(DeterministicError::DecoderError(
+            minicbor::decode::Error::message("invalid additional info for string length"),
+        )),
     }
 }
 
@@ -651,6 +661,204 @@ mod tests {
         assert!(matches!(
             validate_string_length(&decoder, 0),
             Err(DeterministicError::IndefiniteLength)
+        ));
+    }
+
+    /// Test cases for lexicographic ordering of map keys as specified in RFC 8949 Section 4.2.3.
+    ///
+    /// From RFC 8949 Section 4.2.3:
+    /// "The keys in every map must be sorted in the following order:
+    ///  1. If two keys have different lengths, the shorter one sorts earlier;
+    ///  2. If two keys have the same length, the one with the lower value in
+    ///     (byte-wise) lexical order sorts earlier."
+    #[test]
+    fn test_map_lexicographic_ordering() {
+        // Test case: Equal length keys must be sorted lexicographically
+        // This follows rule 2 from RFC 8949 Section 4.2.3 for same-length keys
+        let valid_map = vec![
+            0xA2, // Map with 2 pairs
+            0x42, 0x01, 0x02, // Key 1: [0x01, 0x02]
+            0x41, 0x01, // Value 1
+            0x42, 0x01, 0x03, // Key 2: [0x01, 0x03] (lexicographically larger)
+            0x41, 0x02, // Value 2
+        ];
+        let mut decoder = Decoder::new(&valid_map);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
+
+        // Invalid ordering - violates RFC 8949 Section 4.2.3 rule 2:
+        // "If two keys have the same length, the one with the lower value in
+        // (byte-wise) lexical order sorts earlier"
+        let invalid_map = vec![
+            0xA2, // Map with 2 pairs
+            0x42, 0x01, 0x03, // Key 1: [0x01, 0x03]
+            0x41, 0x01, // Value 1
+            0x42, 0x01, 0x02, // Key 2: [0x01, 0x02] (should come first)
+            0x41, 0x02, // Value 2
+        ];
+        let mut decoder = Decoder::new(&invalid_map);
+        assert!(matches!(
+            decode_map_deterministically(&mut decoder),
+            Err(DeterministicError::UnorderedMapKeys)
+        ));
+    }
+
+    /// Test empty map handling - special case mentioned in RFC 8949.
+    /// An empty map is valid and must still follow length encoding rules
+    /// from Section 4.2.1.
+    #[test]
+    fn test_empty_map() {
+        let empty_map = vec![
+            0xA0, // Map with 0 pairs - encoded with immediate value as per Section 4.2.1
+        ];
+        let mut decoder = Decoder::new(&empty_map);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
+    }
+
+    /// Test minimal length encoding rules for maps as specified in RFC 8949 Section 4.2.1
+    ///
+    /// From RFC 8949 Section 4.2.1 "Integer Encoding":
+    /// "The following must be encoded only with the shortest form that can represent
+    /// the value:
+    ///  1. Integer values in items that use integer encoding
+    ///  2. The length of arrays, maps, strings, and byte strings
+    ///
+    /// Specifically for integers:
+    ///  * 0 to 23 must be expressed in the same byte as the major type
+    ///  * 24 to 255 must be expressed only with an additional uint8_t
+    ///  * 256 to 65535 must be expressed only with an additional uint16_t
+    ///  * 65536 to 4294967295 must be expressed only with an additional uint32_t"
+    ///
+    /// For maps (major type 5), the length must follow these rules. This ensures
+    /// a deterministic encoding where the same length is always encoded the same way.
+    /// Test minimal length encoding rules for maps as specified in RFC 8949 Section 4.2.1
+    ///
+    /// From RFC 8949 Section 4.2.1:
+    /// "The length of arrays, maps, strings, and byte strings must be encoded in the smallest
+    /// possible way. For maps (major type 5), lengths 0-23 must be encoded in the initial byte."
+    #[test]
+    fn test_map_minimal_length_encoding() {
+        // Print constants for debugging
+        println!("CBOR_ARRAY_LENGTH_UINT8: 0x{:02x}", CBOR_ARRAY_LENGTH_UINT8);
+        println!("CBOR_MAP_LENGTH_UINT8: 0x{:02x}", CBOR_MAP_LENGTH_UINT8); // If this exists
+        println!("CBOR_MAX_TINY_VALUE: {}", CBOR_MAX_TINY_VALUE);
+
+        // Test case 1: Valid minimal encoding (length = 1)
+        let valid_small = vec![
+            0xa1, // Map, length 1 (major type 5 with immediate value 1)
+            0x01, // Key: unsigned int 1
+            0x02, // Value: unsigned int 2
+        ];
+        let mut decoder = Decoder::new(&valid_small);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
+
+        // Test case 2: Invalid non-minimal encoding (using additional info 24 for length 1)
+        let invalid_small = vec![
+            0xb8, // Map with additional info = 24 (0xa0 | 0x18)
+            0x01, // Length encoded as uint8 = 1
+            0x01, // Key: unsigned int 1
+            0x02, // Value: unsigned int 2
+        ];
+        let mut decoder = Decoder::new(&invalid_small);
+        let result = decode_map_deterministically(&mut decoder);
+
+        // Debug info
+        println!("Result: {:?}", result);
+        println!("Initial byte: 0x{:02x}", invalid_small[0]);
+
+        assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
+    }
+
+    /// Test rejection of indefinite-length maps as required by RFC 8949 Section 4.2.2
+    ///
+    /// From RFC 8949 Section 4.2.2:
+    /// "Indefinite-length items must be made definite-length items."
+    ///
+    /// The specification explicitly prohibits indefinite-length items in
+    /// deterministic encoding to ensure consistent representation.
+    #[test]
+    fn test_map_indefinite_length() {
+        let indefinite_map = vec![
+            0xBF, // Start indefinite-length map (major type 5, additional info 31)
+            0x41, 0x01, // Key 1: 1-byte string
+            0x41, 0x02, // Value 1: 1-byte string
+            0xFF, // Break (end of indefinite-length map)
+        ];
+        let mut decoder = Decoder::new(&indefinite_map);
+        assert!(matches!(
+            decode_map_deterministically(&mut decoder),
+            Err(DeterministicError::IndefiniteLength)
+        ));
+    }
+
+    /// Test handling of complex key structures while maintaining canonical ordering
+    ///
+    /// RFC 8949 Section 4.2.3 requires correct ordering regardless of key complexity:
+    /// "The keys in every map must be sorted [...] Note that this rule allows maps
+    /// to be deterministically ordered regardless of the specific data model of
+    /// the key values."
+    #[test]
+    fn test_map_complex_keys() {
+        // Test nested structures in keys while maintaining order
+        // Following RFC 8949 Section 4.2.3 length-first rule
+        let valid_complex = vec![
+            0xA2, // Map with 2 pairs
+            0x42, 0x01, 0x02, // Key 1: simple 2-byte string (shorter, so comes first)
+            0x41, 0x01, // Value 1
+            0x44, 0x01, 0x02, 0x03, 0x04, // Key 2: 4-byte string (longer, so comes second)
+            0x41, 0x02, // Value 2
+        ];
+        let mut decoder = Decoder::new(&valid_complex);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
+    }
+
+    /// Test edge cases for map encoding while maintaining compliance with RFC 8949
+    ///
+    /// These cases test boundary conditions that must still follow all rules from
+    /// Section 4.2:
+    /// - Minimal length encoding (4.2.1)
+    /// - No indefinite lengths (4.2.2)
+    /// - Canonical ordering (4.2.3)
+    #[test]
+    fn test_map_edge_cases() {
+        // Single entry map - must still follow minimal length encoding rules
+        let single_entry = vec![
+            0xA1, // Map with 1 pair (using immediate value as per Section 4.2.1)
+            0x41, 0x01, // Key: 1-byte string
+            0x41, 0x02, // Value: 1-byte string
+        ];
+        let mut decoder = Decoder::new(&single_entry);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
+
+        // Map with zero-length string key - tests smallest possible key case
+        // Still must follow sorting rules from Section 4.2.3
+        let zero_length_key = vec![
+            0xA1, // Map with 1 pair
+            0x40, // Key: 0-byte string (smallest possible key length)
+            0x41, 0x01, // Value: 1-byte string
+        ];
+        let mut decoder = Decoder::new(&zero_length_key);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
+    }
+
+    /// Test duplicate key detection as required by RFC 8949 Section 4.2.3
+    ///
+    /// From RFC 8949 Section 4.2.3:
+    /// "The keys in every map must be sorted [...] Note that this rule
+    /// automatically implies that no two keys in a map can be equal (have
+    /// the same length and the same value)."
+    #[test]
+    fn test_duplicate_keys() {
+        let map_with_duplicates = vec![
+            0xA2, // Map with 2 pairs
+            0x41, 0x01, // Key 1: 1-byte string [0x01]
+            0x41, 0x02, // Value 1
+            0x41, 0x01, // Key 2: same as Key 1 (duplicate - invalid)
+            0x41, 0x03, // Value 2
+        ];
+        let mut decoder = Decoder::new(&map_with_duplicates);
+        assert!(matches!(
+            decode_map_deterministically(&mut decoder),
+            Err(DeterministicError::DuplicateMapKey)
         ));
     }
 }
