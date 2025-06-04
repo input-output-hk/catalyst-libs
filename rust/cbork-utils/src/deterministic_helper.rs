@@ -344,14 +344,14 @@ fn check_minimal_length(
 /// * `Err(DeterministicError)` if encoding is non-minimal or invalid
 fn validate_string_length(d: &Decoder, start_pos: usize) -> Result<(), DeterministicError> {
     let input = d.input();
-    
+
     // Check if we have at least one byte
     if start_pos >= input.len() {
         return Err(DeterministicError::UnexpectedEof);
     }
 
     let initial_byte = input[start_pos];
-    
+
     // Early return if not a string type
     if !is_string_type(initial_byte) {
         return Ok(());
@@ -382,9 +382,13 @@ fn is_indefinite_string(byte: u8) -> bool {
 
 /// Ensures the input slice has enough bytes available starting from start_pos
 #[inline]
-fn check_slice_range(input: &[u8], start_pos: usize, additional_bytes: usize) -> Result<(), DeterministicError> {
-    if start_pos.checked_add(additional_bytes)
-        .map_or(true, |end| end > input.len()) {
+fn check_slice_range(
+    input: &[u8], start_pos: usize, additional_bytes: usize,
+) -> Result<(), DeterministicError> {
+    if start_pos
+        .checked_add(additional_bytes)
+        .map_or(true, |end| end > input.len())
+    {
         return Err(DeterministicError::UnexpectedEof);
     }
     Ok(())
@@ -392,41 +396,47 @@ fn check_slice_range(input: &[u8], start_pos: usize, additional_bytes: usize) ->
 
 /// Gets a slice of the input with bounds checking
 #[inline]
-fn get_checked_slice(input: &[u8], start_pos: usize, length: usize) -> Result<&[u8], DeterministicError> {
+fn get_checked_slice(
+    input: &[u8], start_pos: usize, length: usize,
+) -> Result<&[u8], DeterministicError> {
     check_slice_range(input, start_pos, length)?;
     Ok(&input[start_pos..start_pos + length])
 }
 
 /// Decodes the string length based on the additional info value
-fn decode_string_length(d: &Decoder, start_pos: usize, additional_info: u8) -> Result<u64, DeterministicError> {
+fn decode_string_length(
+    d: &Decoder, start_pos: usize, additional_info: u8,
+) -> Result<u64, DeterministicError> {
     let input = d.input();
-    
+
     match additional_info {
         0..=23 => Ok(additional_info as u64), // Direct value
-        
+
         CBOR_STRING_UINT8 => {
             let bytes = get_checked_slice(input, start_pos + 1, 1)?;
             Ok(u64::from(bytes[0]))
         },
-        
+
         CBOR_STRING_UINT16 => {
             let bytes = get_checked_slice(input, start_pos + 1, 2)?;
             Ok(u64::from(u16::from_be_bytes(bytes.try_into().unwrap())))
         },
-        
+
         CBOR_STRING_UINT32 => {
             let bytes = get_checked_slice(input, start_pos + 1, 4)?;
             Ok(u64::from(u32::from_be_bytes(bytes.try_into().unwrap())))
         },
-        
+
         CBOR_STRING_UINT64 => {
             let bytes = get_checked_slice(input, start_pos + 1, 8)?;
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
-        
-        _ => Err(DeterministicError::DecoderError(
-            minicbor::decode::Error::message("invalid additional info for string length")
-        )),
+
+        _ => {
+            Err(DeterministicError::DecoderError(
+                minicbor::decode::Error::message("invalid additional info for string length"),
+            ))
+        },
     }
 }
 
