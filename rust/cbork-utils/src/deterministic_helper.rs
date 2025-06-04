@@ -142,10 +142,15 @@ impl CborDecoder {
             .get(start_position)
             .ok_or(DeterministicError::UnexpectedEof)?;
 
-        // Check if we need deterministic map decoding
-        let is_map_type = (first_byte & MAP_TYPE_MASK) == CBOR_MAJOR_TYPE_MAP;
-        if is_map_type && self.deterministic {
-            return decode_map_deterministically(decoder);
+        if self.deterministic {
+            // Check if we need deterministic map decoding
+            let is_map_type = (first_byte & MAP_TYPE_MASK) == CBOR_MAJOR_TYPE_MAP;
+            if is_map_type {
+                return decode_map_deterministically(decoder);
+            } else {
+                //
+                println!("check if other type is deterministic");
+            }
         }
 
         // For non-map types or non-deterministic decoding, skip and return raw bytes
