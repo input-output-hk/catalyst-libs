@@ -14,42 +14,95 @@ use std::{cmp::Ordering, fmt};
 
 use minicbor::Decoder;
 
-/// CBOR Major Type for Maps (5) shifted left by 5 bits
-const CBOR_MAP_TYPE: u8 = 5 << 5;
+/// Major type indicator for CBOR maps (major type 5: 101 in top 3 bits)
+/// As per RFC 8949 Section 4.2.3, maps in deterministic encoding must:
+/// - Have keys sorted by length first, then bytewise lexicographically
+/// - Contain no duplicate keys
+const CBOR_MAJOR_TYPE_MAP: u8 = 5 << 5;
 
-/// CBOR header byte for indefinite-length maps (major type 5, additional info 31)
-const CBOR_INDEFINITE_MAP: u8 = CBOR_MAP_TYPE | 31;
+/// Major type indicator for CBOR arrays (major type 4: 100 in top 3 bits)
+/// As per RFC 8949 Section 4.2.1, array lengths must use the smallest possible encoding
+const CBOR_MAJOR_TYPE_ARRAY: u8 = 4 << 5;
 
-/// CBOR Major Type for Arrays (4) shifted left by 5 bits
-const CBOR_ARRAY_TYPE: u8 = 4 << 5;
+/// Major type indicator for CBOR text strings (major type 3: 011 in top 3 bits)
+/// Text strings in deterministic encoding must:
+/// - Use definite lengths (no chunking) per RFC 8949 Section 4.2.2
+/// - Use the smallest possible length encoding per Section 4.2.1
+const CBOR_MAJOR_TYPE_TEXT_STRING: u8 = 3 << 5;
 
-/// CBOR array headers for different length encodings
-const CBOR_ARRAY_UINT8: u8 = CBOR_ARRAY_TYPE | 24; // 0x98
-const CBOR_ARRAY_UINT16: u8 = CBOR_ARRAY_TYPE | 25; // 0x99
-const CBOR_ARRAY_UINT32: u8 = CBOR_ARRAY_TYPE | 26; // 0x9A
-const CBOR_ARRAY_UINT64: u8 = CBOR_ARRAY_TYPE | 27; // 0x9B
+/// Major type indicator for CBOR byte strings (major type 2: 010 in top 3 bits)
+/// Byte strings in deterministic encoding must:
+/// - Use definite lengths (no chunking) per RFC 8949 Section 4.2.2
+/// - Use the smallest possible length encoding per Section 4.2.1
+const CBOR_MAJOR_TYPE_BYTE_STRING: u8 = 2 << 5;
 
-/// CBOR Major Type for Text Strings (3) shifted left by 5 bits
-const CBOR_TEXT_STRING_TYPE: u8 = 3 << 5;
+/// Indicator for indefinite-length maps (major type 5 with additional info 31)
+/// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
+/// This value is used to detect and reject indefinite-length maps in deterministic encoding.
+const CBOR_INDEFINITE_LENGTH_MAP: u8 = CBOR_MAJOR_TYPE_MAP | 31;
 
-/// CBOR Major Type for Byte Strings (2) shifted left by 5 bits
-const CBOR_BYTE_STRING_TYPE: u8 = 2 << 5;
+/// Indicator for indefinite-length text strings (major type 3 with additional info 31)
+/// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
+/// This value is used to detect and reject indefinite-length text strings in deterministic encoding.
+const CBOR_INDEFINITE_LENGTH_TEXT: u8 = CBOR_MAJOR_TYPE_TEXT_STRING | 31;
 
-/// CBOR string length encodings
-const CBOR_STRING_UINT8: u8 = 24;
-const CBOR_STRING_UINT16: u8 = 25;
-const CBOR_STRING_UINT32: u8 = 26;
-const CBOR_STRING_UINT64: u8 = 27;
+/// Indicator for indefinite-length byte strings (major type 2 with additional info 31)
+/// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
+/// This value is used to detect and reject indefinite-length byte strings in deterministic encoding.
+const CBOR_INDEFINITE_LENGTH_BYTES: u8 = CBOR_MAJOR_TYPE_BYTE_STRING | 31;
 
-/// CBOR headers for indefinite-length strings
-const CBOR_INDEFINITE_TEXT: u8 = CBOR_TEXT_STRING_TYPE | 31;
-const CBOR_INDEFINITE_BYTES: u8 = CBOR_BYTE_STRING_TYPE | 31;
+/// Indicator for array length encoded as uint8 (major type 4 with additional info 24)
+/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional `uint8_t`"
+const CBOR_ARRAY_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_ARRAY | 24;
 
-/// Maximum values for each compact representation
-const MAX_VALUE_UINT8: u64 = 23;
-const MAX_VALUE_UINT16: u64 = u8::MAX as u64;
-const MAX_VALUE_UINT32: u64 = u16::MAX as u64;
-const MAX_VALUE_UINT64: u64 = u32::MAX as u64;
+/// Indicator for array length encoded as uint16 (major type 4 with additional info 25)
+/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional `uint16_t`"
+const CBOR_ARRAY_LENGTH_UINT16: u8 = CBOR_MAJOR_TYPE_ARRAY | 25;
+
+/// Indicator for array length encoded as uint32 (major type 4 with additional info 26)
+/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional `uint32_t`"
+const CBOR_ARRAY_LENGTH_UINT32: u8 = CBOR_MAJOR_TYPE_ARRAY | 26;
+
+/// Indicator for array length encoded as uint64 (major type 4 with additional info 27)
+/// RFC 8949 Section 4.2.1: "4294967296 to 18446744073709551615 must be expressed only with an additional `uint64_t`"
+const CBOR_ARRAY_LENGTH_UINT64: u8 = CBOR_MAJOR_TYPE_ARRAY | 27;
+
+/// Additional info value for string length encoded as uint8 (24)
+/// RFC 8949 Section 4.2.1: "The value 24 MUST be used only if the value cannot be expressed using the simple value"
+/// Used for lengths 24 to 255
+const CBOR_STRING_LENGTH_UINT8: u8 = 24;
+
+/// Additional info value for string length encoded as uint16 (25)
+/// RFC 8949 Section 4.2.1: "The value 25 MUST be used only if the value cannot be expressed using ... uint8"
+/// Used for lengths 256 to 65535
+const CBOR_STRING_LENGTH_UINT16: u8 = 25;
+
+/// Additional info value for string length encoded as uint32 (26)
+/// RFC 8949 Section 4.2.1: "The value 26 MUST be used only if the value cannot be expressed using ... uint16"
+/// Used for lengths 65536 to 4294967295
+const CBOR_STRING_LENGTH_UINT32: u8 = 26;
+
+/// Additional info value for string length encoded as uint64 (27)
+/// RFC 8949 Section 4.2.1: "The value 27 MUST be used only if the value cannot be expressed using ... uint32"
+/// Used for lengths 4294967296 to 18446744073709551615
+const CBOR_STRING_LENGTH_UINT64: u8 = 27;
+
+/// Maximum value that can be encoded in a 5-bit additional info field
+/// RFC 8949 Section 4.2.1: "0 to 23 must be expressed in the same byte as the major type"
+/// Values 0-23 are encoded directly in the additional info field of the initial byte
+const CBOR_MAX_TINY_VALUE: u64 = 23;
+
+/// Maximum value that can be encoded in a uint8 additional info field
+/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional `uint8_t`"
+const CBOR_MAX_UINT8_VALUE: u64 = u8::MAX as u64;
+
+/// Maximum value that can be encoded in a uint16 additional info field
+/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional `uint16_t`"
+const CBOR_MAX_UINT16_VALUE: u64 = u16::MAX as u64;
+
+/// Maximum value that can be encoded in a uint32 additional info field
+/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional `uint32_t`"
+const CBOR_MAX_UINT32_VALUE: u64 = u32::MAX as u64;
 
 /// Represents a CBOR map key-value pair where the key must be deterministically encoded
 /// according to RFC 8949 Section 4.2.3.
@@ -166,6 +219,7 @@ impl From<minicbor::decode::Error> for DeterministicError {
 }
 
 /// Decodes a CBOR map with deterministic encoding validation (RFC 8949 Section 4.2.3)
+/// Returns the raw bytes of the map if it passes all deterministic validation rules.
 ///
 /// From RFC 8949 Section 4.2.3:
 /// "The keys in every map must be sorted in the following order:
@@ -188,7 +242,7 @@ impl From<minicbor::decode::Error> for DeterministicError {
 /// - Map keys are not properly sorted (`UnorderedMapKeys`)
 /// - Duplicate keys are found (`DuplicateMapKey`)
 /// - Map key or value decoding fails (`DecoderError`)
-pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<MapEntry>, DeterministicError> {
+pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, DeterministicError> {
     validate_input_not_empty(d)?;
     validate_not_indefinite_length_map(d)?;
 
@@ -196,16 +250,25 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<MapEntry>, De
     let map_len = d.map()?.ok_or(DeterministicError::UnexpectedEof)?;
 
     check_minimal_length(d, start_pos, map_len)?;
+    
+    // Store the starting position of the entire map
+    let map_start = start_pos;
+    
+    // Decode entries to validate them
     let entries = decode_map_entries(d, map_len)?;
     validate_map_ordering(&entries)?;
-
-    Ok(entries)
+    
+    // Get the ending position after validation
+    let map_end = d.position();
+    
+    // Return the raw bytes of the entire validated map
+    Ok(d.input()[map_start..map_end].to_vec())
 }
 
 /// Validates that map does not use indefinite-length encoding
 fn validate_not_indefinite_length_map(d: &Decoder) -> Result<(), DeterministicError> {
     let initial_byte = d.input()[d.position()];
-    if initial_byte == CBOR_INDEFINITE_MAP {
+    if initial_byte == CBOR_INDEFINITE_LENGTH_MAP {
         return Err(DeterministicError::IndefiniteLength);
     }
     Ok(())
@@ -284,8 +347,8 @@ fn check_minimal_length(
         // If encoded as uint8 (1 byte, additional info 24)
         // RFC 8949: "The value 24 MUST be used only if the value cannot be expressed using the
         // simple value"
-        CBOR_ARRAY_UINT8 => {
-            if length <= MAX_VALUE_UINT8 {
+        CBOR_ARRAY_LENGTH_UINT8 => {
+            if length <= CBOR_MAX_TINY_VALUE {
                 // Error if value could have fit in 5-bit immediate value (0-23)
                 return Err(DeterministicError::NonMinimalInt);
             }
@@ -293,8 +356,8 @@ fn check_minimal_length(
         // If encoded as uint16 (2 bytes, additional info 25)
         // RFC 8949: "The value 25 MUST be used only if the value cannot be expressed using the
         // simple value or uint8"
-        CBOR_ARRAY_UINT16 => {
-            if length <= MAX_VALUE_UINT16 {
+        CBOR_ARRAY_LENGTH_UINT16 => {
+            if length <= CBOR_MAX_UINT8_VALUE {
                 // Error if value could have fit in uint8
                 return Err(DeterministicError::NonMinimalInt);
             }
@@ -302,8 +365,8 @@ fn check_minimal_length(
         // If encoded as uint32 (4 bytes, additional info 26)
         // RFC 8949: "The value 26 MUST be used only if the value cannot be expressed using the
         // simple value, uint8, or uint16"
-        CBOR_ARRAY_UINT32 => {
-            if length <= MAX_VALUE_UINT32 {
+        CBOR_ARRAY_LENGTH_UINT32 => {
+            if length <= CBOR_MAX_UINT16_VALUE {
                 // Error if value could have fit in uint16
                 return Err(DeterministicError::NonMinimalInt);
             }
@@ -311,8 +374,8 @@ fn check_minimal_length(
         // If encoded as uint64 (8 bytes, additional info 27)
         // RFC 8949: "The value 27 MUST be used only if the value cannot be expressed using the
         // simple value, uint8, uint16, or uint32"
-        CBOR_ARRAY_UINT64 => {
-            if length <= MAX_VALUE_UINT64 {
+        CBOR_ARRAY_LENGTH_UINT64 => {
+            if length <= CBOR_MAX_UINT32_VALUE {
                 // Error if value could have fit in uint32
                 return Err(DeterministicError::NonMinimalInt);
             }
@@ -371,13 +434,13 @@ fn validate_string_length(d: &Decoder, start_pos: usize) -> Result<(), Determini
 #[inline]
 fn is_string_type(byte: u8) -> bool {
     let major_type = byte & 0xE0; // Extract major type (top 3 bits)
-    major_type == CBOR_TEXT_STRING_TYPE || major_type == CBOR_BYTE_STRING_TYPE
+    major_type == CBOR_MAJOR_TYPE_TEXT_STRING || major_type == CBOR_MAJOR_TYPE_BYTE_STRING
 }
 
 /// Checks if the byte represents an indefinite-length string
 #[inline]
 fn is_indefinite_string(byte: u8) -> bool {
-    byte == CBOR_INDEFINITE_TEXT || byte == CBOR_INDEFINITE_BYTES
+    byte == CBOR_INDEFINITE_LENGTH_TEXT || byte == CBOR_INDEFINITE_LENGTH_BYTES
 }
 
 /// Ensures the input slice has enough bytes available starting from `start_pos`
@@ -412,53 +475,51 @@ fn decode_string_length(
     match additional_info {
         0..=23 => Ok(u64::from(additional_info)), // Direct value
 
-        CBOR_STRING_UINT8 => {
+        CBOR_STRING_LENGTH_UINT8 => {
             let bytes = get_checked_slice(input, start_pos + 1, 1)?;
             Ok(u64::from(bytes[0]))
         },
 
-        CBOR_STRING_UINT16 => {
+        CBOR_STRING_LENGTH_UINT16 => {
             let bytes = get_checked_slice(input, start_pos + 1, 2)?;
             Ok(u64::from(u16::from_be_bytes(bytes.try_into().unwrap())))
         },
 
-        CBOR_STRING_UINT32 => {
+        CBOR_STRING_LENGTH_UINT32 => {
             let bytes = get_checked_slice(input, start_pos + 1, 4)?;
             Ok(u64::from(u32::from_be_bytes(bytes.try_into().unwrap())))
         },
 
-        CBOR_STRING_UINT64 => {
+        CBOR_STRING_LENGTH_UINT64 => {
             let bytes = get_checked_slice(input, start_pos + 1, 8)?;
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
 
-        _ => {
-            Err(DeterministicError::DecoderError(
-                minicbor::decode::Error::message("invalid additional info for string length"),
-            ))
-        },
+        _ => Err(DeterministicError::DecoderError(
+            minicbor::decode::Error::message("invalid additional info for string length"),
+        )),
     }
 }
 
 /// Validates that the length uses minimal encoding according to RFC 8949
 fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), DeterministicError> {
     match encoding_used {
-        CBOR_STRING_UINT8 => {
+        CBOR_STRING_LENGTH_UINT8 => {
             if length <= 23 {
                 return Err(DeterministicError::NonMinimalInt);
             }
         },
-        CBOR_STRING_UINT16 => {
+        CBOR_STRING_LENGTH_UINT16 => {
             if u8::try_from(length).is_ok() {
                 return Err(DeterministicError::NonMinimalInt);
             }
         },
-        CBOR_STRING_UINT32 => {
+        CBOR_STRING_LENGTH_UINT32 => {
             if u16::try_from(length).is_ok() {
                 return Err(DeterministicError::NonMinimalInt);
             }
         },
-        CBOR_STRING_UINT64 => {
+        CBOR_STRING_LENGTH_UINT64 => {
             if u32::try_from(length).is_ok() {
                 return Err(DeterministicError::NonMinimalInt);
             }
@@ -470,58 +531,7 @@ fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), Dete
 
 #[cfg(test)]
 mod tests {
-    use std::cmp::Ordering;
-
     use super::*;
-
-    /// Test the map key comparison logic used for deterministic ordering
-    /// as specified in RFC 8949 Section 4.2.3.
-    ///
-    /// The RFC states two rules for key ordering:
-    /// 1. "If two keys have different lengths, the shorter one sorts earlier;"
-    /// 2. "If two keys have the same length, the one with the lower value in (byte-wise)
-    ///    lexical order sorts earlier."
-    #[test]
-    fn test_map_key_ordering() {
-        // Test case 1: Keys of different lengths
-        // RFC 8949 4.2.3 Rule 1: "If two keys have different lengths, the shorter one sorts
-        // earlier"
-        let shorter_key = MapEntry {
-            key_bytes: vec![1, 2],
-            value: vec![],
-        };
-        let longer_key = MapEntry {
-            key_bytes: vec![1, 2, 3],
-            value: vec![],
-        };
-        assert_eq!(shorter_key.compare(&longer_key), Ordering::Less);
-
-        // Test case 2: Equal length keys, different values
-        // RFC 8949 4.2.3 Rule 2: "If two keys have the same length, the one with the lower value
-        // in (byte-wise) lexical order sorts earlier"
-        let key1 = MapEntry {
-            key_bytes: vec![1, 2, 3],
-            value: vec![],
-        };
-        let key2 = MapEntry {
-            key_bytes: vec![1, 2, 4],
-            value: vec![],
-        };
-        assert_eq!(key1.compare(&key2), Ordering::Less);
-
-        // Test case 3: Equal keys
-        // RFC 8949 4.2.3: "No two keys in a map may be equal"
-        // This case should never occur in valid CBOR but we test the comparison behavior
-        let key3 = MapEntry {
-            key_bytes: vec![1, 2, 3],
-            value: vec![],
-        };
-        let key4 = MapEntry {
-            key_bytes: vec![1, 2, 3],
-            value: vec![],
-        };
-        assert_eq!(key3.compare(&key4), Ordering::Equal);
-    }
 
     /// Test the deterministic map validation rules from RFC 8949 Section 4.2.3.
     ///
@@ -529,77 +539,71 @@ mod tests {
     /// 1. Keys must be sorted by length first
     /// 2. Equal length keys must be sorted lexicographically
     /// 3. No duplicate keys are allowed
-    ///
-    /// Section 4.2.3: "The keys in every map must be sorted in the following order:
-    /// 1. If two keys have different lengths, the shorter one sorts earlier;
-    /// 2. If two keys have the same length, the one with the lower value in (byte-wise)
-    ///    lexical order sorts earlier."
     #[test]
     fn test_map_validation() {
         // Test case 1: Valid ordering - shorter key before longer key
-        // RFC 8949 4.2.3 Example: a one-byte key must sort before a two-byte key
-        let valid_entries = vec![
-            MapEntry {
-                key_bytes: vec![1, 2], // Length 2 key
-                value: vec![],
-            },
-            MapEntry {
-                key_bytes: vec![1, 2, 3], // Length 3 key
-                value: vec![],
-            },
+        let valid_map = vec![
+            0xa2, // Map with 2 pairs
+            0x42, 0x01, 0x02, // Key 1: 2-byte string
+            0x41, 0x01, // Value 1: 1-byte string
+            0x43, 0x01, 0x02, 0x03, // Key 2: 3-byte string
+            0x41, 0x02, // Value 2: 1-byte string
         ];
-        assert!(validate_map_ordering(&valid_entries).is_ok());
+        let mut decoder = Decoder::new(&valid_map);
+        assert!(decode_map_deterministically(&mut decoder).is_ok());
 
         // Test case 2: Invalid ordering - longer key before shorter key
-        // RFC 8949 4.2.3: Violates rule "shorter one sorts earlier"
-        let invalid_entries = vec![
-            MapEntry {
-                key_bytes: vec![1, 2, 3], // Length 3 key
-                value: vec![],
-            },
-            MapEntry {
-                key_bytes: vec![1, 2], // Length 2 key
-                value: vec![],
-            },
+        let invalid_map = vec![
+            0xa2, // Map with 2 pairs
+            0x43, 0x01, 0x02, 0x03, // Key 1: 3-byte string (longer first - invalid)
+            0x41, 0x01, // Value 1: 1-byte string
+            0x42, 0x01, 0x02, // Key 2: 2-byte string
+            0x41, 0x02, // Value 2: 1-byte string
         ];
+        let mut decoder = Decoder::new(&invalid_map);
         assert!(matches!(
-            validate_map_ordering(&invalid_entries),
+            decode_map_deterministically(&mut decoder),
             Err(DeterministicError::UnorderedMapKeys)
         ));
 
         // Test case 3: Duplicate keys
-        // RFC 8949 4.2.3: "No two keys in a map may be equal"
-        let duplicate_entries = vec![
-            MapEntry {
-                key_bytes: vec![1, 2],
-                value: vec![],
-            },
-            MapEntry {
-                key_bytes: vec![1, 2], // Same key bytes as above
-                value: vec![],
-            },
+        let duplicate_map = vec![
+            0xa2, // Map with 2 pairs
+            0x42, 0x01, 0x02, // Key 1: 2-byte string
+            0x41, 0x01, // Value 1: 1-byte string
+            0x42, 0x01, 0x02, // Key 2: same as Key 1 (duplicate - invalid)
+            0x41, 0x02, // Value 2: 1-byte string
         ];
+        let mut decoder = Decoder::new(&duplicate_map);
         assert!(matches!(
-            validate_map_ordering(&duplicate_entries),
+            decode_map_deterministically(&mut decoder),
             Err(DeterministicError::DuplicateMapKey)
         ));
     }
 
+    #[test]
+    fn test_map_bytes_roundtrip() {
+        // Create a valid deterministic map encoding
+        let valid_map = vec![
+            0xa2, // Map with 2 pairs
+            0x42, 0x01, 0x02, // Key 1: 2-byte string
+            0x41, 0x01, // Value 1: 1-byte string
+            0x43, 0x01, 0x02, 0x03, // Key 2: 3-byte string
+            0x41, 0x02, // Value 2: 1-byte string
+        ];
+        
+        let mut decoder = Decoder::new(&valid_map);
+        let result = decode_map_deterministically(&mut decoder).unwrap();
+        
+        // Verify we got back exactly the same bytes
+        assert_eq!(result, valid_map);
+    }
+
     /// Test string length encoding validation according to RFC 8949 Section 4.2.1 and
-    /// 4.2.2.
-    ///
-    /// Section 4.2.1 mandates minimal encoding for lengths:
-    /// - 0 to 23: must be expressed in the same byte as the major type
-    /// - 24 to 255: must use additional uint8
-    /// - 256 to 65535: must use additional uint16
-    /// - 65536 to 4294967295: must use additional uint32
-    /// - 4294967296 to 18446744073709551615: must use additional uint64
-    ///
-    /// Section 4.2.2: "Indefinite-length items must be made definite"
+    /// 4.2.2 remains unchanged since it's a helper function
     #[test]
     fn test_string_length_validation() {
         // Test case 1: Valid minimal encoding for small string
-        // RFC 8949 4.2.1: Length 3 should be encoded in the same byte as major type
         let valid_small = vec![
             0x63, // Text string, length 3 (0x60 | 3)
             b'f', b'o', b'o',
@@ -608,8 +612,6 @@ mod tests {
         assert!(validate_string_length(&decoder, 0).is_ok());
 
         // Test case 2: Non-minimal encoding for small string
-        // RFC 8949 4.2.1: "The value 24 MUST NOT be used if the value can be encoded in fewer
-        // bytes"
         let invalid_small = vec![
             0x78, 0x03, // Text string, length 3 with uint8 when not needed
             b'f', b'o', b'o',
@@ -621,7 +623,6 @@ mod tests {
         ));
 
         // Test case 3: Valid encoding for medium string
-        // RFC 8949 4.2.1: Length 128 must use uint8 encoding as it's > 23
         let mut valid_medium = vec![
             0x78, 0x80, // Text string, length 128 with uint8
         ];
@@ -630,7 +631,6 @@ mod tests {
         assert!(validate_string_length(&decoder, 0).is_ok());
 
         // Test case 4: Indefinite length string
-        // RFC 8949 4.2.2: "Indefinite-length items must be made definite"
         let indefinite = vec![
             0x7F, // Indefinite length text string
             0x63, b'f', b'o', b'o', 0xFF, // Break
@@ -641,4 +641,6 @@ mod tests {
             Err(DeterministicError::IndefiniteLength)
         ));
     }
+
+    
 }
