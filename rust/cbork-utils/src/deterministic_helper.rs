@@ -356,7 +356,7 @@ fn check_minimal_length(
     let initial_byte = d.input()[start_pos];
 
     // Extract major type (top 3 bits)
-    let _major_type = initial_byte & 0xe0; // 0xe0 = 11100000
+    let _major_type = initial_byte & 0xE0; // 0xe0 = 11100000
 
     match initial_byte {
         // Check both array and map uint8 length encodings
@@ -517,9 +517,11 @@ fn decode_string_length(
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
 
-        _ => Err(DeterministicError::DecoderError(
-            minicbor::decode::Error::message("invalid additional info for string length"),
-        )),
+        _ => {
+            Err(DeterministicError::DecoderError(
+                minicbor::decode::Error::message("invalid additional info for string length"),
+            ))
+        },
     }
 }
 
@@ -664,13 +666,14 @@ mod tests {
         ));
     }
 
-    /// Test cases for lexicographic ordering of map keys as specified in RFC 8949 Section 4.2.3.
+    /// Test cases for lexicographic ordering of map keys as specified in RFC 8949 Section
+    /// 4.2.3.
     ///
     /// From RFC 8949 Section 4.2.3:
     /// "The keys in every map must be sorted in the following order:
     ///  1. If two keys have different lengths, the shorter one sorts earlier;
-    ///  2. If two keys have the same length, the one with the lower value in
-    ///     (byte-wise) lexical order sorts earlier."
+    ///  2. If two keys have the same length, the one with the lower value in (byte-wise)
+    ///     lexical order sorts earlier."
     #[test]
     fn test_map_lexicographic_ordering() {
         // Test case: Equal length keys must be sorted lexicographically
@@ -733,8 +736,9 @@ mod tests {
     /// Test minimal length encoding rules for maps as specified in RFC 8949 Section 4.2.1
     ///
     /// From RFC 8949 Section 4.2.1:
-    /// "The length of arrays, maps, strings, and byte strings must be encoded in the smallest
-    /// possible way. For maps (major type 5), lengths 0-23 must be encoded in the initial byte."
+    /// "The length of arrays, maps, strings, and byte strings must be encoded in the
+    /// smallest possible way. For maps (major type 5), lengths 0-23 must be encoded
+    /// in the initial byte."
     #[test]
     fn test_map_minimal_length_encoding() {
         // Print constants for debugging
@@ -744,7 +748,7 @@ mod tests {
 
         // Test case 1: Valid minimal encoding (length = 1)
         let valid_small = vec![
-            0xa1, // Map, length 1 (major type 5 with immediate value 1)
+            0xA1, // Map, length 1 (major type 5 with immediate value 1)
             0x01, // Key: unsigned int 1
             0x02, // Value: unsigned int 2
         ];
@@ -753,7 +757,7 @@ mod tests {
 
         // Test case 2: Invalid non-minimal encoding (using additional info 24 for length 1)
         let invalid_small = vec![
-            0xb8, // Map with additional info = 24 (0xa0 | 0x18)
+            0xB8, // Map with additional info = 24 (0xa0 | 0x18)
             0x01, // Length encoded as uint8 = 1
             0x01, // Key: unsigned int 1
             0x02, // Value: unsigned int 2
