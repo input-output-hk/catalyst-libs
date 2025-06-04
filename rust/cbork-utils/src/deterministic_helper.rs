@@ -606,6 +606,10 @@ mod tests {
     }
 
     #[test]
+    // Ensures that encoding and decoding a map preserves:
+    /// - The bytewise lexicographic ordering of keys
+    /// - The exact byte representation of values
+    /// - The definite length encoding format
     fn test_map_bytes_roundtrip() {
         // Create a valid deterministic map encoding
         let valid_map = vec![
@@ -623,8 +627,10 @@ mod tests {
         assert_eq!(result, valid_map);
     }
 
-    /// Test string length encoding validation according to RFC 8949 Section 4.2.1 and
-    /// 4.2.2 remains unchanged since it's a helper function
+    /// Verifies string length encoding follows RFC 8949 requirements:
+    /// - Must use the shortest possible length encoding
+    /// - Length must be encoded as definite length
+    /// - No indefinite length strings allowed
     #[test]
     fn test_string_length_validation() {
         // Test case 1: Valid minimal encoding for small string
