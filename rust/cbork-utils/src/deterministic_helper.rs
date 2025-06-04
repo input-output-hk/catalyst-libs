@@ -38,53 +38,60 @@ const CBOR_MAJOR_TYPE_BYTE_STRING: u8 = 2 << 5;
 
 /// Indicator for indefinite-length maps (major type 5 with additional info 31)
 /// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
-/// This value is used to detect and reject indefinite-length maps in deterministic encoding.
+/// This value is used to detect and reject indefinite-length maps in deterministic
+/// encoding.
 const CBOR_INDEFINITE_LENGTH_MAP: u8 = CBOR_MAJOR_TYPE_MAP | 31;
 
 /// Indicator for indefinite-length text strings (major type 3 with additional info 31)
 /// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
-/// This value is used to detect and reject indefinite-length text strings in deterministic encoding.
+/// This value is used to detect and reject indefinite-length text strings in
+/// deterministic encoding.
 const CBOR_INDEFINITE_LENGTH_TEXT: u8 = CBOR_MAJOR_TYPE_TEXT_STRING | 31;
 
 /// Indicator for indefinite-length byte strings (major type 2 with additional info 31)
 /// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
-/// This value is used to detect and reject indefinite-length byte strings in deterministic encoding.
+/// This value is used to detect and reject indefinite-length byte strings in
+/// deterministic encoding.
 const CBOR_INDEFINITE_LENGTH_BYTES: u8 = CBOR_MAJOR_TYPE_BYTE_STRING | 31;
 
 /// Indicator for array length encoded as uint8 (major type 4 with additional info 24)
-/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional `uint8_t`"
+/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional
+/// `uint8_t`"
 const CBOR_ARRAY_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_ARRAY | 24;
 
 /// Indicator for array length encoded as uint16 (major type 4 with additional info 25)
-/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional `uint16_t`"
+/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional
+/// `uint16_t`"
 const CBOR_ARRAY_LENGTH_UINT16: u8 = CBOR_MAJOR_TYPE_ARRAY | 25;
 
 /// Indicator for array length encoded as uint32 (major type 4 with additional info 26)
-/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional `uint32_t`"
+/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional
+/// `uint32_t`"
 const CBOR_ARRAY_LENGTH_UINT32: u8 = CBOR_MAJOR_TYPE_ARRAY | 26;
 
 /// Indicator for array length encoded as uint64 (major type 4 with additional info 27)
-/// RFC 8949 Section 4.2.1: "4294967296 to 18446744073709551615 must be expressed only with an additional `uint64_t`"
+/// RFC 8949 Section 4.2.1: "4294967296 to 18446744073709551615 must be expressed only
+/// with an additional `uint64_t`"
 const CBOR_ARRAY_LENGTH_UINT64: u8 = CBOR_MAJOR_TYPE_ARRAY | 27;
 
 /// Additional info value for string length encoded as uint8 (24)
-/// RFC 8949 Section 4.2.1: "The value 24 MUST be used only if the value cannot be expressed using the simple value"
-/// Used for lengths 24 to 255
+/// RFC 8949 Section 4.2.1: "The value 24 MUST be used only if the value cannot be
+/// expressed using the simple value" Used for lengths 24 to 255
 const CBOR_STRING_LENGTH_UINT8: u8 = 24;
 
 /// Additional info value for string length encoded as uint16 (25)
-/// RFC 8949 Section 4.2.1: "The value 25 MUST be used only if the value cannot be expressed using ... uint8"
-/// Used for lengths 256 to 65535
+/// RFC 8949 Section 4.2.1: "The value 25 MUST be used only if the value cannot be
+/// expressed using ... uint8" Used for lengths 256 to 65535
 const CBOR_STRING_LENGTH_UINT16: u8 = 25;
 
 /// Additional info value for string length encoded as uint32 (26)
-/// RFC 8949 Section 4.2.1: "The value 26 MUST be used only if the value cannot be expressed using ... uint16"
-/// Used for lengths 65536 to 4294967295
+/// RFC 8949 Section 4.2.1: "The value 26 MUST be used only if the value cannot be
+/// expressed using ... uint16" Used for lengths 65536 to 4294967295
 const CBOR_STRING_LENGTH_UINT32: u8 = 26;
 
 /// Additional info value for string length encoded as uint64 (27)
-/// RFC 8949 Section 4.2.1: "The value 27 MUST be used only if the value cannot be expressed using ... uint32"
-/// Used for lengths 4294967296 to 18446744073709551615
+/// RFC 8949 Section 4.2.1: "The value 27 MUST be used only if the value cannot be
+/// expressed using ... uint32" Used for lengths 4294967296 to 18446744073709551615
 const CBOR_STRING_LENGTH_UINT64: u8 = 27;
 
 /// Maximum value that can be encoded in a 5-bit additional info field
@@ -93,15 +100,18 @@ const CBOR_STRING_LENGTH_UINT64: u8 = 27;
 const CBOR_MAX_TINY_VALUE: u64 = 23;
 
 /// Maximum value that can be encoded in a uint8 additional info field
-/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional `uint8_t`"
+/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional
+/// `uint8_t`"
 const CBOR_MAX_UINT8_VALUE: u64 = u8::MAX as u64;
 
 /// Maximum value that can be encoded in a uint16 additional info field
-/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional `uint16_t`"
+/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional
+/// `uint16_t`"
 const CBOR_MAX_UINT16_VALUE: u64 = u16::MAX as u64;
 
 /// Maximum value that can be encoded in a uint32 additional info field
-/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional `uint32_t`"
+/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional
+/// `uint32_t`"
 const CBOR_MAX_UINT32_VALUE: u64 = u32::MAX as u64;
 
 /// Represents a CBOR map key-value pair where the key must be deterministically encoded
@@ -250,17 +260,17 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, Determin
     let map_len = d.map()?.ok_or(DeterministicError::UnexpectedEof)?;
 
     check_minimal_length(d, start_pos, map_len)?;
-    
+
     // Store the starting position of the entire map
     let map_start = start_pos;
-    
+
     // Decode entries to validate them
     let entries = decode_map_entries(d, map_len)?;
     validate_map_ordering(&entries)?;
-    
+
     // Get the ending position after validation
     let map_end = d.position();
-    
+
     // Return the raw bytes of the entire validated map
     Ok(d.input()[map_start..map_end].to_vec())
 }
@@ -495,9 +505,11 @@ fn decode_string_length(
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
 
-        _ => Err(DeterministicError::DecoderError(
-            minicbor::decode::Error::message("invalid additional info for string length"),
-        )),
+        _ => {
+            Err(DeterministicError::DecoderError(
+                minicbor::decode::Error::message("invalid additional info for string length"),
+            ))
+        },
     }
 }
 
@@ -543,7 +555,7 @@ mod tests {
     fn test_map_validation() {
         // Test case 1: Valid ordering - shorter key before longer key
         let valid_map = vec![
-            0xa2, // Map with 2 pairs
+            0xA2, // Map with 2 pairs
             0x42, 0x01, 0x02, // Key 1: 2-byte string
             0x41, 0x01, // Value 1: 1-byte string
             0x43, 0x01, 0x02, 0x03, // Key 2: 3-byte string
@@ -554,7 +566,7 @@ mod tests {
 
         // Test case 2: Invalid ordering - longer key before shorter key
         let invalid_map = vec![
-            0xa2, // Map with 2 pairs
+            0xA2, // Map with 2 pairs
             0x43, 0x01, 0x02, 0x03, // Key 1: 3-byte string (longer first - invalid)
             0x41, 0x01, // Value 1: 1-byte string
             0x42, 0x01, 0x02, // Key 2: 2-byte string
@@ -568,7 +580,7 @@ mod tests {
 
         // Test case 3: Duplicate keys
         let duplicate_map = vec![
-            0xa2, // Map with 2 pairs
+            0xA2, // Map with 2 pairs
             0x42, 0x01, 0x02, // Key 1: 2-byte string
             0x41, 0x01, // Value 1: 1-byte string
             0x42, 0x01, 0x02, // Key 2: same as Key 1 (duplicate - invalid)
@@ -585,16 +597,16 @@ mod tests {
     fn test_map_bytes_roundtrip() {
         // Create a valid deterministic map encoding
         let valid_map = vec![
-            0xa2, // Map with 2 pairs
+            0xA2, // Map with 2 pairs
             0x42, 0x01, 0x02, // Key 1: 2-byte string
             0x41, 0x01, // Value 1: 1-byte string
             0x43, 0x01, 0x02, 0x03, // Key 2: 3-byte string
             0x41, 0x02, // Value 2: 1-byte string
         ];
-        
+
         let mut decoder = Decoder::new(&valid_map);
         let result = decode_map_deterministically(&mut decoder).unwrap();
-        
+
         // Verify we got back exactly the same bytes
         assert_eq!(result, valid_map);
     }
@@ -641,6 +653,4 @@ mod tests {
             Err(DeterministicError::IndefiniteLength)
         ));
     }
-
-    
 }
