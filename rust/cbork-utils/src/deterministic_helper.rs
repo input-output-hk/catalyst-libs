@@ -139,7 +139,7 @@ impl fmt::Display for DeterministicError {
             DeterministicError::IndefiniteLength => {
                 write!(f, "indefinite-length items not allowed")
             },
-            DeterministicError::DecoderError(e) => write!(f, "decoder error: {}", e),
+            DeterministicError::DecoderError(e) => write!(f, "decoder error: {e}"),
             DeterministicError::UnorderedMapKeys => write!(f, "map keys not in canonical order"),
             DeterministicError::DuplicateMapKey => write!(f, "duplicate map key found"),
             DeterministicError::NonMinimalFloat => write!(f, "float not encoded in minimal form"),
@@ -182,12 +182,12 @@ impl From<minicbor::decode::Error> for DeterministicError {
 /// # Errors
 ///
 /// Returns `DeterministicError` if:
-/// - Input is empty (UnexpectedEof)
-/// - Map uses indefinite-length encoding (IndefiniteLength)
-/// - Map length is not encoded minimally (NonMinimalInt)
-/// - Map keys are not properly sorted (UnorderedMapKeys)
-/// - Duplicate keys are found (DuplicateMapKey)
-/// - Map key or value decoding fails (DecoderError)
+/// - Input is empty (`UnexpectedEof`)
+/// - Map uses indefinite-length encoding (`IndefiniteLength`)
+/// - Map length is not encoded minimally (`NonMinimalInt`)
+/// - Map keys are not properly sorted (`UnorderedMapKeys`)
+/// - Duplicate keys are found (`DuplicateMapKey`)
+/// - Map key or value decoding fails (`DecoderError`)
 pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<MapEntry>, DeterministicError> {
     validate_input_not_empty(d)?;
     validate_not_indefinite_length_map(d)?;
@@ -269,11 +269,11 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
 /// "Integers must be as small as possible. What this means is that the shortest
 /// form of encoding must be used, in particular:
 /// - 0 to 23 must be expressed in the same byte as the major type
-/// - 24 to 255 must be expressed only with an additional uint8_t
-/// - 256 to 65535 must be expressed only with an additional uint16_t
-/// - 65536 to 4294967295 must be expressed only with an additional uint32_t
+/// - 24 to 255 must be expressed only with an additional `uint8_t`
+/// - 256 to 65535 must be expressed only with an additional `uint16_t`
+/// - 65536 to 4294967295 must be expressed only with an additional `uint32_t`
 /// - 4294967296 to 18446744073709551615 must be expressed only with an additional
-///   uint64_t"
+///   `uint64_t`"
 fn check_minimal_length(
     d: &Decoder, start_pos: usize, length: u64,
 ) -> Result<(), DeterministicError> {
@@ -380,14 +380,13 @@ fn is_indefinite_string(byte: u8) -> bool {
     byte == CBOR_INDEFINITE_TEXT || byte == CBOR_INDEFINITE_BYTES
 }
 
-/// Ensures the input slice has enough bytes available starting from start_pos
+/// Ensures the input slice has enough bytes available starting from `start_pos`
 #[inline]
 fn check_slice_range(
     input: &[u8], start_pos: usize, additional_bytes: usize,
 ) -> Result<(), DeterministicError> {
     if start_pos
-        .checked_add(additional_bytes)
-        .map_or(true, |end| end > input.len())
+        .checked_add(additional_bytes).is_none_or(|end| end > input.len())
     {
         return Err(DeterministicError::UnexpectedEof);
     }
@@ -410,7 +409,7 @@ fn decode_string_length(
     let input = d.input();
 
     match additional_info {
-        0..=23 => Ok(additional_info as u64), // Direct value
+        0..=23 => Ok(u64::from(additional_info)), // Direct value
 
         CBOR_STRING_UINT8 => {
             let bytes = get_checked_slice(input, start_pos + 1, 1)?;
@@ -449,17 +448,17 @@ fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), Dete
             }
         },
         CBOR_STRING_UINT16 => {
-            if length <= u64::from(u8::MAX) {
+            if u8::try_from(length).is_ok() {
                 return Err(DeterministicError::NonMinimalInt);
             }
         },
         CBOR_STRING_UINT32 => {
-            if length <= u64::from(u16::MAX) {
+            if u16::try_from(length).is_ok() {
                 return Err(DeterministicError::NonMinimalInt);
             }
         },
         CBOR_STRING_UINT64 => {
-            if length <= u64::from(u32::MAX) {
+            if u32::try_from(length).is_ok() {
                 return Err(DeterministicError::NonMinimalInt);
             }
         },
