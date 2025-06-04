@@ -149,7 +149,7 @@ impl CborDecoder {
                 return decode_map_deterministically(decoder);
             } else {
                 //
-                println!("check if other type is deterministic");
+                println!("we can check other types here via minicbor");
             }
         }
 
@@ -230,21 +230,8 @@ pub enum DeterministicError {
     /// "No two keys in a map may be equal"
     DuplicateMapKey,
 
-    /// Indicates float is not encoded in its shortest possible form.
-    /// Per RFC 8949 Section 4.2.4:
-    /// "Floating-point values must use the shortest form that preserves value"
-    NonMinimalFloat,
-
-    /// Indicates presence of non-finite floating point values.
-    /// Per RFC 8949 Section 4.2.4:
-    /// "Non-finite floating-point values (NaN, infinity, -infinity) are not allowed"
-    NonFiniteFloat,
-
     /// Indicates unexpected end of input
     UnexpectedEof,
-
-    /// Indicates an error occurred while decoding an array element
-    ArrayElementDecoding,
 }
 
 impl fmt::Display for DeterministicError {
@@ -257,10 +244,7 @@ impl fmt::Display for DeterministicError {
             DeterministicError::DecoderError(e) => write!(f, "decoder error: {e}"),
             DeterministicError::UnorderedMapKeys => write!(f, "map keys not in canonical order"),
             DeterministicError::DuplicateMapKey => write!(f, "duplicate map key found"),
-            DeterministicError::NonMinimalFloat => write!(f, "float not encoded in minimal form"),
-            DeterministicError::NonFiniteFloat => write!(f, "non-finite float values not allowed"),
             DeterministicError::UnexpectedEof => write!(f, "unexpected end of input"),
-            DeterministicError::ArrayElementDecoding => write!(f, "error decoding array element"),
         }
     }
 }
