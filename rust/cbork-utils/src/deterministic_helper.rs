@@ -343,8 +343,15 @@ fn check_minimal_length(
 /// * `Ok(())` if the string length is encoded minimally
 /// * `Err(DeterministicError)` if encoding is non-minimal or invalid
 fn validate_string_length(d: &Decoder, start_pos: usize) -> Result<(), DeterministicError> {
-    let initial_byte = d.input()[start_pos];
+    let input = d.input();
+    
+    // Check if we have at least one byte
+    if start_pos >= input.len() {
+        return Err(DeterministicError::UnexpectedEof);
+    }
 
+    let initial_byte = input[start_pos];
+    
     // Early return if not a string type
     if !is_string_type(initial_byte) {
         return Ok(());
@@ -373,69 +380,54 @@ fn is_indefinite_string(byte: u8) -> bool {
     byte == CBOR_INDEFINITE_TEXT || byte == CBOR_INDEFINITE_BYTES
 }
 
-/// Decodes the string length based on the additional info value
-fn decode_string_length(
-    d: &Decoder, start_pos: usize, additional_info: u8,
-) -> Result<u64, DeterministicError> {
-    let input = d.input();
-
-    match additional_info {
-        0..=23 => Ok(additional_info as u64), // Direct value
-
-        CBOR_STRING_UINT8 => {
-            ensure_bytes_available(input, start_pos, 1)?;
-            Ok(u64::from(input[start_pos + 1]))
-        },
-
-        CBOR_STRING_UINT16 => {
-            ensure_bytes_available(input, start_pos, 2)?;
-            Ok(u64::from(u16::from_be_bytes([
-                input[start_pos + 1],
-                input[start_pos + 2],
-            ])))
-        },
-
-        CBOR_STRING_UINT32 => {
-            ensure_bytes_available(input, start_pos, 4)?;
-            Ok(u64::from(u32::from_be_bytes([
-                input[start_pos + 1],
-                input[start_pos + 2],
-                input[start_pos + 3],
-                input[start_pos + 4],
-            ])))
-        },
-
-        CBOR_STRING_UINT64 => {
-            ensure_bytes_available(input, start_pos, 8)?;
-            Ok(u64::from_be_bytes([
-                input[start_pos + 1],
-                input[start_pos + 2],
-                input[start_pos + 3],
-                input[start_pos + 4],
-                input[start_pos + 5],
-                input[start_pos + 6],
-                input[start_pos + 7],
-                input[start_pos + 8],
-            ]))
-        },
-
-        _ => {
-            Err(DeterministicError::DecoderError(
-                minicbor::decode::Error::message("invalid additional info for string length"),
-            ))
-        },
-    }
-}
-
-/// Ensures the required number of bytes are available in the input
+/// Ensures the input slice has enough bytes available starting from start_pos
 #[inline]
-fn ensure_bytes_available(
-    input: &[u8], start_pos: usize, needed: usize,
-) -> Result<(), DeterministicError> {
-    if start_pos + needed >= input.len() {
+fn check_slice_range(input: &[u8], start_pos: usize, additional_bytes: usize) -> Result<(), DeterministicError> {
+    if start_pos.checked_add(additional_bytes)
+        .map_or(true, |end| end > input.len()) {
         return Err(DeterministicError::UnexpectedEof);
     }
     Ok(())
+}
+
+/// Gets a slice of the input with bounds checking
+#[inline]
+fn get_checked_slice(input: &[u8], start_pos: usize, length: usize) -> Result<&[u8], DeterministicError> {
+    check_slice_range(input, start_pos, length)?;
+    Ok(&input[start_pos..start_pos + length])
+}
+
+/// Decodes the string length based on the additional info value
+fn decode_string_length(d: &Decoder, start_pos: usize, additional_info: u8) -> Result<u64, DeterministicError> {
+    let input = d.input();
+    
+    match additional_info {
+        0..=23 => Ok(additional_info as u64), // Direct value
+        
+        CBOR_STRING_UINT8 => {
+            let bytes = get_checked_slice(input, start_pos + 1, 1)?;
+            Ok(u64::from(bytes[0]))
+        },
+        
+        CBOR_STRING_UINT16 => {
+            let bytes = get_checked_slice(input, start_pos + 1, 2)?;
+            Ok(u64::from(u16::from_be_bytes(bytes.try_into().unwrap())))
+        },
+        
+        CBOR_STRING_UINT32 => {
+            let bytes = get_checked_slice(input, start_pos + 1, 4)?;
+            Ok(u64::from(u32::from_be_bytes(bytes.try_into().unwrap())))
+        },
+        
+        CBOR_STRING_UINT64 => {
+            let bytes = get_checked_slice(input, start_pos + 1, 8)?;
+            Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
+        },
+        
+        _ => Err(DeterministicError::DecoderError(
+            minicbor::decode::Error::message("invalid additional info for string length")
+        )),
+    }
 }
 
 /// Validates that the length uses minimal encoding according to RFC 8949
