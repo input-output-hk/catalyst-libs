@@ -10,9 +10,9 @@
 //! 6. Floating point values must use smallest possible encoding
 //! 7. Non-finite floating point values are not allowed (NaN, infinite)
 
+use std::{cmp::Ordering, fmt};
+
 use minicbor::Decoder;
-use std::cmp::Ordering;
-use std::fmt;
 
 /// CBOR Major Type for Maps (5) shifted left by 5 bits
 const CBOR_MAP_TYPE: u8 = 5 << 5;
@@ -170,8 +170,8 @@ impl From<minicbor::decode::Error> for DeterministicError {
 /// From RFC 8949 Section 4.2.3:
 /// "The keys in every map must be sorted in the following order:
 ///  1. If two keys have different lengths, the shorter one sorts earlier;
-///  2. If two keys have the same length, the one with the lower value
-///     in (byte-wise) lexical order sorts earlier."
+///  2. If two keys have the same length, the one with the lower value in (byte-wise)
+///     lexical order sorts earlier."
 ///
 /// Additionally:
 /// - Map lengths must use minimal encoding (Section 4.2.1)
@@ -272,7 +272,8 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
 /// - 24 to 255 must be expressed only with an additional uint8_t
 /// - 256 to 65535 must be expressed only with an additional uint16_t
 /// - 65536 to 4294967295 must be expressed only with an additional uint32_t
-/// - 4294967296 to 18446744073709551615 must be expressed only with an additional uint64_t"
+/// - 4294967296 to 18446744073709551615 must be expressed only with an additional
+///   uint64_t"
 fn check_minimal_length(
     d: &Decoder, start_pos: usize, length: u64,
 ) -> Result<(), DeterministicError> {
@@ -343,7 +344,7 @@ fn check_minimal_length(
 /// * `Err(DeterministicError)` if encoding is non-minimal or invalid
 fn validate_string_length(d: &Decoder, start_pos: usize) -> Result<(), DeterministicError> {
     let initial_byte = d.input()[start_pos];
-    
+
     // Early return if not a string type
     if !is_string_type(initial_byte) {
         return Ok(());
@@ -373,17 +374,19 @@ fn is_indefinite_string(byte: u8) -> bool {
 }
 
 /// Decodes the string length based on the additional info value
-fn decode_string_length(d: &Decoder, start_pos: usize, additional_info: u8) -> Result<u64, DeterministicError> {
+fn decode_string_length(
+    d: &Decoder, start_pos: usize, additional_info: u8,
+) -> Result<u64, DeterministicError> {
     let input = d.input();
-    
+
     match additional_info {
         0..=23 => Ok(additional_info as u64), // Direct value
-        
+
         CBOR_STRING_UINT8 => {
             ensure_bytes_available(input, start_pos, 1)?;
             Ok(u64::from(input[start_pos + 1]))
         },
-        
+
         CBOR_STRING_UINT16 => {
             ensure_bytes_available(input, start_pos, 2)?;
             Ok(u64::from(u16::from_be_bytes([
@@ -391,7 +394,7 @@ fn decode_string_length(d: &Decoder, start_pos: usize, additional_info: u8) -> R
                 input[start_pos + 2],
             ])))
         },
-        
+
         CBOR_STRING_UINT32 => {
             ensure_bytes_available(input, start_pos, 4)?;
             Ok(u64::from(u32::from_be_bytes([
@@ -401,7 +404,7 @@ fn decode_string_length(d: &Decoder, start_pos: usize, additional_info: u8) -> R
                 input[start_pos + 4],
             ])))
         },
-        
+
         CBOR_STRING_UINT64 => {
             ensure_bytes_available(input, start_pos, 8)?;
             Ok(u64::from_be_bytes([
@@ -415,16 +418,20 @@ fn decode_string_length(d: &Decoder, start_pos: usize, additional_info: u8) -> R
                 input[start_pos + 8],
             ]))
         },
-        
-        _ => Err(DeterministicError::DecoderError(
-            minicbor::decode::Error::message("invalid additional info for string length")
-        )),
+
+        _ => {
+            Err(DeterministicError::DecoderError(
+                minicbor::decode::Error::message("invalid additional info for string length"),
+            ))
+        },
     }
 }
 
 /// Ensures the required number of bytes are available in the input
 #[inline]
-fn ensure_bytes_available(input: &[u8], start_pos: usize, needed: usize) -> Result<(), DeterministicError> {
+fn ensure_bytes_available(
+    input: &[u8], start_pos: usize, needed: usize,
+) -> Result<(), DeterministicError> {
     if start_pos + needed >= input.len() {
         return Err(DeterministicError::UnexpectedEof);
     }
@@ -461,20 +468,22 @@ fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), Dete
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use std::cmp::Ordering;
+
+    use super::*;
 
     /// Test the map key comparison logic used for deterministic ordering
     /// as specified in RFC 8949 Section 4.2.3.
-    /// 
+    ///
     /// The RFC states two rules for key ordering:
     /// 1. "If two keys have different lengths, the shorter one sorts earlier;"
-    /// 2. "If two keys have the same length, the one with the lower value in
-    ///     (byte-wise) lexical order sorts earlier."
+    /// 2. "If two keys have the same length, the one with the lower value in (byte-wise)
+    ///    lexical order sorts earlier."
     #[test]
     fn test_map_key_ordering() {
         // Test case 1: Keys of different lengths
-        // RFC 8949 4.2.3 Rule 1: "If two keys have different lengths, the shorter one sorts earlier"
+        // RFC 8949 4.2.3 Rule 1: "If two keys have different lengths, the shorter one sorts
+        // earlier"
         let shorter_key = MapEntry {
             key_bytes: vec![1, 2],
             value: vec![],
@@ -513,16 +522,16 @@ mod tests {
     }
 
     /// Test the deterministic map validation rules from RFC 8949 Section 4.2.3.
-    /// 
+    ///
     /// The RFC mandates:
     /// 1. Keys must be sorted by length first
     /// 2. Equal length keys must be sorted lexicographically
     /// 3. No duplicate keys are allowed
-    /// 
+    ///
     /// Section 4.2.3: "The keys in every map must be sorted in the following order:
     /// 1. If two keys have different lengths, the shorter one sorts earlier;
-    /// 2. If two keys have the same length, the one with the lower value in
-    ///    (byte-wise) lexical order sorts earlier."
+    /// 2. If two keys have the same length, the one with the lower value in (byte-wise)
+    ///    lexical order sorts earlier."
     #[test]
     fn test_map_validation() {
         // Test case 1: Valid ordering - shorter key before longer key
@@ -574,15 +583,16 @@ mod tests {
         ));
     }
 
-    /// Test string length encoding validation according to RFC 8949 Section 4.2.1 and 4.2.2.
-    /// 
+    /// Test string length encoding validation according to RFC 8949 Section 4.2.1 and
+    /// 4.2.2.
+    ///
     /// Section 4.2.1 mandates minimal encoding for lengths:
     /// - 0 to 23: must be expressed in the same byte as the major type
     /// - 24 to 255: must use additional uint8
     /// - 256 to 65535: must use additional uint16
     /// - 65536 to 4294967295: must use additional uint32
     /// - 4294967296 to 18446744073709551615: must use additional uint64
-    /// 
+    ///
     /// Section 4.2.2: "Indefinite-length items must be made definite"
     #[test]
     fn test_string_length_validation() {
@@ -596,7 +606,8 @@ mod tests {
         assert!(validate_string_length(&decoder, 0).is_ok());
 
         // Test case 2: Non-minimal encoding for small string
-        // RFC 8949 4.2.1: "The value 24 MUST NOT be used if the value can be encoded in fewer bytes"
+        // RFC 8949 4.2.1: "The value 24 MUST NOT be used if the value can be encoded in fewer
+        // bytes"
         let invalid_small = vec![
             0x78, 0x03, // Text string, length 3 with uint8 when not needed
             b'f', b'o', b'o',
@@ -620,8 +631,7 @@ mod tests {
         // RFC 8949 4.2.2: "Indefinite-length items must be made definite"
         let indefinite = vec![
             0x7F, // Indefinite length text string
-            0x63, b'f', b'o', b'o',
-            0xFF, // Break
+            0x63, b'f', b'o', b'o', 0xFF, // Break
         ];
         let decoder = Decoder::new(&indefinite);
         assert!(matches!(
