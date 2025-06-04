@@ -386,7 +386,8 @@ fn check_slice_range(
     input: &[u8], start_pos: usize, additional_bytes: usize,
 ) -> Result<(), DeterministicError> {
     if start_pos
-        .checked_add(additional_bytes).is_none_or(|end| end > input.len())
+        .checked_add(additional_bytes)
+        .is_none_or(|end| end > input.len())
     {
         return Err(DeterministicError::UnexpectedEof);
     }
