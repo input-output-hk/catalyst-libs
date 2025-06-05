@@ -376,9 +376,6 @@ fn check_minimal_length(
     // Get the initial byte which indicates the encoding type used
     let initial_byte = d.input()[start_pos];
 
-    // Extract major type (top 3 bits)
-    let _major_type = initial_byte & 0xE0; // 0xe0 = 11100000
-
     match initial_byte {
         // Check both array and map uint8 length encodings
         b if  b== CBOR_MAP_LENGTH_UINT8 => {
