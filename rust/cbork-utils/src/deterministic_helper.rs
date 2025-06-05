@@ -260,7 +260,7 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, Determin
     let start_pos = d.position();
     let map_len = d.map()?.ok_or(DeterministicError::UnexpectedEof)?;
 
-    check_minimal_length(d, start_pos, map_len)?;
+    check_map_minimal_length(d, start_pos, map_len)?;
 
     // Store the starting position of the entire map
     let map_start = start_pos;
@@ -336,68 +336,62 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
     Ok(())
 }
 
-/// Validates that a CBOR map's length uses the minimal length encoding as required by RFC
-/// 8949's deterministic encoding rules section 4.2.
+/// Validates that a CBOR map's length is encoded using the minimal number of bytes as
+/// required by RFC 8949's deterministic encoding rules.
 ///
-/// For maps to be deterministically encoded, their length must be encoded using the
-/// smallest number of bytes possible. This is part of the canonical CBOR encoding
-/// requirements that ensure a unique encoding for each map.
+/// According to the deterministic encoding requirements:
+/// - The length of a map MUST be encoded using the smallest possible CBOR additional
+///   information value
+/// - For values 0 through 23, the additional info byte is used directly
+/// - For values that fit in 8, 16, 32, or 64 bits, the appropriate multi-byte encoding
+///   must be used
 ///
+/// # Arguments
+/// * `decoder` - Reference to the CBOR decoder containing the input bytes
+/// * `position` - Starting position in the input where the map header is located
+/// * `value` - The decoded length value to validate
 ///
 /// # Returns
-/// * `Ok(())` if the map length is encoded using the minimal number of bytes
-/// * `Err(DeterministicError::NonMinimalInt)` if a shorter encoding was possible
+/// * `Ok(())` if the length is encoded minimally
+/// * `Err(DeterministicError::NonMinimalInt)` if the length could have been encoded in
+///   fewer bytes
 ///
-/// # Details
-/// For map lengths, the function verifies that:
-/// - Lengths 0-23 are encoded directly in the initial byte's "additional information"
-///   field
-/// - Lengths 24-255 use UINT8 encoding
-/// - Lengths 256-65535 use UINT16 encoding
-/// - Lengths 65536-4294967295 use UINT32 encoding
-/// - Lengths above 4294967295 use UINT64 encoding
+/// # Examples
 ///
-/// # Example
 /// ```rust
-/// // Valid minimal map length encodings:
-/// // Map with 2 pairs: 0xa2 (encoded in additional info)
-/// // Map with 24 pairs: 0xb8 0x18 (encoded as UINT8)
-/// // Map with 500 pairs: 0xb9 0x01 0xf4 (encoded as UINT16)
+/// // Valid minimal encoding for small map (0-23 elements)
+/// let input = vec![0xA1]; // Map with 1 element
+/// let decoder = Decoder::new(&input);
+/// assert!(check_map_minimal_length(&decoder, 0, 1).is_ok());
 ///
-/// // Invalid map length encodings:
-/// // Map with 2 pairs: 0xb8 0x02 (using UINT8 when additional info would suffice)
-/// // Map with 50 pairs: 0xb9 0x00 0x32 (using UINT16 when UINT8 would suffice)
+/// // Invalid non-minimal encoding
+/// let input = vec![0xB8, 0x01]; // Map with 1 element using 1-byte encoding unnecessarily
+/// let decoder = Decoder::new(&input);
+/// assert!(matches!(
+///     check_map_minimal_length(&decoder, 0, 1),
+///     Err(DeterministicError::NonMinimalInt)
+/// ));
 /// ```
 ///
-/// This validation is part of the larger deterministic encoding requirements for CBOR
-/// maps, which also include:
-/// - No indefinite-length encoding for maps
-/// - Keys must be sorted in bytewise lexicographic order
-/// - No duplicate keys
-fn check_minimal_length(
-    d: &Decoder, start_pos: usize, length: u64,
+/// # Specification Reference
+/// This implementation follows RFC 8949 Section 4.2.1 which requires that:
+/// "The length of arrays, maps, and strings MUST be encoded using the smallest possible
+/// CBOR additional information value."
+fn check_map_minimal_length(
+    decoder: &Decoder, position: usize, value: u64,
 ) -> Result<(), DeterministicError> {
-    // Get the initial byte which indicates the encoding type used
-    let initial_byte = match d.input().get(start_pos) {
-        Some(byte) => *byte,
-        None => {
-            return Err(DeterministicError::CorruptedEncoding(
-                "First byte corrupted".to_owned(),
-            ))
-        },
-    };
+    const ENCODING_ERROR_MSG: &str = "Cannot read initial byte for minimality check";
 
-    match initial_byte {
-        // Check both array and map uint8 length encodings
-        b if  b== CBOR_MAP_LENGTH_UINT8 => {
-            if length <= CBOR_MAX_TINY_VALUE {
-                return Err(DeterministicError::NonMinimalInt);
-            }
-        }
-,
-        // For immediate values (0-23), no minimality check is needed
-        // as these are already the most compact form possible
-        _ => {},
+    let initial_byte = decoder
+        .input()
+        .get(position)
+        .copied()
+        .ok_or_else(|| DeterministicError::CorruptedEncoding(ENCODING_ERROR_MSG.to_owned()))?;
+
+    // Only check minimality for map length encodings using uint8
+    // Immediate values (0-23) are already minimal by definition
+    if initial_byte == CBOR_MAP_LENGTH_UINT8 && value <= CBOR_MAX_TINY_VALUE {
+        return Err(DeterministicError::NonMinimalInt);
     }
 
     Ok(())
