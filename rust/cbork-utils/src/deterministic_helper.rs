@@ -20,10 +20,6 @@ use minicbor::Decoder;
 /// - Contain no duplicate keys
 const CBOR_MAJOR_TYPE_MAP: u8 = 5 << 5;
 
-/// Major type indicator for CBOR arrays (major type 4: 100 in top 3 bits)
-/// As per RFC 8949 Section 4.2.1, array lengths must use the smallest possible encoding
-const CBOR_MAJOR_TYPE_ARRAY: u8 = 4 << 5;
-
 /// Major type indicator for CBOR text strings (major type 3: 011 in top 3 bits)
 /// Text strings in deterministic encoding must:
 /// - Use definite lengths (no chunking) per RFC 8949 Section 4.2.2
@@ -54,26 +50,6 @@ const CBOR_INDEFINITE_LENGTH_TEXT: u8 = CBOR_MAJOR_TYPE_TEXT_STRING | 31;
 /// deterministic encoding.
 const CBOR_INDEFINITE_LENGTH_BYTES: u8 = CBOR_MAJOR_TYPE_BYTE_STRING | 31;
 
-/// Indicator for array length encoded as uint8 (major type 4 with additional info 24)
-/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional
-/// `uint8_t`"
-const CBOR_ARRAY_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_ARRAY | 24;
-
-/// Indicator for array length encoded as uint16 (major type 4 with additional info 25)
-/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional
-/// `uint16_t`"
-const CBOR_ARRAY_LENGTH_UINT16: u8 = CBOR_MAJOR_TYPE_ARRAY | 25;
-
-/// Indicator for array length encoded as uint32 (major type 4 with additional info 26)
-/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional
-/// `uint32_t`"
-const CBOR_ARRAY_LENGTH_UINT32: u8 = CBOR_MAJOR_TYPE_ARRAY | 26;
-
-/// Indicator for array length encoded as uint64 (major type 4 with additional info 27)
-/// RFC 8949 Section 4.2.1: "4294967296 to 18446744073709551615 must be expressed only
-/// with an additional `uint64_t`"
-const CBOR_ARRAY_LENGTH_UINT64: u8 = CBOR_MAJOR_TYPE_ARRAY | 27;
-
 /// Additional info value for string length encoded as uint8 (24)
 /// RFC 8949 Section 4.2.1: "The value 24 MUST be used only if the value cannot be
 /// expressed using the simple value" Used for lengths 24 to 255
@@ -98,21 +74,6 @@ const CBOR_STRING_LENGTH_UINT64: u8 = 27;
 /// RFC 8949 Section 4.2.1: "0 to 23 must be expressed in the same byte as the major type"
 /// Values 0-23 are encoded directly in the additional info field of the initial byte
 const CBOR_MAX_TINY_VALUE: u64 = 23;
-
-/// Maximum value that can be encoded in a uint8 additional info field
-/// RFC 8949 Section 4.2.1: "24 to 255 must be expressed only with an additional
-/// `uint8_t`"
-const CBOR_MAX_UINT8_VALUE: u64 = u8::MAX as u64;
-
-/// Maximum value that can be encoded in a uint16 additional info field
-/// RFC 8949 Section 4.2.1: "256 to 65535 must be expressed only with an additional
-/// `uint16_t`"
-const CBOR_MAX_UINT16_VALUE: u64 = u16::MAX as u64;
-
-/// Maximum value that can be encoded in a uint32 additional info field
-/// RFC 8949 Section 4.2.1: "65536 to 4294967295 must be expressed only with an additional
-/// `uint32_t`"
-const CBOR_MAX_UINT32_VALUE: u64 = u32::MAX as u64;
 
 const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length encoding
 
@@ -371,18 +332,43 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
     Ok(())
 }
 
-/// Validates that a CBOR array length is encoded using the minimal number of bytes
-/// as required by RFC 8949 Section 4.2.1.
+/// Validates that a CBOR map's length uses the minimal length encoding as required by RFC 8949's
+/// deterministic encoding rules section 4.2.
 ///
-/// From RFC 8949 Section 4.2.1:
-/// "Integers must be as small as possible. What this means is that the shortest
-/// form of encoding must be used, in particular:
-/// - 0 to 23 must be expressed in the same byte as the major type
-/// - 24 to 255 must be expressed only with an additional `uint8_t`
-/// - 256 to 65535 must be expressed only with an additional `uint16_t`
-/// - 65536 to 4294967295 must be expressed only with an additional `uint32_t`
-/// - 4294967296 to 18446744073709551615 must be expressed only with an additional
-///   `uint64_t`"
+/// For maps to be deterministically encoded, their length must be encoded using the smallest number
+/// of bytes possible. This is part of the canonical CBOR encoding requirements that ensure
+/// a unique encoding for each map.
+///
+///
+/// # Returns
+/// * `Ok(())` if the map length is encoded using the minimal number of bytes
+/// * `Err(DeterministicError::NonMinimalInt)` if a shorter encoding was possible
+///
+/// # Details
+/// For map lengths, the function verifies that:
+/// - Lengths 0-23 are encoded directly in the initial byte's "additional information" field
+/// - Lengths 24-255 use UINT8 encoding
+/// - Lengths 256-65535 use UINT16 encoding
+/// - Lengths 65536-4294967295 use UINT32 encoding
+/// - Lengths above 4294967295 use UINT64 encoding
+///
+/// # Example
+/// ```rust
+/// // Valid minimal map length encodings:
+/// // Map with 2 pairs: 0xa2 (encoded in additional info)
+/// // Map with 24 pairs: 0xb8 0x18 (encoded as UINT8)
+/// // Map with 500 pairs: 0xb9 0x01 0xf4 (encoded as UINT16)
+///
+/// // Invalid map length encodings:
+/// // Map with 2 pairs: 0xb8 0x02 (using UINT8 when additional info would suffice)
+/// // Map with 50 pairs: 0xb9 0x00 0x32 (using UINT16 when UINT8 would suffice)
+/// ```
+///
+/// This validation is part of the larger deterministic encoding requirements for CBOR maps,
+/// which also include:
+/// - No indefinite-length encoding for maps
+/// - Keys must be sorted in bytewise lexicographic order
+/// - No duplicate keys
 fn check_minimal_length(
     d: &Decoder, start_pos: usize, length: u64,
 ) -> Result<(), DeterministicError> {
@@ -394,48 +380,12 @@ fn check_minimal_length(
 
     match initial_byte {
         // Check both array and map uint8 length encodings
-        b if b == CBOR_ARRAY_LENGTH_UINT8 || b == CBOR_MAP_LENGTH_UINT8 => {
+        b if  b== CBOR_MAP_LENGTH_UINT8 => {
             if length <= CBOR_MAX_TINY_VALUE {
                 return Err(DeterministicError::NonMinimalInt);
             }
         }
 ,
-        // If encoded as uint8 (1 byte, additional info 24)
-        // RFC 8949: "The value 24 MUST be used only if the value cannot be expressed using the
-        // simple value"
-        CBOR_ARRAY_LENGTH_UINT8 => {
-            if length <= CBOR_MAX_TINY_VALUE {
-                // Error if value could have fit in 5-bit immediate value (0-23)
-                return Err(DeterministicError::NonMinimalInt);
-            }
-        },
-        // If encoded as uint16 (2 bytes, additional info 25)
-        // RFC 8949: "The value 25 MUST be used only if the value cannot be expressed using the
-        // simple value or uint8"
-        CBOR_ARRAY_LENGTH_UINT16 => {
-            if length <= CBOR_MAX_UINT8_VALUE {
-                // Error if value could have fit in uint8
-                return Err(DeterministicError::NonMinimalInt);
-            }
-        },
-        // If encoded as uint32 (4 bytes, additional info 26)
-        // RFC 8949: "The value 26 MUST be used only if the value cannot be expressed using the
-        // simple value, uint8, or uint16"
-        CBOR_ARRAY_LENGTH_UINT32 => {
-            if length <= CBOR_MAX_UINT16_VALUE {
-                // Error if value could have fit in uint16
-                return Err(DeterministicError::NonMinimalInt);
-            }
-        },
-        // If encoded as uint64 (8 bytes, additional info 27)
-        // RFC 8949: "The value 27 MUST be used only if the value cannot be expressed using the
-        // simple value, uint8, uint16, or uint32"
-        CBOR_ARRAY_LENGTH_UINT64 => {
-            if length <= CBOR_MAX_UINT32_VALUE {
-                // Error if value could have fit in uint32
-                return Err(DeterministicError::NonMinimalInt);
-            }
-        },
         // For immediate values (0-23), no minimality check is needed
         // as these are already the most compact form possible
         _ => {},
@@ -551,11 +501,9 @@ fn decode_string_length(
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
 
-        _ => {
-            Err(DeterministicError::DecoderError(
-                minicbor::decode::Error::message("invalid additional info for string length"),
-            ))
-        },
+        _ => Err(DeterministicError::DecoderError(
+            minicbor::decode::Error::message("invalid additional info for string length"),
+        )),
     }
 }
 
