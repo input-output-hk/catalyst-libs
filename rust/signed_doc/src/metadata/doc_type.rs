@@ -91,6 +91,12 @@ impl TryFrom<Vec<Uuid>> for DocType {
     }
 }
 
+impl From<DocType> for Vec<Uuid> {
+    fn from(value: DocType) -> Vec<Uuid> {
+        value.0.into_iter().map(Uuid::from).collect()
+    }
+}
+
 impl TryFrom<Vec<UuidV4>> for DocType {
     type Error = DocTypeError;
 
@@ -276,7 +282,9 @@ impl Encode<ProblemReport> for DocType {
 
 impl<'de> Deserialize<'de> for DocType {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where
+        D: Deserializer<'de>,
+    {
         #[derive(Deserialize)]
         #[serde(untagged)]
         enum DocTypeInput {
