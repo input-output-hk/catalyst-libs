@@ -46,21 +46,6 @@ impl DocType {
     pub fn doc_types(&self) -> &Vec<UuidV4> {
         &self.0
     }
-
-    /// Convert `DocType` to coset `Value`.
-    pub(crate) fn to_value(&self) -> Value {
-        Value::Array(
-            self.0
-                .iter()
-                .map(|uuidv4| {
-                    Value::Tag(
-                        UUID_CBOR_TAG,
-                        Box::new(Value::Bytes(uuidv4.uuid().as_bytes().to_vec())),
-                    )
-                })
-                .collect(),
-        )
-    }
 }
 
 impl Hash for DocType {
@@ -275,13 +260,13 @@ impl Encode<ProblemReport> for DocType {
         }
 
         e.array(self.0.len().try_into().map_err(|_| {
-            report.other("Unable to encode array length", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}, unable to encode array length"))
+            report.invalid_encoding("Array", "Invalid array", "Valid array", CONTEXT);
+            minicbor::encode::Error::message(format!("{CONTEXT}, array length encoding failed"))
         })?)?;
 
         for id in &self.0 {
             id.encode(e, &mut CborContext::Tagged).map_err(|_| {
-                report.other("Failed to encode UUIDv4", CONTEXT);
+                report.invalid_encoding("UUIDv4", &id.to_string(), "Valid UUIDv4", CONTEXT);
                 minicbor::encode::Error::message(format!("{CONTEXT}: UUIDv4 encoding failed"))
             })?;
         }
@@ -314,6 +299,23 @@ impl<'de> Deserialize<'de> for DocType {
             DocTypeInput::Multiple(v) => v.try_into().map_err(serde::de::Error::custom)?,
         };
         Ok(dt)
+    }
+}
+
+impl From<DocType> for Value {
+    fn from(value: DocType) -> Self {
+        Value::Array(
+            value
+                .0
+                .iter()
+                .map(|uuidv4| {
+                    Value::Tag(
+                        UUID_CBOR_TAG,
+                        Box::new(Value::Bytes(uuidv4.uuid().as_bytes().to_vec())),
+                    )
+                })
+                .collect(),
+        )
     }
 }
 
@@ -452,9 +454,9 @@ mod tests {
     #[test]
     fn test_doc_type_to_value() {
         let uuid = uuid::Uuid::new_v4();
-        let doc_type = DocType(vec![UuidV4::try_from(uuid).unwrap()]);
+        let doc_type: Value = DocType(vec![UuidV4::try_from(uuid).unwrap()]).into();
 
-        for d in &doc_type.to_value().into_array().unwrap() {
+        for d in &doc_type.into_array().unwrap() {
             let t = d.clone().into_tag().unwrap();
             assert_eq!(t.0, UUID_CBOR_TAG);
             assert_eq!(t.1.as_bytes().unwrap().len(), 16);
