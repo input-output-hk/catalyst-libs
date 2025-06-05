@@ -191,6 +191,9 @@ pub enum DeterministicError {
     /// "No two keys in a map may be equal"
     DuplicateMapKey,
 
+    /// Corrupted encoding
+    CorruptedEncoding(String),
+
     /// Indicates unexpected end of input
     UnexpectedEof,
 }
@@ -206,6 +209,7 @@ impl fmt::Display for DeterministicError {
             DeterministicError::UnorderedMapKeys => write!(f, "map keys not in canonical order"),
             DeterministicError::DuplicateMapKey => write!(f, "duplicate map key found"),
             DeterministicError::UnexpectedEof => write!(f, "unexpected end of input"),
+            DeterministicError::CorruptedEncoding(e) => write!(f, "corrupted encoding {e}"),
         }
     }
 }
@@ -374,7 +378,14 @@ fn check_minimal_length(
     d: &Decoder, start_pos: usize, length: u64,
 ) -> Result<(), DeterministicError> {
     // Get the initial byte which indicates the encoding type used
-    let initial_byte = d.input()[start_pos];
+    let initial_byte = match d.input().get(start_pos) {
+        Some(byte) => *byte,
+        None => {
+            return Err(DeterministicError::CorruptedEncoding(
+                "First byte corrupted".to_owned(),
+            ))
+        },
+    };
 
     match initial_byte {
         // Check both array and map uint8 length encodings
