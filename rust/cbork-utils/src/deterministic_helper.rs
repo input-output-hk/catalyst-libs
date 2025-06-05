@@ -332,12 +332,12 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
     Ok(())
 }
 
-/// Validates that a CBOR map's length uses the minimal length encoding as required by RFC 8949's
-/// deterministic encoding rules section 4.2.
+/// Validates that a CBOR map's length uses the minimal length encoding as required by RFC
+/// 8949's deterministic encoding rules section 4.2.
 ///
-/// For maps to be deterministically encoded, their length must be encoded using the smallest number
-/// of bytes possible. This is part of the canonical CBOR encoding requirements that ensure
-/// a unique encoding for each map.
+/// For maps to be deterministically encoded, their length must be encoded using the
+/// smallest number of bytes possible. This is part of the canonical CBOR encoding
+/// requirements that ensure a unique encoding for each map.
 ///
 ///
 /// # Returns
@@ -346,7 +346,8 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
 ///
 /// # Details
 /// For map lengths, the function verifies that:
-/// - Lengths 0-23 are encoded directly in the initial byte's "additional information" field
+/// - Lengths 0-23 are encoded directly in the initial byte's "additional information"
+///   field
 /// - Lengths 24-255 use UINT8 encoding
 /// - Lengths 256-65535 use UINT16 encoding
 /// - Lengths 65536-4294967295 use UINT32 encoding
@@ -364,8 +365,8 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
 /// // Map with 50 pairs: 0xb9 0x00 0x32 (using UINT16 when UINT8 would suffice)
 /// ```
 ///
-/// This validation is part of the larger deterministic encoding requirements for CBOR maps,
-/// which also include:
+/// This validation is part of the larger deterministic encoding requirements for CBOR
+/// maps, which also include:
 /// - No indefinite-length encoding for maps
 /// - Keys must be sorted in bytewise lexicographic order
 /// - No duplicate keys
@@ -501,9 +502,11 @@ fn decode_string_length(
             Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
         },
 
-        _ => Err(DeterministicError::DecoderError(
-            minicbor::decode::Error::message("invalid additional info for string length"),
-        )),
+        _ => {
+            Err(DeterministicError::DecoderError(
+                minicbor::decode::Error::message("invalid additional info for string length"),
+            ))
+        },
     }
 }
 
