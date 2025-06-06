@@ -6,7 +6,6 @@ package signed_docs
 import (
 	"list"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
-
 )
 
 // Metadata Formats.

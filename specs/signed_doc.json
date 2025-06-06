@@ -2300,5 +2300,214 @@
     "collaborators",
     "revocations",
     "parameters"
-  ]
+  ],
+  "templateJsonSchemaDefs": {
+    "schemaReferenceNonUI": {
+      "definition": {
+        "$comment": "Enforces the json document having a proper reference to the schema.",
+        "readOnly": true,
+        "type": "string"
+      },
+      "description": "Enforces the json document having a proper reference to the schema.",
+      "parameters": {
+        "const": {
+          "description": "The path must always be this value. **MUST** match `default`.",
+          "required": "yes",
+          "type": "string"
+        },
+        "default": {
+          "description": "The path that is defined to find the matching json schema.",
+          "required": "yes",
+          "type": "string"
+        }
+      }
+    },
+    "section": {
+      "definition": {
+        "$comment": "UI - Logical Document Sub-Section Break.",
+        "additionalProperties": false,
+        "type": "object",
+        "x-note": "Subsections containing specific details about the proposal."
+      },
+      "description": "UI - Logical Document Sub-Section Break.",
+      "parameters": {
+        "description": {
+          "description": "The displayable description attached to the section.  Markdown formatted contents.",
+          "required": "optional",
+          "type": "string"
+        },
+        "properties": {
+          "description": "The sub fields of the section.",
+          "required": "yes",
+          "type": "string"
+        },
+        "required": {
+          "description": "Which fields MUST appear in the segment.",
+          "required": "optional",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title of the section.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-icon": {
+          "choices": [
+            "light-bulb",
+            "view-grid",
+            "top-bar",
+            "tag",
+            "chart-pie",
+            "flag",
+            "presentation-chart-line",
+            "double_check"
+          ],
+          "description": "The name of the Icon to display with the field.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-order": {
+          "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an arbitrary order.",
+          "required": "yes",
+          "type": "string"
+        }
+      },
+      "parent": "segment"
+    },
+    "segment": {
+      "definition": {
+        "$comment": "Logical Document Section - Grouping Only - Highest Level Group",
+        "additionalProperties": false,
+        "type": "object",
+        "x-note": "Major sections of the proposal. Each segment contains sections of information grouped together."
+      },
+      "description": "Logical Document Section - Grouping Only - Highest Level Group",
+      "parameters": {
+        "description": {
+          "description": "The displayable description attached to the segment.  Markdown formatted contents.",
+          "required": "optional",
+          "type": "string"
+        },
+        "properties": {
+          "description": "The sub fields of the segment.",
+          "required": "yes",
+          "type": "string"
+        },
+        "required": {
+          "description": "Which fields MUST appear in the segment.",
+          "required": "optional",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title of the segment.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-icon": {
+          "choices": [
+            "light-bulb",
+            "view-grid",
+            "top-bar",
+            "tag",
+            "chart-pie",
+            "flag",
+            "presentation-chart-line",
+            "double_check"
+          ],
+          "description": "The name of the Icon to display with the field.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-order": {
+          "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an arbitrary order.",
+          "required": "yes",
+          "type": "string"
+        }
+      }
+    },
+    "singleLineHttpsURLEntry": {
+      "definition": {
+        "$comment": "UI - Single Line text entry for HTTPS Urls.",
+        "format": "uri",
+        "pattern": "^https://[^\\s]+$",
+        "type": "string",
+        "x-note": "Must start with 'https://' and is followed by one or more \nnon-whitespace characters, ending at the end of the string."
+      },
+      "description": "UI - Single Line text entry for HTTPS Urls.",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxLength": {
+          "description": "Maximum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minLength": {
+          "description": "Minimum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      }
+    },
+    "singleLineTextEntry": {
+      "definition": {
+        "$comment": "UI - Single Line text entry without any markup or rich text capability.",
+        "contentMediaType": "text/plain",
+        "pattern": "^.*$",
+        "type": "string",
+        "x-note": "Enter a single line of text.\nNo formatting, line breaks, or special characters are allowed."
+      },
+      "description": "UI - Single Line text entry without any markup or rich text capability.",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxLength": {
+          "description": "Maximum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minLength": {
+          "description": "Minimum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      }
+    }
+  }
 }
