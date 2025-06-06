@@ -79,8 +79,8 @@ impl ExtraFields {
 
     /// Return `collabs` field.
     #[must_use]
-    pub fn collabs(&self) -> &Vec<String> {
-        &self.collabs
+    pub fn collabs(&self) -> &[String] {
+        self.collabs.as_slice()
     }
 
     /// Return `parameters` field.
