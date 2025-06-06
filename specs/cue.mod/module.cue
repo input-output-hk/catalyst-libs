@@ -1,4 +1,4 @@
-module: "github.com/input-output-hk/catalyst-libs/specs"
+module: "github.com/input-output-hk/catalyst-libs/specs@v0"
 language: {
-	version: "v0.11.2"
+	version: "v0.13.0"
 }
