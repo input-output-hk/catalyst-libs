@@ -8,7 +8,7 @@ use deprecated::{
     COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
 };
 
-use crate::DocType;
+use crate::{doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE, DocType};
 
 /// Proposal document type.
 #[allow(clippy::expect_used)]
@@ -41,15 +41,37 @@ pub static PROPOSAL_ACTION_DOC: LazyLock<DocType> = LazyLock::new(|| {
         .expect("Failed to convert proposal action document Uuid to DocType")
 });
 
+/// Proposal template document type.
+#[allow(clippy::expect_used)]
+pub static PROPOSAL_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[TEMPLATE_UUID_TYPE, PROPOSAL_UUID_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal template Uuid to DocType")
+});
+
+/// Proposal comment template document type.
+#[allow(clippy::expect_used)]
+pub static PROPOSAL_COMMENT_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[TEMPLATE_UUID_TYPE, COMMENT_UUID_TYPE, PROPOSAL_UUID_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal comment template Uuid to DocType")
+});
+
 /// Submission Action UUID type.
 pub const SUBMISSION_ACTION_UUID_TYPE: Uuid =
     Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0E01_9B12_6A65);
+/// Category UUID type.
+pub const CATEGORY_UUID_TYPE: Uuid = Uuid::from_u128(0x818938C3_3139_4DAA_AFE6_974C78488E95);
 /// Proposal UUID type.
 pub const PROPOSAL_UUID_TYPE: Uuid = PROPOSAL_DOCUMENT_UUID_TYPE;
 /// Comment UUID type.
 pub const COMMENT_UUID_TYPE: Uuid = COMMENT_DOCUMENT_UUID_TYPE;
 /// Action UUID type.
 pub const ACTION_UUID_TYPE: Uuid = PROPOSAL_ACTION_DOCUMENT_UUID_TYPE;
+/// Template UUID type.
+pub const TEMPLATE_UUID_TYPE: Uuid = PROPOSAL_TEMPLATE_UUID_TYPE;
 
 /// Document type which will be deprecated.
 pub mod deprecated {
