@@ -8,12 +8,9 @@ docs: #DocumentDefinitions & {
 			A Moderation Action performed on any Comment.
 			"""
 
-		metadata: {
-			ref: {
-				required: "yes"
-				type: ["Proposal Comment"]
-			}
-
+		metadata: ref: {
+			required: "yes"
+			type: ["Proposal Comment"]
 		}
 
 		versions: [

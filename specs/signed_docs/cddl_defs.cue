@@ -14,7 +14,7 @@ package signed_docs
 }
 
 cddlDefinitions: #cddlDefinitions & {
-	"uuid_v7": {
+	uuid_v7: {
 		def:         "#6.37(bytes .size 16)"
 		description: """
 			Version 7 UUID
@@ -23,7 +23,7 @@ cddlDefinitions: #cddlDefinitions & {
 			"""
 		comment:     "UUIDv7"
 	}
-	"uuid_v4": {
+	uuid_v4: {
 		def:         "#6.37(bytes .size 16)"
 		description: """
 			Version 4 UUID
@@ -32,30 +32,30 @@ cddlDefinitions: #cddlDefinitions & {
 			"""
 		comment:     "UUIDv4"
 	}
-	"document_type": {
+	document_type: {
 		def: "[ 1* \(requires[0]) ]"
 		requires: ["uuid_v4"]
 		description: "Unique Document Type Identifier"
 		comment:     "Document Type"
 	}
-	"blake2b_256": {
+	blake2b_256: {
 		def:         "bytes .size 32"
 		description: "Blake2b Hash (256 bits)"
 		comment:     "Blake2B-256"
 	}
-	"document_id": {
+	document_id: {
 		def: "\(requires[0])"
 		requires: ["uuid_v7"]
 		description: "Unique Document Identifier"
 		comment:     "Document ID"
 	}
-	"document_ver": {
+	document_ver: {
 		def: "\(requires[0])"
 		requires: ["uuid_v7"]
 		description: "Unique Chronological Document Version Identifier"
 		comment:     "Document Version"
 	}
-	"cid": {
+	cid: {
 		def:         "#6.42(bytes)"
 		description: """
 			IPLD content identifier.
@@ -68,7 +68,7 @@ cddlDefinitions: #cddlDefinitions & {
 			TODO: add size limits if possible
 			"""
 	}
-	"document_locator": {
+	document_locator: {
 		def: """
 			{ 
 			  \"cid\" => \(requires[0])
@@ -77,7 +77,7 @@ cddlDefinitions: #cddlDefinitions & {
 		requires: ["cid"]
 		comment: "Where a document can be located, must be a unique identifier."
 	}
-	"document_ref": {
+	document_ref: {
 		def: """
 			[ 1* [
 			  \(requires[0]), 
@@ -92,26 +92,26 @@ cddlDefinitions: #cddlDefinitions & {
 		]
 		comment: "Reference to another Signed Document"
 	}
-	"json_pointer": {
+	json_pointer: {
 		def:     "text"
 		comment: "RFC6901 Standard JSON Pointer"
 	}
-	"section_ref": {
+	section_ref: {
 		def: "\(requires[0])"
 		requires: ["json_pointer"]
 		comment: "Reference to a section in a referenced document."
 	}
-	"collaborators": {
+	collaborators: {
 		def: "[ * \(requires[0]) ]"
 		requires: ["catalyst_id_kid"]
 		comment: "Allowed Collaborators on the next subsequent version of a document."
 	}
-	"revocations": {
+	revocations: {
 		def: "[ * \(requires[0]) ] / true "
 		requires: ["document_ver"]
 		comment: "List of revoked versions of this document."
 	}
-	"media_type": {
+	media_type: {
 		def: """
 			(
 			    (uint .eq (\(_cddlCoapTypes))) / 
@@ -125,17 +125,17 @@ cddlDefinitions: #cddlDefinitions & {
 			If uint is used, only CoAP Content Formats that match the string format are allowed.
 			"""
 	}
-	"http_content_encoding": {
+	http_content_encoding: {
 		def: """
 			tstr .eq "br"
 			"""
 		comment: "Supported Content Encoding Types"
 	}
-	"catalyst_id_kid": {
+	catalyst_id_kid: {
 		def:     "bytes"
 		comment: "UTF8 Catalyst ID URI encoded as a bytes string."
 	}
-	"revocations": {
+	revocations: {
 		def: "[ * document_ver ] / true "
 		requires: ["document_ver"]
 	}

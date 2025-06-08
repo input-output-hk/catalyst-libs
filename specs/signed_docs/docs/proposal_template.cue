@@ -16,11 +16,7 @@ docs: #DocumentDefinitions & {
 			The payload of a proposal is controlled by its template.
 			"""
 
-		headers: {
-			"content type": {
-				value: "application/schema+json"
-			}
-		}
+		headers: "content type": value: "application/schema+json"
 
 		metadata: {
 			template: {
@@ -37,23 +33,19 @@ docs: #DocumentDefinitions & {
 			}
 		}
 
-		payload: {
-			description: """
-				JSON Schema document which defines the valid contents of a proposal document.
-				"""
-		}
+		payload: description: """
+			JSON Schema document which defines the valid contents of a proposal document.
+			"""
 
-		signers: {
-			roles: {
-				// No User Role may publish this document.
-				user: []
+		signers: roles: {
+			// No User Role may publish this document.
+			user: []
 
-				// Brand Admin and Lower may publish this document.
-				admin: [
-					"Brand Admin",
-					"Campaign Admin",
-				]
-			}
+			// Brand Admin and Lower may publish this document.
+			admin: [
+				"Brand Admin",
+				"Campaign Admin",
+			]
 		}
 
 		versions: [

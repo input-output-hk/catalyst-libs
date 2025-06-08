@@ -49,18 +49,14 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Comment"
 			}
 
-			section: {
-				required: "optional"
-			}
+			section: required: "optional"
 
 			template: {
 				required: "yes"
 				type:     "Proposal Comment Template"
 			}
 
-			revocations: {
-				required: "optional"
-			}
+			revocations: required: "optional"
 
 			parameters: {
 				required: "yes"
@@ -72,11 +68,9 @@ docs: #DocumentDefinitions & {
 			}
 		}
 
-		payload: {
-			description: """
-				JSON Document which must validate against the referenced template.
-				"""
-		}
+		payload: description: """
+			JSON Document which must validate against the referenced template.
+			"""
 
 		versions: [
 			{

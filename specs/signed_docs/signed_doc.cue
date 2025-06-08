@@ -63,9 +63,7 @@ import (
 // Customize each document type in its own `<document_name>.cue` file.
 docs: #DocumentDefinitions & {
 	for k, v in _allDocs {
-		(k): {
-			type: v
-		}
+		(k): type: v
 	}
 }
 

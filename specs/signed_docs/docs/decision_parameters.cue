@@ -8,11 +8,9 @@ docs: #DocumentDefinitions & {
 			Parameters which define an individual voting event.
 			"""
 
-		metadata: {
-			parameters: {
-				required: "yes"
-				type:     doc_clusters."System Parameters".docs
-			}
+		metadata: parameters: {
+			required: "yes"
+			type:     doc_clusters."System Parameters".docs
 		}
 
 		versions: [

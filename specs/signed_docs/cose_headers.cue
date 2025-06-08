@@ -20,25 +20,21 @@ _contentTypes: {
 		description: "JSON Document"
 		coap_type:   50
 	}
-	"application/schema+json": {
-		description: """
-			JSON Schema Draft 7 Document; Note: 
-			* This is currently an unofficial media type.
-			* Draft 7 is used because of its wide support by tooling.
-			"""
-	}
+	"application/schema+json": description: """
+		JSON Schema Draft 7 Document; Note: 
+		* This is currently an unofficial media type.
+		* Draft 7 is used because of its wide support by tooling.
+		"""
 	"application/cbor": {
 		description: "RFC8949 Binary CBOR Encoded Document"
 		coap_type:   60
 	}
-	"application/cddl": {
-		description: """
-			CDDL Document; Note: 
-			* This is an unofficial media type
-			* RFC9165 Additional Control Operators for CDDL are supported.  
-			* Must not have Modules, schema must be self-contained.
-			"""
-	}
+	"application/cddl": description: """
+		CDDL Document; Note: 
+		* This is an unofficial media type
+		* RFC9165 Additional Control Operators for CDDL are supported.  
+		* Must not have Modules, schema must be self-contained.
+		"""
 }
 
 contentTypes: _contentTypes
@@ -49,11 +45,7 @@ _encodingTypes: {
 		description: string // description of the content type
 	}
 }
-_encodingTypes: {
-	"br": {
-		description: "BROTLI Compression"
-	}
-}
+_encodingTypes: br: description: "BROTLI Compression"
 
 encodingTypes: _encodingTypes
 
@@ -61,25 +53,25 @@ documentationLinks: {
 	"application/json":         "https://www.iana.org/assignments/media-types/application/json"
 	"application/schema+json":  "https://datatracker.ietf.org/doc/draft-bhutton-json-schema/"
 	"application/cbor":         "https://www.iana.org/assignments/media-types/application/cbor"
-	"br":                       "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br"
+	br:                         "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br"
 	"JSON Schema":              "https://json-schema.org/draft-07"
-	"RFC7932":                  "https://www.rfc-editor.org/rfc/rfc7932"                                         // Brotli
-	"RFC8259":                  "https://www.rfc-editor.org/rfc/rfc8259.html"                                    // JSON
-	"RFC8610":                  "https://www.rfc-editor.org/rfc/rfc8610"                                         // CDDL
-	"RFC8949":                  "https://www.rfc-editor.org/rfc/rfc8949.html"                                    // CBOR
-	"RFC9052":                  "https://datatracker.ietf.org/doc/html/rfc9052"                                  // COSE
+	RFC7932:                    "https://www.rfc-editor.org/rfc/rfc7932"                                         // Brotli
+	RFC8259:                    "https://www.rfc-editor.org/rfc/rfc8259.html"                                    // JSON
+	RFC8610:                    "https://www.rfc-editor.org/rfc/rfc8610"                                         // CDDL
+	RFC8949:                    "https://www.rfc-editor.org/rfc/rfc8949.html"                                    // CBOR
+	RFC9052:                    "https://datatracker.ietf.org/doc/html/rfc9052"                                  // COSE
 	"RFC9052-CoseSign":         "https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si" // COSE Multiple Signers
 	"RFC9052-HeaderParameters": "https://www.rfc-editor.org/rfc/rfc8152#section-3.1"                             // COSE Header Parameters
-	"RFC9165":                  "https://www.rfc-editor.org/rfc/rfc9165"                                         // CDDL Additional Controls
+	RFC9165:                    "https://www.rfc-editor.org/rfc/rfc9165"                                         // CDDL Additional Controls
 }
 
 // Known aliases for links.  Lets us automatically create [Named Link][Reference Link]
 linkAKA: {
-	"BROTLI":                             "RFC7932"
-	"JSON":                               "RFC8259"
-	"CDDL":                               "RFC8610"
-	"CBOR":                               "RFC8949"
-	"COSE":                               "RFC9052"
+	BROTLI:                               "RFC7932"
+	JSON:                                 "RFC8259"
+	CDDL:                                 "RFC8610"
+	CBOR:                                 "RFC8949"
+	COSE:                                 "RFC9052"
 	"COSE Sign":                          "RFC9052-CoseSign"
 	"COSE Header Parameters":             "RFC9052-HeaderParameters"
 	"RFC9165 - CDDL Additional Controls": "RFC9165"
@@ -158,11 +150,11 @@ coseHeaderFormats: #metadataFormats & {
 	required:    optional.#field | *"yes"
 	format:      #coseHeaderTypesConstraint
 	if format == "Media Type" {
-		"value": #contentType | [...#contentType]
+		value: #contentType | [...#contentType]
 	}
 
 	if format == "HTTP Content Encoding" {
-		"value": #contentEncoding
+		value: #contentEncoding
 	}
 }
 
@@ -191,7 +183,7 @@ _coseHeaders: #coseHeaders & {
 
 _coseSignatureHeaders: #coseHeaders & {
 	// Key identifier
-	"kid": #coseField & {
+	kid: #coseField & {
 		coseLabel: 4
 		format:    "Catalyst ID"
 		description: """
@@ -206,9 +198,7 @@ _coseSignatureHeaders: #coseHeaders & {
 }
 
 cose_headers: _coseHeaders
-cose_headers:
-	"content type":
-		value: #allContentTypes
+cose_headers: "content type": value: #allContentTypes
 
 // Preferred display order of cose header fields.
 // if header not listed, display after the listed fields, in alphabetical order.

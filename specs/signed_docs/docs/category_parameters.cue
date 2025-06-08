@@ -9,11 +9,9 @@ docs: #DocumentDefinitions & {
 			Parameters which define a Category withing a Campaign under a Brand in the system.
 			"""
 
-		metadata: {
-			parameters: {
-				required: "yes"
-				type:     "Campaign Parameters"
-			}
+		metadata: parameters: {
+			required: "yes"
+			type:     "Campaign Parameters"
 		}
 
 		versions: [
