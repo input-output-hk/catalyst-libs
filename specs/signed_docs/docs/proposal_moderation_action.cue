@@ -9,11 +9,10 @@ docs: #DocumentDefinitions & {
 			A Moderation action performed on a Proposal.
 			"""
 
-		metadata: {
-			ref: {
-				required: "yes"
-				type:     "Proposal"
-			}}
+		metadata: ref: {
+			required: "yes"
+			type:     "Proposal"
+		}
 
 		versions: [
 			{

@@ -13,17 +13,11 @@ docs: #DocumentDefinitions & {
 			The payload of a proposal comment template is controlled by its meta template.
 			"""
 
-		headers: {
-			"content type": {
-				value: "application/schema+json"
-			}
-		}
+		headers: "content type": value: "application/schema+json"
 
-		metadata: {
-			parameters: {
-				required: "yes"
-				type:     doc_clusters."System Parameters".docs
-			}
+		metadata: parameters: {
+			required: "yes"
+			type:     doc_clusters."System Parameters".docs
 		}
 
 		payload: {
@@ -37,18 +31,15 @@ docs: #DocumentDefinitions & {
 
 			schema: "https://json-schema.org/draft-07/schema"
 		}
+		signers: roles: {
+			// No User Role may publish this document.
+			user: []
 
-		"signers": {
-			roles: {
-				// No User Role may publish this document.
-				user: []
-
-				// Root Admin and brand Admin may publish this document.
-				admin: [
-					"Root Admin",
-					"Brand Admin",
-				]
-			}
+			// Root Admin and brand Admin may publish this document.
+			admin: [
+				"Root Admin",
+				"Brand Admin",
+			]
 		}
 
 		versions: [

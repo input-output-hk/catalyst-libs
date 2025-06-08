@@ -22,11 +22,11 @@ metadataFormats: #metadataFormats & {
 		description: "A document reference identifier"
 		cddl:        "document_ref"
 	}
-	"UUIDv7": {
+	UUIDv7: {
 		description: "Version 7 formatted UUID"
 		cddl:        "uuid_v7"
 	}
-	"UUIDv4": {
+	UUIDv4: {
 		description: "Version 4 formatted UUID"
 		cddl:        "uuid_v4"
 	}

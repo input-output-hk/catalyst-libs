@@ -3,7 +3,7 @@ package signed_docs
 // Proposal Document Definition
 
 docs: #DocumentDefinitions & {
-	"Proposal": {
+	Proposal: {
 		description: """
 			A Proposal is a document which describes a proposed solution or project to
 			address the criteria of a category within a campaign.
@@ -61,13 +61,9 @@ docs: #DocumentDefinitions & {
 				type:     "Proposal Template"
 			}
 
-			collaborators: {
-				required: "optional"
-			}
+			collaborators: required: "optional"
 
-			revocations: {
-				required: "optional"
-			}
+			revocations: required: "optional"
 
 			parameters: {
 				required: "yes"
@@ -78,30 +74,22 @@ docs: #DocumentDefinitions & {
 			}
 		}
 
-		payload: {
-			description: """
-				Proposal Document drafted for submission to a category of a campaign.
+		payload: description: """
+			Proposal Document drafted for submission to a category of a campaign.
 
-				Must be valid according to the schema contained within the 
-				`Document Reference` from the `template` metadata.
-				"""
-		}
+			Must be valid according to the schema contained within the 
+			`Document Reference` from the `template` metadata.
+			"""
 
 		signers: {
-			roles: {
-				user: [
-					"Proposer",
-				]
-			}
+			roles: user: [
+				"Proposer",
+			]
 
-			update: {
-				"collaborators": true
-			}
+			update: collaborators: true
 		}
 
-		authors: {
-			"Steven Johnson": "steven.johnson@iohk.io"
-		}
+		authors: "Steven Johnson": "steven.johnson@iohk.io"
 
 		versions: [
 			{

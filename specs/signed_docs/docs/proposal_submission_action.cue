@@ -120,8 +120,7 @@ docs: #DocumentDefinitions & {
 				},
 			]
 		}
-
-		"signers": {
+		signers: {
 			roles: {
 				// Proposers may publish this document.
 				user: [
@@ -131,9 +130,7 @@ docs: #DocumentDefinitions & {
 
 			referenced: true
 
-			update: {
-				collaborators: true
-			}
+			update: collaborators: true
 		}
 
 		versions: [

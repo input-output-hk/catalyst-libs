@@ -8,11 +8,9 @@ docs: #DocumentDefinitions & {
 			Parameters which define a Campaign within a Brand in the system.
 			"""
 
-		metadata: {
-			parameters: {
-				required: "yes"
-				type:     "Brand Parameters"
-			}
+		metadata: parameters: {
+			required: "yes"
+			type:     "Brand Parameters"
 		}
 
 		versions: [
