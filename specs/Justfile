@@ -11,14 +11,16 @@ default:
 # So it should only be run when required.
 fix:
     cue fix ./signed_docs/docs:signed_docs
+    cue fix ./template_field_definitions/fields:template_field_definitions
 
 # Fix the format of cue files
 format:
-    cue fmt --files .
+    cue fmt -s --files .
 
 # Check the signed document cue files are valid.
 check: format
     cue vet ./signed_docs/docs:signed_docs -c
+    cue vet ./template_field_definitions/fields:template_field_definitions -c
 
 # Regenerate the full signed document specification json file.
 regenerate-signed-doc-json:

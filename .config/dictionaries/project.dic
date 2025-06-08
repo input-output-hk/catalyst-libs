@@ -230,6 +230,7 @@ pypackages
 pytest
 pytype
 qpsg
+qrcode
 quic
 rankdir
 rapidoc
