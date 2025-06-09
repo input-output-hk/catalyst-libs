@@ -251,19 +251,6 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
 
 /// Extracts a byte range from a CBOR decoder with validation according to RFC 8949.
 /// Used for extracting map keys and values from deterministically encoded CBOR.
-///
-/// # Parameters
-/// * `decoder` - CBOR decoder containing the input data
-/// * `range_start` - Starting position of the CBOR element
-/// * `range_end` - End position of the CBOR element
-///
-/// # Returns
-/// * `Ok(Vec<u8>)` - Valid CBOR bytes if range is valid
-/// * `Err(DeterministicError)` - If range is invalid or violates CBOR encoding rules
-///
-/// # CBOR Conformance
-/// Ensures extracted ranges follow RFC 8949 Section 4.2 requirements for
-/// deterministic encoding, maintaining proper byte string boundaries.
 fn extract_cbor_bytes(
     decoder: &minicbor::Decoder<'_>, range_start: usize, range_end: usize,
 ) -> Result<Vec<u8>, DeterministicError> {
@@ -310,13 +297,6 @@ fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), Determ
 }
 
 /// Validates that the decoder's input buffer is not empty.
-///
-/// # Arguments
-/// * `d` - Decoder reference to check
-///
-/// # Returns
-/// * `Ok(())` if input buffer contains data
-/// * `DeterministicError::UnexpectedEof` if buffer is empty
 fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
     if d.position() >= d.input().len() {
         return Err(DeterministicError::UnexpectedEof);
