@@ -525,15 +525,21 @@ fn decode_string_length(
     // Convert bytes to length value based on the encoding size
     let length = match bytes_to_read {
         1 => u64::from(*bytes.first().ok_or(DeterministicError::UnexpectedEof)?),
-        2 => u64::from(u16::from_be_bytes(bytes.try_into().map_err(|_| {
-            DeterministicError::CorruptedEncoding("Invalid uint16 encoding".to_string())
-        })?)),
-        4 => u64::from(u32::from_be_bytes(bytes.try_into().map_err(|_| {
-            DeterministicError::CorruptedEncoding("Invalid uint32 encoding".to_string())
-        })?)),
-        _ => u64::from_be_bytes(bytes.try_into().map_err(|_| {
-            DeterministicError::CorruptedEncoding("Invalid uint64 encoding".to_string())
-        })?),
+        2 => {
+            u64::from(u16::from_be_bytes(bytes.try_into().map_err(|_| {
+                DeterministicError::CorruptedEncoding("Invalid uint16 encoding".to_string())
+            })?))
+        },
+        4 => {
+            u64::from(u32::from_be_bytes(bytes.try_into().map_err(|_| {
+                DeterministicError::CorruptedEncoding("Invalid uint32 encoding".to_string())
+            })?))
+        },
+        _ => {
+            u64::from_be_bytes(bytes.try_into().map_err(|_| {
+                DeterministicError::CorruptedEncoding("Invalid uint64 encoding".to_string())
+            })?)
+        },
     };
 
     // Check for non-minimal encoding
