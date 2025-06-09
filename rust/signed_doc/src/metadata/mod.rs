@@ -20,7 +20,7 @@ pub use doc_type::DocType;
 pub use document_ref::DocumentRef;
 use minicbor::{Decode, Decoder};
 pub use section::Section;
-use strum::IntoDiscriminant;
+use strum::IntoDiscriminant as _;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
 
 use crate::{
@@ -501,5 +501,97 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         Ok(builder.build())
+    }
+}
+
+/// [`Metadata`] encoding context for the [`minicbor::Encode`] implementation.
+pub(crate) struct MetadataEncodeContext {
+    /// Used by some fields' encoding implementations.
+    pub uuid_context: catalyst_types::uuid::CborContext,
+    /// Used by some fields' encoding implementations.
+    pub report: ProblemReport,
+}
+
+impl minicbor::Encode<MetadataEncodeContext> for Metadata {
+    /// Encode as a CBOR map.
+    ///
+    /// Note that to put it in an [RFC 8152] protected header.
+    /// The header must be then encoded as a binary string.
+    ///
+    /// Also note that this won't check the presence of the required fields,
+    /// so the checks must be done elsewhere.
+    ///
+    /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
+    #[allow(
+        clippy::cast_possible_truncation,
+        reason = "There can't be enough unique fields to overflow `u64`."
+    )]
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut MetadataEncodeContext,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.map(self.0.len() as u64)?;
+        self.0
+            .values()
+            .try_fold(e, |e, field| e.encode_with(field, ctx))?
+            .ok()
+    }
+}
+
+/// [`Metadata`] decoding context for the [`minicbor::Decode`] implementation.
+pub(crate) struct MetadataDecodeContext {
+    /// Used by some fields' decoding implementations.
+    pub uuid_context: catalyst_types::uuid::CborContext,
+    /// Used by some fields' decoding implementations.
+    pub compatibility_policy: crate::CompatibilityPolicy,
+    /// Used by some fields' decoding implementations.
+    pub report: ProblemReport,
+}
+
+impl MetadataDecodeContext {
+    /// [`DocType`] decoding context.
+    fn doc_type_context(&mut self) -> crate::decode_context::DecodeContext {
+        crate::decode_context::DecodeContext {
+            compatibility_policy: self.compatibility_policy,
+            report: &mut self.report,
+        }
+    }
+
+    /// First in a map [`SupportedField`] decoding context.
+    fn first_field_context(&mut self) -> supported_field::DecodeContext {
+        supported_field::DecodeContext {
+            prev_key: None,
+            metadata_context: self,
+        }
+    }
+}
+
+impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
+    /// Decode from a CBOR map.
+    ///
+    /// Note that this won't decode an [RFC 8152] protected header as is.
+    /// The header must be first decoded as a binary string.
+    ///
+    /// Also note that this won't check the absence of the required fields,
+    /// so the checks must be done elsewhere.
+    ///
+    /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
+    fn decode(
+        d: &mut Decoder<'_>, ctx: &mut MetadataDecodeContext,
+    ) -> Result<Self, minicbor::decode::Error> {
+        let Some(len) = d.map()? else {
+            return Err(minicbor::decode::Error::message(
+                "Indefinite map is not supported",
+            ));
+        };
+        let mut field_ctx = ctx.first_field_context();
+
+        // This performs duplication, ordering and length mismatch checks.
+        (0..len)
+            .map(|_| {
+                d.decode_with(&mut field_ctx)
+                    .map(|field: SupportedField| (field.discriminant(), field))
+            })
+            .collect::<Result<_, _>>()
+            .map(Self)
     }
 }

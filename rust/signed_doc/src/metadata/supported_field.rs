@@ -1,16 +1,19 @@
 //! Catalyst Signed Document unified metadata field.
 
-use std::cmp;
 #[cfg(test)]
 use std::convert::Infallible;
-
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{self, UuidV7},
+use std::{
+    cmp,
+    ops::{Deref, DerefMut},
 };
+
+use catalyst_types::uuid::UuidV7;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
-use crate::{CompatibilityPolicy, ContentEncoding, ContentType, DocType, DocumentRef, Section};
+use crate::{
+    metadata::{MetadataDecodeContext, MetadataEncodeContext},
+    ContentEncoding, ContentType, DocType, DocumentRef, Section,
+};
 
 /// COSE label. May be either a signed integer or a string.
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -38,10 +41,12 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
         match d.datatype()? {
             minicbor::data::Type::I8 => d.i8().map(Self::I8),
             minicbor::data::Type::String => d.str().map(Self::Str),
-            _ => Err(minicbor::decode::Error::message(
-                "Datatype is neither 8bit signed integer nor text",
-            )
-            .at(d.position())),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Datatype is neither 8bit signed integer nor text",
+                )
+                .at(d.position()))
+            },
         }
     }
 }
@@ -144,29 +149,29 @@ impl SupportedLabel {
 }
 
 /// [`SupportedField`] decoding context for the [`minicbor::Decode`] implementation.
-pub struct DecodeContext {
+pub(crate) struct DecodeContext<'a> {
     /// Key of the previously decoded field. Used to check for duplicates and invalid
     /// ordering.
     pub prev_key: Option<SupportedLabel>,
     /// Used by some values' decoding implementations.
-    pub uuid_context: uuid::CborContext,
-    /// Used by some values' decoding implementations.
-    pub compatibility_policy: CompatibilityPolicy,
-    ///  Used by some values' decoding implementations.
-    pub report: ProblemReport,
+    pub metadata_context: &'a mut MetadataDecodeContext,
 }
 
-impl DecodeContext {
-    /// [`DocType`] decoding context.
-    fn doc_type_context(&mut self) -> crate::decode_context::DecodeContext {
-        crate::decode_context::DecodeContext {
-            compatibility_policy: self.compatibility_policy,
-            report: &mut self.report,
-        }
+impl Deref for DecodeContext<'_> {
+    type Target = MetadataDecodeContext;
+
+    fn deref(&self) -> &Self::Target {
+        self.metadata_context
     }
 }
 
-impl minicbor::Decode<'_, DecodeContext> for SupportedField {
+impl DerefMut for DecodeContext<'_> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.metadata_context
+    }
+}
+
+impl minicbor::Decode<'_, DecodeContext<'_>> for SupportedField {
     #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn decode(
         d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
@@ -187,7 +192,7 @@ impl minicbor::Decode<'_, DecodeContext> for SupportedField {
             _ => (),
         }
 
-        match key {
+        let field = match key {
             SupportedLabel::ContentType => todo!(),
             SupportedLabel::Id => d.decode_with(&mut ctx.uuid_context).map(Self::Id),
             SupportedLabel::Ref => todo!(),
@@ -199,22 +204,17 @@ impl minicbor::Decode<'_, DecodeContext> for SupportedField {
             SupportedLabel::Template => todo!(),
             SupportedLabel::Parameters => todo!(),
             SupportedLabel::ContentEncoding => todo!(),
-        }
+        }?;
+
+        ctx.prev_key = Some(key);
+        Ok(field)
     }
 }
 
-/// [`SupportedField`] encoding context for the [`minicbor::Encode`] implementation.
-pub struct EncodeContext {
-    /// Used by some values' encoding implementations.
-    pub uuid_context: uuid::CborContext,
-    /// Used by some values' encoding implementations.
-    pub report: ProblemReport,
-}
-
-impl minicbor::Encode<EncodeContext> for SupportedField {
+impl minicbor::Encode<MetadataEncodeContext> for SupportedField {
     #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut EncodeContext,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut MetadataEncodeContext,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let key = self.discriminant().to_cose();
         e.encode(key)?;
@@ -268,7 +268,8 @@ mod tests {
         );
     }
 
-    /// Checks that [`SupportedLabel`] enum integer values correspond to [`Label::rfc8949_cmp`] ordering.
+    /// Checks that [`SupportedLabel`] enum integer values correspond to
+    /// [`Label::rfc8949_cmp`] ordering.
     #[test]
     fn supported_label_rfc8949_ord() {
         let mut enum_ord = SupportedLabel::VARIANTS.to_vec();
