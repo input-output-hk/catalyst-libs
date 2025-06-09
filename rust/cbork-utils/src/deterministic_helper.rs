@@ -173,17 +173,6 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, Determin
 ///
 /// This function retrieves the raw byte representation of a CBOR map between the given
 /// start and end positions from the decoder's underlying buffer.
-///
-/// # Arguments
-///
-/// * `d` - A reference to a CBOR decoder containing the map data
-/// * `map_start` - The starting position of the map in the decoder's buffer
-/// * `map_end` - The ending position of the map in the decoder's buffer
-///
-/// # Returns
-///
-/// * `Result<Vec<u8>, DeterministicError>` - Returns the raw bytes of the map if
-///   successful, or a `DeterministicError` if an error occurs during extraction
 fn get_map_bytes(
     d: &Decoder<'_>, map_start: usize, map_end: usize,
 ) -> Result<Vec<u8>, DeterministicError> {
@@ -536,21 +525,15 @@ fn decode_string_length(
     // Convert bytes to length value based on the encoding size
     let length = match bytes_to_read {
         1 => u64::from(*bytes.first().ok_or(DeterministicError::UnexpectedEof)?),
-        2 => {
-            u64::from(u16::from_be_bytes(bytes.try_into().map_err(|_| {
-                DeterministicError::CorruptedEncoding("Invalid uint16 encoding".to_string())
-            })?))
-        },
-        4 => {
-            u64::from(u32::from_be_bytes(bytes.try_into().map_err(|_| {
-                DeterministicError::CorruptedEncoding("Invalid uint32 encoding".to_string())
-            })?))
-        },
-        _ => {
-            u64::from_be_bytes(bytes.try_into().map_err(|_| {
-                DeterministicError::CorruptedEncoding("Invalid uint64 encoding".to_string())
-            })?)
-        },
+        2 => u64::from(u16::from_be_bytes(bytes.try_into().map_err(|_| {
+            DeterministicError::CorruptedEncoding("Invalid uint16 encoding".to_string())
+        })?)),
+        4 => u64::from(u32::from_be_bytes(bytes.try_into().map_err(|_| {
+            DeterministicError::CorruptedEncoding("Invalid uint32 encoding".to_string())
+        })?)),
+        _ => u64::from_be_bytes(bytes.try_into().map_err(|_| {
+            DeterministicError::CorruptedEncoding("Invalid uint64 encoding".to_string())
+        })?),
     };
 
     // Check for non-minimal encoding
