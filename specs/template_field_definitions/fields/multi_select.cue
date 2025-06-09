@@ -19,6 +19,10 @@ dictionary: #jsonSchemaFields & {
 		parameters: {
 			title: {}
 			description: {}
+			default: {
+				description: "Default selections can be supplied."
+				required:    "optional"
+			}
 			minItems: {}
 			maxItems: {}
 			contains: {}

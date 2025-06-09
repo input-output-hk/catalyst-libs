@@ -16,7 +16,11 @@ import (
 	"object" |
 	*"string"
 
+// List of properties allowed in the `property` field of `jsonParameter`
+#properties: "oneOf"
+
 #jsonParameter: {
+	property?:   #properties // Name of the property, IF its not the same as the parameter.
 	description: string
 	required:    optional.#field
 	type:        #fieldType
@@ -86,6 +90,35 @@ _allParameters: {
 		description: _ | *"The choices the multi select can contain."
 		required:    "yes"
 	}
+	oneOf_groupedTags?: #jsonParameter & {
+		property: "oneOf"
+		type:     "array"
+		items: {
+			description: """
+					An array of grouped tag objects, of which one can be selected.
+					Each object *MUST* have the form:
+					
+					```json
+					"properties": {
+						"group": {
+							"$ref": "#/definitions/tagGroup",
+							"const": <group name string>
+						},
+						"tag": {
+							"$ref": "#/definitions/tagSelection",
+							"enum": [
+								<tag 1 string>,
+								<tag 2 string>,
+								...
+							]
+						}
+					}
+					```
+				"""
+			type: "object"
+		}
+		description: "A set of tags with a group selector."
+	}
 	"x-guidance"?: #jsonParameter & {
 		description: _ | *"Long form Markdown formatted description to give guidance about how the field is to be completed."
 		required:    "optional"
@@ -104,6 +137,13 @@ _allParameters: {
 		description: """
 			The ordering of the properties to be enforced when displayed.
 			Any field not listed here will get displayed in an arbitrary order.
+			"""
+	}
+	"x-subsection"?: #jsonParameter & {
+		required: "optional"
+		type:     bool
+		description: """
+			TODO: Explain what this parameter does...
 			"""
 	}
 }

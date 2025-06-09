@@ -2380,6 +2380,68 @@
         }
       }
     },
+    "multiLineTextEntryListMarkdown": {
+      "definition": {
+        "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+        "items": {
+          "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+          "contentMediaType": "text/markdown",
+          "minLength": 1,
+          "pattern": "^[\\S\\s]*$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - A Growable List of markdown formatted text fields.\nEach entry is a multiline markdown formatted string.\nMarkdown Formatting, line breaks, or special characters are allowed.\nAdd multiple text entries.\nEach entry should be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default Array of text can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      }
+    },
     "multiLineTextEntryMarkdown": {
       "definition": {
         "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
@@ -2444,6 +2506,11 @@
           },
           "required": "yes",
           "type": "array"
+        },
+        "default": {
+          "description": "Default selections can be supplied.",
+          "required": "optional",
+          "type": "string"
         },
         "description": {
           "description": "The description of the field presented during data entry.",
@@ -3144,6 +3211,46 @@
         }
       }
     },
+    "singleGroupedTagSelector": {
+      "definition": {
+        "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+        "additionalProperties": false,
+        "required": [
+          "group",
+          "tag"
+        ],
+        "type": "object"
+      },
+      "description": "UI - A selector where a top level group selection, allows a single choice from a list of tags.\nSelect one option from the dropdown menu. \nOnly one choice is allowed.\n\nThe contents of the `singleGroupedTagSelector` *MUST* have the following format:\n\n```json\n\"oneOf\": [\n\t{\n\t\t\"properties\": {\n\t\t\t\"group\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\t\"const\": \"Governance\"\n\t\t\t},\n\t\t\t\"tag\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\t\"enum\": [\n\t\t\t\t\t\"Governance\",\n\t\t\t\t\t\"DAO\"\n\t\t\t\t]\n\t\t\t}\n\t\t}\n\t},\n```",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "oneOf_groupedTags": {
+          "description": "A set of tags with a group selector.",
+          "items": {
+            "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
+            "required": "excluded",
+            "type": "object"
+          },
+          "property": "oneOf",
+          "required": "excluded",
+          "type": "array"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        }
+      }
+    },
     "singleLineHttpsURLEntry": {
       "definition": {
         "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
@@ -3185,6 +3292,68 @@
         }
       }
     },
+    "singleLineHttpsURLEntryList": {
+      "definition": {
+        "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+        "items": {
+          "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+          "format": "uri",
+          "minLength": 1,
+          "pattern": "^https://[^\\s]+$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default Array of URLs can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      }
+    },
     "singleLineTextEntry": {
       "definition": {
         "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
@@ -3206,6 +3375,68 @@
         },
         "minLength": {
           "description": "Minimum number of characters allowed in the field.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      }
+    },
+    "singleLineTextEntryList": {
+      "definition": {
+        "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+        "items": {
+          "$comment": "See the Template Schema Definition Dictionary for detailed documentation.",
+          "contentMediaType": "text/plain",
+          "minLength": 1,
+          "pattern": "^.*$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default Array of text can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
           "required": "optional",
           "type": "integer"
         },

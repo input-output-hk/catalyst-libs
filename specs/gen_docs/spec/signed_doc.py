@@ -18,6 +18,7 @@ from spec.copyright import Copyright
 from spec.cose_header import CoseHeader
 from spec.doc_clusters import DocCluster
 from spec.document import Document
+from spec.json_schema_defs import JsonSchemaDefs
 from spec.metadata import Metadata
 from spec.metadata_formats import MetadataFormats
 from spec.optional import OptionalField
@@ -70,6 +71,7 @@ class SignedDoc(BaseModel):
     metadata: dict[str, Metadata]
     metadata_formats: dict[str, MetadataFormats] = Field(alias="metadataFormats")
     metadata_order: list[str]
+    template_json_schema_defs: dict[str, JsonSchemaDefs] = Field(alias="templateJsonSchemaDefs")
 
     _data: dict[str, typing.Any]
     _file: str
