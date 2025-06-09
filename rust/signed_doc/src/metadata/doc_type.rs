@@ -91,9 +91,9 @@ impl TryFrom<Vec<Uuid>> for DocType {
     }
 }
 
-impl From<DocType> for Vec<String> {
-    fn from(val: DocType) -> Self {
-        val.0.into_iter().map(|uuid| uuid.to_string()).collect()
+impl From<DocType> for Vec<Uuid> {
+    fn from(value: DocType) -> Vec<Uuid> {
+        value.0.into_iter().map(Uuid::from).collect()
     }
 }
 
