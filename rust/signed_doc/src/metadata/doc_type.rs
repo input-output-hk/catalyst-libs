@@ -97,6 +97,12 @@ impl From<DocType> for Vec<Uuid> {
     }
 }
 
+impl From<DocType> for Vec<String> {
+    fn from(val: DocType) -> Self {
+        val.0.into_iter().map(|uuid| uuid.to_string()).collect()
+    }
+}
+
 impl TryFrom<Vec<UuidV4>> for DocType {
     type Error = DocTypeError;
 
