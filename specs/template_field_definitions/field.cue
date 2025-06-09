@@ -5,6 +5,10 @@ import (
 	"regexp"
 )
 
+// Note: only attributes which make sense for and are used by definitions
+// are defined.  This should not list any attribute which would needlessly
+// restrict the definition, and should otherwise be a parameter set by the
+// template itself.
 #fieldDefinition: {
 	$comment:  "See the Template Schema Definition Dictionary for detailed documentation."
 	type:      #fieldType
@@ -12,6 +16,7 @@ import (
 
 	if type == "object" {
 		additionalProperties: false // IF false, can not define extra fields.
+		required?: [...string]
 	}
 
 	if type == "array" {
@@ -23,6 +28,7 @@ import (
 		format?:           #formatChoices
 		contentMediaType?: #contentMediaTypeChoices
 		pattern?:          regexp.Valid
+		minLength?:        int // Only to enforce that the field can not be empty (such as when used in lists)
 	}
 
 }
