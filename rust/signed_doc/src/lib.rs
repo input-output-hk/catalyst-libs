@@ -24,9 +24,7 @@ pub use catalyst_types::{
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
-pub use metadata::{
-    ContentEncoding, ContentType, DocType, DocumentRef, ExtraFields, Metadata, Section,
-};
+pub use metadata::{ContentEncoding, ContentType, DocType, DocumentRef, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
@@ -134,9 +132,10 @@ impl CatalystSignedDocument {
     }
 
     /// Return document metadata content.
+    // TODO: remove this and provide getters from metadata like the rest of its fields have.
     #[must_use]
-    pub fn doc_meta(&self) -> &ExtraFields {
-        self.inner.metadata.extra()
+    pub fn doc_meta(&self) -> &Metadata {
+        &self.inner.metadata
     }
 
     /// Return a Document's signatures
