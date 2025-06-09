@@ -75,57 +75,25 @@ const CBOR_STRING_LENGTH_UINT64: u8 = 27;
 /// Values 0-23 are encoded directly in the additional info field of the initial byte
 const CBOR_MAX_TINY_VALUE: u64 = 23;
 
+/// Initial byte for a CBOR map whose length is encoded as an 8-bit unsigned integer
+/// (uint8).
+///
+/// This value combines the map major type (5) with the additional information value (24)
+/// that indicates a uint8 length follows. The resulting byte is:
+/// - High 3 bits: 101 (major type 5 for map)
+/// - Low 5 bits: 24 (indicates uint8 length follows)
+///
+/// Used when encoding CBOR maps with lengths between 24 and 255 elements.
+///
+/// # Examples
+/// ```
+/// // The constant value is 0xb8 (184 in decimal)
+/// // - 0b101 << 5 = 0b10100000 (major type 5)
+/// // - 0b00011000 (24 in decimal)
+/// // = 0b10111000
+/// const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24;
+/// ```
 const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length encoding
-
-const MAP_TYPE_MASK: u8 = 0xE0; // Mask for extracting major type (top 3 bits)
-
-/// A configurable CBOR decoder that can operate in either deterministic or
-/// non-deterministic mode
-pub struct CborDecoder {
-    deterministic: bool,
-}
-
-impl CborDecoder {
-    /// Creates a new CborDecoder with specified deterministic mode
-    pub fn new(deterministic: bool) -> Self {
-        Self { deterministic }
-    }
-
-    /// Decodes CBOR data from the given decoder
-    /// Decodes CBOR data with optional deterministic validation.
-    /// Returns the raw bytes of the decoded data.
-    pub fn decode(&self, decoder: &mut Decoder<'_>) -> Result<Vec<u8>, DeterministicError> {
-        let start_position = decoder.position();
-
-        // Early return if input is empty
-        let first_byte = decoder
-            .input()
-            .get(start_position)
-            .ok_or(DeterministicError::UnexpectedEof)?;
-
-        if self.deterministic {
-            // Check if we need deterministic map decoding
-            let is_map_type = (first_byte & MAP_TYPE_MASK) == CBOR_MAJOR_TYPE_MAP;
-            if is_map_type {
-                return decode_map_deterministically(decoder);
-            } else {
-                //
-                println!("we can check other types here via minicbor");
-            }
-        }
-
-        // For non-map types or non-deterministic decoding, skip and return raw bytes
-        decoder.skip()?;
-        let decoded_bytes = self.extract_decoded_bytes(decoder, start_position);
-        Ok(decoded_bytes)
-    }
-
-    /// Extracts the decoded bytes from the decoder's input
-    #[inline]
-    fn extract_decoded_bytes(&self, decoder: &Decoder<'_>, start_pos: usize) -> Vec<u8> {
-        decoder.input()[start_pos..decoder.position()].to_vec()
-    }
-}
 
 /// Represents a CBOR map key-value pair where the key must be deterministically encoded
 /// according to RFC 8949 Section 4.2.3.
@@ -273,13 +241,46 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, Determin
     let map_end = d.position();
 
     // Return the raw bytes of the entire validated map
-    Ok(d.input()[map_start..map_end].to_vec())
+    get_map_bytes(d, map_start, map_end)
+}
+
+/// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
+///
+/// This function retrieves the raw byte representation of a CBOR map between the given
+/// start and end positions from the decoder's underlying buffer.
+///
+/// # Arguments
+///
+/// * `d` - A reference to a CBOR decoder containing the map data
+/// * `map_start` - The starting position of the map in the decoder's buffer
+/// * `map_end` - The ending position of the map in the decoder's buffer
+///
+/// # Returns
+///
+/// * `Result<Vec<u8>, DeterministicError>` - Returns the raw bytes of the map if
+///   successful, or a `DeterministicError` if an error occurs during extraction
+fn get_map_bytes(
+    d: &Decoder<'_>, map_start: usize, map_end: usize,
+) -> Result<Vec<u8>, DeterministicError> {
+    d.input()
+        .get(map_start..map_end)
+        .ok_or_else(|| {
+            DeterministicError::CorruptedEncoding(
+                "Invalid map byte range: indices out of bounds".to_string(),
+            )
+        })
+        .map(<[u8]>::to_vec)
 }
 
 /// Validates that map does not use indefinite-length encoding
 fn validate_not_indefinite_length_map(d: &Decoder) -> Result<(), DeterministicError> {
-    let initial_byte = d.input()[d.position()];
-    if initial_byte == CBOR_INDEFINITE_LENGTH_MAP {
+    let initial_byte = d.input().get(d.position()).ok_or_else(|| {
+        DeterministicError::CorruptedEncoding(
+            "Unable to read initial byte: position out of bounds".to_string(),
+        )
+    })?;
+
+    if *initial_byte == CBOR_INDEFINITE_LENGTH_MAP {
         return Err(DeterministicError::IndefiniteLength);
     }
     Ok(())
@@ -287,7 +288,11 @@ fn validate_not_indefinite_length_map(d: &Decoder) -> Result<(), DeterministicEr
 
 /// Decodes all key-value pairs in the map
 fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, DeterministicError> {
-    let mut entries = Vec::with_capacity(length as usize);
+    let capacity = usize::try_from(length).map_err(|_| {
+        DeterministicError::CorruptedEncoding("Map length too large for this platform".to_string())
+    })?;
+
+    let mut entries = Vec::with_capacity(capacity);
 
     for _ in 0..length {
         // Validate and decode key
@@ -295,14 +300,23 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
         validate_string_length(d, key_start)?; // Add string length validation
         d.skip()?;
         let key_end = d.position();
-        let key_bytes = d.input()[key_start..key_end].to_vec();
+        // And for the key_bytes case:
+        let key_bytes = d
+            .input()
+            .get(key_start..key_end)
+            .ok_or_else(|| {
+                DeterministicError::CorruptedEncoding(
+                    "Invalid key byte range: indices out of bounds".to_string(),
+                )
+            })?
+            .to_vec();
 
         // Validate and decode value
         let value_start = d.position();
         validate_string_length(d, value_start)?; // Add string length validation
         d.skip()?;
         let value_end = d.position();
-        let value = d.input()[value_start..value_end].to_vec();
+        let value = extract_cbor_bytes(d, value_start, value_end)?;
 
         entries.push(MapEntry { key_bytes, value });
     }
@@ -310,25 +324,74 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
     Ok(entries)
 }
 
+/// Extracts a byte range from a CBOR decoder with validation according to RFC 8949.
+/// Used for extracting map keys and values from deterministically encoded CBOR.
+///
+/// # Parameters
+/// * `decoder` - CBOR decoder containing the input data
+/// * `range_start` - Starting position of the CBOR element
+/// * `range_end` - End position of the CBOR element
+///
+/// # Returns
+/// * `Ok(Vec<u8>)` - Valid CBOR bytes if range is valid
+/// * `Err(DeterministicError)` - If range is invalid or violates CBOR encoding rules
+///
+/// # CBOR Conformance
+/// Ensures extracted ranges follow RFC 8949 Section 4.2 requirements for
+/// deterministic encoding, maintaining proper byte string boundaries.
+fn extract_cbor_bytes(
+    decoder: &minicbor::Decoder<'_>, range_start: usize, range_end: usize,
+) -> Result<Vec<u8>, DeterministicError> {
+    // Validate CBOR byte range bounds
+    if range_start >= range_end {
+        return Err(DeterministicError::CorruptedEncoding(
+            "Invalid CBOR byte range: start must be less than end position".to_string(),
+        ));
+    }
+
+    let byte_length = range_end.saturating_sub(range_start);
+    get_checked_slice(decoder.input(), range_start, byte_length).map(<[u8]>::to_vec)
+}
+
 /// Validates map keys are properly ordered according to RFC 8949 Section 4.2.3
 /// and checks for duplicate keys
 fn validate_map_ordering(entries: &[MapEntry]) -> Result<(), DeterministicError> {
-    if entries.is_empty() {
-        return Ok(());
-    }
+    let mut iter = entries.iter();
 
-    for i in 0..entries.len() - 1 {
-        match entries[i].compare(&entries[i + 1]) {
-            Ordering::Equal => return Err(DeterministicError::DuplicateMapKey),
-            Ordering::Greater => return Err(DeterministicError::UnorderedMapKeys),
-            Ordering::Less => continue,
-        }
+    // Get the first element if it exists
+    let Some(mut current) = iter.next() else {
+        // Empty slice is valid
+        return Ok(());
+    };
+
+    // Compare each adjacent pair
+    for next in iter {
+        check_pair_ordering(current, next)?;
+        current = next;
     }
 
     Ok(())
 }
 
-/// Ensures the decoder has remaining input data
+/// Checks if two adjacent map entries are in the correct order:
+/// - Keys must be in ascending order (current < next)
+/// - Duplicate keys are not allowed (current != next)
+fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), DeterministicError> {
+    match current.compare(next) {
+        Ordering::Less => Ok(()), // Valid: keys are in ascending order
+        Ordering::Equal => Err(DeterministicError::DuplicateMapKey),
+        Ordering::Greater => Err(DeterministicError::UnorderedMapKeys),
+    }
+}
+
+/// Validates that the decoder's input buffer is not empty.
+///
+/// # Arguments
+/// * `d` - Decoder reference to check
+///
+/// # Returns
+/// * `Ok(())` if input buffer contains data
+/// * `DeterministicError::UnexpectedEof` if buffer is empty
 fn validate_input_not_empty(d: &Decoder) -> Result<(), DeterministicError> {
     if d.position() >= d.input().len() {
         return Err(DeterministicError::UnexpectedEof);
@@ -422,7 +485,9 @@ fn validate_string_length(d: &Decoder, start_pos: usize) -> Result<(), Determini
         return Err(DeterministicError::UnexpectedEof);
     }
 
-    let initial_byte = input[start_pos];
+    let initial_byte = *input
+        .get(start_pos)
+        .ok_or(DeterministicError::UnexpectedEof)?;
 
     // Early return if not a string type
     if !is_string_type(initial_byte) {
@@ -471,45 +536,124 @@ fn check_slice_range(
 fn get_checked_slice(
     input: &[u8], start_pos: usize, length: usize,
 ) -> Result<&[u8], DeterministicError> {
-    check_slice_range(input, start_pos, length)?;
-    Ok(&input[start_pos..start_pos + length])
+    let end_pos = start_pos
+        .checked_add(length)
+        .ok_or(DeterministicError::UnexpectedEof)?;
+    input
+        .get(start_pos..end_pos)
+        .ok_or(DeterministicError::UnexpectedEof)
 }
 
-/// Decodes the string length based on the additional info value
+/// Decodes a CBOR string length value following the deterministic encoding rules
+/// specified in RFC 8949.
+///
+/// This function implements the rules for Deterministic Encoding of CBOR as specified in
+/// RFC 8949 Section 4.2.2. For string length encoding, the following rules apply:
+///
+/// # Length Encoding Rules
+/// The length of a string MUST be encoded in one of the following ways:
+/// - For lengths 0-23: Use the direct value in the additional information field
+/// - For lengths 24-255: Use `CBOR_STRING_LENGTH_UINT8` (24) with a one-byte unsigned
+///   integer
+/// - For lengths 256-65535: Use `CBOR_STRING_LENGTH_UINT16` (25) with a two-byte unsigned
+///   integer
+/// - For lengths 65536-4294967295: Use `CBOR_STRING_LENGTH_UINT32` (26) with a four-byte
+///   unsigned integer
+/// - For lengths above 4294967295: Use `CBOR_STRING_LENGTH_UINT64` (27) with an
+///   eight-byte unsigned integer
+///
+/// # Arguments
+/// * `d` - Reference to the CBOR decoder containing the input buffer
+/// * `start_pos` - Starting position in the input buffer where the length value begins
+/// * `additional_info` - The 5-bit additional information value from the initial byte
+///   (values 0-27 are legal, others are reserved)
+///
+/// # Returns
+/// Returns a `Result` containing either:
+/// * `Ok(u64)` - The decoded length value
+/// * `Err(DeterministicError)` - If the encoding violates the deterministic rules
+///
+/// # Errors
+/// Returns `DeterministicError` in the following cases:
+/// * `NonMinimalInt` - If the length is not encoded in its most compact form:
+///   - Using uint8 (24) for values 0-23
+///   - Using uint16 for values that fit in uint8
+///   - Using uint32 for values that fit in uint16
+///   - Using uint64 for values that fit in uint32
+/// * `UnexpectedEof` - If the input buffer ends unexpectedly
+/// * `CorruptedEncoding` - If the byte sequence is not a valid encoding
+///
+/// # Examples from RFC 8949
+/// The following encodings would be considered valid:
+/// * Length 0: encoded as 0x00 in additional info
+/// * Length 23: encoded as 0x17 in additional info
+/// * Length 24: encoded as 0x1818 (uint8)
+/// * Length 255: encoded as 0x18ff (uint8)
+/// * Length 256: encoded as 0x190100 (uint16)
+/// * Length 65535: encoded as 0x19ffff (uint16)
+/// * Length 65536: encoded as 0x1a00010000 (uint32)
+///
+/// The following encodings would result in `NonMinimalInt` errors:
+/// * Length 23: encoded as 0x1817 (uint8)
+/// * Length 255: encoded as 0x1900ff (uint16)
+/// * Length 65535: encoded as 0x1a0000ffff (uint32)
+///
+/// This implementation follows the core deterministic encoding requirement from RFC 8949:
+/// "Length values MUST be expressed using the shortest form that can express the value"
 fn decode_string_length(
     d: &Decoder, start_pos: usize, additional_info: u8,
 ) -> Result<u64, DeterministicError> {
     let input = d.input();
 
-    match additional_info {
-        0..=23 => Ok(u64::from(additional_info)), // Direct value
-
-        CBOR_STRING_LENGTH_UINT8 => {
-            let bytes = get_checked_slice(input, start_pos + 1, 1)?;
-            Ok(u64::from(bytes[0]))
-        },
-
-        CBOR_STRING_LENGTH_UINT16 => {
-            let bytes = get_checked_slice(input, start_pos + 1, 2)?;
-            Ok(u64::from(u16::from_be_bytes(bytes.try_into().unwrap())))
-        },
-
-        CBOR_STRING_LENGTH_UINT32 => {
-            let bytes = get_checked_slice(input, start_pos + 1, 4)?;
-            Ok(u64::from(u32::from_be_bytes(bytes.try_into().unwrap())))
-        },
-
-        CBOR_STRING_LENGTH_UINT64 => {
-            let bytes = get_checked_slice(input, start_pos + 1, 8)?;
-            Ok(u64::from_be_bytes(bytes.try_into().unwrap()))
-        },
-
-        _ => {
-            Err(DeterministicError::DecoderError(
-                minicbor::decode::Error::message("invalid additional info for string length"),
-            ))
-        },
+    // Handle tiny values (0-23) directly in the additional info
+    if u64::from(additional_info) <= CBOR_MAX_TINY_VALUE {
+        return Ok(u64::from(additional_info));
     }
+
+    // Get configuration for different integer sizes
+    let (bytes_to_read, max_previous_value) = match additional_info {
+        CBOR_STRING_LENGTH_UINT8 => (1, CBOR_MAX_TINY_VALUE),
+        CBOR_STRING_LENGTH_UINT16 => (2, u64::from(u8::MAX)),
+        CBOR_STRING_LENGTH_UINT32 => (4, u64::from(u16::MAX)),
+        CBOR_STRING_LENGTH_UINT64 => (8, u64::from(u32::MAX)),
+        _ => return Ok(u64::from(additional_info)),
+    };
+
+    // Calculate position to read from and validate buffer bounds
+    let next_pos = start_pos
+        .checked_add(1)
+        .ok_or(DeterministicError::UnexpectedEof)?;
+    check_slice_range(input, next_pos, bytes_to_read)?;
+
+    // Get the bytes for the length
+    let bytes = get_checked_slice(input, next_pos, bytes_to_read)?;
+
+    // Convert bytes to length value based on the encoding size
+    let length = match bytes_to_read {
+        1 => u64::from(*bytes.first().ok_or(DeterministicError::UnexpectedEof)?),
+        2 => {
+            u64::from(u16::from_be_bytes(bytes.try_into().map_err(|_| {
+                DeterministicError::CorruptedEncoding("Invalid uint16 encoding".to_string())
+            })?))
+        },
+        4 => {
+            u64::from(u32::from_be_bytes(bytes.try_into().map_err(|_| {
+                DeterministicError::CorruptedEncoding("Invalid uint32 encoding".to_string())
+            })?))
+        },
+        _ => {
+            u64::from_be_bytes(bytes.try_into().map_err(|_| {
+                DeterministicError::CorruptedEncoding("Invalid uint64 encoding".to_string())
+            })?)
+        },
+    };
+
+    // Check for non-minimal encoding
+    if length <= max_previous_value {
+        return Err(DeterministicError::NonMinimalInt);
+    }
+
+    Ok(length)
 }
 
 /// Validates that the length uses minimal encoding according to RFC 8949
@@ -542,7 +686,6 @@ fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), Dete
 
 #[cfg(test)]
 mod tests {
-    use minicbor::encode::Encoder;
 
     use super::*;
 
@@ -722,9 +865,9 @@ mod tests {
     ///
     /// Specifically for integers:
     ///  * 0 to 23 must be expressed in the same byte as the major type
-    ///  * 24 to 255 must be expressed only with an additional uint8_t
-    ///  * 256 to 65535 must be expressed only with an additional uint16_t
-    ///  * 65536 to 4294967295 must be expressed only with an additional uint32_t"
+    ///  * 24 to 255 must be expressed only with an additional `uint8_t`
+    ///  * 256 to 65535 must be expressed only with an additional `uint16_t`
+    ///  * 65536 to 4294967295 must be expressed only with an additional `uint32_t`"
     ///
     /// For maps (major type 5), the length must follow these rules. This ensures
     /// a deterministic encoding where the same length is always encoded the same way.
@@ -754,10 +897,6 @@ mod tests {
         ];
         let mut decoder = Decoder::new(&invalid_small);
         let result = decode_map_deterministically(&mut decoder);
-
-        // Debug info
-        println!("Result: {:?}", result);
-        println!("Initial byte: 0x{:02x}", invalid_small[0]);
 
         assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
     }
@@ -854,52 +993,5 @@ mod tests {
             decode_map_deterministically(&mut decoder),
             Err(DeterministicError::DuplicateMapKey)
         ));
-    }
-
-    #[test]
-    fn test_decoder_modes() {
-        // Create a CBOR map with sorted keys
-        let mut data = Vec::new();
-        let mut enc = Encoder::new(&mut data);
-
-        // Create a sorted map with definite length
-        enc.map(2).unwrap(); // Map with 2 pairs
-        enc.str("a").unwrap(); // Key 1 (alphabetically first)
-        enc.u32(1).unwrap(); // Value 1
-        enc.str("b").unwrap(); // Key 2
-        enc.u32(2).unwrap(); // Value 2
-
-        // Test non-deterministic mode
-        let non_det_decoder = CborDecoder::new(false);
-        let mut dec = Decoder::new(&data);
-        let result = non_det_decoder.decode(&mut dec).unwrap();
-        // Should preserve original bytes
-        assert_eq!(result, data);
-
-        // Test deterministic mode with sorted input
-        let det_decoder = CborDecoder::new(true);
-        let mut dec = Decoder::new(&data);
-        let result = det_decoder.decode(&mut dec).unwrap();
-        // Should accept already sorted map
-        assert_eq!(result, data);
-
-        // Now test with unsorted keys
-        let mut unsorted_data = Vec::new();
-        let mut enc = Encoder::new(&mut unsorted_data);
-        enc.map(2).unwrap();
-        enc.str("b").unwrap(); // Key 1 (unsorted)
-        enc.u32(2).unwrap(); // Value 1
-        enc.str("a").unwrap(); // Key 2
-        enc.u32(1).unwrap(); // Value 2
-
-        // Non-deterministic mode should still work with unsorted
-        let mut dec = Decoder::new(&unsorted_data);
-        let result = non_det_decoder.decode(&mut dec).unwrap();
-        assert_eq!(result, unsorted_data);
-
-        // Deterministic mode should reject unsorted keys
-        let mut dec = Decoder::new(&unsorted_data);
-        let result = det_decoder.decode(&mut dec);
-        assert!(matches!(result, Err(DeterministicError::UnorderedMapKeys)));
     }
 }
