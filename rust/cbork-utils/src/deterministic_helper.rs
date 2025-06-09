@@ -122,81 +122,6 @@ impl MapEntry {
     }
 }
 
-/// Error types that can occur during CBOR deterministic decoding validation.
-///
-/// These errors indicate violations of the deterministic encoding rules
-/// as specified in RFC 8949 Section 4.2.
-///
-/// From RFC 8949:
-/// "A CBOR item (data item) is determined to be encoded in a deterministic way if:"
-/// - It follows minimal encoding rules for integers
-/// - It contains no indefinite-length items
-/// - All contained maps are ordered by their keys (lexicographically)
-/// - No duplicate keys exist in maps
-/// - All floating-point values use minimal length encoding
-#[derive(Debug)]
-pub enum DeterministicError {
-    /// Indicates an integer is not encoded in its shortest possible representation.
-    /// Per RFC 8949 Section 4.2.1:
-    /// "An integer is encoded in the shortest form that can represent the value"
-    NonMinimalInt,
-
-    /// Indicates presence of indefinite-length items, which are forbidden.
-    /// Per RFC 8949 Section 4.2.2:
-    /// "Indefinite-length items must be made definite-length items"
-    IndefiniteLength,
-
-    /// Wraps decoding errors from the underlying CBOR decoder
-    DecoderError(minicbor::decode::Error),
-
-    /// Indicates map keys are not properly sorted.
-    /// Per RFC 8949 Section 4.2.3:
-    /// "The keys in every map must be sorted..."
-    UnorderedMapKeys,
-
-    /// Indicates a map contains duplicate keys.
-    /// Per RFC 8949 Section 4.2.3:
-    /// "No two keys in a map may be equal"
-    DuplicateMapKey,
-
-    /// Corrupted encoding
-    CorruptedEncoding(String),
-
-    /// Indicates unexpected end of input
-    UnexpectedEof,
-}
-
-impl fmt::Display for DeterministicError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            DeterministicError::NonMinimalInt => write!(f, "integer not encoded in minimal form"),
-            DeterministicError::IndefiniteLength => {
-                write!(f, "indefinite-length items not allowed")
-            },
-            DeterministicError::DecoderError(e) => write!(f, "decoder error: {e}"),
-            DeterministicError::UnorderedMapKeys => write!(f, "map keys not in canonical order"),
-            DeterministicError::DuplicateMapKey => write!(f, "duplicate map key found"),
-            DeterministicError::UnexpectedEof => write!(f, "unexpected end of input"),
-            DeterministicError::CorruptedEncoding(e) => write!(f, "corrupted encoding {e}"),
-        }
-    }
-}
-
-impl std::error::Error for DeterministicError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            DeterministicError::DecoderError(e) => Some(e),
-            _ => None,
-        }
-    }
-}
-
-impl From<minicbor::decode::Error> for DeterministicError {
-    fn from(error: minicbor::decode::Error) -> Self {
-        DeterministicError::DecoderError(error)
-    }
-}
-
 /// Decodes a CBOR map with deterministic encoding validation (RFC 8949 Section 4.2.3)
 /// Returns the raw bytes of the map if it passes all deterministic validation rules.
 ///
@@ -682,6 +607,81 @@ fn validate_length_minimality(length: u64, encoding_used: u8) -> Result<(), Dete
         _ => {}, // Direct values 0-23 are always minimal
     }
     Ok(())
+}
+
+/// Error types that can occur during CBOR deterministic decoding validation.
+///
+/// These errors indicate violations of the deterministic encoding rules
+/// as specified in RFC 8949 Section 4.2.
+///
+/// From RFC 8949:
+/// "A CBOR item (data item) is determined to be encoded in a deterministic way if:"
+/// - It follows minimal encoding rules for integers
+/// - It contains no indefinite-length items
+/// - All contained maps are ordered by their keys (lexicographically)
+/// - No duplicate keys exist in maps
+/// - All floating-point values use minimal length encoding
+#[derive(Debug)]
+pub enum DeterministicError {
+    /// Indicates an integer is not encoded in its shortest possible representation.
+    /// Per RFC 8949 Section 4.2.1:
+    /// "An integer is encoded in the shortest form that can represent the value"
+    NonMinimalInt,
+
+    /// Indicates presence of indefinite-length items, which are forbidden.
+    /// Per RFC 8949 Section 4.2.2:
+    /// "Indefinite-length items must be made definite-length items"
+    IndefiniteLength,
+
+    /// Wraps decoding errors from the underlying CBOR decoder
+    DecoderError(minicbor::decode::Error),
+
+    /// Indicates map keys are not properly sorted.
+    /// Per RFC 8949 Section 4.2.3:
+    /// "The keys in every map must be sorted..."
+    UnorderedMapKeys,
+
+    /// Indicates a map contains duplicate keys.
+    /// Per RFC 8949 Section 4.2.3:
+    /// "No two keys in a map may be equal"
+    DuplicateMapKey,
+
+    /// Corrupted encoding
+    CorruptedEncoding(String),
+
+    /// Indicates unexpected end of input
+    UnexpectedEof,
+}
+
+impl fmt::Display for DeterministicError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            DeterministicError::NonMinimalInt => write!(f, "Integer not encoded in minimal form"),
+            DeterministicError::IndefiniteLength => {
+                write!(f, "Indefinite-length items not allowed")
+            },
+            DeterministicError::DecoderError(e) => write!(f, "Decoder error: {e}"),
+            DeterministicError::UnorderedMapKeys => write!(f, "Map keys not in canonical order"),
+            DeterministicError::DuplicateMapKey => write!(f, "Duplicate map key found"),
+            DeterministicError::UnexpectedEof => write!(f, "Unexpected end of input"),
+            DeterministicError::CorruptedEncoding(e) => write!(f, "Corrupted encoding {e}"),
+        }
+    }
+}
+
+impl std::error::Error for DeterministicError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            DeterministicError::DecoderError(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
+impl From<minicbor::decode::Error> for DeterministicError {
+    fn from(error: minicbor::decode::Error) -> Self {
+        DeterministicError::DecoderError(error)
+    }
 }
 
 #[cfg(test)]
