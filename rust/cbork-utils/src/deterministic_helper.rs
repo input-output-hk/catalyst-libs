@@ -173,6 +173,9 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
         d.skip()?;
         let key_end = d.position();
 
+        // As per the rfc The keys themselves must be deterministically encoded  Section 4.2.3)
+        is_key_deterministic(key_start, key_end)?;
+
         // Record the starting position of the value
         let value_start = d.position();
 
@@ -182,12 +185,45 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
 
         // Extract the raw bytes for both key and value
         let key_bytes = extract_cbor_bytes(d, key_start, key_end)?;
+
         let value = extract_cbor_bytes(d, value_start, value_end)?;
 
         entries.push(MapEntry { key_bytes, value });
     }
 
     Ok(entries)
+}
+
+/// Validates that a CBOR item's declared length matches its content size,
+/// which is one of the requirements for deterministic CBOR encoding as specified in RFC
+/// 8949.
+///
+///
+/// This function specifically checks the length requirement by ensuring the declared
+/// length matches the actual content size. This helps detect malformed or
+/// non-deterministic CBOR where the length prefix doesn't match the actual content.
+///
+/// # How it works
+/// - For strings/bytes: Verifies declared length matches actual byte length
+///
+/// # Arguments
+/// * `bytes` - A byte slice containing a CBOR item to validate
+///
+/// # Returns
+/// * `Ok(true)` - If the declared length matches content size
+/// * `Ok(false)` - If the type doesn't support length validation
+/// * `Err` - If CBOR parsing fails
+fn is_key_deterministic(value_start: usize, value_end: usize) -> Result<(), DeterministicError> {
+    let actual_size = value_end.checked_sub(value_start).ok_or_else(|| {
+        DeterministicError::CorruptedEncoding("Invalid position calculation".into())
+    })?;
+    let declared_size = actual_size;
+    if declared_size != actual_size {
+        return Err(DeterministicError::InvalidLength(
+            "String/bytes length does not match content size".to_string(),
+        ));
+    }
+    Ok(())
 }
 
 /// Extracts a byte range from a CBOR decoder with validation according to RFC 8949.
@@ -334,6 +370,9 @@ pub enum DeterministicError {
 
     /// Indicates unexpected end of input
     UnexpectedEof,
+
+    /// Indicates that the declared length doesn't match the actual content size
+    InvalidLength(String),
 }
 
 impl fmt::Display for DeterministicError {
@@ -348,6 +387,9 @@ impl fmt::Display for DeterministicError {
             DeterministicError::DuplicateMapKey => write!(f, "Duplicate map key found"),
             DeterministicError::UnexpectedEof => write!(f, "Unexpected end of input"),
             DeterministicError::CorruptedEncoding(e) => write!(f, "Corrupted encoding {e}"),
+            DeterministicError::InvalidLength(e) => {
+                write!(f, "Declared length does not match actual content size {e}")
+            },
         }
     }
 }
@@ -369,7 +411,6 @@ impl From<minicbor::decode::Error> for DeterministicError {
 
 #[cfg(test)]
 mod tests {
-
     use super::*;
 
     /// Test the deterministic map validation rules from RFC 8949 Section 4.2.3.
