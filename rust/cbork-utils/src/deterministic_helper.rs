@@ -157,7 +157,12 @@ fn validate_not_indefinite_length_map(d: &Decoder) -> Result<(), DeterministicEr
 
 /// Decodes all key-value pairs in the map
 fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, DeterministicError> {
-    let mut entries = Vec::with_capacity(length as usize);
+    let capacity = usize::try_from(length).map_err(|_| {
+        DeterministicError::CorruptedEncoding(
+            "Map length too large for current platform".to_string(),
+        )
+    })?;
+    let mut entries = Vec::with_capacity(capacity);
 
     // Decode each key-value pair
     for _ in 0..length {
