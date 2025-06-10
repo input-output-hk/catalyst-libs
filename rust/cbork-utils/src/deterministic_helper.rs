@@ -40,15 +40,6 @@ const CBOR_MAX_TINY_VALUE: u64 = 23;
 /// - Low 5 bits: 24 (indicates uint8 length follows)
 ///
 /// Used when encoding CBOR maps with lengths between 24 and 255 elements.
-///
-/// # Examples
-/// ```
-/// // The constant value is 0xb8 (184 in decimal)
-/// // - 0b101 << 5 = 0b10100000 (major type 5)
-/// // - 0b00011000 (24 in decimal)
-/// // = 0b10111000
-/// const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24;
-/// ```
 const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length encoding
 
 /// Represents a CBOR map key-value pair where the key must be deterministically encoded
