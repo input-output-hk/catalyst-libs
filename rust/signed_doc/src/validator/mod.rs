@@ -5,7 +5,7 @@ pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, SystemTime},
 };
 
@@ -22,11 +22,8 @@ use rules::{
 
 use crate::{
     doc_types::{
-        deprecated::{
-            CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE,
-        },
-        COMMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOC_TYPE,
-        PROPOSAL_UUID_TYPE,
+        deprecated::{self},
+        PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOC_TYPE,
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
@@ -34,7 +31,7 @@ use crate::{
 };
 
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<HashMap<DocType, Arc<Rules>>> = LazyLock::new(document_rules_init);
 
 /// Returns an `DocType` from the provided argument.
 /// Reduce redundant conversion.
@@ -50,7 +47,7 @@ where
 
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
-fn document_rules_init() -> HashMap<DocType, Rules> {
+fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
     let mut document_rules_map = HashMap::new();
 
     let proposal_document_rules = Rules {
@@ -62,10 +59,10 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_doc_type(PROPOSAL_TEMPLATE_UUID_TYPE),
+            exp_template_type: expect_doc_type(deprecated::PROPOSAL_TEMPLATE_UUID_TYPE),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_doc_type(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: expect_doc_type(deprecated::CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::NotSpecified,
@@ -76,8 +73,6 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         },
     };
 
-    document_rules_map.insert(PROPOSAL_DOC_TYPE.clone(), proposal_document_rules);
-
     let comment_document_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
@@ -87,14 +82,14 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_doc_type(COMMENT_TEMPLATE_UUID_TYPE),
+            exp_template_type: expect_doc_type(deprecated::COMMENT_TEMPLATE_UUID_TYPE),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
+            exp_ref_type: expect_doc_type(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: expect_doc_type(COMMENT_UUID_TYPE),
+            exp_reply_type: expect_doc_type(deprecated::COMMENT_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },
@@ -103,7 +98,6 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             exp: &[RoleId::Role0],
         },
     };
-    document_rules_map.insert(PROPOSAL_COMMENT_DOC.clone(), comment_document_rules);
 
     let proposal_action_json_schema = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft7)
@@ -124,11 +118,11 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_doc_type(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: expect_doc_type(deprecated::CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
+            exp_ref_type: expect_doc_type(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
@@ -138,9 +132,22 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         },
     };
 
+    let proposal_rules = Arc::new(proposal_document_rules);
+    let comment_rules = Arc::new(comment_document_rules);
+    let action_rules = Arc::new(proposal_submission_action_rules);
+
+    document_rules_map.insert(PROPOSAL_DOC_TYPE.clone(), Arc::clone(&proposal_rules));
+    document_rules_map.insert(PROPOSAL_COMMENT_DOC.clone(), Arc::clone(&comment_rules));
+    document_rules_map.insert(PROPOSAL_ACTION_DOC.clone(), Arc::clone(&action_rules));
+
+    // Insert old rules (for backward compatibility)
     document_rules_map.insert(
-        PROPOSAL_ACTION_DOC.clone(),
-        proposal_submission_action_rules,
+        expect_doc_type(deprecated::COMMENT_DOCUMENT_UUID_TYPE),
+        Arc::clone(&comment_rules),
+    );
+    document_rules_map.insert(
+        expect_doc_type(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE),
+        Arc::clone(&action_rules),
     );
 
     document_rules_map
