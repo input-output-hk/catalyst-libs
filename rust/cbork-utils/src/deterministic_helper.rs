@@ -16,7 +16,7 @@ use minicbor::Decoder;
 
 /// Major type indicator for CBOR maps (major type 5: 101 in top 3 bits)
 /// As per RFC 8949 Section 4.2.3, maps in deterministic encoding must:
-/// - Have keys sorted by length first, then bytewise lexicographically
+/// - Have keys sorted by length first, then byte wise lexicographically
 /// - Contain no duplicate keys
 const CBOR_MAJOR_TYPE_MAP: u8 = 5 << 5;
 
@@ -69,7 +69,7 @@ pub struct MapEntry {
 impl MapEntry {
     /// Compare map entries according to RFC 8949 Section 4.2.3 rules:
     /// 1. Compare by length of encoded key
-    /// 2. If lengths equal, compare bytewise lexicographically
+    /// 2. If lengths equal, compare byte wise lexicographically
     fn compare(&self, other: &Self) -> Ordering {
         match self.key_bytes.len().cmp(&other.key_bytes.len()) {
             Ordering::Equal => self.key_bytes.cmp(&other.key_bytes),
@@ -446,7 +446,7 @@ mod tests {
 
     #[test]
     // Ensures that encoding and decoding a map preserves:
-    /// - The bytewise lexicographic ordering of keys
+    /// - The byte wise lexicographic ordering of keys
     /// - The exact byte representation of values
     /// - The definite length encoding format
     fn test_map_bytes_roundtrip() {
