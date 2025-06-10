@@ -173,9 +173,6 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
         d.skip()?;
         let key_end = d.position();
 
-        // As per the rfc The keys themselves must be deterministically encoded  Section 4.2.3)
-        is_key_deterministic(key_start, key_end)?;
-
         // Record the starting position of the value
         let value_start = d.position();
 
@@ -198,36 +195,9 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
 /// which is one of the requirements for deterministic CBOR encoding as specified in RFC
 /// 8949.
 ///
-///
 /// This function specifically checks the length requirement by ensuring the declared
 /// length matches the actual content size. This helps detect malformed or
 /// non-deterministic CBOR where the length prefix doesn't match the actual content.
-///
-/// # How it works
-/// - For strings/bytes: Verifies declared length matches actual byte length
-///
-/// # Arguments
-/// * `bytes` - A byte slice containing a CBOR item to validate
-///
-/// # Returns
-/// * `Ok(true)` - If the declared length matches content size
-/// * `Ok(false)` - If the type doesn't support length validation
-/// * `Err` - If CBOR parsing fails
-fn is_key_deterministic(value_start: usize, value_end: usize) -> Result<(), DeterministicError> {
-    let actual_size = value_end.checked_sub(value_start).ok_or_else(|| {
-        DeterministicError::CorruptedEncoding("Invalid position calculation".into())
-    })?;
-    let declared_size = actual_size;
-    if declared_size != actual_size {
-        return Err(DeterministicError::InvalidLength(
-            "String/bytes length does not match content size".to_string(),
-        ));
-    }
-    Ok(())
-}
-
-/// Extracts a byte range from a CBOR decoder with validation according to RFC 8949.
-/// Used for extracting map keys and values from deterministically encoded CBOR.
 fn extract_cbor_bytes(
     decoder: &minicbor::Decoder<'_>, range_start: usize, range_end: usize,
 ) -> Result<Vec<u8>, DeterministicError> {
@@ -459,6 +429,19 @@ mod tests {
             decode_map_deterministically(&mut decoder),
             Err(DeterministicError::DuplicateMapKey)
         ));
+    }
+
+    #[test]
+    fn test_map_keys_are_deterministically_encoded() {
+        // bad encoding for keys
+        let valid_map = vec![
+            0xA4, 0x42, 0x01, 0x02, // Key 1: 2-byte string
+            0x41, 0x01, // Value 1: 1-byte string
+            0x43, 0x01, 0x02, 0x03, // Key 2: 3-byte string
+            0x41, 0x02, // Value 2: 1-byte string
+        ];
+        let mut decoder = Decoder::new(&valid_map);
+        assert!(decode_map_deterministically(&mut decoder).is_err());
     }
 
     #[test]
