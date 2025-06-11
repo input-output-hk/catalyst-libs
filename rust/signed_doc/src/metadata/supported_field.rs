@@ -18,7 +18,13 @@ use crate::{
 /// COSE label. May be either a signed integer or a string.
 #[derive(Copy, Clone, Eq, PartialEq)]
 enum Label<'a> {
-    /// Integer label fitting into `0..=23`.
+    /// Integer label.
+    ///
+    /// Note that COSE isn't strictly limited to 8 bits for a label, but in practice it
+    /// fits.
+    ///
+    /// If for any reason wider bounds would be necessary,
+    /// then additional variants could be added to the [`Label`].
     U8(u8),
     /// Text label.
     Str(&'a str),
