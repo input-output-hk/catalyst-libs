@@ -167,7 +167,16 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
         // Extract the raw bytes for both key and value
         let key_bytes = extract_cbor_bytes(d, key_start, key_end)?;
 
+        if key_bytes.len() != value_end-value_start{
+            return Err(DeterministicError::InvalidLength
+
+            );
+        }
+
+        // value bytes
         let value = extract_cbor_bytes(d, value_start, value_end)?;
+
+
 
         entries.push(MapEntry { key_bytes, value });
     }
