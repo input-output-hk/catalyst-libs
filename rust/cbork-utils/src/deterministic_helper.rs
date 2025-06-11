@@ -171,7 +171,6 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
         // checks the length requirement by ensuring the declared
         // length matches the actual content size. This helps detect malformed or
         // non-deterministic CBOR where the length prefix doesn't match the actual content.
-
         let expected_len = key_end.checked_sub(key_start).ok_or_else(|| {
             DeterministicError::InvalidLength(
                 "Invalid key range: end position before start".to_string(),
