@@ -43,7 +43,7 @@ const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length 
 /// 1. Length-first ordering of keys (shorter keys before longer ones)
 /// 2. Lexicographic comparison of equal-length keys
 /// 3. Preservation of the original encoded form
-#[derive(Clone)]
+#[derive(Clone, Eq, PartialEq)]
 pub struct MapEntry {
     /// Raw bytes of the encoded key, used for deterministic ordering
     pub key_bytes: Vec<u8>,
@@ -51,15 +51,23 @@ pub struct MapEntry {
     pub value: Vec<u8>,
 }
 
-impl MapEntry {
+impl PartialOrd for MapEntry {
     /// Compare map entries according to RFC 8949 Section 4.2.3 rules:
     /// 1. Compare by length of encoded key
     /// 2. If lengths equal, compare byte wise lexicographically
-    fn compare(&self, other: &Self) -> Ordering {
-        match self.key_bytes.len().cmp(&other.key_bytes.len()) {
-            Ordering::Equal => self.key_bytes.cmp(&other.key_bytes),
-            ordering => ordering,
-        }
+    ///
+    /// Returns Some(ordering) since comparison is always defined for these types
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for MapEntry {
+    /// Compare map entries according to RFC 8949 Section 4.2.3 rules:
+    /// 1. Compare by length of encoded key
+    /// 2. If lengths equal, compare byte wise lexicographically
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.key_bytes.cmp(&other.key_bytes)
     }
 }
 
@@ -234,7 +242,7 @@ fn validate_map_ordering(entries: &[MapEntry]) -> Result<(), DeterministicError>
 /// - Keys must be in ascending order (current < next)
 /// - Duplicate keys are not allowed (current != next)
 fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), DeterministicError> {
-    match current.compare(next) {
+    match current.cmp(next) {
         Ordering::Less => Ok(()), // Valid: keys are in ascending order
         Ordering::Equal => Err(DeterministicError::DuplicateMapKey),
         Ordering::Greater => Err(DeterministicError::UnorderedMapKeys),
