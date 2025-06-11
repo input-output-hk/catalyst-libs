@@ -1,17 +1,14 @@
 //! Catalyst Signed Document unified metadata field.
 
+use std::fmt::{self, Display};
 #[cfg(test)]
-use std::convert::Infallible;
-use std::{
-    cmp,
-    ops::{Deref, DerefMut},
-};
+use std::{cmp, convert::Infallible};
 
 use catalyst_types::uuid::UuidV7;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
-    metadata::{MetadataDecodeContext, MetadataEncodeContext},
+    metadata::{custom_transient_decode_error, MetadataDecodeContext, MetadataEncodeContext},
     ContentEncoding, ContentType, DocType, DocumentRef, Section,
 };
 
@@ -69,6 +66,15 @@ impl Label<'_> {
         let rhs = minicbor::to_vec(other)?;
         let ord = lhs.len().cmp(&rhs.len()).then_with(|| lhs.cmp(&rhs));
         Ok(ord)
+    }
+}
+
+impl Display for Label<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Label::U8(u) => write!(f, "{u}"),
+            Label::Str(s) => f.write_str(s),
+        }
     }
 }
 
@@ -154,49 +160,38 @@ impl SupportedLabel {
     }
 }
 
-/// [`SupportedField`] decoding context for the [`minicbor::Decode`] implementation.
-pub(crate) struct DecodeContext<'a> {
-    /// Key of the previously decoded field. Used to check for duplicates and invalid
-    /// ordering.
-    pub prev_key: Option<SupportedLabel>,
-    /// Used by some values' decoding implementations.
-    pub metadata_context: &'a mut MetadataDecodeContext,
-}
-
-impl Deref for DecodeContext<'_> {
-    type Target = MetadataDecodeContext;
-
-    fn deref(&self) -> &Self::Target {
-        self.metadata_context
+impl Display for SupportedLabel {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.to_cose(), f)
     }
 }
 
-impl DerefMut for DecodeContext<'_> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.metadata_context
-    }
-}
-
-impl minicbor::Decode<'_, DecodeContext<'_>> for SupportedField {
+impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
     #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
+        d: &mut minicbor::Decoder<'_>, ctx: &mut MetadataDecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
+        const REPORT_CONTEXT: &str = "Metadata field decoding";
+
         let label_pos = d.position();
         let label = Label::decode(d, &mut ())?;
         let Some(key) = SupportedLabel::from_cose(label) else {
-            return Err(minicbor::decode::Error::message("Not a supported key").at(label_pos))?;
+            let value_start = d.position();
+            d.skip()?;
+            let value_end = d.position();
+            // Since the high level type isn't know, the value CBOR is tokenized and reported as
+            // such.
+            let value = minicbor::decode::Tokenizer::new(
+                d.input().get(value_start..value_end).unwrap_or_default(),
+            )
+            .to_string();
+            ctx.report
+                .unknown_field(&label.to_string(), &value, REPORT_CONTEXT);
+            return Err(custom_transient_decode_error(
+                "Not a supported key",
+                Some(label_pos),
+            ));
         };
-
-        match ctx.prev_key.map(|prev_key| prev_key.cmp(&key)) {
-            Some(cmp::Ordering::Equal) => {
-                return Err(minicbor::decode::Error::message("Duplicate keys").at(label_pos));
-            },
-            Some(cmp::Ordering::Greater) => {
-                return Err(minicbor::decode::Error::message("Invalid key ordering").at(label_pos));
-            },
-            _ => (),
-        }
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
@@ -212,7 +207,6 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for SupportedField {
             SupportedLabel::ContentEncoding => todo!(),
         }?;
 
-        ctx.prev_key = Some(key);
         Ok(field)
     }
 }

@@ -1,6 +1,7 @@
 //! Catalyst Signed Document Metadata.
 use std::{
-    collections::BTreeMap,
+    collections::{btree_map, BTreeMap},
+    error::Error,
     fmt::{Display, Formatter},
 };
 
@@ -555,14 +556,27 @@ impl MetadataDecodeContext {
             report: &mut self.report,
         }
     }
+}
 
-    /// First in a map [`SupportedField`] decoding context.
-    fn first_field_context(&mut self) -> supported_field::DecodeContext {
-        supported_field::DecodeContext {
-            prev_key: None,
-            metadata_context: self,
-        }
+/// An error that's been reported, but doesn't affect the further decoding.
+/// [`minicbor::Decoder`] should be assumed to be in a correct state and advanced towards
+/// the next item.
+///
+/// The wrapped error can be returned up the call stack.
+#[derive(Debug, thiserror::Error)]
+#[error(transparent)]
+pub struct TransientDecodeError(pub minicbor::decode::Error);
+
+/// Creates a [`TransientDecodeError`] and wraps it in a
+/// [`minicbor::decode::Error::custom`].
+fn custom_transient_decode_error(
+    message: &str, position: Option<usize>,
+) -> minicbor::decode::Error {
+    let mut inner = minicbor::decode::Error::message(message);
+    if let Some(pos) = position {
+        inner = inner.at(pos);
     }
+    minicbor::decode::Error::custom(inner)
 }
 
 impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
@@ -578,20 +592,52 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
     fn decode(
         d: &mut Decoder<'_>, ctx: &mut MetadataDecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
+        const REPORT_CONTEXT: &str = "Metadata decoding";
+
         let Some(len) = d.map()? else {
             return Err(minicbor::decode::Error::message(
                 "Indefinite map is not supported",
             ));
         };
-        let mut field_ctx = ctx.first_field_context();
 
-        // This performs duplication, ordering and length mismatch checks.
-        (0..len)
-            .map(|_| {
-                d.decode_with(&mut field_ctx)
-                    .map(|field: SupportedField| (field.discriminant(), field))
-            })
-            .collect::<Result<_, _>>()
-            .map(Self)
+        // TODO: verify key order.
+        // TODO: use helpers from <https://github.com/input-output-hk/catalyst-libs/pull/360> once it's merged.
+
+        let mut metadata_map = BTreeMap::new();
+        let mut first_err = None;
+
+        // This will return an error on the end of input.
+        for _ in 0..len {
+            let entry_pos = d.position();
+            match d.decode_with::<_, SupportedField>(ctx) {
+                Ok(field) => {
+                    let label = field.discriminant();
+                    let entry = metadata_map.entry(label);
+                    if let btree_map::Entry::Vacant(entry) = entry {
+                        entry.insert(field);
+                    } else {
+                        ctx.report.duplicate_field(
+                            &label.to_string(),
+                            "Duplicate metadata fields are not allowed",
+                            REPORT_CONTEXT,
+                        );
+                        first_err.get_or_insert(custom_transient_decode_error(
+                            "Duplicate fields",
+                            Some(entry_pos),
+                        ));
+                    }
+                },
+                Err(err)
+                    if err
+                        .source()
+                        .is_some_and(<dyn std::error::Error>::is::<TransientDecodeError>) =>
+                {
+                    first_err.get_or_insert(err);
+                },
+                Err(err) => return Err(err),
+            }
+        }
+
+        first_err.map_or(Ok(Self(metadata_map)), Err)
     }
 }
