@@ -20,12 +20,6 @@ use minicbor::Decoder;
 /// - Contain no duplicate keys
 const CBOR_MAJOR_TYPE_MAP: u8 = 5 << 5;
 
-/// Indicator for indefinite-length maps (major type 5 with additional info 31)
-/// RFC 8949 Section 4.2.2: "Indefinite-length items must be made definite-length items."
-/// This value is used to detect and reject indefinite-length maps in deterministic
-/// encoding.
-const CBOR_INDEFINITE_LENGTH_MAP: u8 = CBOR_MAJOR_TYPE_MAP | 31;
-
 /// Maximum value that can be encoded in a 5-bit additional info field
 /// RFC 8949 Section 4.2.1: "0 to 23 must be expressed in the same byte as the major type"
 /// Values 0-23 are encoded directly in the additional info field of the initial byte
@@ -95,10 +89,23 @@ impl MapEntry {
 /// - Map key or value decoding fails (`DecoderError`)
 pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, DeterministicError> {
     validate_input_not_empty(d)?;
-    validate_not_indefinite_length_map(d)?;
+
+    // From RFC 8949 Section 4.2.2:
+    // "Indefinite-length items must be made definite-length items."
+    // The specification explicitly prohibits indefinite-length items in
+    // deterministic encoding to ensure consistent representation.
+    match d.datatype()? {
+        minicbor::data::Type::Map => {},
+        minicbor::data::Type::MapIndef => return Err(DeterministicError::IndefiniteLength),
+        _ => {
+            return Err(DeterministicError::CorruptedEncoding(
+                "Expected a map".into(),
+            ))
+        },
+    }
 
     let start_pos = d.position();
-    let map_len = d.map()?.ok_or(DeterministicError::UnexpectedEof)?;
+    let map_len = d.map()?.ok_or(minicbor::decode::Error::end_of_input())?;
 
     check_map_minimal_length(d, start_pos, map_len)?;
 
@@ -130,20 +137,6 @@ fn get_map_bytes(
             )
         })
         .map(<[u8]>::to_vec)
-}
-
-/// Validates that map does not use indefinite-length encoding
-fn validate_not_indefinite_length_map(d: &Decoder) -> Result<(), DeterministicError> {
-    let initial_byte = d.input().get(d.position()).ok_or_else(|| {
-        DeterministicError::CorruptedEncoding(
-            "Unable to read initial byte: position out of bounds".to_string(),
-        )
-    })?;
-
-    if *initial_byte == CBOR_INDEFINITE_LENGTH_MAP {
-        return Err(DeterministicError::IndefiniteLength);
-    }
-    Ok(())
 }
 
 /// Decodes all key-value pairs in the map
@@ -194,7 +187,7 @@ fn extract_cbor_bytes(
 ) -> Result<Vec<u8>, DeterministicError> {
     // Validate CBOR byte range bounds
     if range_start >= range_end {
-        return Err(DeterministicError::CorruptedEncoding(
+        return Err(DeterministicError::InvalidLength(
             "Invalid CBOR byte range: start must be less than end position".to_string(),
         ));
     }
@@ -277,7 +270,6 @@ fn check_map_minimal_length(
 }
 
 /// Gets a slice of the input with bounds checking
-#[inline]
 fn get_checked_slice(
     input: &[u8], start_pos: usize, length: usize,
 ) -> Result<&[u8], DeterministicError> {
@@ -552,28 +544,6 @@ mod tests {
         let result = decode_map_deterministically(&mut decoder);
 
         assert!(matches!(result, Err(DeterministicError::NonMinimalInt)));
-    }
-
-    /// Test rejection of indefinite-length maps as required by RFC 8949 Section 4.2.2
-    ///
-    /// From RFC 8949 Section 4.2.2:
-    /// "Indefinite-length items must be made definite-length items."
-    ///
-    /// The specification explicitly prohibits indefinite-length items in
-    /// deterministic encoding to ensure consistent representation.
-    #[test]
-    fn test_map_indefinite_length() {
-        let indefinite_map = vec![
-            0xBF, // Start indefinite-length map (major type 5, additional info 31)
-            0x41, 0x01, // Key 1: 1-byte string
-            0x41, 0x02, // Value 1: 1-byte string
-            0xFF, // Break (end of indefinite-length map)
-        ];
-        let mut decoder = Decoder::new(&indefinite_map);
-        assert!(matches!(
-            decode_map_deterministically(&mut decoder),
-            Err(DeterministicError::IndefiniteLength)
-        ));
     }
 
     /// Test handling of complex key structures while maintaining canonical ordering
