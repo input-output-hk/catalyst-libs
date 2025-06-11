@@ -167,16 +167,18 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
         // Extract the raw bytes for both key and value
         let key_bytes = extract_cbor_bytes(d, key_start, key_end)?;
 
-        if key_bytes.len() != value_end-value_start{
-            return Err(DeterministicError::InvalidLength
-
-            );
+        // The keys themselves must be deterministically encoded (4.2.1)
+        // checks the length requirement by ensuring the declared
+        // length matches the actual content size. This helps detect malformed or
+        // non-deterministic CBOR where the length prefix doesn't match the actual content.
+        if key_bytes.len() != key_end - key_start {
+            return Err(DeterministicError::InvalidLength(
+                "Declared size does not match content size".to_string(),
+            ));
         }
 
         // value bytes
         let value = extract_cbor_bytes(d, value_start, value_end)?;
-
-
 
         entries.push(MapEntry { key_bytes, value });
     }
@@ -184,13 +186,10 @@ fn decode_map_entries(d: &mut Decoder, length: u64) -> Result<Vec<MapEntry>, Det
     Ok(entries)
 }
 
-/// Validates that a CBOR item's declared length matches its content size,
-/// which is one of the requirements for deterministic CBOR encoding as specified in RFC
-/// 8949.
+/// Extracts a slice of raw CBOR bytes from the decoder's input buffer for a given range.
 ///
-/// This function specifically checks the length requirement by ensuring the declared
-/// length matches the actual content size. This helps detect malformed or
-/// non-deterministic CBOR where the length prefix doesn't match the actual content.
+/// This function safely extracts bytes between the specified start and end positions,
+/// performing bounds checking to ensure the requested range is valid.
 fn extract_cbor_bytes(
     decoder: &minicbor::Decoder<'_>, range_start: usize, range_end: usize,
 ) -> Result<Vec<u8>, DeterministicError> {
