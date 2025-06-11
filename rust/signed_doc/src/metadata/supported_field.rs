@@ -18,8 +18,8 @@ use crate::{
 /// COSE label. May be either a signed integer or a string.
 #[derive(Copy, Clone, Eq, PartialEq)]
 enum Label<'a> {
-    /// Signed integer label fitting into [`i8`].
-    I8(i8),
+    /// Integer label fitting into `0..=23`.
+    U8(u8),
     /// Text label.
     Str(&'a str),
 }
@@ -29,7 +29,7 @@ impl<C> minicbor::Encode<C> for Label<'_> {
         &self, e: &mut minicbor::Encoder<W>, _: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
-            &Label::I8(u) => e.i8(u),
+            &Label::U8(u) => e.u8(u),
             Label::Str(s) => e.str(s),
         }?
         .ok()
@@ -39,7 +39,7 @@ impl<C> minicbor::Encode<C> for Label<'_> {
 impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
     fn decode(d: &mut minicbor::Decoder<'a>, _: &mut C) -> Result<Self, minicbor::decode::Error> {
         match d.datatype()? {
-            minicbor::data::Type::I8 => d.i8().map(Self::I8),
+            minicbor::data::Type::U8 => d.u8().map(Self::U8),
             minicbor::data::Type::String => d.str().map(Self::Str),
             _ => {
                 Err(minicbor::decode::Error::message(
@@ -113,7 +113,7 @@ impl SupportedLabel {
     /// Try to convert from an arbitrary COSE [`Label`].
     fn from_cose(label: Label<'_>) -> Option<Self> {
         match label {
-            Label::I8(3) => Some(Self::ContentType),
+            Label::U8(3) => Some(Self::ContentType),
             Label::Str("id") => Some(Self::Id),
             Label::Str("ref") => Some(Self::Ref),
             Label::Str("ver") => Some(Self::Ver),
@@ -133,7 +133,7 @@ impl SupportedLabel {
     /// Convert to the corresponding COSE [`Label`].
     fn to_cose(self) -> Label<'static> {
         match self {
-            Self::ContentType => Label::I8(3),
+            Self::ContentType => Label::U8(3),
             Self::Id => Label::Str("id"),
             Self::Ref => Label::Str("ref"),
             Self::Ver => Label::Str("ver"),
@@ -263,7 +263,7 @@ mod tests {
             cmp::Ordering::Greater
         );
         assert_eq!(
-            Label::I8(3).rfc8949_cmp(&Label::Str("id")).unwrap(),
+            Label::U8(3).rfc8949_cmp(&Label::Str("id")).unwrap(),
             cmp::Ordering::Less
         );
     }
