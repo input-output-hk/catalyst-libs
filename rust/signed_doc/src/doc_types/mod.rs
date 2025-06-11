@@ -41,24 +41,6 @@ pub static PROPOSAL_ACTION_DOC: LazyLock<DocType> = LazyLock::new(|| {
         .expect("Failed to convert proposal action document Uuid to DocType")
 });
 
-/// Proposal template document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
-    let ids = &[TEMPLATE_UUID_TYPE, PROPOSAL_UUID_TYPE];
-    ids.to_vec()
-        .try_into()
-        .expect("Failed to convert proposal template Uuid to DocType")
-});
-
-/// Proposal comment template document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL_COMMENT_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
-    let ids = &[TEMPLATE_UUID_TYPE, COMMENT_UUID_TYPE, PROPOSAL_UUID_TYPE];
-    ids.to_vec()
-        .try_into()
-        .expect("Failed to convert proposal comment template Uuid to DocType")
-});
-
 /// Submission Action UUID type.
 pub const SUBMISSION_ACTION_UUID_TYPE: Uuid =
     Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0E01_9B12_6A65);
