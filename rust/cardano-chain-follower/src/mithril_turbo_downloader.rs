@@ -3,7 +3,7 @@
 use std::{
     cmp,
     ffi::OsStr,
-    io::{BufReader, Read},
+    io::{BufReader, ErrorKind, Read},
     path::{Path, PathBuf},
     // process::Stdio,
     sync::{
@@ -170,8 +170,15 @@ impl Inner {
             } else {
                 // No dedup, just extract it into the tmp directory as-is.
                 entry.unpack_in(&tmp_dir).inspect_err(|e| {
-                    // Logging IO error, ErrorKind
-                    error!("{}", e.kind());
+                    // Match on ErrorKind to explicitly log and document known expected I/O errors.
+                    // The `_` arm logs any unexpected or less common error kinds.
+                    #[allow(clippy::single_match_else)]
+                    match e.kind() {
+                        ErrorKind::StorageFull => {
+                            error!("Storage full");
+                        },
+                        _ => error!("Unhandled I/O error kind: {}", e.kind()),
+                    }
                 })?;
                 debug!(chain = %self.cfg.chain, "DeDup: Extracted file {rel_file:?}:{entry_size}");
             }
