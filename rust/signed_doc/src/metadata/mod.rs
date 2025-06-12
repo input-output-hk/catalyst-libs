@@ -576,7 +576,7 @@ fn custom_transient_decode_error(
     if let Some(pos) = position {
         inner = inner.at(pos);
     }
-    minicbor::decode::Error::custom(inner)
+    minicbor::decode::Error::custom(TransientDecodeError(inner))
 }
 
 impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
