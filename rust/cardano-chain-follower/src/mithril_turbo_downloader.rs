@@ -169,7 +169,10 @@ impl Inner {
                 }
             } else {
                 // No dedup, just extract it into the tmp directory as-is.
-                entry.unpack_in(&tmp_dir)?;
+                entry.unpack_in(&tmp_dir).inspect_err(|e| {
+                    // Logging IO error, ErrorKind
+                    error!("{}", e.kind());
+                })?;
                 debug!(chain = %self.cfg.chain, "DeDup: Extracted file {rel_file:?}:{entry_size}");
             }
             new_file!(self, rel_file, abs_file, entry_size);
