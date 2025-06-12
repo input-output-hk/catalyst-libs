@@ -16,10 +16,7 @@ use tracing::warn;
 
 use crate::{
     decode_context::{CompatibilityPolicy, DecodeContext},
-    doc_types::{
-        ACTION_UUID_TYPE, COMMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC,
-        PROPOSAL_DOC_TYPE, PROPOSAL_UUID_TYPE,
-    },
+    doc_types::{deprecated, PROPOSAL, PROPOSAL_COMMENT, PROPOSAL_SUBMISSION_ACTION},
 };
 
 /// List of `UUIDv4` document type.
@@ -252,9 +249,11 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
 /// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
 fn map_doc_type(uuid: Uuid) -> anyhow::Result<DocType> {
     match uuid {
-        id if id == PROPOSAL_UUID_TYPE => Ok(PROPOSAL_DOC_TYPE.clone()),
-        id if id == COMMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT_DOC.clone()),
-        id if id == ACTION_UUID_TYPE => Ok(PROPOSAL_ACTION_DOC.clone()),
+        id if id == deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => Ok(PROPOSAL.clone()),
+        id if id == deprecated::COMMENT_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT.clone()),
+        id if id == deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => {
+            Ok(PROPOSAL_SUBMISSION_ACTION.clone())
+        },
         _ => anyhow::bail!("Unknown document type: {uuid}"),
     }
 }
@@ -337,9 +336,12 @@ impl PartialEq for DocType {
         // List of special-case (single UUID) -> new DocType
         // The old one should equal to the new one
         let special_cases = [
-            (PROPOSAL_UUID_TYPE, &*PROPOSAL_DOC_TYPE),
-            (COMMENT_UUID_TYPE, &*PROPOSAL_COMMENT_DOC),
-            (ACTION_UUID_TYPE, &*PROPOSAL_ACTION_DOC),
+            (deprecated::PROPOSAL_DOCUMENT_UUID_TYPE, &*PROPOSAL),
+            (deprecated::COMMENT_DOCUMENT_UUID_TYPE, &*PROPOSAL_COMMENT),
+            (
+                deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+                &*PROPOSAL_SUBMISSION_ACTION,
+            ),
         ];
         for (uuid, expected) in special_cases {
             match DocType::try_from(uuid) {
@@ -478,18 +480,18 @@ mod tests {
     #[test]
     fn test_doctype_equal_special_cases() {
         // Direct equal
-        let uuid = PROPOSAL_UUID_TYPE;
+        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE;
         let dt1 = DocType::try_from(vec![uuid]).unwrap();
         let dt2 = DocType::try_from(vec![uuid]).unwrap();
         assert_eq!(dt1, dt2);
 
         // single -> special mapped type
-        let single = DocType::try_from(PROPOSAL_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_DOC_TYPE);
-        let single = DocType::try_from(COMMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_COMMENT_DOC);
-        let single = DocType::try_from(ACTION_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_ACTION_DOC);
+        let single = DocType::try_from(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL);
+        let single = DocType::try_from(deprecated::COMMENT_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_COMMENT);
+        let single = DocType::try_from(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_SUBMISSION_ACTION);
     }
 
     #[test]
@@ -518,10 +520,10 @@ mod tests {
 
     #[test]
     fn test_deserialize_special_case() {
-        let uuid = PROPOSAL_UUID_TYPE.to_string();
+        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.to_string();
         let json = json!(uuid);
         let dt: DocType = serde_json::from_value(json).unwrap();
 
-        assert_eq!(dt, *PROPOSAL_DOC_TYPE);
+        assert_eq!(dt, *PROPOSAL);
     }
 }

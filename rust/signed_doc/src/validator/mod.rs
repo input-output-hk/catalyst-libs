@@ -23,7 +23,7 @@ use rules::{
 use crate::{
     doc_types::{
         deprecated::{self},
-        PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOC_TYPE,
+        PROPOSAL, PROPOSAL_COMMENT, PROPOSAL_SUBMISSION_ACTION,
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
@@ -136,9 +136,12 @@ fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
     let comment_rules = Arc::new(comment_document_rules);
     let action_rules = Arc::new(proposal_submission_action_rules);
 
-    document_rules_map.insert(PROPOSAL_DOC_TYPE.clone(), Arc::clone(&proposal_rules));
-    document_rules_map.insert(PROPOSAL_COMMENT_DOC.clone(), Arc::clone(&comment_rules));
-    document_rules_map.insert(PROPOSAL_ACTION_DOC.clone(), Arc::clone(&action_rules));
+    document_rules_map.insert(PROPOSAL.clone(), Arc::clone(&proposal_rules));
+    document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));
+    document_rules_map.insert(
+        PROPOSAL_SUBMISSION_ACTION.clone(),
+        Arc::clone(&action_rules),
+    );
 
     // Insert old rules (for backward compatibility)
     document_rules_map.insert(
