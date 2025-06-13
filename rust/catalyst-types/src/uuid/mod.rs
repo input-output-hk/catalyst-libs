@@ -15,8 +15,7 @@ use minicbor::data::Tag;
 pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
-#[allow(dead_code)]
-const UUID_CBOR_TAG: u64 = 37;
+pub const UUID_CBOR_TAG: u64 = 37;
 
 /// Uuid validation errors, which could occur during decoding or converting to
 /// `UuidV4` or `UuidV7` types.
@@ -29,6 +28,9 @@ pub enum UuidError {
     /// `UUIDv7` invalid error
     #[error("'{0}' is not a valid UUIDv7")]
     InvalidUuidV7(uuid::Uuid),
+    /// Invalid string conversion
+    #[error("Invalid string conversion: {0}")]
+    StringConversion(String),
 }
 
 /// Context for `CBOR` encoding and decoding

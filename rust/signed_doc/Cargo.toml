@@ -15,19 +15,20 @@ catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
 
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
-serde_json = "1.0.134"
+serde_json = { version = "1.0.134", features = ["raw_value"] }
 coset = "0.3.8"
 minicbor = { version = "0.25.1", features = ["half"] }
 brotli = "7.0.0"
 ed25519-dalek = { version = "2.1.1", features = ["rand_core", "pem"] }
 hex = "0.4.3"
-strum = { version = "0.26.3", features = ["derive"] }
+strum = { version = "0.27.1", features = ["derive"] }
 clap = { version = "4.5.23",  features = ["derive", "env"] }
 jsonschema = "0.28.3"
 jsonpath-rust = "0.7.5"
 futures = "0.3.31"
 ed25519-bip32 = "0.4.1" # used by the `mk_signed_doc` cli tool
-
+tracing = "0.1.40"
+thiserror = "2.0.11"
 
 [dev-dependencies]
 base64-url = "3.0.0"
