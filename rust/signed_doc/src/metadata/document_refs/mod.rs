@@ -193,9 +193,19 @@ impl TryFrom<DocumentRefs> for Value {
     }
 }
 
+impl TryFrom<&DocumentRefs> for Value {
+    type Error = DocRefError;
+
+    fn try_from(value: &DocumentRefs) -> Result<Self, Self::Error> {
+        value.clone().try_into()
+    }
+}
+
 impl<'de> Deserialize<'de> for DocumentRefs {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where
+        D: Deserializer<'de>,
+    {
         /// Old structure deserialize as map {id, ver}
         #[derive(Deserialize)]
         struct OldRef {
