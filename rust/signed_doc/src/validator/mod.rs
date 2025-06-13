@@ -22,11 +22,8 @@ use rules::{
 
 use crate::{
     doc_types::{
-        deprecated::{
-            CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE, PROPOSAL_TEMPLATE_UUID_TYPE,
-        },
-        COMMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC, PROPOSAL_DOC_TYPE,
-        PROPOSAL_UUID_TYPE,
+        BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
+        PROPOSAL_COMMENT_TEMPLATE, PROPOSAL_SUBMISSION_ACTION, PROPOSAL_TEMPLATE,
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
@@ -51,9 +48,18 @@ where
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
 fn document_rules_init() -> HashMap<DocType, Rules> {
+    // Parameter can be either brand, campaign or category
+    let parameters = vec![
+        BRAND_PARAMETERS.clone(),
+        CAMPAIGN_PARAMETERS.clone(),
+        CATEGORY_PARAMETERS.clone(),
+    ];
+
     let mut document_rules_map = HashMap::new();
 
-    let proposal_document_rules = Rules {
+    // Proposal
+    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal/>
+    let proposal_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -62,11 +68,11 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_doc_type(PROPOSAL_TEMPLATE_UUID_TYPE),
+            exp_template_type: PROPOSAL_TEMPLATE.clone(),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_doc_type(CATEGORY_DOCUMENT_UUID_TYPE),
-            optional: true,
+            exp_parameters_type: parameters.clone(),
+            optional: false,
         },
         doc_ref: RefRule::NotSpecified,
         reply: ReplyRule::NotSpecified,
@@ -76,9 +82,11 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         },
     };
 
-    document_rules_map.insert(PROPOSAL_DOC_TYPE.clone(), proposal_document_rules);
+    document_rules_map.insert(PROPOSAL.clone(), proposal_rules);
 
-    let comment_document_rules = Rules {
+    // Proposal Comment
+    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment_template/>
+    let proposal_comment_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -87,33 +95,40 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_doc_type(COMMENT_TEMPLATE_UUID_TYPE),
+            exp_template_type: PROPOSAL_COMMENT_TEMPLATE.clone(),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
+            exp_ref_type: PROPOSAL.clone(),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: expect_doc_type(COMMENT_UUID_TYPE),
+            exp_reply_type: PROPOSAL_COMMENT.clone(),
             optional: true,
         },
-        section: SectionRule::Specified { optional: true },
-        parameters: ParametersRule::NotSpecified,
+        // FIXME: section ref? optional
+        section: SectionRule::NotSpecified,
+        parameters: ParametersRule::Specified {
+            exp_parameters_type: parameters.clone(),
+            optional: false,
+        },
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
     };
-    document_rules_map.insert(PROPOSAL_COMMENT_DOC.clone(), comment_document_rules);
+    document_rules_map.insert(PROPOSAL_COMMENT.clone(), proposal_comment_rules);
 
     let proposal_action_json_schema = jsonschema::options()
-        .with_draft(jsonschema::Draft::Draft7)
-        .build(
-            &serde_json::from_str(include_str!(
-                "./../../../../specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
-            ))
-            .expect("Must be a valid json file"),
-        )
-        .expect("Must be a valid json scheme file");
+    .with_draft(jsonschema::Draft::Draft7)
+    .build(
+        &serde_json::from_str(include_str!(
+            "./../../../../specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
+        ))
+        .expect("Must be a valid json file"),
+    )
+    .expect("Must be a valid json scheme file");
+
+    // Proposal Submission Action
+    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
     let proposal_submission_action_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
@@ -124,11 +139,11 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_doc_type(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: parameters,
             optional: true,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_doc_type(PROPOSAL_UUID_TYPE),
+            exp_ref_type: PROPOSAL.clone(),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
@@ -139,7 +154,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
     };
 
     document_rules_map.insert(
-        PROPOSAL_ACTION_DOC.clone(),
+        PROPOSAL_SUBMISSION_ACTION.clone(),
         proposal_submission_action_rules,
     );
 

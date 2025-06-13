@@ -12,7 +12,7 @@ pub(crate) enum ParametersRule {
     /// Is `parameters` specified
     Specified {
         /// expected `type` field of the parameter doc
-        exp_parameters_type: DocType,
+        exp_parameters_type: Vec<DocType>,
         /// optional flag for the `parameters` field
         optional: bool,
     },
@@ -33,12 +33,10 @@ impl ParametersRule {
         {
             if let Some(parameters) = doc.doc_meta().parameters() {
                 let parameters_validator = |replied_doc: CatalystSignedDocument| {
-                    referenced_doc_check(
-                        &replied_doc,
-                        exp_parameters_type,
-                        "parameters",
-                        doc.report(),
-                    )
+                    // For "parameters", it should be one of these types
+                    exp_parameters_type.iter().any(|exp_type| {
+                        referenced_doc_check(&replied_doc, exp_type, "parameters", doc.report())
+                    })
                 };
                 return validate_provided_doc(
                     &parameters,
@@ -79,7 +77,8 @@ mod tests {
     async fn ref_rule_specified_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        let exp_parameters_type = UuidV4::new();
+        // Parameter types can contains multiple, but should match one of it.
+        let exp_parameters_type: Vec<DocType> = vec![vec![UuidV4::new()].try_into().unwrap()];
 
         let valid_category_doc_id = UuidV7::new();
         let valid_category_doc_ver = UuidV7::new();
@@ -90,11 +89,16 @@ mod tests {
 
         // prepare replied documents
         {
+            let exp_parameters_type_str: Vec<String> = exp_parameters_type
+                .iter()
+                .map(|dt| dt.to_string())
+                .collect();
+
             let ref_doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_category_doc_id.to_string(),
                     "ver": valid_category_doc_ver.to_string(),
-                    "type": exp_parameters_type.to_string()
+                    "type": exp_parameters_type_str,
                 }))
                 .unwrap()
                 .build();
@@ -124,7 +128,7 @@ mod tests {
 
         // all correct
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameters_type.into(),
+            exp_parameters_type: exp_parameters_type.clone().into(),
             optional: false,
         };
         let doc = Builder::new()
@@ -137,7 +141,7 @@ mod tests {
 
         // all correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameters_type.into(),
+            exp_parameters_type: exp_parameters_type.clone().into(),
             optional: true,
         };
         let doc = Builder::new().build();

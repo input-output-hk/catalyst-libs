@@ -16,17 +16,20 @@ pub(crate) mod utils;
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
+use coset::{cbor::Value, iana::CoapContentFormat};
 pub use doc_type::DocType;
-pub use document_refs::{DocLocator, DocumentRef, DocumentRefs};
-use minicbor::{Decode, Decoder};
+pub use document_refs::{DocLocator, DocumentRefs};
+use minicbor::Decoder;
 pub use section::Section;
 use strum::IntoDiscriminant as _;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
 
 use crate::{
     decode_context::DecodeContext,
-    metadata::supported_field::{SupportedField, SupportedLabel},
+    metadata::{
+        supported_field::{SupportedField, SupportedLabel},
+        utils::decode_cose_protected_header_value,
+    },
 };
 
 /// `content_encoding` field COSE key value
@@ -83,13 +86,13 @@ pub(crate) struct InnerMetadata {
     content_encoding: Option<ContentEncoding>,
     /// Reference to the latest document.
     #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
-    doc_ref: Option<DocumentRef>,
+    doc_ref: Option<DocumentRefs>,
     /// Reference to the document template.
     #[serde(skip_serializing_if = "Option::is_none")]
-    template: Option<DocumentRef>,
+    template: Option<DocumentRefs>,
     /// Reference to the document reply.
     #[serde(skip_serializing_if = "Option::is_none")]
-    reply: Option<DocumentRef>,
+    reply: Option<DocumentRefs>,
     /// Reference to the document section.
     #[serde(skip_serializing_if = "Option::is_none")]
     section: Option<Section>,
@@ -98,7 +101,7 @@ pub(crate) struct InnerMetadata {
     collabs: Vec<String>,
     /// Reference to the parameters document.
     #[serde(skip_serializing_if = "Option::is_none")]
-    parameters: Option<DocumentRef>,
+    parameters: Option<DocumentRefs>,
 }
 
 impl InnerMetadata {
@@ -181,29 +184,26 @@ impl Metadata {
 
     /// Return `ref` field.
     #[must_use]
-    pub fn doc_ref(&self) -> Option<DocumentRef> {
+    pub fn doc_ref(&self) -> Option<&DocumentRefs> {
         self.0
             .get(&SupportedLabel::Ref)
             .and_then(SupportedField::try_as_ref_ref)
-            .copied()
     }
 
     /// Return `template` field.
     #[must_use]
-    pub fn template(&self) -> Option<DocumentRef> {
+    pub fn template(&self) -> Option<&DocumentRefs> {
         self.0
             .get(&SupportedLabel::Template)
             .and_then(SupportedField::try_as_template_ref)
-            .copied()
     }
 
     /// Return `reply` field.
     #[must_use]
-    pub fn reply(&self) -> Option<DocumentRef> {
+    pub fn reply(&self) -> Option<&DocumentRefs> {
         self.0
             .get(&SupportedLabel::Reply)
             .and_then(SupportedField::try_as_reply_ref)
-            .copied()
     }
 
     /// Return `section` field.
@@ -225,11 +225,10 @@ impl Metadata {
 
     /// Return `parameters` field.
     #[must_use]
-    pub fn parameters(&self) -> Option<DocumentRef> {
+    pub fn parameters(&self) -> Option<&DocumentRefs> {
         self.0
             .get(&SupportedLabel::Parameters)
             .and_then(SupportedField::try_as_parameters_ref)
-            .copied()
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
@@ -315,18 +314,6 @@ impl InnerMetadata {
             }
         }
 
-        metadata.doc_type = cose_protected_header_find(
-            protected,
-            |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(TYPE_KEY)),
-        )
-        .and_then(|value| {
-            DocType::decode(
-                &mut Decoder::new(&value.clone().to_vec().unwrap_or_default()),
-                context,
-            )
-            .ok()
-        });
-
         metadata.id = decode_document_field_from_protected_header::<CborUuidV7>(
             protected,
             ID_KEY,
@@ -343,24 +330,12 @@ impl InnerMetadata {
         )
         .map(|v| v.0);
 
-        metadata.doc_ref = decode_document_field_from_protected_header(
-            protected,
-            REF_KEY,
-            COSE_DECODING_CONTEXT,
-            context.report,
-        );
-        metadata.template = decode_document_field_from_protected_header(
-            protected,
-            TEMPLATE_KEY,
-            COSE_DECODING_CONTEXT,
-            context.report,
-        );
-        metadata.reply = decode_document_field_from_protected_header(
-            protected,
-            REPLY_KEY,
-            COSE_DECODING_CONTEXT,
-            context.report,
-        );
+        // DocType and DocRef now using cbor decoding.
+        metadata.doc_type = decode_cose_protected_header_value(&protected, context, TYPE_KEY);
+        metadata.doc_ref = decode_cose_protected_header_value(&protected, context, REF_KEY);
+        metadata.template = decode_cose_protected_header_value(&protected, context, TEMPLATE_KEY);
+        metadata.reply = decode_cose_protected_header_value(&protected, context, REPLY_KEY);
+
         metadata.section = decode_document_field_from_protected_header(
             protected,
             SECTION_KEY,
@@ -376,20 +351,15 @@ impl InnerMetadata {
             CATEGORY_ID_KEY,
         ]
         .iter()
-        .filter_map(|field_name| -> Option<DocumentRef> {
-            decode_document_field_from_protected_header(
-                protected,
-                field_name,
-                COSE_DECODING_CONTEXT,
-                context.report,
-            )
+        .filter_map(|field_name| -> Option<DocumentRefs> {
+            return decode_cose_protected_header_value(&protected, context, field_name);
         })
         .fold((None, false), |(res, _), v| (Some(v), res.is_some()));
         if has_multiple_fields {
             context.report.duplicate_field(
-                    "brand_id, campaign_id, category_id", 
-                    "Only value at the same time is allowed parameters, brand_id, campaign_id, category_id", 
-                    "Validation of parameters field aliases"
+                    "Parameters field", 
+                    "Only one parameter can be used at a time: either brand_id, campaign_id, category_id", 
+                    COSE_DECODING_CONTEXT
                 );
         }
         metadata.parameters = parameters;
