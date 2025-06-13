@@ -175,9 +175,16 @@ impl Inner {
                     #[allow(clippy::single_match_else)]
                     match e.kind() {
                         ErrorKind::StorageFull => {
-                            error!("Storage full");
+                            error!(
+                                chain = %self.cfg.chain,
+                                error = %e,
+                                "Storage full while extracting file {rel_file:?} with size {entry_size}"
+                            );
                         },
-                        _ => error!("Unhandled I/O error kind: {}", e.kind()),
+                        _ => error!(
+                            chain = %self.cfg.chain,
+                            error = %e,
+                            "Unhandled I/O error kind: {}", e.kind()),
                     }
                 })?;
                 debug!(chain = %self.cfg.chain, "DeDup: Extracted file {rel_file:?}:{entry_size}");
