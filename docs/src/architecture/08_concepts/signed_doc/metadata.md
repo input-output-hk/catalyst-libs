@@ -348,7 +348,7 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-05 |
+| Modified | 2025-05-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

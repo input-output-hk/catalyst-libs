@@ -1,5 +1,5 @@
 {
-  // Recommended `settings.json` configuration
+  "$comment": "Recommended `settings.json` configuration",
   "editor.formatOnSave": true,
   "editor.codeActionsOnSave": {
     "source.organizeImports": true,
@@ -37,12 +37,20 @@
     "rust",
     "rust/c509-certificate",
     "rust/cardano-chain-follower",
+    "rust/catalyst-types",
     "rust/catalyst-voting",
+    "rust/immutable-ledger",
+    "rust/vote-tx-v1",
+    "rust/vote-tx-v2",
+    "rust/signed-doc",
     "rust/cbork",
     "rust/hermes-ipfs",
+    "rust/rbac-registration",
+    "rust/cardano-blockchain-types",
     "dart",
     "docs",
-    "general"
+    "general",
+    "deps"
   ],
   "conventionalCommits.gitmoji": false,
   "markdown.extension.toc.unorderedList.marker": "*",
