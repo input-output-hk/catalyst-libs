@@ -24,7 +24,9 @@ pub use catalyst_types::{
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
-pub use metadata::{ContentEncoding, ContentType, DocType, DocumentRef, Metadata, Section};
+pub use metadata::{
+    ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, Metadata, Section,
+};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
