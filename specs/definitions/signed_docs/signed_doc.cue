@@ -7,7 +7,7 @@ import (
 	"list"
 	"strings"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:uuid"
-	"github.com/input-output-hk/catalyst-libs/specs/template_field_definitions/fields:template_field_definitions"
+	"github.com/input-output-hk/catalyst-libs/specs/form_template/fields:form_template"
 )
 
 // Document Type must be a valid UUIDv4
@@ -118,4 +118,4 @@ _allDocNames: or(_allDocNamesList)
 // Individual Valid Document Name constraint.
 #DocumentName: _allDocNames
 
-templateJsonSchemaDefs: template_field_definitions.dictionary
+formTemplate: form_template.dictionary

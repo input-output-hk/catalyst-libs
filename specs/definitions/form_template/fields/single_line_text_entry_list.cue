@@ -1,19 +1,21 @@
 // Single Line Text Entry List
 
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
-	multiLineTextEntryListMarkdown: {
+dictionary: #formTemplate & {
+	singleLineTextEntryList: {
 		description: """
-			UI - A Growable List of markdown formatted text fields.
-			Each entry is a multiline markdown formatted string.
-			Markdown Formatting, line breaks, or special characters are allowed.
-			Add multiple text entries.
+			UI - A Growable List of single line text
+			A single line of text.
+			No formatting, markup, line breaks, or special characters are allowed.
+			Add multiple single-line text entries.
 			Each entry should be unique.
 			"""
+		parent: "section"
+
 		definition: {
 			type:  "array"
-			items: dictionary.multiLineTextEntryMarkdown.definition
+			items: dictionary.singleLineTextEntry.definition
 			items: minLength: 1
 			uniqueItems: true
 		}

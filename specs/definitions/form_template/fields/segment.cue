@@ -3,9 +3,9 @@
 // Segment -
 //   Section -
 //     Topic -
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	segment: {
 		description: """
 			Logical Document Section - Grouping Only - Highest Level Group

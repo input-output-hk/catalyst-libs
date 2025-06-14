@@ -1,7 +1,7 @@
 // List of all valid ICON choices.
 // The UI is free to render Icons or not and render them in its own style.
 // However, Icons not listed here are not supported.
-package template_field_definitions
+package form_template
 
 import (
 	"list"

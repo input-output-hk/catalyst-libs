@@ -1,8 +1,8 @@
 // Radio Button selection from a list of text options.
 
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	multiSelect: {
 		description: """
 			UI - Multiselect from the given items.
@@ -11,6 +11,8 @@ dictionary: #jsonSchemaFields & {
 			Multiple choices are allowed.
 			All choices MUST be unique.
 			"""
+		parent: "section"
+
 		definition: {
 			type:        "array"
 			uniqueItems: true

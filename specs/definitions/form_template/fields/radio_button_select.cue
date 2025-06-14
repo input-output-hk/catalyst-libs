@@ -1,8 +1,8 @@
 // Radio Button selection from a list of text options.
 
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	radioButtonSelect: {
 		description: """
 			UI - Radio Button Selection.
@@ -10,9 +10,10 @@ dictionary: #jsonSchemaFields & {
 			Select one option from a list of text options.
 			Selector is styled as a set of Radio Buttons.
 			"""
+		parent: "section"
+
 		definition: {
 			type:             "string"
-			format:           "radioButtonSelect"
 			contentMediaType: "text/plain"
 			pattern:          _regexTextSingleLine
 		}

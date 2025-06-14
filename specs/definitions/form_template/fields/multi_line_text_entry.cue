@@ -1,7 +1,7 @@
 // Single Line Text Entry
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	multiLineTextEntry: {
 		description: """
 			UI - One or more Lines of text entry.
@@ -9,6 +9,8 @@ dictionary: #jsonSchemaFields & {
 			Special formatted markup, such as Markdown are not allowed.
 			Enter multiple lines of plain text. You can use line breaks but no special formatting.
 			"""
+		parent: "section"
+
 		definition: {
 			type:             "string"
 			contentMediaType: "text/plain"

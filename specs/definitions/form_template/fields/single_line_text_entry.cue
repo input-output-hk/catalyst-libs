@@ -1,17 +1,18 @@
 // Single Line Text Entry
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	singleLineTextEntry: {
 		description: """
 			UI - Single Line text entry without any markup or rich text capability.
 			A single line of text.
 			No formatting, markup, line breaks, or special characters are allowed.
 			"""
+		parent: "section"
+
 		definition: {
-			type:             "string"
-			contentMediaType: "text/plain"
-			pattern:          _regexTextSingleLine
+			type:    "string"
+			pattern: _regexTextSingleLine
 		}
 		parameters: {
 			title: {}
