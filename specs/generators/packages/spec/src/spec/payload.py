@@ -65,6 +65,8 @@ class Payload(BaseModel):
         if isinstance(self.doc_schema, HttpUrl):
             if f"{self.doc_schema}" == "https://json-schema.org/draft-07/schema":
                 schema = jsonschema.Draft7Validator.META_SCHEMA
+            elif f"{self.doc_schema}" == "https://json-schema.org/draft/2020-12/schema":
+                schema = jsonschema.Draft202012Validator.META_SCHEMA
             else:
                 rich.print(f"Downloading Schema from: {self.doc_schema}")
                 with urllib.request.urlopen(f"{self.doc_schema}") as response:  # noqa: S310
@@ -73,9 +75,15 @@ class Payload(BaseModel):
             schema = self.doc_schema
 
         if schema is not None:
-            # Check that its valid jsonschema Draft 7.
-            jsonschema.Draft7Validator.check_schema(schema)
-            validator = jsonschema.Draft7Validator(schema, format_checker=jsonschema.draft7_format_checker)
+            # Check that its valid jsonschema Draft 7 or 202012.
+            try:
+                jsonschema.Draft7Validator.check_schema(schema)
+                validator = jsonschema.Draft7Validator(schema, format_checker=jsonschema.draft7_format_checker)
+            except:  # noqa: E722
+                jsonschema.Draft202012Validator.check_schema(schema)
+                validator = jsonschema.Draft202012Validator(
+                    schema, format_checker=jsonschema.draft202012_format_checker
+                )
 
         for example in self.examples:
             if validator is None:

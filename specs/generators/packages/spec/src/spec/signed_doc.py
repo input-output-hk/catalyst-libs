@@ -9,7 +9,7 @@ import typing
 from enum import Enum
 from pathlib import Path
 
-from pydantic import BaseModel, ConfigDict, Field, HttpUrl
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, PrivateAttr
 
 from spec.cddl_definitions import CDDLDefinition
 from spec.change_log_entry import ChangeLogEntry
@@ -18,7 +18,7 @@ from spec.copyright import Copyright
 from spec.cose_header import CoseHeader
 from spec.doc_clusters import DocCluster
 from spec.document import Document
-from spec.json_schema_defs import JsonSchemaDefs
+from spec.forms.template import FormTemplate
 from spec.metadata import Metadata
 from spec.metadata_formats import MetadataFormats
 from spec.optional import OptionalField
@@ -71,10 +71,10 @@ class SignedDoc(BaseModel):
     metadata: dict[str, Metadata]
     metadata_formats: dict[str, MetadataFormats] = Field(alias="metadataFormats")
     metadata_order: list[str]
-    template_json_schema_defs: dict[str, JsonSchemaDefs] = Field(alias="templateJsonSchemaDefs")
+    form_template: FormTemplate = Field(alias="formTemplate")
 
-    _data: dict[str, typing.Any]
-    _file: str
+    _data: dict[str, typing.Any] = PrivateAttr(default_factory=dict[str, typing.Any])
+    _file: str = PrivateAttr(default="Uninitialized")
 
     model_config = ConfigDict(extra="forbid")
 
@@ -82,10 +82,11 @@ class SignedDoc(BaseModel):
     def load(cls, spec_file: str) -> typing.Self:
         """Initialize the Signed Document Specification."""
         with Path(spec_file).open("r") as f:
-            data: dict[str, typing.Any] = json.load(f)
-            doc = cls(**data)
-            doc._data = data
-            doc._file = spec_file
+            raw_json = f.read()
+            doc = cls.model_validate_json(raw_json, strict=True)
+            data: dict[str, typing.Any] = json.loads(raw_json)
+            doc._data = data  # noqa: SLF001
+            doc._file = spec_file  # noqa: SLF001
             return doc
 
     def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
