@@ -1,5 +1,5 @@
 // Choices that can be made for a string field.
-package template_field_definitions
+package form_template
 
 import (
 	"list"
@@ -10,9 +10,6 @@ _allFormats: list.UniqueItems
 _allFormats: list.Sort([
 	"uri",
 	"path",
-	"radioButtonSelect",
-	"dropDownSingleSelect",
-	"multiSelect",
 ], list.Ascending)
 
 #formatChoices: or(_allFormats)
@@ -21,7 +18,11 @@ _allFormats: list.Sort([
 _allContentMediaTypes: list.UniqueItems
 _allContentMediaTypes: list.Sort([
 	"text/plain",
+	"text/plain; template=mustache",
 	"text/markdown",
+	"text/markdown; template=mustache",
+	"text/html",
+	"text/html; template=mustache",
 ], list.Ascending)
 
 #contentMediaTypeChoices: or(_allContentMediaTypes)

@@ -1,5 +1,5 @@
 // Regex patterns that are defined.
-package template_field_definitions
+package form_template
 
 _regexTextSingleLine: #"^.*$"#
 _regexTextMultiLine:  #"^[\S\s]*$"#

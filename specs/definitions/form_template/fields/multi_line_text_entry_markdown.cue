@@ -1,7 +1,7 @@
 // Single Line Text Entry
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	multiLineTextEntryMarkdown: {
 		description: """
 			UI - Multiline text entry with Markdown content.
@@ -17,6 +17,7 @@ dictionary: #jsonSchemaFields & {
 			contentMediaType: "text/markdown"
 			pattern:          _regexTextMultiLine
 		}
+		parent: "section"
 		parameters: {
 			title: {}
 			description: {}

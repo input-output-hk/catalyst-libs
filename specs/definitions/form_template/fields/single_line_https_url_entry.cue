@@ -1,7 +1,7 @@
 // Single Line HTTPS URL Text Entry
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	singleLineHttpsURLEntry: {
 		description: """
 			UI - Single Line text entry for HTTPS Urls.
@@ -10,6 +10,8 @@ dictionary: #jsonSchemaFields & {
 				non-whitespace characters, ending at the end of the string.
 				
 			"""
+		parent: "section"
+
 		definition: {
 			type:    "string"
 			format:  "uri"

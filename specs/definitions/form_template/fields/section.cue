@@ -3,9 +3,9 @@
 // Segment -
 //   Section -
 //     Topic -
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	section: {
 		description: """
 			UI - Logical Document Sub-Section Break.

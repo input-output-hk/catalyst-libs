@@ -1,9 +1,9 @@
 // Single Line Text Entry List
 
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
-	singleLineTextEntryList: {
+dictionary: #formTemplate & {
+	singleLineHttpsURLEntryList: {
 		description: """
 			UI - A Growable List of single line text
 			A single line of text.
@@ -11,9 +11,11 @@ dictionary: #jsonSchemaFields & {
 			Add multiple single-line text entries.
 			Each entry should be unique.
 			"""
+		parent: "section"
+
 		definition: {
 			type:  "array"
-			items: dictionary.singleLineTextEntry.definition
+			items: dictionary.singleLineHttpsURLEntry.definition
 			items: minLength: 1
 			uniqueItems: true
 		}
@@ -21,7 +23,7 @@ dictionary: #jsonSchemaFields & {
 			title: {}
 			description: {}
 			default: {
-				description: "Default Array of text can be supplied."
+				description: "Default Array of URLs can be supplied."
 				required:    "optional"
 			}
 			minItems: {}

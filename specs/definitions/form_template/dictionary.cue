@@ -4,17 +4,17 @@
 // and their parameters and documentation so that
 // a dictionary document and the definitions themselves
 // can be generated.
-package template_field_definitions
+package form_template
 
 // Types of a Metadata Fields
-#templateJsonSchemaDefNames: or([
+#formTemplateElementNames: or([
 	for k, _ in dictionary {k},
 ])
 
 // Definitions for all defined template schema field types.
-dictionary: #jsonSchemaFields & {}
+formTemplate: #formTemplate & {}
 
 // Types of a Metadata Fields
-#templateJsonSchemaDefNames: or([
+#formTemplateElementNames: or([
 	for k, _ in dictionary {k},
 ])

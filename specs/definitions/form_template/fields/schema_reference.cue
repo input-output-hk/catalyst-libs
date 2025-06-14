@@ -1,11 +1,13 @@
 // Schema Reference - Not used in any UI
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 	schemaReferenceNonUI: {
 		description: """
 			Enforces the json document having a proper reference to the schema.
 			"""
+		parent: "section"
+
 		definition: {
 			type:     "string"
 			readOnly: true

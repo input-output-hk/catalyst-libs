@@ -1,7 +1,7 @@
 // Tag Input
-package template_field_definitions
+package form_template
 
-dictionary: #jsonSchemaFields & {
+dictionary: #formTemplate & {
 
 	singleGroupedTagSelector: {
 		description: """
@@ -30,6 +30,8 @@ dictionary: #jsonSchemaFields & {
 				},
 			```
 			"""
+		parent: "section"
+
 		definition: {
 			type: "object"
 			required: [
