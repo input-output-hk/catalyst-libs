@@ -190,6 +190,7 @@ fn decode_map_entries(
 /// RFC 8949. In this case, it validates that the keys themselves must be
 /// deterministically encoded (4.2.1).
 fn map_keys_are_deterministic(key_bytes: &[u8]) -> Result<(), minicbor::decode::Error> {
+    // if the map keys are not a txt string or byte string we cannot get a declared length
     if let Some(key_declared_length) = get_declared_length(key_bytes)? {
         let header_size = get_cbor_header_size(key_bytes)?;
         let actual_content_size = key_bytes.len().checked_sub(header_size).ok_or_else(|| {
@@ -231,7 +232,7 @@ pub fn get_declared_length(bytes: &[u8]) -> Result<Option<usize>, minicbor::deco
 
     // Extract major type from high 3 bits of initial byte (RFC 8949 Section 3.1)
     match bytes.first().map(|&b| b >> 5) {
-        Some(7 | 0 | 1) => Ok(None),
+        Some(7 | 0 | 1 | 4 | 5 | 6) => Ok(None),
         Some(2) => {
             // Read length for byte string header
             let len = decoder.bytes()?;
@@ -242,28 +243,7 @@ pub fn get_declared_length(bytes: &[u8]) -> Result<Option<usize>, minicbor::deco
             let len = decoder.str()?;
             Ok(Some(len.len()))
         },
-        Some(4) => {
-            // Read array header length
-            let len = decoder.array()?;
-            Ok(Some(u64::try_into(len.unwrap_or(0)).map_err(|_| {
-                minicbor::decode::Error::message("Integer conversion error")
-            })?))
-        },
-        Some(5) => {
-            // Read map header length
-            // refers to how many key-value pairs there are
-            let len = decoder.map()?;
-            Ok(Some(u64::try_into(len.unwrap_or(0)).map_err(|_| {
-                minicbor::decode::Error::message("Integer conversion error")
-            })?))
-        },
-        Some(6) => {
-            decoder.tag()?;
-            let remaining = decoder.input().get(decoder.position()..).ok_or_else(|| {
-                minicbor::decode::Error::message("Invalid position in decoder input")
-            })?;
-            get_declared_length(remaining)
-        },
+
         _ => Err(minicbor::decode::Error::message("Invalid type")),
     }
 }
