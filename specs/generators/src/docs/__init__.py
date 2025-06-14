@@ -1,2 +1,2 @@
-# Intentionally Empty
 """Doc Generator Module."""
+# Intentionally Empty

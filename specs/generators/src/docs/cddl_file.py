@@ -4,8 +4,9 @@ import argparse
 import re
 import textwrap
 
-from gen.doc_generator import DocGenerator
 from spec.signed_doc import SignedDoc
+
+from .doc_generator import DocGenerator
 
 
 def add_cddl_comments(comment: str) -> tuple[str, bool]:

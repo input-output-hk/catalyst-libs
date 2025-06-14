@@ -8,12 +8,14 @@ from pathlib import Path
 import rich
 from rich_argparse import RichHelpFormatter
 
-from gen.docs_page_md import IndividualDocMd
-from gen.metadata_md import MetadataMd
-from gen.spec_index import SpecIndex
-from gen.spec_md import SpecMd
-from gen.types_md import TypesMd
 from spec.signed_doc import SignedDoc
+
+from .docs_page_md import IndividualDocMd
+from .metadata_md import MetadataMd
+from .spec_index import SpecIndex
+from .spec_md import SpecMd
+from .templates_md import TemplatesMd
+from .types_md import TypesMd
 
 
 def check_is_dir(base_path: Path) -> bool:
@@ -62,8 +64,10 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def main(args: argparse.Namespace) -> None:
+def main() -> None:
     """Generate Signed Document Specification documentation."""
+    args = parse_args()
+
     # Get the compiled documentation json file
     spec = SignedDoc.load(args.spec)
 
@@ -76,6 +80,7 @@ def main(args: argparse.Namespace) -> None:
     good &= TypesMd(args, spec).save_or_validate()
     good &= MetadataMd(args, spec).save_or_validate()
     good &= IndividualDocMd.save_or_validate_all(args, spec)
+    good &= TemplatesMd(args, spec).save_or_validate()
 
     if not good:
         rich.print("File Comparisons Failed, Documentation is not current.")
@@ -88,4 +93,4 @@ def main(args: argparse.Namespace) -> None:
 
 
 if __name__ == "__main__":
-    main(parse_args())
+    main()

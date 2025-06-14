@@ -13,6 +13,7 @@ dependencies = [
 
 [project.scripts]
 validator = "validator.main:main"
+docs = "docs.main:main"
 
 [tool.uv.workspace]
 members = [
@@ -25,11 +26,10 @@ spec = { workspace = true }
 [tool.ruff]
 # Extend the project wide `ruff.toml` file.
 # Done so we can add known libraries to sorting.
-extend = "ruff.toml"
+extend = "../../ruff.toml"
 
 [tool.ruff.lint.isort]
-known-third-party = ["pydantic", "pydot", "rich", "rich-argparse"]
-
+#known-third-party = ["pydantic", "pydot", "rich", "rich-argparse"]
 known-first-party = ["spec"]
 
 [build-system]
