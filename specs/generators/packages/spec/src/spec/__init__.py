@@ -1,2 +1,3 @@
-# Intentionally Empty
 """Spec Definition Module."""
+
+# Intentionally Empty File.
