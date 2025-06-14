@@ -187,7 +187,7 @@ fn decode_map_entries(
 }
 
 /// Validates that a CBOR map key follows the deterministic encoding rules as specified in
-/// RFC 8949. In this case it specifcially validates that the keys themselves must be
+/// RFC 8949. In this case, it validates that the keys themselves must be
 /// deterministically encoded (4.2.1).
 fn map_keys_are_deterministic(key_bytes: &[u8]) -> Result<(), minicbor::decode::Error> {
     if let Some(key_declared_length) = get_declared_length(key_bytes)? {
@@ -202,8 +202,6 @@ fn map_keys_are_deterministic(key_bytes: &[u8]) -> Result<(), minicbor::decode::
                     .to_string(),
             ));
         }
-    } else {
-        println!("Key has no declared length");
     }
     Ok(())
 }
@@ -406,9 +404,6 @@ fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicb
     match current.cmp(next) {
         Ordering::Less => Ok(()), // Valid: keys are in ascending order
         Ordering::Equal => {
-            // return Err(minicbor::decode::Error::message(
-            //     DeterministicError::DuplicateMapKey.into(),
-            // ))
             Err(minicbor::decode::Error::message(
                 DeterministicError::DuplicateMapKey,
             ))
