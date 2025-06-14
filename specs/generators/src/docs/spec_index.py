@@ -2,8 +2,9 @@
 
 import argparse
 
-from gen.doc_generator import DocGenerator
 from spec.signed_doc import SignedDoc
+
+from .doc_generator import DocGenerator
 
 
 class SpecIndex(DocGenerator):
@@ -21,6 +22,7 @@ nav:
   - Specification: spec.md
   - Metadata Fields: metadata.md
   - Document Types: types.md
+  - Document Templates: templates.md
   - docs
 """
         return super().generate()

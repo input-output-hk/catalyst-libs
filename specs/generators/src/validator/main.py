@@ -7,6 +7,7 @@ import rich
 from pydantic import ValidationError
 from rich.table import Table
 from rich_argparse import RichHelpFormatter
+
 from spec.signed_doc import SignedDoc
 
 

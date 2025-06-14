@@ -5,9 +5,10 @@ import argparse
 import rich
 from rich.console import Console
 
-from gen.cddl_file import CDDLFile
-from gen.doc_generator import DocGenerator
 from spec.signed_doc import SignedDoc
+
+from .cddl_file import CDDLFile
+from .doc_generator import DocGenerator
 
 console = Console()
 

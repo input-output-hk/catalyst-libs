@@ -3,11 +3,12 @@
 import argparse
 import textwrap
 
-from gen.doc_generator import DocGenerator
-from gen.graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, FontTheme, TableRow
 from spec.metadata import Metadata
 from spec.optional import OptionalField
 from spec.signed_doc import HeaderType, SignedDoc
+
+from .doc_generator import DocGenerator
+from .graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, FontTheme, TableRow
 
 
 class DocRelationshipFile(DocGenerator):

@@ -2,9 +2,10 @@
 
 import argparse
 
-from gen.doc_generator import DocGenerator
-from gen.doc_relationship_diagrams import DocRelationshipFile
 from spec.signed_doc import SignedDoc
+
+from .doc_generator import DocGenerator
+from .doc_relationship_diagrams import DocRelationshipFile
 
 
 class TypesMd(DocGenerator):
@@ -30,7 +31,7 @@ class TypesMd(DocGenerator):
             type_names += self.uuid_as_cbor(sub_type) + ",<br/>"
         return type_names[:-6] + "]"
 
-    def doc_type_summary(self) -> None:
+    def doc_type_summary(self) -> str:
         """Generate a Document Base Type Summary from the Document Specifications Data."""
         doc_types = self._spec.base_document_types()
 

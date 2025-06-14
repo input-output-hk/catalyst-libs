@@ -3,9 +3,10 @@
 import argparse
 import typing
 
-from gen.doc_generator import DocGenerator
-from gen.doc_relationship_diagrams import DocRelationshipFile
 from spec.signed_doc import SignedDoc
+
+from .doc_generator import DocGenerator
+from .doc_relationship_diagrams import DocRelationshipFile
 
 
 class IndividualDocMd(DocGenerator):
