@@ -1,0 +1,17 @@
+VERSION 0.8
+
+IMPORT github.com/input-output-hk/catalyst-ci/earthly/cddl:v3.4.0 AS cddl-ci
+
+check-cddl:
+    FROM cddl-ci+cddl-base
+
+    WORKDIR /cddl
+
+    COPY ./gen_vote_tx.cddl \
+         ./vote_tx_v2_public.cddl \
+         ./vote_tx_v2_private.cddl \
+        .
+
+    RUN cddlc -2 gen_vote_tx.cddl
+    RUN cddlc -2 vote_tx_v2_public.cddl
+    RUN cddlc -2 vote_tx_v2_private.cddl

@@ -1,0 +1,27 @@
+; document_ref
+
+
+; Reference to another Signed Document
+document_ref = [ 1* [
+  document_id,
+  document_ver,
+  document_locator
+] ]
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)
+
+; Document Version
+document_ver = uuid_v7
+
+; Where a document can be located, must be a unique identifier.
+document_locator = {
+  "cid" => cid
+}
+
+; IPLD content identifier
+; TODO: add size limits if possible
+cid = #6.42(bytes)
