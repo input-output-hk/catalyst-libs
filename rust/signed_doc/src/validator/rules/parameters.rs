@@ -73,7 +73,9 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{
+        metadata::SupportedField, providers::tests::TestCatalystSignedDocumentProvider, Builder,
+    };
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
@@ -91,33 +93,24 @@ mod tests {
         // prepare replied documents
         {
             let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": valid_category_doc_id.to_string(),
-                    "ver": valid_category_doc_ver.to_string(),
-                    "type": exp_parameters_type.to_string()
-                }))
-                .unwrap()
+                .with_field(SupportedField::Id(valid_category_doc_id))
+                .with_field(SupportedField::Ver(valid_category_doc_ver))
+                .with_field(SupportedField::Type(exp_parameters_type.into()))
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // reply doc with other `type` field
             let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": another_type_category_doc_id.to_string(),
-                    "ver": another_type_category_doc_ver.to_string(),
-                    "type": UuidV4::new().to_string()
-                }))
-                .unwrap()
+                .with_field(SupportedField::Id(another_type_category_doc_id))
+                .with_field(SupportedField::Ver(another_type_category_doc_ver))
+                .with_field(SupportedField::Type(UuidV4::new().into()))
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // missing `type` field in the referenced document
             let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": missing_type_category_doc_id.to_string(),
-                    "ver": missing_type_category_doc_ver.to_string(),
-                }))
-                .unwrap()
+                .with_field(SupportedField::Id(missing_type_category_doc_id))
+                .with_field(SupportedField::Ver(missing_type_category_doc_ver))
                 .build();
             provider.add_document(ref_doc).unwrap();
         }
@@ -128,10 +121,10 @@ mod tests {
             optional: false,
         };
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
+            .with_field(SupportedField::Parameters(crate::DocumentRef {
+                id: valid_category_doc_id,
+                ver: valid_category_doc_ver,
             }))
-            .unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
@@ -153,28 +146,28 @@ mod tests {
 
         // reference to the document with another `type` field
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
+            .with_field(SupportedField::Parameters(crate::DocumentRef {
+                id: another_type_category_doc_id,
+                ver: another_type_category_doc_ver,
             }))
-            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
+            .with_field(SupportedField::Parameters(crate::DocumentRef {
+                id: missing_type_category_doc_id,
+                ver: missing_type_category_doc_ver,
             }))
-            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
+            .with_field(SupportedField::Parameters(crate::DocumentRef {
+                id: UuidV7::new(),
+                ver: UuidV7::new(),
             }))
-            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
@@ -190,8 +183,10 @@ mod tests {
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"parameters": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
-            .unwrap()
+            .with_field(SupportedField::Parameters(crate::DocumentRef {
+                id: ref_id,
+                ver: ref_ver,
+            }))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }

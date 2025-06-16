@@ -358,6 +358,7 @@ mod tests {
     use uuid::{Timestamp, Uuid};
 
     use crate::{
+        metadata::SupportedField,
         providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
         validator::{document_rules_init, validate_id_and_ver},
         Builder, UuidV7,
@@ -373,25 +374,23 @@ mod tests {
 
         let uuid_v7 = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": uuid_v7.to_string(),
-                "ver": uuid_v7.to_string()
-            }))
-            .unwrap()
+            .with_field(SupportedField::Id(uuid_v7))
+            .with_field(SupportedField::Ver(uuid_v7))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
         assert!(is_valid);
 
-        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0));
-        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0));
+        let ver = Uuid::new_v7(Timestamp::from_unix_time(now - 1, 0, 0, 0))
+            .try_into()
+            .unwrap();
+        let id = Uuid::new_v7(Timestamp::from_unix_time(now + 1, 0, 0, 0))
+            .try_into()
+            .unwrap();
         assert!(ver < id);
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": id.to_string(),
-                "ver": ver.to_string()
-            }))
-            .unwrap()
+            .with_field(SupportedField::Id(id))
+            .with_field(SupportedField::Ver(ver))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
@@ -402,13 +401,12 @@ mod tests {
             0,
             0,
             0,
-        ));
+        ))
+        .try_into()
+        .unwrap();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": to_far_in_past.to_string(),
-                "ver": to_far_in_past.to_string()
-            }))
-            .unwrap()
+            .with_field(SupportedField::Id(to_far_in_past))
+            .with_field(SupportedField::Ver(to_far_in_past))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();
@@ -419,13 +417,12 @@ mod tests {
             0,
             0,
             0,
-        ));
+        ))
+        .try_into()
+        .unwrap();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "id": to_far_in_future.to_string(),
-                "ver": to_far_in_future.to_string()
-            }))
-            .unwrap()
+            .with_field(SupportedField::Id(to_far_in_future))
+            .with_field(SupportedField::Ver(to_far_in_future))
             .build();
 
         let is_valid = validate_id_and_ver(&doc, &provider).unwrap();

@@ -47,7 +47,7 @@ mod tests {
     use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
-    use crate::{Builder, ContentType};
+    use crate::{metadata::SupportedField, Builder, ContentType};
 
     #[tokio::test]
     async fn signature_kid_rule_test() {
@@ -60,14 +60,11 @@ mod tests {
         let kid = CatalystId::new("cardano", None, pk).with_role(RoleId::Role0);
 
         let doc = Builder::new()
+            .with_field(SupportedField::Id(UuidV7::new()))
+            .with_field(SupportedField::Ver(UuidV7::new()))
+            .with_field(SupportedField::Type(UuidV4::new().into()))
+            .with_field(SupportedField::ContentType(ContentType::Json))
             .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
-            .with_json_metadata(serde_json::json!({
-                "type": UuidV4::new().to_string(),
-                "id": UuidV7::new().to_string(),
-                "ver": UuidV7::new().to_string(),
-                "content-type": ContentType::Json.to_string(),
-            }))
-            .unwrap()
             .add_signature(|m| sk.sign(&m).to_vec(), kid)
             .unwrap()
             .build();
