@@ -3,7 +3,6 @@
 # Autogenerate Documentation Pages from the formal specification
 
 import datetime
-import json
 import typing
 from pathlib import Path
 
@@ -41,7 +40,6 @@ class SignedDoc(BaseModel):
     metadata: Metadata
     form_template: FormTemplate = Field(alias="formTemplate")
 
-    _data: dict[str, typing.Any] = PrivateAttr(default_factory=dict[str, typing.Any])
     _file: str = PrivateAttr(default="Uninitialized")
 
     model_config = ConfigDict(extra="forbid")
@@ -52,8 +50,6 @@ class SignedDoc(BaseModel):
         with Path(spec_file).open("r") as f:
             raw_json = f.read()
             doc = cls.model_validate_json(raw_json, strict=True)
-            data: dict[str, typing.Any] = json.loads(raw_json)
-            doc._data = data  # noqa: SLF001
             doc._file = spec_file  # noqa: SLF001
             return doc
 
@@ -88,10 +84,6 @@ class SignedDoc(BaseModel):
                 ),
             ]
         )
-
-    def data(self) -> dict[str, typing.Any]:
-        """Return the raw spec data."""
-        return self._data
 
     def get_copyright(
         self,

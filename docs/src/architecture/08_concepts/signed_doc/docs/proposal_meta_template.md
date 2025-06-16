@@ -126,7 +126,7 @@ Must be a valid according to <https://json-schema.org/draft-07/schema>.
 
 ## Signers
 
-The following admin roles may sign documents of this type:
+The following Admin roles may sign documents of this type:
 
 * Root Admin
 * Brand Admin

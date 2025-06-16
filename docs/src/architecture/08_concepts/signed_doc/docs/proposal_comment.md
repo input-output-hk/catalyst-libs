@@ -247,7 +247,7 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Signers
 
-The following user roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
 * Registered
 
