@@ -451,13 +451,7 @@ impl Display for Metadata {
     }
 }
 
-/// [`Metadata`] encoding context for the [`minicbor::Encode`] implementation.
-pub(crate) struct MetadataEncodeContext {
-    /// Used by some fields' encoding implementations.
-    pub uuid_context: catalyst_types::uuid::CborContext,
-}
-
-impl minicbor::Encode<MetadataEncodeContext> for Metadata {
+impl minicbor::Encode<()> for Metadata {
     /// Encode as a CBOR map.
     ///
     /// Note that to put it in an [RFC 8152] protected header.
@@ -472,33 +466,13 @@ impl minicbor::Encode<MetadataEncodeContext> for Metadata {
         reason = "There can't be enough unique fields to overflow `u64`."
     )]
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut MetadataEncodeContext,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(self.0.len() as u64)?;
         self.0
             .values()
             .try_fold(e, |e, field| e.encode_with(field, ctx))?
             .ok()
-    }
-}
-
-/// [`Metadata`] decoding context for the [`minicbor::Decode`] implementation.
-pub(crate) struct MetadataDecodeContext {
-    /// Used by some fields' decoding implementations.
-    pub uuid_context: catalyst_types::uuid::CborContext,
-    /// Used by some fields' decoding implementations.
-    pub compatibility_policy: crate::CompatibilityPolicy,
-    /// Used by some fields' decoding implementations.
-    pub report: ProblemReport,
-}
-
-impl MetadataDecodeContext {
-    /// [`DocType`] decoding context.
-    fn doc_type_context(&mut self) -> crate::decode_context::DecodeContext {
-        crate::decode_context::DecodeContext {
-            compatibility_policy: self.compatibility_policy,
-            report: &mut self.report,
-        }
     }
 }
 
@@ -523,7 +497,7 @@ fn custom_transient_decode_error(
     minicbor::decode::Error::custom(TransientDecodeError(inner))
 }
 
-impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata {
     /// Decode from a CBOR map.
     ///
     /// Note that this won't decode an [RFC 8152] protected header as is.
@@ -534,7 +508,7 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
     fn decode(
-        d: &mut Decoder<'_>, ctx: &mut MetadataDecodeContext,
+        d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata decoding";
 

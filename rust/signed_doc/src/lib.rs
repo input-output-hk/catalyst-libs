@@ -24,7 +24,6 @@ pub use catalyst_types::{
 pub use content::Content;
 use coset::{CborSerializable, CoseSignature, Header, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
-use metadata::MetadataEncodeContext;
 pub use metadata::{ContentEncoding, ContentType, DocType, DocumentRef, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
@@ -212,13 +211,8 @@ impl InnerCatalystSignedDocument {
                 })?;
             Ok(cose_sign)
         } else {
-            let mut e = minicbor::Encoder::new(Vec::new());
-            self.metadata
-                .encode(&mut e, &mut MetadataEncodeContext {
-                    uuid_context: catalyst_types::uuid::CborContext::Tagged,
-                })
-                .context("Failed to encode Document Metadata")?;
-            let protected_header_bytes = e.into_writer();
+            let protected_header_bytes =
+                minicbor::to_vec(&self.metadata).context("Failed to encode Document Metadata")?;
             let protected_header = Header::from_slice(protected_header_bytes.as_slice())
                 .map_err(|e| anyhow::anyhow!("{e} Failed to encode Document Metadata"))?;
 

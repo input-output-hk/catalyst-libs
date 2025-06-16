@@ -8,8 +8,8 @@ use catalyst_types::uuid::UuidV7;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
-    metadata::{custom_transient_decode_error, MetadataDecodeContext, MetadataEncodeContext},
-    ContentEncoding, ContentType, DocType, DocumentRef, Section,
+    metadata::custom_transient_decode_error, ContentEncoding, ContentType, DocType, DocumentRef,
+    Section,
 };
 
 /// COSE label. May be either a signed integer or a string.
@@ -166,10 +166,10 @@ impl Display for SupportedLabel {
     }
 }
 
-impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for SupportedField {
     #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut MetadataDecodeContext,
+        d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
 
@@ -195,10 +195,16 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
-            SupportedLabel::Id => d.decode_with(&mut ctx.uuid_context).map(Self::Id),
+            SupportedLabel::Id => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Id)
+            },
             SupportedLabel::Ref => todo!(),
-            SupportedLabel::Ver => d.decode_with(&mut ctx.uuid_context).map(Self::Ver),
-            SupportedLabel::Type => d.decode_with(&mut ctx.doc_type_context()).map(Self::Type),
+            SupportedLabel::Ver => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Ver)
+            },
+            SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
             SupportedLabel::Reply => todo!(),
             SupportedLabel::Collabs => todo!(),
             SupportedLabel::Section => todo!(),
@@ -211,10 +217,10 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
     }
 }
 
-impl minicbor::Encode<MetadataEncodeContext> for SupportedField {
+impl minicbor::Encode<()> for SupportedField {
     #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut MetadataEncodeContext,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let key = self.discriminant().to_cose();
         e.encode(key)?;
@@ -222,7 +228,7 @@ impl minicbor::Encode<MetadataEncodeContext> for SupportedField {
         match self {
             SupportedField::ContentType(_content_type) => todo!(),
             SupportedField::Id(uuid_v7) | SupportedField::Ver(uuid_v7) => {
-                e.encode_with(uuid_v7, &mut ctx.uuid_context)?
+                e.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?
             },
             SupportedField::Ref(_document_ref)
             | SupportedField::Reply(_document_ref)
