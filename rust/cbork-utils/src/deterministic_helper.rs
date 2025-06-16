@@ -907,4 +907,24 @@ mod tests {
         // First two bytes are identical (0x01, 0x02), so compare third byte: 0x03 < 0x04
         assert!(key_complex1 < key_complex2);
     }
+    /// An edge case where slice [`Ord`] isn't minimal length byte-wise lexicographic.
+    #[test]
+    fn test_map_entry_ord_len_edge_case() {
+        // Shorter length key with greater first byte.
+        let lhs = MapEntry {
+            key_bytes: minicbor::to_vec("a").unwrap(),
+            value: vec![],
+        };
+        assert_eq!(lhs.key_bytes, &[97, 97]);
+
+        // Longer length key with lesser first byte.
+        let rhs = MapEntry {
+            key_bytes: minicbor::to_vec(65535u32).unwrap(),
+            value: vec![],
+        };
+        assert_eq!(rhs.key_bytes, &[25, 255, 255]);
+
+        // Shorter must go first.
+        assert!(lhs < rhs);
+    }
 }
