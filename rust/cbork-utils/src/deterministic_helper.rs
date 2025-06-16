@@ -473,9 +473,6 @@ pub enum DeterministicError {
     /// "Indefinite-length items must be made definite-length items"
     IndefiniteLength,
 
-    /// Wraps decoding errors from the underlying CBOR decoder
-    DecoderError(minicbor::decode::Error),
-
     /// Indicates map keys are not properly sorted.
     /// Per RFC 8949 Section 4.2.3:
     /// "The keys in every map must be sorted..."
@@ -503,7 +500,6 @@ impl fmt::Display for DeterministicError {
             DeterministicError::IndefiniteLength => {
                 write!(f, "Indefinite-length items not allowed")
             },
-            DeterministicError::DecoderError(e) => write!(f, "Decoder error: {e}"),
             DeterministicError::UnorderedMapKeys => write!(f, "Map keys not in canonical order"),
             DeterministicError::DuplicateMapKey => write!(f, "Duplicate map key found"),
             DeterministicError::UnexpectedEof => write!(f, "Unexpected end of input"),
@@ -512,21 +508,6 @@ impl fmt::Display for DeterministicError {
                 write!(f, "Declared length does not match actual content size {e}")
             },
         }
-    }
-}
-
-impl std::error::Error for DeterministicError {
-    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
-        match self {
-            DeterministicError::DecoderError(e) => Some(e),
-            _ => None,
-        }
-    }
-}
-
-impl From<minicbor::decode::Error> for DeterministicError {
-    fn from(error: minicbor::decode::Error) -> Self {
-        DeterministicError::DecoderError(error)
     }
 }
 
@@ -888,5 +869,105 @@ mod tests {
 
         // Reserved values (additional info 28-30)
         assert!(get_cbor_header_size(&[0b111_11100]).is_err()); // Major type 7, value 28
+    }
+
+    #[test]
+    fn test_map_entry_ord_comprehensive() {
+        // Test 1: Length-first ordering
+        // According to RFC 8949, shorter keys must come before longer keys
+        // regardless of their actual byte values
+        let short_key = MapEntry {
+            key_bytes: vec![0x41], // Single byte key
+            value: vec![0x01],
+        };
+        let long_key = MapEntry {
+            key_bytes: vec![0x41, 0x42, 0x43], // Three byte key (longer)
+            value: vec![0x01],
+        };
+        // Even though both start with 0x41, the shorter one comes first
+        assert!(short_key < long_key);
+        assert!(long_key > short_key);
+
+        // Test 2: Lexicographic ordering for equal-length keys
+        // When keys have the same length, they are compared byte by byte
+        // lexicographically (like dictionary ordering)
+        let key_a = MapEntry {
+            key_bytes: vec![0x41, 0x41], // Represents "AA" in ASCII
+            value: vec![0x01],
+        };
+        let key_b = MapEntry {
+            key_bytes: vec![0x41, 0x42], // Represents "AB" in ASCII
+            value: vec![0x01],
+        };
+        // "AA" comes before "AB" lexicographically
+        assert!(key_a < key_b);
+        assert!(key_b > key_a);
+
+        // Test 3: Identical entries (same key AND value)
+        // Complete MapEntry equality requires both key and value to be identical
+        let entry1 = MapEntry {
+            key_bytes: vec![0x41, 0x42],
+            value: vec![0x01],
+        };
+        let entry2 = MapEntry {
+            key_bytes: vec![0x41, 0x42],
+            value: vec![0x01], // Same value as entry1
+        };
+        // These are truly identical entries
+        assert_eq!(entry1, entry2);
+
+        // Test 4: Same key, different values - these are NOT equal
+        // In CBOR maps, this would represent duplicate keys (invalid)
+        let entry_v1 = MapEntry {
+            key_bytes: vec![0x41, 0x42],
+            value: vec![0x01],
+        };
+        let entry_v2 = MapEntry {
+            key_bytes: vec![0x41, 0x42],
+            value: vec![0x02], // Different value
+        };
+        // These entries are NOT equal (different values)
+        assert_ne!(entry_v1, entry_v2);
+        // But they have the same ordering position (same key)
+        assert_eq!(entry_v1.cmp(&entry_v2), std::cmp::Ordering::Equal);
+
+        // Test 5: Empty key vs non-empty key
+        // Empty keys should come before any non-empty key (shortest length rule)
+        let empty_key = MapEntry {
+            key_bytes: vec![], // Empty key (length 0)
+            value: vec![0x01],
+        };
+        let non_empty_key = MapEntry {
+            key_bytes: vec![0x00], // Single null byte (length 1)
+            value: vec![0x01],
+        };
+        // Empty key (length 0) comes before single byte key (length 1)
+        assert!(empty_key < non_empty_key);
+
+        // Test 6: Numerical byte value ordering
+        // Test that individual byte values are compared correctly (0x00 < 0xFF)
+        let key_0 = MapEntry {
+            key_bytes: vec![0x00], // Null byte
+            value: vec![0x01],
+        };
+        let key_255 = MapEntry {
+            key_bytes: vec![0xFF], // Maximum byte value
+            value: vec![0x01],
+        };
+        // 0x00 is numerically less than 0xFF
+        assert!(key_0 < key_255);
+
+        // Test 7: Complex multi-byte lexicographic comparison
+        // Test lexicographic ordering when keys differ in later bytes
+        let key_complex1 = MapEntry {
+            key_bytes: vec![0x01, 0x02, 0x03], // Differs in last byte (0x03)
+            value: vec![0x01],
+        };
+        let key_complex2 = MapEntry {
+            key_bytes: vec![0x01, 0x02, 0x04], // Differs in last byte (0x04)
+            value: vec![0x01],
+        };
+        // First two bytes are identical (0x01, 0x02), so compare third byte: 0x03 < 0x04
+        assert!(key_complex1 < key_complex2);
     }
 }
