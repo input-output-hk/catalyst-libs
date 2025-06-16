@@ -4,6 +4,7 @@ use catalyst_types::problem_report::ProblemReport;
 
 /// Compatibility policy
 #[allow(dead_code)]
+#[derive(Copy, Clone)]
 pub(crate) enum CompatibilityPolicy {
     /// Silently allow obsoleted type conversions or non deterministic encoding.
     Accept,
