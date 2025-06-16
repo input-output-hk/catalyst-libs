@@ -181,14 +181,6 @@ impl CatalystSignedDocument {
         &self.inner.report
     }
 
-    /// Convert Catalyst Signed Document into `coset::CoseSign`
-    ///
-    /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
-    pub(crate) fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        self.inner.as_cose_sign()
-    }
-
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
     #[must_use]

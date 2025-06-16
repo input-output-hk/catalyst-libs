@@ -4,6 +4,8 @@ pub use catalyst_types::catalyst_id::CatalystId;
 use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
 
+use crate::{Content, Metadata};
+
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]
 pub struct Signature {
@@ -102,21 +104,32 @@ impl Signatures {
     }
 }
 
+/// Create a binary blob that will be signed. No support for unprotected headers.
+///
+/// Described in [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
+pub(crate) fn tbs_data(
+    kid: &CatalystId, metadata: &Metadata, content: &Content,
+) -> anyhow::Result<Vec<u8>> {
+    Ok(minicbor::to_vec((
+        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
+        "Signature",
+        <minicbor::bytes::ByteVec>::from(minicbor::to_vec(metadata)?),
+        <minicbor::bytes::ByteVec>::from(protected_header_bytes(kid)?),
+        minicbor::bytes::ByteArray::from([]),
+        <minicbor::bytes::ByteVec>::from(content.encoded_bytes(metadata.content_encoding())?),
+    ))?)
+}
+
 impl<C> minicbor::Encode<C> for Signature {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(3)?;
-        let mut p_headers = minicbor::Encoder::new(Vec::new());
-        // protected headers (kid field)
-        p_headers
-            .map(1)
-            .map_err(minicbor::encode::Error::message)?
-            .u8(4)
-            .map_err(minicbor::encode::Error::message)?
-            .encode(&self.kid)
-            .map_err(minicbor::encode::Error::message)?;
-        e.bytes(p_headers.into_writer().as_slice())?;
+        e.bytes(
+            protected_header_bytes(&self.kid)
+                .map_err(minicbor::encode::Error::message)?
+                .as_slice(),
+        )?;
         // empty unprotected headers
         e.map(0)?;
         e.bytes(&self.signature)?;
@@ -139,4 +152,14 @@ impl<C> minicbor::Encode<C> for Signatures {
         }
         Ok(())
     }
+}
+
+/// Signatures protected header bytes
+///
+/// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
+fn protected_header_bytes(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
+    let mut p_headers = minicbor::Encoder::new(Vec::new());
+    // protected headers (kid field)
+    p_headers.map(1)?.u8(4)?.encode(kid)?;
+    Ok(p_headers.into_writer())
 }
