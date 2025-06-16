@@ -277,18 +277,38 @@ impl Decode<'_, ()> for CatalystSignedDocument {
     }
 }
 
-impl Encode<()> for CatalystSignedDocument {
+impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
+        &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
-            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
-        })?;
+        if let Some(raw_bytes) = &self.inner.raw_bytes {
+            e.writer_mut()
+                .write_all(raw_bytes)
+                .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))?;
+        } else {
+            // COSE_Sign tag
+            // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+            e.tag(minicbor::data::Tag::new(98))?;
+            e.array(4)?;
+            // protected headers (metadata fields)
+            e.bytes(
+                minicbor::to_vec(self.doc_meta())
+                    .map_err(minicbor::encode::Error::message)?
+                    .as_slice(),
+            )?;
+            // empty unprotected headers
+            e.map(0)?;
+            // content
+            let content = self
+                .doc_content()
+                .encoded_bytes(self.doc_content_encoding())
+                .map_err(minicbor::encode::Error::message)?;
+            e.bytes(content.as_slice())?;
+            // signatures
+            e.encode(self.signatures())?;
+        }
 
-        e.writer_mut()
-            .write_all(&cose_bytes)
-            .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
+        Ok(())
     }
 }
 

@@ -123,3 +123,21 @@ impl<C> minicbor::Encode<C> for Signature {
         Ok(())
     }
 }
+
+impl<C> minicbor::Encode<C> for Signatures {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
+        for sign in self.iter() {
+            e.encode(sign)?;
+        }
+
+        Ok(())
+    }
+}
