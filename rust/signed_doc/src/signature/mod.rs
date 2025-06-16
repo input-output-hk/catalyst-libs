@@ -114,7 +114,7 @@ impl<C> minicbor::Encode<C> for Signature {
             .map_err(minicbor::encode::Error::message)?
             .u8(4)
             .map_err(minicbor::encode::Error::message)?
-            .bytes(Vec::<u8>::from(&self.kid).as_slice())
+            .encode(&self.kid)
             .map_err(minicbor::encode::Error::message)?;
         e.bytes(p_headers.into_writer().as_slice())?;
         // empty unprotected headers

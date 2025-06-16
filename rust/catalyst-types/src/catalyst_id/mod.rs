@@ -676,9 +676,12 @@ impl TryFrom<&[u8]> for CatalystId {
     }
 }
 
-impl From<&CatalystId> for Vec<u8> {
-    fn from(value: &CatalystId) -> Self {
-        value.to_string().into_bytes()
+impl minicbor::Encode<()> for CatalystId {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.bytes(self.to_string().into_bytes().as_slice())?;
+        Ok(())
     }
 }
 
