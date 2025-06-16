@@ -43,7 +43,6 @@ validate:
 validate-docs:
     # Check our validation code actually works properly
     cd generators; uv run docs -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
-    #cd gen_docs; ./main.py -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
 
 # Pre Push Checks - intended to be run by a git pre-push hook.
 pre-push: format-python-code lint-python regenerate validate

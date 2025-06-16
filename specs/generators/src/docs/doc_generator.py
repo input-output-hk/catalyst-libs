@@ -11,8 +11,8 @@ from pathlib import Path
 import rich
 import rich.markdown
 
-from spec.metadata import Metadata
-from spec.signed_doc import HeaderType, SignedDoc
+from docs.markdown import MarkdownHelpers
+from spec.signed_doc import SignedDoc
 
 
 class DocGenerator:
@@ -44,11 +44,6 @@ class DocGenerator:
 
         # Make sure any destination directory exists.
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
-
-    @staticmethod
-    def uuid_as_cbor(uuid: str) -> str:
-        """UUID in CBOR Diagnostic Notation."""
-        return f"37(h'{uuid.replace('-', '')}')"
 
     @staticmethod
     def name_to_spec_link(name: str, ref: str | None = None) -> str:
@@ -93,8 +88,8 @@ class DocGenerator:
         All Document References in text must be as `<name>` or they will not be linked.
         """
         self.add_generic_markdown_links(
-            self._spec.document_names(),
-            Metadata.doc_ref_link,
+            self._spec.docs.names,
+            MarkdownHelpers.doc_ref_link,
             primary_source=primary_source,
         )
 
@@ -103,10 +98,9 @@ class DocGenerator:
 
         All metadata fields in text must be as `<name>` or they will not be linked.
         """
-        _, metadata_names, _ = self._spec.headers_and_order(header_type=HeaderType.METADATA)
         self.add_generic_markdown_links(
-            metadata_names,
-            Metadata.field_link,
+            self._spec.metadata.headers.names,
+            MarkdownHelpers.field_link,
             primary_source=self._is_metadata_primary_source,
         )
 
@@ -116,8 +110,8 @@ class DocGenerator:
         All metadata formats in text must be as `<name>` or they will not be linked.
         """
         self.add_generic_markdown_links(
-            self._spec.format_names(header_type=HeaderType.METADATA),
-            Metadata.format_link,
+            self._spec.metadata.formats.all,
+            MarkdownHelpers.format_link,
             primary_source=self._is_metadata_primary_source,
         )
 
@@ -168,13 +162,11 @@ class DocGenerator:
 
         self.strip_end_whitespace()
 
-        actual_link_names = self._spec.link_names()
-
         actual_links_used: dict[str, str] = {}
-        for link_name in actual_link_names:
+        for link_name in self._spec.documentation_links.all:
             esc_link_name = re.escape(link_name)
             link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
-            aka = self._spec.link_name_aka(link_name)
+            aka = self._spec.documentation_links.aka(link_name)
             if aka is not None:
                 replacement = f"\\1[\\2][{aka}]\\3"
                 link_name = aka  # noqa: PLW2901
@@ -185,7 +177,7 @@ class DocGenerator:
                 link_name_regex,
                 replacement,
             ):
-                actual_links_used[link_name] = self._spec.link_for_link_name(link_name)
+                actual_links_used[link_name] = self._spec.documentation_links.link(link_name)
 
         for link, actual in actual_links_used.items():
             self._filedata += f"\n[{link}]: {actual}"
@@ -242,8 +234,8 @@ class DocGenerator:
         )
 
         author_title = " Authors "
-        for author in sorted(authors):
-            copyright_notice += f"|{author_title}| {author} <{authors[author]}> |\n"
+        for author in authors.all():
+            copyright_notice += f"|{author_title}| {author} <{authors.email(author)}> |\n"
             author_title = " "
 
         if changelog:

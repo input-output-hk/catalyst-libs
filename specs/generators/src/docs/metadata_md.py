@@ -29,8 +29,8 @@ class MetadataMd(DocGenerator):
         """Generate the metadata types documentation."""
         metadata_types = ""
 
-        for format_name in self._spec.get_all_metadata_formats():
-            format_def = self._spec.get_metadata_format(format_name)
+        for format_name in self._spec.metadata.formats.all:
+            format_def = self._spec.metadata.formats.get(format_name)
 
             cddl_def = CDDLFile(self._args, self._spec, format_def.cddl)
             if not cddl_def.save_or_validate():
@@ -70,25 +70,3 @@ All Metadata fields use one of these types.
             console.print_exception()
             return False
         return super().generate()
-
-    @staticmethod
-    def format_link(name: str, depth: int = 0) -> str:
-        """Metadata Format link."""
-        link = f"metadata.md#{name.lower().replace(' ', '-')}"
-
-        while depth > 0:
-            link = f"../{link}"
-            depth -= 1
-
-        return f"[{name}]({link})"
-
-    @staticmethod
-    def field_link(name: str, depth: int = 0) -> str:
-        """Metadata Field link."""
-        link = f"metadata.md#{name.lower().replace('`', '')}"
-
-        while depth > 0:
-            link = f"../{link}"
-            depth -= 1
-
-        return f"[`{name}`]({link})"

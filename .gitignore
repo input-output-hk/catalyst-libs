@@ -93,3 +93,4 @@ py.typed
 .venv
 .ruff_cache
 dist
+*.pyi

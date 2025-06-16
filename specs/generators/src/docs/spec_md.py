@@ -2,7 +2,8 @@
 
 import argparse
 
-from spec.signed_doc import HeaderType, SignedDoc
+from spec.cddl.cose import CoseHeader, HeaderType
+from spec.signed_doc import SignedDoc
 
 from .cddl_file import CDDLFile
 from .doc_generator import DocGenerator
@@ -15,26 +16,22 @@ class SpecMd(DocGenerator):
         """Initialise Spec.md generator."""
         super().__init__(args, spec, "spec.md")
 
-    def header_parameter_doc(self, header: str, header_type: HeaderType) -> str:
+    def header_parameter_doc(self, header: CoseHeader) -> str:
         """Create documentation for a single cose header."""
-        options = self._spec.header(header, header_type=header_type)
-        label = options.get("coseLabel")
-
         custom_header = "***Custom Header***"
-        if not isinstance(label, str):
+        if not isinstance(header.cose_label, str):
             custom_header = ""
-        header_format = options["format"]
-        header_value: str | list[str] | None = options.get("value", None)
-        header_format_display = f"{header_format}"
-        if isinstance(header_value, list) and len(header_value) > 0:
+
+        header_format_display = f"{header.format}"
+        if isinstance(header.value, list) and len(header.value) > 0:
             header_format_display += "\n  * Supported Values:"
-            for value in header_value:
+            for value in header.value:
                 value_entry = f"\n    * {value}"
                 description = None
-                if header_format == "Media Type":
-                    description = self._spec.content_type_description(value)
-                if header_format == "HTTP Content Encoding":
-                    description = self._spec.encoding_type_description(value)
+                if header.format == "Media Type":
+                    description = self._spec.content_types.description(value)
+                if header.format == "HTTP Content Encoding":
+                    description = self._spec.encoding_types.description(value)
 
                 if description is not None:
                     value_entry += f" : {description.replace('\n', '\n      ')}"
@@ -42,21 +39,27 @@ class SpecMd(DocGenerator):
                 header_format_display += value_entry
 
         return f"""
-#### `{header}`
+#### `{header.name}`
 
-{options.get("description")}
+{header.description}
 
-* Required : {options["required"]}
-* Cose Label : {label} {custom_header}
+* Required : {header.required.value}
+* Cose Label : {header.cose_label} {custom_header}
 * Format : {header_format_display}
     """
 
     def cose_header_parameters(self, header_type: HeaderType) -> str:
         """Insert details about Cose header Parameters that are defined for use."""
-        headers = self._spec.all_headers(header_type)
+        if header_type == HeaderType.DOCUMENT:
+            headers = self._spec.cose.headers.all
+        elif header_type == HeaderType.SIGNATURE:
+            headers = self._spec.cose.signature_headers.all
+        else:
+            return ""  # No Cose Headers in metadata.
+
         header_parameters_doc = ""
         for header in headers:
-            header_parameters_doc += self.header_parameter_doc(header, header_type=header_type)
+            header_parameters_doc += self.header_parameter_doc(header)
 
         return header_parameters_doc.strip()
 

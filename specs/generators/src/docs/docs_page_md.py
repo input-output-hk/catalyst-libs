@@ -25,14 +25,14 @@ This section will be included and updated in future iterations.
         super().__init__(args, spec, file_name, flags=self.HAS_MARKDOWN_LINKS)
 
         self._document_name = doc_name
-        self._doc = self._spec.get_document(doc_name)
+        self._doc = self._spec.docs.get(doc_name)
         self._depth = 1
 
     @classmethod
     def save_or_validate_all(cls, args: argparse.Namespace, spec: SignedDoc) -> bool:
         """Save or Validate all documentation pages."""
         good = True
-        for doc_name in spec.document_names():
+        for doc_name in spec.docs.names:
             good &= cls(args, spec, doc_name).save_or_validate()
 
         return good
@@ -47,8 +47,8 @@ This section will be included and updated in future iterations.
         """Generate concrete Cose header parameter settings for a specific document."""
         headers = self._doc.headers
         header_docs = ""
-        for header, value in headers.items():
-            value = value.value  # noqa: PLW2901
+        for header in headers.names:
+            value = headers.get(header).value
             if isinstance(value, list):
                 value = f"[{','.join(value)}]"  # noqa: PLW2901
             link = f"../spec.md#{header.replace(' ', '-')}"

@@ -261,53 +261,55 @@
       }
     ]
   },
-  "coseHeaderFormats": {
-    "Catalyst ID": {
-      "cddl": "catalyst_id_kid",
-      "description": "KID (Catalyst ID URI)"
+  "cose": {
+    "headerFormats": {
+      "Catalyst ID": {
+        "cddl": "catalyst_id_kid",
+        "description": "KID (Catalyst ID URI)"
+      },
+      "HTTP Content Encoding": {
+        "cddl": "http_content_encoding",
+        "description": "Encoding if any on the payload."
+      },
+      "Media Type": {
+        "cddl": "media_type",
+        "description": "A Media Type string which identifies the payload."
+      }
     },
-    "HTTP Content Encoding": {
-      "cddl": "http_content_encoding",
-      "description": "Encoding if any on the payload."
+    "headers": {
+      "content type": {
+        "coseLabel": 3,
+        "description": "Media Type/s allowed in the Payload",
+        "format": "Media Type",
+        "required": "yes",
+        "value": [
+          "application/json",
+          "application/schema+json",
+          "application/cbor",
+          "application/cddl"
+        ]
+      },
+      "content-encoding": {
+        "coseLabel": "content-encoding",
+        "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+        "format": "HTTP Content Encoding",
+        "required": "optional",
+        "value": [
+          "br"
+        ]
+      }
     },
-    "Media Type": {
-      "cddl": "media_type",
-      "description": "A Media Type string which identifies the payload."
-    }
-  },
-  "cose_headers": {
-    "content type": {
-      "coseLabel": 3,
-      "description": "Media Type/s allowed in the Payload",
-      "format": "Media Type",
-      "required": "yes",
-      "value": [
-        "application/json",
-        "application/schema+json",
-        "application/cbor",
-        "application/cddl"
-      ]
-    },
-    "content-encoding": {
-      "coseLabel": "content-encoding",
-      "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
-      "format": "HTTP Content Encoding",
-      "required": "optional",
-      "value": [
-        "br"
-      ]
-    }
-  },
-  "cose_headers_order": [
-    "content type",
-    "content-encoding"
-  ],
-  "cose_signature_headers": {
-    "kid": {
-      "coseLabel": 4,
-      "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
-      "format": "Catalyst ID",
-      "required": "yes"
+    "headersOrder": [
+      "content type",
+      "content-encoding"
+    ],
+    "signature_headers": {
+      "kid": {
+        "coseLabel": 4,
+        "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
+        "format": "Catalyst ID",
+        "required": "yes"
+      }
     }
   },
   "doc_clusters": {
@@ -344,70 +346,60 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -459,21 +451,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -483,49 +472,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -582,21 +564,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -606,49 +585,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -705,28 +677,24 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -738,42 +706,36 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -827,21 +789,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -855,49 +814,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -960,21 +912,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "optional",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "template"
@@ -990,35 +939,30 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1028,14 +972,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1101,21 +1043,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "ref",
@@ -1132,7 +1071,6 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1142,7 +1080,6 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1152,21 +1089,18 @@
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "optional",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1176,14 +1110,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1245,21 +1177,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1273,49 +1202,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1381,21 +1303,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1409,35 +1328,30 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1447,14 +1361,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1518,21 +1430,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1546,49 +1455,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1653,28 +1555,24 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1684,42 +1582,36 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1777,21 +1669,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "ref"
@@ -1807,7 +1696,6 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": true,
@@ -1817,42 +1705,36 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1978,21 +1860,18 @@
       "metadata": {
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "template"
@@ -2008,35 +1887,30 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -2046,14 +1920,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
           "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -3289,163 +3161,155 @@
     "UUIDv7": "RFC9562-V7"
   },
   "metadata": {
-    "collaborators": {
-      "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-      "exclusive": null,
-      "format": "Collaborators Reference List",
-      "required": "optional",
-      "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+    "formats": {
+      "Collaborators Reference List": {
+        "cddl": "collaborators",
+        "description": "A list of collaborators who can participate in drafting and submitting a document"
+      },
+      "Document Id": {
+        "cddl": "document_id",
+        "description": "A unique document identifier"
+      },
+      "Document Reference": {
+        "cddl": "document_ref",
+        "description": "A document reference identifier"
+      },
+      "Document Type": {
+        "cddl": "document_type",
+        "description": "A document type identifier"
+      },
+      "Document Ver": {
+        "cddl": "document_ver",
+        "description": "A unique chronological document version"
+      },
+      "Section Reference": {
+        "cddl": "section_ref",
+        "description": "A document section reference identifier"
+      },
+      "UUIDv4": {
+        "cddl": "uuid_v4",
+        "description": "Version 4 formatted UUID"
+      },
+      "UUIDv7": {
+        "cddl": "uuid_v7",
+        "description": "Version 7 formatted UUID"
+      },
+      "Version Revocations": {
+        "cddl": "revocations",
+        "description": "A list of all versions of this document which are 'revoked'."
+      }
     },
-    "id": {
-      "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-      "exclusive": null,
-      "format": "Document Id",
-      "required": "yes",
-      "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+    "headers": {
+      "collaborators": {
+        "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+        "format": "Collaborators Reference List",
+        "required": "optional",
+        "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+      },
+      "id": {
+        "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+        "format": "Document Id",
+        "required": "yes",
+        "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+      },
+      "parameters": {
+        "description": "A reference to the Parameters Document this document lies under.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Brand Parameters",
+          "Campaign Parameters",
+          "Category Parameters",
+          "Decision Parameters"
+        ],
+        "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+      },
+      "ref": {
+        "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Proposal Meta Template",
+          "Proposal Template",
+          "Proposal",
+          "Proposal Comment Meta Template",
+          "Proposal Comment Template",
+          "Proposal Comment",
+          "Proposal Submission Action",
+          "Proposal Moderation Action",
+          "Comment Moderation Action",
+          "Brand Parameters",
+          "Campaign Parameters",
+          "Category Parameters",
+          "Decision Parameters"
+        ],
+        "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+      },
+      "reply": {
+        "description": "Reference to a Comment document type being referred to.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Proposal Comment"
+        ],
+        "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+      },
+      "revocations": {
+        "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+        "format": "Version Revocations",
+        "required": "excluded",
+        "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+      },
+      "section": {
+        "description": "A Reference to the original document, or the comment being replied to.",
+        "format": "Section Reference",
+        "required": "optional",
+        "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+      },
+      "template": {
+        "description": "Reference to the template used to create and/or validate this document.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Proposal Meta Template",
+          "Proposal Template",
+          "Proposal Comment Meta Template",
+          "Proposal Comment Template"
+        ],
+        "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+      },
+      "type": {
+        "description": "The document TYPE.",
+        "format": "Document Type",
+        "required": "yes",
+        "validation": "**MUST** be a known document type."
+      },
+      "ver": {
+        "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+        "format": "Document Ver",
+        "required": "yes",
+        "validation": "The document version must always be >= the document ID."
+      }
     },
-    "parameters": {
-      "description": "A reference to the Parameters Document this document lies under.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Brand Parameters",
-        "Campaign Parameters",
-        "Category Parameters",
-        "Decision Parameters"
-      ],
-      "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
-    },
-    "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Proposal Meta Template",
-        "Proposal Template",
-        "Proposal",
-        "Proposal Comment Meta Template",
-        "Proposal Comment Template",
-        "Proposal Comment",
-        "Proposal Submission Action",
-        "Proposal Moderation Action",
-        "Comment Moderation Action",
-        "Brand Parameters",
-        "Campaign Parameters",
-        "Category Parameters",
-        "Decision Parameters"
-      ],
-      "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
-    },
-    "reply": {
-      "description": "Reference to a Comment document type being referred to.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Proposal Comment"
-      ],
-      "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
-    },
-    "revocations": {
-      "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-      "exclusive": null,
-      "format": "Version Revocations",
-      "required": "excluded",
-      "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
-    },
-    "section": {
-      "description": "A Reference to the original document, or the comment being replied to.",
-      "exclusive": null,
-      "format": "Section Reference",
-      "required": "optional",
-      "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
-    },
-    "template": {
-      "description": "Reference to the template used to create and/or validate this document.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Proposal Meta Template",
-        "Proposal Template",
-        "Proposal Comment Meta Template",
-        "Proposal Comment Template"
-      ],
-      "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
-    },
-    "type": {
-      "description": "The document TYPE.",
-      "exclusive": null,
-      "format": "Document Type",
-      "required": "yes",
-      "validation": "**MUST** be a known document type."
-    },
-    "ver": {
-      "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-      "exclusive": null,
-      "format": "Document Ver",
-      "required": "yes",
-      "validation": "The document version must always be >= the document ID."
-    }
-  },
-  "metadataFormats": {
-    "Collaborators Reference List": {
-      "cddl": "collaborators",
-      "description": "A list of collaborators who can participate in drafting and submitting a document"
-    },
-    "Document Id": {
-      "cddl": "document_id",
-      "description": "A unique document identifier"
-    },
-    "Document Reference": {
-      "cddl": "document_ref",
-      "description": "A document reference identifier"
-    },
-    "Document Type": {
-      "cddl": "document_type",
-      "description": "A document type identifier"
-    },
-    "Document Ver": {
-      "cddl": "document_ver",
-      "description": "A unique chronological document version"
-    },
-    "Section Reference": {
-      "cddl": "section_ref",
-      "description": "A document section reference identifier"
-    },
-    "UUIDv4": {
-      "cddl": "uuid_v4",
-      "description": "Version 4 formatted UUID"
-    },
-    "UUIDv7": {
-      "cddl": "uuid_v7",
-      "description": "Version 7 formatted UUID"
-    },
-    "Version Revocations": {
-      "cddl": "revocations",
-      "description": "A list of all versions of this document which are 'revoked'."
-    }
-  },
-  "metadata_order": [
-    "type",
-    "id",
-    "ver",
-    "ref",
-    "template",
-    "reply",
-    "section",
-    "collaborators",
-    "revocations",
-    "parameters"
-  ]
+    "order": [
+      "type",
+      "id",
+      "ver",
+      "ref",
+      "template",
+      "reply",
+      "section",
+      "collaborators",
+      "revocations",
+      "parameters"
+    ]
+  }
 }
