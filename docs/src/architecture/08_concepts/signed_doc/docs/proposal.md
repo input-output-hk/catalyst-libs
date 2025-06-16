@@ -211,7 +211,7 @@ Must be valid according to the schema contained within the
 
 ## Signers
 
-The following user roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
 * Proposer
 

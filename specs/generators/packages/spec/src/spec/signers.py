@@ -27,6 +27,6 @@ class Signers(BaseModel):
 
     roles: AllowedRoles
     referenced: bool = Field(default=False)
-    update: AllowedUpdaters
+    update: dict[str, bool]
 
     model_config = ConfigDict(extra="forbid")

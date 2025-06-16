@@ -139,7 +139,7 @@ This section will be included and updated in future iterations.
 
 ## Signers
 
-The following user roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
 * Registered
 

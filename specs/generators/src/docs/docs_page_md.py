@@ -50,7 +50,7 @@ This section will be included and updated in future iterations.
         for header in headers.names:
             value = headers.get(header).value
             if isinstance(value, list):
-                value = f"[{','.join(value)}]"  # noqa: PLW2901
+                value = f"[{','.join(value)}]"
             link = f"../spec.md#{header.replace(' ', '-')}"
             header_docs += f"* [{header}]({link}) = `{value}`\n"
         return header_docs.strip()
@@ -64,21 +64,24 @@ This section will be included and updated in future iterations.
 
     def document_signers(self) -> str:
         """Generate documentation about who may sign this documents."""
-        signers = self._spec.data()["docs"][self._document_name]["signers"]
-        signers_doc = ""
+        signers = self._spec.docs.get(self._document_name).signers
+        signers_doc: str = ""
 
-        for role_group in signers["roles"]:
-            roles = signers["roles"][role_group]
-            if roles:
-                signers_doc += f"\nThe following {role_group} roles may sign documents of this type:\n\n"
+        def add_role_group(name: str, roles: list[str]) -> None:
+            nonlocal signers_doc
+            if len(roles) > 0:
+                signers_doc += f"\nThe following {name} roles may sign documents of this type:\n\n"
                 for role in roles:
                     signers_doc += f"* {role}\n"
+
+        add_role_group("User", signers.roles.user)
+        add_role_group("Admin", signers.roles.admin)
 
         signers_doc = signers_doc.strip()
 
         signers_doc += "\n\nNew versions of this document may be published by:\n\n"
-        for updater in signers["update"]:
-            if signers["update"][updater]:
+        for updater in signers.update:
+            if signers.update[updater]:
                 signers_doc += f"* {updater}\n"
 
         return signers_doc.strip()
