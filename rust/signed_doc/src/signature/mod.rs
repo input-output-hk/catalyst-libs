@@ -16,6 +16,11 @@ pub struct Signature {
 }
 
 impl Signature {
+    /// Creates a `Signature` object from `kid` and raw `signature` bytes
+    pub(crate) fn new(kid: CatalystId, signature: Vec<u8>) -> Self {
+        Self { kid, signature }
+    }
+
     /// Return `kid` field (`CatalystId`), identifier who made a signature
     pub fn kid(&self) -> &CatalystId {
         &self.kid
@@ -29,12 +34,7 @@ impl Signature {
     /// Convert COSE Signature to `Signature`.
     pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
         match CatalystId::try_from(signature.protected.header.key_id.as_ref()) {
-            Ok(kid) if kid.is_uri() => {
-                Some(Self {
-                    kid,
-                    signature: signature.signature,
-                })
-            },
+            Ok(kid) if kid.is_uri() => Some(Self::new(kid, signature.signature)),
             Ok(kid) => {
                 report.invalid_value(
                     "COSE signature protected header key ID",

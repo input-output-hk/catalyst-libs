@@ -15,14 +15,13 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::Context;
 pub use builder::Builder;
 pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
 pub use content::Content;
-use coset::{CborSerializable, CoseSignature, Header, TaggedCborSerializable};
+use coset::{CborSerializable, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{ContentEncoding, ContentType, DocType, DocumentRef, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
@@ -186,44 +185,6 @@ impl CatalystSignedDocument {
     #[must_use]
     pub fn into_builder(&self) -> Builder {
         self.into()
-    }
-}
-
-impl InnerCatalystSignedDocument {
-    /// Convert Catalyst Signed Document into `coset::CoseSign`
-    ///
-    /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
-    fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        if let Some(raw_bytes) = self.raw_bytes.clone() {
-            let cose_sign = coset::CoseSign::from_tagged_slice(raw_bytes.as_slice())
-                .or_else(|_| coset::CoseSign::from_slice(raw_bytes.as_slice()))
-                .map_err(|e| {
-                    minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
-                })?;
-            Ok(cose_sign)
-        } else {
-            let protected_header_bytes =
-                minicbor::to_vec(&self.metadata).context("Failed to encode Document Metadata")?;
-            let protected_header = Header::from_slice(protected_header_bytes.as_slice())
-                .map_err(|e| anyhow::anyhow!("{e} Failed to encode Document Metadata"))?;
-
-            let content = self
-                .content
-                .encoded_bytes(self.metadata.content_encoding())?;
-
-            let mut builder = coset::CoseSignBuilder::new()
-                .protected(protected_header)
-                .payload(content);
-
-            for signature in self.signatures.iter() {
-                let bytes = minicbor::to_vec(signature)?;
-                let signature = CoseSignature::from_slice(bytes.as_slice())
-                    .map_err(|e| anyhow::anyhow!("{e} Failed to encode signature"))?;
-                builder = builder.add_signature(signature);
-            }
-            Ok(builder.build())
-        }
     }
 }
 

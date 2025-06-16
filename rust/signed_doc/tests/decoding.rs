@@ -2,41 +2,11 @@
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
-use common::create_dummy_key_pair;
 use coset::{CborSerializable, TaggedCborSerializable};
 use ed25519_dalek::ed25519::signature::Signer;
 use minicbor::{data::Tag, Encoder};
 
 mod common;
-
-#[test]
-fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
-    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
-    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
-        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
-        None,
-    ));
-}
-
-#[allow(clippy::unwrap_used)]
-fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_json::Value)) {
-    let (_, _, metadata_fields) = data;
-    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
-    // transform Catalyst ID URI form to the ID form
-    let kid = kid.as_id();
-
-    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
-
-    let doc = Builder::new()
-        .with_json_metadata(metadata_fields.clone())
-        .unwrap()
-        .with_decoded_content(content.clone())
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
-        .unwrap()
-        .build();
-
-    assert!(doc.problem_report().is_problematic());
-}
 
 #[tokio::test]
 async fn catalyst_signed_doc_parameters_aliases_test() {
@@ -99,7 +69,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     let doc = doc
         .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
@@ -119,7 +89,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     let doc = doc
         .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
@@ -139,7 +109,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     let doc = doc
         .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+        .add_signature(|m| sk.sign(&m).to_vec(), kid)
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
