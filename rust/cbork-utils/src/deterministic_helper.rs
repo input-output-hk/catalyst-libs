@@ -10,7 +10,7 @@
 //! 6. Floating point values must use smallest possible encoding
 //! 7. Non-finite floating point values are not allowed (NaN, infinite)
 
-use std::{cmp::Ordering, fmt};
+use std::cmp::Ordering;
 
 use minicbor::Decoder;
 
@@ -105,12 +105,12 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor
     match d.datatype()? {
         minicbor::data::Type::Map => {},
         minicbor::data::Type::MapIndef => {
-            minicbor::decode::Error::message(DeterministicError::IndefiniteLength.to_string());
+            minicbor::decode::Error::message(
+                "Indefinite-length items must be made definite-length items",
+            );
         },
         _ => {
-            minicbor::decode::Error::message(DeterministicError::CorruptedEncoding(
-                "Expected a map".to_owned(),
-            ));
+            minicbor::decode::Error::message("Expected a map");
         },
     }
 
@@ -142,9 +142,7 @@ fn get_map_bytes(
     d.input()
         .get(map_start..map_end)
         .ok_or_else(|| {
-            minicbor::decode::Error::message(DeterministicError::CorruptedEncoding(
-                "Invalid map byte range: indices out of bounds".to_string(),
-            ))
+            minicbor::decode::Error::message("Invalid map byte range: indices out of bounds")
         })
         .map(<[u8]>::to_vec)
 }
@@ -154,7 +152,7 @@ fn decode_map_entries(
     d: &mut Decoder, length: u64,
 ) -> Result<Vec<MapEntry>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
-        minicbor::decode::Error::message("Map length too large for current platform".to_string())
+        minicbor::decode::Error::message("Map length too large for current platform")
     })?;
     let mut entries = Vec::with_capacity(capacity);
 
@@ -198,10 +196,9 @@ fn map_keys_are_deterministic(key_bytes: &[u8]) -> Result<(), minicbor::decode::
         })?;
 
         if key_declared_length != actual_content_size {
-            minicbor::decode::Error::message(DeterministicError::InvalidLength(
-                "Declared length does not match the actual length. Non deterministic map key."
-                    .to_string(),
-            ));
+            minicbor::decode::Error::message(
+                "Declared length does not match the actual length. Non deterministic map key.",
+            );
         }
     }
     Ok(())
@@ -294,7 +291,7 @@ pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Err
     let first_byte = bytes
         .first()
         .copied()
-        .ok_or_else(|| minicbor::decode::Error::message("Empty cbor data".to_string()))?;
+        .ok_or_else(|| minicbor::decode::Error::message("Empty cbor data"))?;
     // Major type is in the high 3 bits (not used in this function but noted for clarity)
     // let major_type = first_byte >> 5;
     // Additional info is in the low 5 bits and determines header size
@@ -321,19 +318,18 @@ pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Err
         // Value 27 means the actual value is in the next 8 bytes
         // Header is 9 bytes (initial byte + 8 bytes)
         27 => Ok(9),
-
         // Value 31 indicates indefinite length, which is not allowed in
         // deterministic encoding per RFC 8949 section 4.2.1
         31 => {
             Err(minicbor::decode::Error::message(
-                "Cannot determine size of indefinite length item".to_string(),
+                "Cannot determine size of indefinite length item",
             ))
         },
 
         // Values 28-30 are reserved in RFC 8949 and not valid in current CBOR
         _ => {
             Err(minicbor::decode::Error::message(
-                "Invalid additional info in CBOR header".to_string(),
+                "Invalid additional info in CBOR header",
             ))
         },
     }
@@ -348,9 +344,9 @@ fn extract_cbor_bytes(
 ) -> Result<Vec<u8>, minicbor::decode::Error> {
     // Validate CBOR byte range bounds
     if range_start >= range_end {
-        minicbor::decode::Error::message(DeterministicError::InvalidLength(
-            "Invalid CBOR byte range: start must be less than end position".to_string(),
-        ));
+        minicbor::decode::Error::message(
+            "Invalid CBOR byte range: start must be less than end position",
+        );
     }
 
     let byte_length = range_end.saturating_sub(range_start);
@@ -383,14 +379,10 @@ fn validate_map_ordering(entries: &[MapEntry]) -> Result<(), minicbor::decode::E
 fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicbor::decode::Error> {
     match current.cmp(next) {
         Ordering::Less => Ok(()), // Valid: keys are in ascending order
-        Ordering::Equal => {
-            Err(minicbor::decode::Error::message(
-                DeterministicError::DuplicateMapKey,
-            ))
-        },
+        Ordering::Equal => Err(minicbor::decode::Error::message("Duplicate map key found")),
         Ordering::Greater => {
             Err(minicbor::decode::Error::message(
-                DeterministicError::UnorderedMapKeys,
+                "Map keys not in canonical order",
             ))
         },
     }
@@ -399,7 +391,9 @@ fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicb
 /// Validates that the decoder's input buffer is not empty.
 fn validate_input_not_empty(d: &Decoder) -> Result<(), minicbor::decode::Error> {
     if d.position() >= d.input().len() {
-        return Err(minicbor::decode::Error::message("Empty input buffer"));
+        return Err(minicbor::decode::Error::message(
+            minicbor::decode::Error::message("Empty input buffer"),
+        ));
     }
     Ok(())
 }
@@ -424,14 +418,16 @@ fn check_map_minimal_length(
     const ENCODING_ERROR_MSG: &str = "Cannot read initial byte for minimality check";
 
     let initial_byte = decoder.input().get(position).copied().ok_or_else(|| {
-        minicbor::decode::Error::message(DeterministicError::CorruptedEncoding(
+        minicbor::decode::Error::message(minicbor::decode::Error::message(
             ENCODING_ERROR_MSG.to_owned(),
         ))
     })?;
     // Only check minimality for map length encodings using uint8
     // Immediate values (0-23) are already minimal by definition
     if initial_byte == CBOR_MAP_LENGTH_UINT8 && value <= CBOR_MAX_TINY_VALUE {
-        minicbor::decode::Error::message(DeterministicError::NonMinimalInt);
+        minicbor::decode::Error::message(minicbor::decode::Error::message(
+            "map minimal length failure",
+        ));
     }
 
     Ok(())
@@ -443,72 +439,12 @@ fn get_checked_slice(
 ) -> Result<&[u8], minicbor::decode::Error> {
     let end_pos = start_pos
         .checked_add(length)
-        .ok_or(minicbor::decode::Error::message("Cannot checked add"))?;
+        .ok_or(minicbor::decode::Error::message("cannot checked add"))?;
     input
         .get(start_pos..end_pos)
-        .ok_or(minicbor::decode::Error::message("Cannot checked add.."))
-}
-
-/// Error types that can occur during CBOR deterministic decoding validation.
-///
-/// These errors indicate violations of the deterministic encoding rules
-/// as specified in RFC 8949 Section 4.2.
-///
-/// From RFC 8949:
-/// "A CBOR item (data item) is determined to be encoded in a deterministic way if:"
-/// - It follows minimal encoding rules for integers
-/// - It contains no indefinite-length items
-/// - All contained maps are ordered by their keys (lexicographically)
-/// - No duplicate keys exist in maps
-/// - All floating-point values use minimal length encoding
-#[derive(Debug)]
-pub enum DeterministicError {
-    /// Indicates an integer is not encoded in its shortest possible representation.
-    /// Per RFC 8949 Section 4.2.1:
-    /// "An integer is encoded in the shortest form that can represent the value"
-    NonMinimalInt,
-
-    /// Indicates presence of indefinite-length items, which are forbidden.
-    /// Per RFC 8949 Section 4.2.2:
-    /// "Indefinite-length items must be made definite-length items"
-    IndefiniteLength,
-
-    /// Indicates map keys are not properly sorted.
-    /// Per RFC 8949 Section 4.2.3:
-    /// "The keys in every map must be sorted..."
-    UnorderedMapKeys,
-
-    /// Indicates a map contains duplicate keys.
-    /// Per RFC 8949 Section 4.2.3:
-    /// "No two keys in a map may be equal"
-    DuplicateMapKey,
-
-    /// Corrupted encoding
-    CorruptedEncoding(String),
-
-    /// Indicates unexpected end of input
-    UnexpectedEof,
-
-    /// Indicates that the declared length doesn't match the actual content size
-    InvalidLength(String),
-}
-
-impl fmt::Display for DeterministicError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            DeterministicError::NonMinimalInt => write!(f, "Integer not encoded in minimal form"),
-            DeterministicError::IndefiniteLength => {
-                write!(f, "Indefinite-length items not allowed")
-            },
-            DeterministicError::UnorderedMapKeys => write!(f, "Map keys not in canonical order"),
-            DeterministicError::DuplicateMapKey => write!(f, "Duplicate map key found"),
-            DeterministicError::UnexpectedEof => write!(f, "Unexpected end of input"),
-            DeterministicError::CorruptedEncoding(e) => write!(f, "Corrupted encoding {e}"),
-            DeterministicError::InvalidLength(e) => {
-                write!(f, "Declared length does not match actual content size {e}")
-            },
-        }
-    }
+        .ok_or(minicbor::decode::Error::message(
+            minicbor::decode::Error::message("cannot checked add.."),
+        ))
 }
 
 #[cfg(test)]
