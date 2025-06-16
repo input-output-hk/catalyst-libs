@@ -57,16 +57,21 @@ pub static PROPOSAL_SUBMISSION_ACTION: LazyLock<DocType> = LazyLock::new(|| {
         ACTION_BASE_TYPE,
         PROPOSAL_BASE_TYPE,
         SUBMISSION_ACTION_BASE_TYPE,
-        ];
-        ids.to_vec()
+    ];
+    ids.to_vec()
         .try_into()
         .expect("Failed to convert proposal action document Uuid to DocType")
-    });
-    
+});
+
 /// Proposal Comment Meta Template document type.
 #[allow(clippy::expect_used)]
 pub static PROPOSAL_COMMENT_META_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
-    let ids = &[TEMPLATE_BASE_TYPE, TEMPLATE_BASE_TYPE, COMMENT_BASE_TYPE, PROPOSAL_BASE_TYPE];
+    let ids = &[
+        TEMPLATE_BASE_TYPE,
+        TEMPLATE_BASE_TYPE,
+        COMMENT_BASE_TYPE,
+        PROPOSAL_BASE_TYPE,
+    ];
     ids.to_vec()
         .try_into()
         .expect("Failed to convert proposal comment meta template document Uuid to DocType")
