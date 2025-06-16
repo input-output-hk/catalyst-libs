@@ -3,9 +3,9 @@
 import argparse
 import textwrap
 
-from spec.metadata import Metadata
+from docs.markdown import MarkdownHelpers
 from spec.optional import OptionalField
-from spec.signed_doc import HeaderType, SignedDoc
+from spec.signed_doc import SignedDoc
 
 from .doc_generator import DocGenerator
 from .graphviz_doc_diagram import Cluster, DotFile, DotLink, DotLinkEnd, DotSignedDoc, FontTheme, TableRow
@@ -46,7 +46,7 @@ class DocRelationshipFile(DocGenerator):
 
     def generate(self) -> bool:  # noqa: C901
         """Generate a Document Relationship Diagram File."""
-        doc_names = self._spec.document_names() if self._document_name is None else [self._document_name]
+        doc_names = self._spec.docs.names if self._document_name is None else [self._document_name]
 
         file_id = self._document_name if self._document_name is not None else "All"
         file_title = textwrap.fill(f"{file_id} Document Relationships", width=30)
@@ -58,19 +58,20 @@ class DocRelationshipFile(DocGenerator):
         all_dst_refs: list[str] = []
 
         for doc in doc_names:
-            cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(doc))
+            cluster = Cluster.from_doc_cluster(self._spec.doc_clusters.get(doc))
             doc_table = DotSignedDoc(
                 table_id=doc,
-                title_href=Metadata.doc_ref_link(doc, self._depth, html=True),
+                title_href=MarkdownHelpers.doc_ref_link(doc, self._depth, html=True),
                 cluster=cluster,
             )
-            doc_data = self._spec.get_document(doc)
+            doc_data = self._spec.docs.get(doc)
+            doc_type = doc_data.type.formatted_ids(prefix="", separator="<BR />", suffix="", cbor=False)
 
             # Add content type explicitely to table.
             doc_table.add_row(TableRow(name="content type", value=doc_data.content_type))
 
             # Add all used Metadata to table.
-            for meta in self._spec.all_headers(HeaderType.METADATA):
+            for meta in self._spec.metadata.headers.names:
                 doc_metadata = self._spec.get_metadata(meta, doc)
                 # Skip excluded metadata.
                 if doc_metadata.required == OptionalField.excluded:
@@ -80,7 +81,7 @@ class DocRelationshipFile(DocGenerator):
                     doc_table.add_row(
                         TableRow(
                             name=meta,
-                            value=doc_data.type,
+                            value=doc_type,
                             value_theme=FontTheme(face="Courier", bold=True, italic=True),
                         )
                     )
@@ -96,10 +97,10 @@ class DocRelationshipFile(DocGenerator):
                         dst_dir = "n" if doc == link_dst else "w"
 
                         # Add dummy destination table, in case we don't have it in our docs.
-                        ref_cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(link_dst))
+                        ref_cluster = Cluster.from_doc_cluster(self._spec.doc_clusters.get(link_dst))
                         dummy_table = DotSignedDoc(
                             table_id=link_dst,
-                            title_href=Metadata.doc_ref_link(
+                            title_href=MarkdownHelpers.doc_ref_link(
                                 link_dst,
                                 depth=self._depth,
                                 html=True,
@@ -132,10 +133,10 @@ class DocRelationshipFile(DocGenerator):
             for ref_doc in doc_data.all_docs_referencing:
                 if ref_doc not in doc_names:
                     # Then we need to create a dummy doc and link.
-                    ref_cluster = Cluster.from_doc_cluster(self._spec.doc_in_cluster(ref_doc))
+                    ref_cluster = Cluster.from_doc_cluster(self._spec.doc_clusters.get(ref_doc))
                     ref_doc_table = DotSignedDoc(
                         table_id=ref_doc,
-                        title_href=Metadata.doc_ref_link(ref_doc, self._depth, html=True),
+                        title_href=MarkdownHelpers.doc_ref_link(ref_doc, self._depth, html=True),
                         cluster=ref_cluster,
                     )
                     dot_file.add_table(ref_doc_table)

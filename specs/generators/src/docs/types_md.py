@@ -15,51 +15,33 @@ class TypesMd(DocGenerator):
         """Initialize."""
         super().__init__(args, spec, "types.md")
 
-    def formatted_doc_types(self, name: str) -> str:
-        """Return a formatted doc types entry."""
-        types = self._spec.document_type(name)
-        type_names = ""
-        for sub_type in types:
-            type_names += f"{self._spec.doc_name_for_type(sub_type)}/"
-        return type_names[:-1]
-
-    def formatted_cbor_doc_types(self, name: str) -> str:
-        """Return doc types formatted as cbor."""
-        types = self._spec.document_type(name)
-        type_names = "["
-        for sub_type in types:
-            type_names += self.uuid_as_cbor(sub_type) + ",<br/>"
-        return type_names[:-6] + "]"
-
     def doc_type_summary(self) -> str:
         """Generate a Document Base Type Summary from the Document Specifications Data."""
-        doc_types = self._spec.base_document_types()
-
         doc_type_summary = """
 | Base Type | UUID | CBOR |
 | :--- | :--- | :--- |
 """
 
-        for k, v in doc_types.items():
-            doc_type_summary += f"| {k} | `{v}` | `{self.uuid_as_cbor(v)}` |\n"
+        for type_name in self._spec.base_types.all:
+            uuid = self._spec.base_types.uuid(type_name)
+            doc_type_summary += f"| {type_name} | `{uuid.as_uuid_str}` | `{uuid.as_cbor}` |\n"
 
         return doc_type_summary.strip()
 
     def doc_type_details(self) -> str:
         """Generate a Document Type Detailed Summary from the Document Specifications Data."""
-        docs = self._spec.document_names()
-
         doc_type_details = """
 <!-- markdownlint-disable MD033 -->
 | Document Type | Base Types | CBOR |
 | :--- | :--- | :--- |
 """
 
-        for k in docs:
+        for k in self._spec.docs.names:
+            doc_type = self._spec.docs.type(k)
             doc_type_details += (
                 f"| [{k}]({self.name_to_spec_link(k)}) |"
-                f" {self.formatted_doc_types(k)} |"
-                f" {self.formatted_cbor_doc_types(k)} |\n"
+                f" {doc_type.formatted_names()} |"
+                f" {doc_type.formatted_ids(separator=',<br/>')} |\n"
             )
 
         doc_type_details += "<!-- markdownlint-enable MD033 -->"

@@ -17,7 +17,7 @@ import (
 	}
 }
 
-metadataFormats: #metadataFormats & {
+metadata: formats: #metadataFormats & {
 	"Document Reference": {
 		description: "A document reference identifier"
 		cddl:        "document_ref"
@@ -58,7 +58,7 @@ metadataFormats: #metadataFormats & {
 
 // Types of a Metadata Fields
 #metadataTypes: [
-	for k, _ in metadataFormats {k},
+	for k, _ in metadata.formats {k},
 ]
 
 // Constraint of Types of Metadata Fields
@@ -100,9 +100,6 @@ _allMetadataNames: or([
 	description: string | *""
 	// Optional notes about validating the field.
 	validation: string | *null
-
-	// Is the field exclusive of another field (ie can not exist with that other field in the same document)
-	exclusive: [..._allMetadataNames] | *null
 }
 
 // Metadata fields that are optional
@@ -266,8 +263,8 @@ _metadata: #metadataStruct & {
 }
 
 // Note: we make all normally excluded fields optional at the global level, because they are globally optional
-metadata: _metadata
-metadata: {
+metadata: headers: _metadata
+metadata: headers: {
 	ref: required:           "optional"
 	ref: type:               _allDocNamesList
 	template: required:      "optional"
@@ -282,8 +279,8 @@ metadata: {
 
 // Preferred display order
 // If metadata field not listed, then list them after the explicit ones, in alphabetical order.
-metadata_order: list.UniqueItems
-metadata_order: [..._allMetadataNames] & [
+metadata: order: list.UniqueItems
+metadata: order: [..._allMetadataNames] & [
 	"type",
 	"id",
 	"ver",

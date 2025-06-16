@@ -121,7 +121,7 @@ _allCoseHeaderNames: or([
 	for k in _coseHeaderNames {k},
 ])
 
-coseHeaderFormats: #metadataFormats & {
+cose: headerFormats: #metadataFormats & {
 	"Media Type": {
 		description: "A Media Type string which identifies the payload."
 		cddl:        "media_type"
@@ -138,7 +138,7 @@ coseHeaderFormats: #metadataFormats & {
 
 // Types of a Metadata Fields
 #coseHeaderTypes: [
-	for k, _ in coseHeaderFormats {k},
+	for k, _ in cose.headerFormats {k},
 ]
 
 // Constraint of Types of Cose Header Fields
@@ -197,16 +197,16 @@ _coseSignatureHeaders: #coseHeaders & {
 	}
 }
 
-cose_headers: _coseHeaders
-cose_headers: "content type": value: #allContentTypes
+cose: headers: _coseHeaders
+cose: headers: "content type": value: #allContentTypes
 
 // Preferred display order of cose header fields.
 // if header not listed, display after the listed fields, in alphabetical order.
-cose_headers_order: list.UniqueItems
-cose_headers_order: [
+cose: headersOrder: list.UniqueItems
+cose: headersOrder: [
 	"content type",
 	"content-encoding",
 ]
 
 // Headers defined for signatures.
-cose_signature_headers: _coseSignatureHeaders
+cose: signature_headers: _coseSignatureHeaders

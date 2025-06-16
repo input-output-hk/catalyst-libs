@@ -1,12 +1,16 @@
 """Individual Document Specification."""
 
 import typing
+from functools import cached_property
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, computed_field
 
+from spec.authors import Authors
+from spec.base_types import BaseTypes
+from spec.cddl.cose import CoseHeaders
 from spec.change_log_entry import ChangeLogEntry
-from spec.cose_header import CoseHeader
-from spec.metadata import Metadata
+from spec.doc_types import DocType
+from spec.metadata import MetadataHeaders
 from spec.payload import Payload
 from spec.signers import Signers
 
@@ -28,18 +32,18 @@ def empty_string_list() -> list[str]:
 class Document(BaseModel):
     """Document Data Definition."""
 
-    type: list[str]
+    type: DocType
     description: str | None = Field(default=None)
     validation: str | None = Field(default=None)
     business_logic: DocumentBusinessLogic = Field(
         default_factory=DocumentBusinessLogic,
     )
     notes: list[str]
-    headers: dict[str, CoseHeader]
-    metadata: dict[str, Metadata]
+    headers: CoseHeaders
+    metadata: MetadataHeaders
     payload: Payload | None = Field(default=None)
     signers: Signers
-    authors: dict[str, str]
+    authors: Authors
     versions: list[ChangeLogEntry]
 
     _name: str | None = PrivateAttr(default=None)
@@ -56,17 +60,20 @@ class Document(BaseModel):
 
         # Set all the documents this references.
         all_refs: list[str] = []
-        for meta in self.metadata.values():
+        for name in self.metadata.names:
+            meta = self.metadata.get(name)
             if meta.format == "Document Reference":
                 all_refs.extend(meta.type)
         self._all_refs = list(set(all_refs))
 
+    def set_base_types(self, types: BaseTypes) -> None:
+        """Save a local copy of the Base Types."""
+        self.type.set_base_types(types)
+
     def set_name(self, doc_name: str) -> None:
         """Set the name properties."""
         self.doc_name = doc_name
-
-        for name, meta in self.metadata.items():
-            meta.set_name(name, doc_name)
+        self.metadata.set_name(doc_name)
 
     def add_referer(self, doc_name: str) -> None:
         """Set the name properties."""
@@ -92,8 +99,41 @@ class Document(BaseModel):
     def content_type(self) -> str | list[str]:
         """Get document content type."""
         content_type = self.headers.get("content type")
-        if content_type is not None:
-            content_type = content_type.value
-        if content_type is None:
-            content_type = "Undefined"
-        return content_type
+        if content_type.value is None:
+            return "Undefined"
+        return content_type.value
+
+
+class Documents(RootModel[dict[str, Document]]):
+    """All Documents."""
+
+    root: dict[str, Document]
+
+    def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
+        """Extra setup after we deserialize."""
+        super().model_post_init(context)
+
+        # Set the name and references for each document.
+        for name, doc in self.root.items():
+            doc.set_name(name)
+            for ref_doc in doc.all_references:
+                self.root[ref_doc].add_referer(name)
+
+    def set_base_types(self, types: BaseTypes) -> None:
+        """Save a local copy of the Base Types."""
+        for doc in self.root.values():
+            doc.set_base_types(types)
+
+    def get(self, name: str) -> Document:
+        """Get a document by its name."""
+        return self.root[name]
+
+    @computed_field
+    @cached_property
+    def names(self) -> list[str]:
+        """Get all documents."""
+        return list(self.root.keys())
+
+    def type(self, doc_name: str) -> DocType:
+        """Get the types for a specific document."""
+        return self.root[doc_name].type
