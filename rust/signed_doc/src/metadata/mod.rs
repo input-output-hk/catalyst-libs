@@ -462,7 +462,7 @@ impl minicbor::Encode<()> for Metadata {
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(
             self.0
@@ -472,7 +472,7 @@ impl minicbor::Encode<()> for Metadata {
         )?;
         self.0
             .values()
-            .try_fold(e, |e, field| e.encode_with(field, ctx))?
+            .try_fold(e, |e, field| e.encode(field))?
             .ok()
     }
 }

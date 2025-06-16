@@ -76,9 +76,9 @@ impl TryFrom<&coset::ContentType> for ContentType {
     }
 }
 
-impl<C> minicbor::Encode<C> for ContentType {
+impl minicbor::Encode<()> for ContentType {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // encode as media types, not in CoAP Content-Formats
         e.str(self.to_string().as_str())?;

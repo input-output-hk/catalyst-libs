@@ -120,9 +120,9 @@ pub(crate) fn tbs_data(
     ))?)
 }
 
-impl<C> minicbor::Encode<C> for Signature {
+impl minicbor::Encode<()> for Signature {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(3)?;
         e.bytes(
@@ -137,9 +137,9 @@ impl<C> minicbor::Encode<C> for Signature {
     }
 }
 
-impl<C> minicbor::Encode<C> for Signatures {
+impl minicbor::Encode<()> for Signatures {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(
             self.0

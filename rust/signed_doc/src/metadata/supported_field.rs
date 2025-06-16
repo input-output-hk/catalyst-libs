@@ -27,9 +27,9 @@ enum Label<'a> {
     Str(&'a str),
 }
 
-impl<C> minicbor::Encode<C> for Label<'_> {
+impl minicbor::Encode<()> for Label<'_> {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _: &mut C,
+        &self, e: &mut minicbor::Encoder<W>, _: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             &Label::U8(u) => e.u8(u),
