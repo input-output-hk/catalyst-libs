@@ -218,28 +218,39 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
 }
 
 impl minicbor::Encode<()> for SupportedField {
-    #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let key = self.discriminant().to_cose();
         e.encode(key)?;
 
         match self {
-            SupportedField::ContentType(_content_type) => todo!(),
+            SupportedField::ContentType(content_type) => content_type.encode(e, ctx),
             SupportedField::Id(uuid_v7) | SupportedField::Ver(uuid_v7) => {
-                e.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?
+                uuid_v7.encode(e, &mut catalyst_types::uuid::CborContext::Tagged)
             },
-            SupportedField::Ref(_document_ref)
-            | SupportedField::Reply(_document_ref)
-            | SupportedField::Template(_document_ref)
-            | SupportedField::Parameters(_document_ref) => todo!(),
-            SupportedField::Type(doc_type) => e.encode_with(doc_type, &mut ())?,
-            SupportedField::Collabs(_items) => todo!(),
-            SupportedField::Section(_section) => todo!(),
-            SupportedField::ContentEncoding(_content_encoding) => todo!(),
+            SupportedField::Ref(document_ref)
+            | SupportedField::Reply(document_ref)
+            | SupportedField::Template(document_ref)
+            | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
+            SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
+            SupportedField::Collabs(collabs) => {
+                if !collabs.is_empty() {
+                    e.array(
+                        collabs
+                            .len()
+                            .try_into()
+                            .map_err(minicbor::encode::Error::message)?,
+                    )?;
+                    for collab in collabs {
+                        e.str(collab)?;
+                    }
+                }
+                Ok(())
+            },
+            SupportedField::Section(section) => section.encode(e, ctx),
+            SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }
-        .ok()
     }
 }
 
