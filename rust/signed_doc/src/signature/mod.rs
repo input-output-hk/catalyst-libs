@@ -137,7 +137,6 @@ impl<C> minicbor::Encode<C> for Signatures {
         for sign in self.iter() {
             e.encode(sign)?;
         }
-
         Ok(())
     }
 }
