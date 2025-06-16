@@ -67,7 +67,10 @@ impl Ord for MapEntry {
     /// 1. Compare by length of encoded key
     /// 2. If lengths equal, compare byte wise lexicographically
     fn cmp(&self, other: &Self) -> Ordering {
-        self.key_bytes.cmp(&other.key_bytes)
+        self.key_bytes
+            .len()
+            .cmp(&other.key_bytes.len())
+            .then_with(|| self.key_bytes.cmp(&other.key_bytes))
     }
 }
 
