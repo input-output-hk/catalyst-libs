@@ -461,14 +461,15 @@ impl minicbor::Encode<()> for Metadata {
     /// so the checks must be done elsewhere.
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
-    #[allow(
-        clippy::cast_possible_truncation,
-        reason = "There can't be enough unique fields to overflow `u64`."
-    )]
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.map(self.0.len() as u64)?;
+        e.map(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
         self.0
             .values()
             .try_fold(e, |e, field| e.encode_with(field, ctx))?
