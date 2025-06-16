@@ -9,6 +9,7 @@ use crate::DocType;
 
 /// -------------- Document Types --------------
 /// Brand document type.
+#[allow(clippy::expect_used)]
 pub static BRAND_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[BRAND_BASE_TYPE];
     ids.to_vec()
@@ -17,6 +18,7 @@ pub static BRAND_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
 });
 
 /// Campaign Parameters document type.
+#[allow(clippy::expect_used)]
 pub static CAMPAIGN_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[CAMPAIGN_BASE_TYPE];
     ids.to_vec()
@@ -25,6 +27,7 @@ pub static CAMPAIGN_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
 });
 
 /// Category Parameters document type.
+#[allow(clippy::expect_used)]
 pub static CATEGORY_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[CATEGORY_BASE_TYPE];
     ids.to_vec()
