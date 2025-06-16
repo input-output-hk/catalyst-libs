@@ -242,8 +242,8 @@ impl minicbor::Encode<()> for SupportedField {
                             .try_into()
                             .map_err(minicbor::encode::Error::message)?,
                     )?;
-                    for collab in collabs {
-                        e.str(collab)?;
+                    for c in collabs {
+                        e.str(c)?;
                     }
                 }
                 Ok(())
