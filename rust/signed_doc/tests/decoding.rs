@@ -2,6 +2,7 @@
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
+use common::create_dummy_key_pair;
 use coset::{CborSerializable, TaggedCborSerializable};
 use ed25519_dalek::ed25519::signature::Signer;
 use minicbor::{data::Tag, Encoder};
@@ -175,9 +176,11 @@ fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v4 = UuidV4::new();
 
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, without signatures (unsigned), CBOR tagged.",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
         bytes_gen: Box::new({
             move || {
+                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
@@ -196,7 +199,15 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                 // content
                 e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
                 // signatures
-                e.array(0)?;
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                let mut p_headers = minicbor::Encoder::new(Vec::new());
+                p_headers.map(1)?.u8(4)?.encode(kid)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                e.map(0)?;
+                e.bytes(&[1,2,3])?;
                 Ok(e)
             }
         }),
@@ -209,7 +220,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
                     && (doc.doc_content().decoded_bytes().unwrap()
-                        == serde_json::to_vec(&serde_json::Value::Null).unwrap())
+                        == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
             }
         })),
     }
@@ -242,7 +253,11 @@ fn catalyst_signed_doc_decoding_test() {
             );
 
             if let Some(post_checks) = &case.post_checks {
-                assert!((post_checks.as_ref())(&doc), "Case: [{}]", case.name);
+                assert!(
+                    (post_checks.as_ref())(&doc),
+                    "Case: [{}]. Post checks fails",
+                    case.name
+                );
             }
 
             assert_eq!(
