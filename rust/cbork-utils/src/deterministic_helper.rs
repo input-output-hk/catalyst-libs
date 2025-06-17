@@ -422,7 +422,7 @@ fn check_map_minimal_length(
 
     let initial_byte = decoder.input().get(position).copied().ok_or_else(|| {
         minicbor::decode::Error::message(minicbor::decode::Error::message(
-            ENCODING_ERROR_MSG.to_owned(),
+           "Cannot read initial byte for minimality check"
         ))
     })?;
     // Only check minimality for map length encodings using uint8
