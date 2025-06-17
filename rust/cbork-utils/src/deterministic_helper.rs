@@ -99,13 +99,6 @@ impl Ord for MapEntry {
 /// - Duplicate keys are found (`DuplicateMapKey`)
 /// - Map key or value decoding fails (`DecoderError`)
 pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor::decode::Error> {
-    // Debug: Check if input is empty
-    if d.input().is_empty() {
-        return Err(minicbor::decode::Error::message(
-            "Debug: Input is completely empty",
-        ));
-    }
-
     validate_input_not_empty(d)?;
 
     // Store the starting position BEFORE consuming the map header
