@@ -176,10 +176,10 @@ fn decode_map_entries(
         let value_end = d.position();
 
         // The keys themselves must be deterministically encoded (4.2.1)
-        let key_bytes = extract_cbor_bytes(d, key_start, key_end)?;
+        let key_bytes = get_map_bytes(d, key_start, key_end)?;
         map_keys_are_deterministic(&key_bytes)?;
 
-        let value = extract_cbor_bytes(d, value_start, value_end)?;
+        let value = get_map_bytes(d, value_start, value_end)?;
 
         entries.push(MapEntry { key_bytes, value });
     }
@@ -334,24 +334,6 @@ pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Err
     }
 }
 
-/// Extracts a slice of raw CBOR bytes from the decoder's input buffer for a given range.
-///
-/// This function safely extracts bytes between the specified start and end positions,
-/// performing bounds checking to ensure the requested range is valid.
-fn extract_cbor_bytes(
-    decoder: &minicbor::Decoder<'_>, range_start: usize, range_end: usize,
-) -> Result<Vec<u8>, minicbor::decode::Error> {
-    // Validate CBOR byte range bounds
-    if range_start >= range_end {
-        minicbor::decode::Error::message(
-            "Invalid CBOR byte range: start must be less than end position",
-        );
-    }
-
-    let byte_length = range_end.saturating_sub(range_start);
-    get_checked_slice(decoder.input(), range_start, byte_length).map(<[u8]>::to_vec)
-}
-
 /// Validates map keys are properly ordered according to RFC 8949 Section 4.2.3
 /// and checks for duplicate keys
 fn validate_map_ordering(entries: &[MapEntry]) -> Result<(), minicbor::decode::Error> {
@@ -426,20 +408,6 @@ fn check_map_minimal_length(
     }
 
     Ok(())
-}
-
-/// Gets a slice of the input with bounds checking
-fn get_checked_slice(
-    input: &[u8], start_pos: usize, length: usize,
-) -> Result<&[u8], minicbor::decode::Error> {
-    let end_pos = start_pos
-        .checked_add(length)
-        .ok_or(minicbor::decode::Error::message("cannot checked add"))?;
-    input
-        .get(start_pos..end_pos)
-        .ok_or(minicbor::decode::Error::message(
-            minicbor::decode::Error::message("cannot checked add.."),
-        ))
 }
 
 #[cfg(test)]
