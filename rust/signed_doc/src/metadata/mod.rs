@@ -466,7 +466,7 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value())
+            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.clone().into())
             .text_value(
                 ID_KEY.to_string(),
                 Value::try_from(CborUuidV7(meta.doc_id()?))?,

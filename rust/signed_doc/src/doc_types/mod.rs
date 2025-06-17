@@ -4,16 +4,13 @@
 use std::sync::LazyLock;
 
 use catalyst_types::uuid::Uuid;
-use deprecated::{
-    COMMENT_DOCUMENT_UUID_TYPE, PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
-};
 
 use crate::DocType;
 
 /// Proposal document type.
 #[allow(clippy::expect_used)]
-pub static PROPOSAL_DOC_TYPE: LazyLock<DocType> = LazyLock::new(|| {
-    let ids = &[PROPOSAL_UUID_TYPE];
+pub static PROPOSAL: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[PROPOSAL_BASE_TYPE];
     ids.to_vec()
         .try_into()
         .expect("Failed to convert proposal document Uuid to DocType")
@@ -21,8 +18,8 @@ pub static PROPOSAL_DOC_TYPE: LazyLock<DocType> = LazyLock::new(|| {
 
 /// Proposal comment document type.
 #[allow(clippy::expect_used)]
-pub static PROPOSAL_COMMENT_DOC: LazyLock<DocType> = LazyLock::new(|| {
-    let ids = &[COMMENT_UUID_TYPE, PROPOSAL_UUID_TYPE];
+pub static PROPOSAL_COMMENT: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[COMMENT_BASE_TYPE, PROPOSAL_BASE_TYPE];
     ids.to_vec()
         .try_into()
         .expect("Failed to convert proposal comment document Uuid to DocType")
@@ -30,26 +27,40 @@ pub static PROPOSAL_COMMENT_DOC: LazyLock<DocType> = LazyLock::new(|| {
 
 /// Proposal action document type.
 #[allow(clippy::expect_used)]
-pub static PROPOSAL_ACTION_DOC: LazyLock<DocType> = LazyLock::new(|| {
+pub static PROPOSAL_SUBMISSION_ACTION: LazyLock<DocType> = LazyLock::new(|| {
     let ids = &[
-        ACTION_UUID_TYPE,
-        PROPOSAL_UUID_TYPE,
-        SUBMISSION_ACTION_UUID_TYPE,
+        ACTION_BASE_TYPE,
+        PROPOSAL_BASE_TYPE,
+        SUBMISSION_ACTION_BASE_TYPE,
     ];
     ids.to_vec()
         .try_into()
         .expect("Failed to convert proposal action document Uuid to DocType")
 });
 
-/// Submission Action UUID type.
-pub const SUBMISSION_ACTION_UUID_TYPE: Uuid =
+/// -------------- Base Types --------------
+/// Action UUID base type.
+pub const ACTION_BASE_TYPE: Uuid = Uuid::from_u128(0x5E60_E623_AD02_4A1B_A1AC_406D_B978_EE48);
+/// Brand UUID base type.
+pub const BRAND_BASE_TYPE: Uuid = Uuid::from_u128(0xEBCA_BEEB_5BC5_4F95_91E8_CAB8_CA72_4172);
+/// Campaign UUID base type.
+pub const CAMPAIGN_BASE_TYPE: Uuid = Uuid::from_u128(0x5EF3_2D5D_F240_462C_A7A4_BA4A_F221_FA23);
+/// Category UUID base type.
+pub const CATEGORY_BASE_TYPE: Uuid = Uuid::from_u128(0x8189_38C3_3139_4DAA_AFE6_974C_7848_8E95);
+/// Comment UUID base type.
+pub const COMMENT_BASE_TYPE: Uuid = Uuid::from_u128(0xB679_DED3_0E7C_41BA_89F8_DA62_A178_98EA);
+/// Decision UUID base type.
+pub const DECISION_BASE_TYPE: Uuid = Uuid::from_u128(0x788F_F4C6_D65A_451F_BB33_575F_E056_B411);
+/// Moderation Action UUID base type.
+pub const MODERATION_ACTION_BASE_TYPE: Uuid =
+    Uuid::from_u128(0xA5D2_32B8_5E03_4117_9AFD_BE32_B878_FCDD);
+/// Proposal UUID base type.
+pub const PROPOSAL_BASE_TYPE: Uuid = Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC);
+/// Submission Action UUID base type.
+pub const SUBMISSION_ACTION_BASE_TYPE: Uuid =
     Uuid::from_u128(0x7892_7329_CFD9_4EA1_9C71_0E01_9B12_6A65);
-/// Proposal UUID type.
-pub const PROPOSAL_UUID_TYPE: Uuid = PROPOSAL_DOCUMENT_UUID_TYPE;
-/// Comment UUID type.
-pub const COMMENT_UUID_TYPE: Uuid = COMMENT_DOCUMENT_UUID_TYPE;
-/// Action UUID type.
-pub const ACTION_UUID_TYPE: Uuid = PROPOSAL_ACTION_DOCUMENT_UUID_TYPE;
+/// Template UUID base type.
+pub const TEMPLATE_BASE_TYPE: Uuid = Uuid::from_u128(0x0CE8_AB38_9258_4FBC_A62E_7FAA_6E58_318F);
 
 /// Document type which will be deprecated.
 pub mod deprecated {
