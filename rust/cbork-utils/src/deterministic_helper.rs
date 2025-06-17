@@ -99,47 +99,47 @@ impl Ord for MapEntry {
 /// - Duplicate keys are found (`DuplicateMapKey`)
 /// - Map key or value decoding fails (`DecoderError`)
 pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor::decode::Error> {
+    // Debug: Check if input is empty
+    if d.input().is_empty() {
+        return Err(minicbor::decode::Error::message(
+            "Debug: Input is completely empty",
+        ));
+    }
+
     validate_input_not_empty(d)?;
+
+    // Store the starting position BEFORE consuming the map header
+    let map_start = d.position();
 
     // From RFC 8949 Section 4.2.2:
     // "Indefinite-length items must be made definite-length items."
     // The specification explicitly prohibits indefinite-length items in
     // deterministic encoding to ensure consistent representation.
-    match d.datatype()? {
-        minicbor::data::Type::Map => {},
-        minicbor::data::Type::MapIndef => {
-            minicbor::decode::Error::message(
-                "Indefinite-length items must be made definite-length items",
-            );
-        },
-        _ => {
-            minicbor::decode::Error::message("Expected a map");
-        },
-    }
+    let map_len = d.map()?.ok_or_else(|| {
+        minicbor::decode::Error::message(
+            "Indefinite-length items must be made definite-length items",
+        )
+    })?;
 
-    let start_pos = d.position();
-    let map_len = d.map()?.ok_or(minicbor::decode::Error::end_of_input())?;
+    let header_end_pos = d.position();
 
-    check_map_minimal_length(d, start_pos, map_len)?;
-
-    // Store the starting position of the entire map
-    let map_start = start_pos;
+    check_map_minimal_length(d, header_end_pos, map_len)?;
 
     // Decode entries to validate them
     let entries = decode_map_entries(d, map_len)?;
+
     validate_map_ordering(&entries)?;
 
     // Get the ending position after validation
     let map_end = d.position();
 
-    // Return the raw bytes of the entire validated map
-    get_map_bytes(d, map_start, map_end)
+    get_bytes(d, map_start, map_end)
 }
 
 /// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
 /// This function retrieves the raw byte representation of a CBOR map between the given
 /// start and end positions from the decoder's underlying buffer.
-fn get_map_bytes(
+fn get_bytes(
     d: &Decoder<'_>, map_start: usize, map_end: usize,
 ) -> Result<Vec<u8>, minicbor::decode::Error> {
     d.input()
@@ -176,10 +176,10 @@ fn decode_map_entries(
         let value_end = d.position();
 
         // The keys themselves must be deterministically encoded (4.2.1)
-        let key_bytes = get_map_bytes(d, key_start, key_end)?;
+        let key_bytes = get_bytes(d, key_start, key_end)?;
         map_keys_are_deterministic(&key_bytes)?;
 
-        let value = get_map_bytes(d, value_start, value_end)?;
+        let value = get_bytes(d, value_start, value_end)?;
 
         entries.push(MapEntry { key_bytes, value });
     }
@@ -375,10 +375,8 @@ fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicb
 
 /// Validates that the decoder's input buffer is not empty.
 fn validate_input_not_empty(d: &Decoder) -> Result<(), minicbor::decode::Error> {
-    if d.position() >= d.input().len() {
-        return Err(minicbor::decode::Error::message(
-            minicbor::decode::Error::message("Empty input buffer"),
-        ));
+    if d.input().is_empty() {
+        return Err(minicbor::decode::Error::end_of_input());
     }
     Ok(())
 }
@@ -400,6 +398,11 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), minicbor::decode::Error> 
 fn check_map_minimal_length(
     decoder: &Decoder, position: usize, value: u64,
 ) -> Result<(), minicbor::decode::Error> {
+    // For zero length, 0xA0 is always the minimal encoding
+    if value == 0 {
+        return Ok(());
+    }
+
     let initial_byte = decoder.input().get(position).copied().ok_or_else(|| {
         minicbor::decode::Error::message(minicbor::decode::Error::message(
             "Cannot read initial byte for minimality check",
