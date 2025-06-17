@@ -323,14 +323,18 @@ pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Err
         27 => Ok(9),
         // Value 31 indicates indefinite length, which is not allowed in
         // deterministic encoding per RFC 8949 section 4.2.1
-        31 => Err(minicbor::decode::Error::message(
-            "Cannot determine size of indefinite length item",
-        )),
+        31 => {
+            Err(minicbor::decode::Error::message(
+                "Cannot determine size of indefinite length item",
+            ))
+        },
 
         // Values 28-30 are reserved in RFC 8949 and not valid in current CBOR
-        _ => Err(minicbor::decode::Error::message(
-            "Invalid additional info in CBOR header",
-        )),
+        _ => {
+            Err(minicbor::decode::Error::message(
+                "Invalid additional info in CBOR header",
+            ))
+        },
     }
 }
 
@@ -361,9 +365,11 @@ fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicb
     match current.cmp(next) {
         Ordering::Less => Ok(()), // Valid: keys are in ascending order
         Ordering::Equal => Err(minicbor::decode::Error::message("Duplicate map key found")),
-        Ordering::Greater => Err(minicbor::decode::Error::message(
-            "Map keys not in canonical order",
-        )),
+        Ordering::Greater => {
+            Err(minicbor::decode::Error::message(
+                "Map keys not in canonical order",
+            ))
+        },
     }
 }
 
