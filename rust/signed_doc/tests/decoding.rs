@@ -9,36 +9,17 @@ use ed25519_dalek::ed25519::signature::Signer;
 mod common;
 
 #[test]
-fn catalyst_signed_doc_cbor_roundtrip_test() {
-    let (uuid_v7, uuid_v4, metadata_fields) = common::test_metadata();
-    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
-
-    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
-
-    let doc = Builder::new()
-        .with_json_metadata(metadata_fields.clone())
-        .unwrap()
-        .with_decoded_content(content.clone())
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
-        .unwrap()
-        .build();
-
-    assert!(!doc.problem_report().is_problematic());
-
-    let bytes: Vec<u8> = doc.try_into().unwrap();
-    let decoded: CatalystSignedDocument = bytes.as_slice().try_into().unwrap();
-    let extra_fields: ExtraFields = serde_json::from_value(metadata_fields).unwrap();
-
-    assert_eq!(decoded.doc_type().unwrap(), uuid_v4);
-    assert_eq!(decoded.doc_id().unwrap(), uuid_v7);
-    assert_eq!(decoded.doc_ver().unwrap(), uuid_v7);
-    assert_eq!(decoded.doc_content().decoded_bytes().unwrap(), &content);
-    assert_eq!(decoded.doc_meta(), &extra_fields);
+fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
+    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
+    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
+        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        None,
+    ));
 }
 
-#[test]
-fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
-    let (_, _, metadata_fields) = common::test_metadata();
+#[allow(clippy::unwrap_used)]
+fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (_, _, metadata_fields) = data;
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
     // transform Catalyst ID URI form to the ID form
     let kid = kid.as_id();
@@ -57,9 +38,19 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
 }
 
 #[tokio::test]
-#[allow(clippy::too_many_lines)]
 async fn catalyst_signed_doc_parameters_aliases_test() {
-    let (_, _, metadata_fields) = common::test_metadata();
+    catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
+    catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
+        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        None,
+    ))
+    .await;
+}
+
+#[allow(clippy::unwrap_used)]
+#[allow(clippy::too_many_lines)]
+async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_json::Value)) {
+    let (_, _, metadata_fields) = data;
     let (sk, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid.clone(), pk);
@@ -180,4 +171,134 @@ async fn catalyst_signed_doc_parameters_aliases_test() {
         .try_into()
         .unwrap();
     assert!(doc.problem_report().is_problematic());
+}
+
+type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
+
+struct TestCase {
+    name: &'static str,
+    bytes_gen: Box<dyn Fn() -> Vec<u8>>,
+    // If the provided bytes can be even decoded without error (valid COSE or not).
+    // If set to `false` all further checks will not even happen.
+    can_decode: bool,
+    // If the decoded doc is a valid `CatalystSignedDocument`, underlying problem report is empty.
+    valid_doc: bool,
+    post_checks: Option<Box<PostCheck>>,
+}
+
+fn decoding_empty_bytes_case() -> TestCase {
+    TestCase {
+        name: "Decoding empty bytes",
+        bytes_gen: Box::new(Vec::new),
+        can_decode: false,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
+#[allow(clippy::unwrap_used)]
+fn signed_doc_with_all_fields_case() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+
+    TestCase {
+        name: "Catalyst Signed Doc with ALL defined metadata fields and signatures",
+        bytes_gen: Box::new({
+            let kid = kid.clone();
+            move || {
+                Builder::new()
+                    .with_json_metadata(serde_json::json!({
+                        "content-type": ContentType::Json.to_string(),
+                        "content-encoding": ContentEncoding::Brotli.to_string(),
+                        "type": uuid_v4.to_string(),
+                        "id": uuid_v7.to_string(),
+                        "ver": uuid_v7.to_string(),
+                        "ref": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+                        "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+                        "template": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+                        "section": "$".to_string(),
+                        "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
+                        "parameters": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
+                    }))
+                    .unwrap()
+                    .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
+                    .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+                    .unwrap()
+                    .build()
+                    .try_into()
+                    .unwrap()
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                (doc.doc_type().unwrap() == &DocType::from(uuid_v4))
+                    && (doc.doc_id().unwrap() == uuid_v7)
+                    && (doc.doc_ver().unwrap() == uuid_v7)
+                    && (doc.doc_content_type().unwrap() == ContentType::Json)
+                    && (doc.doc_content_encoding().unwrap() == ContentEncoding::Brotli)
+                    && (doc.doc_meta().doc_ref().unwrap()
+                        == DocumentRef {
+                            id: uuid_v7,
+                            ver: uuid_v7,
+                        })
+                    && (doc.doc_meta().reply().unwrap()
+                        == DocumentRef {
+                            id: uuid_v7,
+                            ver: uuid_v7,
+                        })
+                    && (doc.doc_meta().template().unwrap()
+                        == DocumentRef {
+                            id: uuid_v7,
+                            ver: uuid_v7,
+                        })
+                    && (doc.doc_meta().parameters().unwrap()
+                        == DocumentRef {
+                            id: uuid_v7,
+                            ver: uuid_v7,
+                        })
+                    && (doc.doc_meta().section().unwrap() == &"$".parse::<Section>().unwrap())
+                    && (doc.doc_meta().collabs() == ["Alex1".to_string(), "Alex2".to_string()])
+                    && (doc.doc_content().decoded_bytes().unwrap()
+                        == serde_json::to_vec(&serde_json::Value::Null).unwrap())
+                    && (doc.kids() == vec![kid.clone()])
+            }
+        })),
+    }
+}
+
+#[test]
+fn catalyst_signed_doc_decoding_test() {
+    let test_cases = [
+        decoding_empty_bytes_case(),
+        signed_doc_with_all_fields_case(),
+    ];
+
+    for case in test_cases {
+        let bytes = case.bytes_gen.as_ref()();
+        let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
+        assert_eq!(doc_res.is_ok(), case.can_decode, "Case: [{}]", case.name);
+        if let Ok(doc) = doc_res {
+            assert_eq!(
+                !doc.problem_report().is_problematic(),
+                case.valid_doc,
+                "Case: [{}]. Problem report: {:?}",
+                case.name,
+                doc.problem_report()
+            );
+
+            if let Some(post_checks) = &case.post_checks {
+                assert!((post_checks.as_ref())(&doc), "Case: [{}]", case.name);
+            }
+
+            assert_eq!(
+                bytes,
+                Vec::<u8>::try_from(doc).unwrap(),
+                "Case: [{}]. Asymmetric encoding and decoding procedure",
+                case.name
+            );
+        }
+    }
 }

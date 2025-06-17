@@ -2,6 +2,7 @@
 
 mod builder;
 mod content;
+mod decode_context;
 pub mod doc_types;
 mod metadata;
 pub mod providers;
@@ -22,7 +23,8 @@ pub use catalyst_types::{
 };
 pub use content::Content;
 use coset::{CborSerializable, Header, TaggedCborSerializable};
-pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
+use decode_context::{CompatibilityPolicy, DecodeContext};
+pub use metadata::{ContentEncoding, ContentType, DocType, DocumentRef, Metadata, Section};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
@@ -85,11 +87,11 @@ impl From<InnerCatalystSignedDocument> for CatalystSignedDocument {
 impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
 
-    /// Return Document Type `UUIDv4`.
+    /// Return Document Type `DocType` - List of `UUIDv4`.
     ///
     /// # Errors
     /// - Missing 'type' field.
-    pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
+    pub fn doc_type(&self) -> anyhow::Result<&DocType> {
         self.inner.metadata.doc_type()
     }
 
@@ -130,9 +132,10 @@ impl CatalystSignedDocument {
     }
 
     /// Return document metadata content.
+    // TODO: remove this and provide getters from metadata like the rest of its fields have.
     #[must_use]
-    pub fn doc_meta(&self) -> &ExtraFields {
-        self.inner.metadata.extra()
+    pub fn doc_meta(&self) -> &Metadata {
+        &self.inner.metadata
     }
 
     /// Return a Document's signatures
@@ -235,8 +238,12 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
             })?;
 
-        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        let metadata = Metadata::from_protected_header(&cose_sign.protected, &report);
+        let mut report = ProblemReport::new(PROBLEM_REPORT_CTX);
+        let mut ctx = DecodeContext {
+            compatibility_policy: CompatibilityPolicy::Accept,
+            report: &mut report,
+        };
+        let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut ctx);
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
