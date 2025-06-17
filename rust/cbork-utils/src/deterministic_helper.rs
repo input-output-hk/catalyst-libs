@@ -418,7 +418,6 @@ fn validate_input_not_empty(d: &Decoder) -> Result<(), minicbor::decode::Error> 
 fn check_map_minimal_length(
     decoder: &Decoder, position: usize, value: u64,
 ) -> Result<(), minicbor::decode::Error> {
-    const ENCODING_ERROR_MSG: &str = "Cannot read initial byte for minimality check";
 
     let initial_byte = decoder.input().get(position).copied().ok_or_else(|| {
         minicbor::decode::Error::message(minicbor::decode::Error::message(
