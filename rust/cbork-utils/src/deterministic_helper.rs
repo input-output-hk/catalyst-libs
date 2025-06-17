@@ -139,7 +139,7 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor
 /// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
 /// This function retrieves the raw byte representation of a CBOR map between the given
 /// start and end positions from the decoder's underlying buffer.
-fn get_map_bytes(
+fn get_bytes(
     d: &Decoder<'_>, map_start: usize, map_end: usize,
 ) -> Result<Vec<u8>, minicbor::decode::Error> {
     d.input()
