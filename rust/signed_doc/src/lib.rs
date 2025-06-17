@@ -237,7 +237,7 @@ impl<C> Encode<C> for CatalystSignedDocument {
         if let Some(raw_bytes) = &self.inner.raw_bytes {
             e.writer_mut()
                 .write_all(raw_bytes)
-                .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))?;
+                .map_err(minicbor::encode::Error::write)?;
         } else {
             // COSE_Sign tag
             // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
