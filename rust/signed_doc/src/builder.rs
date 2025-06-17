@@ -2,7 +2,6 @@
 use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
 
 use crate::{
-    metadata::SupportedField,
     signature::{tbs_data, Signature},
     CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
     PROBLEM_REPORT_CTX,
@@ -30,13 +29,6 @@ impl Builder {
             signatures: Signatures::default(),
             raw_bytes: None,
         })
-    }
-
-    /// Set the provided supported field
-    #[must_use]
-    pub fn with_field(mut self, field: SupportedField) -> Self {
-        self.0.metadata.add_field(field);
-        self
     }
 
     /// Set document metadata in JSON format

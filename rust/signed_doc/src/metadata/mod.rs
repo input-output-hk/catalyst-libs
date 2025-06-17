@@ -24,8 +24,10 @@ pub use section::Section;
 use strum::IntoDiscriminant as _;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
 
-pub use crate::metadata::supported_field::SupportedField;
-use crate::{decode_context::DecodeContext, metadata::supported_field::SupportedLabel};
+use crate::{
+    decode_context::DecodeContext,
+    metadata::supported_field::{SupportedField, SupportedLabel},
+};
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -228,11 +230,6 @@ impl Metadata {
             .get(&SupportedLabel::Parameters)
             .and_then(SupportedField::try_as_parameters_ref)
             .copied()
-    }
-
-    /// Add a provided metadata field
-    pub(crate) fn add_field(&mut self, field: SupportedField) {
-        self.0.insert(field.discriminant(), field);
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.

@@ -180,9 +180,7 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{
-        metadata::SupportedField, providers::tests::TestCatalystSignedDocumentProvider, Builder,
-    };
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
@@ -204,57 +202,75 @@ mod tests {
         // prepare replied documents
         {
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(valid_template_doc_id))
-                .with_field(SupportedField::Ver(valid_template_doc_id))
-                .with_field(SupportedField::Type(exp_template_type.into()))
-                .with_field(SupportedField::ContentType(content_type))
+                .with_json_metadata(serde_json::json!({
+                    "id": valid_template_doc_id.to_string(),
+                    "ver": valid_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string(),
+                    "content-type": content_type.to_string(),
+                }))
+                .unwrap()
                 .with_decoded_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // reply doc with other `type` field
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(another_type_template_doc_id))
-                .with_field(SupportedField::Ver(another_type_template_doc_id))
-                .with_field(SupportedField::Type(UuidV4::new().into()))
-                .with_field(SupportedField::ContentType(content_type))
+                .with_json_metadata(serde_json::json!({
+                    "id": another_type_template_doc_id.to_string(),
+                    "ver": another_type_template_doc_id.to_string(),
+                    "type": UuidV4::new().to_string(),
+                    "content-type": content_type.to_string(),
+                }))
+                .unwrap()
                 .with_decoded_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // missing `type` field in the referenced document
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(missing_type_template_doc_id))
-                .with_field(SupportedField::Ver(missing_type_template_doc_id))
-                .with_field(SupportedField::ContentType(content_type))
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_type_template_doc_id.to_string(),
+                    "ver": missing_type_template_doc_id.to_string(),
+                    "content-type": content_type.to_string(),
+                }))
+                .unwrap()
                 .with_decoded_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // missing `content-type` field in the referenced document
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(missing_content_type_template_doc_id))
-                .with_field(SupportedField::Ver(missing_content_type_template_doc_id))
-                .with_field(SupportedField::Type(exp_template_type.into()))
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_content_type_template_doc_id.to_string(),
+                    "ver": missing_content_type_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string(),
+                }))
+                .unwrap()
                 .with_decoded_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // missing content
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(missing_content_template_doc_id))
-                .with_field(SupportedField::Ver(missing_content_template_doc_id))
-                .with_field(SupportedField::Type(exp_template_type.into()))
-                .with_field(SupportedField::ContentType(content_type))
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_content_template_doc_id.to_string(),
+                    "ver": missing_content_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string(),
+                    "content-type": content_type.to_string(),
+                }))
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // invalid content, must be json encoded
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(invalid_content_template_doc_id))
-                .with_field(SupportedField::Ver(invalid_content_template_doc_id))
-                .with_field(SupportedField::Type(exp_template_type.into()))
-                .with_field(SupportedField::ContentType(content_type))
+                .with_json_metadata(serde_json::json!({
+                    "id": invalid_content_template_doc_id.to_string(),
+                    "ver": invalid_content_template_doc_id.to_string(),
+                    "type": exp_template_type.to_string(),
+                    "content-type": content_type.to_string(),
+                }))
+                .unwrap()
                 .with_decoded_content(vec![])
                 .build();
             provider.add_document(ref_doc).unwrap();
@@ -265,16 +281,18 @@ mod tests {
             exp_template_type: exp_template_type.into(),
         };
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: valid_template_doc_id,
-                ver: valid_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing `template` field, but its required
         let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({}))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
@@ -284,10 +302,10 @@ mod tests {
             exp_template_type: exp_template_type.into(),
         };
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: valid_template_doc_id,
-                ver: valid_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -296,30 +314,30 @@ mod tests {
             exp_template_type: exp_template_type.into(),
         };
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: valid_template_doc_id,
-                ver: valid_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(vec![])
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: another_type_template_doc_id,
-                ver: another_type_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": another_type_template_doc_id.to_string(), "ver": another_type_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: missing_type_template_doc_id,
-                ver: missing_type_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": missing_type_template_doc_id.to_string(), "ver": missing_type_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
@@ -329,40 +347,40 @@ mod tests {
             exp_template_type: exp_template_type.into(),
         };
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: missing_content_type_template_doc_id,
-                ver: missing_content_type_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": missing_content_type_template_doc_id.to_string(), "ver": missing_content_type_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing content in the referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: missing_content_template_doc_id,
-                ver: missing_content_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": missing_content_template_doc_id.to_string(), "ver": missing_content_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded in the referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: invalid_content_template_doc_id,
-                ver: invalid_content_template_doc_id,
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": invalid_content_template_doc_id.to_string(), "ver": invalid_content_template_doc_id.to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: UuidV7::new(),
-                ver: UuidV7::new(),
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
+            .unwrap()
             .with_decoded_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
@@ -399,12 +417,9 @@ mod tests {
         // defined `template` field which should be absent
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
-        let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: ref_id,
-                ver: ref_ver,
-            }))
-            .with_decoded_content(json_content)
+        let doc =  Builder::new().with_decoded_content(json_content)
+            .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
@@ -421,10 +436,8 @@ mod tests {
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_field(SupportedField::Template(crate::DocumentRef {
-                id: ref_id,
-                ver: ref_ver,
-            }))
+            .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }

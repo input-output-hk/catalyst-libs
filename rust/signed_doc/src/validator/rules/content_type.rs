@@ -74,7 +74,7 @@ impl ContentTypeRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{metadata::SupportedField, Builder};
+    use crate::Builder;
 
     #[tokio::test]
     async fn cbor_with_trailing_bytes_test() {
@@ -89,7 +89,8 @@ mod tests {
         };
 
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(cbor_rule.exp))
+            .with_json_metadata(serde_json::json!({ "content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(buf)
             .build();
 
@@ -106,7 +107,8 @@ mod tests {
         };
 
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(cbor_rule.exp))
+            .with_json_metadata(serde_json::json!({ "content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(invalid_bytes.into())
             .build();
 
@@ -121,27 +123,31 @@ mod tests {
 
         // with json bytes
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(cbor_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
 
         // with cbor bytes
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(cbor_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(true)));
 
         // without content
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(cbor_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
 
         // with empty content
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(cbor_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(vec![])
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
@@ -155,27 +161,31 @@ mod tests {
 
         // with json bytes
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(json_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(true)));
 
         // with cbor bytes
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(json_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(false)));
 
         // without content
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(json_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(false)));
 
         // with empty content
         let doc = Builder::new()
-            .with_field(SupportedField::ContentType(json_rule.exp))
+            .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
+            .unwrap()
             .with_decoded_content(vec![])
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(false)));

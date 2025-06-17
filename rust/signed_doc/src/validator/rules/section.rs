@@ -41,15 +41,16 @@ impl SectionRule {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use super::*;
-    use crate::{metadata::SupportedField, Builder, Section};
+    use crate::Builder;
 
     #[tokio::test]
     async fn section_rule_specified_test() {
         let doc = Builder::new()
-            .with_field(SupportedField::Section(Section::from_str("$").unwrap()))
+            .with_json_metadata(serde_json::json!({
+                "section": "$".to_string()
+            }))
+            .unwrap()
             .build();
         let rule = SectionRule::Specified { optional: false };
         assert!(rule.check(&doc).await.unwrap());
@@ -71,7 +72,10 @@ mod tests {
         assert!(rule.check(&doc).await.unwrap());
 
         let doc = Builder::new()
-            .with_field(SupportedField::Section(Section::from_str("$").unwrap()))
+            .with_json_metadata(serde_json::json!({
+                "section": "$".to_string()
+            }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc).await.unwrap());
     }

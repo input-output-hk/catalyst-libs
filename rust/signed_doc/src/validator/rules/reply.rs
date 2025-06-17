@@ -88,10 +88,7 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{
-        metadata::SupportedField, providers::tests::TestCatalystSignedDocumentProvider, Builder,
-        DocumentRef,
-    };
+    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
 
     #[allow(clippy::too_many_lines)]
     #[tokio::test]
@@ -114,44 +111,47 @@ mod tests {
         // prepare replied documents
         {
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(valid_replied_doc_id))
-                .with_field(SupportedField::Ver(valid_replied_doc_ver))
-                .with_field(SupportedField::Type(exp_reply_type.into()))
-                .with_field(SupportedField::Ref(DocumentRef {
-                    id: common_ref_id,
-                    ver: common_ref_ver,
+                .with_json_metadata(serde_json::json!({
+                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                    "id": valid_replied_doc_id.to_string(),
+                    "ver": valid_replied_doc_ver.to_string(),
+                    "type": exp_reply_type.to_string()
                 }))
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // reply doc with other `type` field
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(another_type_replied_doc_id))
-                .with_field(SupportedField::Ver(another_type_replied_doc_ver))
-                .with_field(SupportedField::Type(UuidV4::new().into()))
-                .with_field(SupportedField::Ref(DocumentRef {
-                    id: common_ref_id,
-                    ver: common_ref_ver,
+                .with_json_metadata(serde_json::json!({
+                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                    "id": another_type_replied_doc_id.to_string(),
+                    "ver": another_type_replied_doc_ver.to_string(),
+                    "type": UuidV4::new().to_string()
                 }))
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // missing `ref` field in the referenced document
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(missing_ref_replied_doc_id))
-                .with_field(SupportedField::Ver(missing_ref_replied_doc_ver))
-                .with_field(SupportedField::Type(exp_reply_type.into()))
+                .with_json_metadata(serde_json::json!({
+                    "id": missing_ref_replied_doc_id.to_string(),
+                    "ver": missing_ref_replied_doc_ver.to_string(),
+                    "type": exp_reply_type.to_string()
+                }))
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
             // missing `type` field in the referenced document
             let ref_doc = Builder::new()
-                .with_field(SupportedField::Id(missing_type_replied_doc_id))
-                .with_field(SupportedField::Ver(missing_type_replied_doc_ver))
-                .with_field(SupportedField::Ref(DocumentRef {
-                    id: common_ref_id,
-                    ver: common_ref_ver,
+                .with_json_metadata(serde_json::json!({
+                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                    "id": missing_type_replied_doc_id.to_string(),
+                    "ver": missing_type_replied_doc_ver.to_string(),
                 }))
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
         }
@@ -162,14 +162,11 @@ mod tests {
             optional: false,
         };
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: common_ref_id,
-                ver: common_ref_ver,
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
             }))
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: valid_replied_doc_id,
-                ver: valid_replied_doc_ver,
-            }))
+            .unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
@@ -187,84 +184,69 @@ mod tests {
             optional: false,
         };
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: common_ref_id,
-                ver: common_ref_ver,
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
             }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field
         let doc = Builder::new()
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: valid_replied_doc_id,
-                ver: valid_replied_doc_ver,
+            .with_json_metadata(serde_json::json!({
+                "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
             }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // reference to the document with another `type` field
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: common_ref_id,
-                ver: common_ref_ver,
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                "reply": { "id": another_type_replied_doc_id.to_string(), "ver": another_type_replied_doc_ver.to_string() }
             }))
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: another_type_replied_doc_id,
-                ver: another_type_replied_doc_ver,
-            }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `ref` field in the referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: common_ref_id,
-                ver: common_ref_ver,
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                "reply": { "id": missing_ref_replied_doc_id.to_string(), "ver": missing_type_replied_doc_ver.to_string() }
             }))
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: missing_ref_replied_doc_id,
-                ver: missing_ref_replied_doc_ver,
-            }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `type` field in the referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: common_ref_id,
-                ver: common_ref_ver,
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                "reply": { "id": missing_type_replied_doc_id.to_string(), "ver": missing_type_replied_doc_ver.to_string() }
             }))
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: missing_type_replied_doc_id,
-                ver: missing_type_replied_doc_ver,
-            }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // `ref` field does not align with the referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: UuidV7::new(),
-                ver: UuidV7::new(),
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() },
+                "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
             }))
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: valid_replied_doc_id,
-                ver: valid_replied_doc_ver,
-            }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // cannot find a referenced document
         let doc = Builder::new()
-            .with_field(SupportedField::Ref(DocumentRef {
-                id: common_ref_id,
-                ver: common_ref_ver,
+            .with_json_metadata(serde_json::json!({
+                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
+                "reply": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
             }))
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: UuidV7::new(),
-                ver: UuidV7::new(),
-            }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
@@ -280,10 +262,8 @@ mod tests {
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_field(SupportedField::Reply(DocumentRef {
-                id: ref_id,
-                ver: ref_ver,
-            }))
+            .with_json_metadata(serde_json::json!({"reply": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
