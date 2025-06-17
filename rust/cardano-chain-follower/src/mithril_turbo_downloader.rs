@@ -171,7 +171,7 @@ impl Inner {
                 // No dedup, just extract it into the tmp directory as-is.
                 entry.unpack_in(&tmp_dir).inspect_err(|e| {
                     // Handle known I/O error kinds explicitly - `StorageFull`
-                    // All other error kinds are logged as it is.
+                    // All other error kinds are logged as unhandled.
                     if e.kind() == ErrorKind::StorageFull {
                         error!(
                             chain = %self.cfg.chain,
