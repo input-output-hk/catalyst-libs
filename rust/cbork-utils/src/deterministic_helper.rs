@@ -139,7 +139,7 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor
 /// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
 /// This function retrieves the raw byte representation of a CBOR map between the given
 /// start and end positions from the decoder's underlying buffer.
-fn get_bytes(
+fn get_map_bytes(
     d: &Decoder<'_>, map_start: usize, map_end: usize,
 ) -> Result<Vec<u8>, minicbor::decode::Error> {
     d.input()
@@ -323,18 +323,14 @@ pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Err
         27 => Ok(9),
         // Value 31 indicates indefinite length, which is not allowed in
         // deterministic encoding per RFC 8949 section 4.2.1
-        31 => {
-            Err(minicbor::decode::Error::message(
-                "Cannot determine size of indefinite length item",
-            ))
-        },
+        31 => Err(minicbor::decode::Error::message(
+            "Cannot determine size of indefinite length item",
+        )),
 
         // Values 28-30 are reserved in RFC 8949 and not valid in current CBOR
-        _ => {
-            Err(minicbor::decode::Error::message(
-                "Invalid additional info in CBOR header",
-            ))
-        },
+        _ => Err(minicbor::decode::Error::message(
+            "Invalid additional info in CBOR header",
+        )),
     }
 }
 
@@ -383,11 +379,9 @@ fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicb
     match current.cmp(next) {
         Ordering::Less => Ok(()), // Valid: keys are in ascending order
         Ordering::Equal => Err(minicbor::decode::Error::message("Duplicate map key found")),
-        Ordering::Greater => {
-            Err(minicbor::decode::Error::message(
-                "Map keys not in canonical order",
-            ))
-        },
+        Ordering::Greater => Err(minicbor::decode::Error::message(
+            "Map keys not in canonical order",
+        )),
     }
 }
 
