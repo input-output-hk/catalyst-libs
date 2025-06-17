@@ -29,7 +29,7 @@ enum Label<'a> {
 
 impl minicbor::Encode<()> for Label<'_> {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _: &mut (),
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             &Label::U8(u) => e.u8(u),

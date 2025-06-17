@@ -294,7 +294,7 @@ pub async fn validate_signatures(
     let sign_rules = doc
         .signatures()
         .iter()
-        .map(|sign| validate_signature(&doc, sign, provider, doc.report()));
+        .map(|sign| validate_signature(doc, sign, provider, doc.report()));
 
     let res = futures::future::join_all(sign_rules)
         .await
