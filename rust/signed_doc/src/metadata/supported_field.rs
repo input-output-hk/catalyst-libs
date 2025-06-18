@@ -8,8 +8,8 @@ use catalyst_types::uuid::UuidV7;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
-    metadata::{custom_transient_decode_error, MetadataDecodeContext, MetadataEncodeContext},
-    ContentEncoding, ContentType, DocType, DocumentRef, Section,
+    metadata::custom_transient_decode_error, ContentEncoding, ContentType, DocType, DocumentRef,
+    Section,
 };
 
 /// COSE label. May be either a signed integer or a string.
@@ -27,9 +27,9 @@ enum Label<'a> {
     Str(&'a str),
 }
 
-impl<C> minicbor::Encode<C> for Label<'_> {
+impl minicbor::Encode<()> for Label<'_> {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _: &mut C,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             &Label::U8(u) => e.u8(u),
@@ -166,10 +166,10 @@ impl Display for SupportedLabel {
     }
 }
 
-impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for SupportedField {
     #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut MetadataDecodeContext,
+        d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
 
@@ -195,10 +195,16 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
-            SupportedLabel::Id => d.decode_with(&mut ctx.uuid_context).map(Self::Id),
+            SupportedLabel::Id => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Id)
+            },
             SupportedLabel::Ref => todo!(),
-            SupportedLabel::Ver => d.decode_with(&mut ctx.uuid_context).map(Self::Ver),
-            SupportedLabel::Type => d.decode_with(&mut ctx.doc_type_context()).map(Self::Type),
+            SupportedLabel::Ver => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Ver)
+            },
+            SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
             SupportedLabel::Reply => todo!(),
             SupportedLabel::Collabs => todo!(),
             SupportedLabel::Section => todo!(),
@@ -211,29 +217,40 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
     }
 }
 
-impl minicbor::Encode<MetadataEncodeContext> for SupportedField {
-    #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
+impl minicbor::Encode<()> for SupportedField {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut MetadataEncodeContext,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let key = self.discriminant().to_cose();
         e.encode(key)?;
 
         match self {
-            SupportedField::ContentType(_content_type) => todo!(),
+            SupportedField::ContentType(content_type) => content_type.encode(e, ctx),
             SupportedField::Id(uuid_v7) | SupportedField::Ver(uuid_v7) => {
-                e.encode_with(uuid_v7, &mut ctx.uuid_context)?
+                uuid_v7.encode(e, &mut catalyst_types::uuid::CborContext::Tagged)
             },
-            SupportedField::Ref(_document_ref)
-            | SupportedField::Reply(_document_ref)
-            | SupportedField::Template(_document_ref)
-            | SupportedField::Parameters(_document_ref) => todo!(),
-            SupportedField::Type(doc_type) => e.encode_with(doc_type, &mut ctx.report)?,
-            SupportedField::Collabs(_items) => todo!(),
-            SupportedField::Section(_section) => todo!(),
-            SupportedField::ContentEncoding(_content_encoding) => todo!(),
+            SupportedField::Ref(document_ref)
+            | SupportedField::Reply(document_ref)
+            | SupportedField::Template(document_ref)
+            | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
+            SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
+            SupportedField::Collabs(collabs) => {
+                if !collabs.is_empty() {
+                    e.array(
+                        collabs
+                            .len()
+                            .try_into()
+                            .map_err(minicbor::encode::Error::message)?,
+                    )?;
+                    for c in collabs {
+                        e.str(c)?;
+                    }
+                }
+                Ok(())
+            },
+            SupportedField::Section(section) => section.encode(e, ctx),
+            SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }
-        .ok()
     }
 }
 

@@ -5,10 +5,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG},
-};
+use catalyst_types::uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG};
 use coset::cbor::Value;
 use minicbor::{Decode, Decoder, Encode};
 use serde::{Deserialize, Deserializer};
@@ -213,12 +210,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                             minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
                         })?;
 
-                        let doc_type = map_doc_type(uuid.into()).map_err(|e| {
-                            decode_context.report.other(&e.to_string(), CONTEXT);
-                            minicbor::decode::Error::message(format!("{CONTEXT}: {e}"))
-                        })?;
-
-                        Ok(doc_type)
+                        Ok(map_doc_type(uuid))
                     },
 
                     CompatibilityPolicy::Fail => {
@@ -247,39 +239,30 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
 
 /// Map single UUID doc type to new list of doc types
 /// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
-fn map_doc_type(uuid: Uuid) -> anyhow::Result<DocType> {
+fn map_doc_type(uuid: UuidV4) -> DocType {
     match uuid {
-        id if id == deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => Ok(PROPOSAL.clone()),
-        id if id == deprecated::COMMENT_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT.clone()),
-        id if id == deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => {
-            Ok(PROPOSAL_SUBMISSION_ACTION.clone())
+        id if Uuid::from(id) == deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => PROPOSAL.clone(),
+        id if Uuid::from(id) == deprecated::COMMENT_DOCUMENT_UUID_TYPE => PROPOSAL_COMMENT.clone(),
+        id if Uuid::from(id) == deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => {
+            PROPOSAL_SUBMISSION_ACTION.clone()
         },
-        _ => anyhow::bail!("Unknown document type: {uuid}"),
+        id => DocType(vec![id]),
     }
 }
 
-impl Encode<ProblemReport> for DocType {
+impl<C> Encode<C> for DocType {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        const CONTEXT: &str = "DocType encoding";
-        if self.0.is_empty() {
-            report.invalid_value("DocType", "empty", "DocType cannot be empty", CONTEXT);
-            return Err(minicbor::encode::Error::message(format!(
-                "{CONTEXT}: DocType cannot be empty"
-            )));
-        }
-
-        e.array(self.0.len().try_into().map_err(|_| {
-            report.invalid_encoding("Array", "Invalid array", "Valid array", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}, array length encoding failed"))
-        })?)?;
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
 
         for id in &self.0 {
-            id.encode(e, &mut CborContext::Tagged).map_err(|_| {
-                report.invalid_encoding("UUIDv4", &id.to_string(), "Valid UUIDv4", CONTEXT);
-                minicbor::encode::Error::message(format!("{CONTEXT}: UUIDv4 encoding failed"))
-            })?;
+            id.encode(e, &mut CborContext::Tagged)?;
         }
         Ok(())
     }
@@ -300,12 +283,12 @@ impl<'de> Deserialize<'de> for DocType {
         let input = DocTypeInput::deserialize(deserializer)?;
         let dt = match input {
             DocTypeInput::Single(s) => {
-                let uuid = Uuid::parse_str(&s).map_err(|_| {
+                let uuid = s.parse().map_err(|_| {
                     serde::de::Error::custom(DocTypeError::StringConversion(s.clone()))
                 })?;
                 // If there is a map from old (single uuid) to new use that list, else convert that
                 // single uuid to [uuid] - of type DocType
-                map_doc_type(uuid).unwrap_or(uuid.try_into().map_err(serde::de::Error::custom)?)
+                map_doc_type(uuid)
             },
             DocTypeInput::Multiple(v) => v.try_into().map_err(serde::de::Error::custom)?,
         };
@@ -361,7 +344,7 @@ impl PartialEq for DocType {
 
 #[cfg(test)]
 mod tests {
-
+    use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
 

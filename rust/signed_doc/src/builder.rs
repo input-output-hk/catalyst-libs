@@ -2,8 +2,9 @@
 use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
 
 use crate::{
-    signature::Signature, CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata,
-    Signatures, PROBLEM_REPORT_CTX,
+    signature::{tbs_data, Signature},
+    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
+    PROBLEM_REPORT_CTX,
 };
 
 /// Catalyst Signed Document Builder.
@@ -56,23 +57,14 @@ impl Builder {
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
-        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: &CatalystId,
+        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId,
     ) -> anyhow::Result<Self> {
-        let cose_sign = self
-            .0
-            .as_cose_sign()
-            .map_err(|e| anyhow::anyhow!("Failed to sign: {e}"))?;
-
-        let protected_header = coset::HeaderBuilder::new().key_id(kid.to_string().into_bytes());
-
-        let mut signature = coset::CoseSignatureBuilder::new()
-            .protected(protected_header.build())
-            .build();
-        let data_to_sign = cose_sign.tbs_data(&[], &signature);
-        signature.signature = sign_fn(data_to_sign);
-        if let Some(sign) = Signature::from_cose_sig(signature, &self.0.report) {
-            self.0.signatures.push(sign);
+        if kid.is_id() {
+            anyhow::bail!("Provided kid should be in a uri format, kid: {kid}");
         }
+        let data_to_sign = tbs_data(&kid, &self.0.metadata, &self.0.content)?;
+        let sign_bytes = sign_fn(data_to_sign);
+        self.0.signatures.push(Signature::new(kid, sign_bytes));
 
         Ok(self)
     }
