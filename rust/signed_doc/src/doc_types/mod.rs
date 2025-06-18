@@ -7,6 +7,34 @@ use catalyst_types::uuid::Uuid;
 
 use crate::DocType;
 
+/// -------------- Document Types --------------
+/// Brand document type.
+#[allow(clippy::expect_used)]
+pub static BRAND_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[BRAND_BASE_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert brand base types Uuid to DocType")
+});
+
+/// Campaign Parameters document type.
+#[allow(clippy::expect_used)]
+pub static CAMPAIGN_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[CAMPAIGN_BASE_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert campaign base types Uuid to DocType")
+});
+
+/// Category Parameters document type.
+#[allow(clippy::expect_used)]
+pub static CATEGORY_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[CATEGORY_BASE_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert category base types Uuid to DocType")
+});
+
 /// Proposal document type.
 #[allow(clippy::expect_used)]
 pub static PROPOSAL: LazyLock<DocType> = LazyLock::new(|| {
@@ -36,6 +64,38 @@ pub static PROPOSAL_SUBMISSION_ACTION: LazyLock<DocType> = LazyLock::new(|| {
     ids.to_vec()
         .try_into()
         .expect("Failed to convert proposal action document Uuid to DocType")
+});
+
+/// Proposal Comment Meta Template document type.
+#[allow(clippy::expect_used)]
+pub static PROPOSAL_COMMENT_META_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[
+        TEMPLATE_BASE_TYPE,
+        TEMPLATE_BASE_TYPE,
+        COMMENT_BASE_TYPE,
+        PROPOSAL_BASE_TYPE,
+    ];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal comment meta template document Uuid to DocType")
+});
+
+/// Proposal Comment Template document type.
+#[allow(clippy::expect_used)]
+pub static PROPOSAL_COMMENT_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[TEMPLATE_BASE_TYPE, COMMENT_BASE_TYPE, PROPOSAL_BASE_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal comment template document Uuid to DocType")
+});
+
+/// Proposal Template document type.
+#[allow(clippy::expect_used)]
+pub static PROPOSAL_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
+    let ids = &[TEMPLATE_BASE_TYPE, PROPOSAL_BASE_TYPE];
+    ids.to_vec()
+        .try_into()
+        .expect("Failed to convert proposal template document Uuid to DocType")
 });
 
 /// -------------- Base Types --------------
