@@ -77,7 +77,10 @@ impl Builder {
     /// Build a signed document with the collected error report.
     /// Could provide an invalid document.
     #[must_use]
-    #[allow(clippy::unwrap_used)]
+    #[allow(
+        clippy::unwrap_used,
+        reason = "At this point all the data MUST be correctly encodable, and the final prepared bytes MUST be correctly decodable as a CatalystSignedDocument object."
+    )]
     pub fn build(self) -> CatalystSignedDocument {
         let mut e = minicbor::Encoder::new(Vec::new());
         // COSE_Sign tag
