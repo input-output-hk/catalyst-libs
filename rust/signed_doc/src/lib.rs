@@ -117,7 +117,9 @@ impl CatalystSignedDocument {
     }
 
     /// Return document decoded (original/non compressed) content bytes.
-    #[must_use]
+    ///
+    /// # Errors
+    ///  - Decompression failure
     pub fn decoded_content(&self) -> anyhow::Result<Vec<u8>> {
         if let Some(encoding) = self.doc_content_encoding() {
             encoding.decode(self.encoded_content())

@@ -6,11 +6,13 @@ pub struct Content(Vec<u8>);
 
 impl Content {
     /// Return content bytes.
+    #[must_use]
     pub fn bytes(&self) -> &[u8] {
         self.0.as_slice()
     }
 
     /// Return content byte size.
+    #[must_use]
     pub fn size(&self) -> usize {
         self.0.len()
     }
@@ -29,7 +31,7 @@ impl minicbor::Encode<()> for Content {
         if self.0.is_empty() {
             e.null()?;
         } else {
-            e.bytes(&self.0.as_slice())?;
+            e.bytes(self.0.as_slice())?;
         }
         Ok(())
     }

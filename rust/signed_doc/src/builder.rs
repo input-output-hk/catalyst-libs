@@ -9,8 +9,11 @@ use crate::{
 /// Catalyst Signed Document Builder.
 #[derive(Debug)]
 pub struct Builder {
+    /// metadata
     metadata: Metadata,
+    /// content
     content: Content,
+    /// signatures
     signatures: Signatures,
 }
 
@@ -43,7 +46,9 @@ impl Builder {
     }
 
     /// Set decoded (original) document content bytes
-    #[must_use]
+    ///
+    /// # Errors
+    ///  - Compression failure
     pub fn with_decoded_content(mut self, decoded: Vec<u8>) -> anyhow::Result<Self> {
         if let Some(encoding) = self.metadata.content_encoding() {
             self.content = encoding.encode(&decoded)?.into();
@@ -75,6 +80,9 @@ impl Builder {
 
     /// Build a signed document with the collected error report.
     /// Could provide an invalid document.
+    ///
+    /// # Panics
+    ///  Should not panic
     #[must_use]
     #[allow(
         clippy::unwrap_used,

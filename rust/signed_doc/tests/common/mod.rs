@@ -83,8 +83,7 @@ pub fn create_dummy_doc(
             "ver": doc_ver,
             "template": { "id": doc_id.to_string(), "ver": doc_ver.to_string() }
         }))?
-        .with_decoded_content(empty_json.clone())
-        .unwrap()
+        .with_decoded_content(empty_json.clone())?
         .build();
 
     Ok((doc, doc_id, doc_ver))
