@@ -70,12 +70,11 @@ mod tests {
             .build();
         assert!(rule.check(&doc).await.unwrap());
 
+        // empty content (empty bytes) could not be brotli decoded
         let doc = Builder::new()
             .with_json_metadata(
                 serde_json::json!({"content-encoding": content_encoding.to_string() }),
             )
-            .unwrap()
-            .with_decoded_content(vec![])
             .unwrap()
             .build();
         assert!(!rule.check(&doc).await.unwrap());
