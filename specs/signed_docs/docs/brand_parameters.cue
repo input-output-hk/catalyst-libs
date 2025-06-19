@@ -1,46 +1,28 @@
 package signed_docs
 
-// Import common definitions JSON schema for use in embedded schemas
 _common_defs: {} @embed(file="./payload_schemas/common_definitions.schema.json")
 
 // Brand Parameters Document Definition
 
 docs: #DocumentDefinitions & {
 	"Brand Parameters": {
-		description: """
-			Parameters which define this brand within the system.
-			"""
 		metadata: {
-			parameters: {
-				required: "optional"
-				type:     "Brand Parameters"
-			}
-			collaborators: {
-				required: "optional"
-			}
+			ref:      metadata.ref      // Reference to the next highest document
+			template: metadata.template // Reference to a brand/campaign/etc template document
 		}
-		signers: _allowedSigners
 		versions: [
 			{
-				version:  "0.01"
+				version:  "v1"
+				modified: "2024-06-07"
+				changes:  "Initial version. Structure aligned with global metadata requirements."
+			},
+			{
+				version:  "v2"
 				modified: "2025-04-04"
-				changes: """
-						* First Published Version
-					"""
+				changes:  "Updated to include common definitions and examples."
 			},
 		]
-		payload: {
-			description: "Payload for Brand Parameters document."
-			schema: {} @embed(file="./payload_schemas/brand_parameters.schema.json")
-			examples: [
-				{
-					title: "Final Proposal Submission"
-					description: """
-						This document indicates the linked proposal is final and requested to proceed for further consideration.
-						"""
-					example: {} @embed(file="./payload_schemas/brand_parameter.example.json")
-				},
-			]
-		}
+		// Payload is fully templated and not defined here
 	}
+
 }
