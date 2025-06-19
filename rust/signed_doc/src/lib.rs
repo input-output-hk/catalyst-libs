@@ -110,18 +110,26 @@ impl CatalystSignedDocument {
         self.inner.metadata.doc_ver()
     }
 
+    /// Return document content object.
+    #[must_use]
+    pub(crate) fn content(&self) -> &Content {
+        &self.inner.content
+    }
+
     /// Return document decoded (original/non compressed) content bytes.
     #[must_use]
-    pub fn decoded_content(&self) -> &[u8] {
-        &self.inner.content.decoded_bytes()
+    pub fn decoded_content(&self) -> anyhow::Result<Vec<u8>> {
+        if let Some(encoding) = self.doc_content_encoding() {
+            encoding.decode(self.encoded_content())
+        } else {
+            Ok(self.encoded_content().to_vec())
+        }
     }
 
     /// Return document encoded (compressed) content bytes.
     #[must_use]
-    pub fn encoded_content(&self) -> anyhow::Result<Vec<u8>> {
-        self.inner
-            .content
-            .encoded_bytes(self.doc_content_encoding())
+    pub fn encoded_content(&self) -> &[u8] {
+        self.content().bytes()
     }
 
     /// Return document `ContentType`.
@@ -221,7 +229,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(payload, metadata.content_encoding(), &report)
+            payload.into()
         } else {
             report.missing_field("COSE Sign Payload", "Missing document content (payload)");
             Content::default()

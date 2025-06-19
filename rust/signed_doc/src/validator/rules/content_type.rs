@@ -29,15 +29,14 @@ impl ContentTypeRule {
             );
             return Ok(false);
         }
-        let content = doc.decoded_content();
-        if content.is_empty() {
-            doc.report().missing_field(
-                "payload",
+        let Ok(content) = doc.decoded_content() else {
+            doc.report().functional_validation(
+                "Invalid Document content, cannot get decoded bytes",
                 "Cannot get a document content during the content type field validation",
             );
             return Ok(false);
         };
-        if self.validate(content).is_err() {
+        if self.validate(&content).is_err() {
             doc.report().invalid_value(
                 "payload",
                 &hex::encode(content),
@@ -93,6 +92,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({ "content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(buf)
+            .unwrap()
             .build();
 
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
@@ -111,6 +111,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({ "content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(invalid_bytes.into())
+            .unwrap()
             .build();
 
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
@@ -127,6 +128,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
+            .unwrap()
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
 
@@ -135,6 +137,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
+            .unwrap()
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(true)));
 
@@ -150,6 +153,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"content-type": cbor_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(vec![])
+            .unwrap()
             .build();
         assert!(matches!(cbor_rule.check(&doc).await, Ok(false)));
     }
@@ -165,6 +169,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(serde_json::to_vec(&serde_json::json!({})).unwrap())
+            .unwrap()
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(true)));
 
@@ -173,6 +178,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(minicbor::to_vec(minicbor::data::Token::Null).unwrap())
+            .unwrap()
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(false)));
 
@@ -188,6 +194,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({"content-type": json_rule.exp.to_string() }))
             .unwrap()
             .with_decoded_content(vec![])
+            .unwrap()
             .build();
         assert!(matches!(json_rule.check(&doc).await, Ok(false)));
 

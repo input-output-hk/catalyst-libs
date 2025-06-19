@@ -44,9 +44,13 @@ impl Builder {
 
     /// Set decoded (original) document content bytes
     #[must_use]
-    pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
-        self.content = Content::from_decoded(content);
-        self
+    pub fn with_decoded_content(mut self, decoded: Vec<u8>) -> anyhow::Result<Self> {
+        if let Some(encoding) = self.metadata.content_encoding() {
+            self.content = encoding.encode(&decoded)?.into();
+        } else {
+            self.content = decoded.into();
+        }
+        Ok(self)
     }
 
     /// Add a signature to the document
@@ -62,12 +66,7 @@ impl Builder {
         if kid.is_id() {
             anyhow::bail!("Provided kid should be in a uri format, kid: {kid}");
         }
-        let data_to_sign = tbs_data(
-            &kid,
-            &self.metadata,
-            self.content
-                .encoded_bytes(self.metadata.content_encoding())?,
-        )?;
+        let data_to_sign = tbs_data(&kid, &self.metadata, &self.content)?;
         let sign_bytes = sign_fn(data_to_sign);
         self.signatures.push(Signature::new(kid, sign_bytes));
 
@@ -93,15 +92,7 @@ impl Builder {
         // empty unprotected headers
         e.map(0).unwrap();
         // content
-        let content = self
-            .content
-            .encoded_bytes(self.metadata.content_encoding())
-            .unwrap();
-        if content.is_empty() {
-            e.null().unwrap();
-        } else {
-            e.bytes(content.as_slice()).unwrap();
-        }
+        e.encode(&self.content).unwrap();
         // signatures
         e.encode(self.signatures).unwrap();
 

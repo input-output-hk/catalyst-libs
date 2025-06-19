@@ -108,15 +108,14 @@ impl ContentRule {
 fn templated_json_schema_check(
     doc: &CatalystSignedDocument, template_doc: &CatalystSignedDocument,
 ) -> bool {
-    let template_content = template_doc.decoded_content();
-    if template_content.is_empty() {
-        doc.report().missing_field(
-            "payload",
-            "Referenced template document must have a content",
+    let Ok(template_content) = template_doc.decoded_content() else {
+        doc.report().functional_validation(
+            "Invalid document content, cannot get decoded bytes",
+            "Cannot get a referenced template document content during the templated validation",
         );
         return false;
     };
-    let Ok(template_json_schema) = serde_json::from_slice(template_content) else {
+    let Ok(template_json_schema) = serde_json::from_slice(&template_content) else {
         doc.report().functional_validation(
             "Template document content must be json encoded",
             "Invalid referenced template document content",
@@ -139,13 +138,19 @@ fn templated_json_schema_check(
 
 /// Validating the document's content against the provided schema
 fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) -> bool {
-    let doc_content = doc.decoded_content();
+    let Ok(doc_content) = doc.decoded_content() else {
+        doc.report().functional_validation(
+            "Invalid Document content, cannot get decoded bytes",
+            "Cannot get a document content during the templated validation",
+        );
+        return false;
+    };
     if doc_content.is_empty() {
         doc.report()
             .missing_field("payload", "Document must have a content");
         return false;
     };
-    let Ok(doc_json) = serde_json::from_slice(doc_content) else {
+    let Ok(doc_json) = serde_json::from_slice(&doc_content) else {
         doc.report().functional_validation(
             "Document content must be json encoded",
             "Invalid referenced template document content",
@@ -212,6 +217,7 @@ mod tests {
                 }))
                 .unwrap()
                 .with_decoded_content(json_schema.clone())
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -225,6 +231,7 @@ mod tests {
                 }))
                 .unwrap()
                 .with_decoded_content(json_schema.clone())
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -237,6 +244,7 @@ mod tests {
                 }))
                 .unwrap()
                 .with_decoded_content(json_schema.clone())
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -249,6 +257,7 @@ mod tests {
                 }))
                 .unwrap()
                 .with_decoded_content(json_schema.clone())
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -274,6 +283,7 @@ mod tests {
                 }))
                 .unwrap()
                 .with_decoded_content(vec![])
+                .unwrap()
                 .build();
             provider.add_document(ref_doc).unwrap();
         }
@@ -287,7 +297,7 @@ mod tests {
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(json_content.clone())
+            .with_decoded_content(json_content.clone()).unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
@@ -296,6 +306,7 @@ mod tests {
             .with_json_metadata(serde_json::json!({}))
             .unwrap()
             .with_decoded_content(json_content.clone())
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -320,7 +331,7 @@ mod tests {
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(vec![])
+            .with_decoded_content(vec![]).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -330,7 +341,7 @@ mod tests {
                 "template": {"id": another_type_template_doc_id.to_string(), "ver": another_type_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(json_content.clone())
+            .with_decoded_content(json_content.clone()).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -340,7 +351,7 @@ mod tests {
                 "template": {"id": missing_type_template_doc_id.to_string(), "ver": missing_type_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(json_content.clone())
+            .with_decoded_content(json_content.clone()).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -353,7 +364,7 @@ mod tests {
                 "template": {"id": missing_content_type_template_doc_id.to_string(), "ver": missing_content_type_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(json_content.clone())
+            .with_decoded_content(json_content.clone()).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -363,7 +374,7 @@ mod tests {
                 "template": {"id": missing_content_template_doc_id.to_string(), "ver": missing_content_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(json_content.clone())
+            .with_decoded_content(json_content.clone()).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -373,7 +384,7 @@ mod tests {
                 "template": {"id": invalid_content_template_doc_id.to_string(), "ver": invalid_content_template_doc_id.to_string() }
             }))
             .unwrap()
-            .with_decoded_content(json_content.clone())
+            .with_decoded_content(json_content.clone()).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -384,6 +395,7 @@ mod tests {
             }))
             .unwrap()
             .with_decoded_content(json_content.clone())
+            .unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
@@ -405,6 +417,7 @@ mod tests {
         let rule = ContentRule::Static(json_schema);
         let doc = Builder::new()
             .with_decoded_content(json_content.clone())
+            .unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
@@ -413,15 +426,16 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded
-        let doc = Builder::new().with_decoded_content(vec![]).build();
+        let doc = Builder::new().with_decoded_content(vec![]).unwrap().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // defined `template` field which should be absent
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
-        let doc =  Builder::new().with_decoded_content(json_content)
+        let doc =  Builder::new()
             .with_json_metadata(serde_json::json!({"template": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
             .unwrap()
+            .with_decoded_content(json_content).unwrap()
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }

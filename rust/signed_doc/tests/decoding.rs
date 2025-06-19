@@ -33,6 +33,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
         .with_decoded_content(content.clone())
+        .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
 
@@ -219,7 +220,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
-                    && (doc.decoded_content()
+                    && (doc.encoded_content()
                         == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
             }
         })),
