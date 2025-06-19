@@ -322,7 +322,6 @@
   "docs": {
     "Brand Parameters": {
       "authors": {},
-      "description": "Parameters which define this brand within the system.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -346,7 +345,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
           "format": "Collaborators Reference List",
-          "required": "optional",
+          "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
@@ -360,10 +359,7 @@
           "description": "A reference to the Parameters Document this document lies under.",
           "exclusive": null,
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Brand Parameters",
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -417,17 +413,6 @@
         }
       },
       "notes": [],
-      "payload": {
-        "description": "Payload for Brand Parameters document.",
-        "examples": [
-          {
-            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
-            "example": {},
-            "title": "Final Proposal Submission"
-          }
-        ],
-        "schema": {}
-      },
       "signers": {
         "roles": {
           "user": [
@@ -443,15 +428,19 @@
       ],
       "versions": [
         {
-          "changes": "\t* First Published Version",
+          "changes": "Initial version. Structure aligned with global metadata requirements.",
+          "modified": "2024-06-07",
+          "version": "v1"
+        },
+        {
+          "changes": "Updated to include common definitions and examples.",
           "modified": "2025-04-04",
-          "version": "0.01"
+          "version": "v2"
         }
       ]
     },
     "Campaign Parameters": {
       "authors": {},
-      "description": "Parameters which define a Campaign within a Brand in the system.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -475,7 +464,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
           "format": "Collaborators Reference List",
-          "required": "optional",
+          "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
@@ -489,10 +478,7 @@
           "description": "A reference to the Parameters Document this document lies under.",
           "exclusive": null,
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Campaign Parameters",
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -546,17 +532,6 @@
         }
       },
       "notes": [],
-      "payload": {
-        "description": "Payload for Campaign Parameters document.",
-        "examples": [
-          {
-            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
-            "example": {},
-            "title": "Final Proposal Submission"
-          }
-        ],
-        "schema": {}
-      },
       "signers": {
         "roles": {
           "user": [
@@ -572,20 +547,14 @@
       ],
       "versions": [
         {
-          "changes": "\t* First Published Version",
-          "modified": "2025-04-04",
-          "version": "0.01"
-        },
-        {
-          "changes": "\t* Use generalized parameters.",
-          "modified": "2025-05-05",
-          "version": "0.03"
+          "changes": "Initial version. Structure aligned with global metadata requirements.",
+          "modified": "2024-06-07",
+          "version": "v1"
         }
       ]
     },
     "Category Parameters": {
       "authors": {},
-      "description": "Parameters which define a Category within a Campaign under a Brand in the system.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -609,7 +578,7 @@
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
           "exclusive": null,
           "format": "Collaborators Reference List",
-          "required": "optional",
+          "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
@@ -623,10 +592,7 @@
           "description": "A reference to the Parameters Document this document lies under.",
           "exclusive": null,
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Campaign Parameters",
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -680,17 +646,6 @@
         }
       },
       "notes": [],
-      "payload": {
-        "description": "Payload for Category Parameters document.",
-        "examples": [
-          {
-            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
-            "example": {},
-            "title": "Final Proposal Submission"
-          }
-        ],
-        "schema": {}
-      },
       "signers": {
         "roles": {
           "user": [
@@ -706,14 +661,9 @@
       ],
       "versions": [
         {
-          "changes": "\t* First Published Version",
-          "modified": "2025-04-04",
-          "version": "0.01"
-        },
-        {
-          "changes": "\t* Use generalized parameters.",
-          "modified": "2025-05-05",
-          "version": "0.03"
+          "changes": "Initial version. Structure aligned with global metadata requirements.",
+          "modified": "2024-06-07",
+          "version": "v1"
         }
       ]
     },

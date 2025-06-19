@@ -67,26 +67,6 @@ Relationships"
                         </TABLE>
                     </TD>
                 </TR>
-                <TR>
-                    <TD ALIGN="LEFT" PORT="collaborators" BGCOLOR="#e7e2dd">
-                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                            <TR>
-                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">collaborators</FONT></TD>
-                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Collaborators Reference List</I></FONT></TD>
-                            </TR>
-                        </TABLE>
-                    </TD>
-                </TR>
-                <TR>
-                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
-                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                            <TR>
-                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters</I></FONT></TD>
-                            </TR>
-                        </TABLE>
-                    </TD>
-                </TR>
 
                 </TABLE>
             >
@@ -199,7 +179,6 @@ Relationships"
     ];
 
 
-    "Brand Parameters":"parameters":e -> "Brand Parameters":"title":n [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment Meta Template":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]

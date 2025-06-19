@@ -2,7 +2,10 @@
 
 ## Description
 
-Parameters which define a Category within a Campaign under a Brand in the system.
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -89,74 +92,12 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`collaborators`](../metadata.md#collaborators)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Collaborators Reference List](../metadata.md#collaborators-reference-list) |
-<!-- markdownlint-enable MD033 -->
-A list of collaborators who may also publish updates to versions of this document.
-This should include all parties who have not signed this document directly.
-
-Every subsequent version can amend the collaborators list.
-However, the initial Author can never be removed from being able to
-publish a new version of the document.
-
-#### [`collaborators`](../metadata.md#collaborators) Validation
-
-This list does not imply these collaborators have consented to collaborate, only that the author/s
-are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
-
-### [`parameters`](../metadata.md#parameters)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | yes |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Campaign Parameters](campaign_parameters.md) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Parameters Document this document lies under.
-
-#### [`parameters`](../metadata.md#parameters) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
-[`parameters`](../metadata.md#parameters) of the referencing document.
-
 ## Payload
 
-Payload for Category Parameters document.
-
-### Schema
-
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? abstract
-
-    Payload for Category Parameters document.
-
-    ```json
-    {}
-    ```
-
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
-
-### Example
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? example "Example: Final Proposal Submission"
-
-    This document indicates the linked proposal is final and requested to proceed for further consideration.
-
-    ```json
-    {}
-    ```
-
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 ## Signers
 
@@ -180,13 +121,9 @@ New versions of this document may be published by:
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### v1 (2024-06-07)
 
-   * First Published Version
-
-#### 0.03 (2025-05-05)
-
-   * Use generalized parameters.
+Initial version. Structure aligned with global metadata requirements.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
