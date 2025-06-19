@@ -1,6 +1,6 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
+use catalyst_signed_doc::{doc_types::deprecated, providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::TaggedCborSerializable;
@@ -12,7 +12,7 @@ mod common;
 fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
     catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
     catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
-        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        Some(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
         None,
     ));
 }
@@ -41,7 +41,7 @@ fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_jso
 async fn catalyst_signed_doc_parameters_aliases_test() {
     catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
     catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
-        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        Some(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
         None,
     ))
     .await;
@@ -201,6 +201,8 @@ fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+    let doc_refs: DocumentRefs =
+        vec![DocumentRef::new(uuid_v7, uuid_v7, DocLocator::default())].into();
 
     TestCase {
         name: "Catalyst Signed Doc with ALL defined metadata fields and signatures",
@@ -239,26 +241,10 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
                     && (doc.doc_content_encoding().unwrap() == ContentEncoding::Brotli)
-                    && (doc.doc_meta().doc_ref().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().reply().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().template().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
-                    && (doc.doc_meta().parameters().unwrap()
-                        == DocumentRef {
-                            id: uuid_v7,
-                            ver: uuid_v7,
-                        })
+                    && (doc.doc_meta().doc_ref().unwrap() == &doc_refs)
+                    && (doc.doc_meta().reply().unwrap() == &doc_refs)
+                    && (doc.doc_meta().template().unwrap() == &doc_refs)
+                    && (doc.doc_meta().parameters().unwrap() == &doc_refs)
                     && (doc.doc_meta().section().unwrap() == &"$".parse::<Section>().unwrap())
                     && (doc.doc_meta().collabs() == ["Alex1".to_string(), "Alex2".to_string()])
                     && (doc.doc_content().decoded_bytes().unwrap()

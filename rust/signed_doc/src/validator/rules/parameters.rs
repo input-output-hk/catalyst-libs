@@ -2,8 +2,8 @@
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::DocType, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    CatalystSignedDocument, DocType,
 };
 
 /// `parameters` field validation rule
@@ -17,6 +17,7 @@ pub(crate) enum ParametersRule {
         optional: bool,
     },
     /// `parameters` is not specified
+    #[allow(unused)]
     NotSpecified,
 }
 
@@ -26,28 +27,31 @@ impl ParametersRule {
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: CatalystSignedDocumentProvider {
+        let context: &str = "Parameter rule check";
         if let Self::Specified {
             exp_parameters_type,
             optional,
         } = self
         {
             if let Some(parameters) = doc.doc_meta().parameters() {
-                let parameters_validator = |replied_doc: CatalystSignedDocument| {
-                    // For "parameters", it should be one of these types
+                let parameters_validator = |ref_doc: CatalystSignedDocument| {
+                    // Check that the type matches one of the expected ones
                     exp_parameters_type.iter().any(|exp_type| {
-                        referenced_doc_check(&replied_doc, exp_type, "parameters", doc.report())
+                        referenced_doc_check(&ref_doc, exp_type, "parameters", doc.report())
                     })
                 };
-                return validate_provided_doc(
-                    &parameters,
-                    provider,
-                    doc.report(),
-                    parameters_validator,
-                )
-                .await;
+                for dr in parameters.doc_refs() {
+                    let result =
+                        validate_provided_doc(dr, provider, doc.report(), parameters_validator)
+                            .await?;
+                    // Reference ALL of them
+                    if !result {
+                        return Ok(false);
+                    }
+                }
+                return Ok(true);
             } else if !optional {
-                doc.report()
-                    .missing_field("parameters", "Document must have a parameters field");
+                doc.report().missing_field("parameters", context);
                 return Ok(false);
             }
         }
@@ -56,7 +60,7 @@ impl ParametersRule {
                 doc.report().unknown_field(
                     "parameters",
                     &parameters.to_string(),
-                    "Document does not expect to have a parameters field",
+                    &format!("{context}, document does not expect to have a parameters field"),
                 );
                 return Ok(false);
             }
@@ -67,6 +71,7 @@ impl ParametersRule {
 }
 
 #[cfg(test)]
+#[allow(clippy::similar_names, clippy::too_many_lines)]
 mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
@@ -77,35 +82,51 @@ mod tests {
     async fn ref_rule_specified_test() {
         let mut provider = TestCatalystSignedDocumentProvider::default();
 
-        // Parameter types can contains multiple, but should match one of it.
-        let exp_parameters_type: Vec<DocType> = vec![vec![UuidV4::new()].try_into().unwrap()];
+        let exp_parameters_cat_type = UuidV4::new();
+        let exp_parameters_cam_type = UuidV4::new();
+        let exp_parameters_brand_type = UuidV4::new();
+
+        let exp_param_type: Vec<DocType> = vec![
+            exp_parameters_cat_type.into(),
+            exp_parameters_cam_type.into(),
+            exp_parameters_brand_type.into(),
+        ];
 
         let valid_category_doc_id = UuidV7::new();
         let valid_category_doc_ver = UuidV7::new();
+        let valid_brand_doc_id = UuidV7::new();
+        let valid_brand_doc_ver = UuidV7::new();
         let another_type_category_doc_id = UuidV7::new();
         let another_type_category_doc_ver = UuidV7::new();
         let missing_type_category_doc_id = UuidV7::new();
         let missing_type_category_doc_ver = UuidV7::new();
 
-        // prepare replied documents
+        // Prepare provider documents
         {
-            let exp_parameters_type_str: Vec<String> = exp_parameters_type
-                .iter()
-                .map(|dt| dt.to_string())
-                .collect();
-
-            let ref_doc = Builder::new()
+            // Category doc
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_category_doc_id.to_string(),
                     "ver": valid_category_doc_ver.to_string(),
-                    "type": exp_parameters_type_str,
+                    "type": exp_parameters_cat_type.to_string(),
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
 
-            // reply doc with other `type` field
-            let ref_doc = Builder::new()
+            // Brand doc
+            let doc = Builder::new()
+                .with_json_metadata(serde_json::json!({
+                    "id": valid_brand_doc_id.to_string(),
+                    "ver": valid_brand_doc_ver.to_string(),
+                    "type": exp_parameters_cat_type.to_string(),
+                }))
+                .unwrap()
+                .build();
+            provider.add_document(None, &doc).unwrap();
+
+            // Other type
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": another_type_category_doc_id.to_string(),
                     "ver": another_type_category_doc_ver.to_string(),
@@ -113,49 +134,83 @@ mod tests {
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
 
-            // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
+            // Missing `type` field in the referenced document
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": missing_type_category_doc_id.to_string(),
                     "ver": missing_type_category_doc_ver.to_string(),
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
         }
 
-        // all correct
+        // Create a document where `parameters` field is required and referencing a valid document
+        // in provider. Using doc ref of new implementation.
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameters_type.clone().into(),
+            exp_parameters_type: exp_param_type.clone(),
             optional: false,
         };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "parameters": {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver }
+                "parameters": 
+                [{"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string(), "cid": "0x" }]
             }))
             .unwrap()
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        // all correct, `parameters` field is missing, but its optional
+        // Parameters contain multiple ref
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "parameters": 
+                [{"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string(), "cid": "0x" },
+                {"id": valid_brand_doc_id.to_string(), "ver": valid_brand_doc_ver.to_string(), "cid": "0x" }]
+            }))
+            .unwrap()
+            .build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // Parameters contain multiple ref, but one of them is invalid (not registered).
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "parameters": 
+                [{"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string(), "cid": "0x" },
+                {"id": UuidV7::new().to_string() , "ver": UuidV7::new().to_string(), "cid": "0x" }]
+            }))
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc, &provider).await.unwrap());
+
+        // Checking backward compatible
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "parameters":
+                {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string()}
+            }))
+            .unwrap()
+            .build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // All correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameters_type.clone().into(),
+            exp_parameters_type: exp_param_type.clone(),
             optional: true,
         };
         let doc = Builder::new().build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
-        // missing `parameters` field, but its required
+        // Missing `parameters` field, but its required
         let rule = ParametersRule::Specified {
-            exp_parameters_type: exp_parameters_type.into(),
+            exp_parameters_type: exp_param_type,
             optional: false,
         };
         let doc = Builder::new().build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
-        // reference to the document with another `type` field
+        // Reference to the document with another `type` field
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "parameters": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
@@ -164,7 +219,7 @@ mod tests {
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
-        // missing `type` field in the referenced document
+        // Missing `type` field in the referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "parameters": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
@@ -173,7 +228,7 @@ mod tests {
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
-        // cannot find a referenced document
+        // Cannot find a referenced document
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "parameters": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }

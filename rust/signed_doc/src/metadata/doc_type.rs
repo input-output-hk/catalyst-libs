@@ -16,10 +16,7 @@ use tracing::warn;
 
 use crate::{
     decode_context::{CompatibilityPolicy, DecodeContext},
-    doc_types::{
-        ACTION_UUID_TYPE, COMMENT_UUID_TYPE, PROPOSAL_ACTION_DOC, PROPOSAL_COMMENT_DOC,
-        PROPOSAL_DOC_TYPE, PROPOSAL_UUID_TYPE,
-    },
+    doc_types::{deprecated, PROPOSAL, PROPOSAL_COMMENT, PROPOSAL_SUBMISSION_ACTION},
 };
 
 /// List of `UUIDv4` document type.
@@ -45,21 +42,6 @@ impl DocType {
     #[must_use]
     pub fn doc_types(&self) -> &Vec<UuidV4> {
         &self.0
-    }
-
-    /// Convert `DocType` to coset `Value`.
-    pub(crate) fn to_value(&self) -> Value {
-        Value::Array(
-            self.0
-                .iter()
-                .map(|uuidv4| {
-                    Value::Tag(
-                        UUID_CBOR_TAG,
-                        Box::new(Value::Bytes(uuidv4.uuid().as_bytes().to_vec())),
-                    )
-                })
-                .collect(),
-        )
     }
 }
 
@@ -103,6 +85,18 @@ impl TryFrom<Vec<Uuid>> for DocType {
             .collect::<Result<Vec<UuidV4>, DocTypeError>>()?;
 
         DocType::try_from(converted)
+    }
+}
+
+impl From<DocType> for Vec<Uuid> {
+    fn from(value: DocType) -> Vec<Uuid> {
+        value.0.into_iter().map(Uuid::from).collect()
+    }
+}
+
+impl From<DocType> for Vec<String> {
+    fn from(val: DocType) -> Self {
+        val.0.into_iter().map(|uuid| uuid.to_string()).collect()
     }
 }
 
@@ -255,9 +249,11 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
 /// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
 fn map_doc_type(uuid: Uuid) -> anyhow::Result<DocType> {
     match uuid {
-        id if id == PROPOSAL_UUID_TYPE => Ok(PROPOSAL_DOC_TYPE.clone()),
-        id if id == COMMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT_DOC.clone()),
-        id if id == ACTION_UUID_TYPE => Ok(PROPOSAL_ACTION_DOC.clone()),
+        id if id == deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => Ok(PROPOSAL.clone()),
+        id if id == deprecated::COMMENT_DOCUMENT_UUID_TYPE => Ok(PROPOSAL_COMMENT.clone()),
+        id if id == deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => {
+            Ok(PROPOSAL_SUBMISSION_ACTION.clone())
+        },
         _ => anyhow::bail!("Unknown document type: {uuid}"),
     }
 }
@@ -275,13 +271,13 @@ impl Encode<ProblemReport> for DocType {
         }
 
         e.array(self.0.len().try_into().map_err(|_| {
-            report.other("Unable to encode array length", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}, unable to encode array length"))
+            report.invalid_encoding("Array", "Invalid array", "Valid array", CONTEXT);
+            minicbor::encode::Error::message(format!("{CONTEXT}, array length encoding failed"))
         })?)?;
 
         for id in &self.0 {
             id.encode(e, &mut CborContext::Tagged).map_err(|_| {
-                report.other("Failed to encode UUIDv4", CONTEXT);
+                report.invalid_encoding("UUIDv4", &id.to_string(), "Valid UUIDv4", CONTEXT);
                 minicbor::encode::Error::message(format!("{CONTEXT}: UUIDv4 encoding failed"))
             })?;
         }
@@ -317,15 +313,35 @@ impl<'de> Deserialize<'de> for DocType {
     }
 }
 
+impl From<DocType> for Value {
+    fn from(value: DocType) -> Self {
+        Value::Array(
+            value
+                .0
+                .iter()
+                .map(|uuidv4| {
+                    Value::Tag(
+                        UUID_CBOR_TAG,
+                        Box::new(Value::Bytes(uuidv4.uuid().as_bytes().to_vec())),
+                    )
+                })
+                .collect(),
+        )
+    }
+}
+
 // This is needed to preserve backward compatibility with the old solution.
 impl PartialEq for DocType {
     fn eq(&self, other: &Self) -> bool {
         // List of special-case (single UUID) -> new DocType
         // The old one should equal to the new one
         let special_cases = [
-            (PROPOSAL_UUID_TYPE, &*PROPOSAL_DOC_TYPE),
-            (COMMENT_UUID_TYPE, &*PROPOSAL_COMMENT_DOC),
-            (ACTION_UUID_TYPE, &*PROPOSAL_ACTION_DOC),
+            (deprecated::PROPOSAL_DOCUMENT_UUID_TYPE, &*PROPOSAL),
+            (deprecated::COMMENT_DOCUMENT_UUID_TYPE, &*PROPOSAL_COMMENT),
+            (
+                deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+                &*PROPOSAL_SUBMISSION_ACTION,
+            ),
         ];
         for (uuid, expected) in special_cases {
             match DocType::try_from(uuid) {
@@ -447,14 +463,19 @@ mod tests {
         let input = vec!["not-a-uuid".to_string()];
         let result = DocType::try_from(input);
         assert!(matches!(result, Err(DocTypeError::StringConversion(s)) if s == "not-a-uuid"));
+
+        let e: Vec<DocType> = vec![vec![UuidV4::new()].try_into().unwrap()];
+        let exp_parameters_type_str: Vec<String> =
+            e.iter().map(std::string::ToString::to_string).collect();
+        assert!(!exp_parameters_type_str.is_empty());
     }
 
     #[test]
     fn test_doc_type_to_value() {
         let uuid = uuid::Uuid::new_v4();
-        let doc_type = DocType(vec![UuidV4::try_from(uuid).unwrap()]);
+        let doc_type: Value = DocType(vec![UuidV4::try_from(uuid).unwrap()]).into();
 
-        for d in &doc_type.to_value().into_array().unwrap() {
+        for d in &doc_type.into_array().unwrap() {
             let t = d.clone().into_tag().unwrap();
             assert_eq!(t.0, UUID_CBOR_TAG);
             assert_eq!(t.1.as_bytes().unwrap().len(), 16);
@@ -464,18 +485,18 @@ mod tests {
     #[test]
     fn test_doctype_equal_special_cases() {
         // Direct equal
-        let uuid = PROPOSAL_UUID_TYPE;
+        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE;
         let dt1 = DocType::try_from(vec![uuid]).unwrap();
         let dt2 = DocType::try_from(vec![uuid]).unwrap();
         assert_eq!(dt1, dt2);
 
         // single -> special mapped type
-        let single = DocType::try_from(PROPOSAL_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_DOC_TYPE);
-        let single = DocType::try_from(COMMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_COMMENT_DOC);
-        let single = DocType::try_from(ACTION_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_ACTION_DOC);
+        let single = DocType::try_from(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL);
+        let single = DocType::try_from(deprecated::COMMENT_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_COMMENT);
+        let single = DocType::try_from(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE).unwrap();
+        assert_eq!(single, *PROPOSAL_SUBMISSION_ACTION);
     }
 
     #[test]
@@ -504,10 +525,10 @@ mod tests {
 
     #[test]
     fn test_deserialize_special_case() {
-        let uuid = PROPOSAL_UUID_TYPE.to_string();
+        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.to_string();
         let json = json!(uuid);
         let dt: DocType = serde_json::from_value(json).unwrap();
 
-        assert_eq!(dt, *PROPOSAL_DOC_TYPE);
+        assert_eq!(dt, *PROPOSAL);
     }
 }

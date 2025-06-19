@@ -167,7 +167,7 @@ mod test {
     use catalyst_types::uuid::{UuidV7, UUID_CBOR_TAG};
     use coset::cbor::Value;
 
-    use crate::{metadata::document_refs::doc_ref::DOC_REF_ARR_ITEM, DocumentRef};
+    use crate::metadata::document_refs::{doc_ref::DOC_REF_ARR_ITEM, DocumentRef};
 
     #[test]
     #[allow(clippy::indexing_slicing)]

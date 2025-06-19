@@ -18,7 +18,7 @@ pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::{cbor::Value, iana::CoapContentFormat};
 pub use doc_type::DocType;
-pub use document_refs::{DocLocator, DocumentRefs};
+pub use document_refs::{DocLocator, DocumentRef, DocumentRefs};
 use minicbor::Decoder;
 pub use section::Section;
 use strum::IntoDiscriminant as _;
@@ -330,11 +330,11 @@ impl InnerMetadata {
         )
         .map(|v| v.0);
 
-        // DocType and DocRef now using cbor decoding.
-        metadata.doc_type = decode_cose_protected_header_value(&protected, context, TYPE_KEY);
-        metadata.doc_ref = decode_cose_protected_header_value(&protected, context, REF_KEY);
-        metadata.template = decode_cose_protected_header_value(&protected, context, TEMPLATE_KEY);
-        metadata.reply = decode_cose_protected_header_value(&protected, context, REPLY_KEY);
+        // DocType and DocRef now using minicbor decoding.
+        metadata.doc_type = decode_cose_protected_header_value(protected, context, TYPE_KEY);
+        metadata.doc_ref = decode_cose_protected_header_value(protected, context, REF_KEY);
+        metadata.template = decode_cose_protected_header_value(protected, context, TEMPLATE_KEY);
+        metadata.reply = decode_cose_protected_header_value(protected, context, REPLY_KEY);
 
         metadata.section = decode_document_field_from_protected_header(
             protected,
@@ -352,7 +352,7 @@ impl InnerMetadata {
         ]
         .iter()
         .filter_map(|field_name| -> Option<DocumentRefs> {
-            return decode_cose_protected_header_value(&protected, context, field_name);
+            decode_cose_protected_header_value(protected, context, field_name)
         })
         .fold((None, false), |(res, _), v| (Some(v), res.is_some()));
         if has_multiple_fields {
@@ -436,7 +436,7 @@ impl TryFrom<&Metadata> for coset::Header {
         }
 
         builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value())
+            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.clone().into())
             .text_value(
                 ID_KEY.to_string(),
                 Value::try_from(CborUuidV7(meta.doc_id()?))?,
@@ -519,8 +519,8 @@ pub(crate) struct MetadataDecodeContext {
 }
 
 impl MetadataDecodeContext {
-    /// [`DocType`] decoding context.
-    fn doc_type_context(&mut self) -> crate::decode_context::DecodeContext {
+    /// [`DocType`, `DocumentRef`] decoding context.
+    fn doc_type_ref_context(&mut self) -> crate::decode_context::DecodeContext {
         crate::decode_context::DecodeContext {
             compatibility_policy: self.compatibility_policy,
             report: &mut self.report,

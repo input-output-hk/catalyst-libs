@@ -5,7 +5,7 @@ pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, SystemTime},
 };
 
@@ -16,12 +16,13 @@ use catalyst_types::{
 };
 use coset::{CoseSign, CoseSignature};
 use rules::{
-    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
-    ReplyRule, Rules, SectionRule, SignatureKidRule,
+    ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, LinkField,
+    ParameterLinkRefRule, ParametersRule, RefRule, ReplyRule, Rules, SectionRule, SignatureKidRule,
 };
 
 use crate::{
     doc_types::{
+        deprecated::{self},
         BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
         PROPOSAL_COMMENT_TEMPLATE, PROPOSAL_SUBMISSION_ACTION, PROPOSAL_TEMPLATE,
     },
@@ -31,7 +32,7 @@ use crate::{
 };
 
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<DocType, Rules>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<HashMap<DocType, Arc<Rules>>> = LazyLock::new(document_rules_init);
 
 /// Returns an `DocType` from the provided argument.
 /// Reduce redundant conversion.
@@ -46,8 +47,8 @@ where
 }
 
 /// `DOCUMENT_RULES` initialization function
-#[allow(clippy::expect_used)]
-fn document_rules_init() -> HashMap<DocType, Rules> {
+#[allow(clippy::expect_used, clippy::too_many_lines)]
+fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
     // Parameter can be either brand, campaign or category
     let parameters = vec![
         BRAND_PARAMETERS.clone(),
@@ -58,6 +59,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
     let mut document_rules_map = HashMap::new();
 
     // Proposal
+    // Require field: type, id, ver, template, parameters
     // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal/>
     let proposal_rules = Rules {
         content_type: ContentTypeRule {
@@ -80,11 +82,13 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
+        param_link_ref: ParameterLinkRefRule::Specified {
+            field: LinkField::Template,
+        },
     };
 
-    document_rules_map.insert(PROPOSAL.clone(), proposal_rules);
-
     // Proposal Comment
+    // Require field: type, id, ver, ref, template, parameters
     // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment_template/>
     let proposal_comment_rules = Rules {
         content_type: ContentTypeRule {
@@ -105,7 +109,6 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
             exp_reply_type: PROPOSAL_COMMENT.clone(),
             optional: true,
         },
-        // FIXME: section ref? optional
         section: SectionRule::NotSpecified,
         parameters: ParametersRule::Specified {
             exp_parameters_type: parameters.clone(),
@@ -114,8 +117,11 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         kid: SignatureKidRule {
             exp: &[RoleId::Role0],
         },
+        // Link field can be either template or ref
+        param_link_ref: ParameterLinkRefRule::Specified {
+            field: LinkField::Template,
+        },
     };
-    document_rules_map.insert(PROPOSAL_COMMENT.clone(), proposal_comment_rules);
 
     let proposal_action_json_schema = jsonschema::options()
     .with_draft(jsonschema::Draft::Draft7)
@@ -128,6 +134,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
     .expect("Must be a valid json scheme file");
 
     // Proposal Submission Action
+    // Require fields: type, id, ver, ref, parameters
     // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
     let proposal_submission_action_rules = Rules {
         content_type: ContentTypeRule {
@@ -140,7 +147,7 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
             exp_parameters_type: parameters,
-            optional: true,
+            optional: false,
         },
         doc_ref: RefRule::Specified {
             exp_ref_type: PROPOSAL.clone(),
@@ -151,11 +158,30 @@ fn document_rules_init() -> HashMap<DocType, Rules> {
         kid: SignatureKidRule {
             exp: &[RoleId::Proposer],
         },
+        param_link_ref: ParameterLinkRefRule::Specified {
+            field: LinkField::Ref,
+        },
     };
 
+    let proposal_rules = Arc::new(proposal_rules);
+    let comment_rules = Arc::new(proposal_comment_rules);
+    let action_rules = Arc::new(proposal_submission_action_rules);
+
+    document_rules_map.insert(PROPOSAL.clone(), Arc::clone(&proposal_rules));
+    document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));
     document_rules_map.insert(
         PROPOSAL_SUBMISSION_ACTION.clone(),
-        proposal_submission_action_rules,
+        Arc::clone(&action_rules),
+    );
+
+    // Insert old rules (for backward compatibility)
+    document_rules_map.insert(
+        expect_doc_type(deprecated::COMMENT_DOCUMENT_UUID_TYPE),
+        Arc::clone(&comment_rules),
+    );
+    document_rules_map.insert(
+        expect_doc_type(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE),
+        Arc::clone(&action_rules),
     );
 
     document_rules_map

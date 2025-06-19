@@ -9,7 +9,7 @@ use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
     metadata::{custom_transient_decode_error, MetadataDecodeContext, MetadataEncodeContext},
-    ContentEncoding, ContentType, DocType, DocumentRef, Section,
+    ContentEncoding, ContentType, DocType, DocumentRefs, Section,
 };
 
 /// COSE label. May be either a signed integer or a string.
@@ -102,21 +102,21 @@ pub enum SupportedField {
     /// `id` field.
     Id(UuidV7) = 1,
     /// `ref` field.
-    Ref(DocumentRef) = 2,
+    Ref(DocumentRefs) = 2,
     /// `ver` field.
     Ver(UuidV7) = 3,
     /// `type` field.
     Type(DocType) = 4,
     /// `reply` field.
-    Reply(DocumentRef) = 5,
+    Reply(DocumentRefs) = 5,
     /// `collabs` field.
     Collabs(Vec<String>) = 7,
     /// `section` field.
     Section(Section) = 8,
     /// `template` field.
-    Template(DocumentRef) = 9,
+    Template(DocumentRefs) = 9,
     /// `parameters` field.
-    Parameters(DocumentRef) = 10,
+    Parameters(DocumentRefs) = 10,
     /// `Content-Encoding` field.
     ContentEncoding(ContentEncoding) = 11,
 }
@@ -196,14 +196,29 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for SupportedField {
         let field = match key {
             SupportedLabel::ContentType => todo!(),
             SupportedLabel::Id => d.decode_with(&mut ctx.uuid_context).map(Self::Id),
-            SupportedLabel::Ref => todo!(),
+            SupportedLabel::Ref => {
+                d.decode_with(&mut ctx.doc_type_ref_context())
+                    .map(Self::Ref)
+            },
             SupportedLabel::Ver => d.decode_with(&mut ctx.uuid_context).map(Self::Ver),
-            SupportedLabel::Type => d.decode_with(&mut ctx.doc_type_context()).map(Self::Type),
-            SupportedLabel::Reply => todo!(),
+            SupportedLabel::Type => {
+                d.decode_with(&mut ctx.doc_type_ref_context())
+                    .map(Self::Type)
+            },
+            SupportedLabel::Reply => {
+                d.decode_with(&mut ctx.doc_type_ref_context())
+                    .map(Self::Reply)
+            },
             SupportedLabel::Collabs => todo!(),
             SupportedLabel::Section => todo!(),
-            SupportedLabel::Template => todo!(),
-            SupportedLabel::Parameters => todo!(),
+            SupportedLabel::Template => {
+                d.decode_with(&mut ctx.doc_type_ref_context())
+                    .map(Self::Template)
+            },
+            SupportedLabel::Parameters => {
+                d.decode_with(&mut ctx.doc_type_ref_context())
+                    .map(Self::Parameters)
+            },
             SupportedLabel::ContentEncoding => todo!(),
         }?;
 

@@ -2,8 +2,8 @@
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::DocType, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    CatalystSignedDocument, DocType,
 };
 
 /// `reply` field validation rule
@@ -26,45 +26,45 @@ impl ReplyRule {
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: CatalystSignedDocumentProvider {
+        let context: &str = "Reply rule check";
         if let Self::Specified {
             exp_reply_type,
             optional,
         } = self
         {
             if let Some(reply) = doc.doc_meta().reply() {
-                let reply_validator = |replied_doc: CatalystSignedDocument| {
-                    if !referenced_doc_check(&replied_doc, exp_reply_type, "reply", doc.report()) {
-                        return false;
-                    }
-                    let Some(doc_ref) = doc.doc_meta().doc_ref() else {
-                        doc.report()
-                            .missing_field("ref", "Document must have a ref field");
-                        return false;
-                    };
-
-                    let Some(replied_doc_ref) = replied_doc.doc_meta().doc_ref() else {
-                        doc.report()
-                            .missing_field("ref", "Referenced document must have ref field");
-                        return false;
-                    };
-
-                    if replied_doc_ref.id != doc_ref.id {
-                        doc.report().invalid_value(
-                                "reply",
-                                doc_ref.id .to_string().as_str(),
-                                replied_doc_ref.id.to_string().as_str(),
-                                "Invalid referenced document. Document ID should aligned with the replied document.",
-                            );
+                let reply_validator = |ref_doc: CatalystSignedDocument| {
+                    // Validate type
+                    if !referenced_doc_check(&ref_doc, exp_reply_type, "reply", doc.report()) {
                         return false;
                     }
 
-                    true
+                    // Get `ref` from both the doc and the ref doc
+                    let Some(ref_doc_dr) = ref_doc.doc_meta().doc_ref() else {
+                        doc.report().missing_field("Ref doc `ref` field", context);
+                        return false;
+                    };
+
+                    let Some(doc_dr) = doc.doc_meta().doc_ref() else {
+                        doc.report().missing_field("Doc `ref` field", context);
+                        return false;
+                    };
+
+                    // Checking the ref field of ref doc, it should match the ref field of the doc
+                    ref_doc_dr == doc_dr
                 };
-                return validate_provided_doc(&reply, provider, doc.report(), reply_validator)
-                    .await;
+
+                for dr in reply.doc_refs() {
+                    let result =
+                        validate_provided_doc(dr, provider, doc.report(), reply_validator).await?;
+                    // Reference ALL of them
+                    if !result {
+                        return Ok(false);
+                    };
+                }
+                return Ok(true);
             } else if !optional {
-                doc.report()
-                    .missing_field("reply", "Document must have a reply field");
+                doc.report().missing_field("reply", context);
                 return Ok(false);
             }
         }
@@ -73,7 +73,7 @@ impl ReplyRule {
                 doc.report().unknown_field(
                     "reply",
                     &reply.to_string(),
-                    "Document does not expect to have a reply field",
+                    &format!("{context}, document does not expect to have a reply field"),
                 );
                 return Ok(false);
             }
@@ -99,53 +99,45 @@ mod tests {
         let common_ref_id = UuidV7::new();
         let common_ref_ver = UuidV7::new();
 
+        let doc1_id = UuidV7::new();
+        let doc1_ver = UuidV7::new();
+        let doc2_id = UuidV7::new();
+        let doc2_ver = UuidV7::new();
+
         let valid_replied_doc_id = UuidV7::new();
         let valid_replied_doc_ver = UuidV7::new();
         let another_type_replied_doc_ver = UuidV7::new();
         let another_type_replied_doc_id = UuidV7::new();
-        let missing_ref_replied_doc_ver = UuidV7::new();
         let missing_ref_replied_doc_id = UuidV7::new();
         let missing_type_replied_doc_ver = UuidV7::new();
         let missing_type_replied_doc_id = UuidV7::new();
 
-        // prepare replied documents
+        // Prepare provider documents
         {
-            let ref_doc = Builder::new()
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
-                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                    "id": valid_replied_doc_id.to_string(),
-                    "ver": valid_replied_doc_ver.to_string(),
-                    "type": exp_reply_type.to_string()
+                    "id": doc1_id.to_string(),
+                    "ver": doc1_ver.to_string(),
+                    "type": exp_reply_type.to_string(),
+                    "ref": { "id": doc2_id.to_string(), "ver": doc2_ver.to_string(), "cid": "0x" }
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
 
-            // reply doc with other `type` field
-            let ref_doc = Builder::new()
+            // Reply doc with other `type` field
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
-                    "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                     "id": another_type_replied_doc_id.to_string(),
                     "ver": another_type_replied_doc_ver.to_string(),
                     "type": UuidV4::new().to_string()
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
 
-            // missing `ref` field in the referenced document
-            let ref_doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": missing_ref_replied_doc_id.to_string(),
-                    "ver": missing_ref_replied_doc_ver.to_string(),
-                    "type": exp_reply_type.to_string()
-                }))
-                .unwrap()
-                .build();
-            provider.add_document(ref_doc).unwrap();
-
-            // missing `type` field in the referenced document
-            let ref_doc = Builder::new()
+            // Missing `type` field in the referenced document
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
                     "id": missing_type_replied_doc_id.to_string(),
@@ -153,18 +145,21 @@ mod tests {
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
         }
 
-        // all correct
+        // Create a document where `reply` field is required and referencing a valid document in
+        // provider.
         let rule = ReplyRule::Specified {
             exp_reply_type: exp_reply_type.into(),
             optional: false,
         };
+
+        // Doc1 ref reply to doc2. Doc1 ref filed should match doc2 ref field
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "ref": { "id": common_ref_id.to_string(), "ver": common_ref_ver.to_string() },
-                "reply": { "id": valid_replied_doc_id.to_string(), "ver": valid_replied_doc_ver.to_string() }
+                "ref": { "id": doc2_id.to_string(), "ver": doc2_ver.to_string() },
+                "reply": { "id": doc1_id.to_string(), "ver": doc1_ver.to_string() }
             }))
             .unwrap()
             .build();
