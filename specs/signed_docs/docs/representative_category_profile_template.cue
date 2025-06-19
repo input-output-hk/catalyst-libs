@@ -4,7 +4,7 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Representative Category Profile Template": {
-		description: "## Representative Category Profile Template\n\nDefines the JSON schema for a 'Representative Category Profile'.\nThis allows an 'Admin' to specify different profile requirements for each category."
+		description: "## Representative Category Profile Template\nDefines the JSON schema for a 'Representative Category Profile'.\nThis allows an 'Admin' to specify different profile requirements for each category."
 		validation: """
 			* The signer MUST be a registered 'Admin'.
 			* The payload MUST be a valid JSON schema.

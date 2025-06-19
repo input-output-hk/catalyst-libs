@@ -134,7 +134,7 @@ New versions of this document may be published by:
 
 #### 0.01 (2025-06-19)
 
- * First Published Version
+* First Published Version
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema]: https://json-schema.org/draft-07

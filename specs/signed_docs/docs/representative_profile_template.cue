@@ -4,7 +4,7 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Representative Profile Template": {
-		description: "## Representative Profile Template\n\nDefines the JSON schema for a 'Representative Profile'.\nThis template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles."
+		description: "## Representative Profile Template\nDefines the JSON schema for a 'Representative Profile'.\nThis template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles."
 		validation: """
 			* The signer MUST be a registered 'Admin'.
 			* The payload MUST be a valid JSON schema.

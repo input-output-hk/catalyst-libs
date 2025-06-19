@@ -4,7 +4,7 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Voter Representative Delegation": {
-		description: "## Voter Representative Delegation\n\nA signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category."
+		description: "## Voter Representative Delegation\nA signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category."
 		validation: """
 			* The signer MUST be a registered 'Voter'.
 			* The 'ref' metadata field MUST point to a valid 'Representative Category Profile'.

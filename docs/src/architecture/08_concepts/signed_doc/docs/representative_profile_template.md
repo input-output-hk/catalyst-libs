@@ -3,7 +3,6 @@
 ## Description
 
 ## Representative Profile Template
-
 Defines the [JSON schema] for a 'Representative Profile'.
 This template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles.
 

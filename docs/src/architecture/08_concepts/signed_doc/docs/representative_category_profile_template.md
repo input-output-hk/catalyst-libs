@@ -3,7 +3,6 @@
 ## Description
 
 ## Representative Category Profile Template
-
 Defines the [JSON schema] for a 'Representative Category Profile'.
 This allows an 'Admin' to specify different profile requirements for each category.
 

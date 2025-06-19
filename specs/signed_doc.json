@@ -1056,7 +1056,7 @@
       "validation": "* The signer must be a registered 'User'.\n* The payload must be valid against the JSON schema defined in the referenced 'Profile Template'.",
       "versions": [
         {
-          "changes": "\t* First Published Version",
+          "changes": "* First Published Version",
           "modified": "2025-06-19",
           "version": "0.01"
         }
@@ -2389,10 +2389,10 @@
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
       "business_logic": {
-        "back_end": "\t* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n\t* The system will only consider Representatives with an 'active' status as eligible for delegation.",
-        "front_end": "\t* Allows a Representative to create or update their profile for a category.\n\t* The Representative sets their status to 'active' to be discoverable for delegation.\n\t* The Representative can set their status to 'revoked' to signal they are no longer participating in the category,\n\t  without having to revoke the document."
+        "back_end": "* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n* The system will only consider Representatives with an 'active' status as eligible for delegation.",
+        "front_end": "* Allows a Representative to create or update their profile for a category.\n* The Representative sets their status to 'active' to be discoverable for delegation.\n* The Representative can set their status to 'revoked' to signal they are no longer participating in the category, without having to revoke the document."
       },
-      "description": "## Representative Category Profile Document\n\nA Representative Category Profile is created to opt in as a Representative for a specific campaign category, the user must have registered as a Representative.\nThe presence of this docuemnt signifies the user's intent to participate in that category as a Representative.\n\nThe document's structure is defined by the associated Representative_Category_Profile_Template, which allows an Admin to specify category-specific requirements.\n\nThe payload must contain a 'status' field to indicate if the Representative is active or has revoked their participation.",
+      "description": "## Representative Category Profile Document\n\nA Representative Category Profile is created to opt in as a Representative for a specific campaign category, the user must have registered as a Representative.\nThe presence of this document signifies the user's intent to participate in that category as a Representative.\n\nThe document's structure is defined by the associated Representative_Category_Profile_Template, which allows an Admin to specify category-specific requirements.\n\nThe payload must contain a 'status' field to indicate if the Representative is active or has revoked their participation.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2494,7 +2494,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "\tThe Representative's profile data for a specific category.\n\tIts structure is defined by the referenced template document.\n\tIt MUST contain a 'status' field ('active' or 'revoked') to manage the Representative's participation."
+        "description": "The Representative's profile data for a specific category.\nIts structure is defined by the referenced template document.\nIt MUST contain a 'status' field ('active' or 'revoked') to manage the Representative's participation."
       },
       "signers": {
         "roles": {
@@ -2509,7 +2509,7 @@
       "type": [
         "f1a2b3c4-1111-4abc-8def-2345678901aa"
       ],
-      "validation": "\t* The signer MUST be a registered 'Representative'.\n\t* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n\t* The 'parameters' metadata field MUST point to a valid 'Category Parameters' document.\n\t* The 'template' metadata field MUST point to a valid 'Representative Category Profile Template' document.\n\t* The payload MUST be valid against the JSON schema defined in the referenced template.",
+      "validation": "* The signer MUST be a registered 'Representative'.\n* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n* The 'parameters' metadata field MUST point to a valid 'Category Parameters' document.\n* The 'template' metadata field MUST point to a valid 'Representative Category Profile Template' document.\n* The payload MUST be valid against the JSON schema defined in the referenced template.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -2526,7 +2526,7 @@
         "back_end": "* Validate and store the JSON schema that defines the structure for 'Representative Category Profile' documents.",
         "front_end": ""
       },
-      "description": "## Representative Category Profile Template\n\nDefines the JSON schema for a 'Representative Category Profile'.\nThis allows an 'Admin' to specify different profile requirements for each category.",
+      "description": "## Representative Category Profile Template\nDefines the JSON schema for a 'Representative Category Profile'.\nThis allows an 'Admin' to specify different profile requirements for each category.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2821,7 +2821,7 @@
         "back_end": "* Validate and store the JSON schema that defines the structure for all 'Representative Profile' documents.\n* The schema MUST extend the base 'Profile' schema with Representative-specific fields.",
         "front_end": ""
       },
-      "description": "## Representative Profile Template\n\nDefines the JSON schema for a 'Representative Profile'.\nThis template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles.",
+      "description": "## Representative Profile Template\nDefines the JSON schema for a 'Representative Profile'.\nThis template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -3009,7 +3009,7 @@
         "back_end": "* Verifies that the voter and Representative are valid and registered for the category.\n* Records the delegation of voting power from the voter to the Representative.",
         "front_end": "* Allows a voter to select a Representative from a list of eligible candidates for a category.\n* The voter signs this document to confirm their delegation choice."
       },
-      "description": "## Voter Representative Delegation\n\nA signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category.",
+      "description": "## Voter Representative Delegation\nA signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category.",
       "headers": {
         "content type": {
           "coseLabel": 3,

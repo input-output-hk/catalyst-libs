@@ -3,7 +3,6 @@
 ## Description
 
 ## Voter Representative Delegation
-
 A signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
@@ -104,7 +103,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
- In other words, that the document intended to be referenced, is actually referenced.
+  In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.
