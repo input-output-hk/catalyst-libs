@@ -47,8 +47,9 @@ async fn multiple_signatures_validation_test() {
     let (_, pk_n, kid_n) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let signed_doc = Builder::new()
-        .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
         .with_json_metadata(common::test_metadata().2)
+        .unwrap()
+        .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
         .unwrap()
         .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
         .unwrap()

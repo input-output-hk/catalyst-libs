@@ -107,6 +107,7 @@ async fn test_valid_comment_doc_with_reply() {
         }))
         .unwrap()
         .with_decoded_content(empty_json.clone())
+        .unwrap()
         .build();
 
     let uuid_v7 = UuidV7::new();

@@ -116,7 +116,7 @@ pub(crate) fn tbs_data(
         <minicbor::bytes::ByteVec>::from(minicbor::to_vec(metadata)?),
         <minicbor::bytes::ByteVec>::from(protected_header_bytes(kid)?),
         minicbor::bytes::ByteArray::from([]),
-        <minicbor::bytes::ByteVec>::from(content.encoded_bytes(metadata.content_encoding())?),
+        content,
     ))?)
 }
 
