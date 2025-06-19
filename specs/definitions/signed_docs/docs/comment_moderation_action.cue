@@ -7,6 +7,7 @@ docs: #DocumentDefinitions & {
 		description: """
 			A Moderation Action performed on any Comment.
 			"""
+		headers: "content type": value: "application/json"
 
 		metadata: ref: {
 			required: "yes"

@@ -5,13 +5,14 @@ package signed_docs
 
 import (
 	"strings"
+	"github.com/input-output-hk/catalyst-libs/specs/media_types"
 )
 
 // Formatted content strings to use in CDDL Definition.
 _cddlContentTypes: "\"\(strings.Join(cose.headers."content type".value, "\" /\n        \""))\""
 
 // Formatted CoAP content string to use in CDDL Definition.
-_cddlCoapTypes: "\(strings.Join(_allCoapTypesStr, " / "))"
+_cddlCoapTypes: "\(strings.Join(media_types.allCoapTypesStr, " / "))"
 
 cddlDefinitions: #cddlDefinitions & {
 	signed_document: {
@@ -24,7 +25,7 @@ cddlDefinitions: #cddlDefinitions & {
 			used by the Catalyst project to encapsulate and authenticate
 			documents used within the system.
 
-			See: \(documentationLinks."RFC9052-CoseSign")
+			See: \(documentation.links."RFC9052-CoseSign")
 			"""
 		comment: """
 			Catalyst Signed Document data object.

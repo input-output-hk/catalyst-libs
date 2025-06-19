@@ -4,6 +4,7 @@ ABNF
 addrr
 addrs
 adminer
+admon
 anypolicy
 apskhem
 Arissara
@@ -160,6 +161,8 @@ ltail
 maindbname
 mapref
 markdownlint
+mdformat
+mdit
 mdlint
 mdns
 MEMMAP

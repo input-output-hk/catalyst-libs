@@ -8,6 +8,7 @@ docs: #DocumentDefinitions & {
 		description: """
 			A Moderation action performed on a Proposal.
 			"""
+		headers: "content type": value: "application/json"
 
 		metadata: ref: {
 			required: "yes"

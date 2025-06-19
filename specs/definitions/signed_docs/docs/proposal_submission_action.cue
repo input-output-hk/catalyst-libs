@@ -62,6 +62,9 @@ docs: #DocumentDefinitions & {
 				is not considered `final` and will not be considered in the category it was being submitted to.
 				"""
 		}
+
+		headers: "content type": value: "application/json"
+
 		metadata: {
 			ref: {
 				type:     "Proposal"

@@ -17,7 +17,7 @@ from spec.content_types import ContentTypes, EncodingTypes
 from spec.copyright import Copyright
 from spec.doc_clusters import DocClusters
 from spec.document import Documents
-from spec.documentation_links import DocumentationLinks, LinkAKA
+from spec.documentation_links import Documentation
 from spec.forms.template import FormTemplate
 from spec.metadata import Metadata, MetadataHeader
 from spec.optional import OptionalField
@@ -34,9 +34,8 @@ class SignedDoc(BaseModel):
     cose: CoseDefinitions
     doc_clusters: DocClusters
     docs: Documents
-    documentation_links: DocumentationLinks = Field(alias="documentationLinks")
+    documentation: Documentation
     encoding_types: EncodingTypes = Field(alias="encodingTypes")
-    link_aka_dont_use: LinkAKA = Field(alias="linkAKA")  # dont use directly
     metadata: Metadata
     form_template: FormTemplate = Field(alias="formTemplate")
 
@@ -60,9 +59,6 @@ class SignedDoc(BaseModel):
         # Put Base Document Types inside the individual doc types for easy reference.
         self.docs.set_base_types(self.base_types)
         self.metadata.set_name(None)
-
-        # Associate the Link AKA with documentation links.
-        self.documentation_links.set_link_aka(self.link_aka_dont_use)
 
         # Build dynamic CDDL Definitions from the defined headers.
         self.cddl_definitions.add(

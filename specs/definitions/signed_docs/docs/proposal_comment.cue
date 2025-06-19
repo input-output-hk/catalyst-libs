@@ -38,6 +38,9 @@ docs: #DocumentDefinitions & {
 				and the integrity of the `ref` and `reply` metadata fields is correct.
 				"""
 		}
+
+		headers: "content type": value: "application/json"
+
 		metadata: {
 			ref: {
 				required: "yes"

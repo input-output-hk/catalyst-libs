@@ -9,6 +9,8 @@ docs: #DocumentDefinitions & {
 			Parameters which define this brand within the system.
 			"""
 
+		headers: "content type": value: "application/json"
+
 		versions: [
 			{
 				version:  "0.01"

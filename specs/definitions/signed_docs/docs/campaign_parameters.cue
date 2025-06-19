@@ -7,6 +7,7 @@ docs: #DocumentDefinitions & {
 		description: """
 			Parameters which define a Campaign within a Brand in the system.
 			"""
+		headers: "content type": value: "application/json"
 
 		metadata: parameters: {
 			required: "yes"

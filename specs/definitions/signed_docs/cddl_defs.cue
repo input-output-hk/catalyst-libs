@@ -18,8 +18,8 @@ cddlDefinitions: #cddlDefinitions & {
 		def:         "#6.37(bytes .size 16)"
 		description: """
 			Version 7 UUID
-			See: \(documentationLinks."RFC9562-V7")
-			     \(documentationLinks."CBOR-TAG-37")
+			See: \(documentation.links."RFC9562-V7")
+			     \(documentation.links."CBOR-TAG-37")
 			"""
 		comment:     "UUIDv7"
 	}
@@ -27,8 +27,8 @@ cddlDefinitions: #cddlDefinitions & {
 		def:         "#6.37(bytes .size 16)"
 		description: """
 			Version 4 UUID
-			See: \(documentationLinks."RFC9562-V4")
-			     \(documentationLinks."CBOR-TAG-37")
+			See: \(documentation.links."RFC9562-V4")
+			     \(documentation.links."CBOR-TAG-37")
 			"""
 		comment:     "UUIDv4"
 	}
@@ -60,8 +60,8 @@ cddlDefinitions: #cddlDefinitions & {
 		description: """
 			IPLD content identifier.
 			Also known as an IPFS CID
-			See: \(documentationLinks."IPFS-CID")
-			     \(documentationLinks."CBOR-TAG-42")
+			See: \(documentation.links."IPFS-CID")
+			     \(documentation.links."CBOR-TAG-42")
 			"""
 		comment: """
 			IPLD content identifier
@@ -122,7 +122,8 @@ cddlDefinitions: #cddlDefinitions & {
 			"""
 		comment: """
 			Supported Content Media Types.
-			If uint is used, only CoAP Content Formats that match the string format are allowed.
+			If the Media Type is supported by COAP, then the `uint` CoAP encoded
+			version of the media type must be used, in preference to the string.
 			"""
 	}
 	http_content_encoding: {

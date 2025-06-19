@@ -54,6 +54,7 @@ docs: #DocumentDefinitions & {
 				* That the document has been signed validly according to the [validation](#validation) rules.
 				"""
 		}
+		headers: "content type": value: "application/json"
 
 		metadata: {
 			template: {

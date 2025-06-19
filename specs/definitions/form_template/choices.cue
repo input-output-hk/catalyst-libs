@@ -18,11 +18,11 @@ _allFormats: list.Sort([
 _allContentMediaTypes: list.UniqueItems
 _allContentMediaTypes: list.Sort([
 	"text/plain",
-	"text/plain; template=mustache",
+	"text/plain; template=handlebars",
 	"text/markdown",
-	"text/markdown; template=mustache",
+	"text/markdown; template=handlebars",
 	"text/html",
-	"text/html; template=mustache",
+	"text/html; template=handlebars",
 ], list.Ascending)
 
 #contentMediaTypeChoices: or(_allContentMediaTypes)

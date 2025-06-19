@@ -11,7 +11,7 @@
     "$defs": {
         "dropDownSingleSelect": {
             "contentMediaType": "text/plain",
-            "pattern": "^.*$",
+            "pattern": "^[^\\n]*$",
             "type": "string"
         },
         "multiLineTextEntry": {
@@ -36,7 +36,7 @@
         },
         "multiSelect": {
             "items": {
-                "pattern": "^.*$",
+                "pattern": "^[^\\n]*$",
                 "type": "string"
             },
             "type": "array",
@@ -44,7 +44,7 @@
         },
         "radioButtonSelect": {
             "contentMediaType": "text/plain",
-            "pattern": "^.*$",
+            "pattern": "^[^\\n]*$",
             "type": "string"
         },
         "schemaReferenceNonUI": {
@@ -83,13 +83,13 @@
             "uniqueItems": true
         },
         "singleLineTextEntry": {
-            "pattern": "^.*$",
+            "pattern": "^[^\\n]*$",
             "type": "string"
         },
         "singleLineTextEntryList": {
             "items": {
                 "minLength": 1,
-                "pattern": "^.*$",
+                "pattern": "^[^\\n]*$",
                 "type": "string"
             },
             "type": "array",

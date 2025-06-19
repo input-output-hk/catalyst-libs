@@ -179,8 +179,8 @@
       "requires": []
     },
     "media_type": {
-      "comment": "Supported Content Media Types.\nIf uint is used, only CoAP Content Formats that match the string format are allowed.",
-      "def": "(\n    (uint .eq (50 / 60)) / \n    (tstr .eq (\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"application/cbor\" /\n        \"application/cddl\"\n    ))\n)",
+      "comment": "Supported Content Media Types.\nIf the Media Type is supported by COAP, then the `uint` CoAP encoded\nversion of the media type must be used, in preference to the string.",
+      "def": "(\n    (uint .eq (0 / 50 / 60 / 20000)) / \n    (tstr .eq (\n        \"application/cbor\" /\n        \"application/cddl\" /\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"text/css; charset=utf-8\" /\n        \"text/css; charset=utf-8; template=handlebars\" /\n        \"text/html; charset=utf-8\" /\n        \"text/html; charset=utf-8; template=handlebars\" /\n        \"text/markdown; charset=utf-8\" /\n        \"text/markdown; charset=utf-8; template=handlebars\" /\n        \"text/plain; charset=utf-8\" /\n        \"text/plain; charset=utf-8; template=handlebars\"\n    ))\n)",
       "requires": []
     },
     "revocations": {
@@ -221,17 +221,43 @@
   "contentTypes": {
     "application/cbor": {
       "coap_type": 60,
-      "description": "RFC8949 Binary CBOR Encoded Document"
+      "description": "An RFC8949 Binary CBOR Encoded Document."
     },
     "application/cddl": {
-      "description": "CDDL Document; Note: \n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
+      "description": "A CDDL Document.\n\nNote: \n\n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
     },
     "application/json": {
       "coap_type": 50,
       "description": "JSON Document"
     },
     "application/schema+json": {
-      "description": "JSON Schema Draft 7 Document; Note: \n* This is currently an unofficial media type.\n* Draft 7 is used because of its wide support by tooling."
+      "description": "A JSON Schema Draft 2020-12 Document.\n\nNote: \n\n* This is currently an unofficial media type."
+    },
+    "text/css; charset=utf-8": {
+      "coap_type": 20000,
+      "description": "CSS Content used for styling HTML.\nCSS should use the least set of features possible to achieve\nthe desired presentation to ensure the broadest compatibility."
+    },
+    "text/css; charset=utf-8; template=handlebars": {
+      "description": "CSS Content used for styling HTML.\nCSS should use the least set of features possible to achieve\nthe desired presentation to ensure the broadest compatibility.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+    },
+    "text/html; charset=utf-8": {
+      "description": "Formatted text using HTML5 markup for rich text. \nOnly HTML5 syntax is supported."
+    },
+    "text/html; charset=utf-8; template=handlebars": {
+      "description": "Formatted text using HTML5 markup for rich text. \nOnly HTML5 syntax is supported.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+    },
+    "text/markdown; charset=utf-8": {
+      "description": "Formatted text using Markdown for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nIF the document includes HTML, then HTML5 syntax only is supported.\n\nThe following Markdown Extensions are also supported:\n\n* None"
+    },
+    "text/markdown; charset=utf-8; template=handlebars": {
+      "description": "Formatted text using Markdown for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nIF the document includes HTML, then HTML5 syntax only is supported.\n\nThe following Markdown Extensions are also supported:\n\n* None\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+    },
+    "text/plain; charset=utf-8": {
+      "coap_type": 0,
+      "description": "Plain Text with no markup or special formatting.\nMultiline Plain Text *MUST* always interpret `\n` \nas a hard line break."
+    },
+    "text/plain; charset=utf-8; template=handlebars": {
+      "description": "Plain Text with no markup or special formatting.\nMultiline Plain Text *MUST* always interpret `\n` \nas a hard line break.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
     }
   },
   "copyright": {
@@ -283,10 +309,18 @@
         "format": "Media Type",
         "required": "yes",
         "value": [
+          "application/cbor",
+          "application/cddl",
           "application/json",
           "application/schema+json",
-          "application/cbor",
-          "application/cddl"
+          "text/css; charset=utf-8",
+          "text/css; charset=utf-8; template=handlebars",
+          "text/html; charset=utf-8",
+          "text/html; charset=utf-8; template=handlebars",
+          "text/markdown; charset=utf-8",
+          "text/markdown; charset=utf-8; template=handlebars",
+          "text/plain; charset=utf-8",
+          "text/plain; charset=utf-8; template=handlebars"
         ]
       },
       "content-encoding": {
@@ -1965,30 +1999,70 @@
       ]
     }
   },
-  "documentationLinks": {
-    "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
-    "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
-    "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
-    "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
-    "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
-    "JSON Schema": "https://json-schema.org/draft-07",
-    "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
-    "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
-    "RFC7932": "https://www.rfc-editor.org/rfc/rfc7932",
-    "RFC8259": "https://www.rfc-editor.org/rfc/rfc8259.html",
-    "RFC8610": "https://www.rfc-editor.org/rfc/rfc8610",
-    "RFC8949": "https://www.rfc-editor.org/rfc/rfc8949.html",
-    "RFC9052": "https://datatracker.ietf.org/doc/html/rfc9052",
-    "RFC9052-CoseSign": "https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si",
-    "RFC9052-HeaderParameters": "https://www.rfc-editor.org/rfc/rfc8152#section-3.1",
-    "RFC9165": "https://www.rfc-editor.org/rfc/rfc9165",
-    "RFC9562": "https://www.rfc-editor.org/rfc/rfc9562.html",
-    "RFC9562-V4": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4",
-    "RFC9562-V7": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7",
-    "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
-    "application/json": "https://www.iana.org/assignments/media-types/application/json",
-    "application/schema+json": "https://datatracker.ietf.org/doc/draft-bhutton-json-schema/",
-    "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br"
+  "documentation": {
+    "linkAKA": {
+      "BROTLI": "RFC7932",
+      "CBOR": "RFC8949",
+      "CBOR Deterministic Encoding": "CBOR-LFD-ENCODING",
+      "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
+      "CDDL": "RFC8610",
+      "COSE": "RFC9052",
+      "COSE Header Parameters": "RFC9052-HeaderParameters",
+      "COSE Sign": "RFC9052-CoseSign",
+      "HTML": "HTML5",
+      "IPFS CID": "IPFS-CID",
+      "JSON": "RFC8259",
+      "JSON Schema": "JSON Schema-2020-12",
+      "JSON Schema Draft 2020-12": "JSON Schema-2020-12",
+      "Markdown": "CommonMark",
+      "RFC9165 - CDDL Additional Controls": "RFC9165",
+      "URI": "RFC3986",
+      "UTF-8": "RFC3629",
+      "UUID": "RFC9562",
+      "UUIDv4": "RFC9562-V4",
+      "UUIDv7": "RFC9562-V7",
+      "application/cddl": "RFC8610",
+      "application/schema+json": "JSON Schema-2020-12",
+      "charset=utf-8": "RFC3629",
+      "charset=utf-8;": "RFC3629",
+      "template=handlebars": "Handlebars",
+      "text/css;": "text/css",
+      "text/html;": "HTML5",
+      "text/markdown;": "CommonMark",
+      "text/plain;": "text/plain"
+    },
+    "links": {
+      "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
+      "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
+      "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
+      "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "CSS": "https://www.w3.org/Style/CSS/",
+      "CommonMark": "https://spec.commonmark.org/0.31.2/",
+      "HTML5": "https://html.spec.whatwg.org/multipage/syntax.html#syntax",
+      "Handlebars": "https://handlebarsjs.com/",
+      "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
+      "JSON Schema-2020-12": "https://json-schema.org/draft/2020-12",
+      "JSON Schema-draft7": "https://json-schema.org/draft-07",
+      "Mustache": "https://mustache.github.io/mustache.5.html",
+      "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
+      "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
+      "RFC7932": "https://www.rfc-editor.org/rfc/rfc7932",
+      "RFC8259": "https://www.rfc-editor.org/rfc/rfc8259.html",
+      "RFC8610": "https://www.rfc-editor.org/rfc/rfc8610",
+      "RFC8949": "https://www.rfc-editor.org/rfc/rfc8949.html",
+      "RFC9052": "https://datatracker.ietf.org/doc/html/rfc9052",
+      "RFC9052-CoseSign": "https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si",
+      "RFC9052-HeaderParameters": "https://www.rfc-editor.org/rfc/rfc8152#section-3.1",
+      "RFC9165": "https://www.rfc-editor.org/rfc/rfc9165",
+      "RFC9562": "https://www.rfc-editor.org/rfc/rfc9562.html",
+      "RFC9562-V4": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4",
+      "RFC9562-V7": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7",
+      "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
+      "application/json": "https://www.iana.org/assignments/media-types/application/json",
+      "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br",
+      "text/css": "https://www.rfc-editor.org/rfc/rfc2318.html",
+      "text/plain": "https://www.rfc-editor.org/rfc/rfc2046.html"
+    }
   },
   "encodingTypes": {
     "br": {
@@ -1999,7 +2073,7 @@
     "dropDownSingleSelect": {
       "definition": {
         "contentMediaType": "text/plain",
-        "pattern": "^.*$",
+        "pattern": "^[^\\n]*$",
         "type": "string"
       },
       "description": "UI - Drop Down Selection of a single entry from the defined enum.\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.",
@@ -2140,7 +2214,7 @@
         "pattern": "^[\\S\\s]*$",
         "type": "string"
       },
-      "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by <https://spec.commonmark.org/0.31.2/>\n\nThe following Markdown Extensions are also supported:\n\n* None",
+      "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
       "parameters": {
         "description": {
           "description": "The description of the field presented during data entry.",
@@ -2178,7 +2252,7 @@
     "multiSelect": {
       "definition": {
         "items": {
-          "pattern": "^.*$",
+          "pattern": "^[^\\n]*$",
           "type": "string"
         },
         "type": "array",
@@ -2232,7 +2306,7 @@
     "radioButtonSelect": {
       "definition": {
         "contentMediaType": "text/plain",
-        "pattern": "^.*$",
+        "pattern": "^[^\\n]*$",
         "type": "string"
       },
       "description": "UI - Radio Button Selection.\n\nSelect one option from a list of text options.\nSelector is styled as a set of Radio Buttons.",
@@ -3043,7 +3117,7 @@
     },
     "singleLineTextEntry": {
       "definition": {
-        "pattern": "^.*$",
+        "pattern": "^[^\\n]*$",
         "type": "string"
       },
       "description": "UI - Single Line text entry without any markup or rich text capability.\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.",
@@ -3085,7 +3159,7 @@
       "definition": {
         "items": {
           "minLength": 1,
-          "pattern": "^.*$",
+          "pattern": "^[^\\n]*$",
           "type": "string"
         },
         "type": "array",
@@ -3141,24 +3215,6 @@
       },
       "parent": "section"
     }
-  },
-  "linkAKA": {
-    "BROTLI": "RFC7932",
-    "CBOR": "RFC8949",
-    "CBOR Deterministic Encoding": "CBOR-LFD-ENCODING",
-    "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
-    "CDDL": "RFC8610",
-    "COSE": "RFC9052",
-    "COSE Header Parameters": "RFC9052-HeaderParameters",
-    "COSE Sign": "RFC9052-CoseSign",
-    "IPFS CID": "IPFS-CID",
-    "JSON": "RFC8259",
-    "RFC9165 - CDDL Additional Controls": "RFC9165",
-    "URI": "RFC3986",
-    "UTF-8": "RFC3629",
-    "UUID": "RFC9562",
-    "UUIDv4": "RFC9562-V4",
-    "UUIDv7": "RFC9562-V7"
   },
   "metadata": {
     "formats": {

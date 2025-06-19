@@ -2,7 +2,8 @@
 package form_template
 
 import (
-	"regexp"
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
+
 )
 
 // Schema Definition for the Form Element.
@@ -44,7 +45,7 @@ import (
 	if type == "string" {
 		format?:           #formatChoices
 		contentMediaType?: #contentMediaTypeChoices
-		pattern?:          regexp.Valid
+		pattern?:          regex.#regex
 		minLength?:        int // Only to enforce that the field can not be empty (such as when used in lists)
 	}
 
