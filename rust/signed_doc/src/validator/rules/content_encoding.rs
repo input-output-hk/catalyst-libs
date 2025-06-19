@@ -24,6 +24,17 @@ impl ContentEncodingRule {
                 );
                 return Ok(false);
             }
+            if content_encoding.decode(doc.encoded_content()).is_err() {
+                doc.report().invalid_value(
+                    "payload",
+                    &hex::encode(doc.encoded_content()),
+                    &format!(
+                        "Document content (payload) must decodable by the set content encoding type: {content_encoding}"
+                    ),
+                    "Invalid Document content value",
+                );
+                return Ok(false);
+            }
         } else if !self.optional {
             doc.report().missing_field(
                 "content-encoding",
@@ -54,8 +65,20 @@ mod tests {
                 serde_json::json!({"content-encoding": content_encoding.to_string() }),
             )
             .unwrap()
+            .with_decoded_content(vec![1, 2, 3])
+            .unwrap()
             .build();
         assert!(rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new()
+            .with_json_metadata(
+                serde_json::json!({"content-encoding": content_encoding.to_string() }),
+            )
+            .unwrap()
+            .with_decoded_content(vec![])
+            .unwrap()
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
 
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({}))
