@@ -1,5 +1,5 @@
 //! Catalyst Signed Document Builder.
-use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
+use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
     signature::{tbs_data, Signature},
@@ -40,9 +40,17 @@ impl Builder {
     /// # Errors
     /// - Fails if it is invalid metadata fields JSON object.
     pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+        use crate::ProblemReport;
         let metadata = serde_json::from_value(json)?;
         self.metadata = Metadata::from_metadata_fields(metadata, &ProblemReport::new(""));
         Ok(self)
+    }
+
+    /// Add provided `SupportedField` into the `Metadata`.
+    #[cfg(test)]
+    pub(crate) fn with_metadata_field(mut self, field: crate::metadata::SupportedField) -> Self {
+        self.metadata.add_field(field);
+        self
     }
 
     /// Set decoded (original) document content bytes
@@ -56,6 +64,15 @@ impl Builder {
             self.content = decoded.into();
         }
         Ok(self)
+    }
+
+    /// Set the content (COSE payload) to the document builder.
+    /// It will set the content as its provided, make sure by yourself that `content-type`
+    /// and `content-encoding` fields are aligned with the provided content bytes.
+    #[allow(dead_code)]
+    pub(crate) fn with_content(mut self, content: Vec<u8>) -> Self {
+        self.content = content.into();
+        self
     }
 
     /// Add a signature to the document
