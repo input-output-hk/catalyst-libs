@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/representative_category_profile_template.schema.json",
+  "title": "Representative Category Profile Template Payload Schema", 
+  "description": "This schema is defined by an Admin to specify the required properties for a user opting in as a Representative within a specific campaign category. It outlines the structure of a Representative's profile for that category and supports the addition of custom properties as needed by the Admin. The status field is mandatory and cannot be removed or modified by the Admin.",
+  "maintainers": [
+    {
+      "name": "Catalyst Team",
+      "url": "https://projectcatalyst.io/"
+    }
+  ],
+  "x-changelog": {
+    "2025-06-19": [
+      "First Version Created."
+    ]
+  },
+  "type": "object",
+  "additionalProperties": true,
+  "definitions": {
+    "status": {
+      "type": "string",
+      "enum": ["active", "revoked"],
+      "description": "The Representative's status in this category. 'active' means they are participating, 'revoked' means they have withdrawn."
+    }
+  },
+  "properties": {
+    "status": {
+      "$ref": "#/definitions/status"
+    }
+  },
+  "required": ["status"]
+} 

@@ -13,9 +13,13 @@ All Document Types are defined by composing these base document types:
 | Comment | `b679ded3-0e7c-41ba-89f8-da62a17898ea` | `37(h'b679ded30e7c41ba89f8da62a17898ea')` |
 | Decision | `788ff4c6-d65a-451f-bb33-575fe056b411` | `37(h'788ff4c6d65a451fbb33575fe056b411')` |
 | ModerationAction | `a5d232b8-5e03-4117-9afd-be32b878fcdd` | `37(h'a5d232b85e0341179afdbe32b878fcdd')` |
+| Profile | `1b70f611-518d-479e-be73-11b5e9cb68a5` | `37(h'1b70f611518d479ebe7311b5e9cb68a5')` |
 | Proposal | `7808d2ba-d511-40af-84e8-c0d1625fdfdc` | `37(h'7808d2bad51140af84e8c0d1625fdfdc')` |
+| RepresentativeCategoryProfile | `f1a2b3c4-1111-4abc-8def-2345678901aa` | `37(h'f1a2b3c411114abc8def2345678901aa')` |
+| RepresentativeProfile | `e3f2c1b4-7890-4abc-8def-2345678901ef` | `37(h'e3f2c1b478904abc8def2345678901ef')` |
 | SubmissionAction | `78927329-cfd9-4ea1-9c71-0e019b126a65` | `37(h'78927329cfd94ea19c710e019b126a65')` |
 | Template | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` | `37(h'0ce8ab3892584fbca62e7faa6e58318f')` |
+| VoterRepresentativeDelegation | `f1a2b3c4-3333-4abc-8def-2345678901cc` | `37(h'f1a2b3c433334abc8def2345678901cc')` |
 
 ## Document Types
 
@@ -29,6 +33,8 @@ All Defined Document Types
 | [Category Parameters](./docs/category_parameters.md) | Category | [37(h'818938c331394daaafe6974c78488e95')] |
 | [Comment Moderation Action](./docs/comment_moderation_action.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
 | [Decision Parameters](./docs/decision_parameters.md) | Decision | [37(h'788ff4c6d65a451fbb33575fe056b411')] |
+| [Profile](./docs/profile.md) | Profile | [37(h'1b70f611518d479ebe7311b5e9cb68a5')] |
+| [Profile Template](./docs/profile_template.md) | Template/Profile | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'1b70f611518d479ebe7311b5e9cb68a5')] |
 | [Proposal](./docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
 | [Proposal Comment](./docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
 | [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) | Template/Template/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
@@ -37,6 +43,11 @@ All Defined Document Types
 | [Proposal Moderation Action](./docs/proposal_moderation_action.md) | Action/Proposal/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
 | [Proposal Submission Action](./docs/proposal_submission_action.md) | Action/Proposal/SubmissionAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'78927329cfd94ea19c710e019b126a65')] |
 | [Proposal Template](./docs/proposal_template.md) | Template/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Representative Category Profile](./docs/representative_category_profile.md) | RepresentativeCategoryProfile | [37(h'f1a2b3c411114abc8def2345678901aa')] |
+| [Representative Category Profile Template](./docs/representative_category_profile_template.md) | Template/RepresentativeCategoryProfile | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'f1a2b3c411114abc8def2345678901aa')] |
+| [Representative Profile](./docs/representative_profile.md) | RepresentativeProfile | [37(h'e3f2c1b478904abc8def2345678901ef')] |
+| [Representative Profile Template](./docs/representative_profile_template.md) | Template/RepresentativeProfile | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'e3f2c1b478904abc8def2345678901ef')] |
+| [Voter Representative Delegation](./docs/voter_representative_delegation.md) | VoterRepresentativeDelegation | [37(h'f1a2b3c433334abc8def2345678901cc')] |
 <!-- markdownlint-enable MD033 -->
 
 ## Document Relationship Hierarchy

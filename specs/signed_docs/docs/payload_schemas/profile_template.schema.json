@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/profile_template.schema.json",
+  "title": "Profile Template Payload Schema",
+  "description": "Schema for a profile document template for any Catalyst actor.",
+  "maintainers": [
+    {
+      "name": "Catalyst Team",
+      "url": "https://projectcatalyst.io/"
+    }
+  ],
+  "x-changelog": {
+    "2025-06-19": [
+      "First Version Created."
+    ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": { "type": "string" },
+    "bio": { "type": "string" }
+  },
+  "required": ["name", "bio"]
+} 

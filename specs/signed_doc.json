@@ -11,9 +11,13 @@
     "Comment": "b679ded3-0e7c-41ba-89f8-da62a17898ea",
     "Decision": "788ff4c6-d65a-451f-bb33-575fe056b411",
     "ModerationAction": "a5d232b8-5e03-4117-9afd-be32b878fcdd",
+    "Profile": "1b70f611-518d-479e-be73-11b5e9cb68a5",
     "Proposal": "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
+    "RepresentativeCategoryProfile": "f1a2b3c4-1111-4abc-8def-2345678901aa",
+    "RepresentativeProfile": "e3f2c1b4-7890-4abc-8def-2345678901ef",
     "SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65",
-    "Template": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
+    "Template": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+    "VoterRepresentativeDelegation": "f1a2b3c4-3333-4abc-8def-2345678901cc"
   },
   "cddlDefinitions": {
     "COSE_Document_Header_Map": {
@@ -927,6 +931,289 @@
           "changes": "* Use generalized parameters.",
           "modified": "2025-05-05",
           "version": "0.03"
+        }
+      ]
+    },
+    "Profile": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "Validate profile data and store in the system.",
+        "front_end": "Display and allow editing of profile fields for the user."
+      },
+      "description": "## Profile Document\n\nA profile document for a Catalyst user containing basic user information.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Profile Template",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The profile payload contains the minimum profile information for a user. Its structure is defined by the referenced Profile Template."
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "1b70f611-518d-479e-be73-11b5e9cb68a5"
+      ],
+      "validation": "The profile must include both a name and a bio. No additional validation beyond schema and required fields.",
+      "versions": [
+        {
+          "changes": "\t* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        }
+      ]
+    },
+    "Profile Template": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "description": "## Profile Template Document\n\nDefines the allowed payload contents and constraints for a generic user profile.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "JSON Schema document which defines the valid contents of a profile document.",
+        "schema": {
+          "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/profile_template.schema.json",
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "description": "Schema for a profile document template for any Catalyst actor.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "bio": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name",
+            "bio"
+          ],
+          "title": "Profile Template Payload Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-06-19": [
+              "First Version Created."
+            ]
+          }
+        }
+      },
+      "signers": {
+        "roles": {
+          "admin": [
+            "Brand Admin"
+          ],
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+        "1b70f611-518d-479e-be73-11b5e9cb68a5"
+      ],
+      "versions": [
+        {
+          "changes": "\t* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
         }
       ]
     },
@@ -2091,6 +2378,776 @@
           "version": "0.03"
         }
       ]
+    },
+    "Representative Category Profile": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "  - The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n  - The system will only consider Representatives with an 'active' status as eligible for delegation.",
+        "front_end": "  - Allows a Representative to create or update their profile for a category.\n  - The status is set to 'active' when created and the Representative is then discoverable for delegation.\n  - The Representative can opt-out and their status set to 'revoked' to signal they are no longer participating in the category."
+      },
+      "description": "  ## Representative Category Profile Document\n\n  A Representative Category Profile is created to opt in as a Representative for a specific campaign category, the user must have registered as a Representative.\n  The presence of this docuemnt signifies the user's intent to participate in that category as a Representative.\n  \n  The document's structure is defined by the associated Representative_Category_Profile_Template, which allows an Admin to specify category-specific requirements.\n  \n  The payload must include a status field, indicating whether the Representative is currently active or has revoked their participation.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Category Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Representative Profile",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Representative Category Profile Template",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "  The Representative's profile data for a specific category. Its structure is defined by the referenced template document.\n  It MUST contain a 'status' field ('active' or 'revoked') to manage the Representative's participation."
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Representative"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "f1a2b3c4-1111-4abc-8def-2345678901aa"
+      ],
+      "validation": "  - The signer MUST be a registered 'Representative'.\n  - The 'ref' metadata field MUST point to a valid 'Representative_Profile' document.\n  - The 'parameters' metadata field MUST point to a valid 'Category Parameters' document.\n  - The 'template' metadata field MUST point to a valid 'Representative_Category_Profile_Template' document.\n  - The payload MUST be valid against the JSON schema defined in the referenced template.",
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        }
+      ]
+    },
+    "Representative Category Profile Template": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "description": "  ## Representative Category Profile Template Document\n\n  Defines the allowed payload contents and constraints for a Representative's category-specific profile.\n  This template is created by an Admin to enforce a consistent structure for all Representatives within a given category.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/schema+json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "JSON Schema document which defines the valid contents of a Representative Category Profile document.\nThe schema MUST include a 'status' field to indicate if the Representative is active or withdrawn from the category.",
+        "schema": {
+          "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/representative_category_profile_template.schema.json",
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": true,
+          "definitions": {
+            "status": {
+              "description": "The Representative's status in this category. 'active' means they are participating, 'revoked' means they have withdrawn.",
+              "enum": [
+                "active",
+                "revoked"
+              ],
+              "type": "string"
+            }
+          },
+          "description": "This schema is defined by an Admin to specify the required properties for a user opting in as a Representative within a specific campaign category. It outlines the structure of a Representative's profile for that category and supports the addition of custom properties as needed by the Admin. The status field is mandatory and cannot be removed or modified by the Admin.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "status": {
+              "$ref": "#/definitions/status"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "title": "Representative Category Profile Template Payload Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-06-19": [
+              "First Version Created."
+            ]
+          }
+        }
+      },
+      "signers": {
+        "roles": {
+          "admin": [
+            "Brand Admin",
+            "Campaign Admin"
+          ],
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+        "f1a2b3c4-1111-4abc-8def-2345678901aa"
+      ],
+      "versions": [
+        {
+          "changes": "  * First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        }
+      ]
+    },
+    "Representative Profile": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "- Validate Representative profile data against the referenced 'Representative_Profile_Template' and store it in the system.\n- This global profile is the foundational document referenced by all of the Representative's category-specific profiles.",
+        "front_end": "- Display and allow editing of the Representative's core profile fields.\n- This profile serves as the central hub for a Representative's identity across all funds and categories."
+      },
+      "description": "## Representative Profile Document\n\nA Representative-specific profile, extending the minimal profile with Representative-specific fields.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Representative Profile Template",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "The Representative profile payload contains all base profile fields and Representative-specific fields.\nIts structure is defined by the referenced Representative Profile Template."
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Representative"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "e3f2c1b4-7890-4abc-8def-2345678901ef"
+      ],
+      "validation": "  - The signer MUST be a registered 'Representative'.\n  - The payload MUST be valid against the JSON schema defined in the referenced 'Representative Profile Template'.",
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        }
+      ]
+    },
+    "Representative Profile Template": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "description": "  ## Representative Profile Template Document\n\n  Defines the allowed payload contents and constraints for a Representative profile.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "JSON Schema document which defines the valid contents of a Representative profile document.",
+        "schema": {
+          "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/drep_profile_template.schema.json",
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "description": "Schema for a Representative profile document template, extending the base profile with Representative-specific fields as defined by the Admin.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "avatar": {
+              "$ref": "common_definitions.schema.json#/definitions/ipfsUrl"
+            },
+            "avatar_required": {
+              "enum": [
+                "yes",
+                "optional",
+                "excluded"
+              ],
+              "type": "string"
+            },
+            "bio": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "social_links": {
+              "items": {
+                "$ref": "common_definitions.schema.json#/definitions/url"
+              },
+              "type": "array"
+            },
+            "tags": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "website": {
+              "$ref": "common_definitions.schema.json#/definitions/url"
+            }
+          },
+          "required": [
+            "name",
+            "bio",
+            "avatar",
+            "website",
+            "social_links",
+            "tags",
+            "avatar_required"
+          ],
+          "title": "Representative Profile Template Payload Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-06-19": [
+              "First Version Created."
+            ]
+          }
+        }
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+        "e3f2c1b4-7890-4abc-8def-2345678901ef"
+      ],
+      "versions": [
+        {
+          "changes": "  * First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        }
+      ]
+    },
+    "Voter Representative Delegation": {
+      "authors": {
+        "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "  Validate the delegation action and update the voter's delegation state for the given category and Representative.",
+        "front_end": "  Allow voters to delegate to a Representative for a category ('active') or revoke that delegation ('revoked')."
+      },
+      "description": "  ## Voter Representative Delegation Document\n\n  Captures that a voter (the signer) has delegated to a Representative for a specific category.\n  The document this refers to (`ref`) is the Representative's Category Profile.\n  The category itself is specified in the `parameters` metadata.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "exclusive": null,
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "exclusive": null,
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Category Parameters",
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": "Representative Category Profile",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "exclusive": null,
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "exclusive": null,
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "exclusive": null,
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "exclusive": null,
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
+          "exclusive": null,
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "  A minimal payload indicating the intended status of the delegation.\n  'active' creates or affirms the delegation.\n  'revoked' withdraws the delegation.",
+        "schema": {
+          "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/voter_representative_delegation.schema.json",
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "description": "This payload is submitted when a voter delegates to a Representative, with the voter as the signer and the Representative’s category profile as the referenced document; to revoke the delegation, the voter can publish again with the status set to revoked.",
+          "maintainers": [
+            {
+              "name": "Catalyst Team",
+              "url": "https://projectcatalyst.io/"
+            }
+          ],
+          "properties": {
+            "status": {
+              "description": "The status of the delegation. 'active' signifies delegation (set by default), 'revoked' signifies withdrawal of delegation.",
+              "enum": [
+                "active",
+                "revoked"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "status"
+          ],
+          "title": "Voter Representative Delegation Payload Schema",
+          "type": "object",
+          "x-changelog": {
+            "2025-06-19": [
+              "First Version Created."
+            ]
+          }
+        }
+      },
+      "signers": {
+        "roles": {
+          "user": [
+            "Registered"
+          ]
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "f1a2b3c4-3333-4abc-8def-2345678901cc"
+      ],
+      "validation": "  The payload must contain a 'status' field, which must be either 'active' or 'revoked'.\n  The Category id for the Representative's Category Profile and as specified in the metadata must match. ",
+      "versions": [
+        {
+          "changes": "* First Published Version",
+          "modified": "2025-06-19",
+          "version": "0.01"
+        }
+      ]
     }
   },
   "documentationLinks": {
@@ -2191,7 +3248,14 @@
         "Brand Parameters",
         "Campaign Parameters",
         "Category Parameters",
-        "Decision Parameters"
+        "Decision Parameters",
+        "Profile",
+        "Profile Template",
+        "Representative Profile Template",
+        "Representative Category Profile Template",
+        "Representative Profile",
+        "Representative Category Profile",
+        "Voter Representative Delegation"
       ],
       "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
     },
@@ -2232,7 +3296,10 @@
         "Proposal Meta Template",
         "Proposal Template",
         "Proposal Comment Meta Template",
-        "Proposal Comment Template"
+        "Proposal Comment Template",
+        "Profile Template",
+        "Representative Profile Template",
+        "Representative Category Profile Template"
       ],
       "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
     },
