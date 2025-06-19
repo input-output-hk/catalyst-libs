@@ -1,18 +1,8 @@
 //! Catalyst Signed Document Content Payload
 
-use std::ops::Deref;
-
 /// Document Content bytes (COSE payload).
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Content(Vec<u8>);
-
-impl Deref for Content {
-    type Target = [u8];
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
-    }
-}
 
 impl Content {
     /// Return content bytes.
@@ -21,7 +11,6 @@ impl Content {
     }
 
     /// Return content byte size.
-    #[must_use]
     pub fn size(&self) -> usize {
         self.0.len()
     }
@@ -45,10 +34,3 @@ impl minicbor::Encode<()> for Content {
         Ok(())
     }
 }
-
-// impl minicbor::Decode<'_, ()> for Content {
-//     fn decode(
-//         d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
-//     ) -> Result<Self, minicbor::decode::Error> {
-//     }
-// }
