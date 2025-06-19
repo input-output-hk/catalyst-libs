@@ -94,7 +94,11 @@ impl Builder {
             .content
             .encoded_bytes(self.metadata.content_encoding())
             .unwrap();
-        e.bytes(content.as_slice()).unwrap();
+        if content.is_empty() {
+            e.null().unwrap();
+        } else {
+            e.bytes(content.as_slice()).unwrap();
+        }
         // signatures
         e.encode(self.signatures).unwrap();
 
