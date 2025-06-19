@@ -3,13 +3,16 @@ use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
 
 use crate::{
     signature::{tbs_data, Signature},
-    CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata, Signatures,
-    PROBLEM_REPORT_CTX,
+    CatalystSignedDocument, Content, Metadata, Signatures,
 };
 
 /// Catalyst Signed Document Builder.
 #[derive(Debug)]
-pub struct Builder(InnerCatalystSignedDocument);
+pub struct Builder {
+    metadata: Metadata,
+    content: Content,
+    signatures: Signatures,
+}
 
 impl Default for Builder {
     fn default() -> Self {
@@ -21,14 +24,11 @@ impl Builder {
     /// Start building a signed document
     #[must_use]
     pub fn new() -> Self {
-        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        Self(InnerCatalystSignedDocument {
-            report,
+        Self {
             metadata: Metadata::default(),
             content: Content::default(),
             signatures: Signatures::default(),
-            raw_bytes: None,
-        })
+        }
     }
 
     /// Set document metadata in JSON format
@@ -38,14 +38,14 @@ impl Builder {
     /// - Fails if it is invalid metadata fields JSON object.
     pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
         let metadata = serde_json::from_value(json)?;
-        self.0.metadata = Metadata::from_metadata_fields(metadata, &self.0.report);
+        self.metadata = Metadata::from_metadata_fields(metadata, &ProblemReport::new(""));
         Ok(self)
     }
 
     /// Set decoded (original) document content bytes
     #[must_use]
     pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
-        self.0.content = Content::from_decoded(content);
+        self.content = Content::from_decoded(content);
         self
     }
 
@@ -64,13 +64,12 @@ impl Builder {
         }
         let data_to_sign = tbs_data(
             &kid,
-            &self.0.metadata,
-            self.0
-                .content
-                .encoded_bytes(self.0.metadata.content_encoding())?,
+            &self.metadata,
+            self.content
+                .encoded_bytes(self.metadata.content_encoding())?,
         )?;
         let sign_bytes = sign_fn(data_to_sign);
-        self.0.signatures.push(Signature::new(kid, sign_bytes));
+        self.signatures.push(Signature::new(kid, sign_bytes));
 
         Ok(self)
     }
@@ -78,19 +77,37 @@ impl Builder {
     /// Build a signed document with the collected error report.
     /// Could provide an invalid document.
     #[must_use]
+    #[allow(clippy::unwrap_used)]
     pub fn build(self) -> CatalystSignedDocument {
-        self.0.into()
+        let mut e = minicbor::Encoder::new(Vec::new());
+        // COSE_Sign tag
+        // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+        e.tag(minicbor::data::Tag::new(98)).unwrap();
+        e.array(4).unwrap();
+        // protected headers (metadata fields)
+        e.bytes(minicbor::to_vec(&self.metadata).unwrap().as_slice())
+            .unwrap();
+        // empty unprotected headers
+        e.map(0).unwrap();
+        // content
+        let content = self
+            .content
+            .encoded_bytes(self.metadata.content_encoding())
+            .unwrap();
+        e.bytes(content.as_slice()).unwrap();
+        // signatures
+        e.encode(self.signatures).unwrap();
+
+        CatalystSignedDocument::try_from(e.into_writer().as_slice()).unwrap()
     }
 }
 
 impl From<&CatalystSignedDocument> for Builder {
     fn from(value: &CatalystSignedDocument) -> Self {
-        Self(InnerCatalystSignedDocument {
+        Self {
             metadata: value.inner.metadata.clone(),
             content: value.inner.content.clone(),
             signatures: value.inner.signatures.clone(),
-            report: value.inner.report.clone(),
-            raw_bytes: None,
-        })
+        }
     }
 }
