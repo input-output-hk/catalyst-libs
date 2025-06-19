@@ -2,10 +2,10 @@
 
 ## Description
 
-  ## Representative Category Profile Template Document
+## Representative Category Profile Template
 
-  Defines the allowed payload contents and constraints for a Representative's category-specific profile.
-  This template is created by an Admin to enforce a consistent structure for all Representatives within a given category.
+Defines the [JSON schema] for a 'Representative Category Profile'.
+This allows an 'Admin' to specify different profile requirements for each category.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -17,26 +17,19 @@
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* The signer MUST be a registered 'Admin'.
+* The payload MUST be a valid [JSON schema].
+* The schema MUST include a 'status' field.
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* Validate and store the [JSON schema] that defines the structure for 'Representative Category Profile' documents.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 

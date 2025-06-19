@@ -4,12 +4,22 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Representative Category Profile Template": {
-		description: """
-			  ## Representative Category Profile Template Document
-
-			  Defines the allowed payload contents and constraints for a Representative's category-specific profile.
-			  This template is created by an Admin to enforce a consistent structure for all Representatives within a given category.
+		description: "## Representative Category Profile Template\n\nDefines the JSON schema for a 'Representative Category Profile'.\nThis allows an 'Admin' to specify different profile requirements for each category."
+		validation: """
+			* The signer MUST be a registered 'Admin'.
+			* The payload MUST be a valid JSON schema.
+			* The schema MUST include a 'status' field.
 			"""
+		business_logic: {
+			front_end: """
+				"""
+			back_end: """
+				* Validate and store the JSON schema that defines the structure for 'Representative Category Profile' documents.
+				"""
+		}
+		metadata: {
+			// Add any template-specific metadata here if needed
+		}
 		headers: {
 			"content type": {
 				value: "application/schema+json"

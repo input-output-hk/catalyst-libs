@@ -4,11 +4,19 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Representative Profile Template": {
-		description: """
-			  ## Representative Profile Template Document
-
-			  Defines the allowed payload contents and constraints for a Representative profile.
+		description: "## Representative Profile Template\n\nDefines the JSON schema for a 'Representative Profile'.\nThis template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles."
+		validation: """
+			* The signer MUST be a registered 'Admin'.
+			* The payload MUST be a valid JSON schema.
 			"""
+		business_logic: {
+			front_end: """
+				"""
+			back_end: """
+				* Validate and store the JSON schema that defines the structure for all 'Representative Profile' documents.
+				* The schema MUST extend the base 'Profile' schema with Representative-specific fields.
+				"""
+		}
 		metadata: {
 			// Add any template-specific metadata here if needed
 		}

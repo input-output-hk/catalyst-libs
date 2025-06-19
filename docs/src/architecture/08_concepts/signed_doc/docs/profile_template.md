@@ -16,26 +16,19 @@ Defines the allowed payload contents and constraints for a generic user profile.
 
 ### Validation
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* The signer MUST be a registered 'Admin'.
+* The payload MUST be a valid [JSON schema].
+* The schema SHOULD define a minimal set of profile fields (e.g., name, bio).
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* Validate and store the [JSON schema] that defines the structure for all 'Profile' documents.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 

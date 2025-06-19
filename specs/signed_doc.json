@@ -939,10 +939,10 @@
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
       "business_logic": {
-        "back_end": "Validate profile data and store in the system.",
-        "front_end": "Display and allow editing of profile fields for the user."
+        "back_end": "* Validate and store profile data against the referenced 'Profile_Template'.\n* This profile serves as the base document for a user.\n  Its scope can be extended to create more specific profiles.",
+        "front_end": "* Display the user's profile information.\n* Allow a user to edit their own profile data."
       },
-      "description": "## Profile Document\n\nA profile document for a Catalyst user containing basic user information.",
+      "description": "## Profile Document\n\nA minimal user profile that provides basic information about a user.\nIts structure is defined by the referenced Profile Template.\nIt is used as a base for more specific profiles like the Representative Profile.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1038,7 +1038,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "The profile payload contains the minimum profile information for a user. Its structure is defined by the referenced Profile Template."
+        "description": "The profile payload contains all base profile fields.\nIts structure is defined by the referenced Profile Template."
       },
       "signers": {
         "roles": {
@@ -1053,7 +1053,7 @@
       "type": [
         "1b70f611-518d-479e-be73-11b5e9cb68a5"
       ],
-      "validation": "The profile must include both a name and a bio. No additional validation beyond schema and required fields.",
+      "validation": "* The signer must be a registered 'User'.\n* The payload must be valid against the JSON schema defined in the referenced 'Profile Template'.",
       "versions": [
         {
           "changes": "\t* First Published Version",
@@ -1065,6 +1065,10 @@
     "Profile Template": {
       "authors": {
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
+      },
+      "business_logic": {
+        "back_end": "* Validate and store the JSON schema that defines the structure for all 'Profile' documents.",
+        "front_end": ""
       },
       "description": "## Profile Template Document\n\nDefines the allowed payload contents and constraints for a generic user profile.",
       "headers": {
@@ -1209,6 +1213,7 @@
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "1b70f611-518d-479e-be73-11b5e9cb68a5"
       ],
+      "validation": "* The signer MUST be a registered 'Admin'.\n* The payload MUST be a valid JSON schema.\n* The schema SHOULD define a minimal set of profile fields (e.g., name, bio).",
       "versions": [
         {
           "changes": "\t* First Published Version",
@@ -2384,10 +2389,10 @@
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
       "business_logic": {
-        "back_end": "  - The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n  - The system will only consider Representatives with an 'active' status as eligible for delegation.",
-        "front_end": "  - Allows a Representative to create or update their profile for a category.\n  - The status is set to 'active' when created and the Representative is then discoverable for delegation.\n  - The Representative can opt-out and their status set to 'revoked' to signal they are no longer participating in the category."
+        "back_end": "\t* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.\n\t* The system will only consider Representatives with an 'active' status as eligible for delegation.",
+        "front_end": "\t* Allows a Representative to create or update their profile for a category.\n\t* The Representative sets their status to 'active' to be discoverable for delegation.\n\t* The Representative can set their status to 'revoked' to signal they are no longer participating in the category,\n\t  without having to revoke the document."
       },
-      "description": "  ## Representative Category Profile Document\n\n  A Representative Category Profile is created to opt in as a Representative for a specific campaign category, the user must have registered as a Representative.\n  The presence of this docuemnt signifies the user's intent to participate in that category as a Representative.\n  \n  The document's structure is defined by the associated Representative_Category_Profile_Template, which allows an Admin to specify category-specific requirements.\n  \n  The payload must include a status field, indicating whether the Representative is currently active or has revoked their participation.",
+      "description": "## Representative Category Profile Document\n\nA Representative Category Profile is created to opt in as a Representative for a specific campaign category, the user must have registered as a Representative.\nThe presence of this docuemnt signifies the user's intent to participate in that category as a Representative.\n\nThe document's structure is defined by the associated Representative_Category_Profile_Template, which allows an Admin to specify category-specific requirements.\n\nThe payload must contain a 'status' field to indicate if the Representative is active or has revoked their participation.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2489,7 +2494,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "  The Representative's profile data for a specific category. Its structure is defined by the referenced template document.\n  It MUST contain a 'status' field ('active' or 'revoked') to manage the Representative's participation."
+        "description": "\tThe Representative's profile data for a specific category.\n\tIts structure is defined by the referenced template document.\n\tIt MUST contain a 'status' field ('active' or 'revoked') to manage the Representative's participation."
       },
       "signers": {
         "roles": {
@@ -2504,7 +2509,7 @@
       "type": [
         "f1a2b3c4-1111-4abc-8def-2345678901aa"
       ],
-      "validation": "  - The signer MUST be a registered 'Representative'.\n  - The 'ref' metadata field MUST point to a valid 'Representative_Profile' document.\n  - The 'parameters' metadata field MUST point to a valid 'Category Parameters' document.\n  - The 'template' metadata field MUST point to a valid 'Representative_Category_Profile_Template' document.\n  - The payload MUST be valid against the JSON schema defined in the referenced template.",
+      "validation": "\t* The signer MUST be a registered 'Representative'.\n\t* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.\n\t* The 'parameters' metadata field MUST point to a valid 'Category Parameters' document.\n\t* The 'template' metadata field MUST point to a valid 'Representative Category Profile Template' document.\n\t* The payload MUST be valid against the JSON schema defined in the referenced template.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -2517,7 +2522,11 @@
       "authors": {
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
-      "description": "  ## Representative Category Profile Template Document\n\n  Defines the allowed payload contents and constraints for a Representative's category-specific profile.\n  This template is created by an Admin to enforce a consistent structure for all Representatives within a given category.",
+      "business_logic": {
+        "back_end": "* Validate and store the JSON schema that defines the structure for 'Representative Category Profile' documents.",
+        "front_end": ""
+      },
+      "description": "## Representative Category Profile Template\n\nDefines the JSON schema for a 'Representative Category Profile'.\nThis allows an 'Admin' to specify different profile requirements for each category.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2667,6 +2676,7 @@
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "f1a2b3c4-1111-4abc-8def-2345678901aa"
       ],
+      "validation": "* The signer MUST be a registered 'Admin'.\n* The payload MUST be a valid JSON schema.\n* The schema MUST include a 'status' field.",
       "versions": [
         {
           "changes": "  * First Published Version",
@@ -2680,8 +2690,8 @@
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
       "business_logic": {
-        "back_end": "- Validate Representative profile data against the referenced 'Representative_Profile_Template' and store it in the system.\n- This global profile is the foundational document referenced by all of the Representative's category-specific profiles.",
-        "front_end": "- Display and allow editing of the Representative's core profile fields.\n- This profile serves as the central hub for a Representative's identity across all funds and categories."
+        "back_end": "* Validate Representative profile data against the referenced 'Representative_Profile_Template' and store it.\n* This global profile is the foundational document referenced by all of the Representative's category-specific profiles.",
+        "front_end": "* Display and allow editing of the Representative's core profile fields.\n* This profile serves as the central hub for a Representative's identity."
       },
       "description": "## Representative Profile Document\n\nA Representative-specific profile, extending the minimal profile with Representative-specific fields.",
       "headers": {
@@ -2794,7 +2804,7 @@
       "type": [
         "e3f2c1b4-7890-4abc-8def-2345678901ef"
       ],
-      "validation": "  - The signer MUST be a registered 'Representative'.\n  - The payload MUST be valid against the JSON schema defined in the referenced 'Representative Profile Template'.",
+      "validation": "  * The signer MUST be a registered 'Representative'.\n  * The payload MUST be valid against the JSON schema defined in the referenced 'Representative Profile Template'.",
       "versions": [
         {
           "changes": "* First Published Version",
@@ -2807,7 +2817,11 @@
       "authors": {
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
-      "description": "  ## Representative Profile Template Document\n\n  Defines the allowed payload contents and constraints for a Representative profile.",
+      "business_logic": {
+        "back_end": "* Validate and store the JSON schema that defines the structure for all 'Representative Profile' documents.\n* The schema MUST extend the base 'Profile' schema with Representative-specific fields.",
+        "front_end": ""
+      },
+      "description": "## Representative Profile Template\n\nDefines the JSON schema for a 'Representative Profile'.\nThis template allows an 'Admin' to enforce a specific structure and set of constraints for Representative profiles.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -2978,6 +2992,7 @@
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "e3f2c1b4-7890-4abc-8def-2345678901ef"
       ],
+      "validation": "* The signer MUST be a registered 'Admin'.\n* The payload MUST be a valid JSON schema.",
       "versions": [
         {
           "changes": "  * First Published Version",
@@ -2991,10 +3006,10 @@
         "Neil McAuliffe": "neil.mcauliffe@iohk.io"
       },
       "business_logic": {
-        "back_end": "  Validate the delegation action and update the voter's delegation state for the given category and Representative.",
-        "front_end": "  Allow voters to delegate to a Representative for a category ('active') or revoke that delegation ('revoked')."
+        "back_end": "* Verifies that the voter and Representative are valid and registered for the category.\n* Records the delegation of voting power from the voter to the Representative.",
+        "front_end": "* Allows a voter to select a Representative from a list of eligible candidates for a category.\n* The voter signs this document to confirm their delegation choice."
       },
-      "description": "  ## Voter Representative Delegation Document\n\n  Captures that a voter (the signer) has delegated to a Representative for a specific category.\n  The document this refers to (`ref`) is the Representative's Category Profile.\n  The category itself is specified in the `parameters` metadata.",
+      "description": "## Voter Representative Delegation\n\nA signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -3140,7 +3155,7 @@
       "type": [
         "f1a2b3c4-3333-4abc-8def-2345678901cc"
       ],
-      "validation": "  The payload must contain a 'status' field, which must be either 'active' or 'revoked'.\n  The Category id for the Representative's Category Profile and as specified in the metadata must match. ",
+      "validation": "* The signer MUST be a registered 'Voter'.\n* The 'ref' metadata field MUST point to a valid 'Representative Category Profile'.\n* The payload MUST be empty.",
       "versions": [
         {
           "changes": "* First Published Version",

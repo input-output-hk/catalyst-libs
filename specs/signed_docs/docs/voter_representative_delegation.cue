@@ -4,23 +4,20 @@ package signed_docs
 
 docs: #DocumentDefinitions & {
 	"Voter Representative Delegation": {
-		description: """
-			  ## Voter Representative Delegation Document
-
-			  Captures that a voter (the signer) has delegated to a Representative for a specific category.
-			  The document this refers to (`ref`) is the Representative's Category Profile.
-			  The category itself is specified in the `parameters` metadata.
-			"""
+		description: "## Voter Representative Delegation\n\nA signed document that allows a 'Voter' to delegate their voting power to a 'Representative' for a specific category."
 		validation: """
-			  The payload must contain a 'status' field, which must be either 'active' or 'revoked'.
-			  The Category id for the Representative's Category Profile and as specified in the metadata must match. 
+			* The signer MUST be a registered 'Voter'.
+			* The 'ref' metadata field MUST point to a valid 'Representative Category Profile'.
+			* The payload MUST be empty.
 			"""
 		business_logic: {
 			front_end: """
-				  Allow voters to delegate to a Representative for a category ('active') or revoke that delegation ('revoked').
+				* Allows a voter to select a Representative from a list of eligible candidates for a category.
+				* The voter signs this document to confirm their delegation choice.
 				"""
 			back_end: """
-				  Validate the delegation action and update the voter's delegation state for the given category and Representative.
+				* Verifies that the voter and Representative are valid and registered for the category.
+				* Records the delegation of voting power from the voter to the Representative.
 				"""
 		}
 		metadata: {

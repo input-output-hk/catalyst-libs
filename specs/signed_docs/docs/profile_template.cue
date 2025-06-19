@@ -9,6 +9,18 @@ docs: #DocumentDefinitions & {
 
 			Defines the allowed payload contents and constraints for a generic user profile.
 			"""
+		validation: """
+			* The signer MUST be a registered 'Admin'.
+			* The payload MUST be a valid JSON schema.
+			* The schema SHOULD define a minimal set of profile fields (e.g., name, bio).
+			"""
+		business_logic: {
+			front_end: """
+				"""
+			back_end: """
+				* Validate and store the JSON schema that defines the structure for all 'Profile' documents.
+				"""
+		}
 		metadata: {
 			// Add any template-specific metadata here if needed
 		}

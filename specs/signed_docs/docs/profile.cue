@@ -5,17 +5,23 @@ docs: #DocumentDefinitions & {
 		description: """
 			## Profile Document
 
-			A profile document for a Catalyst user containing basic user information.
+			A minimal user profile that provides basic information about a user.
+			Its structure is defined by the referenced Profile Template.
+			It is used as a base for more specific profiles like the Representative Profile.
 			"""
 		validation: """
-			The profile must include both a name and a bio. No additional validation beyond schema and required fields.
+			* The signer must be a registered 'User'.
+			* The payload must be valid against the JSON schema defined in the referenced 'Profile Template'.
 			"""
 		business_logic: {
 			front_end: """
-				Display and allow editing of profile fields for the user.
+				* Display the user's profile information.
+				* Allow a user to edit their own profile data.
 				"""
 			back_end: """
-				Validate profile data and store in the system.
+				* Validate and store profile data against the referenced 'Profile_Template'.
+				* This profile serves as the base document for a user.
+				  Its scope can be extended to create more specific profiles.
 				"""
 		}
 		metadata: {
@@ -26,7 +32,8 @@ docs: #DocumentDefinitions & {
 		}
 		payload: {
 			description: """
-				The profile payload contains the minimum profile information for a user. Its structure is defined by the referenced Profile Template.
+				The profile payload contains all base profile fields.
+				Its structure is defined by the referenced Profile Template.
 				"""
 		}
 		signers: {

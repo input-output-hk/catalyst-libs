@@ -16,20 +16,20 @@ A Representative-specific profile, extending the minimal profile with Representa
 
 ### Validation
 
-  - The signer MUST be a registered 'Representative'.
-  - The payload MUST be valid against the [JSON schema] defined in the referenced 'Representative Profile Template'.
+  * The signer MUST be a registered 'Representative'.
+  * The payload MUST be valid against the [JSON schema] defined in the referenced 'Representative Profile Template'.
 
 ### Business Logic
 
 #### Front End
 
-- Display and allow editing of the Representative's core profile fields.
-- This profile serves as the central hub for a Representative's identity across all funds and categories.
+* Display and allow editing of the Representative's core profile fields.
+* This profile serves as the central hub for a Representative's identity.
 
 #### Back End
 
-- Validate Representative profile data against the referenced 'Representative_Profile_Template' and store it in the system.
-- This global profile is the foundational document referenced by all of the Representative's category-specific profiles.
+* Validate Representative profile data against the referenced 'Representative_Profile_Template' and store it.
+* This global profile is the foundational document referenced by all of the Representative's category-specific profiles.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
