@@ -16,7 +16,7 @@ pub(crate) mod utils;
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
-use coset::{cbor::Value, iana::CoapContentFormat, CborSerializable};
+use coset::CborSerializable;
 pub use doc_type::DocType;
 pub use document_refs::{DocLocator, DocumentRef, DocumentRefs};
 use minicbor::{Decode, Decoder};
@@ -451,69 +451,7 @@ impl Display for Metadata {
     }
 }
 
-impl TryFrom<&Metadata> for coset::Header {
-    type Error = anyhow::Error;
-
-    fn try_from(meta: &Metadata) -> Result<Self, Self::Error> {
-        let mut builder = coset::HeaderBuilder::new()
-            .content_format(CoapContentFormat::from(meta.content_type()?));
-
-        if let Some(content_encoding) = meta.content_encoding() {
-            builder = builder.text_value(
-                CONTENT_ENCODING_KEY.to_string(),
-                format!("{content_encoding}").into(),
-            );
-        }
-
-        builder = builder
-            .text_value(TYPE_KEY.to_string(), meta.doc_type()?.to_value())
-            .text_value(
-                ID_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_id()?))?,
-            )
-            .text_value(
-                VER_KEY.to_string(),
-                Value::try_from(CborUuidV7(meta.doc_ver()?))?,
-            );
-
-        if let Some(doc_ref) = meta.doc_ref() {
-            builder = builder.text_value(REF_KEY.to_string(), Value::try_from(doc_ref)?);
-        }
-        if let Some(template) = meta.template() {
-            builder = builder.text_value(TEMPLATE_KEY.to_string(), Value::try_from(template)?);
-        }
-        if let Some(reply) = meta.reply() {
-            builder = builder.text_value(REPLY_KEY.to_string(), Value::try_from(reply)?);
-        }
-
-        if let Some(section) = meta.section() {
-            builder = builder.text_value(SECTION_KEY.to_string(), Value::from(section.clone()));
-        }
-
-        if !meta.collabs().is_empty() {
-            builder = builder.text_value(
-                COLLABS_KEY.to_string(),
-                Value::Array(meta.collabs().iter().cloned().map(Value::Text).collect()),
-            );
-        }
-
-        if let Some(parameters) = meta.parameters() {
-            builder = builder.text_value(PARAMETERS_KEY.to_string(), Value::try_from(parameters)?);
-        }
-
-        Ok(builder.build())
-    }
-}
-
-/// [`Metadata`] encoding context for the [`minicbor::Encode`] implementation.
-pub(crate) struct MetadataEncodeContext {
-    /// Used by some fields' encoding implementations.
-    pub uuid_context: catalyst_types::uuid::CborContext,
-    /// Used by some fields' encoding implementations.
-    pub report: ProblemReport,
-}
-
-impl minicbor::Encode<MetadataEncodeContext> for Metadata {
+impl minicbor::Encode<()> for Metadata {
     /// Encode as a CBOR map.
     ///
     /// Note that to put it in an [RFC 8152] protected header.
@@ -523,38 +461,19 @@ impl minicbor::Encode<MetadataEncodeContext> for Metadata {
     /// so the checks must be done elsewhere.
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
-    #[allow(
-        clippy::cast_possible_truncation,
-        reason = "There can't be enough unique fields to overflow `u64`."
-    )]
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut MetadataEncodeContext,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        e.map(self.0.len() as u64)?;
+        e.map(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
         self.0
             .values()
-            .try_fold(e, |e, field| e.encode_with(field, ctx))?
+            .try_fold(e, |e, field| e.encode(field))?
             .ok()
-    }
-}
-
-/// [`Metadata`] decoding context for the [`minicbor::Decode`] implementation.
-pub(crate) struct MetadataDecodeContext {
-    /// Used by some fields' decoding implementations.
-    pub uuid_context: catalyst_types::uuid::CborContext,
-    /// Used by some fields' decoding implementations.
-    pub compatibility_policy: crate::CompatibilityPolicy,
-    /// Used by some fields' decoding implementations.
-    pub report: ProblemReport,
-}
-
-impl MetadataDecodeContext {
-    /// [`DocType`] decoding context.
-    fn doc_type_context(&mut self) -> crate::decode_context::DecodeContext {
-        crate::decode_context::DecodeContext {
-            compatibility_policy: self.compatibility_policy,
-            report: &mut self.report,
-        }
     }
 }
 
@@ -579,7 +498,7 @@ fn custom_transient_decode_error(
     minicbor::decode::Error::custom(TransientDecodeError(inner))
 }
 
-impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata {
     /// Decode from a CBOR map.
     ///
     /// Note that this won't decode an [RFC 8152] protected header as is.
@@ -590,7 +509,7 @@ impl minicbor::Decode<'_, MetadataDecodeContext> for Metadata {
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
     fn decode(
-        d: &mut Decoder<'_>, ctx: &mut MetadataDecodeContext,
+        d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata decoding";
 
