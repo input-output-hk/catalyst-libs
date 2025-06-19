@@ -321,7 +321,15 @@ where Provider: VerifyingKeyProvider {
         return Ok(false);
     };
 
-    let Ok(tbs_data) = tbs_data(kid, doc.doc_meta(), doc.doc_content()) else {
+    let Ok(encoded_content) = doc.encoded_content() else {
+        doc.report().other(
+            "Cannot build a COSE to be signed data",
+            "During creating COSE to be signed data",
+        );
+        return Ok(false);
+    };
+
+    let Ok(tbs_data) = tbs_data(kid, doc.doc_meta(), encoded_content) else {
         doc.report().other(
             "Cannot build a COSE to be signed data",
             "During creating COSE to be signed data",

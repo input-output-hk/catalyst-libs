@@ -29,7 +29,8 @@ impl ContentTypeRule {
             );
             return Ok(false);
         }
-        let Ok(content) = doc.doc_content().decoded_bytes() else {
+        let content = doc.decoded_content();
+        if content.is_empty() {
             doc.report().missing_field(
                 "payload",
                 "Cannot get a document content during the content type field validation",

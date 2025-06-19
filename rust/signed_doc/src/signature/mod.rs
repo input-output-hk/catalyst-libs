@@ -4,7 +4,7 @@ pub use catalyst_types::catalyst_id::CatalystId;
 use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
 
-use crate::{Content, Metadata};
+use crate::Metadata;
 
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]
@@ -108,7 +108,7 @@ impl Signatures {
 ///
 /// Described in [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
 pub(crate) fn tbs_data(
-    kid: &CatalystId, metadata: &Metadata, content: &Content,
+    kid: &CatalystId, metadata: &Metadata, encoded_content: Vec<u8>,
 ) -> anyhow::Result<Vec<u8>> {
     Ok(minicbor::to_vec((
         // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
@@ -116,7 +116,7 @@ pub(crate) fn tbs_data(
         <minicbor::bytes::ByteVec>::from(minicbor::to_vec(metadata)?),
         <minicbor::bytes::ByteVec>::from(protected_header_bytes(kid)?),
         minicbor::bytes::ByteArray::from([]),
-        <minicbor::bytes::ByteVec>::from(content.encoded_bytes(metadata.content_encoding())?),
+        <minicbor::bytes::ByteVec>::from(encoded_content),
     ))?)
 }
 

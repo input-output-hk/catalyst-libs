@@ -62,7 +62,13 @@ impl Builder {
         if kid.is_id() {
             anyhow::bail!("Provided kid should be in a uri format, kid: {kid}");
         }
-        let data_to_sign = tbs_data(&kid, &self.0.metadata, &self.0.content)?;
+        let data_to_sign = tbs_data(
+            &kid,
+            &self.0.metadata,
+            self.0
+                .content
+                .encoded_bytes(self.0.metadata.content_encoding())?,
+        )?;
         let sign_bytes = sign_fn(data_to_sign);
         self.0.signatures.push(Signature::new(kid, sign_bytes));
 

@@ -219,7 +219,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
-                    && (doc.doc_content().decoded_bytes().unwrap()
+                    && (doc.decoded_content()
                         == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
             }
         })),

@@ -9,7 +9,7 @@ use crate::metadata::ContentEncoding;
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct Content {
     /// Original Decompressed Document's data bytes
-    data: Option<Vec<u8>>,
+    data: Vec<u8>,
 }
 
 impl Content {
@@ -37,17 +37,12 @@ impl Content {
 
     /// Creates a new `Content` value, from the decoded (original) data.
     pub(crate) fn from_decoded(data: Vec<u8>) -> Self {
-        Self { data: Some(data) }
+        Self { data }
     }
 
     /// Return an decoded (original) content bytes.
-    ///
-    /// # Errors
-    ///  - Missing Document content
-    pub fn decoded_bytes(&self) -> anyhow::Result<&[u8]> {
-        self.data
-            .as_deref()
-            .ok_or(anyhow::anyhow!("Missing Document content"))
+    pub fn decoded_bytes(&self) -> &[u8] {
+        self.data.as_slice()
     }
 
     /// Return an encoded content bytes,
@@ -59,7 +54,7 @@ impl Content {
     pub(crate) fn encoded_bytes(
         &self, content_encoding: Option<ContentEncoding>,
     ) -> anyhow::Result<Vec<u8>> {
-        let content = self.decoded_bytes()?;
+        let content = self.decoded_bytes();
         if let Some(content_encoding) = content_encoding {
             content_encoding
                 .encode(content)
@@ -70,9 +65,8 @@ impl Content {
     }
 
     /// Return content byte size.
-    /// If content is empty returns `0`.
     #[must_use]
     pub fn size(&self) -> usize {
-        self.data.as_ref().map(Vec::len).unwrap_or_default()
+        self.data.len()
     }
 }

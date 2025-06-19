@@ -110,10 +110,18 @@ impl CatalystSignedDocument {
         self.inner.metadata.doc_ver()
     }
 
-    /// Return document `Content`.
+    /// Return document decoded (original/non compressed) content bytes.
     #[must_use]
-    pub fn doc_content(&self) -> &Content {
-        &self.inner.content
+    pub fn decoded_content(&self) -> &[u8] {
+        &self.inner.content.decoded_bytes()
+    }
+
+    /// Return document encoded (compressed) content bytes.
+    #[must_use]
+    pub fn encoded_content(&self) -> anyhow::Result<Vec<u8>> {
+        self.inner
+            .content
+            .encoded_bytes(self.doc_content_encoding())
     }
 
     /// Return document `ContentType`.
@@ -253,8 +261,7 @@ impl<C> Encode<C> for CatalystSignedDocument {
             e.map(0)?;
             // content
             let content = self
-                .doc_content()
-                .encoded_bytes(self.doc_content_encoding())
+                .encoded_content()
                 .map_err(minicbor::encode::Error::message)?;
             e.bytes(content.as_slice())?;
             // signatures
