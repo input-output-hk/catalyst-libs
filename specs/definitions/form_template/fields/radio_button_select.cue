@@ -2,6 +2,11 @@
 
 package form_template
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
+
+)
+
 dictionary: #formTemplate & {
 	radioButtonSelect: {
 		description: """
@@ -15,7 +20,7 @@ dictionary: #formTemplate & {
 		definition: {
 			type:             "string"
 			contentMediaType: "text/plain"
-			pattern:          _regexTextSingleLine
+			pattern:          regex.def.singleLine.pattern
 		}
 		parameters: {
 			title: {}

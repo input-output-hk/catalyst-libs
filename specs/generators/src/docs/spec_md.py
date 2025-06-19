@@ -34,7 +34,7 @@ class SpecMd(DocGenerator):
                     description = self._spec.encoding_types.description(value)
 
                 if description is not None:
-                    value_entry += f" : {description.replace('\n', '\n      ')}"
+                    value_entry += f" : {f'\n{description}'.replace('\n', '\n      ')}"
 
                 header_format_display += value_entry
 
@@ -157,8 +157,7 @@ The COSE header parameters defined and used by Catalyst Signed Documents are as 
 
 ### Metadata
 
-Catalyst Signed Documents extend the Header Parameters with a series of Metadata fields.
-These fields are defined [here](./metadata.md).
+Catalyst Signed Documents extend the Header Parameters with a series of [Metadata fields](./metadata.md).
 
 ### Signing Catalyst Signed Documents
 

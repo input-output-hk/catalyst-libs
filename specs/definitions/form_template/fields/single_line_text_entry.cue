@@ -1,6 +1,11 @@
 // Single Line Text Entry
 package form_template
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
+
+)
+
 dictionary: #formTemplate & {
 	singleLineTextEntry: {
 		description: """
@@ -12,7 +17,7 @@ dictionary: #formTemplate & {
 
 		definition: {
 			type:    "string"
-			pattern: _regexTextSingleLine
+			pattern: regex.def.singleLine.pattern
 		}
 		parameters: {
 			title: {}

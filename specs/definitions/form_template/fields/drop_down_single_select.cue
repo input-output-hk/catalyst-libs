@@ -2,6 +2,11 @@
 
 package form_template
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
+
+)
+
 dictionary: #formTemplate & {
 	dropDownSingleSelect: {
 		description: """
@@ -14,7 +19,7 @@ dictionary: #formTemplate & {
 		definition: {
 			type:             "string"
 			contentMediaType: "text/plain"
-			pattern:          _regexTextSingleLine
+			pattern:          regex.def.singleLine.pattern
 		}
 		parameters: {
 			title: {}

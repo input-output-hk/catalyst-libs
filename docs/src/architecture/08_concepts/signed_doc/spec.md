@@ -98,15 +98,78 @@ Media Type/s allowed in the Payload
 * [Cose][RFC9052] Label : 3
 * Format : Media Type
   * Supported Values:
-    * [application/json] : [JSON][RFC8259] Document
-    * [application/schema+json] : [JSON Schema] Draft 7 Document; Note:
-      * This is currently an unofficial media type.
-      * Draft 7 is used because of its wide support by tooling.
-    * [application/cbor] : [RFC8949] Binary [CBOR][RFC8949] Encoded Document
-    * application/cddl : [CDDL][RFC8610] Document; Note:
+    * [application/cbor] :
+      An [RFC8949] Binary [CBOR][RFC8949] Encoded Document.
+    * [application/cddl][RFC8610] :
+      A [CDDL][RFC8610] Document.
+
+      Note:
+
       * This is an unofficial media type
       * [RFC9165] Additional Control Operators for [CDDL][RFC8610] are supported.
       * Must not have Modules, schema must be self-contained.
+    * [application/json] :
+      [JSON][RFC8259] Document
+    * [application/schema+json][JSON Schema-2020-12] :
+      A [JSON Schema Draft 2020-12][JSON Schema-2020-12] Document.
+
+      Note:
+
+      * This is currently an unofficial media type.
+    * [text/css;][text/css] [charset=utf-8][RFC3629] :
+      [CSS] Content used for styling [HTML][HTML5].
+      [CSS] should use the least set of features possible to achieve
+      the desired presentation to ensure the broadest compatibility.
+    * [text/css;][text/css] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
+      [CSS] Content used for styling [HTML][HTML5].
+      [CSS] should use the least set of features possible to achieve
+      the desired presentation to ensure the broadest compatibility.
+
+      The text includes [Handlebars] type template fields that need
+      processing and replacement prior to display.
+    * [text/html;][HTML5] [charset=utf-8][RFC3629] :
+      Formatted text using [HTML5] markup for rich text.
+      Only [HTML5] syntax is supported.
+    * [text/html;][HTML5] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
+      Formatted text using [HTML5] markup for rich text.
+      Only [HTML5] syntax is supported.
+
+      The text includes [Handlebars] type template fields that need
+      processing and replacement prior to display.
+    * [text/markdown;][CommonMark] [charset=utf-8][RFC3629] :
+      Formatted text using [Markdown][CommonMark] for rich text.
+      [Markdown][CommonMark] formatting is as defined by [CommonMark].
+
+      IF the document includes HTML, then [HTML5] syntax only is supported.
+
+      The following [Markdown][CommonMark] Extensions are also supported:
+
+      * None
+    * [text/markdown;][CommonMark] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
+      Formatted text using [Markdown][CommonMark] for rich text.
+      [Markdown][CommonMark] formatting is as defined by [CommonMark].
+
+      IF the document includes HTML, then [HTML5] syntax only is supported.
+
+      The following [Markdown][CommonMark] Extensions are also supported:
+
+      * None
+
+      The text includes [Handlebars] type template fields that need
+      processing and replacement prior to display.
+    * [text/plain;][text/plain] [charset=utf-8][RFC3629] :
+      Plain Text with no markup or special formatting.
+      Multiline Plain Text *MUST* always interpret `
+      `
+      as a hard line break.
+    * [text/plain;][text/plain] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
+      Plain Text with no markup or special formatting.
+      Multiline Plain Text *MUST* always interpret `
+      `
+      as a hard line break.
+
+      The text includes [Handlebars] type template fields that need
+      processing and replacement prior to display.
 
 #### `content-encoding`
 
@@ -117,12 +180,12 @@ If no compression or encoding is used, then this field must not be present.
 * [Cose][RFC9052] Label : content-encoding ***Custom Header***
 * Format : HTTP Content Encoding
   * Supported Values:
-    * [br] : [BROTLI][RFC7932] Compression
+    * [br] :
+      [BROTLI][RFC7932] Compression
 
 ### Metadata
 
-Catalyst Signed Documents extend the Header Parameters with a series of Metadata fields.
-These fields are defined [here](./metadata.md).
+Catalyst Signed Documents extend the Header Parameters with a series of [Metadata fields](./metadata.md).
 
 ### Signing Catalyst Signed Documents
 
@@ -181,19 +244,24 @@ used to sign the protected portion of the document.
 * TODO: Define Role 0 Profile.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
-[application/schema+json]: https://datatracker.ietf.org/doc/draft-bhutton-json-schema/
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
+[Handlebars]: https://handlebarsjs.com/
+[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [application/cbor]: https://www.iana.org/assignments/media-types/application/cbor
 [application/json]: https://www.iana.org/assignments/media-types/application/json
-[JSON Schema]: https://json-schema.org/draft-07
+[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
+[CommonMark]: https://spec.commonmark.org/0.31.2/
+[text/plain]: https://www.rfc-editor.org/rfc/rfc2046.html
+[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
 [RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
+[text/css]: https://www.rfc-editor.org/rfc/rfc2318.html
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
 [RFC9165]: https://www.rfc-editor.org/rfc/rfc9165
 [RFC7932]: https://www.rfc-editor.org/rfc/rfc7932
-[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
-[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [RFC9052]: https://datatracker.ietf.org/doc/html/rfc9052
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
 [RFC3986]: https://datatracker.ietf.org/doc/html/rfc3986
+[CSS]: https://www.w3.org/Style/CSS/
 [br]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br

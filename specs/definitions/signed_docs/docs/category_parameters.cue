@@ -9,6 +9,8 @@ docs: #DocumentDefinitions & {
 			Parameters which define a Category withing a Campaign under a Brand in the system.
 			"""
 
+		headers: "content type": value: "application/json"
+
 		metadata: parameters: {
 			required: "yes"
 			type:     "Campaign Parameters"

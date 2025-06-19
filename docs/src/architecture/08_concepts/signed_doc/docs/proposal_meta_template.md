@@ -116,7 +116,7 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Payload
 
-[JSON Schema] document which ensures the minimum required functional requirements
+[JSON Schema][JSON Schema-2020-12] document which ensures the minimum required functional requirements
 of the Proposal Template are met.
 
 This ensures that payloads can be reliably interpreted by business logic processes,
@@ -156,6 +156,6 @@ New versions of this document may be published by:
 * Use generalized parameters.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[JSON Schema]: https://json-schema.org/draft-07
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7

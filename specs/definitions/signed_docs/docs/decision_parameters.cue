@@ -7,6 +7,7 @@ docs: #DocumentDefinitions & {
 		description: """
 			Parameters which define an individual voting event.
 			"""
+		headers: "content type": value: "application/json"
 
 		metadata: parameters: {
 			required: "yes"

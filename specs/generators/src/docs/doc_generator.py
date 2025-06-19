@@ -163,10 +163,10 @@ class DocGenerator:
         self.strip_end_whitespace()
 
         actual_links_used: dict[str, str] = {}
-        for link_name in self._spec.documentation_links.all:
+        for link_name in self._spec.documentation.links.all:
             esc_link_name = re.escape(link_name)
             link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
-            aka = self._spec.documentation_links.aka(link_name)
+            aka = self._spec.documentation.links.aka(link_name)
             if aka is not None:
                 replacement = f"\\1[\\2][{aka}]\\3"
                 link_name = aka  # noqa: PLW2901
@@ -177,7 +177,7 @@ class DocGenerator:
                 link_name_regex,
                 replacement,
             ):
-                actual_links_used[link_name] = self._spec.documentation_links.link(link_name)
+                actual_links_used[link_name] = self._spec.documentation.links.link(link_name)
 
         for link, actual in actual_links_used.items():
             self._filedata += f"\n[{link}]: {actual}"
@@ -268,6 +268,20 @@ class DocGenerator:
 
         # Remove any leading or trailing newlines and add a single newline at the end/
         # Helps make clean markdown files.
+        # if self.file_name().endswith(".md"):
+        # because mdformat turns `*` list markers into `-` and it can't be configured
+        # tell mdlint that in these files it should be "consistent" which will allow
+        # the formatted markdown to pass lints.
+        # self._filedata = f"""
+        # <!-- markdownlint-configure-file {{
+        #    "MD004": {{"style": "consistent"}},
+        #    "MD007": {{"indent": 4}}
+        # }}-->
+        # {self._filedata}"""
+        #            self._filedata = mdformat.text(  # type: ignore  # noqa: PGH003
+        #                self._filedata, options={"number": True, "wrap": "keep"}, extensions=["mkdocs"]
+        #            )
+        #        else:
         self.strip_end_whitespace()
 
         return True

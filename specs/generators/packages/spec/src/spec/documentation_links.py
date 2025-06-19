@@ -1,6 +1,8 @@
 """Documentation Links."""
 
-from pydantic import HttpUrl, RootModel, computed_field
+import typing
+
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, RootModel, computed_field
 
 
 class LinkAKA(RootModel[dict[str, str]]):
@@ -9,7 +11,7 @@ class LinkAKA(RootModel[dict[str, str]]):
     root: dict[str, str]
 
 
-class DocumentationLinks(RootModel[dict[str, HttpUrl]]):
+class Links(RootModel[dict[str, HttpUrl]]):
     """Documentation Links."""
 
     root: dict[str, HttpUrl]
@@ -39,3 +41,19 @@ class DocumentationLinks(RootModel[dict[str, HttpUrl]]):
     def link(self, link_name: str) -> str:
         """Get a link for a link name."""
         return f"{self.root[link_name]}"
+
+
+class Documentation(BaseModel):
+    """Documentation Information."""
+
+    links: Links
+    link_aka: LinkAKA = Field(alias="linkAKA")
+
+    model_config = ConfigDict(extra="forbid")
+
+    def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
+        """Extra setup after we deserialize."""
+        super().model_post_init(context)
+
+        # Associate the Link AKA with documentation links.
+        self.links.set_link_aka(self.link_aka)
