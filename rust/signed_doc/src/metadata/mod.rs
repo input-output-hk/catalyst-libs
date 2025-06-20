@@ -287,12 +287,30 @@ impl Metadata {
         }
 
         // DocType and DocRef now using minicbor decoding.
-        metadata.doc_type = decode_cose_protected_header_value(protected, context, TYPE_KEY);
-        metadata.doc_ref = decode_cose_protected_header_value(protected, context, REF_KEY);
-        metadata.template = decode_cose_protected_header_value(protected, context, TEMPLATE_KEY);
-        metadata.reply = decode_cose_protected_header_value(protected, context, REPLY_KEY);
+        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocType>(
+            protected, context, TYPE_KEY,
+        ) {
+            metadata_fields.push(SupportedField::Type(value));
+        };
+        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocumentRefs>(
+            protected, context, REF_KEY,
+        ) {
+            metadata_fields.push(SupportedField::Ref(value));
+        };
+        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocumentRefs>(
+            protected,
+            context,
+            TEMPLATE_KEY,
+        ) {
+            metadata_fields.push(SupportedField::Template(value));
+        }
+        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocumentRefs>(
+            protected, context, REPLY_KEY,
+        ) {
+            metadata_fields.push(SupportedField::Reply(value));
+        }
 
-        metadata.section = decode_document_field_from_protected_header(
+        if let Some(value) = decode_document_field_from_protected_header(
             protected,
             SECTION_KEY,
             COSE_DECODING_CONTEXT,
