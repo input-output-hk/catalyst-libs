@@ -2,7 +2,6 @@
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
-    metadata::SupportedField,
     signature::{tbs_data, Signature},
     CatalystSignedDocument, Content, ContentType, Metadata, ProblemReport, Signatures,
 };
@@ -49,17 +48,21 @@ impl Builder {
     /// Set the provided JSON content, applying already set `content-encoding`.
     ///
     /// # Errors
+    ///  - Verifies that `content-type` field is set to JSON
     ///  - Cannot serialize provided JSON
     ///  - Compression failure
     pub fn with_json_content(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+        anyhow::ensure!(
+            self.metadata.content_type()? == ContentType::Json,
+            "Already set metadata field `content-type` is not JSON value"
+        );
+
         let content = serde_json::to_vec(&json)?;
         if let Some(encoding) = self.metadata.content_encoding() {
             self.content = encoding.encode(&content)?.into();
         } else {
             self.content = content.into();
         }
-        self.metadata
-            .add_field(SupportedField::ContentType(ContentType::Json));
 
         Ok(self)
     }
