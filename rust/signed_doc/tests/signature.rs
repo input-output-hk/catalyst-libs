@@ -2,20 +2,34 @@
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
-use common::test_metadata;
 use ed25519_dalek::ed25519::signature::Signer;
 
 use crate::common::create_dummy_key_pair;
 
 mod common;
 
+fn metadata() -> serde_json::Value {
+    serde_json::json!({
+        "content-type": ContentType::Json.to_string(),
+        "content-encoding": ContentEncoding::Brotli.to_string(),
+        "type": UuidV4::new(),
+        "id":  UuidV7::new(),
+        "ver":  UuidV7::new(),
+        "ref": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "reply": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "template": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "section": "$",
+        "collabs": vec!["Alex1", "Alex2"],
+        "parameters": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+    })
+}
+
 #[tokio::test]
 async fn single_signature_validation_test() {
-    let (_, _, metadata) = test_metadata();
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let signed_doc = Builder::new()
-        .with_json_metadata(metadata)
+        .with_json_metadata(metadata())
         .unwrap()
         .with_json_content(serde_json::Value::Null)
         .unwrap()
@@ -64,7 +78,7 @@ async fn multiple_signatures_validation_test() {
     let (_, pk_n, kid_n) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let signed_doc = Builder::new()
-        .with_json_metadata(common::test_metadata().2)
+        .with_json_metadata(metadata())
         .unwrap()
         .with_json_content(serde_json::Value::Null)
         .unwrap()
