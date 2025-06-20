@@ -45,12 +45,10 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
         match d.datatype()? {
             minicbor::data::Type::U8 => d.u8().map(Self::U8),
             minicbor::data::Type::String => d.str().map(Self::Str),
-            _ => {
-                Err(minicbor::decode::Error::message(
-                    "Datatype is neither 8bit unsigned integer nor text",
-                )
-                .at(d.position()))
-            },
+            _ => Err(minicbor::decode::Error::message(
+                "Datatype is neither 8bit unsigned integer nor text",
+            )
+            .at(d.position())),
         }
     }
 }
@@ -124,39 +122,9 @@ pub enum SupportedField {
 }
 
 impl SupportedLabel {
-    /// If [`Label`] is an alias to `self`, return canonical [`Self::to_label`].
-    /// Otherwise, returns [`Label`] as is.
-    fn resolve_aliases(self, label: Label<'_>) -> Label<'_> {
-        match (self, label) {
-            // Text version alias to COAP assigned integer.
-            (Self::ContentType, Label::Str("content-type")) => Self::ContentType.to_label(),
-            // Legacy names of the parameters field.
-            (Self::Parameters, Label::Str("brand_id" | "campaign_id" | "category_id")) => {
-                Self::Parameters.to_label()
-            },
-            // Ignore case to support (e.g. to support "Content-Encoding" alias).
-            (Self::ContentEncoding, Label::Str(s))
-                if s.eq_ignore_ascii_case("content-encoding") =>
-            {
-                Self::ContentEncoding.to_label()
-            },
-            // Other fields don't have aliases.
-            _ => label,
-        }
-    }
-
-    /// Try to convert from an arbitrary COSE [`Label`].
-    /// This will resolve `Self` variant aliases (but only the explicitly allowed ones).
-    fn from_label_aliased(label: Label<'_>, allowed_aliasing: &[Self]) -> Option<Self> {
-        let label = allowed_aliasing
-            .iter()
-            .fold(label, |l, allowed| allowed.resolve_aliases(l));
-        Self::from_label(label)
-    }
-
     /// Try to convert from an arbitrary COSE [`Label`].
     /// This doesn't allow any aliases.
-    fn from_label(label: Label<'_>) -> Option<Self> {
+    fn from_cose(label: Label<'_>) -> Option<Self> {
         match label {
             Label::U8(3) => Some(Self::ContentType),
             Label::Str("id") => Some(Self::Id),
@@ -167,14 +135,18 @@ impl SupportedLabel {
             Label::Str("collabs") => Some(Self::Collabs),
             Label::Str("section") => Some(Self::Section),
             Label::Str("template") => Some(Self::Template),
-            Label::Str("parameters") => Some(Self::Parameters),
-            Label::Str("content-encoding") => Some(Self::ContentEncoding),
+            Label::Str("parameters" | "brand_id" | "campaign_id" | "category_id") => {
+                Some(Self::Parameters)
+            },
+            Label::Str(s) if s.eq_ignore_ascii_case("content-encoding") => {
+                Some(Self::ContentEncoding)
+            },
             _ => None,
         }
     }
 
     /// Convert to the corresponding COSE [`Label`].
-    fn to_label(self) -> Label<'static> {
+    fn to_cose(self) -> Label<'static> {
         match self {
             Self::ContentType => Label::U8(3),
             Self::Id => Label::Str("id"),
@@ -193,7 +165,7 @@ impl SupportedLabel {
 
 impl Display for SupportedLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.to_label(), f)
+        Display::fmt(&self.to_cose(), f)
     }
 }
 
@@ -229,13 +201,10 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
         d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
-        /// Allow aliases for `content-encoding` and `parameters` only.
-        const ALLOWED_ALIASING: &[SupportedLabel] =
-            &[SupportedLabel::ContentEncoding, SupportedLabel::Parameters];
 
         let label_pos = d.position();
         let label = Label::decode(d, &mut ())?;
-        let Some(key) = SupportedLabel::from_label_aliased(label, ALLOWED_ALIASING) else {
+        let Some(key) = SupportedLabel::from_cose(label) else {
             let value_start = d.position();
             d.skip()?;
             let value_end = d.position();
@@ -255,15 +224,13 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
-            SupportedLabel::Id => {
-                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                    .map(Self::Id)
-            },
+            SupportedLabel::Id => d
+                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                .map(Self::Id),
             SupportedLabel::Ref => todo!(),
-            SupportedLabel::Ver => {
-                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                    .map(Self::Ver)
-            },
+            SupportedLabel::Ver => d
+                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                .map(Self::Ver),
             SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
             SupportedLabel::Reply => todo!(),
             SupportedLabel::Collabs => todo!(),
@@ -281,7 +248,7 @@ impl minicbor::Encode<()> for SupportedField {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        let key = self.discriminant().to_label();
+        let key = self.discriminant().to_cose();
         e.encode(key)?;
 
         match self {
@@ -355,7 +322,7 @@ mod tests {
 
         let mut cose_ord = SupportedLabel::VARIANTS.to_vec();
         // Sorting by the corresponding COSE labels.
-        cose_ord.sort_unstable_by(|lhs, rhs| lhs.to_label().rfc8949_cmp(&rhs.to_label()).unwrap());
+        cose_ord.sort_unstable_by(|lhs, rhs| lhs.to_cose().rfc8949_cmp(&rhs.to_cose()).unwrap());
 
         assert_eq!(enum_ord, cose_ord);
     }
