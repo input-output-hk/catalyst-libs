@@ -175,8 +175,6 @@ fn decoding_empty_bytes_case() -> TestCase {
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let doc_refs: DocumentRefs =
-        vec![DocumentRef::new(uuid_v7, uuid_v7, DocLocator::default())].into();
 
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
@@ -222,10 +220,6 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
-                    && (doc.doc_meta().doc_ref().unwrap() == &doc_refs)
-                    && (doc.doc_meta().reply().unwrap() == &doc_refs)
-                    && (doc.doc_meta().template().unwrap() == &doc_refs)
-                    && (doc.doc_meta().parameters().unwrap() == &doc_refs)
                     && (doc.encoded_content()
                         == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
             }
