@@ -116,7 +116,7 @@ impl Decode<'_, ProblemReport> for DocLocator {
 
 impl Encode<()> for DocLocator {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _: &mut (),
+        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(DOC_LOC_MAP_ITEM)?;
         e.str(CID_MAP_KEY)?;
