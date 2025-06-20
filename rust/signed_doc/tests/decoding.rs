@@ -27,12 +27,10 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid.clone(), pk);
 
-    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
-
     let doc = Builder::new()
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
-        .with_decoded_content(content.clone())
+        .with_json_content(serde_json::Value::Null)
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());

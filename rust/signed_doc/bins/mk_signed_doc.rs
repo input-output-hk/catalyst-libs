@@ -63,12 +63,10 @@ impl Cli {
                 println!("{metadata}");
                 // Load Document from JSON file
                 let json_doc: serde_json::Value = load_json_from_file(&doc)?;
-                // Possibly encode if Metadata has an encoding set.
-                let payload = serde_json::to_vec(&json_doc)?;
                 // Start with no signatures.
                 let signed_doc = Builder::new()
                     .with_json_metadata(metadata)?
-                    .with_decoded_content(payload)?
+                    .with_json_content(json_doc)?
                     .build();
                 println!(
                     "report {}",

@@ -2,6 +2,9 @@
 
 use catalyst_signed_doc::{providers::tests::TestCatalystSignedDocumentProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
+use ed25519_dalek::ed25519::signature::Signer;
+
+use crate::common::create_dummy_key_pair;
 
 mod common;
 
@@ -9,10 +12,11 @@ mod common;
 async fn test_valid_proposal_doc() {
     let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
@@ -22,11 +26,13 @@ async fn test_valid_proposal_doc() {
               "id": template_doc_id,
               "ver": template_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();
@@ -40,10 +46,11 @@ async fn test_valid_proposal_doc() {
 async fn test_valid_proposal_doc_old_type() {
     let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             // Using old (single uuid)
@@ -54,11 +61,13 @@ async fn test_valid_proposal_doc_old_type() {
               "id": template_doc_id,
               "ver": template_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();
@@ -73,10 +82,11 @@ async fn test_valid_proposal_doc_with_empty_provider() {
     // dummy template doc to dummy provider
     let template_doc_id = UuidV7::new();
     let template_doc_ver = UuidV7::new();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
@@ -86,11 +96,13 @@ async fn test_valid_proposal_doc_with_empty_provider() {
               "id": template_doc_id,
               "ver": template_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
@@ -102,8 +114,9 @@ async fn test_valid_proposal_doc_with_empty_provider() {
 #[tokio::test]
 async fn test_invalid_proposal_doc() {
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL.clone(),
@@ -111,11 +124,13 @@ async fn test_invalid_proposal_doc() {
             "ver": uuid_v7.to_string(),
             // without specifying template id
             "template": serde_json::Value::Null,
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let provider = TestCatalystSignedDocumentProvider::default();
 

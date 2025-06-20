@@ -5,17 +5,24 @@ use catalyst_types::catalyst_id::role_index::RoleId;
 use common::test_metadata;
 use ed25519_dalek::ed25519::signature::Signer;
 
+use crate::common::create_dummy_key_pair;
+
 mod common;
 
 #[tokio::test]
 async fn single_signature_validation_test() {
     let (_, _, metadata) = test_metadata();
-    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(
-        metadata,
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Role0,
-    )
-    .unwrap();
+    let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+
+    let signed_doc = Builder::new()
+        .with_json_metadata(metadata)
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
+
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: has key
@@ -49,7 +56,7 @@ async fn multiple_signatures_validation_test() {
     let signed_doc = Builder::new()
         .with_json_metadata(common::test_metadata().2)
         .unwrap()
-        .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
+        .with_json_content(serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
         .unwrap()

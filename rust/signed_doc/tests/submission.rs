@@ -4,6 +4,9 @@ use catalyst_signed_doc::{
     doc_types::deprecated, providers::tests::TestCatalystSignedDocumentProvider, *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
+use ed25519_dalek::ed25519::signature::Signer;
+
+use crate::common::create_dummy_key_pair;
 
 mod common;
 
@@ -11,10 +14,11 @@ mod common;
 async fn test_valid_submission_action() {
     let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
@@ -24,14 +28,15 @@ async fn test_valid_submission_action() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::json!({
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(proposal_doc).unwrap();
@@ -43,10 +48,11 @@ async fn test_valid_submission_action() {
 async fn test_valid_submission_action_old_type() {
     let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             // Using old (single uuid)
@@ -57,14 +63,15 @@ async fn test_valid_submission_action_old_type() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::json!({
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(proposal_doc).unwrap();
@@ -76,10 +83,11 @@ async fn test_valid_submission_action_old_type() {
 async fn test_valid_submission_action_with_empty_provider() {
     let proposal_doc_id = UuidV7::new();
     let proposal_doc_ver = UuidV7::new();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
@@ -89,14 +97,15 @@ async fn test_valid_submission_action_with_empty_provider() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::json!({
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
@@ -108,9 +117,10 @@ async fn test_valid_submission_action_with_empty_provider() {
 #[tokio::test]
 async fn test_invalid_submission_action() {
     let uuid_v7 = UuidV7::new();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
     // missing `ref` field
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
@@ -118,14 +128,15 @@ async fn test_invalid_submission_action() {
             "ver": uuid_v7.to_string(),
             // without specifying ref
             "ref": serde_json::Value::Null,
-        }),
-        serde_json::to_vec(&serde_json::json!({
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let provider = TestCatalystSignedDocumentProvider::default();
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
@@ -135,8 +146,8 @@ async fn test_invalid_submission_action() {
     let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
@@ -146,11 +157,13 @@ async fn test_invalid_submission_action() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             },
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(proposal_doc).unwrap();
@@ -161,8 +174,8 @@ async fn test_invalid_submission_action() {
     let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
@@ -172,11 +185,11 @@ async fn test_invalid_submission_action() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             },
-        }),
-        vec![],
-        RoleId::Proposer,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(proposal_doc).unwrap();

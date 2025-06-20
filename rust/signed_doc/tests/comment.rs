@@ -4,6 +4,9 @@ use catalyst_signed_doc::{
     doc_types::deprecated, providers::tests::TestCatalystSignedDocumentProvider, *,
 };
 use catalyst_types::catalyst_id::role_index::RoleId;
+use ed25519_dalek::ed25519::signature::Signer;
+
+use crate::common::create_dummy_key_pair;
 
 mod common;
 
@@ -13,10 +16,11 @@ async fn test_valid_comment_doc() {
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
@@ -30,11 +34,13 @@ async fn test_valid_comment_doc() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             }
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Role0,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();
@@ -51,10 +57,11 @@ async fn test_valid_comment_doc_old_type() {
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let (template_doc, template_doc_id, template_doc_ver) =
         common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
+    let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             // Using old (single uuid)
@@ -69,11 +76,13 @@ async fn test_valid_comment_doc_old_type() {
                 "id": proposal_doc_id,
                 "ver": proposal_doc_ver
             }
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Role0,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();
@@ -86,8 +95,6 @@ async fn test_valid_comment_doc_old_type() {
 
 #[tokio::test]
 async fn test_valid_comment_doc_with_reply() {
-    let empty_json = serde_json::to_vec(&serde_json::json!({})).unwrap();
-
     let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
         common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let (template_doc, template_doc_id, template_doc_ver) =
@@ -97,10 +104,10 @@ async fn test_valid_comment_doc_with_reply() {
     let comment_doc_ver = UuidV7::new();
     let comment_doc = Builder::new()
         .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
             "id": comment_doc_id,
             "ver": comment_doc_ver,
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "content-type": ContentType::Json.to_string(),
             "template": { "id": template_doc_id.to_string(), "ver": template_doc_ver.to_string() },
             "ref": {
                 "id": proposal_doc_id,
@@ -108,14 +115,14 @@ async fn test_valid_comment_doc_with_reply() {
             },
         }))
         .unwrap()
-        .with_decoded_content(empty_json.clone())
+        .with_json_content(serde_json::json!({}))
         .unwrap()
         .build();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
+           "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
             "id": uuid_v7.to_string(),
@@ -132,11 +139,11 @@ async fn test_valid_comment_doc_with_reply() {
                 "id": comment_doc_id,
                 "ver": comment_doc_ver
             }
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Role0,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();
@@ -156,8 +163,8 @@ async fn test_invalid_comment_doc() {
         common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
 
     let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_COMMENT.clone(),
@@ -169,11 +176,11 @@ async fn test_invalid_comment_doc() {
             },
             // without ref
             "ref": serde_json::Value::Null
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Role0,
-    )
-    .unwrap();
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(template_doc).unwrap();

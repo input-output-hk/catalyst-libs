@@ -4,7 +4,6 @@ use std::str::FromStr;
 
 use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
-use ed25519_dalek::ed25519::signature::Signer;
 
 pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
     let uuid_v7 = UuidV7::new();
@@ -70,20 +69,17 @@ pub fn create_dummy_key_pair(
 pub fn create_dummy_doc(
     doc_type_id: Uuid,
 ) -> anyhow::Result<(CatalystSignedDocument, UuidV7, UuidV7)> {
-    let empty_json = serde_json::to_vec(&serde_json::json!({}))?;
-
     let doc_id = UuidV7::new();
     let doc_ver = UuidV7::new();
 
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
             "type": doc_type_id,
             "id": doc_id,
             "ver": doc_ver,
             "template": { "id": doc_id.to_string(), "ver": doc_ver.to_string() }
         }))?
-        .with_decoded_content(empty_json.clone())?
+        .with_json_content(serde_json::json!({}))?
         .build();
 
     Ok((doc, doc_id, doc_ver))
@@ -92,22 +88,4 @@ pub fn create_dummy_doc(
 pub fn create_signing_key() -> ed25519_dalek::SigningKey {
     let mut csprng = rand::rngs::OsRng;
     ed25519_dalek::SigningKey::generate(&mut csprng)
-}
-
-pub fn create_dummy_signed_doc(
-    metadata: serde_json::Value, content: Vec<u8>, with_role_index: RoleId,
-) -> anyhow::Result<(
-    CatalystSignedDocument,
-    ed25519_dalek::VerifyingKey,
-    CatalystId,
-)> {
-    let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
-
-    let signed_doc = Builder::new()
-        .with_json_metadata(metadata)?
-        .with_decoded_content(content)?
-        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())?
-        .build();
-
-    Ok((signed_doc, pk, kid))
 }

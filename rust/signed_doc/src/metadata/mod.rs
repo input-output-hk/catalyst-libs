@@ -231,7 +231,6 @@ impl Metadata {
     }
 
     /// Add `SupportedField` into the `Metadata`
-    #[cfg(test)]
     pub(crate) fn add_field(&mut self, field: SupportedField) {
         self.0.insert(field.discriminant(), field);
     }

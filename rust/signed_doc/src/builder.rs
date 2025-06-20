@@ -2,8 +2,9 @@
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
+    metadata::SupportedField,
     signature::{tbs_data, Signature},
-    CatalystSignedDocument, Content, Metadata, ProblemReport, Signatures,
+    CatalystSignedDocument, Content, ContentType, Metadata, ProblemReport, Signatures,
 };
 
 /// Catalyst Signed Document Builder.
@@ -45,16 +46,21 @@ impl Builder {
         Ok(self)
     }
 
-    /// Set decoded (original) document content bytes
+    /// Set the provided JSON content, applying already set `content-encoding`.
     ///
     /// # Errors
+    ///  - Cannot serialize provided JSON
     ///  - Compression failure
-    pub fn with_decoded_content(mut self, decoded: Vec<u8>) -> anyhow::Result<Self> {
+    pub fn with_json_content(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+        let content = serde_json::to_vec(&json)?;
         if let Some(encoding) = self.metadata.content_encoding() {
-            self.content = encoding.encode(&decoded)?.into();
+            self.content = encoding.encode(&content)?.into();
         } else {
-            self.content = decoded.into();
+            self.content = content.into();
         }
+        self.metadata
+            .add_field(SupportedField::ContentType(ContentType::Json));
+
         Ok(self)
     }
 
