@@ -95,7 +95,7 @@ impl Display for Label<'_> {
 )]
 #[non_exhaustive]
 #[repr(usize)]
-pub enum SupportedField {
+pub(crate) enum SupportedField {
     /// `content-type` field. In COSE it's represented as the signed integer `3` (see [RFC
     /// 8949 section 3.1]).
     ///

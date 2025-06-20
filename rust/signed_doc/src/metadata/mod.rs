@@ -24,10 +24,8 @@ pub use section::Section;
 use strum::IntoDiscriminant as _;
 use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
 
-use crate::{
-    decode_context::DecodeContext,
-    metadata::supported_field::{SupportedField, SupportedLabel},
-};
+use crate::decode_context::DecodeContext;
+pub(crate) use crate::metadata::supported_field::{SupportedField, SupportedLabel};
 
 /// `content_encoding` field COSE key value
 const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
@@ -173,6 +171,12 @@ impl Metadata {
             .copied()
     }
 
+    /// Add `SupportedField` into the `Metadata`
+    #[cfg(test)]
+    pub(crate) fn add_field(&mut self, field: SupportedField) {
+        self.0.insert(field.discriminant(), field);
+    }
+
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     pub(crate) fn from_fields(fields: Vec<SupportedField>, report: &ProblemReport) -> Self {
         const REPORT_CONTEXT: &str = "Metadata building";
@@ -206,16 +210,12 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_json(fields: serde_json::Value, report: &ProblemReport) -> Self {
-        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)
-            .inspect_err(|err| {
-                report.other(
-                    &format!("Unable to deserialize json: {err}"),
-                    "Metadata building from json",
-                );
-            })
-            .unwrap_or_default();
-        Self::from_fields(fields, report)
+    pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
+        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
+        let report = ProblemReport::new("");
+        let metadata = Self::from_fields(fields, &report);
+        anyhow::ensure!(!report.is_problematic(), "{:?}", report);
+        Ok(metadata)
     }
 }
 

@@ -27,6 +27,8 @@ pub use metadata::{ContentEncoding, ContentType, DocType, DocumentRef, Metadata,
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
+use crate::builder::SignaturesBuilder;
+
 /// A problem report content string
 const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
 
@@ -201,7 +203,7 @@ impl CatalystSignedDocument {
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
     #[must_use]
-    pub fn into_builder(&self) -> Builder {
+    pub fn into_builder(&self) -> SignaturesBuilder {
         self.into()
     }
 }
@@ -230,12 +232,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut ctx);
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
-        let content = if let Some(payload) = cose_sign.payload {
-            payload.into()
-        } else {
-            report.missing_field("COSE Sign Payload", "Missing document content (payload)");
-            Content::default()
-        };
+        let content = cose_sign.payload.map_or(Content::default(), Into::into);
 
         Ok(InnerCatalystSignedDocument {
             metadata,
