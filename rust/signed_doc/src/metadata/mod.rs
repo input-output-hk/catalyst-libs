@@ -63,93 +63,6 @@ const CATEGORY_ID_KEY: &str = "category_id";
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Metadata(BTreeMap<SupportedLabel, SupportedField>);
 
-/// Implements [`serde::de::Visitor`], so that [`Metadata`] can implement [`serde::Deserialize`].
-struct MetadataDeserializeContext;
-
-impl<'de> serde::de::Visitor<'de> for MetadataDeserializeContext {
-    type Value = Vec<SupportedField>;
-
-    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        f.write_str("Catalyst Signed Document metadata key-value pairs")
-    }
-
-    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut d: A) -> Result<Self::Value, A::Error> {
-        let mut res = Vec::with_capacity(d.size_hint().unwrap_or(0));
-        while let Some(k) = d.next_key::<SupportedLabel>()? {
-            let v = d.next_value_seed(k)?;
-            res.push(v);
-        }
-        Ok(res)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for Metadata {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let fields = d.deserialize_map(MetadataDeserializeContext)?;
-        let report = ProblemReport::new("Metadata deserialization");
-        let res = Self::from_metadata_fields(fields, &report);
-        if report.is_problematic() {
-            let mut err = anyhow::anyhow!("Invalid metadata");
-            if let Ok(report_json) = serde_json::to_string(&report) {
-                err = err.context(report_json);
-            }
-            Err(serde::de::Error::custom(err))
-        } else {
-            Ok(res)
-        }
-    }
-}
-
-/// An actual representation of all metadata fields.
-// TODO: this is maintained as an implementation of `serde` and `coset` for `Metadata`
-//       and should be removed in case `serde` and `coset` are deprecated completely.
-#[derive(Clone, Debug, PartialEq, Default)]
-pub(crate) struct InnerMetadata {
-    /// Document Type, list of `UUIDv4`.
-    doc_type: Option<DocType>,
-    /// Document ID `UUIDv7`.
-    id: Option<UuidV7>,
-    /// Document Version `UUIDv7`.
-    ver: Option<UuidV7>,
-    /// Document Payload Content Type.
-    content_type: Option<ContentType>,
-    /// Document Payload Content Encoding.
-    content_encoding: Option<ContentEncoding>,
-    /// Reference to the latest document.
-    doc_ref: Option<DocumentRef>,
-    /// Reference to the document template.
-    template: Option<DocumentRef>,
-    /// Reference to the document reply.
-    reply: Option<DocumentRef>,
-    /// Reference to the document section.
-    section: Option<Section>,
-    /// Reference to the document collaborators. Collaborator type is TBD.
-    collabs: Vec<String>,
-    /// Reference to the parameters document.
-    parameters: Option<DocumentRef>,
-}
-
-impl InnerMetadata {
-    /// Converts into an iterator over present fields fields.
-    fn into_iter(self) -> impl Iterator<Item = SupportedField> {
-        [
-            self.doc_type.map(SupportedField::Type),
-            self.id.map(SupportedField::Id),
-            self.ver.map(SupportedField::Ver),
-            self.content_type.map(SupportedField::ContentType),
-            self.content_encoding.map(SupportedField::ContentEncoding),
-            self.doc_ref.map(SupportedField::Ref),
-            self.template.map(SupportedField::Template),
-            self.reply.map(SupportedField::Reply),
-            self.section.map(SupportedField::Section),
-            (!self.collabs.is_empty()).then_some(SupportedField::Collabs(self.collabs)),
-            self.parameters.map(SupportedField::Parameters),
-        ]
-        .into_iter()
-        .flatten()
-    }
-}
-
 impl Metadata {
     /// Return Document Type `DocType` - a list of `UUIDv4`.
     ///
@@ -261,11 +174,8 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_metadata_fields<I>(fields: I, report: &ProblemReport) -> Self
-    where
-        I: IntoIterator<Item = SupportedField>,
-    {
-        const REPORT_CONTEXT: &str = "Metadata creation";
+    pub(crate) fn from_fields(fields: Vec<SupportedField>, report: &ProblemReport) -> Self {
+        const REPORT_CONTEXT: &str = "Metadata building";
 
         let mut metadata = Metadata(BTreeMap::new());
         for v in fields {
@@ -295,16 +205,21 @@ impl Metadata {
         metadata
     }
 
-    /// Converting COSE Protected Header to Metadata.
-    pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, context: &mut DecodeContext,
-    ) -> Self {
-        let metadata = InnerMetadata::from_protected_header(protected, context);
-        Self::from_metadata_fields(metadata.into_iter(), context.report)
+    /// Build `Metadata` object from the metadata fields, doing all necessary validation.
+    pub(crate) fn from_json(fields: serde_json::Value, report: &ProblemReport) -> Self {
+        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeContext)
+            .inspect_err(|err| {
+                report.other(
+                    &format!("Unable to deserialize json: {err}"),
+                    "Metadata building from json",
+                );
+            })
+            .unwrap_or_default();
+        Self::from_fields(fields, report)
     }
 }
 
-impl InnerMetadata {
+impl Metadata {
     /// Converting COSE Protected Header to Metadata fields, collecting decoding report
     /// issues.
     #[allow(
@@ -318,11 +233,11 @@ impl InnerMetadata {
         /// header.
         const COSE_DECODING_CONTEXT: &str = "COSE Protected Header to Metadata";
 
-        let mut metadata = Self::default();
+        let mut metadata_fields = vec![];
 
         if let Some(value) = protected.header.content_type.as_ref() {
             match ContentType::try_from(value) {
-                Ok(ct) => metadata.content_type = Some(ct),
+                Ok(ct) => metadata_fields.push(SupportedField::ContentType(ct)),
                 Err(e) => {
                     context.report.conversion_error(
                         "COSE protected header content type",
@@ -339,7 +254,7 @@ impl InnerMetadata {
             |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)),
         ) {
             match ContentEncoding::try_from(value) {
-                Ok(ce) => metadata.content_encoding = Some(ce),
+                Ok(ce) => metadata_fields.push(SupportedField::ContentEncoding(ce)),
                 Err(e) => {
                     context.report.conversion_error(
                         "COSE protected header content encoding",
@@ -351,7 +266,7 @@ impl InnerMetadata {
             }
         }
 
-        metadata.doc_type = cose_protected_header_find(
+        if let Some(value) = cose_protected_header_find(
             protected,
             |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(TYPE_KEY)),
         )
@@ -361,48 +276,64 @@ impl InnerMetadata {
                 context,
             )
             .ok()
-        });
+        }) {
+            metadata_fields.push(SupportedField::Type(value));
+        }
 
-        metadata.id = decode_document_field_from_protected_header::<CborUuidV7>(
+        if let Some(value) = decode_document_field_from_protected_header::<CborUuidV7>(
             protected,
             ID_KEY,
             COSE_DECODING_CONTEXT,
             context.report,
         )
-        .map(|v| v.0);
+        .map(|v| v.0)
+        {
+            metadata_fields.push(SupportedField::Id(value));
+        }
 
-        metadata.ver = decode_document_field_from_protected_header::<CborUuidV7>(
+        if let Some(value) = decode_document_field_from_protected_header::<CborUuidV7>(
             protected,
             VER_KEY,
             COSE_DECODING_CONTEXT,
             context.report,
         )
-        .map(|v| v.0);
+        .map(|v| v.0)
+        {
+            metadata_fields.push(SupportedField::Ver(value));
+        }
 
-        metadata.doc_ref = decode_document_field_from_protected_header(
+        if let Some(value) = decode_document_field_from_protected_header(
             protected,
             REF_KEY,
             COSE_DECODING_CONTEXT,
             context.report,
-        );
-        metadata.template = decode_document_field_from_protected_header(
+        ) {
+            metadata_fields.push(SupportedField::Ref(value));
+        }
+        if let Some(value) = decode_document_field_from_protected_header(
             protected,
             TEMPLATE_KEY,
             COSE_DECODING_CONTEXT,
             context.report,
-        );
-        metadata.reply = decode_document_field_from_protected_header(
+        ) {
+            metadata_fields.push(SupportedField::Template(value));
+        }
+        if let Some(value) = decode_document_field_from_protected_header(
             protected,
             REPLY_KEY,
             COSE_DECODING_CONTEXT,
             context.report,
-        );
-        metadata.section = decode_document_field_from_protected_header(
+        ) {
+            metadata_fields.push(SupportedField::Reply(value));
+        }
+        if let Some(value) = decode_document_field_from_protected_header(
             protected,
             SECTION_KEY,
             COSE_DECODING_CONTEXT,
             context.report,
-        );
+        ) {
+            metadata_fields.push(SupportedField::Section(value));
+        }
 
         // process `parameters` field and all its aliases
         let (parameters, has_multiple_fields) = [
@@ -428,7 +359,9 @@ impl InnerMetadata {
                     "Validation of parameters field aliases"
                 );
         }
-        metadata.parameters = parameters;
+        if let Some(value) = parameters {
+            metadata_fields.push(SupportedField::Parameters(value));
+        }
 
         if let Some(cbor_doc_collabs) = cose_protected_header_find(protected, |key| {
             key == &coset::Label::Text(COLLABS_KEY.to_string())
@@ -452,7 +385,9 @@ impl InnerMetadata {
                         },
                     }
                 }
-                metadata.collabs = c;
+                if !c.is_empty() {
+                    metadata_fields.push(SupportedField::Collabs(c));
+                }
             } else {
                 context.report.conversion_error(
                     "CBOR COSE protected header collaborators",
@@ -463,7 +398,7 @@ impl InnerMetadata {
             };
         }
 
-        metadata
+        Self::from_fields(metadata_fields, context.report)
     }
 }
 
@@ -594,5 +529,26 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
         }
 
         first_err.map_or(Ok(Self(metadata_map)), Err)
+    }
+}
+
+/// Implements [`serde::de::Visitor`], so that [`Metadata`] can be
+/// deserialized by [`serde::Deserializer::deserialize_map`].
+struct MetadataDeserializeContext;
+
+impl<'de> serde::de::Visitor<'de> for MetadataDeserializeContext {
+    type Value = Vec<SupportedField>;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("Catalyst Signed Document metadata key-value pairs")
+    }
+
+    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut d: A) -> Result<Self::Value, A::Error> {
+        let mut res = Vec::with_capacity(d.size_hint().unwrap_or(0));
+        while let Some(k) = d.next_key::<SupportedLabel>()? {
+            let v = d.next_value_seed(k)?;
+            res.push(v);
+        }
+        Ok(res)
     }
 }

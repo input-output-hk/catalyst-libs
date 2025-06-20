@@ -1,6 +1,9 @@
 //! Catalyst Signed Document unified metadata field.
 
-use std::fmt::{self, Display};
+use std::{
+    borrow::Cow,
+    fmt::{self, Display},
+};
 #[cfg(test)]
 use std::{cmp, convert::Infallible};
 
@@ -14,8 +17,7 @@ use crate::{
 };
 
 /// COSE label. May be either a signed integer or a string.
-#[derive(Copy, Clone, Eq, PartialEq, serde::Deserialize)]
-#[serde(untagged, expecting = "8bit unsigned integer or text")]
+#[derive(Copy, Clone, Eq, PartialEq)]
 enum Label<'a> {
     /// Integer label.
     ///
@@ -46,10 +48,12 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
         match d.datatype()? {
             minicbor::data::Type::U8 => d.u8().map(Self::U8),
             minicbor::data::Type::String => d.str().map(Self::Str),
-            _ => Err(minicbor::decode::Error::message(
-                "Datatype is neither 8bit unsigned integer nor text",
-            )
-            .at(d.position())),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Datatype is neither 8bit unsigned integer nor text",
+                )
+                .at(d.position()))
+            },
         }
     }
 }
@@ -168,8 +172,8 @@ impl Display for SupportedLabel {
 
 impl<'de> serde::Deserialize<'de> for SupportedLabel {
     fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let l = Label::deserialize(d)?;
-        Self::from_cose(l).ok_or_else(|| {
+        let l = Cow::deserialize(d)?;
+        Self::from_cose(Label::Str(&l)).ok_or_else(|| {
             serde::de::Error::custom(format!("Not a supported metadata label ({l})"))
         })
     }
@@ -230,13 +234,15 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
-            SupportedLabel::Id => d
-                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                .map(Self::Id),
+            SupportedLabel::Id => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Id)
+            },
             SupportedLabel::Ref => todo!(),
-            SupportedLabel::Ver => d
-                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                .map(Self::Ver),
+            SupportedLabel::Ver => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Ver)
+            },
             SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
             SupportedLabel::Reply => todo!(),
             SupportedLabel::Collabs => todo!(),
