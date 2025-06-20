@@ -207,7 +207,7 @@ impl Metadata {
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     pub(crate) fn from_json(fields: serde_json::Value, report: &ProblemReport) -> Self {
-        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeContext)
+        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)
             .inspect_err(|err| {
                 report.other(
                     &format!("Unable to deserialize json: {err}"),
@@ -534,9 +534,9 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
 
 /// Implements [`serde::de::Visitor`], so that [`Metadata`] can be
 /// deserialized by [`serde::Deserializer::deserialize_map`].
-struct MetadataDeserializeContext;
+struct MetadataDeserializeVisitor;
 
-impl<'de> serde::de::Visitor<'de> for MetadataDeserializeContext {
+impl<'de> serde::de::Visitor<'de> for MetadataDeserializeVisitor {
     type Value = Vec<SupportedField>;
 
     fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
