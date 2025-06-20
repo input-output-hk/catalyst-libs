@@ -232,12 +232,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut ctx);
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
-        let content = if let Some(payload) = cose_sign.payload {
-            payload.into()
-        } else {
-            report.missing_field("COSE Sign Payload", "Missing document content (payload)");
-            Content::default()
-        };
+        let content = cose_sign.payload.map_or(Content::default(), Into::into);
 
         Ok(InnerCatalystSignedDocument {
             metadata,

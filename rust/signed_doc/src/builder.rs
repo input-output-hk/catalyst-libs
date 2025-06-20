@@ -1,4 +1,5 @@
 //! Catalyst Signed Document Builder.
+use anyhow::ensure;
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
@@ -117,25 +118,42 @@ impl SignaturesBuilder {
     ///
     /// # Errors:
     ///  - CBOR encoding/decoding failures
-    ///  -
+    ///  - Document 
     #[must_use]
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
-        let mut e = minicbor::Encoder::new(Vec::new());
-        // COSE_Sign tag
-        // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
-        e.tag(minicbor::data::Tag::new(98))?;
-        e.array(4)?;
-        // protected headers (metadata fields)
-        e.bytes(minicbor::to_vec(&self.prev.prev.metadata)?.as_slice())?;
-        // empty unprotected headers
-        e.map(0)?;
-        // content
-        e.encode(&self.prev.content)?;
-        // signatures
-        e.encode(self.signatures)?;
-
-        CatalystSignedDocument::try_from(e.into_writer().as_slice())
+        let doc = build_document(
+            &self.prev.prev.metadata,
+            &self.prev.content,
+            &self.signatures,
+        )?;
+        ensure!(
+            !doc.problem_report().is_problematic(),
+            "{:?}",
+            doc.problem_report()
+        );
+        Ok(doc)
     }
+}
+
+/// Build document from the provided `metadata`, `content` and `signatures`, performs all
+/// the decoding validation and collects a problem report.
+fn build_document(
+    metadata: &Metadata, content: &Content, signatures: &Signatures,
+) -> anyhow::Result<CatalystSignedDocument> {
+    let mut e = minicbor::Encoder::new(Vec::new());
+    // COSE_Sign tag
+    // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+    e.tag(minicbor::data::Tag::new(98))?;
+    e.array(4)?;
+    // protected headers (metadata fields)
+    e.bytes(minicbor::to_vec(metadata)?.as_slice())?;
+    // empty unprotected headers
+    e.map(0)?;
+    // content
+    e.encode(&content)?;
+    // signatures
+    e.encode(signatures)?;
+    CatalystSignedDocument::try_from(e.into_writer().as_slice())
 }
 
 impl From<&CatalystSignedDocument> for SignaturesBuilder {
@@ -199,7 +217,12 @@ pub(crate) mod tests {
         /// Build a signed document with the collected error report.
         /// Could provide an invalid document.
         pub(crate) fn build(self) -> super::CatalystSignedDocument {
-            self.0.build().unwrap()
+            super::build_document(
+                &self.0.prev.prev.metadata,
+                &self.0.prev.content,
+                &self.0.signatures,
+            )
+            .unwrap()
         }
     }
 }
