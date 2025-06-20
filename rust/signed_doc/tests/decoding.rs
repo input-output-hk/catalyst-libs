@@ -7,7 +7,7 @@ use minicbor::{data::Tag, Encoder};
 
 mod common;
 
-type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
+type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
 
 struct TestCase {
     name: &'static str,
@@ -30,7 +30,6 @@ fn decoding_empty_bytes_case() -> TestCase {
     }
 }
 
-#[allow(clippy::unwrap_used)]
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -39,7 +38,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
         bytes_gen: Box::new({
             move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -75,12 +74,13 @@ fn signed_doc_with_all_fields_case() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                (doc.doc_type().unwrap() == &DocType::from(uuid_v4))
-                    && (doc.doc_id().unwrap() == uuid_v7)
-                    && (doc.doc_ver().unwrap() == uuid_v7)
-                    && (doc.doc_content_type().unwrap() == ContentType::Json)
-                    && (doc.encoded_content()
-                        == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
+                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_id()? == uuid_v7);
+                anyhow::ensure!(doc.doc_ver()? == uuid_v7);
+                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
+                anyhow::ensure!(doc.kids().len() == 1);
+                Ok(())
             }
         })),
     }
@@ -94,7 +94,14 @@ fn catalyst_signed_doc_decoding_test() {
     ];
 
     for case in test_cases {
-        let bytes = case.bytes_gen.as_ref()().unwrap().into_writer();
+        let bytes_res = case.bytes_gen.as_ref()();
+        assert!(
+            bytes_res.is_ok(),
+            "Case: [{}], error: {:?}",
+            case.name,
+            bytes_res.err()
+        );
+        let bytes = bytes_res.unwrap().into_writer();
         let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
         assert_eq!(
             doc_res.is_ok(),
@@ -113,10 +120,12 @@ fn catalyst_signed_doc_decoding_test() {
             );
 
             if let Some(post_checks) = &case.post_checks {
+                let post_checks_res = post_checks(&doc);
                 assert!(
-                    (post_checks.as_ref())(&doc),
-                    "Case: [{}]. Post checks fails",
-                    case.name
+                    post_checks_res.is_ok(),
+                    "Case: [{}]. Post checks fails: {:?}",
+                    case.name,
+                    post_checks_res.err()
                 );
             }
 
