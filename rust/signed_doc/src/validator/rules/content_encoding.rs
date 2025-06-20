@@ -73,6 +73,11 @@ mod tests {
             .build();
         assert!(!rule.check(&doc).await.unwrap());
 
+        let doc = Builder::new()
+            .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
+            .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
         let doc = Builder::new().build();
         assert!(rule.check(&doc).await.unwrap());
 
