@@ -21,6 +21,7 @@ pub struct ContentBuilder(BuilderInner);
 /// Only `Signatures` builder part
 pub struct SignaturesBuilder(BuilderInner);
 
+/// Inner state of the Catalyst Signed Documents `Builder`
 #[derive(Default)]
 pub struct BuilderInner {
     /// metadata
@@ -34,6 +35,7 @@ pub struct BuilderInner {
 impl MetadataBuilder {
     /// Start building a signed document
     #[must_use]
+    #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self(BuilderInner::default())
     }
