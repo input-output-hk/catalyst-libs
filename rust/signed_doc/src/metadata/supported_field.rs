@@ -1,9 +1,6 @@
 //! Catalyst Signed Document unified metadata field.
 
-use std::{
-    borrow::Cow,
-    fmt::{self, Display},
-};
+use std::fmt::{self, Display};
 #[cfg(test)]
 use std::{cmp, convert::Infallible};
 
@@ -92,7 +89,8 @@ impl Display for Label<'_> {
 #[derive(Clone, Debug, PartialEq, EnumDiscriminants, EnumTryAs)]
 #[strum_discriminants(
     name(SupportedLabel),
-    derive(Ord, PartialOrd),
+    derive(Ord, PartialOrd, serde::Deserialize),
+    serde(rename_all = "kebab-case"),
     cfg_attr(test, derive(strum::VariantArray))
 )]
 #[non_exhaustive]
@@ -196,22 +194,6 @@ impl SupportedLabel {
 impl Display for SupportedLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Display::fmt(&self.to_label(), f)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for SupportedLabel {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        /// Allow aliases for `content-type`, `content-encoding` and `parameters`.
-        const ALLOWED_ALIASING: &[SupportedLabel] = &[
-            SupportedLabel::ContentType,
-            SupportedLabel::ContentEncoding,
-            SupportedLabel::Parameters,
-        ];
-
-        let l = Cow::deserialize(d)?;
-        Self::from_label_aliased(Label::Str(&l), ALLOWED_ALIASING).ok_or_else(|| {
-            serde::de::Error::custom(format!("Not a supported metadata label ({l})"))
-        })
     }
 }
 
