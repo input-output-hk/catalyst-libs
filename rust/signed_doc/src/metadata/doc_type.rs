@@ -5,10 +5,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG},
-};
+use catalyst_types::uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG};
 use coset::cbor::Value;
 use minicbor::{Decode, Decoder, Encode};
 use serde::{Deserialize, Deserializer};
@@ -253,28 +250,19 @@ fn map_doc_type(uuid: UuidV4) -> DocType {
     }
 }
 
-impl Encode<ProblemReport> for DocType {
+impl<C> Encode<C> for DocType {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        const CONTEXT: &str = "DocType encoding";
-        if self.0.is_empty() {
-            report.invalid_value("DocType", "empty", "DocType cannot be empty", CONTEXT);
-            return Err(minicbor::encode::Error::message(format!(
-                "{CONTEXT}: DocType cannot be empty"
-            )));
-        }
-
-        e.array(self.0.len().try_into().map_err(|_| {
-            report.invalid_encoding("Array", "Invalid array", "Valid array", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}, array length encoding failed"))
-        })?)?;
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
 
         for id in &self.0 {
-            id.encode(e, &mut CborContext::Tagged).map_err(|_| {
-                report.invalid_encoding("UUIDv4", &id.to_string(), "Valid UUIDv4", CONTEXT);
-                minicbor::encode::Error::message(format!("{CONTEXT}: UUIDv4 encoding failed"))
-            })?;
+            id.encode(e, &mut CborContext::Tagged)?;
         }
         Ok(())
     }
@@ -458,11 +446,6 @@ mod tests {
         let input = vec!["not-a-uuid".to_string()];
         let result = DocType::try_from(input);
         assert!(matches!(result, Err(DocTypeError::StringConversion(s)) if s == "not-a-uuid"));
-
-        let e: Vec<DocType> = vec![vec![UuidV4::new()].try_into().unwrap()];
-        let exp_parameters_type_str: Vec<String> =
-            e.iter().map(std::string::ToString::to_string).collect();
-        assert!(!exp_parameters_type_str.is_empty());
     }
 
     #[test]
