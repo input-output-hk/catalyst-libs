@@ -4,7 +4,7 @@ use std::fmt::{self, Display};
 #[cfg(test)]
 use std::{cmp, convert::Infallible};
 
-use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
+use catalyst_types::uuid::UuidV7;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
@@ -44,10 +44,12 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
         match d.datatype()? {
             minicbor::data::Type::U8 => d.u8().map(Self::U8),
             minicbor::data::Type::String => d.str().map(Self::Str),
-            _ => Err(minicbor::decode::Error::message(
-                "Datatype is neither 8bit signed integer nor text",
-            )
-            .at(d.position())),
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "Datatype is neither 8bit signed integer nor text",
+                )
+                .at(d.position()))
+            },
         }
     }
 }
@@ -193,13 +195,15 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
-            SupportedLabel::Id => d
-                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                .map(Self::Id),
+            SupportedLabel::Id => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Id)
+            },
             SupportedLabel::Ref => d.decode_with(ctx).map(Self::Ref),
-            SupportedLabel::Ver => d
-                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                .map(Self::Ver),
+            SupportedLabel::Ver => {
+                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                    .map(Self::Ver)
+            },
             SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
             SupportedLabel::Reply => d.decode_with(ctx).map(Self::Reply),
             SupportedLabel::Collabs => todo!(),
@@ -213,23 +217,23 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
     }
 }
 
-impl minicbor::Encode<ProblemReport> for SupportedField {
+impl minicbor::Encode<()> for SupportedField {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let key = self.discriminant().to_cose();
         e.encode(key)?;
 
         match self {
-            SupportedField::ContentType(content_type) => content_type.encode(e, &mut ()),
+            SupportedField::ContentType(content_type) => content_type.encode(e, ctx),
             SupportedField::Id(uuid_v7) | SupportedField::Ver(uuid_v7) => {
                 uuid_v7.encode(e, &mut catalyst_types::uuid::CborContext::Tagged)
             },
             SupportedField::Ref(document_ref)
             | SupportedField::Reply(document_ref)
             | SupportedField::Template(document_ref)
-            | SupportedField::Parameters(document_ref) => document_ref.encode(e, report),
-            SupportedField::Type(doc_type) => doc_type.encode(e, report),
+            | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
+            SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
             SupportedField::Collabs(collabs) => {
                 if !collabs.is_empty() {
                     e.array(
@@ -244,10 +248,8 @@ impl minicbor::Encode<ProblemReport> for SupportedField {
                 }
                 Ok(())
             },
-            SupportedField::Section(section) => section.encode(e, &mut ()),
-            SupportedField::ContentEncoding(content_encoding) => {
-                content_encoding.encode(e, &mut ())
-            },
+            SupportedField::Section(section) => section.encode(e, ctx),
+            SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }
     }
 }
