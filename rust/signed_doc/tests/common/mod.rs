@@ -68,7 +68,7 @@ pub fn create_dummy_key_pair(
 }
 
 pub fn create_dummy_doc(
-    doc_type_id: Uuid,
+    doc_type_id: &DocType,
 ) -> anyhow::Result<(CatalystSignedDocument, UuidV7, UuidV7)> {
     let empty_json = serde_json::to_vec(&serde_json::json!({}))?;
 

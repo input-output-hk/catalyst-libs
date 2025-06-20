@@ -9,7 +9,7 @@ use serde::Deserialize;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
-    metadata::custom_transient_decode_error, ContentEncoding, ContentType, DocType, DocumentRef,
+    metadata::custom_transient_decode_error, ContentEncoding, ContentType, DocType, DocumentRefs,
     Section,
 };
 
@@ -104,21 +104,21 @@ pub enum SupportedField {
     /// `id` field.
     Id(UuidV7) = 1,
     /// `ref` field.
-    Ref(DocumentRef) = 2,
+    Ref(DocumentRefs) = 2,
     /// `ver` field.
     Ver(UuidV7) = 3,
     /// `type` field.
     Type(DocType) = 4,
     /// `reply` field.
-    Reply(DocumentRef) = 5,
+    Reply(DocumentRefs) = 5,
     /// `collabs` field.
     Collabs(Vec<String>) = 7,
     /// `section` field.
     Section(Section) = 8,
     /// `template` field.
-    Template(DocumentRef) = 9,
+    Template(DocumentRefs) = 9,
     /// `parameters` field.
-    Parameters(DocumentRef) = 10,
+    Parameters(DocumentRefs) = 10,
     /// `Content-Encoding` field.
     ContentEncoding(ContentEncoding) = 11,
 }
@@ -230,17 +230,17 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
                 d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
                     .map(Self::Id)
             },
-            SupportedLabel::Ref => todo!(),
+            SupportedLabel::Ref => d.decode_with(ctx).map(Self::Ref),
             SupportedLabel::Ver => {
                 d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
                     .map(Self::Ver)
             },
             SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
-            SupportedLabel::Reply => todo!(),
+            SupportedLabel::Reply => d.decode_with(ctx).map(Self::Reply),
             SupportedLabel::Collabs => todo!(),
             SupportedLabel::Section => todo!(),
-            SupportedLabel::Template => todo!(),
-            SupportedLabel::Parameters => todo!(),
+            SupportedLabel::Template => d.decode_with(ctx).map(Self::Template),
+            SupportedLabel::Parameters => d.decode_with(ctx).map(Self::Parameters),
             SupportedLabel::ContentEncoding => todo!(),
         }?;
 

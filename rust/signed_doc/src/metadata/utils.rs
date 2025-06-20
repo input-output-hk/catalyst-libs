@@ -5,6 +5,19 @@ use catalyst_types::{
     uuid::{CborContext, UuidV7},
 };
 use coset::{CborSerializable, Label, ProtectedHeader};
+use minicbor::{Decode, Decoder};
+
+/// Decode cose protected header value using minicbor decoder.
+pub(crate) fn decode_cose_protected_header_value<C, T>(
+    protected: &ProtectedHeader, context: &mut C, label: &str,
+) -> Option<T>
+where T: for<'a> Decode<'a, C> {
+    cose_protected_header_find(protected, |key| matches!(key, Label::Text(l) if l == label))
+        .and_then(|value| {
+            let bytes = value.clone().to_vec().unwrap_or_default();
+            Decoder::new(&bytes).decode_with(context).ok()
+        })
+}
 
 /// Find a value for a predicate in the protected header.
 pub(crate) fn cose_protected_header_find(

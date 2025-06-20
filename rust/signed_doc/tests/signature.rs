@@ -33,7 +33,7 @@ async fn single_signature_validation_test() {
     );
 
     // case: missing signatures
-    let (unsigned_doc, ..) = common::create_dummy_doc(UuidV4::new().into()).unwrap();
+    let (unsigned_doc, ..) = common::create_dummy_doc(&UuidV4::new().into()).unwrap();
     assert!(!validator::validate_signatures(&unsigned_doc, &provider)
         .await
         .unwrap());
