@@ -1,9 +1,6 @@
 //! Catalyst Signed Document unified metadata field.
 
-use std::{
-    borrow::Cow,
-    fmt::{self, Display},
-};
+use std::fmt::{self, Display};
 #[cfg(test)]
 use std::{cmp, convert::Infallible};
 
@@ -92,7 +89,8 @@ impl Display for Label<'_> {
 #[derive(Clone, Debug, PartialEq, EnumDiscriminants, EnumTryAs)]
 #[strum_discriminants(
     name(SupportedLabel),
-    derive(Ord, PartialOrd),
+    derive(Ord, PartialOrd, serde::Deserialize),
+    serde(rename_all = "kebab-case"),
     cfg_attr(test, derive(strum::VariantArray))
 )]
 #[non_exhaustive]
@@ -129,7 +127,7 @@ impl SupportedLabel {
     /// Try to convert from an arbitrary COSE [`Label`].
     fn from_cose(label: Label<'_>) -> Option<Self> {
         match label {
-            Label::U8(3) | Label::Str("content-type") => Some(Self::ContentType),
+            Label::U8(3) => Some(Self::ContentType),
             Label::Str("id") => Some(Self::Id),
             Label::Str("ref") => Some(Self::Ref),
             Label::Str("ver") => Some(Self::Ver),
@@ -167,15 +165,6 @@ impl SupportedLabel {
 impl Display for SupportedLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Display::fmt(&self.to_cose(), f)
-    }
-}
-
-impl<'de> serde::Deserialize<'de> for SupportedLabel {
-    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
-        let l = Cow::deserialize(d)?;
-        Self::from_cose(Label::Str(&l)).ok_or_else(|| {
-            serde::de::Error::custom(format!("Not a supported metadata label ({l})"))
-        })
     }
 }
 
