@@ -2,13 +2,20 @@
 use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
 
 use crate::{
-    signature::Signature, CatalystSignedDocument, Content, InnerCatalystSignedDocument, Metadata,
-    Signatures, PROBLEM_REPORT_CTX,
+    signature::{tbs_data, Signature},
+    CatalystSignedDocument, Content, Metadata, Signatures,
 };
 
 /// Catalyst Signed Document Builder.
 #[derive(Debug)]
-pub struct Builder(InnerCatalystSignedDocument);
+pub struct Builder {
+    /// metadata
+    metadata: Metadata,
+    /// content
+    content: Content,
+    /// signatures
+    signatures: Signatures,
+}
 
 impl Default for Builder {
     fn default() -> Self {
@@ -20,14 +27,11 @@ impl Builder {
     /// Start building a signed document
     #[must_use]
     pub fn new() -> Self {
-        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        Self(InnerCatalystSignedDocument {
-            report,
+        Self {
             metadata: Metadata::default(),
             content: Content::default(),
             signatures: Signatures::default(),
-            raw_bytes: None,
-        })
+        }
     }
 
     /// Set document metadata in JSON format
@@ -37,15 +41,21 @@ impl Builder {
     /// - Fails if it is invalid metadata fields JSON object.
     pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
         let metadata = serde_json::from_value(json)?;
-        self.0.metadata = Metadata::from_metadata_fields(metadata, &self.0.report);
+        self.metadata = Metadata::from_metadata_fields(metadata, &ProblemReport::new(""));
         Ok(self)
     }
 
     /// Set decoded (original) document content bytes
-    #[must_use]
-    pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
-        self.0.content = Content::from_decoded(content);
-        self
+    ///
+    /// # Errors
+    ///  - Compression failure
+    pub fn with_decoded_content(mut self, decoded: Vec<u8>) -> anyhow::Result<Self> {
+        if let Some(encoding) = self.metadata.content_encoding() {
+            self.content = encoding.encode(&decoded)?.into();
+        } else {
+            self.content = decoded.into();
+        }
+        Ok(self)
     }
 
     /// Add a signature to the document
@@ -56,43 +66,54 @@ impl Builder {
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
-        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: &CatalystId,
+        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId,
     ) -> anyhow::Result<Self> {
-        let cose_sign = self
-            .0
-            .as_cose_sign()
-            .map_err(|e| anyhow::anyhow!("Failed to sign: {e}"))?;
-
-        let protected_header = coset::HeaderBuilder::new().key_id(kid.to_string().into_bytes());
-
-        let mut signature = coset::CoseSignatureBuilder::new()
-            .protected(protected_header.build())
-            .build();
-        let data_to_sign = cose_sign.tbs_data(&[], &signature);
-        signature.signature = sign_fn(data_to_sign);
-        if let Some(sign) = Signature::from_cose_sig(signature, &self.0.report) {
-            self.0.signatures.push(sign);
+        if kid.is_id() {
+            anyhow::bail!("Provided kid should be in a uri format, kid: {kid}");
         }
+        let data_to_sign = tbs_data(&kid, &self.metadata, &self.content)?;
+        let sign_bytes = sign_fn(data_to_sign);
+        self.signatures.push(Signature::new(kid, sign_bytes));
 
         Ok(self)
     }
 
     /// Build a signed document with the collected error report.
     /// Could provide an invalid document.
+    ///
+    /// # Panics
+    ///  Should not panic
     #[must_use]
+    #[allow(
+        clippy::unwrap_used,
+        reason = "At this point all the data MUST be correctly encodable, and the final prepared bytes MUST be correctly decodable as a CatalystSignedDocument object."
+    )]
     pub fn build(self) -> CatalystSignedDocument {
-        self.0.into()
+        let mut e = minicbor::Encoder::new(Vec::new());
+        // COSE_Sign tag
+        // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+        e.tag(minicbor::data::Tag::new(98)).unwrap();
+        e.array(4).unwrap();
+        // protected headers (metadata fields)
+        e.bytes(minicbor::to_vec(&self.metadata).unwrap().as_slice())
+            .unwrap();
+        // empty unprotected headers
+        e.map(0).unwrap();
+        // content
+        e.encode(&self.content).unwrap();
+        // signatures
+        e.encode(self.signatures).unwrap();
+
+        CatalystSignedDocument::try_from(e.into_writer().as_slice()).unwrap()
     }
 }
 
 impl From<&CatalystSignedDocument> for Builder {
     fn from(value: &CatalystSignedDocument) -> Self {
-        Self(InnerCatalystSignedDocument {
+        Self {
             metadata: value.inner.metadata.clone(),
             content: value.inner.content.clone(),
             signatures: value.inner.signatures.clone(),
-            report: value.inner.report.clone(),
-            raw_bytes: None,
-        })
+        }
     }
 }

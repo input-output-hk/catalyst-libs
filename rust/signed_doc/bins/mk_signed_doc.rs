@@ -67,8 +67,8 @@ impl Cli {
                 let payload = serde_json::to_vec(&json_doc)?;
                 // Start with no signatures.
                 let signed_doc = Builder::new()
-                    .with_decoded_content(payload)
                     .with_json_metadata(metadata)?
+                    .with_decoded_content(payload)?
                     .build();
                 println!(
                     "report {}",
@@ -83,7 +83,10 @@ impl Cli {
 
                 let new_signed_doc = signed_doc
                     .into_builder()
-                    .add_signature(|message| sk.sign::<()>(&message).to_bytes().to_vec(), &kid)?
+                    .add_signature(
+                        |message| sk.sign::<()>(&message).to_bytes().to_vec(),
+                        kid.clone(),
+                    )?
                     .build();
                 save_signed_doc(new_signed_doc, &doc)?;
             },

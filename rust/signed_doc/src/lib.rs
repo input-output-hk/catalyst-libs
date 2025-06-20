@@ -15,14 +15,13 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::Context;
 pub use builder::Builder;
 pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
 pub use content::Content;
-use coset::{CborSerializable, Header, TaggedCborSerializable};
+use coset::{CborSerializable, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
     ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, DocumentRefs, Metadata, Section,
@@ -49,7 +48,7 @@ struct InnerCatalystSignedDocument {
     /// raw CBOR bytes of the `CatalystSignedDocument` object.
     /// It is important to keep them to have a consistency what comes from the decoding
     /// process, so we would return the same data again
-    raw_bytes: Option<Vec<u8>>,
+    raw_bytes: Vec<u8>,
 }
 
 /// Keep all the contents private.
@@ -70,7 +69,7 @@ impl Display for CatalystSignedDocument {
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
         } else {
-            for kid in &self.inner.signatures.kids() {
+            for kid in &self.kids() {
                 writeln!(f, "  Signature Key ID: {kid}")?;
             }
         }
@@ -113,10 +112,28 @@ impl CatalystSignedDocument {
         self.inner.metadata.doc_ver()
     }
 
-    /// Return document `Content`.
+    /// Return document content object.
     #[must_use]
-    pub fn doc_content(&self) -> &Content {
+    pub(crate) fn content(&self) -> &Content {
         &self.inner.content
+    }
+
+    /// Return document decoded (original/non compressed) content bytes.
+    ///
+    /// # Errors
+    ///  - Decompression failure
+    pub fn decoded_content(&self) -> anyhow::Result<Vec<u8>> {
+        if let Some(encoding) = self.doc_content_encoding() {
+            encoding.decode(self.encoded_content())
+        } else {
+            Ok(self.encoded_content().to_vec())
+        }
+    }
+
+    /// Return document encoded (compressed) content bytes.
+    #[must_use]
+    pub fn encoded_content(&self) -> &[u8] {
+        self.content().bytes()
     }
 
     /// Return document `ContentType`.
@@ -149,13 +166,21 @@ impl CatalystSignedDocument {
     /// Return a list of Document's Catalyst IDs.
     #[must_use]
     pub fn kids(&self) -> Vec<CatalystId> {
-        self.inner.signatures.kids()
+        self.inner
+            .signatures
+            .iter()
+            .map(|s| s.kid().clone())
+            .collect()
     }
 
     /// Return a list of Document's author IDs (short form of Catalyst IDs).
     #[must_use]
     pub fn authors(&self) -> Vec<CatalystId> {
-        self.inner.signatures.authors()
+        self.inner
+            .signatures
+            .iter()
+            .map(|s| s.kid().as_short_id())
+            .collect()
     }
 
     /// Returns a collected problem report for the document.
@@ -175,52 +200,11 @@ impl CatalystSignedDocument {
         &self.inner.report
     }
 
-    /// Convert Catalyst Signed Document into `coset::CoseSign`
-    ///
-    /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
-    pub(crate) fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        self.inner.as_cose_sign()
-    }
-
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
     #[must_use]
     pub fn into_builder(&self) -> Builder {
         self.into()
-    }
-}
-
-impl InnerCatalystSignedDocument {
-    /// Convert Catalyst Signed Document into `coset::CoseSign`
-    ///
-    /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
-    fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        if let Some(raw_bytes) = self.raw_bytes.clone() {
-            let cose_sign = coset::CoseSign::from_tagged_slice(raw_bytes.as_slice())
-                .or_else(|_| coset::CoseSign::from_slice(raw_bytes.as_slice()))
-                .map_err(|e| {
-                    minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
-                })?;
-            Ok(cose_sign)
-        } else {
-            let protected_header =
-                Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
-
-            let content = self
-                .content
-                .encoded_bytes(self.metadata.content_encoding())?;
-
-            let mut builder = coset::CoseSignBuilder::new()
-                .protected(protected_header)
-                .payload(content);
-
-            for signature in self.signatures.cose_signatures() {
-                builder = builder.add_signature(signature);
-            }
-            Ok(builder.build())
-        }
     }
 }
 
@@ -249,7 +233,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(payload, metadata.content_encoding(), &report)
+            payload.into()
         } else {
             report.missing_field("COSE Sign Payload", "Missing document content (payload)");
             Content::default()
@@ -260,24 +244,21 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             content,
             signatures,
             report,
-            raw_bytes: Some(cose_bytes.to_vec()),
+            raw_bytes: cose_bytes.to_vec(),
         }
         .into())
     }
 }
 
-impl Encode<()> for CatalystSignedDocument {
+impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
+        &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
-            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
-        })?;
-
+        let raw_bytes = &self.inner.raw_bytes;
         e.writer_mut()
-            .write_all(&cose_bytes)
-            .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
+            .write_all(raw_bytes)
+            .map_err(minicbor::encode::Error::write)?;
+        Ok(())
     }
 }
 

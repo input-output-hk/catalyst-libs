@@ -55,33 +55,34 @@ impl<'de> Deserialize<'de> for ContentType {
     }
 }
 
-impl From<ContentType> for CoapContentFormat {
-    fn from(value: ContentType) -> Self {
-        match value {
-            ContentType::Cbor => Self::Cbor,
-            ContentType::Json => Self::Json,
-        }
-    }
-}
-
 impl TryFrom<&coset::ContentType> for ContentType {
     type Error = anyhow::Error;
 
     fn try_from(value: &coset::ContentType) -> Result<Self, Self::Error> {
-        let content_type = match value {
-            coset::ContentType::Assigned(CoapContentFormat::Json) => ContentType::Json,
-            coset::ContentType::Assigned(CoapContentFormat::Cbor) => ContentType::Cbor,
-            _ => {
+        match value {
+            coset::ContentType::Assigned(CoapContentFormat::Json) => Ok(ContentType::Json),
+            coset::ContentType::Assigned(CoapContentFormat::Cbor) => Ok(ContentType::Cbor),
+            coset::ContentType::Text(str) => str.parse(),
+            coset::RegisteredLabel::Assigned(_) => {
                 anyhow::bail!(
-                    "Unsupported Content Type {value:?}, Supported only: {:?}",
+                    "Unsupported Content Type: {value:?}, Supported only: {:?}",
                     ContentType::VARIANTS
                         .iter()
                         .map(ToString::to_string)
                         .collect::<Vec<_>>()
                 )
             },
-        };
-        Ok(content_type)
+        }
+    }
+}
+
+impl minicbor::Encode<()> for ContentType {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        // encode as media types, not in CoAP Content-Formats
+        e.str(self.to_string().as_str())?;
+        Ok(())
     }
 }
 

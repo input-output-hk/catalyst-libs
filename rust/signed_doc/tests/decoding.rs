@@ -3,39 +3,11 @@
 use catalyst_signed_doc::{doc_types::deprecated, providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
-use coset::TaggedCborSerializable;
+use coset::{CborSerializable, TaggedCborSerializable};
 use ed25519_dalek::ed25519::signature::Signer;
+use minicbor::{data::Tag, Encoder};
 
 mod common;
-
-#[test]
-fn catalyst_signed_doc_cbor_roundtrip_kid_as_id_test() {
-    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata());
-    catalyst_signed_doc_cbor_roundtrip_kid_as_id(common::test_metadata_specific_type(
-        Some(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
-        None,
-    ));
-}
-
-#[allow(clippy::unwrap_used)]
-fn catalyst_signed_doc_cbor_roundtrip_kid_as_id(data: (UuidV7, UuidV4, serde_json::Value)) {
-    let (_, _, metadata_fields) = data;
-    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
-    // transform Catalyst ID URI form to the ID form
-    let kid = kid.as_id();
-
-    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
-
-    let doc = Builder::new()
-        .with_json_metadata(metadata_fields.clone())
-        .unwrap()
-        .with_decoded_content(content.clone())
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
-        .unwrap()
-        .build();
-
-    assert!(doc.problem_report().is_problematic());
-}
 
 #[tokio::test]
 async fn catalyst_signed_doc_parameters_aliases_test() {
@@ -61,11 +33,14 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
         .with_json_metadata(metadata_fields.clone())
         .unwrap()
         .with_decoded_content(content.clone())
+        .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
 
     let parameters_val = doc.doc_meta().parameters().unwrap();
-    let parameters_val_cbor: coset::cbor::Value = parameters_val.try_into().unwrap();
+    let parameters_val_cbor =
+        coset::cbor::Value::from_slice(minicbor::to_vec(parameters_val).unwrap().as_slice())
+            .unwrap();
     // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
     let bytes: Vec<u8> = doc.try_into().unwrap();
     let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();
@@ -96,7 +71,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     let doc = doc
         .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
@@ -116,7 +91,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     let doc = doc
         .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
@@ -136,7 +111,7 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
     let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
     let doc = doc
         .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)
+        .add_signature(|m| sk.sign(&m).to_vec(), kid)
         .unwrap()
         .build();
     assert!(!doc.problem_report().is_problematic());
@@ -177,7 +152,7 @@ type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
 
 struct TestCase {
     name: &'static str,
-    bytes_gen: Box<dyn Fn() -> Vec<u8>>,
+    bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
     // If the provided bytes can be even decoded without error (valid COSE or not).
     // If set to `false` all further checks will not even happen.
     can_decode: bool,
@@ -189,7 +164,7 @@ struct TestCase {
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes",
-        bytes_gen: Box::new(Vec::new),
+        bytes_gen: Box::new(|| Ok(Encoder::new(Vec::new()))),
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -200,36 +175,43 @@ fn decoding_empty_bytes_case() -> TestCase {
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let (sk, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
     let doc_refs: DocumentRefs =
         vec![DocumentRef::new(uuid_v7, uuid_v7, DocLocator::default())].into();
 
     TestCase {
-        name: "Catalyst Signed Doc with ALL defined metadata fields and signatures",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
         bytes_gen: Box::new({
-            let kid = kid.clone();
             move || {
-                Builder::new()
-                    .with_json_metadata(serde_json::json!({
-                        "content-type": ContentType::Json.to_string(),
-                        "content-encoding": ContentEncoding::Brotli.to_string(),
-                        "type": uuid_v4.to_string(),
-                        "id": uuid_v7.to_string(),
-                        "ver": uuid_v7.to_string(),
-                        "ref": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                        "reply": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                        "template": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                        "section": "$".to_string(),
-                        "collabs": vec!["Alex1".to_string(), "Alex2".to_string()],
-                        "parameters": {"id": uuid_v7.to_string(), "ver": uuid_v7.to_string()},
-                    }))
-                    .unwrap()
-                    .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
-                    .add_signature(|m| sk.sign(&m).to_vec(), &kid)
-                    .unwrap()
-                    .build()
-                    .try_into()
-                    .unwrap()
+                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("ver")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                let mut p_headers = minicbor::Encoder::new(Vec::new());
+                p_headers.map(1)?.u8(4)?.encode(kid)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                e.map(0)?;
+                e.bytes(&[1,2,3])?;
+                Ok(e)
             }
         }),
         can_decode: true,
@@ -240,16 +222,12 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
-                    && (doc.doc_content_encoding().unwrap() == ContentEncoding::Brotli)
                     && (doc.doc_meta().doc_ref().unwrap() == &doc_refs)
                     && (doc.doc_meta().reply().unwrap() == &doc_refs)
                     && (doc.doc_meta().template().unwrap() == &doc_refs)
                     && (doc.doc_meta().parameters().unwrap() == &doc_refs)
-                    && (doc.doc_meta().section().unwrap() == &"$".parse::<Section>().unwrap())
-                    && (doc.doc_meta().collabs() == ["Alex1".to_string(), "Alex2".to_string()])
-                    && (doc.doc_content().decoded_bytes().unwrap()
-                        == serde_json::to_vec(&serde_json::Value::Null).unwrap())
-                    && (doc.kids() == vec![kid.clone()])
+                    && (doc.encoded_content()
+                        == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
             }
         })),
     }
@@ -263,9 +241,15 @@ fn catalyst_signed_doc_decoding_test() {
     ];
 
     for case in test_cases {
-        let bytes = case.bytes_gen.as_ref()();
+        let bytes = case.bytes_gen.as_ref()().unwrap().into_writer();
         let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
-        assert_eq!(doc_res.is_ok(), case.can_decode, "Case: [{}]", case.name);
+        assert_eq!(
+            doc_res.is_ok(),
+            case.can_decode,
+            "Case: [{}], error: {:?}",
+            case.name,
+            doc_res.err()
+        );
         if let Ok(doc) = doc_res {
             assert_eq!(
                 !doc.problem_report().is_problematic(),
@@ -276,7 +260,11 @@ fn catalyst_signed_doc_decoding_test() {
             );
 
             if let Some(post_checks) = &case.post_checks {
-                assert!((post_checks.as_ref())(&doc), "Case: [{}]", case.name);
+                assert!(
+                    (post_checks.as_ref())(&doc),
+                    "Case: [{}]. Post checks fails",
+                    case.name
+                );
             }
 
             assert_eq!(

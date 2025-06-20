@@ -2,7 +2,7 @@
 
 use catalyst_types::{
     problem_report::ProblemReport,
-    uuid::{CborContext, UuidV4, UuidV7},
+    uuid::{CborContext, UuidV7},
 };
 use coset::{CborSerializable, Label, ProtectedHeader};
 use minicbor::{Decode, Decoder};
@@ -50,24 +50,6 @@ where T: for<'a> TryFrom<&'a coset::cbor::Value> {
         );
     }
     None
-}
-
-/// A convenient wrapper over the `UuidV4` type, to implement
-/// `TryFrom<coset::cbor::Value>` and `TryFrom<Self> for coset::cbor::Value` traits.
-pub(crate) struct CborUuidV4(pub(crate) UuidV4);
-impl TryFrom<&coset::cbor::Value> for CborUuidV4 {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &coset::cbor::Value) -> Result<Self, Self::Error> {
-        Ok(Self(decode_cbor_uuid(value)?))
-    }
-}
-impl TryFrom<CborUuidV4> for coset::cbor::Value {
-    type Error = anyhow::Error;
-
-    fn try_from(value: CborUuidV4) -> Result<Self, Self::Error> {
-        encode_cbor_uuid(value.0)
-    }
 }
 
 /// A convenient wrapper over the `UuidV7` type, to implement

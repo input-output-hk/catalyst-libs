@@ -83,7 +83,7 @@ pub fn create_dummy_doc(
             "ver": doc_ver,
             "template": { "id": doc_id.to_string(), "ver": doc_ver.to_string() }
         }))?
-        .with_decoded_content(empty_json.clone())
+        .with_decoded_content(empty_json.clone())?
         .build();
 
     Ok((doc, doc_id, doc_ver))
@@ -104,9 +104,9 @@ pub fn create_dummy_signed_doc(
     let (sk, pk, kid) = create_dummy_key_pair(with_role_index)?;
 
     let signed_doc = Builder::new()
-        .with_decoded_content(content)
         .with_json_metadata(metadata)?
-        .add_signature(|m| sk.sign(&m).to_vec(), &kid)?
+        .with_decoded_content(content)?
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())?
         .build();
 
     Ok((signed_doc, pk, kid))
