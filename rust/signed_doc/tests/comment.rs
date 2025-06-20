@@ -204,7 +204,6 @@ async fn test_invalid_comment_doc() {
               "ver": dummy_template_doc.doc_ver().unwrap()
             },
             // without ref
-            "ref": serde_json::Value::Null
         }))
         .unwrap()
         .with_json_content(serde_json::json!({}))

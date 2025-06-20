@@ -143,7 +143,6 @@ async fn test_invalid_submission_action() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             // without specifying ref
-            "ref": serde_json::Value::Null,
         }))
         .unwrap()
         .with_json_content(serde_json::json!({

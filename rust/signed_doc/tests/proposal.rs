@@ -139,7 +139,6 @@ async fn test_invalid_proposal_doc() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             // without specifying template id
-            "template": serde_json::Value::Null,
         }))
         .unwrap()
         .with_json_content(serde_json::Value::Null)

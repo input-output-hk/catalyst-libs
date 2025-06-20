@@ -210,16 +210,9 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_json(fields: serde_json::Value, report: &ProblemReport) -> Self {
-        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)
-            .inspect_err(|err| {
-                report.other(
-                    &format!("Unable to deserialize json: {err}"),
-                    "Metadata building from json",
-                );
-            })
-            .unwrap_or_default();
-        Self::from_fields(fields, report)
+    pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
+        let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
+        Ok(Self::from_fields(fields, &ProblemReport::new("")))
     }
 }
 
