@@ -147,29 +147,25 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRefs {
     }
 }
 
-impl Encode<ProblemReport> for DocumentRefs {
+impl Encode<()> for DocumentRefs {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         const CONTEXT: &str = "DocumentRefs encoding";
         if self.0.is_empty() {
-            report.invalid_value(
-                "DocumentRefs",
-                "empty",
-                "DocumentRefs cannot be empty",
-                CONTEXT,
-            );
             return Err(minicbor::encode::Error::message(format!(
                 "{CONTEXT}: DocumentRefs cannot be empty"
             )));
         }
-        e.array(self.0.len().try_into().map_err(|_| {
-            report.invalid_encoding("Array", "Invalid array", "Valid array", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}, unable to encode array length"))
-        })?)?;
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(|e| minicbor::encode::Error::message(format!("{CONTEXT}, {e}")))?,
+        )?;
 
         for doc_ref in &self.0 {
-            doc_ref.encode(e, report)?;
+            doc_ref.encode(e, ctx)?;
         }
         Ok(())
     }
