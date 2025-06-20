@@ -2,10 +2,7 @@
 
 use std::fmt::Display;
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{CborContext, UuidV7},
-};
+use catalyst_types::uuid::{CborContext, UuidV7};
 use coset::cbor::Value;
 use minicbor::{Decode, Decoder, Encode};
 
@@ -135,29 +132,14 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRef {
     }
 }
 
-impl Encode<ProblemReport> for DocumentRef {
+impl Encode<()> for DocumentRef {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        const CONTEXT: &str = "DocumentRef encoding";
         e.array(DOC_REF_ARR_ITEM)?;
-        self.id.encode(e, &mut CborContext::Tagged).map_err(|_| {
-            report.invalid_encoding("ID", &self.id.to_string(), "Valid UUIDv7", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}: ID UUIDv7 encoding failed"))
-        })?;
-        self.ver.encode(e, &mut CborContext::Tagged).map_err(|_| {
-            report.invalid_encoding("Ver", &self.id.to_string(), "Valid UUIDv7", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}: Ver UUIDv7 encoding failed"))
-        })?;
-        self.doc_locator.encode(e, report).map_err(|e| {
-            report.invalid_encoding(
-                "Doc locator",
-                &self.doc_locator.to_string(),
-                "Valid doc locator",
-                CONTEXT,
-            );
-            e.with_message("{CONTEXT}: Failed to encode doc locator")
-        })?;
+        self.id.encode(e, &mut CborContext::Tagged)?;
+        self.ver.encode(e, &mut CborContext::Tagged)?;
+        self.doc_locator.encode(e, ctx)?;
         Ok(())
     }
 }

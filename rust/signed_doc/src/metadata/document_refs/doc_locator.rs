@@ -114,32 +114,14 @@ impl Decode<'_, ProblemReport> for DocLocator {
     }
 }
 
-impl Encode<ProblemReport> for DocLocator {
+impl Encode<()> for DocLocator {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, report: &mut ProblemReport,
+        &self, e: &mut minicbor::Encoder<W>, _: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
-        const CONTEXT: &str = "DocLocator encoding";
-        e.map(DOC_LOC_MAP_ITEM).map_err(|_| {
-            report.invalid_encoding(
-                "Map",
-                "Invalid length",
-                &DOC_LOC_MAP_ITEM.to_string(),
-                CONTEXT,
-            );
-            minicbor::encode::Error::message(format!("{CONTEXT}: Unable to encode map length"))
-        })?;
-        e.str(CID_MAP_KEY).map_err(|_| {
-            report.invalid_encoding("Key", "Invalid string", " String", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}: Unable to encode key"))
-        })?;
-        e.tag(minicbor::data::Tag::new(CID_TAG)).map_err(|_| {
-            report.invalid_encoding("CBOR tag", "Invalid tag", &CID_TAG.to_string(), CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}: Unable to encode CBOR tag"))
-        })?;
-        e.bytes(&self.0).map_err(|_| {
-            report.invalid_encoding("CID", "Invalid bytes", "Valid CBOR byte", CONTEXT);
-            minicbor::encode::Error::message(format!("{CONTEXT}: Unable to encode CID bytes"))
-        })?;
+        e.map(DOC_LOC_MAP_ITEM)?;
+        e.str(CID_MAP_KEY)?;
+        e.tag(minicbor::data::Tag::new(CID_TAG))?;
+        e.bytes(&self.0)?;
         Ok(())
     }
 }
@@ -157,7 +139,7 @@ mod tests {
         let locator = DocLocator(vec![1, 2, 3, 4]);
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        locator.encode(&mut encoder, &mut report).unwrap();
+        locator.encode(&mut encoder, &mut ()).unwrap();
         let mut decoder = Decoder::new(&buffer);
         let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut report).unwrap();
         assert_eq!(locator, decoded_doc_loc);
@@ -170,7 +152,7 @@ mod tests {
         let locator = DocLocator(vec![]);
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        locator.encode(&mut encoder, &mut report).unwrap();
+        locator.encode(&mut encoder, &mut ()).unwrap();
         let mut decoder = Decoder::new(&buffer);
         let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut report).unwrap();
         assert_eq!(locator, decoded_doc_loc);
