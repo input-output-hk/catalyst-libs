@@ -48,7 +48,7 @@ struct InnerCatalystSignedDocument {
     /// raw CBOR bytes of the `CatalystSignedDocument` object.
     /// It is important to keep them to have a consistency what comes from the decoding
     /// process, so we would return the same data again
-    raw_bytes: Option<Vec<u8>>,
+    raw_bytes: Vec<u8>,
 }
 
 /// Keep all the contents private.
@@ -112,10 +112,28 @@ impl CatalystSignedDocument {
         self.inner.metadata.doc_ver()
     }
 
-    /// Return document `Content`.
+    /// Return document content object.
     #[must_use]
-    pub fn doc_content(&self) -> &Content {
+    pub(crate) fn content(&self) -> &Content {
         &self.inner.content
+    }
+
+    /// Return document decoded (original/non compressed) content bytes.
+    ///
+    /// # Errors
+    ///  - Decompression failure
+    pub fn decoded_content(&self) -> anyhow::Result<Vec<u8>> {
+        if let Some(encoding) = self.doc_content_encoding() {
+            encoding.decode(self.encoded_content())
+        } else {
+            Ok(self.encoded_content().to_vec())
+        }
+    }
+
+    /// Return document encoded (compressed) content bytes.
+    #[must_use]
+    pub fn encoded_content(&self) -> &[u8] {
+        self.content().bytes()
     }
 
     /// Return document `ContentType`.
@@ -215,7 +233,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
 
         let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(payload, metadata.content_encoding(), &report)
+            payload.into()
         } else {
             report.missing_field("COSE Sign Payload", "Missing document content (payload)");
             Content::default()
@@ -226,7 +244,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             content,
             signatures,
             report,
-            raw_bytes: Some(cose_bytes.to_vec()),
+            raw_bytes: cose_bytes.to_vec(),
         }
         .into())
     }
@@ -236,33 +254,10 @@ impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        if let Some(raw_bytes) = &self.inner.raw_bytes {
-            e.writer_mut()
-                .write_all(raw_bytes)
-                .map_err(minicbor::encode::Error::write)?;
-        } else {
-            // COSE_Sign tag
-            // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
-            e.tag(minicbor::data::Tag::new(98))?;
-            e.array(4)?;
-            // protected headers (metadata fields)
-            e.bytes(
-                minicbor::to_vec(self.doc_meta())
-                    .map_err(minicbor::encode::Error::message)?
-                    .as_slice(),
-            )?;
-            // empty unprotected headers
-            e.map(0)?;
-            // content
-            let content = self
-                .doc_content()
-                .encoded_bytes(self.doc_content_encoding())
-                .map_err(minicbor::encode::Error::message)?;
-            e.bytes(content.as_slice())?;
-            // signatures
-            e.encode(self.signatures())?;
-        }
-
+        let raw_bytes = &self.inner.raw_bytes;
+        e.writer_mut()
+            .write_all(raw_bytes)
+            .map_err(minicbor::encode::Error::write)?;
         Ok(())
     }
 }

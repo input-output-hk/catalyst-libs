@@ -67,8 +67,8 @@ impl Cli {
                 let payload = serde_json::to_vec(&json_doc)?;
                 // Start with no signatures.
                 let signed_doc = Builder::new()
-                    .with_decoded_content(payload)
                     .with_json_metadata(metadata)?
+                    .with_decoded_content(payload)?
                     .build();
                 println!(
                     "report {}",
