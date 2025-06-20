@@ -8,10 +8,23 @@ use crate::common::create_dummy_key_pair;
 
 mod common;
 
+fn dummy_proposal_template() -> CatalystSignedDocument {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE,
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build()
+}
+
 #[tokio::test]
 async fn test_valid_proposal_doc() {
-    let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
+    let dummy_template_doc = dummy_proposal_template();
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -23,8 +36,8 @@ async fn test_valid_proposal_doc() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
+              "id": dummy_template_doc.doc_id().unwrap(),
+              "ver": dummy_template_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -35,7 +48,7 @@ async fn test_valid_proposal_doc() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(template_doc).unwrap();
+    provider.add_document(dummy_template_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
@@ -44,8 +57,7 @@ async fn test_valid_proposal_doc() {
 
 #[tokio::test]
 async fn test_valid_proposal_doc_old_type() {
-    let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE).unwrap();
+    let dummy_template_doc = dummy_proposal_template();
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -58,8 +70,8 @@ async fn test_valid_proposal_doc_old_type() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
+              "id": dummy_template_doc.doc_id().unwrap(),
+              "ver": dummy_template_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -70,7 +82,7 @@ async fn test_valid_proposal_doc_old_type() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(template_doc).unwrap();
+    provider.add_document(dummy_template_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 

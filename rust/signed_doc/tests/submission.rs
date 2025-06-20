@@ -10,10 +10,23 @@ use crate::common::create_dummy_key_pair;
 
 mod common;
 
+fn dummy_proposal_doc() -> CatalystSignedDocument {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": deprecated::PROPOSAL_DOCUMENT_UUID_TYPE,
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build()
+}
+
 #[tokio::test]
 async fn test_valid_submission_action() {
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+    let dummy_proposal_doc = dummy_proposal_doc();
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -25,8 +38,8 @@ async fn test_valid_submission_action() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -39,15 +52,14 @@ async fn test_valid_submission_action() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(proposal_doc).unwrap();
+    provider.add_document(dummy_proposal_doc).unwrap();
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid, "{:?}", doc.problem_report());
 }
 
 #[tokio::test]
 async fn test_valid_submission_action_old_type() {
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
+    let dummy_proposal_doc = dummy_proposal_doc();
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Proposer).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -60,8 +72,8 @@ async fn test_valid_submission_action_old_type() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -74,7 +86,7 @@ async fn test_valid_submission_action_old_type() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(proposal_doc).unwrap();
+    provider.add_document(dummy_proposal_doc).unwrap();
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid, "{:?}", doc.problem_report());
 }
@@ -142,9 +154,11 @@ async fn test_invalid_submission_action() {
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
 
+    let dummy_proposal_doc = dummy_proposal_doc();
+    let mut provider = TestCatalystSignedDocumentProvider::default();
+    provider.add_document(dummy_proposal_doc.clone()).unwrap();
+
     // corrupted JSON
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let uuid_v7 = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -154,8 +168,8 @@ async fn test_invalid_submission_action() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -165,14 +179,10 @@ async fn test_invalid_submission_action() {
         .unwrap()
         .build();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(proposal_doc).unwrap();
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
 
     // empty content
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
     let uuid_v7 = UuidV7::new();
     let doc = Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -182,8 +192,8 @@ async fn test_invalid_submission_action() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -191,8 +201,6 @@ async fn test_invalid_submission_action() {
         .unwrap()
         .build();
 
-    let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(proposal_doc).unwrap();
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
 }

@@ -10,12 +10,39 @@ use crate::common::create_dummy_key_pair;
 
 mod common;
 
+fn dummy_proposal_doc() -> CatalystSignedDocument {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": deprecated::PROPOSAL_DOCUMENT_UUID_TYPE,
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build()
+}
+
+fn dummy_comment_template_doc() -> CatalystSignedDocument {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": deprecated::COMMENT_TEMPLATE_UUID_TYPE,
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build()
+}
+
 #[tokio::test]
 async fn test_valid_comment_doc() {
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
+    let dummy_proposal_doc = dummy_proposal_doc();
+    let dummy_template_doc = dummy_comment_template_doc();
+
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -27,12 +54,12 @@ async fn test_valid_comment_doc() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
+              "id": dummy_template_doc.doc_id().unwrap(),
+              "ver": dummy_template_doc.doc_ver().unwrap()
             },
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap() ,
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             }
         }))
         .unwrap()
@@ -43,8 +70,8 @@ async fn test_valid_comment_doc() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(template_doc).unwrap();
-    provider.add_document(proposal_doc).unwrap();
+    provider.add_document(dummy_template_doc).unwrap();
+    provider.add_document(dummy_proposal_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
@@ -53,10 +80,8 @@ async fn test_valid_comment_doc() {
 
 #[tokio::test]
 async fn test_valid_comment_doc_old_type() {
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
+    let dummy_proposal_doc = dummy_proposal_doc();
+    let dummy_template_doc = dummy_comment_template_doc();
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let uuid_v7 = UuidV7::new();
@@ -69,12 +94,12 @@ async fn test_valid_comment_doc_old_type() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
+              "id": dummy_template_doc.doc_id().unwrap(),
+              "ver": dummy_template_doc.doc_ver().unwrap()
             },
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             }
         }))
         .unwrap()
@@ -85,8 +110,8 @@ async fn test_valid_comment_doc_old_type() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(template_doc).unwrap();
-    provider.add_document(proposal_doc).unwrap();
+    provider.add_document(dummy_template_doc).unwrap();
+    provider.add_document(dummy_proposal_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 
@@ -95,10 +120,8 @@ async fn test_valid_comment_doc_old_type() {
 
 #[tokio::test]
 async fn test_valid_comment_doc_with_reply() {
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
+    let dummy_proposal_doc = dummy_proposal_doc();
+    let dummy_template_doc = dummy_comment_template_doc();
 
     let comment_doc_id = UuidV7::new();
     let comment_doc_ver = UuidV7::new();
@@ -108,10 +131,13 @@ async fn test_valid_comment_doc_with_reply() {
             "id": comment_doc_id,
             "ver": comment_doc_ver,
             "type": doc_types::PROPOSAL_COMMENT.clone(),
-            "template": { "id": template_doc_id.to_string(), "ver": template_doc_ver.to_string() },
+            "template": {
+                "id": dummy_template_doc.doc_id().unwrap(),
+                "ver": dummy_template_doc.doc_ver().unwrap()
+            },
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             },
         }))
         .unwrap()
@@ -128,12 +154,12 @@ async fn test_valid_comment_doc_with_reply() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
+                "id": dummy_template_doc.doc_id().unwrap(),
+                "ver": dummy_template_doc.doc_ver().unwrap()
             },
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": dummy_proposal_doc.doc_id().unwrap(),
+                "ver": dummy_proposal_doc.doc_ver().unwrap()
             },
             "reply": {
                 "id": comment_doc_id,
@@ -146,21 +172,18 @@ async fn test_valid_comment_doc_with_reply() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(template_doc).unwrap();
-    provider.add_document(proposal_doc).unwrap();
+    provider.add_document(dummy_template_doc).unwrap();
+    provider.add_document(dummy_proposal_doc).unwrap();
     provider.add_document(comment_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
-
     assert!(is_valid);
 }
 
 #[tokio::test]
 async fn test_invalid_comment_doc() {
-    let (proposal_doc, ..) =
-        common::create_dummy_doc(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-    let (template_doc, template_doc_id, template_doc_ver) =
-        common::create_dummy_doc(deprecated::COMMENT_TEMPLATE_UUID_TYPE).unwrap();
+    let dummy_proposal_doc = dummy_proposal_doc();
+    let dummy_template_doc = dummy_comment_template_doc();
 
     let uuid_v7 = UuidV7::new();
     let doc = Builder::new()
@@ -171,8 +194,8 @@ async fn test_invalid_comment_doc() {
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
+              "id": dummy_template_doc.doc_id().unwrap(),
+              "ver": dummy_template_doc.doc_ver().unwrap()
             },
             // without ref
             "ref": serde_json::Value::Null
@@ -183,8 +206,8 @@ async fn test_invalid_comment_doc() {
         .build();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(template_doc).unwrap();
-    provider.add_document(proposal_doc).unwrap();
+    provider.add_document(dummy_template_doc).unwrap();
+    provider.add_document(dummy_proposal_doc).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
 

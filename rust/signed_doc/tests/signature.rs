@@ -40,7 +40,17 @@ async fn single_signature_validation_test() {
     );
 
     // case: missing signatures
-    let (unsigned_doc, ..) = common::create_dummy_doc(UuidV4::new().into()).unwrap();
+    let unsigned_doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": UuidV4::new(),
+        }))
+        .unwrap()
+        .with_json_content(serde_json::json!({}))
+        .unwrap()
+        .build();
     assert!(!validator::validate_signatures(&unsigned_doc, &provider)
         .await
         .unwrap());
