@@ -10,6 +10,7 @@ use crate::common::create_dummy_key_pair;
 
 mod common;
 
+#[allow(clippy::unwrap_used)]
 fn dummy_proposal_doc() -> CatalystSignedDocument {
     Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -19,12 +20,13 @@ fn dummy_proposal_doc() -> CatalystSignedDocument {
             "type": deprecated::PROPOSAL_DOCUMENT_UUID_TYPE,
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap()
 }
 
+#[allow(clippy::unwrap_used)]
 fn dummy_comment_template_doc() -> CatalystSignedDocument {
     Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -34,7 +36,7 @@ fn dummy_comment_template_doc() -> CatalystSignedDocument {
             "type": deprecated::COMMENT_TEMPLATE_UUID_TYPE,
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap()
@@ -65,7 +67,7 @@ async fn test_valid_comment_doc() {
             }
         }))
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
@@ -106,7 +108,7 @@ async fn test_valid_comment_doc_old_type() {
             }
         }))
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
@@ -145,7 +147,7 @@ async fn test_valid_comment_doc_with_reply() {
             },
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap();
@@ -172,7 +174,7 @@ async fn test_valid_comment_doc_with_reply() {
             }
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap();
@@ -206,7 +208,7 @@ async fn test_invalid_comment_doc() {
             // without ref
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap();

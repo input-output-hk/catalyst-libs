@@ -31,7 +31,7 @@ async fn single_signature_validation_test() {
     let signed_doc = Builder::new()
         .with_json_metadata(metadata())
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
@@ -63,7 +63,7 @@ async fn single_signature_validation_test() {
             "type": UuidV4::new(),
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap();
@@ -82,7 +82,7 @@ async fn multiple_signatures_validation_test() {
     let signed_doc = Builder::new()
         .with_json_metadata(metadata())
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
         .unwrap()

@@ -8,6 +8,7 @@ use crate::common::create_dummy_key_pair;
 
 mod common;
 
+#[allow(clippy::unwrap_used)]
 fn dummy_proposal_template() -> CatalystSignedDocument {
     Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -17,7 +18,7 @@ fn dummy_proposal_template() -> CatalystSignedDocument {
             "type": doc_types::deprecated::PROPOSAL_TEMPLATE_UUID_TYPE,
         }))
         .unwrap()
-        .with_json_content(serde_json::json!({}))
+        .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
         .unwrap()
@@ -42,7 +43,7 @@ async fn test_valid_proposal_doc() {
             },
         }))
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
@@ -77,7 +78,7 @@ async fn test_valid_proposal_doc_old_type() {
             },
         }))
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
@@ -113,7 +114,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
             },
         }))
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
@@ -141,7 +142,7 @@ async fn test_invalid_proposal_doc() {
             // without specifying template id
         }))
         .unwrap()
-        .with_json_content(serde_json::Value::Null)
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()

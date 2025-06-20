@@ -66,7 +66,7 @@ impl Cli {
                 // Start with no signatures.
                 let signed_doc = Builder::new()
                     .with_json_metadata(metadata)?
-                    .with_json_content(json_doc)?
+                    .with_json_content(&json_doc)?
                     .build()?;
                 println!(
                     "report {}",

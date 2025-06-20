@@ -8,14 +8,19 @@ use crate::{
 };
 
 /// Catalyst Signed Document Builder.
-pub struct Builder;
+/// Its a type sage state machine which iterates typesafly during different stages of the
+/// Catalyst Signed Document build process:
+/// Setting Metadata -> Setting Content -> Setting Signatures
+pub type Builder = MetadataBuilder;
 
+/// Only `Metadata` builder part
 #[derive(Default)]
 pub struct MetadataBuilder {
     /// metadata
     metadata: Metadata,
 }
 
+/// Only `Content` builder part
 #[derive(Default)]
 pub struct ContentBuilder {
     /// previous builder
@@ -24,6 +29,7 @@ pub struct ContentBuilder {
     content: Content,
 }
 
+/// Only `Signatures` builder part
 #[derive(Default)]
 pub struct SignaturesBuilder {
     /// previous builder
@@ -32,15 +38,13 @@ pub struct SignaturesBuilder {
     signatures: Signatures,
 }
 
-impl Builder {
+impl MetadataBuilder {
     /// Start building a signed document
     #[must_use]
     pub fn new() -> MetadataBuilder {
         MetadataBuilder::default()
     }
-}
 
-impl MetadataBuilder {
     /// Set document metadata in JSON format
     /// Collect problem report if some fields are missing.
     ///
@@ -71,7 +75,7 @@ impl ContentBuilder {
     ///  - Cannot serialize provided JSON
     ///  - Compression failure
     pub fn with_json_content(
-        mut self, json: serde_json::Value,
+        mut self, json: &serde_json::Value,
     ) -> anyhow::Result<SignaturesBuilder> {
         anyhow::ensure!(
             self.prev.metadata.content_type()? == ContentType::Json,
@@ -118,8 +122,7 @@ impl SignaturesBuilder {
     ///
     /// # Errors:
     ///  - CBOR encoding/decoding failures
-    ///  - Document 
-    #[must_use]
+    ///  - Document
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
         let doc = build_document(
             &self.prev.prev.metadata,
@@ -150,7 +153,7 @@ fn build_document(
     // empty unprotected headers
     e.map(0)?;
     // content
-    e.encode(&content)?;
+    e.encode(content)?;
     // signatures
     e.encode(signatures)?;
     CatalystSignedDocument::try_from(e.into_writer().as_slice())
