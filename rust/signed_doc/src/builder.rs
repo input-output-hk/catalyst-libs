@@ -117,23 +117,17 @@ impl SignaturesBuilder {
         Ok(self)
     }
 
-    /// Build a signed document with the collected error report.
-    /// Could provide an invalid document.
+    /// Build a signed document. At this stage document must be 100% valid.
     ///
     /// # Errors:
-    ///  - CBOR encoding/decoding failures
-    ///  - Document
+    ///  - CBOR encoding/decoding failures (should never happen, if it happens means
+    ///    something wrong)
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
         let doc = build_document(
             &self.prev.prev.metadata,
             &self.prev.content,
             &self.signatures,
         )?;
-        ensure!(
-            !doc.problem_report().is_problematic(),
-            "{:?}",
-            doc.problem_report()
-        );
         Ok(doc)
     }
 }
