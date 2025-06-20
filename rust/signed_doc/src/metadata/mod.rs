@@ -8,7 +8,7 @@ use std::{
 mod content_encoding;
 mod content_type;
 pub(crate) mod doc_type;
-mod document_ref;
+mod document_refs;
 mod section;
 mod supported_field;
 pub(crate) mod utils;
@@ -18,7 +18,7 @@ pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 use coset::CborSerializable;
 pub use doc_type::DocType;
-pub use document_ref::DocumentRef;
+pub use document_refs::{DocLocator, DocumentRef, DocumentRefs};
 use minicbor::{Decode, Decoder};
 pub use section::Section;
 use strum::IntoDiscriminant as _;
