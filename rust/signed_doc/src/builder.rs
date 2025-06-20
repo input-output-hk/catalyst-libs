@@ -7,8 +7,8 @@ use crate::{
 };
 
 /// Catalyst Signed Document Builder.
-/// Its a type sage state machine which iterates typesafely during different stages of the
-/// Catalyst Signed Document build process:
+/// Its a type sage state machine which iterates type safely during different stages of
+/// the Catalyst Signed Document build process:
 /// Setting Metadata -> Setting Content -> Setting Signatures
 pub type Builder = MetadataBuilder;
 
