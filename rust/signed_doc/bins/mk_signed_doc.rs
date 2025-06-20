@@ -67,7 +67,7 @@ impl Cli {
                 let signed_doc = Builder::new()
                     .with_json_metadata(metadata)?
                     .with_json_content(json_doc)?
-                    .build();
+                    .build()?;
                 println!(
                     "report {}",
                     serde_json::to_string(&signed_doc.problem_report())?
@@ -85,7 +85,7 @@ impl Cli {
                         |message| sk.sign::<()>(&message).to_bytes().to_vec(),
                         kid.clone(),
                     )?
-                    .build();
+                    .build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {

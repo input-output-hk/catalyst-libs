@@ -35,7 +35,8 @@ async fn single_signature_validation_test() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     assert!(!signed_doc.problem_report().is_problematic());
 
@@ -64,7 +65,8 @@ async fn single_signature_validation_test() {
         .unwrap()
         .with_json_content(serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
     assert!(!validator::validate_signatures(&unsigned_doc, &provider)
         .await
         .unwrap());
@@ -88,7 +90,8 @@ async fn multiple_signatures_validation_test() {
         .unwrap()
         .add_signature(|m| sk3.sign(&m).to_vec(), kid3.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     assert!(!signed_doc.problem_report().is_problematic());
 

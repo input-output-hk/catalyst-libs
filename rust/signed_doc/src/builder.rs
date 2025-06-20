@@ -90,30 +90,26 @@ impl Builder {
     /// Build a signed document with the collected error report.
     /// Could provide an invalid document.
     ///
-    /// # Panics
-    ///  Should not panic
+    /// # Errors:
+    ///  - CBOR encoding/decoding failures
+    ///  -
     #[must_use]
-    #[allow(
-        clippy::unwrap_used,
-        reason = "At this point all the data MUST be correctly encodable, and the final prepared bytes MUST be correctly decodable as a CatalystSignedDocument object."
-    )]
-    pub fn build(self) -> CatalystSignedDocument {
+    pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
         let mut e = minicbor::Encoder::new(Vec::new());
         // COSE_Sign tag
         // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
-        e.tag(minicbor::data::Tag::new(98)).unwrap();
-        e.array(4).unwrap();
+        e.tag(minicbor::data::Tag::new(98))?;
+        e.array(4)?;
         // protected headers (metadata fields)
-        e.bytes(minicbor::to_vec(&self.metadata).unwrap().as_slice())
-            .unwrap();
+        e.bytes(minicbor::to_vec(&self.metadata)?.as_slice())?;
         // empty unprotected headers
-        e.map(0).unwrap();
+        e.map(0)?;
         // content
-        e.encode(&self.content).unwrap();
+        e.encode(&self.content)?;
         // signatures
-        e.encode(self.signatures).unwrap();
+        e.encode(self.signatures)?;
 
-        CatalystSignedDocument::try_from(e.into_writer().as_slice()).unwrap()
+        CatalystSignedDocument::try_from(e.into_writer().as_slice())
     }
 }
 
@@ -174,7 +170,7 @@ pub(crate) mod tests {
         /// Build a signed document with the collected error report.
         /// Could provide an invalid document.
         pub(crate) fn build(self) -> super::CatalystSignedDocument {
-            self.0.build()
+            self.0.build().unwrap()
         }
     }
 }

@@ -22,6 +22,7 @@ fn dummy_proposal_doc() -> CatalystSignedDocument {
         .with_json_content(serde_json::json!({}))
         .unwrap()
         .build()
+        .unwrap()
 }
 
 fn dummy_comment_template_doc() -> CatalystSignedDocument {
@@ -36,6 +37,7 @@ fn dummy_comment_template_doc() -> CatalystSignedDocument {
         .with_json_content(serde_json::json!({}))
         .unwrap()
         .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -67,7 +69,8 @@ async fn test_valid_comment_doc() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_template_doc).unwrap();
@@ -107,7 +110,8 @@ async fn test_valid_comment_doc_old_type() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_template_doc).unwrap();
@@ -143,7 +147,8 @@ async fn test_valid_comment_doc_with_reply() {
         .unwrap()
         .with_json_content(serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let uuid_v7 = UuidV7::new();
     let doc = Builder::new()
@@ -169,7 +174,8 @@ async fn test_valid_comment_doc_with_reply() {
         .unwrap()
         .with_json_content(serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_template_doc).unwrap();
@@ -203,7 +209,8 @@ async fn test_invalid_comment_doc() {
         .unwrap()
         .with_json_content(serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_template_doc).unwrap();

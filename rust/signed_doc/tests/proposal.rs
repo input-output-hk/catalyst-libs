@@ -20,6 +20,7 @@ fn dummy_proposal_template() -> CatalystSignedDocument {
         .with_json_content(serde_json::json!({}))
         .unwrap()
         .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -45,7 +46,8 @@ async fn test_valid_proposal_doc() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_template_doc).unwrap();
@@ -79,7 +81,8 @@ async fn test_valid_proposal_doc_old_type() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_template_doc).unwrap();
@@ -114,7 +117,8 @@ async fn test_valid_proposal_doc_with_empty_provider() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
@@ -142,7 +146,8 @@ async fn test_invalid_proposal_doc() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let provider = TestCatalystSignedDocumentProvider::default();
 

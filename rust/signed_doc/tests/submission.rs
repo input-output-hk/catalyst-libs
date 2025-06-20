@@ -22,6 +22,7 @@ fn dummy_proposal_doc() -> CatalystSignedDocument {
         .with_json_content(serde_json::json!({}))
         .unwrap()
         .build()
+        .unwrap()
 }
 
 #[tokio::test]
@@ -49,7 +50,8 @@ async fn test_valid_submission_action() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_proposal_doc).unwrap();
@@ -83,7 +85,8 @@ async fn test_valid_submission_action_old_type() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(dummy_proposal_doc).unwrap();
@@ -117,7 +120,8 @@ async fn test_valid_submission_action_with_empty_provider() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let provider = TestCatalystSignedDocumentProvider::default();
 
@@ -148,7 +152,8 @@ async fn test_invalid_submission_action() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let provider = TestCatalystSignedDocumentProvider::default();
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
@@ -177,7 +182,8 @@ async fn test_invalid_submission_action() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
@@ -199,7 +205,8 @@ async fn test_invalid_submission_action() {
         .unwrap()
         .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
