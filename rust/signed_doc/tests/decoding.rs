@@ -1,6 +1,6 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
+use catalyst_signed_doc::{doc_types::deprecated, providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use coset::{CborSerializable, TaggedCborSerializable};
@@ -13,7 +13,7 @@ mod common;
 async fn catalyst_signed_doc_parameters_aliases_test() {
     catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
     catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
-        Some(doc_types::PROPOSAL_UUID_TYPE.try_into().unwrap()),
+        Some(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
         None,
     ))
     .await;

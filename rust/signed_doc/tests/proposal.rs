@@ -15,7 +15,7 @@ async fn test_valid_proposal_doc() {
         serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_DOC_TYPE.clone(),
+            "type": doc_types::PROPOSAL.clone(),
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
@@ -79,7 +79,7 @@ async fn test_valid_proposal_doc_with_empty_provider() {
         serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_DOC_TYPE.clone(),
+            "type": doc_types::PROPOSAL.clone(),
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             "template": {
@@ -106,7 +106,7 @@ async fn test_invalid_proposal_doc() {
         serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_DOC_TYPE.clone(),
+            "type": doc_types::PROPOSAL.clone(),
             "id": uuid_v7.to_string(),
             "ver": uuid_v7.to_string(),
             // without specifying template id
