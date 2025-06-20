@@ -5,6 +5,7 @@ use std::fmt::{self, Display};
 use std::{cmp, convert::Infallible};
 
 use catalyst_types::uuid::UuidV7;
+use serde::Deserialize;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
@@ -13,7 +14,8 @@ use crate::{
 };
 
 /// COSE label. May be either a signed integer or a string.
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, serde::Deserialize)]
+#[serde(untagged, expecting = "8bit unsigned integer or text")]
 enum Label<'a> {
     /// Integer label.
     ///
@@ -44,12 +46,10 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
         match d.datatype()? {
             minicbor::data::Type::U8 => d.u8().map(Self::U8),
             minicbor::data::Type::String => d.str().map(Self::Str),
-            _ => {
-                Err(minicbor::decode::Error::message(
-                    "Datatype is neither 8bit signed integer nor text",
-                )
-                .at(d.position()))
-            },
+            _ => Err(minicbor::decode::Error::message(
+                "Datatype is neither 8bit unsigned integer nor text",
+            )
+            .at(d.position())),
         }
     }
 }
@@ -125,7 +125,7 @@ impl SupportedLabel {
     /// Try to convert from an arbitrary COSE [`Label`].
     fn from_cose(label: Label<'_>) -> Option<Self> {
         match label {
-            Label::U8(3) => Some(Self::ContentType),
+            Label::U8(3) | Label::Str("content-type") => Some(Self::ContentType),
             Label::Str("id") => Some(Self::Id),
             Label::Str("ref") => Some(Self::Ref),
             Label::Str("ver") => Some(Self::Ver),
@@ -137,7 +137,7 @@ impl SupportedLabel {
             Label::Str("parameters" | "brand_id" | "campaign_id" | "category_id") => {
                 Some(Self::Parameters)
             },
-            Label::Str("Content-Encoding") => Some(Self::ContentEncoding),
+            Label::Str("content-encoding") => Some(Self::ContentEncoding),
             _ => None,
         }
     }
@@ -155,7 +155,7 @@ impl SupportedLabel {
             Self::Section => Label::Str("section"),
             Self::Template => Label::Str("template"),
             Self::Parameters => Label::Str("parameters"),
-            Self::ContentEncoding => Label::Str("Content-Encoding"),
+            Self::ContentEncoding => Label::Str("content-encoding"),
         }
     }
 }
@@ -163,6 +163,41 @@ impl SupportedLabel {
 impl Display for SupportedLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         Display::fmt(&self.to_cose(), f)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for SupportedLabel {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let l = Label::deserialize(d)?;
+        Self::from_cose(l).ok_or_else(|| {
+            serde::de::Error::custom(format!("Not a supported metadata label ({l})"))
+        })
+    }
+}
+
+impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
+    type Value = SupportedField;
+
+    fn deserialize<D: serde::Deserializer<'de>>(self, d: D) -> Result<Self::Value, D::Error> {
+        match self {
+            SupportedLabel::ContentType => {
+                Deserialize::deserialize(d).map(SupportedField::ContentType)
+            },
+            SupportedLabel::Id => Deserialize::deserialize(d).map(SupportedField::Id),
+            SupportedLabel::Ref => Deserialize::deserialize(d).map(SupportedField::Ref),
+            SupportedLabel::Ver => Deserialize::deserialize(d).map(SupportedField::Ver),
+            SupportedLabel::Type => Deserialize::deserialize(d).map(SupportedField::Type),
+            SupportedLabel::Reply => Deserialize::deserialize(d).map(SupportedField::Reply),
+            SupportedLabel::Collabs => Deserialize::deserialize(d).map(SupportedField::Collabs),
+            SupportedLabel::Section => Deserialize::deserialize(d).map(SupportedField::Section),
+            SupportedLabel::Template => Deserialize::deserialize(d).map(SupportedField::Template),
+            SupportedLabel::Parameters => {
+                Deserialize::deserialize(d).map(SupportedField::Parameters)
+            },
+            SupportedLabel::ContentEncoding => {
+                Deserialize::deserialize(d).map(SupportedField::ContentEncoding)
+            },
+        }
     }
 }
 
@@ -195,15 +230,13 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
 
         let field = match key {
             SupportedLabel::ContentType => todo!(),
-            SupportedLabel::Id => {
-                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                    .map(Self::Id)
-            },
+            SupportedLabel::Id => d
+                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                .map(Self::Id),
             SupportedLabel::Ref => todo!(),
-            SupportedLabel::Ver => {
-                d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                    .map(Self::Ver)
-            },
+            SupportedLabel::Ver => d
+                .decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
+                .map(Self::Ver),
             SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
             SupportedLabel::Reply => todo!(),
             SupportedLabel::Collabs => todo!(),

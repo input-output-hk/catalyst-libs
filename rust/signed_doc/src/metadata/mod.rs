@@ -63,41 +63,69 @@ const CATEGORY_ID_KEY: &str = "category_id";
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct Metadata(BTreeMap<SupportedLabel, SupportedField>);
 
+/// Implements [`serde::de::Visitor`], so that [`Metadata`] can implement [`serde::Deserialize`].
+struct MetadataDeserializeContext;
+
+impl<'de> serde::de::Visitor<'de> for MetadataDeserializeContext {
+    type Value = Vec<SupportedField>;
+
+    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        f.write_str("Catalyst Signed Document metadata key-value pairs")
+    }
+
+    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut d: A) -> Result<Self::Value, A::Error> {
+        let mut res = Vec::with_capacity(d.size_hint().unwrap_or(0));
+        while let Some(k) = d.next_key::<SupportedLabel>()? {
+            let v = d.next_value_seed(k)?;
+            res.push(v);
+        }
+        Ok(res)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Metadata {
+    fn deserialize<D: serde::Deserializer<'de>>(d: D) -> Result<Self, D::Error> {
+        let fields = d.deserialize_map(MetadataDeserializeContext)?;
+        let report = ProblemReport::new("Metadata deserialization");
+        let res = Self::from_metadata_fields(fields, &report);
+        if report.is_problematic() {
+            let mut err = anyhow::anyhow!("Invalid metadata");
+            if let Ok(report_json) = serde_json::to_string(&report) {
+                err = err.context(report_json);
+            }
+            Err(serde::de::Error::custom(err))
+        } else {
+            Ok(res)
+        }
+    }
+}
+
 /// An actual representation of all metadata fields.
 // TODO: this is maintained as an implementation of `serde` and `coset` for `Metadata`
 //       and should be removed in case `serde` and `coset` are deprecated completely.
-#[derive(Clone, Debug, PartialEq, serde::Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Default)]
 pub(crate) struct InnerMetadata {
     /// Document Type, list of `UUIDv4`.
-    #[serde(rename = "type")]
     doc_type: Option<DocType>,
     /// Document ID `UUIDv7`.
     id: Option<UuidV7>,
     /// Document Version `UUIDv7`.
     ver: Option<UuidV7>,
     /// Document Payload Content Type.
-    #[serde(rename = "content-type")]
     content_type: Option<ContentType>,
     /// Document Payload Content Encoding.
-    #[serde(rename = "content-encoding")]
     content_encoding: Option<ContentEncoding>,
     /// Reference to the latest document.
-    #[serde(rename = "ref", skip_serializing_if = "Option::is_none")]
     doc_ref: Option<DocumentRef>,
     /// Reference to the document template.
-    #[serde(skip_serializing_if = "Option::is_none")]
     template: Option<DocumentRef>,
     /// Reference to the document reply.
-    #[serde(skip_serializing_if = "Option::is_none")]
     reply: Option<DocumentRef>,
     /// Reference to the document section.
-    #[serde(skip_serializing_if = "Option::is_none")]
     section: Option<Section>,
     /// Reference to the document collaborators. Collaborator type is TBD.
-    #[serde(default = "Vec::new", skip_serializing_if = "Vec::is_empty")]
     collabs: Vec<String>,
     /// Reference to the parameters document.
-    #[serde(skip_serializing_if = "Option::is_none")]
     parameters: Option<DocumentRef>,
 }
 
@@ -233,30 +261,38 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_metadata_fields(metadata: InnerMetadata, report: &ProblemReport) -> Self {
-        if metadata.doc_type.is_none() {
-            report.missing_field("type", "Missing type field in COSE protected header");
-        }
-        if metadata.id.is_none() {
-            report.missing_field("id", "Missing id field in COSE protected header");
-        }
-        if metadata.ver.is_none() {
-            report.missing_field("ver", "Missing ver field in COSE protected header");
+    pub(crate) fn from_metadata_fields<I>(fields: I, report: &ProblemReport) -> Self
+    where
+        I: IntoIterator<Item = SupportedField>,
+    {
+        const REPORT_CONTEXT: &str = "Metadata creation";
+
+        let mut metadata = Metadata(BTreeMap::new());
+        for v in fields {
+            let k = v.discriminant();
+            if metadata.0.insert(k, v).is_some() {
+                report.duplicate_field(
+                    &k.to_string(),
+                    "Duplicate metadata fields are not allowed",
+                    REPORT_CONTEXT,
+                );
+            }
         }
 
-        if metadata.content_type.is_none() {
-            report.missing_field(
-                "content type",
-                "Missing content_type field in COSE protected header",
-            );
+        if metadata.doc_type().is_err() {
+            report.missing_field("type", REPORT_CONTEXT);
+        }
+        if metadata.doc_id().is_err() {
+            report.missing_field("id", REPORT_CONTEXT);
+        }
+        if metadata.doc_ver().is_err() {
+            report.missing_field("ver", REPORT_CONTEXT);
+        }
+        if metadata.content_type().is_err() {
+            report.missing_field("content-type", REPORT_CONTEXT);
         }
 
-        Self(
-            metadata
-                .into_iter()
-                .map(|field| (field.discriminant(), field))
-                .collect(),
-        )
+        metadata
     }
 
     /// Converting COSE Protected Header to Metadata.
@@ -264,7 +300,7 @@ impl Metadata {
         protected: &coset::ProtectedHeader, context: &mut DecodeContext,
     ) -> Self {
         let metadata = InnerMetadata::from_protected_header(protected, context);
-        Self::from_metadata_fields(metadata, context.report)
+        Self::from_metadata_fields(metadata.into_iter(), context.report)
     }
 }
 

@@ -1,5 +1,5 @@
 //! Catalyst Signed Document Builder.
-use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
+use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
     signature::{tbs_data, Signature},
@@ -40,8 +40,7 @@ impl Builder {
     /// # Errors
     /// - Fails if it is invalid metadata fields JSON object.
     pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
-        let metadata = serde_json::from_value(json)?;
-        self.metadata = Metadata::from_metadata_fields(metadata, &ProblemReport::new(""));
+        self.metadata = serde_json::from_value(json)?;
         Ok(self)
     }
 
