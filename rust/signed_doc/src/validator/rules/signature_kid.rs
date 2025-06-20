@@ -47,7 +47,7 @@ mod tests {
     use ed25519_dalek::ed25519::signature::Signer;
 
     use super::*;
-    use crate::{metadata::SupportedField, Builder, ContentType};
+    use crate::{builder::tests::Builder, metadata::SupportedField, ContentType};
 
     #[tokio::test]
     async fn signature_kid_rule_test() {
@@ -64,8 +64,7 @@ mod tests {
             .with_metadata_field(SupportedField::Ver(UuidV7::new()))
             .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
             .with_metadata_field(SupportedField::ContentType(ContentType::Json))
-            .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
-            .unwrap()
+            .with_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
             .add_signature(|m| sk.sign(&m).to_vec(), kid)
             .unwrap()
             .build();

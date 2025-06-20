@@ -42,7 +42,7 @@ impl SectionRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{metadata::SupportedField, Builder};
+    use crate::{builder::tests::Builder, metadata::SupportedField};
 
     #[tokio::test]
     async fn section_rule_specified_test() {

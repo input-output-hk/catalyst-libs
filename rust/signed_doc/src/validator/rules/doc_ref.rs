@@ -85,8 +85,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        metadata::SupportedField, providers::tests::TestCatalystSignedDocumentProvider, Builder,
-        DocumentRef,
+        builder::tests::Builder, metadata::SupportedField,
+        providers::tests::TestCatalystSignedDocumentProvider, DocumentRef,
     };
 
     #[tokio::test]

@@ -49,7 +49,7 @@ impl ContentEncodingRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{metadata::SupportedField, Builder};
+    use crate::{builder::tests::Builder, metadata::SupportedField};
 
     #[tokio::test]
     async fn content_encoding_rule_test() {
@@ -62,17 +62,11 @@ mod tests {
 
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
-            .with_decoded_content(vec![1, 2, 3])
-            .unwrap()
+            .with_content(content_encoding.encode(&[1, 2, 3]).unwrap())
             .build();
         assert!(rule.check(&doc).await.unwrap());
 
         // empty content (empty bytes) could not be brotli decoded
-        let doc = Builder::new()
-            .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
-            .build();
-        assert!(!rule.check(&doc).await.unwrap());
-
         let doc = Builder::new()
             .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();

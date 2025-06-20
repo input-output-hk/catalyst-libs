@@ -45,13 +45,6 @@ impl Builder {
         Ok(self)
     }
 
-    /// Add provided `SupportedField` into the `Metadata`.
-    #[cfg(test)]
-    pub(crate) fn with_metadata_field(mut self, field: crate::metadata::SupportedField) -> Self {
-        self.metadata.add_field(field);
-        self
-    }
-
     /// Set decoded (original) document content bytes
     ///
     /// # Errors
@@ -63,15 +56,6 @@ impl Builder {
             self.content = decoded.into();
         }
         Ok(self)
-    }
-
-    /// Set the content (COSE payload) to the document builder.
-    /// It will set the content as its provided, make sure by yourself that `content-type`
-    /// and `content-encoding` fields are aligned with the provided content bytes.
-    #[allow(dead_code)]
-    pub(crate) fn with_content(mut self, content: Vec<u8>) -> Self {
-        self.content = content.into();
-        self
     }
 
     /// Add a signature to the document
@@ -130,6 +114,58 @@ impl From<&CatalystSignedDocument> for Builder {
             metadata: value.inner.metadata.clone(),
             content: value.inner.content.clone(),
             signatures: value.inner.signatures.clone(),
+        }
+    }
+}
+
+#[cfg(test)]
+pub(crate) mod tests {
+    /// A test version of the builder, which allows to build a not fully valid catalyst
+    /// signed document
+    pub(crate) struct Builder(super::Builder);
+
+    impl Default for Builder {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
+    impl Builder {
+        /// Start building a signed document
+        #[must_use]
+        pub(crate) fn new() -> Self {
+            Self(super::Builder::new())
+        }
+
+        /// Add provided `SupportedField` into the `Metadata`.
+        pub(crate) fn with_metadata_field(
+            mut self, field: crate::metadata::SupportedField,
+        ) -> Self {
+            self.0.metadata.add_field(field);
+            self
+        }
+
+        /// Set the content (COSE payload) to the document builder.
+        /// It will set the content as its provided, make sure by yourself that
+        /// `content-type` and `content-encoding` fields are aligned with the
+        /// provided content bytes.
+        pub(crate) fn with_content(mut self, content: Vec<u8>) -> Self {
+            self.0.content = content.into();
+            self
+        }
+
+        /// Add a signature to the document
+        pub(crate) fn add_signature(
+            mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: super::CatalystId,
+        ) -> anyhow::Result<Self> {
+            self.0 = self.0.add_signature(sign_fn, kid)?;
+            Ok(self)
+        }
+
+        /// Build a signed document with the collected error report.
+        /// Could provide an invalid document.
+        pub(crate) fn build(self) -> super::CatalystSignedDocument {
+            self.0.build()
         }
     }
 }

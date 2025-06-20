@@ -188,8 +188,8 @@ mod tests {
 
     use super::*;
     use crate::{
-        metadata::SupportedField, providers::tests::TestCatalystSignedDocumentProvider, Builder,
-        DocumentRef,
+        builder::tests::Builder, metadata::SupportedField,
+        providers::tests::TestCatalystSignedDocumentProvider, DocumentRef,
     };
 
     #[allow(clippy::too_many_lines)]
@@ -216,8 +216,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Ver(valid_template_doc_id))
                 .with_metadata_field(SupportedField::Type(exp_template_type.into()))
                 .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_decoded_content(json_schema.clone())
-                .unwrap()
+                .with_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -227,8 +226,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Ver(another_type_template_doc_id))
                 .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
                 .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_decoded_content(json_schema.clone())
-                .unwrap()
+                .with_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -237,8 +235,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(missing_type_template_doc_id))
                 .with_metadata_field(SupportedField::Ver(missing_content_template_doc_id))
                 .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_decoded_content(json_schema.clone())
-                .unwrap()
+                .with_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -247,8 +244,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Id(missing_content_type_template_doc_id))
                 .with_metadata_field(SupportedField::Ver(missing_content_type_template_doc_id))
                 .with_metadata_field(SupportedField::Type(exp_template_type.into()))
-                .with_decoded_content(json_schema.clone())
-                .unwrap()
+                .with_content(json_schema.clone())
                 .build();
             provider.add_document(ref_doc).unwrap();
 
@@ -267,8 +263,7 @@ mod tests {
                 .with_metadata_field(SupportedField::Ver(invalid_content_template_doc_id))
                 .with_metadata_field(SupportedField::Type(exp_template_type.into()))
                 .with_metadata_field(SupportedField::ContentType(content_type))
-                .with_decoded_content(vec![])
-                .unwrap()
+                .with_content(vec![1, 2, 3])
                 .build();
             provider.add_document(ref_doc).unwrap();
         }
@@ -282,16 +277,12 @@ mod tests {
                 id: valid_template_doc_id,
                 ver: valid_template_doc_id,
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing `template` field, but its required
-        let doc = Builder::new()
-            .with_decoded_content(json_content.clone())
-            .unwrap()
-            .build();
+        let doc = Builder::new().with_content(json_content.clone()).build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing content
@@ -315,8 +306,7 @@ mod tests {
                 id: valid_template_doc_id,
                 ver: valid_template_doc_id,
             }))
-            .with_decoded_content(vec![])
-            .unwrap()
+            .with_content(vec![1, 2, 3])
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -326,8 +316,7 @@ mod tests {
                 id: another_type_template_doc_id,
                 ver: another_type_template_doc_id,
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -337,8 +326,7 @@ mod tests {
                 id: missing_type_template_doc_id,
                 ver: missing_type_template_doc_id,
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -351,8 +339,7 @@ mod tests {
                 id: missing_content_type_template_doc_id,
                 ver: missing_content_type_template_doc_id,
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -362,8 +349,7 @@ mod tests {
                 id: missing_content_template_doc_id,
                 ver: missing_content_template_doc_id,
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -373,8 +359,7 @@ mod tests {
                 id: invalid_content_template_doc_id,
                 ver: invalid_content_template_doc_id,
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
@@ -384,8 +369,7 @@ mod tests {
                 id: UuidV7::new(),
                 ver: UuidV7::new(),
             }))
-            .with_decoded_content(json_content.clone())
-            .unwrap()
+            .with_content(json_content.clone())
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
@@ -405,10 +389,7 @@ mod tests {
 
         // all correct
         let rule = ContentRule::Static(json_schema);
-        let doc = Builder::new()
-            .with_decoded_content(json_content.clone())
-            .unwrap()
-            .build();
+        let doc = Builder::new().with_content(json_content.clone()).build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // missing content
@@ -416,7 +397,7 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded
-        let doc = Builder::new().with_decoded_content(vec![]).unwrap().build();
+        let doc = Builder::new().with_content(vec![1, 2, 3]).build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // defined `template` field which should be absent
@@ -427,8 +408,7 @@ mod tests {
                 id: ref_id,
                 ver: ref_ver,
             }))
-            .with_decoded_content(json_content)
-            .unwrap()
+            .with_content(json_content)
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }

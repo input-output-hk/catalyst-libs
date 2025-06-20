@@ -368,10 +368,11 @@ mod tests {
     use uuid::{Timestamp, Uuid};
 
     use crate::{
+        builder::tests::Builder,
         metadata::SupportedField,
         providers::{tests::TestCatalystSignedDocumentProvider, CatalystSignedDocumentProvider},
         validator::{document_rules_init, validate_id_and_ver},
-        Builder, UuidV7,
+        UuidV7,
     };
 
     #[test]
