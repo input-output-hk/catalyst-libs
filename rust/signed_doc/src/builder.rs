@@ -1,5 +1,4 @@
 //! Catalyst Signed Document Builder.
-use anyhow::ensure;
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
@@ -117,11 +116,10 @@ impl SignaturesBuilder {
         Ok(self)
     }
 
-    /// Build a signed document. At this stage document must be 100% valid.
+    /// Builds a document from the set `metadata`, `content` and `signatures`.
     ///
     /// # Errors:
-    ///  - CBOR encoding/decoding failures (should never happen, if it happens means
-    ///    something wrong)
+    ///  - CBOR encoding/decoding failures
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
         let doc = build_document(
             &self.prev.prev.metadata,
