@@ -5,18 +5,12 @@ pub(crate) mod utils;
 
 use std::{
     collections::HashMap,
-    fmt,
-    sync::LazyLock,
+    sync::{Arc, LazyLock},
     time::{Duration, SystemTime},
 };
 
 use anyhow::Context;
-use catalyst_types::{
-    catalyst_id::{role_index::RoleId, CatalystId},
-    problem_report::ProblemReport,
-    uuid::{Uuid, UuidV4},
-};
-use coset::{CoseSign, CoseSignature};
+use catalyst_types::{catalyst_id::role_index::RoleId, problem_report::ProblemReport};
 use rules::{
     ContentEncodingRule, ContentRule, ContentSchema, ContentTypeRule, ParametersRule, RefRule,
     ReplyRule, Rules, SectionRule, SignatureKidRule,
@@ -24,28 +18,33 @@ use rules::{
 
 use crate::{
     doc_types::{
-        CATEGORY_DOCUMENT_UUID_TYPE, COMMENT_DOCUMENT_UUID_TYPE, COMMENT_TEMPLATE_UUID_TYPE,
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE, PROPOSAL_DOCUMENT_UUID_TYPE,
-        PROPOSAL_TEMPLATE_UUID_TYPE,
+        deprecated::{self},
+        PROPOSAL, PROPOSAL_COMMENT, PROPOSAL_SUBMISSION_ACTION,
     },
+    metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
+    signature::{tbs_data, Signature},
     CatalystSignedDocument, ContentEncoding, ContentType,
 };
 
 /// A table representing a full set or validation rules per document id.
-static DOCUMENT_RULES: LazyLock<HashMap<Uuid, Rules>> = LazyLock::new(document_rules_init);
+static DOCUMENT_RULES: LazyLock<HashMap<DocType, Arc<Rules>>> = LazyLock::new(document_rules_init);
 
-/// Returns an [`UuidV4`] from the provided argument, panicking if the argument is
-/// invalid.
+/// Returns an `DocType` from the provided argument.
+/// Reduce redundant conversion.
+/// This function should be used for hardcoded values, panic if conversion fail.
 #[allow(clippy::expect_used)]
-fn expect_uuidv4<T>(t: T) -> UuidV4
-where T: TryInto<UuidV4, Error: fmt::Debug> {
-    t.try_into().expect("Must be a valid UUID V4")
+pub(crate) fn expect_doc_type<T>(t: T) -> DocType
+where
+    T: TryInto<DocType>,
+    T::Error: std::fmt::Debug,
+{
+    t.try_into().expect("Failed to convert to DocType")
 }
 
 /// `DOCUMENT_RULES` initialization function
 #[allow(clippy::expect_used)]
-fn document_rules_init() -> HashMap<Uuid, Rules> {
+fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
     let mut document_rules_map = HashMap::new();
 
     let proposal_document_rules = Rules {
@@ -57,10 +56,10 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_uuidv4(PROPOSAL_TEMPLATE_UUID_TYPE),
+            exp_template_type: expect_doc_type(deprecated::PROPOSAL_TEMPLATE_UUID_TYPE),
         },
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: expect_doc_type(deprecated::CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::NotSpecified,
@@ -71,8 +70,6 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
     };
 
-    document_rules_map.insert(PROPOSAL_DOCUMENT_UUID_TYPE, proposal_document_rules);
-
     let comment_document_rules = Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
@@ -82,14 +79,14 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: expect_uuidv4(COMMENT_TEMPLATE_UUID_TYPE),
+            exp_template_type: expect_doc_type(deprecated::COMMENT_TEMPLATE_UUID_TYPE),
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: expect_doc_type(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::Specified {
-            exp_reply_type: expect_uuidv4(COMMENT_DOCUMENT_UUID_TYPE),
+            exp_reply_type: expect_doc_type(deprecated::COMMENT_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         section: SectionRule::Specified { optional: true },
@@ -98,7 +95,6 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
             exp: &[RoleId::Role0],
         },
     };
-    document_rules_map.insert(COMMENT_DOCUMENT_UUID_TYPE, comment_document_rules);
 
     let proposal_action_json_schema = jsonschema::options()
         .with_draft(jsonschema::Draft::Draft7)
@@ -119,11 +115,11 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
         content: ContentRule::Static(ContentSchema::Json(proposal_action_json_schema)),
         parameters: ParametersRule::Specified {
-            exp_parameters_type: expect_uuidv4(CATEGORY_DOCUMENT_UUID_TYPE),
+            exp_parameters_type: expect_doc_type(deprecated::CATEGORY_DOCUMENT_UUID_TYPE),
             optional: true,
         },
         doc_ref: RefRule::Specified {
-            exp_ref_type: expect_uuidv4(PROPOSAL_DOCUMENT_UUID_TYPE),
+            exp_ref_type: expect_doc_type(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE),
             optional: false,
         },
         reply: ReplyRule::NotSpecified,
@@ -133,9 +129,25 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         },
     };
 
+    let proposal_rules = Arc::new(proposal_document_rules);
+    let comment_rules = Arc::new(comment_document_rules);
+    let action_rules = Arc::new(proposal_submission_action_rules);
+
+    document_rules_map.insert(PROPOSAL.clone(), Arc::clone(&proposal_rules));
+    document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));
     document_rules_map.insert(
-        PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-        proposal_submission_action_rules,
+        PROPOSAL_SUBMISSION_ACTION.clone(),
+        Arc::clone(&action_rules),
+    );
+
+    // Insert old rules (for backward compatibility)
+    document_rules_map.insert(
+        expect_doc_type(deprecated::COMMENT_DOCUMENT_UUID_TYPE),
+        Arc::clone(&comment_rules),
+    );
+    document_rules_map.insert(
+        expect_doc_type(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE),
+        Arc::clone(&action_rules),
     );
 
     document_rules_map
@@ -164,7 +176,7 @@ where Provider: CatalystSignedDocumentProvider {
         return Ok(false);
     }
 
-    let Some(rules) = DOCUMENT_RULES.get(&doc_type.uuid()) else {
+    let Some(rules) = DOCUMENT_RULES.get(doc_type) else {
         doc.report().invalid_value(
             "`type`",
             &doc.doc_type()?.to_string(),
@@ -281,14 +293,6 @@ where Provider: CatalystSignedDocumentProvider {
 pub async fn validate_signatures(
     doc: &CatalystSignedDocument, provider: &impl VerifyingKeyProvider,
 ) -> anyhow::Result<bool> {
-    let Ok(cose_sign) = doc.as_cose_sign() else {
-        doc.report().other(
-            "Cannot build a COSE sign object",
-            "During encoding signed document as COSE SIGN",
-        );
-        return Ok(false);
-    };
-
     if doc.signatures().is_empty() {
         doc.report().other(
             "Catalyst Signed Document is unsigned",
@@ -299,10 +303,8 @@ pub async fn validate_signatures(
 
     let sign_rules = doc
         .signatures()
-        .cose_signatures_with_kids()
-        .map(|(signature, kid)| {
-            validate_signature(&cose_sign, signature, kid, provider, doc.report())
-        });
+        .iter()
+        .map(|sign| validate_signature(doc, sign, provider, doc.report()));
 
     let res = futures::future::join_all(sign_rules)
         .await
@@ -316,12 +318,11 @@ pub async fn validate_signatures(
 
 /// A single signature validation function
 async fn validate_signature<Provider>(
-    cose_sign: &CoseSign, signature: &CoseSignature, kid: &CatalystId, provider: &Provider,
-    report: &ProblemReport,
+    doc: &CatalystSignedDocument, sign: &Signature, provider: &Provider, report: &ProblemReport,
 ) -> anyhow::Result<bool>
-where
-    Provider: VerifyingKeyProvider,
-{
+where Provider: VerifyingKeyProvider {
+    let kid = sign.kid();
+
     let Some(pk) = provider.try_get_key(kid).await? else {
         report.other(
             &format!("Missing public key for {kid}."),
@@ -330,11 +331,18 @@ where
         return Ok(false);
     };
 
-    let tbs_data = cose_sign.tbs_data(&[], signature);
-    let Ok(signature_bytes) = signature.signature.as_slice().try_into() else {
+    let Ok(tbs_data) = tbs_data(kid, doc.doc_meta(), doc.content()) else {
+        doc.report().other(
+            "Cannot build a COSE to be signed data",
+            "During creating COSE to be signed data",
+        );
+        return Ok(false);
+    };
+
+    let Ok(signature_bytes) = sign.signature().try_into() else {
         report.invalid_value(
             "cose signature",
-            &format!("{}", signature.signature.len()),
+            &format!("{}", sign.signature().len()),
             &format!("must be {}", ed25519_dalek::Signature::BYTE_SIZE),
             "During encoding cose signature to bytes",
         );

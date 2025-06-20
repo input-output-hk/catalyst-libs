@@ -40,12 +40,6 @@ impl FromStr for Section {
     }
 }
 
-impl From<Section> for Value {
-    fn from(value: Section) -> Self {
-        Value::Text(value.to_string())
-    }
-}
-
 impl TryFrom<&Value> for Section {
     type Error = anyhow::Error;
 
@@ -54,5 +48,14 @@ impl TryFrom<&Value> for Section {
             .as_text()
             .ok_or(anyhow::anyhow!("Not a cbor string type"))?;
         Self::from_str(str)
+    }
+}
+
+impl minicbor::Encode<()> for Section {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.str(self.to_string().as_str())?;
+        Ok(())
     }
 }

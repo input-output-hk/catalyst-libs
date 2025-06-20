@@ -21,17 +21,6 @@ impl Display for DocumentRef {
     }
 }
 
-impl TryFrom<DocumentRef> for Value {
-    type Error = anyhow::Error;
-
-    fn try_from(value: DocumentRef) -> Result<Self, Self::Error> {
-        Ok(Value::Array(vec![
-            Value::try_from(CborUuidV7(value.id))?,
-            Value::try_from(CborUuidV7(value.ver))?,
-        ]))
-    }
-}
-
 impl TryFrom<&Value> for DocumentRef {
     type Error = anyhow::Error;
 
@@ -51,5 +40,16 @@ impl TryFrom<&Value> for DocumentRef {
             "Document Reference Version can never be smaller than its ID"
         );
         Ok(DocumentRef { id, ver })
+    }
+}
+
+impl minicbor::Encode<()> for DocumentRef {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(2)?
+            .encode_with(self.id, &mut catalyst_types::uuid::CborContext::Tagged)?
+            .encode_with(self.ver, &mut catalyst_types::uuid::CborContext::Tagged)?;
+        Ok(())
     }
 }
