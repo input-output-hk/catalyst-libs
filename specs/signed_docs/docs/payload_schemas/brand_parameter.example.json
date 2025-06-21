@@ -1,0 +1,11 @@
+{
+    "directVotingPrivacyState": true,
+    "brandName": "Catalyst Foundation",
+    "minimumBudgetRequestPerProposal": 15000,
+    "maximumBudgetRequestPerProposal": "200000 (variable per challenge)",
+    "maximumProposalsPerProposer": 6,
+    "communityReviewerRegistration": "Open to all ADA holders",
+    "votingPowerThreshold": 1000000,
+    "tallyingOptimization": "majority",
+    "proposalAcceptanceThreshold": 60
+}

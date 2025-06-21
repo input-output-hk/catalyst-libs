@@ -3,12 +3,10 @@
     "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
     "title": "Proposal Submission Action Payload Schema",
     "description": "Structure of the payload of a Proposal Submission Action.",
-    "maintainers": [
-        {
-            "name": "Catalyst Team",
-            "url": "https://projectcatalyst.io/"
-        }
-    ],
+    "maintainers": [{
+        "name": "Catalyst Team",
+        "url": "https://projectcatalyst.io/"
+    }],
     "x-changelog": {
         "2025-03-01": [
             "First Version Created."

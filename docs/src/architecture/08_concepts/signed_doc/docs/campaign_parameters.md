@@ -2,7 +2,10 @@
 
 ## Description
 
-Parameters which define a Campaign within a Brand in the system.
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -89,24 +92,6 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`parameters`](../metadata.md#parameters)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | yes |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Brand Parameters](brand_parameters.md) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Parameters Document this document lies under.
-
-#### [`parameters`](../metadata.md#parameters) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
-[`parameters`](../metadata.md#parameters) of the referencing document.
-
 ## Payload
 
 This specification outlines the required definitions for the current features.
@@ -136,13 +121,9 @@ New versions of this document may be published by:
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### v1 (2024-06-07)
 
-* First Published Version
-
-#### 0.03 (2025-05-05)
-
-* Use generalized parameters.
+Initial version. Structure aligned with global metadata requirements.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

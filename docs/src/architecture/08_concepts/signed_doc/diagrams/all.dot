@@ -121,16 +121,6 @@ digraph "All" {
                         </TABLE>
                     </TD>
                 </TR>
-                <TR>
-                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                            <TR>
-                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters</I></FONT></TD>
-                            </TR>
-                        </TABLE>
-                    </TD>
-                </TR>
 
                 </TABLE>
             >
@@ -182,16 +172,6 @@ digraph "All" {
                             <TR>
                                 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ver</FONT></TD>
                                 <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Ver</I></FONT></TD>
-                            </TR>
-                        </TABLE>
-                    </TD>
-                </TR>
-                <TR>
-                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                            <TR>
-                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Campaign Parameters</I></FONT></TD>
                             </TR>
                         </TABLE>
                     </TD>
@@ -437,7 +417,7 @@ digraph "All" {
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Decision Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -963,10 +943,8 @@ digraph "All" {
     ];
 
 
-    "Campaign Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Category Parameters":"parameters":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Comment Moderation Action":"ref":e -> "Proposal Comment":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Decision Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Decision Parameters":"parameters":e -> "Decision Parameters":"title":n [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal":"template":e -> "Proposal Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]

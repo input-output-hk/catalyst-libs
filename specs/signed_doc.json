@@ -322,7 +322,6 @@
   "docs": {
     "Brand Parameters": {
       "authors": {},
-      "description": "Parameters which define this brand within the system.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -429,15 +428,19 @@
       ],
       "versions": [
         {
-          "changes": "* First Published Version",
+          "changes": "Initial version. Structure aligned with global metadata requirements.",
+          "modified": "2024-06-07",
+          "version": "v1"
+        },
+        {
+          "changes": "Updated to include common definitions and examples.",
           "modified": "2025-04-04",
-          "version": "0.01"
+          "version": "v2"
         }
       ]
     },
     "Campaign Parameters": {
       "authors": {},
-      "description": "Parameters which define a Campaign within a Brand in the system.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -475,10 +478,7 @@
           "description": "A reference to the Parameters Document this document lies under.",
           "exclusive": null,
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Brand Parameters",
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -547,20 +547,14 @@
       ],
       "versions": [
         {
-          "changes": "* First Published Version",
-          "modified": "2025-04-04",
-          "version": "0.01"
-        },
-        {
-          "changes": "* Use generalized parameters.",
-          "modified": "2025-05-05",
-          "version": "0.03"
+          "changes": "Initial version. Structure aligned with global metadata requirements.",
+          "modified": "2024-06-07",
+          "version": "v1"
         }
       ]
     },
     "Category Parameters": {
       "authors": {},
-      "description": "Parameters which define a Category withing a Campaign under a Brand in the system.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -598,10 +592,7 @@
           "description": "A reference to the Parameters Document this document lies under.",
           "exclusive": null,
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": "Campaign Parameters",
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -670,14 +661,9 @@
       ],
       "versions": [
         {
-          "changes": "* First Published Version",
-          "modified": "2025-04-04",
-          "version": "0.01"
-        },
-        {
-          "changes": "* Use generalized parameters.",
-          "modified": "2025-05-05",
-          "version": "0.03"
+          "changes": "Initial version. Structure aligned with global metadata requirements.",
+          "modified": "2024-06-07",
+          "version": "v1"
         }
       ]
     },
@@ -805,7 +791,7 @@
     },
     "Decision Parameters": {
       "authors": {},
-      "description": "Parameters which define an individual voting event.",
+      "description": "\tParameters which define an individual voting event.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -846,11 +832,7 @@
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
+          "type": "Decision Parameters",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -904,6 +886,17 @@
         }
       },
       "notes": [],
+      "payload": {
+        "description": "Payload for Decision Parameters document.",
+        "examples": [
+          {
+            "description": "This document indicates the linked proposal is final and requested to proceed for further consideration.",
+            "example": {},
+            "title": "Final Proposal Submission"
+          }
+        ],
+        "schema": {}
+      },
       "signers": {
         "roles": {
           "user": [
@@ -919,14 +912,19 @@
       ],
       "versions": [
         {
-          "changes": "* First Published Version",
+          "changes": "\t* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
         },
         {
-          "changes": "* Use generalized parameters.",
+          "changes": "\t* Use generalized parameters.",
           "modified": "2025-05-05",
           "version": "0.03"
+        },
+        {
+          "changes": "\t* Added brand reference to decision parameters.",
+          "modified": "2025-06-06",
+          "version": "0.04"
         }
       ]
     },

@@ -1,34 +1,22 @@
 package signed_docs
 
-// Proposal Document Definition
+// Import common definitions JSON schema for use in embedded schemas
+_common_defs: {} @embed(file="./payload_schemas/common_definitions.schema.json")
 
+// Campaign Parameters Document Definition
 docs: #DocumentDefinitions & {
 	"Campaign Parameters": {
-		description: """
-			Parameters which define a Campaign within a Brand in the system.
-			"""
-
 		metadata: {
-			parameters: {
-				required: "yes"
-				type:     "Brand Parameters"
-			}
+			ref:      metadata.ref
+			template: metadata.template
 		}
-
 		versions: [
 			{
-				version:  "0.01"
-				modified: "2025-04-04"
-				changes: """
-					* First Published Version
-					"""
+				version:  "v1"
+				modified: "2024-06-07"
+				changes:  "Initial version. Structure aligned with global metadata requirements."
 			},
-			{
-				version:  "0.03"
-				modified: "2025-05-05"
-				changes: """
-					* Use generalized parameters.
-					"""
-			},
-		]}
+		]
+		// Payload is fully templated and not defined here
+	}
 }
