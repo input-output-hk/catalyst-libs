@@ -104,7 +104,7 @@ fn document_rules_init() -> HashMap<Uuid, Rules> {
         .with_draft(jsonschema::Draft::Draft7)
         .build(
             &serde_json::from_str(include_str!(
-                "./../../../../specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
+                "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
             ))
             .expect("Must be a valid json file"),
         )
