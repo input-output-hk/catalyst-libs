@@ -20,6 +20,11 @@ class DocumentBusinessLogic(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+def empty_string_list() -> list[str]:
+    """Get an empty string list."""
+    return []
+
+
 class Document(BaseModel):
     """Document Data Definition."""
 
@@ -38,8 +43,8 @@ class Document(BaseModel):
     versions: list[ChangeLogEntry]
 
     _name: str | None = PrivateAttr(default=None)
-    _all_refs: list[str] = PrivateAttr(default_factory=list)
-    _refed_by: list[str] = PrivateAttr(default_factory=list)
+    _all_refs: list[str] = PrivateAttr(default_factory=empty_string_list)
+    _refed_by: list[str] = PrivateAttr(default_factory=empty_string_list)
 
     doc_name: str | None = Field(default=None)  # Set when wwe get a document
 
@@ -74,11 +79,21 @@ class Document(BaseModel):
         return self._all_refs
 
     @property
-    def name(self) -> list[str]:
+    def name(self) -> str:
         """Get name of this document."""
-        return self._name
+        return self._name if self._name is not None else "Unknown"
 
     @property
     def all_docs_referencing(self) -> list[str]:
         """Get name of all documents which reference this document."""
         return self._refed_by
+
+    @property
+    def content_type(self) -> str | list[str]:
+        """Get document content type."""
+        content_type = self.headers.get("content type")
+        if content_type is not None:
+            content_type = content_type.value
+        if content_type is None:
+            content_type = "Undefined"
+        return content_type
