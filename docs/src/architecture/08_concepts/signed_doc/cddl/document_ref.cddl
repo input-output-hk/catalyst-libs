@@ -1,12 +1,12 @@
 ; document_ref
 
 
-; Reference to another Signed Document
-document_ref = [ 1* [
+; Reference to a single Signed Document
+document_ref = [
   document_id,
   document_ver,
   document_locator
-] ]
+]
 
 ; Document ID
 document_id = uuid_v7

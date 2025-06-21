@@ -4,6 +4,7 @@ ABNF
 addrr
 addrs
 adminer
+admon
 anypolicy
 apskhem
 Arissara
@@ -160,6 +161,8 @@ ltail
 maindbname
 mapref
 markdownlint
+mdformat
+mdit
 mdlint
 mdns
 MEMMAP
@@ -175,6 +178,7 @@ mitigations
 mkcron
 mkdelay
 mkdirat
+mkdocs
 Mmap
 moderations
 moka
@@ -230,6 +234,7 @@ pypackages
 pytest
 pytype
 qpsg
+qrcode
 quic
 rankdir
 rapidoc

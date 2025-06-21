@@ -93,6 +93,8 @@ IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a docu
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
+[`ver`](../metadata.md#ver) represents new versions of the same document as it changes over time.
+
 #### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
@@ -135,11 +137,11 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Payload
 
-[JSON Schema] document which defines the content of the Proposal Comments.
+[JSON Schema][JSON Schema-2020-12] document which defines the content of the Proposal Comments.
 
 ## Signers
 
-The following admin roles may sign documents of this type:
+The following Admin roles may sign documents of this type:
 
 * Brand Admin
 * Campaign Admin
@@ -169,6 +171,6 @@ New versions of this document may be published by:
 * Use generalized parameters.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[JSON Schema]: https://json-schema.org/draft-07
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7

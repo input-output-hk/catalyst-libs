@@ -88,3 +88,9 @@ $RECYCLE.BIN/
 # Python stuff
 .pytest_cache
 __pycache__
+py.typed
+*.egg-info
+.venv
+.ruff_cache
+dist
+*.pyi

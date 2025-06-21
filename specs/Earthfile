@@ -8,7 +8,7 @@ IMPORT ../docs AS docs
 
 # Get cue binary
 cue-bin:
-    FROM cuelang/cue:0.12.0
+    FROM cuelang/cue:0.13.1
     SAVE ARTIFACT /usr/bin/cue
 
 
@@ -30,18 +30,20 @@ src:
 # Check that the generated signed docs data matches the src.
 check:
     FROM +src
-    RUN cue fmt --check --files . 
-    RUN cue vet ./signed_docs/docs:signed_docs  signed_doc.json
+    RUN cue fmt --check -s --files ./definitions
+    RUN cd definitions; cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
 
 # Check the the generated signed docs documentation matches the generated signed docs data
 check-docs-generation:
     FROM python-ci+python-base
-    COPY ./gen_docs gen_docs
+    COPY ./generators generators
     COPY +src/signed_doc.json .
     COPY --dir docs+generated-signed-docs-pages/signed_doc signed_doc
      # Check our validation code actually works properly
-    RUN cd gen_docs; \
-        ./main.py -o "../signed_doc" ../signed_doc.json 
+    RUN cd generators; \
+        uv run validator ../signed_doc.json
+    RUN cd generators; \
+        uv run docs -o "../signed_doc" ../signed_doc.json 
 
 
 #  Regenerate - using the builder

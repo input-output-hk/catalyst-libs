@@ -115,6 +115,14 @@
       "def": "bytes",
       "requires": []
     },
+    "chain": {
+      "comment": "Reference to the previous Signed Document in a sequence.\n* `height` is of the CURRENT block.\n* `document_ref` is *ONLY* omitted in the very first document in a sequence.",
+      "def": "[height, ? document_ref]",
+      "requires": [
+        "height",
+        "document_ref"
+      ]
+    },
     "cid": {
       "comment": "IPLD content identifier\nTODO: add size limits if possible",
       "def": "#6.42(bytes)",
@@ -144,12 +152,19 @@
       ]
     },
     "document_ref": {
-      "comment": "Reference to another Signed Document",
-      "def": "[ 1* [\n  document_id, \n  document_ver, \n  document_locator\n] ]",
+      "comment": "Reference to a single Signed Document",
+      "def": "[\n  document_id, \n  document_ver, \n  document_locator\n]",
       "requires": [
         "document_id",
         "document_ver",
         "document_locator"
+      ]
+    },
+    "document_refs": {
+      "comment": "Reference to one or more Signed Documents",
+      "def": "[ 1* document_ref ]",
+      "requires": [
+        "document_ref"
       ]
     },
     "document_type": {
@@ -168,6 +183,11 @@
         "uuid_v7"
       ]
     },
+    "height": {
+      "comment": "The consecutive sequence number of the current document \nin the chain.\nThe very first document in a sequence is numbered `0` and it\n*MUST ONLY* increment by one for each successive document in\nthe sequence.\n\nThe FINAL sequence number is encoded with the current height\nsequence value, negated. \n\nFor example the following values for height define a chain\nthat has 5 documents in the sequence 0-4, the final height \nis negated to indicate the end of the chain:\n`0, 1, 2, 3, -4`\n\nNo subsequent document can be chained to a sequence that has\na final chain height.",
+      "def": "int",
+      "requires": []
+    },
     "http_content_encoding": {
       "comment": "Supported Content Encoding Types",
       "def": "tstr .eq \"br\"",
@@ -179,8 +199,8 @@
       "requires": []
     },
     "media_type": {
-      "comment": "Supported Content Media Types.\nIf uint is used, only CoAP Content Formats that match the string format are allowed.",
-      "def": "(\n    (uint .eq (50 / 60)) / \n    (tstr .eq (\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"application/cbor\" /\n        \"application/cddl\"\n    ))\n)",
+      "comment": "Supported Content Media Types.\nIf the Media Type is supported by COAP, then the `uint` CoAP encoded\nversion of the media type must be used, in preference to the string.",
+      "def": "(\n    (uint .eq (0 / 50 / 60 / 20000)) / \n    (tstr .eq (\n        \"application/cbor\" /\n        \"application/cddl\" /\n        \"application/json\" /\n        \"application/schema+json\" /\n        \"text/css; charset=utf-8\" /\n        \"text/css; charset=utf-8; template=handlebars\" /\n        \"text/html; charset=utf-8\" /\n        \"text/html; charset=utf-8; template=handlebars\" /\n        \"text/markdown; charset=utf-8\" /\n        \"text/markdown; charset=utf-8; template=handlebars\" /\n        \"text/plain; charset=utf-8\" /\n        \"text/plain; charset=utf-8; template=handlebars\"\n    ))\n)",
       "requires": []
     },
     "revocations": {
@@ -221,17 +241,43 @@
   "contentTypes": {
     "application/cbor": {
       "coap_type": 60,
-      "description": "RFC8949 Binary CBOR Encoded Document"
+      "description": "An RFC8949 Binary CBOR Encoded Document."
     },
     "application/cddl": {
-      "description": "CDDL Document; Note: \n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
+      "description": "A CDDL Document.\n\nNote: \n\n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
     },
     "application/json": {
       "coap_type": 50,
       "description": "JSON Document"
     },
     "application/schema+json": {
-      "description": "JSON Schema Draft 7 Document; Note: \n* This is currently an unofficial media type.\n* Draft 7 is used because of its wide support by tooling."
+      "description": "A JSON Schema Draft 2020-12 Document.\n\nNote: \n\n* This is currently an unofficial media type."
+    },
+    "text/css; charset=utf-8": {
+      "coap_type": 20000,
+      "description": "CSS Content used for styling HTML.\nCSS should use the least set of features possible to achieve\nthe desired presentation to ensure the broadest compatibility."
+    },
+    "text/css; charset=utf-8; template=handlebars": {
+      "description": "CSS Content used for styling HTML.\nCSS should use the least set of features possible to achieve\nthe desired presentation to ensure the broadest compatibility.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+    },
+    "text/html; charset=utf-8": {
+      "description": "Formatted text using HTML5 markup for rich text. \nOnly HTML5 syntax is supported."
+    },
+    "text/html; charset=utf-8; template=handlebars": {
+      "description": "Formatted text using HTML5 markup for rich text. \nOnly HTML5 syntax is supported.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+    },
+    "text/markdown; charset=utf-8": {
+      "description": "Formatted text using Markdown for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nIF the document includes HTML, then HTML5 syntax only is supported.\n\nThe following Markdown Extensions are also supported:\n\n* None"
+    },
+    "text/markdown; charset=utf-8; template=handlebars": {
+      "description": "Formatted text using Markdown for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nIF the document includes HTML, then HTML5 syntax only is supported.\n\nThe following Markdown Extensions are also supported:\n\n* None\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+    },
+    "text/plain; charset=utf-8": {
+      "coap_type": 0,
+      "description": "Plain Text with no markup or special formatting.\nMultiline Plain Text *MUST* always interpret `\n` \nas a hard line break."
+    },
+    "text/plain; charset=utf-8; template=handlebars": {
+      "description": "Plain Text with no markup or special formatting.\nMultiline Plain Text *MUST* always interpret `\n` \nas a hard line break.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
     }
   },
   "copyright": {
@@ -261,53 +307,63 @@
       }
     ]
   },
-  "coseHeaderFormats": {
-    "Catalyst ID": {
-      "cddl": "catalyst_id_kid",
-      "description": "KID (Catalyst ID URI)"
+  "cose": {
+    "headerFormats": {
+      "Catalyst ID": {
+        "cddl": "catalyst_id_kid",
+        "description": "KID (Catalyst ID URI)"
+      },
+      "HTTP Content Encoding": {
+        "cddl": "http_content_encoding",
+        "description": "Encoding if any on the payload."
+      },
+      "Media Type": {
+        "cddl": "media_type",
+        "description": "A Media Type string which identifies the payload."
+      }
     },
-    "HTTP Content Encoding": {
-      "cddl": "http_content_encoding",
-      "description": "Encoding if any on the payload."
+    "headers": {
+      "content type": {
+        "coseLabel": 3,
+        "description": "Media Type/s allowed in the Payload",
+        "format": "Media Type",
+        "required": "yes",
+        "value": [
+          "application/cbor",
+          "application/cddl",
+          "application/json",
+          "application/schema+json",
+          "text/css; charset=utf-8",
+          "text/css; charset=utf-8; template=handlebars",
+          "text/html; charset=utf-8",
+          "text/html; charset=utf-8; template=handlebars",
+          "text/markdown; charset=utf-8",
+          "text/markdown; charset=utf-8; template=handlebars",
+          "text/plain; charset=utf-8",
+          "text/plain; charset=utf-8; template=handlebars"
+        ]
+      },
+      "content-encoding": {
+        "coseLabel": "content-encoding",
+        "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+        "format": "HTTP Content Encoding",
+        "required": "optional",
+        "value": [
+          "br"
+        ]
+      }
     },
-    "Media Type": {
-      "cddl": "media_type",
-      "description": "A Media Type string which identifies the payload."
-    }
-  },
-  "cose_headers": {
-    "content type": {
-      "coseLabel": 3,
-      "description": "Media Type/s allowed in the Payload",
-      "format": "Media Type",
-      "required": "yes",
-      "value": [
-        "application/json",
-        "application/schema+json",
-        "application/cbor",
-        "application/cddl"
-      ]
-    },
-    "content-encoding": {
-      "coseLabel": "content-encoding",
-      "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
-      "format": "HTTP Content Encoding",
-      "required": "optional",
-      "value": [
-        "br"
-      ]
-    }
-  },
-  "cose_headers_order": [
-    "content type",
-    "content-encoding"
-  ],
-  "cose_signature_headers": {
-    "kid": {
-      "coseLabel": 4,
-      "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
-      "format": "Catalyst ID",
-      "required": "yes"
+    "headersOrder": [
+      "content type",
+      "content-encoding"
+    ],
+    "signature_headers": {
+      "kid": {
+        "coseLabel": 4,
+        "description": "Catalyst ID URI identifying the Public Key.\n\nThe `kid` is a UTF-8 encoded Catalyst ID URI.\nAny `kid` URI which conforms to the Catalyst ID specification may be used.\nThe Catalyst ID unambiguously defines both the signing keys and signing algorithm\nused to sign the protected portion of the document.\t\t\t",
+        "format": "Catalyst ID",
+        "required": "yes"
+      }
     }
   },
   "doc_clusters": {
@@ -342,72 +398,68 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -457,23 +509,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -483,49 +538,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -580,23 +628,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -606,49 +657,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -703,30 +747,32 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -738,42 +784,36 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -825,23 +865,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -855,49 +898,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -958,23 +994,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "optional",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "template"
@@ -990,35 +1029,30 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1028,14 +1062,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1099,23 +1131,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "ref",
@@ -1132,7 +1167,6 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1142,7 +1176,6 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1152,21 +1185,18 @@
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "optional",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "optional",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1176,14 +1206,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1243,23 +1271,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1273,49 +1304,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1379,23 +1403,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1409,35 +1436,30 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1447,14 +1469,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1516,23 +1536,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1546,49 +1569,42 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1651,30 +1667,32 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -1684,42 +1702,36 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1775,23 +1787,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "ref"
@@ -1807,7 +1822,6 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": true,
@@ -1817,42 +1831,36 @@
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -1976,23 +1984,26 @@
         }
       },
       "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
         "collaborators": {
           "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "exclusive": null,
           "format": "Collaborators Reference List",
           "required": "excluded",
           "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
         },
         "id": {
           "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "exclusive": null,
           "format": "Document Id",
           "required": "yes",
           "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
         },
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": [
             "template"
@@ -2008,35 +2019,30 @@
         },
         "ref": {
           "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
         },
         "reply": {
           "description": "Reference to a Comment document type being referred to.",
-          "exclusive": null,
           "format": "Document Reference",
           "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
         },
         "revocations": {
           "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "exclusive": null,
           "format": "Version Revocations",
           "required": "excluded",
           "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
         },
         "section": {
           "description": "A Reference to the original document, or the comment being replied to.",
-          "exclusive": null,
           "format": "Section Reference",
           "required": "excluded",
           "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
         },
         "template": {
           "description": "Reference to the template used to create and/or validate this document.",
-          "exclusive": null,
           "format": "Document Reference",
           "linked_refs": null,
           "multiple": false,
@@ -2046,14 +2052,12 @@
         },
         "type": {
           "description": "The document TYPE.",
-          "exclusive": null,
           "format": "Document Type",
           "required": "yes",
           "validation": "**MUST** be a known document type."
         },
         "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-          "exclusive": null,
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
           "format": "Document Ver",
           "required": "yes",
           "validation": "The document version must always be >= the document ID."
@@ -2093,212 +2097,1383 @@
       ]
     }
   },
-  "documentationLinks": {
-    "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
-    "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
-    "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
-    "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
-    "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
-    "JSON Schema": "https://json-schema.org/draft-07",
-    "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
-    "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
-    "RFC7932": "https://www.rfc-editor.org/rfc/rfc7932",
-    "RFC8259": "https://www.rfc-editor.org/rfc/rfc8259.html",
-    "RFC8610": "https://www.rfc-editor.org/rfc/rfc8610",
-    "RFC8949": "https://www.rfc-editor.org/rfc/rfc8949.html",
-    "RFC9052": "https://datatracker.ietf.org/doc/html/rfc9052",
-    "RFC9052-CoseSign": "https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si",
-    "RFC9052-HeaderParameters": "https://www.rfc-editor.org/rfc/rfc8152#section-3.1",
-    "RFC9165": "https://www.rfc-editor.org/rfc/rfc9165",
-    "RFC9562": "https://www.rfc-editor.org/rfc/rfc9562.html",
-    "RFC9562-V4": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4",
-    "RFC9562-V7": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7",
-    "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
-    "application/json": "https://www.iana.org/assignments/media-types/application/json",
-    "application/schema+json": "https://datatracker.ietf.org/doc/draft-bhutton-json-schema/",
-    "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br"
+  "documentation": {
+    "linkAKA": {
+      "BROTLI": "RFC7932",
+      "CBOR": "RFC8949",
+      "CBOR Deterministic Encoding": "CBOR-LFD-ENCODING",
+      "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
+      "CDDL": "RFC8610",
+      "COSE": "RFC9052",
+      "COSE Header Parameters": "RFC9052-HeaderParameters",
+      "COSE Sign": "RFC9052-CoseSign",
+      "HTML": "HTML5",
+      "IPFS CID": "IPFS-CID",
+      "JSON": "RFC8259",
+      "JSON Schema": "JSON Schema-2020-12",
+      "JSON Schema Draft 2020-12": "JSON Schema-2020-12",
+      "Markdown": "CommonMark",
+      "RFC9165 - CDDL Additional Controls": "RFC9165",
+      "URI": "RFC3986",
+      "UTF-8": "RFC3629",
+      "UUID": "RFC9562",
+      "UUIDv4": "RFC9562-V4",
+      "UUIDv7": "RFC9562-V7",
+      "application/cddl": "RFC8610",
+      "application/schema+json": "JSON Schema-2020-12",
+      "charset=utf-8": "RFC3629",
+      "charset=utf-8;": "RFC3629",
+      "template=handlebars": "Handlebars",
+      "text/css;": "text/css",
+      "text/html;": "HTML5",
+      "text/markdown;": "CommonMark",
+      "text/plain;": "text/plain"
+    },
+    "links": {
+      "CBOR-LFD-ENCODING": "https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3",
+      "CBOR-TAG-37": "https://github.com/lucas-clemente/cbor-specs/blob/master/uuid.md",
+      "CBOR-TAG-42": "https://github.com/ipld/cid-cbor/",
+      "CC-BY-4.0": "https://creativecommons.org/licenses/by/4.0/legalcode",
+      "CSS": "https://www.w3.org/Style/CSS/",
+      "CommonMark": "https://spec.commonmark.org/0.31.2/",
+      "HTML5": "https://html.spec.whatwg.org/multipage/syntax.html#syntax",
+      "Handlebars": "https://handlebarsjs.com/",
+      "IPFS-CID": "https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid",
+      "JSON Schema-2020-12": "https://json-schema.org/draft/2020-12",
+      "JSON Schema-draft7": "https://json-schema.org/draft-07",
+      "Mustache": "https://mustache.github.io/mustache.5.html",
+      "RFC3629": "https://datatracker.ietf.org/doc/html/rfc3629",
+      "RFC3986": "https://datatracker.ietf.org/doc/html/rfc3986",
+      "RFC7932": "https://www.rfc-editor.org/rfc/rfc7932",
+      "RFC8259": "https://www.rfc-editor.org/rfc/rfc8259.html",
+      "RFC8610": "https://www.rfc-editor.org/rfc/rfc8610",
+      "RFC8949": "https://www.rfc-editor.org/rfc/rfc8949.html",
+      "RFC9052": "https://datatracker.ietf.org/doc/html/rfc9052",
+      "RFC9052-CoseSign": "https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si",
+      "RFC9052-HeaderParameters": "https://www.rfc-editor.org/rfc/rfc8152#section-3.1",
+      "RFC9165": "https://www.rfc-editor.org/rfc/rfc9165",
+      "RFC9562": "https://www.rfc-editor.org/rfc/rfc9562.html",
+      "RFC9562-V4": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-4",
+      "RFC9562-V7": "https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7",
+      "application/cbor": "https://www.iana.org/assignments/media-types/application/cbor",
+      "application/json": "https://www.iana.org/assignments/media-types/application/json",
+      "br": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br",
+      "text/css": "https://www.rfc-editor.org/rfc/rfc2318.html",
+      "text/plain": "https://www.rfc-editor.org/rfc/rfc2046.html"
+    }
   },
   "encodingTypes": {
     "br": {
       "description": "BROTLI Compression"
     }
   },
-  "linkAKA": {
-    "BROTLI": "RFC7932",
-    "CBOR": "RFC8949",
-    "CBOR Deterministic Encoding": "CBOR-LFD-ENCODING",
-    "CBOR Encoded IPLD Content Identifier": "CBOR-TAG-42",
-    "CDDL": "RFC8610",
-    "COSE": "RFC9052",
-    "COSE Header Parameters": "RFC9052-HeaderParameters",
-    "COSE Sign": "RFC9052-CoseSign",
-    "IPFS CID": "IPFS-CID",
-    "JSON": "RFC8259",
-    "RFC9165 - CDDL Additional Controls": "RFC9165",
-    "URI": "RFC3986",
-    "UTF-8": "RFC3629",
-    "UUID": "RFC9562",
-    "UUIDv4": "RFC9562-V4",
-    "UUIDv7": "RFC9562-V7"
-  },
-  "metadata": {
-    "collaborators": {
-      "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-      "exclusive": null,
-      "format": "Collaborators Reference List",
-      "required": "optional",
-      "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+  "formTemplate": {
+    "dropDownSingleSelect": {
+      "definition": {
+        "contentMediaType": "text/plain",
+        "pattern": "^[^\\n]*$",
+        "type": "string"
+      },
+      "description": "UI - Drop Down Selection of a single entry from the defined enum.\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "enum": {
+          "description": "An array of string to select from.",
+          "items": {
+            "description": "An element of the Enum.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
-    "id": {
-      "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-      "exclusive": null,
-      "format": "Document Id",
-      "required": "yes",
-      "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+    "multiLineTextEntry": {
+      "definition": {
+        "contentMediaType": "text/plain",
+        "pattern": "^[\\S\\s]*$",
+        "type": "string"
+      },
+      "description": "UI - One or more Lines of text entry.\nLine breaks, and special characters are allowed.\nSpecial formatted markup, such as Markdown are not allowed.\nEnter multiple lines of plain text. You can use line breaks but no special formatting.",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxLength": {
+          "description": "Maximum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minLength": {
+          "description": "Minimum number of characters allowed in the field.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
-    "parameters": {
-      "description": "A reference to the Parameters Document this document lies under.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Brand Parameters",
-        "Campaign Parameters",
-        "Category Parameters",
-        "Decision Parameters"
-      ],
-      "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+    "multiLineTextEntryListMarkdown": {
+      "definition": {
+        "items": {
+          "contentMediaType": "text/markdown",
+          "minLength": 1,
+          "pattern": "^[\\S\\s]*$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - A Growable List of markdown formatted text fields.\nEach entry is a multiline markdown formatted string.\nMarkdown Formatting, line breaks, or special characters are allowed.\nAdd multiple text entries.\nEach entry should be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default Array of text can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
-    "ref": {
-      "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Proposal Meta Template",
-        "Proposal Template",
-        "Proposal",
-        "Proposal Comment Meta Template",
-        "Proposal Comment Template",
-        "Proposal Comment",
-        "Proposal Submission Action",
-        "Proposal Moderation Action",
-        "Comment Moderation Action",
-        "Brand Parameters",
-        "Campaign Parameters",
-        "Category Parameters",
-        "Decision Parameters"
-      ],
-      "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+    "multiLineTextEntryMarkdown": {
+      "definition": {
+        "contentMediaType": "text/markdown",
+        "pattern": "^[\\S\\s]*$",
+        "type": "string"
+      },
+      "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxLength": {
+          "description": "Maximum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minLength": {
+          "description": "Minimum number of characters allowed in the field.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
-    "reply": {
-      "description": "Reference to a Comment document type being referred to.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Proposal Comment"
-      ],
-      "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+    "multiSelect": {
+      "definition": {
+        "items": {
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - Multiselect from the given items.\n\nSelect multiple options from the dropdown menu.\nMultiple choices are allowed.\nAll choices MUST be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default selections can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
-    "revocations": {
-      "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-      "exclusive": null,
-      "format": "Version Revocations",
-      "required": "excluded",
-      "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+    "radioButtonSelect": {
+      "definition": {
+        "contentMediaType": "text/plain",
+        "pattern": "^[^\\n]*$",
+        "type": "string"
+      },
+      "description": "UI - Radio Button Selection.\n\nSelect one option from a list of text options.\nSelector is styled as a set of Radio Buttons.",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "enum": {
+          "description": "An array of string to select from.",
+          "items": {
+            "description": "An element of the Enum.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
+    },
+    "schemaReferenceNonUI": {
+      "definition": {
+        "readOnly": true,
+        "type": "string"
+      },
+      "description": "Enforces the json document having a proper reference to the schema.",
+      "parameters": {
+        "const": {
+          "description": "The path must always be this value. **MUST** match `default`.",
+          "required": "yes",
+          "type": "string"
+        },
+        "default": {
+          "description": "The path that is defined to find the matching json schema.",
+          "required": "yes",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
     "section": {
-      "description": "A Reference to the original document, or the comment being replied to.",
-      "exclusive": null,
-      "format": "Section Reference",
-      "required": "optional",
-      "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+      "definition": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "description": "UI - Logical Document Sub-Section Break.\nSubsections containing specific details about the proposal.",
+      "parameters": {
+        "description": {
+          "description": "The displayable description attached to the section.  Markdown formatted contents.",
+          "required": "optional",
+          "type": "string"
+        },
+        "properties": {
+          "description": "The sub fields of the section.",
+          "required": "yes",
+          "type": "string"
+        },
+        "required": {
+          "description": "Which fields MUST appear in the segment.",
+          "required": "optional",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title of the section.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-icon": {
+          "choices": [
+            "'all spaces menu'",
+            "'all spaces menu-1'",
+            "academic-cap",
+            "ada",
+            "adjustments",
+            "annotation",
+            "archive",
+            "arrow-circle-down",
+            "arrow-circle-left",
+            "arrow-circle-right",
+            "arrow-circle-up",
+            "arrow-down",
+            "arrow-left",
+            "arrow-narrow-down",
+            "arrow-narrow-left",
+            "arrow-narrow-right",
+            "arrow-narrow-up",
+            "arrow-right",
+            "arrow-triangle-down",
+            "arrow-triangle-up",
+            "arrow-up",
+            "arrows-expand",
+            "at-symbol",
+            "avatar_placeholder",
+            "backspace",
+            "badge-check",
+            "ban",
+            "beaker",
+            "bell",
+            "book-open",
+            "bookmark",
+            "bookmark-alt",
+            "bottom-main-content",
+            "bottom-rail-toggle",
+            "bottom-rail-toggle-1",
+            "briefcase",
+            "cake",
+            "calculator",
+            "calendar",
+            "camera",
+            "cash",
+            "chart-bar",
+            "chart-pie",
+            "chart-square-bar",
+            "chat",
+            "chat-alt",
+            "chat-alt-2",
+            "check",
+            "check-circle",
+            "chevron-double-down",
+            "chevron-double-left",
+            "chevron-double-right",
+            "chevron-double-up",
+            "chevron-down",
+            "chevron-down-1",
+            "chevron-left",
+            "chevron-right",
+            "chevron-up",
+            "chip",
+            "clipboard",
+            "clipboard-check",
+            "clipboard-copy",
+            "clipboard-list",
+            "clock",
+            "cloud",
+            "cloud-download",
+            "cloud-upload",
+            "code",
+            "cog-gear",
+            "collection",
+            "color-swatch",
+            "credit-card",
+            "cube",
+            "cube-transparent",
+            "currency-bangladeshi",
+            "currency-dollar",
+            "currency-euro",
+            "currency-pound",
+            "currency-rupee",
+            "currency-yen",
+            "cursor-click",
+            "curved-arrow-right",
+            "database",
+            "desktop-computer",
+            "device-mobile",
+            "device-tablet",
+            "document",
+            "document-add",
+            "document-remove",
+            "document-report",
+            "document-search",
+            "document-text",
+            "dots-circle-horizontal",
+            "dots-horizontal",
+            "dots-vertical",
+            "double_check",
+            "download",
+            "duplicate",
+            "emoji-happy",
+            "emoji-sad",
+            "exclamation",
+            "exclamation-circle",
+            "external-link",
+            "eye",
+            "eye-off",
+            "facebook",
+            "fast-forward",
+            "film",
+            "filter",
+            "finger-print",
+            "fire",
+            "flag",
+            "folder",
+            "folder-add",
+            "folder-download",
+            "folder-open",
+            "folder-remove",
+            "fund",
+            "gift",
+            "globe",
+            "globe-alt",
+            "hand",
+            "hashtag",
+            "heart",
+            "home",
+            "icon-user-remove",
+            "identification",
+            "inbox",
+            "inbox-in",
+            "information-circle",
+            "key",
+            "left-rail-toggle",
+            "library",
+            "light-bulb",
+            "lightning-bolt",
+            "link",
+            "linkedin",
+            "location-marker",
+            "lock-closed",
+            "lock-open",
+            "logout",
+            "logout-1",
+            "mail",
+            "mail-open",
+            "map",
+            "maximize-toggle",
+            "menu",
+            "menu-alt-1",
+            "menu-alt-2",
+            "menu-alt-3",
+            "menu-alt-4",
+            "microphone",
+            "minimize-toggle",
+            "minus",
+            "minus-circle",
+            "moon",
+            "move-item",
+            "music-note",
+            "newspaper",
+            "node-closed",
+            "node-line",
+            "node-line-end",
+            "node-open",
+            "office-building",
+            "paper-airplane",
+            "paper-clip",
+            "pause",
+            "pencil",
+            "pencil-alt",
+            "phone",
+            "phone-incoming",
+            "phone-missed-call",
+            "phone-outgoing",
+            "photograph",
+            "play",
+            "plus",
+            "plus_circle_filled",
+            "plus_circle_outlined",
+            "presentation-chart-bar",
+            "presentation-chart-line",
+            "printer",
+            "progress-track-warning",
+            "puzzle",
+            "qrcode",
+            "question-mark-circle",
+            "receipt-refund",
+            "receipt-tax",
+            "reddit",
+            "refresh",
+            "reply",
+            "rewind",
+            "right-rail-toggle",
+            "rss",
+            "rt_bold",
+            "rt_decrease_indent",
+            "rt_heading",
+            "rt_increase_indent",
+            "rt_italic",
+            "rt_ordered_list",
+            "rt_unordered_list",
+            "save",
+            "save-as",
+            "scale",
+            "scissors",
+            "search",
+            "search-circle",
+            "selector",
+            "send-airplane",
+            "server",
+            "share",
+            "shield-check",
+            "shield-exclamation",
+            "shopping-bag",
+            "shopping-cart",
+            "sm-view-grid-add",
+            "sort-ascending",
+            "sort-descending",
+            "sparkles",
+            "speakerphone",
+            "star_filled",
+            "star_outlined",
+            "status-offline",
+            "status-online",
+            "stop",
+            "summary",
+            "sun",
+            "support",
+            "switch-horizontal",
+            "switch-vertical",
+            "table",
+            "tag",
+            "template",
+            "terminal",
+            "thumb-down",
+            "thumb-up",
+            "ticket",
+            "top-bar",
+            "top-bar-filled",
+            "translate",
+            "trash",
+            "trending-down",
+            "trending-up",
+            "truck",
+            "unlink",
+            "upload",
+            "user",
+            "user-add",
+            "user-circle",
+            "user-group",
+            "users",
+            "variable",
+            "video-camera",
+            "view-boards",
+            "view-grid",
+            "view-list",
+            "volume-off",
+            "volume-up",
+            "vote",
+            "wallet",
+            "wifi",
+            "x",
+            "x-circle",
+            "xTwitter",
+            "zoom-in",
+            "zoom-out"
+          ],
+          "description": "The name of the Icon to display with the field.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-order": {
+          "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an arbitrary order.",
+          "required": "yes",
+          "type": "string"
+        }
+      },
+      "parent": "segment"
     },
-    "template": {
-      "description": "Reference to the template used to create and/or validate this document.",
-      "exclusive": null,
-      "format": "Document Reference",
-      "linked_refs": null,
-      "multiple": false,
-      "required": "optional",
-      "type": [
-        "Proposal Meta Template",
-        "Proposal Template",
-        "Proposal Comment Meta Template",
-        "Proposal Comment Template"
-      ],
-      "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+    "segment": {
+      "definition": {
+        "additionalProperties": false,
+        "type": "object"
+      },
+      "description": "Logical Document Section - Grouping Only - Highest Level Group\n\"x-note\": \"\n\tMajor sections of the proposal. Each segment contains sections of information grouped together.\n\t\"",
+      "parameters": {
+        "description": {
+          "description": "The displayable description attached to the segment.  Markdown formatted contents.",
+          "required": "optional",
+          "type": "string"
+        },
+        "properties": {
+          "description": "The sub fields of the segment.",
+          "required": "yes",
+          "type": "string"
+        },
+        "required": {
+          "description": "Which fields MUST appear in the segment.",
+          "required": "optional",
+          "type": "string"
+        },
+        "title": {
+          "description": "The title of the segment.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-icon": {
+          "choices": [
+            "'all spaces menu'",
+            "'all spaces menu-1'",
+            "academic-cap",
+            "ada",
+            "adjustments",
+            "annotation",
+            "archive",
+            "arrow-circle-down",
+            "arrow-circle-left",
+            "arrow-circle-right",
+            "arrow-circle-up",
+            "arrow-down",
+            "arrow-left",
+            "arrow-narrow-down",
+            "arrow-narrow-left",
+            "arrow-narrow-right",
+            "arrow-narrow-up",
+            "arrow-right",
+            "arrow-triangle-down",
+            "arrow-triangle-up",
+            "arrow-up",
+            "arrows-expand",
+            "at-symbol",
+            "avatar_placeholder",
+            "backspace",
+            "badge-check",
+            "ban",
+            "beaker",
+            "bell",
+            "book-open",
+            "bookmark",
+            "bookmark-alt",
+            "bottom-main-content",
+            "bottom-rail-toggle",
+            "bottom-rail-toggle-1",
+            "briefcase",
+            "cake",
+            "calculator",
+            "calendar",
+            "camera",
+            "cash",
+            "chart-bar",
+            "chart-pie",
+            "chart-square-bar",
+            "chat",
+            "chat-alt",
+            "chat-alt-2",
+            "check",
+            "check-circle",
+            "chevron-double-down",
+            "chevron-double-left",
+            "chevron-double-right",
+            "chevron-double-up",
+            "chevron-down",
+            "chevron-down-1",
+            "chevron-left",
+            "chevron-right",
+            "chevron-up",
+            "chip",
+            "clipboard",
+            "clipboard-check",
+            "clipboard-copy",
+            "clipboard-list",
+            "clock",
+            "cloud",
+            "cloud-download",
+            "cloud-upload",
+            "code",
+            "cog-gear",
+            "collection",
+            "color-swatch",
+            "credit-card",
+            "cube",
+            "cube-transparent",
+            "currency-bangladeshi",
+            "currency-dollar",
+            "currency-euro",
+            "currency-pound",
+            "currency-rupee",
+            "currency-yen",
+            "cursor-click",
+            "curved-arrow-right",
+            "database",
+            "desktop-computer",
+            "device-mobile",
+            "device-tablet",
+            "document",
+            "document-add",
+            "document-remove",
+            "document-report",
+            "document-search",
+            "document-text",
+            "dots-circle-horizontal",
+            "dots-horizontal",
+            "dots-vertical",
+            "double_check",
+            "download",
+            "duplicate",
+            "emoji-happy",
+            "emoji-sad",
+            "exclamation",
+            "exclamation-circle",
+            "external-link",
+            "eye",
+            "eye-off",
+            "facebook",
+            "fast-forward",
+            "film",
+            "filter",
+            "finger-print",
+            "fire",
+            "flag",
+            "folder",
+            "folder-add",
+            "folder-download",
+            "folder-open",
+            "folder-remove",
+            "fund",
+            "gift",
+            "globe",
+            "globe-alt",
+            "hand",
+            "hashtag",
+            "heart",
+            "home",
+            "icon-user-remove",
+            "identification",
+            "inbox",
+            "inbox-in",
+            "information-circle",
+            "key",
+            "left-rail-toggle",
+            "library",
+            "light-bulb",
+            "lightning-bolt",
+            "link",
+            "linkedin",
+            "location-marker",
+            "lock-closed",
+            "lock-open",
+            "logout",
+            "logout-1",
+            "mail",
+            "mail-open",
+            "map",
+            "maximize-toggle",
+            "menu",
+            "menu-alt-1",
+            "menu-alt-2",
+            "menu-alt-3",
+            "menu-alt-4",
+            "microphone",
+            "minimize-toggle",
+            "minus",
+            "minus-circle",
+            "moon",
+            "move-item",
+            "music-note",
+            "newspaper",
+            "node-closed",
+            "node-line",
+            "node-line-end",
+            "node-open",
+            "office-building",
+            "paper-airplane",
+            "paper-clip",
+            "pause",
+            "pencil",
+            "pencil-alt",
+            "phone",
+            "phone-incoming",
+            "phone-missed-call",
+            "phone-outgoing",
+            "photograph",
+            "play",
+            "plus",
+            "plus_circle_filled",
+            "plus_circle_outlined",
+            "presentation-chart-bar",
+            "presentation-chart-line",
+            "printer",
+            "progress-track-warning",
+            "puzzle",
+            "qrcode",
+            "question-mark-circle",
+            "receipt-refund",
+            "receipt-tax",
+            "reddit",
+            "refresh",
+            "reply",
+            "rewind",
+            "right-rail-toggle",
+            "rss",
+            "rt_bold",
+            "rt_decrease_indent",
+            "rt_heading",
+            "rt_increase_indent",
+            "rt_italic",
+            "rt_ordered_list",
+            "rt_unordered_list",
+            "save",
+            "save-as",
+            "scale",
+            "scissors",
+            "search",
+            "search-circle",
+            "selector",
+            "send-airplane",
+            "server",
+            "share",
+            "shield-check",
+            "shield-exclamation",
+            "shopping-bag",
+            "shopping-cart",
+            "sm-view-grid-add",
+            "sort-ascending",
+            "sort-descending",
+            "sparkles",
+            "speakerphone",
+            "star_filled",
+            "star_outlined",
+            "status-offline",
+            "status-online",
+            "stop",
+            "summary",
+            "sun",
+            "support",
+            "switch-horizontal",
+            "switch-vertical",
+            "table",
+            "tag",
+            "template",
+            "terminal",
+            "thumb-down",
+            "thumb-up",
+            "ticket",
+            "top-bar",
+            "top-bar-filled",
+            "translate",
+            "trash",
+            "trending-down",
+            "trending-up",
+            "truck",
+            "unlink",
+            "upload",
+            "user",
+            "user-add",
+            "user-circle",
+            "user-group",
+            "users",
+            "variable",
+            "video-camera",
+            "view-boards",
+            "view-grid",
+            "view-list",
+            "volume-off",
+            "volume-up",
+            "vote",
+            "wallet",
+            "wifi",
+            "x",
+            "x-circle",
+            "xTwitter",
+            "zoom-in",
+            "zoom-out"
+          ],
+          "description": "The name of the Icon to display with the field.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-order": {
+          "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an arbitrary order.",
+          "required": "yes",
+          "type": "string"
+        }
+      },
+      "parent": "{}"
     },
-    "type": {
-      "description": "The document TYPE.",
-      "exclusive": null,
-      "format": "Document Type",
-      "required": "yes",
-      "validation": "**MUST** be a known document type."
+    "singleGroupedTagSelector": {
+      "definition": {
+        "additionalProperties": false,
+        "required": [
+          "group",
+          "tag"
+        ],
+        "type": "object"
+      },
+      "description": "UI - A selector where a top level group selection, allows a single choice from a list of tags.\nSelect one option from the dropdown menu. \nOnly one choice is allowed.\n\nThe contents of the `singleGroupedTagSelector` *MUST* have the following format:\n\n```json\n\"oneOf\": [\n\t{\n\t\t\"properties\": {\n\t\t\t\"group\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\t\"const\": \"Governance\"\n\t\t\t},\n\t\t\t\"tag\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\t\"enum\": [\n\t\t\t\t\t\"Governance\",\n\t\t\t\t\t\"DAO\"\n\t\t\t\t]\n\t\t\t}\n\t\t}\n\t},\n```",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "oneOf_groupedTags": {
+          "description": "A set of tags with a group selector.",
+          "items": {
+            "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
+            "required": "excluded",
+            "type": "object"
+          },
+          "property": "oneOf",
+          "required": "excluded",
+          "type": "array"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     },
-    "ver": {
-      "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`",
-      "exclusive": null,
-      "format": "Document Ver",
-      "required": "yes",
-      "validation": "The document version must always be >= the document ID."
+    "singleLineHttpsURLEntry": {
+      "definition": {
+        "format": "uri",
+        "pattern": "^https://[^\\s]+$",
+        "type": "string"
+      },
+      "description": "UI - Single Line text entry for HTTPS Urls.\n\"x-note\": \n\tMust start with 'https://' and is followed by one or more \n\tnon-whitespace characters, ending at the end of the string.\n\t",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxLength": {
+          "description": "Maximum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minLength": {
+          "description": "Minimum number of characters allowed in the field.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
+    },
+    "singleLineHttpsURLEntryList": {
+      "definition": {
+        "items": {
+          "format": "uri",
+          "minLength": 1,
+          "pattern": "^https://[^\\s]+$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default Array of URLs can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
+    },
+    "singleLineTextEntry": {
+      "definition": {
+        "pattern": "^[^\\n]*$",
+        "type": "string"
+      },
+      "description": "UI - Single Line text entry without any markup or rich text capability.\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.",
+      "parameters": {
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxLength": {
+          "description": "Maximum number of characters allowed in the field.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minLength": {
+          "description": "Minimum number of characters allowed in the field.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
+    },
+    "singleLineTextEntryList": {
+      "definition": {
+        "items": {
+          "minLength": 1,
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
+      "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
+      "parameters": {
+        "contains": {
+          "description": "The choices the multi select can contain.",
+          "items": {
+            "description": "An individual Choice.",
+            "required": "excluded",
+            "type": "string"
+          },
+          "required": "yes",
+          "type": "array"
+        },
+        "default": {
+          "description": "Default Array of text can be supplied.",
+          "required": "optional",
+          "type": "string"
+        },
+        "description": {
+          "description": "The description of the field presented during data entry.",
+          "required": "optional",
+          "type": "string"
+        },
+        "maxItems": {
+          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+          "required": "yes",
+          "type": "integer"
+        },
+        "minItems": {
+          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+          "required": "optional",
+          "type": "integer"
+        },
+        "title": {
+          "description": "The label attached to the field.",
+          "required": "yes",
+          "type": "string"
+        },
+        "x-guidance": {
+          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+          "required": "optional",
+          "type": "string"
+        },
+        "x-placeholder": {
+          "description": "Placeholder text to display inside the field if it is empty.",
+          "required": "optional",
+          "type": "string"
+        }
+      },
+      "parent": "section"
     }
   },
-  "metadataFormats": {
-    "Collaborators Reference List": {
-      "cddl": "collaborators",
-      "description": "A list of collaborators who can participate in drafting and submitting a document"
+  "metadata": {
+    "formats": {
+      "Chain Link": {
+        "cddl": "chain",
+        "description": "A link to a previous document in a chained sequence."
+      },
+      "Collaborators Reference List": {
+        "cddl": "collaborators",
+        "description": "A list of collaborators who can participate in drafting and submitting a document"
+      },
+      "Document Id": {
+        "cddl": "document_id",
+        "description": "A unique document identifier"
+      },
+      "Document Reference": {
+        "cddl": "document_refs",
+        "description": "A document reference identifier"
+      },
+      "Document Type": {
+        "cddl": "document_type",
+        "description": "A document type identifier"
+      },
+      "Document Ver": {
+        "cddl": "document_ver",
+        "description": "A unique chronological document version"
+      },
+      "Section Reference": {
+        "cddl": "section_ref",
+        "description": "A document section reference identifier"
+      },
+      "UUIDv4": {
+        "cddl": "uuid_v4",
+        "description": "Version 4 formatted UUID"
+      },
+      "UUIDv7": {
+        "cddl": "uuid_v7",
+        "description": "Version 7 formatted UUID"
+      },
+      "Version Revocations": {
+        "cddl": "revocations",
+        "description": "A list of all versions of this document which are 'revoked'."
+      }
     },
-    "Document Id": {
-      "cddl": "document_id",
-      "description": "A unique document identifier"
+    "headers": {
+      "chain": {
+        "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+        "format": "Chain Link",
+        "required": "optional",
+        "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document.\n\n##### Example of a Valid Chain\n\n<!-- markdownlint-disable MD046 -->\n``` mermaid\n\tclassDiagram\n    direction LR\n    class Last {\n        type: \"=Intermediate.Document Type\"\n        id: \"=Intermediate.Document ID\"\n        ver: \">Intermediate.Document ID\"\n        parameters: \"=Intermediate.Document Parameters\"\n        chain.height: -2\n        chain.document_ref: \"=Intermediate\"\n\n        author(Intermediate.Catalyst ID)\n    }\n    style Last stroke:#060,stroke-width:4px\n\n    class Intermediate {\n        type: \"=First.Document Type\"\n        id: \"=First.Document ID\"\n        ver: \">First.Document ID\"\n        parameters: \"=First.Document Parameters\"\n        chain.height: 1\n        chain.document_ref: \"=First\"\n\n        author(First.Catalyst ID)\n    }\n    style Intermediate stroke:#060,stroke-width:4px\n\n    class First {\n        type: \"Document Type\"\n        id: \"Document ID\"\n        ver: \"=Document ID\"\n        parameters: \"Document Parameters\"\n        chain.height: 0\n        chain.document_ref: None\n\n        author(Catalyst ID)\n    }\n    style First stroke:#060,stroke-width:4px\n\n    Last --|> Intermediate : chains to\n    Intermediate --|> First : chains to\n\n\n```\n<!-- markdownlint-enable MD046 -->\n\n##### Example of an Invalid Chain\n\nEither of the two documents being present invalidates the data\nin the entire chain,\nas they are signed by the author of the chain.\n\n<!-- markdownlint-disable MD046 -->\n``` mermaid\n\tclassDiagram\n    direction LR\n\n    class Last {\n        type: \"=Intermediate.Document Type\"\n        id: \"=Intermediate.Document ID\"\n        ver: \">Intermediate.Document ID\"\n        parameters: \"=Intermediate.Document Parameters\"\n        chain.height: -2\n        chain.document_ref: \"=Intermediate\"\n\n        author(Intermediate.Catalyst ID)\n    }\n    style Last stroke:#f60,stroke-width:4px\n\n    class Intermediate {\n        type: \"=First.Document Type\"\n        id: \"=First.Document ID\"\n        ver: \">First.Document ID\"\n        parameters: \"=First.Document Parameters\"\n        chain.height: 1\n        chain.document_ref: \"=First\"\n\n        author(First.Catalyst ID)\n    }\n    style Intermediate stroke:#f60,stroke-width:4px\n\n    class First {\n        type: \"Document Type\"\n        id: \"Document ID\"\n        ver: \"=Document ID\"\n        parameters: \"Document Parameters\"\n        chain.height: 0\n        chain.document_ref: None\n\n        author(Catalyst ID)\n    }\n    style First stroke:#f60,stroke-width:4px\n\n    Last --|> Intermediate : chains to\n    Intermediate --|> First : chains to\n\n    class Invalid_Chain {\n        type: \"=First.Document Type\"\n        id: \"=First.Document ID\"\n        ver: \">Intermediate.Document ID\"\n        parameters: \"=First.Document Parameters\"\n        chain.height: 1\n        chain.document_ref: \"=First\"\n\n        author(First.Catalyst ID)\n    }\n\n    Invalid_Chain --|> First : Invalidly chains to\n    style Invalid_Chain fill:#100,stroke:#f00,stroke-width:4px\n\n\n    class After_Final {\n        type: \"=Final.Document Type\"\n        id: \"=Final.Document ID\"\n        ver: \">Final.Document ID\"\n        parameters: \"=Final.Document Parameters\"\n        chain.height: 3\n        chain.document_ref: \"=Last\"\n\n        author(Last.Catalyst ID)\n    }\n\n    After_Final --|> Last : Invalidly chains to\n    style After_Final fill:#100,stroke:#f00,stroke-width:4px\n\n```\n<!-- markdownlint-enable MD046 -->\n\n##### Example of a Fraudulent Chain Document\n\nThe invalid document does not invalidate the chain,\nas its not signed by the author of the chained documents.\n\n<!-- markdownlint-disable MD046 -->\n``` mermaid\n\tclassDiagram\n    direction LR\n    class Last {\n        type: \"=Intermediate.Document Type\"\n        id: \"=Intermediate.Document ID\"\n        ver: \">Intermediate.Document ID\"\n        parameters: \"=Intermediate.Document Parameters\"\n        chain.height: -2\n        chain.document_ref: \"=Intermediate\"\n\n        author(Intermediate.Catalyst ID)\n    }\n    style Last stroke:#060,stroke-width:4px\n\n    class Intermediate {\n        type: \"=First.Document Type\"\n        id: \"=First.Document ID\"\n        ver: \">First.Document ID\"\n        parameters: \"=First.Document Parameters\"\n        chain.height: 1\n        chain.document_ref: \"=First\"\n\n        author(First.Catalyst ID)\n    }\n    style Intermediate stroke:#060,stroke-width:4px\n\n    class First {\n        type: \"Document Type\"\n        id: \"Document ID\"\n        ver: \"=Document ID\"\n        parameters: \"Document Parameters\"\n        chain.height: 0\n        chain.document_ref: None\n\n        author(Catalyst ID)\n    }\n    style First stroke:#060,stroke-width:4px\n\n    Last --|> Intermediate : chains to\n    Intermediate --|> First : chains to\n\n    class Rejected {\n        type: \"=First.Document Type\"\n        id: \"=First.Document ID\"\n        ver: \">Intermediate.Document ID\"\n        parameters: \"=Intermediate.Document Parameters\"\n        chain.height: 1\n        chain.document_ref: \"=First\"\n\n        author(Other.Catalyst ID)\n    }\n\n    Rejected --|> Intermediate : Invalidly chains to\n    style Rejected fill:#100,stroke:#f00,stroke-width:4px    \n\n```\n<!-- markdownlint-enable MD046 -->"
+      },
+      "collaborators": {
+        "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+        "format": "Collaborators Reference List",
+        "required": "optional",
+        "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+      },
+      "id": {
+        "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+        "format": "Document Id",
+        "required": "yes",
+        "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+      },
+      "parameters": {
+        "description": "A reference to the Parameters Document this document lies under.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Brand Parameters",
+          "Campaign Parameters",
+          "Category Parameters",
+          "Decision Parameters"
+        ],
+        "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+      },
+      "ref": {
+        "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Proposal Meta Template",
+          "Proposal Template",
+          "Proposal",
+          "Proposal Comment Meta Template",
+          "Proposal Comment Template",
+          "Proposal Comment",
+          "Proposal Submission Action",
+          "Proposal Moderation Action",
+          "Comment Moderation Action",
+          "Brand Parameters",
+          "Campaign Parameters",
+          "Category Parameters",
+          "Decision Parameters"
+        ],
+        "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+      },
+      "reply": {
+        "description": "Reference to a Comment document type being referred to.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Proposal Comment"
+        ],
+        "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+      },
+      "revocations": {
+        "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+        "format": "Version Revocations",
+        "required": "excluded",
+        "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+      },
+      "section": {
+        "description": "A Reference to the original document, or the comment being replied to.",
+        "format": "Section Reference",
+        "required": "optional",
+        "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+      },
+      "template": {
+        "description": "Reference to the template used to create and/or validate this document.",
+        "format": "Document Reference",
+        "linked_refs": null,
+        "multiple": false,
+        "required": "optional",
+        "type": [
+          "Proposal Meta Template",
+          "Proposal Template",
+          "Proposal Comment Meta Template",
+          "Proposal Comment Template"
+        ],
+        "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+      },
+      "type": {
+        "description": "The document TYPE.",
+        "format": "Document Type",
+        "required": "yes",
+        "validation": "**MUST** be a known document type."
+      },
+      "ver": {
+        "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents either:\n\n* when a document changes over time, such as\n\twith a new version of a particular document that supersedes an \n\tearlier one.\n* when a new document in a sequence of documents is produced.\n\t\nBecause the most common use `ver` is a new version of the same document\nthis is to be assumed unless the document specifies its representing\na sequence of documents.",
+        "format": "Document Ver",
+        "required": "yes",
+        "validation": "The document version must always be >= the document ID."
+      }
     },
-    "Document Reference": {
-      "cddl": "document_ref",
-      "description": "A document reference identifier"
-    },
-    "Document Type": {
-      "cddl": "document_type",
-      "description": "A document type identifier"
-    },
-    "Document Ver": {
-      "cddl": "document_ver",
-      "description": "A unique chronological document version"
-    },
-    "Section Reference": {
-      "cddl": "section_ref",
-      "description": "A document section reference identifier"
-    },
-    "UUIDv4": {
-      "cddl": "uuid_v4",
-      "description": "Version 4 formatted UUID"
-    },
-    "UUIDv7": {
-      "cddl": "uuid_v7",
-      "description": "Version 7 formatted UUID"
-    },
-    "Version Revocations": {
-      "cddl": "revocations",
-      "description": "A list of all versions of this document which are 'revoked'."
-    }
-  },
-  "metadata_order": [
-    "type",
-    "id",
-    "ver",
-    "ref",
-    "template",
-    "reply",
-    "section",
-    "collaborators",
-    "revocations",
-    "parameters"
-  ]
+    "order": [
+      "type",
+      "id",
+      "ver",
+      "ref",
+      "template",
+      "reply",
+      "section",
+      "collaborators",
+      "revocations",
+      "parameters"
+    ]
+  }
 }
