@@ -22,4 +22,8 @@ class TemplatesMd(DocGenerator):
         if not example_schema.save_or_validate():
             return False
 
+        self._filedata = """
+# Templates"
+"""
+
         return super().generate()

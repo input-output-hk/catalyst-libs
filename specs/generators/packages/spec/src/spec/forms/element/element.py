@@ -19,22 +19,21 @@ class Element(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    @computed_field
-    def name(self) -> str:  # type: ignore[obscured]
+    def name(self) -> str:
         """Name Of the Parameter."""
         return self._name
 
-    @name.setter  # type: ignore[prop-decorator]
-    def name(self, val: str) -> None:
+    def set_name(self, val: str) -> None:
+        """Set Name."""
         self._name = val
 
-    @computed_field()
+    @computed_field
     @cached_property
     def json_definition(self) -> dict[str, Any]:
         """Json Definition."""
         return self.definition
 
-    @computed_field()
+    @computed_field
     @cached_property
     def example(self) -> dict[str, Any]:
         """Generate an example of the definition."""

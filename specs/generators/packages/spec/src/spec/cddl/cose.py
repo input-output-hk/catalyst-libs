@@ -30,15 +30,11 @@ class GenericHeader(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    @computed_field
-    @property
     def name(self) -> str:
         """Get headers name."""
         return self._name
 
-    @computed_field
-    @name.setter
-    def name(self, name: str) -> None:
+    def set_name(self, name: str) -> None:
         """Set headers name."""
         self._name = name
 
@@ -74,7 +70,7 @@ class CoseHeaders(RootModel[dict[str, CoseHeader]]):
 
         # Set Cose Header Names
         for name, header in self.root.items():
-            header.name = name
+            header.set_name(name)
 
     def get(self, name: str) -> CoseHeader:
         """Get a Cose Header by its name."""

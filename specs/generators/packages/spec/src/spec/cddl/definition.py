@@ -3,7 +3,7 @@
 import re
 import typing
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, computed_field
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel
 
 
 class CDDLDefinition(BaseModel):
@@ -18,13 +18,12 @@ class CDDLDefinition(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    @computed_field
-    def name(self) -> str:  # type: ignore[obscured]
+    def name(self) -> str:
         """Name Of the Parameter."""
         return self._name
 
-    @name.setter  # type: ignore[prop-decorator]
-    def name(self, val: str) -> None:
+    def set_name(self, val: str) -> None:
+        """Set Name."""
         self._name = val
 
 
@@ -38,7 +37,7 @@ class CDDLDefinitions(RootModel[dict[str, CDDLDefinition]]):
         super().model_post_init(context)
 
         for def_name, value in self.root.items():
-            value.name = def_name
+            value.set_name(def_name)
 
     def get(self, name: str) -> CDDLDefinition:
         """Get a CDDL Definition."""
@@ -49,7 +48,7 @@ class CDDLDefinitions(RootModel[dict[str, CDDLDefinition]]):
         if isinstance(definition, CDDLDefinition):
             definition = [definition]
         for this_def in definition:
-            self.root[this_def.name] = this_def
+            self.root[this_def.name()] = this_def
 
     @staticmethod
     def _add_cddl_comments(comment: str) -> tuple[str, bool]:

@@ -28,27 +28,26 @@ class Parameter(BaseModel):
     minimum: int | None = Field(default=None)
     maximum: int | None = Field(default=None)
     example: Any = Field(default=None)
+
     _name: str = PrivateAttr(default="Unknown")
     _element_name: str = PrivateAttr(default="Unknown")
 
     model_config = ConfigDict(extra="forbid")
 
-    @computed_field
-    def element_name(self) -> str:  # type: ignore[obscured]
+    def element_name(self) -> str:
         """Name Of the Parameters Element Type."""
-        return self._name
+        return self._element_name
 
-    @element_name.setter  # type: ignore[prop-decorator]
-    def element_name(self, val: str) -> None:
-        self._name = val
+    def set_element_name(self, val: str) -> None:
+        """Set Element Name."""
+        self._element_name = val
 
-    @computed_field
-    def name(self) -> str:  # type: ignore[obscured]
+    def name(self) -> str:
         """Name Of the Parameter."""
         return self._name
 
-    @name.setter  # type: ignore[prop-decorator]
-    def name(self, val: str) -> None:
+    def set_name(self, val: str) -> None:
+        """Set Name."""
         self._name = val
 
     def example_kv(self, index: int = 0) -> tuple[str, Any]:
@@ -67,25 +66,24 @@ class Parameters(RootModel[dict[str, Parameter]]):
     root: dict[str, Parameter]
     _element_name: str = PrivateAttr(default="Unknown")
 
-    @computed_field
-    def element_name(self) -> str | None:  # type: ignore[obscured]
+    def element_name(self) -> str | None:
         """Name Of the Parameters Element Type."""
-        return self._name
+        return self._element_name
 
-    @element_name.setter  # type: ignore[prop-decorator]
-    def element_name(self, val: str) -> None:
-        self._name = val
+    def set_element_name(self, val: str) -> None:
+        """Set Element Name."""
+        self._element_name = val
         for name, value in self.root.items():
-            value.element_name = name
+            value.set_element_name(name)
 
     def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
         """Extra setup after we deserialize."""
         super().model_post_init(context)
 
         for name, value in self.root.items():
-            value.name = name
+            value.set_name(name)
 
-    @computed_field()
+    @computed_field
     @cached_property
     def example(self) -> dict[str, Any]:
         """Generate an example of the definition."""

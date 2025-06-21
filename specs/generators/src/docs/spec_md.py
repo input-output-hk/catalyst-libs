@@ -39,7 +39,7 @@ class SpecMd(DocGenerator):
                 header_format_display += value_entry
 
         return f"""
-#### `{header.name}`
+#### `{header.name()}`
 
 {header.description}
 

@@ -33,15 +33,8 @@ class TemplateExampleSchemaJson(DocGenerator):
             "properties": self._spec.form_template.example,
         }
 
-        #    "definitions": {{
-        # {self._spec.template_json_schema_defs.json_definition}
-        # }},
-        # }}
-        # """
         template_schema = json.dumps(schema, indent=4)
         jsonschema.Draft202012Validator.check_schema(schema)
-        # validator = jsonschema.Draft7Validator(schema, format_checker=jsonschema.draft7_format_checker)  # noqa: ERA001
-        # validator.validate(schema)  # noqa: ERA001
 
         self._filedata = template_schema
 
