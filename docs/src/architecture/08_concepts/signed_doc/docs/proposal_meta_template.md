@@ -90,6 +90,8 @@ IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a docu
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
+[`ver`](../metadata.md#ver) represents new versions of the same document as it changes over time.
+
 #### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.

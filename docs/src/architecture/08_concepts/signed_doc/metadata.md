@@ -5,6 +5,21 @@
 The following types of metadata have been defined.
 All Metadata fields use one of these types.
 
+### Chain Link
+
+A link to a previous document in a chained sequence.
+
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "CDDL Specification"
+
+    * [cddl/chain.cddl](cddl/chain.cddl)
+
+    ```cddl
+    {{ include_file('./cddl/chain.cddl', indent=4) }}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
+
 ### Collaborators Reference List
 
 A list of collaborators who can participate in drafting and submitting a document
@@ -42,10 +57,10 @@ A document reference identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_ref.cddl](cddl/document_ref.cddl)
+    * [cddl/document_refs.cddl](cddl/document_refs.cddl)
 
     ```cddl
-    {{ include_file('./cddl/document_ref.cddl', indent=4) }}
+    {{ include_file('./cddl/document_refs.cddl', indent=4) }}
     ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -184,6 +199,17 @@ IF [`ver`](metadata.md#ver) does not == [`id`](metadata.md#id) then a document w
 The unique version of the document.
 The first version of the document must set [`ver`](metadata.md#ver) == [`id`](metadata.md#id)
 
+[`ver`](metadata.md#ver) represents either:
+
+* when a document changes over time, such as
+   with a new version of a particular document that supersedes an
+  earlier one.
+* when a new document in a sequence of documents is produced.
+
+Because the most common use [`ver`](metadata.md#ver) is a new version of the same document
+this is to be assumed unless the document specifies its representing
+a sequence of documents.
+
 #### `ver` Validation
 
 The document version must always be >= the document ID.
@@ -218,7 +244,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-    In other words, that the document intended to be referenced, is actually referenced.
+  In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.
@@ -341,6 +367,232 @@ In addition to the validation performed for [Document Reference](metadata.md#doc
 
 * Any linked referenced document that includes a [`parameters`](metadata.md#parameters) metadata must match the
 [`parameters`](metadata.md#parameters) of the referencing document.
+
+### `chain`
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Chain Link](metadata.md#chain-link) |
+<!-- markdownlint-enable MD033 -->
+An immutable link to the previous document in a chained sequence of documents.
+Because ID/Ver only defines values for the current document, and is not intended
+by itself to prevent insertion of documents in a sequence, the [`chain`](metadata.md#chain)
+metadata allows for the latest document to directly point to its previous iteration.
+
+It also aids in discoverability, where the latest document may be pinned but prior
+documents can be discovered automatically by following the chain.
+
+#### `chain` Validation
+
+Chained Documents do not support collaborators.
+Any document which is attempted to be published in the sequence
+which is *NOT* published by the author of the first document in the
+sequence is fraudulent, and to be discarded.
+
+In addition, the chained document *MUST*:
+
+* Not have `collaborators`;
+* Have the same [`id`](metadata.md#id) as the document being chained to;
+* Have a [`ver`](metadata.md#ver) that is greater than the [`ver`](metadata.md#ver) being chained to;
+* Have the same [`type`](metadata.md#type) as the chained document;
+* Have [`parameters`](metadata.md#parameters) match;
+* Have not be chaining to a document already chained to by another document;
+* Have its absolute `height` exactly one more than the `height` of the document being chained to.
+
+IF any of these validations fail, then the entire sequence of documents is INVALID.
+Not just the current document.
+
+##### Example of a Valid Chain
+
+``` mermaid
+    classDiagram
+    direction LR
+    class Last {
+        type: "=Intermediate.Document Type"
+        id: "=Intermediate.Document ID"
+        ver: ">Intermediate.Document ID"
+        parameters: "=Intermediate.Document Parameters"
+        chain.height: -2
+        chain.document_ref: "=Intermediate"
+
+        author(Intermediate.Catalyst ID)
+    }
+    style Last stroke:#060,stroke-width:4px
+
+    class Intermediate {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">First.Document ID"
+        parameters: "=First.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(First.Catalyst ID)
+    }
+    style Intermediate stroke:#060,stroke-width:4px
+
+    class First {
+        type: "Document Type"
+        id: "Document ID"
+        ver: "=Document ID"
+        parameters: "Document Parameters"
+        chain.height: 0
+        chain.document_ref: None
+
+        author(Catalyst ID)
+    }
+    style First stroke:#060,stroke-width:4px
+
+    Last --|> Intermediate : chains to
+    Intermediate --|> First : chains to
+
+
+```
+
+##### Example of an Invalid Chain
+
+Either of the two documents being present invalidates the data
+in the entire chain,
+as they are signed by the author of the chain.
+
+``` mermaid
+    classDiagram
+    direction LR
+
+    class Last {
+        type: "=Intermediate.Document Type"
+        id: "=Intermediate.Document ID"
+        ver: ">Intermediate.Document ID"
+        parameters: "=Intermediate.Document Parameters"
+        chain.height: -2
+        chain.document_ref: "=Intermediate"
+
+        author(Intermediate.Catalyst ID)
+    }
+    style Last stroke:#f60,stroke-width:4px
+
+    class Intermediate {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">First.Document ID"
+        parameters: "=First.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(First.Catalyst ID)
+    }
+    style Intermediate stroke:#f60,stroke-width:4px
+
+    class First {
+        type: "Document Type"
+        id: "Document ID"
+        ver: "=Document ID"
+        parameters: "Document Parameters"
+        chain.height: 0
+        chain.document_ref: None
+
+        author(Catalyst ID)
+    }
+    style First stroke:#f60,stroke-width:4px
+
+    Last --|> Intermediate : chains to
+    Intermediate --|> First : chains to
+
+    class Invalid_Chain {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">Intermedisate.Document ID"
+        parameters: "=First.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(First.Catalyst ID)
+    }
+
+    Invalid_Chain --|> First : Invalidly chains to
+    style Invalid_Chain fill:#100,stroke:#f00,stroke-width:4px
+
+
+    class After_Final {
+        type: "=Final.Document Type"
+        id: "=Final.Document ID"
+        ver: ">Final.Document ID"
+        parameters: "=Final.Document Parameters"
+        chain.height: 3
+        chain.document_ref: "=Last"
+
+        author(Last.Catalyst ID)
+    }
+
+    After_Final --|> Last : Invalidly chains to
+    style After_Final fill:#100,stroke:#f00,stroke-width:4px
+
+```
+
+##### Example of a Fraudulent Chain Document
+
+The invalid document does not invalidate the chain,
+as its not signed by the author of the chained documents.
+
+``` mermaid
+    classDiagram
+    direction LR
+    class Last {
+        type: "=Intermediate.Document Type"
+        id: "=Intermediate.Document ID"
+        ver: ">Intermediate.Document ID"
+        parameters: "=Intermediate.Document Parameters"
+        chain.height: -2
+        chain.document_ref: "=Intermediate"
+
+        author(Intermediate.Catalyst ID)
+    }
+    style Last stroke:#060,stroke-width:4px
+
+    class Intermediate {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">First.Document ID"
+        parameters: "=First.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(First.Catalyst ID)
+    }
+    style Intermediate stroke:#060,stroke-width:4px
+
+    class First {
+        type: "Document Type"
+        id: "Document ID"
+        ver: "=Document ID"
+        parameters: "Document Parameters"
+        chain.height: 0
+        chain.document_ref: None
+
+        author(Catalyst ID)
+    }
+    style First stroke:#060,stroke-width:4px
+
+    Last --|> Intermediate : chains to
+    Intermediate --|> First : chains to
+
+    class Rejected {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">Intermedisate.Document ID"
+        parameters: "=Intermediate.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(Other.Catalyst ID)
+    }
+
+    Rejected --|> Intermediate : Invalidly chains to
+    style Rejected fill:#100,stroke:#f00,stroke-width:4px
+
+```
 
 ## Copyright
 
