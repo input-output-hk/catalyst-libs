@@ -150,7 +150,8 @@ block-beta
     style D0 fill: green
 ```
 
-It isn't allowed to use a role 0 public key that was used in any of the other registration chains.
+It isn't allowed to use a public key that was used in any of the other registration chains.
+This applies to public keys of all roles.
 
 In the example above the third registration in the first chain is invalid, so `PubKey3` that is used in that transaction
 can be used in the fourth chain.
