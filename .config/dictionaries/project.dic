@@ -178,6 +178,7 @@ mitigations
 mkcron
 mkdelay
 mkdirat
+mkdocs
 Mmap
 moderations
 moka
