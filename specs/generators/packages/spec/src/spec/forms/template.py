@@ -19,9 +19,9 @@ class FormTemplate(RootModel[dict[str, Element]]):
         super().model_post_init(context)
 
         for def_name, value in self.root.items():
-            value.name = def_name
+            value.set_name(def_name)
 
-    @computed_field()
+    @computed_field
     @cached_property
     def json_definition(self) -> dict[str, Any]:
         """Json Definition."""
@@ -32,7 +32,7 @@ class FormTemplate(RootModel[dict[str, Element]]):
 
         return definitions
 
-    @computed_field()
+    @computed_field
     @cached_property
     def example(self) -> dict[str, Any]:
         """Generate an example of the definitions."""

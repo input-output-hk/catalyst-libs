@@ -274,14 +274,14 @@ class DocGenerator:
         # the formatted markdown to pass lints.
         # self._filedata = f"""
         # <!-- markdownlint-configure-file {{
-        #    "MD004": {{"style": "consistent"}},
+        #    "MD004": {{"style": "consistent"}},  # noqa: ERA001
         #    "MD007": {{"indent": 4}}
         # }}-->
         # {self._filedata}"""
         #            self._filedata = mdformat.text(  # type: ignore  # noqa: PGH003
         #                self._filedata, options={"number": True, "wrap": "keep"}, extensions=["mkdocs"]
-        #            )
-        #        else:
+        #            )  # noqa: ERA001, RUF100
+        #        else:  # noqa: ERA001
         self.strip_end_whitespace()
 
         return True

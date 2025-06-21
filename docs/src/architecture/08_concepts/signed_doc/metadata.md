@@ -406,8 +406,9 @@ Not just the current document.
 
 ##### Example of a Valid Chain
 
+<!-- markdownlint-disable MD046 -->
 ``` mermaid
-    classDiagram
+   classDiagram
     direction LR
     class Last {
         type: "=Intermediate.Document Type"
@@ -450,6 +451,7 @@ Not just the current document.
 
 
 ```
+<!-- markdownlint-enable MD046 -->
 
 ##### Example of an Invalid Chain
 
@@ -457,8 +459,9 @@ Either of the two documents being present invalidates the data
 in the entire chain,
 as they are signed by the author of the chain.
 
+<!-- markdownlint-disable MD046 -->
 ``` mermaid
-    classDiagram
+ classDiagram
     direction LR
 
     class Last {
@@ -503,7 +506,7 @@ as they are signed by the author of the chain.
     class Invalid_Chain {
         type: "=First.Document Type"
         id: "=First.Document ID"
-        ver: ">Intermedisate.Document ID"
+        ver: ">Intermediate.Document ID"
         parameters: "=First.Document Parameters"
         chain.height: 1
         chain.document_ref: "=First"
@@ -530,12 +533,14 @@ as they are signed by the author of the chain.
     style After_Final fill:#100,stroke:#f00,stroke-width:4px
 
 ```
+<!-- markdownlint-enable MD046 -->
 
 ##### Example of a Fraudulent Chain Document
 
 The invalid document does not invalidate the chain,
 as its not signed by the author of the chained documents.
 
+<!-- markdownlint-disable MD046 -->
 ``` mermaid
     classDiagram
     direction LR
@@ -581,7 +586,7 @@ as its not signed by the author of the chained documents.
     class Rejected {
         type: "=First.Document Type"
         id: "=First.Document ID"
-        ver: ">Intermedisate.Document ID"
+        ver: ">Intermediate.Document ID"
         parameters: "=Intermediate.Document Parameters"
         chain.height: 1
         chain.document_ref: "=First"
@@ -593,6 +598,7 @@ as its not signed by the author of the chained documents.
     style Rejected fill:#100,stroke:#f00,stroke-width:4px
 
 ```
+<!-- markdownlint-enable MD046 -->
 
 ## Copyright
 

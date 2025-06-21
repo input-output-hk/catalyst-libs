@@ -22,14 +22,15 @@ class MetadataHeader(GenericHeader):
     raw_linked_refs: list[str] | None = Field(alias="linked_refs", default=None)
 
     # Not deserialized, must be supplied.
-    doc_name: str | None = Field(default=None)
+    _name: str = PrivateAttr(default="Unknown")
+    _doc_name: str | None = PrivateAttr(default=None)
 
     model_config = ConfigDict(extra="forbid")
 
     def set_name(self, name: str, doc_name: str | None = None) -> None:
         """Set the name properties."""
-        self.name = name
-        self.doc_name = doc_name
+        self._name = name
+        self._doc_name = doc_name
 
     @staticmethod
     def fix_list(fix: str | list[str] | None) -> list[str]:
@@ -40,13 +41,13 @@ class MetadataHeader(GenericHeader):
             fix = [fix]
         return fix
 
-    @computed_field()
+    @computed_field
     @cached_property
     def type(self) -> list[str]:
         """Type."""
         return self.fix_list(self.raw_type)
 
-    @computed_field()
+    @computed_field
     @cached_property
     def linked_refs(self) -> list[str]:
         """Linked Refs."""
@@ -60,8 +61,8 @@ class MetadataHeader(GenericHeader):
         for ref in self.linked_refs:
             validation += f"""
 * The Document referenced by `{ref}`
-  * MUST contain `{self.name}` metadata; AND
-  * MUST match the referencing documents `{self.name}` value."""
+  * MUST contain `{self._name}` metadata; AND
+  * MUST match the referencing documents `{self._name}` value."""
 
         return validation.strip()
 
@@ -74,7 +75,7 @@ class MetadataHeader(GenericHeader):
         field_title_level = "###"
 
         field_display = f"""
-{field_title_level} `{self.name}`
+{field_title_level} `{self._name}`
 
 <!-- markdownlint-disable MD033 -->
 | Parameter | Value |
@@ -84,7 +85,7 @@ class MetadataHeader(GenericHeader):
         if not self.is_excluded():
             field_display += f"| Format | `{self.format}` |\n"
 
-            if self.name == "type" and doc_types is not None:
+            if self._name == "type" and doc_types is not None:
                 # Display the actual documents type values
                 formatted_id = doc_types.formatted_ids(
                     prefix="", start_quote="`", end_quote="`", separator=",<br/>", suffix="", cbor=False
@@ -107,7 +108,7 @@ class MetadataHeader(GenericHeader):
             field_display += f"""<!-- markdownlint-enable MD033 -->
 {self.description}
 
-{field_title_level}# `{self.name}` Validation
+{field_title_level}# `{self._name}` Validation
 
 {self.get_validation()}
 """

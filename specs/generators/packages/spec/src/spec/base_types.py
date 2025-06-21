@@ -12,6 +12,8 @@ class DocTypeId(RootModel[UUID4]):
     root: UUID4  # name: uuid_str
 
     class Config:
+        """Config."""
+
         frozen = True
 
     @computed_field
