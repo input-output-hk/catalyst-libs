@@ -1,0 +1,54 @@
+classDiagram
+    direction LR
+    class Last {
+        type: "=Intermediate.Document Type"
+        id: "=Intermediate.Document ID"
+        ver: ">Intermediate.Document ID"
+        parameters: "=Intermediate.Document Parameters"
+        chain.height: -2
+        chain.document_ref: "=Intermediate"
+
+        author(Intermediate.Catalyst ID)
+    }
+    style Last stroke:#060,stroke-width:4px
+
+    class Intermediate {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">First.Document ID"
+        parameters: "=First.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(First.Catalyst ID)
+    }
+    style Intermediate stroke:#060,stroke-width:4px
+
+    class First {
+        type: "Document Type"
+        id: "Document ID"
+        ver: "=Document ID"
+        parameters: "Document Parameters"
+        chain.height: 0
+        chain.document_ref: None
+
+        author(Catalyst ID)
+    }
+    style First stroke:#060,stroke-width:4px
+
+    Last --|> Intermediate : chains to
+    Intermediate --|> First : chains to
+
+    class Rejected {
+        type: "=First.Document Type"
+        id: "=First.Document ID"
+        ver: ">Intermedisate.Document ID"
+        parameters: "=Intermediate.Document Parameters"
+        chain.height: 1
+        chain.document_ref: "=First"
+
+        author(Other.Catalyst ID)
+    }
+
+    Rejected --|> Intermediate : Invalidly chains to
+    style Rejected fill:#100,stroke:#f00,stroke-width:4px    

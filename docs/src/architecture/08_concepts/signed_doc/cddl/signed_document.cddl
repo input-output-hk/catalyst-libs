@@ -65,13 +65,14 @@ Signed_Document_Metadata_Headers = (
   "type" => document_type
   "id" => document_id
   "ver" => document_ver
-  ?"ref" => document_ref
-  ?"template" => document_ref
-  ?"reply" => document_ref
+  ?"ref" => document_refs
+  ?"template" => document_refs
+  ?"reply" => document_refs
   ?"section" => section_ref
   ?"collaborators" => collaborators
   ?"revocations" => revocations
-  ?"parameters" => document_ref
+  ?"parameters" => document_refs
+  ?"chain" => chain
 )
 
 ; Document Type
@@ -89,12 +90,15 @@ uuid_v7 = #6.37(bytes .size 16)
 ; Document Version
 document_ver = uuid_v7
 
-; Reference to another Signed Document
-document_ref = [ 1* [
+; Reference to one or more Signed Documents
+document_refs = [ 1* document_ref ]
+
+; Reference to a single Signed Document
+document_ref = [
   document_id,
   document_ver,
   document_locator
-] ]
+]
 
 ; Where a document can be located, must be a unique identifier.
 document_locator = {
@@ -119,6 +123,29 @@ catalyst_id_kid = bytes
 
 ; List of revoked versions of this document.
 revocations = [ * document_ver ] / true
+
+; Reference to the previous Signed Document in a sequence.
+; * `height` is of the CURRENT block.
+; * `document_ref` is *ONLY* omitted in the very first document in a sequence.
+chain = [height, ? document_ref]
+
+; The consecutive sequence number of the current document
+; in the chain.
+; The very first document in a sequence is numbered `0` and it
+; *MUST ONLY* increment by one for each successive document in
+; the sequence.
+;
+; The FINAL sequence number is encoded with the current height
+; sequence value, negated.
+;
+; For example the following values for height define a chain
+; that has 5 documents in the sequence 0-4, the final height
+; is negated to indicate the end of the chain:
+; `0, 1, 2, 3, -4`
+;
+; No subsequent document can be chained to a sequence that has
+; a final chain height.
+height = int
 
 ; Generic Header definition
 COSE_Generic_Headers = ( * COSE_label => COSE_values )

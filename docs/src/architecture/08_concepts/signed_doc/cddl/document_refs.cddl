@@ -1,5 +1,8 @@
-; document_ref
+; document_refs
 
+
+; Reference to one or more Signed Documents
+document_refs = [ 1* document_ref ]
 
 ; Reference to a single Signed Document
 document_ref = [

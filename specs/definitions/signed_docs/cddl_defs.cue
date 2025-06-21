@@ -77,20 +77,27 @@ cddlDefinitions: #cddlDefinitions & {
 		requires: ["cid"]
 		comment: "Where a document can be located, must be a unique identifier."
 	}
+	document_refs: {
+		def: "[ 1* \(requires[0]) ]"
+		requires: [
+			"document_ref",
+		]
+		comment: "Reference to one or more Signed Documents"
+	}
 	document_ref: {
 		def: """
-			[ 1* [
+			[
 			  \(requires[0]), 
 			  \(requires[1]), 
 			  \(requires[2])
-			] ]
+			]
 			"""
 		requires: [
 			"document_id",
 			"document_ver",
 			"document_locator",
 		]
-		comment: "Reference to another Signed Document"
+		comment: "Reference to a single Signed Document"
 	}
 	json_pointer: {
 		def:     "text"
@@ -140,6 +147,40 @@ cddlDefinitions: #cddlDefinitions & {
 		def: "[ * document_ver ] / true "
 		requires: ["document_ver"]
 	}
+	chain: {
+		def: "[\(requires[0]), ? \(requires[1])]"
+		requires: [
+			"height",
+			"document_ref",
+		]
+		comment: """
+			Reference to the previous Signed Document in a sequence.
+			* `\(requires[0])` is of the CURRENT block.
+			* `\(requires[1])` is *ONLY* omitted in the very first document in a sequence.
+			"""
+	}
+	height: {
+		def: "int"
+		comment: """
+			The consecutive sequence number of the current document 
+			in the chain.
+			The very first document in a sequence is numbered `0` and it
+			*MUST ONLY* increment by one for each successive document in
+			the sequence.
+
+			The FINAL sequence number is encoded with the current height
+			sequence value, negated. 
+			
+			For example the following values for height define a chain
+			that has 5 documents in the sequence 0-4, the final height 
+			is negated to indicate the end of the chain:
+			`0, 1, 2, 3, -4`
+
+			No subsequent document can be chained to a sequence that has
+			a final chain height.
+			"""
+	}
+
 }
 
 #cddlTypes: [
