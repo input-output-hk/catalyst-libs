@@ -7,16 +7,20 @@ import (
 
 // Named Type UUIDs for easier definitions/references
 _allDocTypes: {
-	"Template":         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
-	"Proposal":         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
-	"Comment":          "b679ded3-0e7c-41ba-89f8-da62a17898ea"
-	"Action":           "5e60e623-ad02-4a1b-a1ac-406db978ee48"
-	"SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65"
-	"ModerationAction": "a5d232b8-5e03-4117-9afd-be32b878fcdd"
-	"Brand":            "ebcabeeb-5bc5-4f95-91e8-cab8ca724172"
-	"Campaign":         "5ef32d5d-f240-462c-a7a4-ba4af221fa23"
-	"Category":         "818938c3-3139-4daa-afe6-974c78488e95"
-	"Decision":         "788ff4c6-d65a-451f-bb33-575fe056b411"
+	"Template":                      "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
+	"Proposal":                      "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+	"Comment":                       "b679ded3-0e7c-41ba-89f8-da62a17898ea"
+	"Action":                        "5e60e623-ad02-4a1b-a1ac-406db978ee48"
+	"SubmissionAction":              "78927329-cfd9-4ea1-9c71-0e019b126a65"
+	"ModerationAction":              "a5d232b8-5e03-4117-9afd-be32b878fcdd"
+	"Brand":                         "ebcabeeb-5bc5-4f95-91e8-cab8ca724172"
+	"Campaign":                      "5ef32d5d-f240-462c-a7a4-ba4af221fa23"
+	"Category":                      "818938c3-3139-4daa-afe6-974c78488e95"
+	"Decision":                      "788ff4c6-d65a-451f-bb33-575fe056b411"
+	"Profile":                       "1b70f611-518d-479e-be73-11b5e9cb68a5"
+	"RepresentativeProfile":         "e3f2c1b4-7890-4abc-8def-2345678901ef"
+	"RepresentativeCategoryProfile": "f1a2b3c4-1111-4abc-8def-2345678901aa"
+	"VoterRepresentativeDelegation": "f1a2b3c4-3333-4abc-8def-2345678901cc"
 }
 
 // Source of truth for ALL Document Types and their matching UUID's.
@@ -78,7 +82,30 @@ _allDocs: {
 	"Decision Parameters": [
 		_allDocTypes["Decision"],
 	]
-
+	"Profile": [
+		_allDocTypes["Profile"],
+	]
+	"Profile Template": [
+		_allDocTypes["Template"],
+		_allDocTypes["Profile"],
+	]
+	"Representative Profile Template": [
+		_allDocTypes["Template"],
+		_allDocTypes["RepresentativeProfile"],
+	]
+	"Representative Category Profile Template": [
+		_allDocTypes["Template"],
+		_allDocTypes["RepresentativeCategoryProfile"],
+	]
+	"Representative Profile": [
+		_allDocTypes["RepresentativeProfile"],
+	]
+	"Representative Category Profile": [
+		_allDocTypes["RepresentativeCategoryProfile"],
+	]
+	"Voter Representative Delegation": [
+		_allDocTypes["VoterRepresentativeDelegation"],
+	]
 }
 
 // Document Cluster Definition

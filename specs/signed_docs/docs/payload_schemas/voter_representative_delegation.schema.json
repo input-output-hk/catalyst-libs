@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/voter_representative_delegation.schema.json",
+  "title": "Voter Representative Delegation Payload Schema",
+  "description": "This payload is submitted when a voter delegates to a Representative, with the voter as the signer and the Representative’s category profile as the referenced document; to revoke the delegation, the voter can publish again with the status set to revoked.",
+  "maintainers": [
+    {
+      "name": "Catalyst Team",
+      "url": "https://projectcatalyst.io/"
+    }
+  ],
+  "x-changelog": {
+    "2025-06-19": [
+      "First Version Created."
+    ]
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "status": {
+      "type": "string",
+      "enum": ["active", "revoked"],
+      "description": "The status of the delegation. 'active' signifies delegation (set by default), 'revoked' signifies withdrawal of delegation."
+    }
+  },
+  "required": ["status"]
+} 

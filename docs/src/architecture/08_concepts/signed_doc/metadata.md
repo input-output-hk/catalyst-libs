@@ -208,6 +208,13 @@ The document version must always be >= the document ID.
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
 |  | [Decision Parameters](./docs/decision_parameters.md) |
+|  | [Profile](./docs/profile.md) |
+|  | [Profile Template](./docs/profile_template.md) |
+|  | [Representative Profile Template](./docs/representative_profile_template.md) |
+|  | [Representative Category Profile Template](./docs/representative_category_profile_template.md) |
+|  | [Representative Profile](./docs/representative_profile.md) |
+|  | [Representative Category Profile](./docs/representative_category_profile.md) |
+|  | [Voter Representative Delegation](./docs/voter_representative_delegation.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -252,6 +259,9 @@ The following must be true for a valid reference:
 |  | [Proposal Template](./docs/proposal_template.md) |
 |  | [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) |
 |  | [Proposal Comment Template](./docs/proposal_comment_template.md) |
+|  | [Profile Template](./docs/profile_template.md) |
+|  | [Representative Profile Template](./docs/representative_profile_template.md) |
+|  | [Representative Category Profile Template](./docs/representative_category_profile_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
