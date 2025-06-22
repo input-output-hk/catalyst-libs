@@ -56,7 +56,7 @@ docs: #DocumentDefinitions & {
 
 			template: {
 				required: "yes"
-				type:     "Proposal Comment Template"
+				type:     "Proposal Comment Form Template"
 			}
 
 			revocations: required: "optional"

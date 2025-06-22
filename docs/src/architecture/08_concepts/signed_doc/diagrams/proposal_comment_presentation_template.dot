@@ -1,12 +1,13 @@
-digraph "Proposal Meta Template" {
+digraph "Proposal Comment Presentation Template" {
     rankdir="LR"
     graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
     node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
     edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
-    label="Proposal Meta Template
-Document Relationships"
+    label="Proposal Comment Presentation
+Template Document
+Relationships"
     fontcolor="#1d71b8"
     fontsize=50
     compound=true
@@ -64,13 +65,13 @@ Document Relationships"
 
     }
 
-    "Proposal Meta Template" [
-        id="Proposal Meta Template";
+    "Proposal Comment Presentation Template" [
+        id="Proposal Comment Presentation Template";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_meta_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Meta Template </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_presentation_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment Presentation Template </B></FONT>
                 </TD>
             </TR>
             <TR>
@@ -88,7 +89,7 @@ Document Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>0ce8ab38-9258-4fbc-a62e-7faa6e58318f<BR />0ce8ab38-9258-4fbc-a62e-7faa6e58318f<BR />7808d2ba-d511-40af-84e8-c0d1625fdfdc</I></B></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>cb99b9bd-681a-49d8-9836-89107c02e8ef<BR />b679ded3-0e7c-41ba-89f8-da62a17898ea<BR />7808d2ba-d511-40af-84e8-c0d1625fdfdc</I></B></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -129,21 +130,5 @@ Document Relationships"
     ];
 
 
-    "Proposal Template" [
-        id="Proposal Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Meta Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Proposal Template":"title":e -> "Proposal Meta Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment Presentation Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
 }

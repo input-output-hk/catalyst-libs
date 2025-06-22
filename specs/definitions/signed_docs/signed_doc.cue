@@ -39,7 +39,7 @@ import (
 	headers: _coseHeaders
 
 	// The Metadata fields in this document (non cose standard)
-	metadata: _metadata
+	metadata: #metadata
 
 	// Requirements for the document payload.
 	payload?: _payload
@@ -102,13 +102,6 @@ _allDocNamesList: [...string] & [
 	for k, _ in _allDocs
 	if strings.Contains(k, "Parameter") &&
 		!strings.Contains(k, "Template") &&
-		!strings.Contains(k, "Action") {k},
-]
-
-// List of all Template Docs (not actions)
-#templateDocNamesList: [...string] & [
-	for k, _ in _allDocs
-	if strings.Contains(k, "Template") &&
 		!strings.Contains(k, "Action") {k},
 ]
 

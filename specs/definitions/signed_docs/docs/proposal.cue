@@ -59,7 +59,7 @@ docs: #DocumentDefinitions & {
 		metadata: {
 			template: {
 				required: "yes"
-				type:     "Proposal Template"
+				type:     "Proposal Form Template"
 			}
 
 			collaborators: required: "optional"

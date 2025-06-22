@@ -1,18 +1,34 @@
-# Proposal Meta Template
+# Proposal Form Template
 
 ## Description
 
-## Proposal Meta Template Document
+## Proposal Form Template Document
 
-A Proposal Meta Template is used to enforce functional requirements
-are met in any Proposal Template.
+A Proposal Form Template defines both:
 
-The payload of a proposal template is controlled by its meta template.
+* The data that is entered in the Form.
+* Formatting hints for the collection of the data in a form.
+
+A Proposal Form Template is a [JSON Schema][JSON Schema-2020-12] Document.
+
+Proposal entry *SHOULD* use the hints when collecting
+data defined by the Proposal Form Template to provide a
+consistent user interface.
+It *CAN* also use those hints when re-displaying the full forms data.
+
+Alternatively a Proposal Presentation Template can be used to
+format the Proposal data for presentation.
+
+The Proposal Document is intentionally general,
+however it may be linked to a brand/campaign or category
+via the template used by the Proposal.
+
+The payload of a Proposal is controlled by its template.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot proposal_meta_template.dot.svg
-{{ include_file('./../diagrams/proposal_meta_template.dot', indent=4) }}
+```graphviz dot proposal_form_template.dot.svg
+{{ include_file('./../diagrams/proposal_form_template.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -54,7 +70,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -106,6 +122,7 @@ The document version must always be >= the document ID.
 | Valid References | [Brand Parameters](brand_parameters.md) |
 |  | [Campaign Parameters](campaign_parameters.md) |
 |  | [Category Parameters](category_parameters.md) |
+| Linked Reference Metadata | [`template`](#template) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -115,23 +132,22 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 * Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
 [`parameters`](../metadata.md#parameters) of the referencing document.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
-[JSON Schema][JSON Schema-2020-12] document which ensures the minimum required functional requirements
-of the Proposal Template are met.
-
-This ensures that payloads can be reliably interpreted by business logic processes,
-while allowing for flexibility to capture extended information.
-
-Must be a valid according to <https://json-schema.org/draft-07/schema>.
+[JSON Schema][JSON Schema-2020-12] document which defines the valid contents and
+formatting hints for the collection of data for a
+Proposal Document.
 
 ## Signers
 
 The following Admin roles may sign documents of this type:
 
-* Root Admin
 * Brand Admin
+* Campaign Admin
 
 New versions of this document may be published by:
 
@@ -156,6 +172,10 @@ New versions of this document may be published by:
 #### 0.03 (2025-05-05)
 
 * Use generalized parameters.
+
+#### 0.04 (2025-05-05)
+
+* Generalize the Form Template definitions.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12

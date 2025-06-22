@@ -1,21 +1,34 @@
-# Proposal Template
+# Proposal Comment Form Template
 
 ## Description
 
-## Proposal Template Document
+## Proposal Comment Form Template Document
 
-A Proposal Template defines the allowed payload contents of a
-linked proposal.
+A Proposal Comment Form Template defines both:
 
-Proposals themselves are intentionally general, however they may be
-linked to a brand/campaign or category via the template used by the proposal.
+* The data that is entered in the Form.
+* Formatting hints for the collection of the data in a form.
 
-The payload of a proposal is controlled by its template.
+A Proposal Comment Form Template is a [JSON Schema][JSON Schema-2020-12] Document.
+
+Proposal Comment entry *SHOULD* use the hints when collecting
+data defined by the Proposal Comment Form Template to provide a
+consistent user interface.
+It *CAN* also use those hints when re-displaying the full forms data.
+
+Alternatively a Proposal Comment Presentation Template can be used to
+format the Proposal Comment data for presentation.
+
+The Proposal Comment Document is intentionally general,
+however it may be linked to a brand/campaign or category
+via the template used by the Proposal Comment.
+
+The payload of a Proposal Comment is controlled by its template.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot proposal_template.dot.svg
-{{ include_file('./../diagrams/proposal_template.dot', indent=4) }}
+```graphviz dot proposal_comment_form_template.dot.svg
+{{ include_file('./../diagrams/proposal_comment_form_template.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -57,7 +70,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -99,22 +112,6 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`template`](../metadata.md#template)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Proposal Meta Template](proposal_meta_template.md) |
-<!-- markdownlint-enable MD033 -->
-Reference to the template used to create and/or validate this document.
-
-#### [`template`](../metadata.md#template) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
-The document payload is not valid if it does not validate completely against the referenced template.
-
 ### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
@@ -141,7 +138,9 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Payload
 
-[JSON Schema][JSON Schema-2020-12] document which defines the valid contents of a proposal document.
+[JSON Schema][JSON Schema-2020-12] document which defines the valid contents and
+formatting hints for the collection of data for a
+Proposal Comment Document.
 
 ## Signers
 
@@ -173,6 +172,10 @@ New versions of this document may be published by:
 #### 0.03 (2025-05-05)
 
 * Use generalized parameters.
+
+#### 0.04 (2025-05-05)
+
+* Generalize the Form Template definitions.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12

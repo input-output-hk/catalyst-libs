@@ -221,11 +221,11 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | [Proposal Meta Template](./docs/proposal_meta_template.md) |
-|  | [Proposal Template](./docs/proposal_template.md) |
+| Valid References | [Proposal Form Template](./docs/proposal_form_template.md) |
+|  | [Proposal Presentation Template](./docs/proposal_presentation_template.md) |
 |  | [Proposal](./docs/proposal.md) |
-|  | [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) |
-|  | [Proposal Comment Template](./docs/proposal_comment_template.md) |
+|  | [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) |
+|  | [Proposal Comment Presentation Template](./docs/proposal_comment_presentation_template.md) |
 |  | [Proposal Comment](./docs/proposal_comment.md) |
 |  | [Proposal Submission Action](./docs/proposal_submission_action.md) |
 |  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |
@@ -244,7 +244,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-  In other words, that the document intended to be referenced, is actually referenced.
+    In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.
@@ -274,10 +274,8 @@ The following must be true for a valid reference:
 | --- | --- |
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
-| Valid References | [Proposal Meta Template](./docs/proposal_meta_template.md) |
-|  | [Proposal Template](./docs/proposal_template.md) |
-|  | [Proposal Comment Meta Template](./docs/proposal_comment_meta_template.md) |
-|  | [Proposal Comment Template](./docs/proposal_comment_template.md) |
+| Valid References | [Proposal Form Template](./docs/proposal_form_template.md) |
+|  | [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 

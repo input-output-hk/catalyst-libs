@@ -10,10 +10,11 @@
     "Category": "818938c3-3139-4daa-afe6-974c78488e95",
     "Comment": "b679ded3-0e7c-41ba-89f8-da62a17898ea",
     "Decision": "788ff4c6-d65a-451f-bb33-575fe056b411",
+    "FormTemplate": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
     "ModerationAction": "a5d232b8-5e03-4117-9afd-be32b878fcdd",
+    "PresentationTemplate": "cb99b9bd-681a-49d8-9836-89107c02e8ef",
     "Proposal": "7808d2ba-d511-40af-84e8-c0d1625fdfdc",
-    "SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65",
-    "Template": "0ce8ab38-9258-4fbc-a62e-7faa6e58318f"
+    "SubmissionAction": "78927329-cfd9-4ea1-9c71-0e019b126a65"
   },
   "cddlDefinitions": {
     "COSE_Document_Header_Map": {
@@ -1057,7 +1058,7 @@
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
-          "type": "Proposal Template",
+          "type": "Proposal Form Template",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
@@ -1201,7 +1202,7 @@
           "linked_refs": null,
           "multiple": false,
           "required": "yes",
-          "type": "Proposal Comment Template",
+          "type": "Proposal Comment Form Template",
           "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
         },
         "type": {
@@ -1249,9 +1250,9 @@
         }
       ]
     },
-    "Proposal Comment Meta Template": {
+    "Proposal Comment Form Template": {
       "authors": {},
-      "description": "## Proposal Comment Meta Template Document\n\nA Proposal Comment Meta Template is used to enforce functional requirements\nare met in any Proposal Comment Template.\n\nThe payload of a proposal comment template is controlled by its meta template.",
+      "description": "## Proposal Comment Form Template Document\n\t\nA Proposal Comment Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Proposal Comment Form Template is a JSON Schema Document.\n\nProposal Comment entry *SHOULD* use the hints when collecting \ndata defined by the Proposal Comment Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Proposal Comment Presentation Template can be used to\nformat the Proposal Comment data for presentation.\n\nThe Proposal Comment Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Proposal Comment.\n\nThe payload of a Proposal Comment is controlled by its template.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1292,7 +1293,9 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
+          "linked_refs": [
+            "template"
+          ],
           "multiple": false,
           "required": "yes",
           "type": [
@@ -1347,142 +1350,7 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Comment Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
-        "schema": "https://json-schema.org/draft-07/schema"
-      },
-      "signers": {
-        "roles": {
-          "admin": [
-            "Root Admin",
-            "Brand Admin"
-          ],
-          "user": []
-        },
-        "update": {
-          "author": true
-        }
-      },
-      "type": [
-        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
-        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
-        "b679ded3-0e7c-41ba-89f8-da62a17898ea",
-        "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
-      ],
-      "versions": [
-        {
-          "changes": "* First Published Version",
-          "modified": "2025-04-04",
-          "version": "0.01"
-        },
-        {
-          "changes": "* Use generalized parameters.",
-          "modified": "2025-05-05",
-          "version": "0.03"
-        }
-      ]
-    },
-    "Proposal Comment Template": {
-      "authors": {},
-      "description": "## Proposal Comment Template Document\n\nA Proposal Comment Template defines the allowed payload contents of a\nlinked proposal comment.\n\nProposal comments themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal comment is controlled by its template.",
-      "headers": {
-        "content type": {
-          "coseLabel": 3,
-          "description": "Media Type/s allowed in the Payload",
-          "format": "Media Type",
-          "required": "yes",
-          "value": "application/schema+json"
-        },
-        "content-encoding": {
-          "coseLabel": "content-encoding",
-          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
-          "format": "HTTP Content Encoding",
-          "required": "optional",
-          "value": [
-            "br"
-          ]
-        }
-      },
-      "metadata": {
-        "chain": {
-          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
-          "format": "Chain Link",
-          "required": "excluded",
-          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
-        },
-        "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "format": "Collaborators Reference List",
-          "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
-        },
-        "id": {
-          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "format": "Document Id",
-          "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
-        },
-        "parameters": {
-          "description": "A reference to the Parameters Document this document lies under.",
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
-        },
-        "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
-        },
-        "reply": {
-          "description": "Reference to a Comment document type being referred to.",
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
-        },
-        "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "format": "Version Revocations",
-          "required": "excluded",
-          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
-        },
-        "section": {
-          "description": "A Reference to the original document, or the comment being replied to.",
-          "format": "Section Reference",
-          "required": "excluded",
-          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
-        },
-        "template": {
-          "description": "Reference to the template used to create and/or validate this document.",
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Proposal Comment Meta Template",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
-        },
-        "type": {
-          "description": "The document TYPE.",
-          "format": "Document Type",
-          "required": "yes",
-          "validation": "**MUST** be a known document type."
-        },
-        "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
-          "format": "Document Ver",
-          "required": "yes",
-          "validation": "The document version must always be >= the document ID."
-        }
-      },
-      "notes": [],
-      "payload": {
-        "description": "JSON Schema document which defines the content of the Proposal Comments."
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Comment Document."
       },
       "signers": {
         "roles": {
@@ -1511,12 +1379,17 @@
           "changes": "* Use generalized parameters.",
           "modified": "2025-05-05",
           "version": "0.03"
+        },
+        {
+          "changes": "* Generalize the Form Template definitions.",
+          "modified": "2025-05-05",
+          "version": "0.04"
         }
       ]
     },
-    "Proposal Meta Template": {
+    "Proposal Comment Presentation Template": {
       "authors": {},
-      "description": "## Proposal Meta Template Document\n\nA Proposal Meta Template is used to enforce functional requirements\nare met in any Proposal Template.\n\nThe payload of a proposal template is controlled by its meta template.",
+      "description": "## Proposal Comment Presentation Template Document\n\t\nA Proposal Comment Presentation Template defines how the data\ncaptured by the Proposal Comment Form Template is to be displayed.\n\nMultiple Proposal Comment Presentation Templates can exist for the \nsame Proposal Comment Form Template.\nEach can be used to display the form data under different \ncircumstances.\n\nProposal Comment Presentation Templates can reference any data contained\nin the Proposal Comment Document, as well as any documents linked by:\n\n* `ref`\n* `reply`\n* `parameters`\n\nThe presentation of the payload of a Proposal Comment is controlled by \nits Proposal Comment Presentation Template/s.",
       "headers": {
         "content type": {
           "coseLabel": 3,
@@ -1612,14 +1485,13 @@
       },
       "notes": [],
       "payload": {
-        "description": "JSON Schema document which ensures the minimum required functional requirements\nof the Proposal Template are met.\n\nThis ensures that payloads can be reliably interpreted by business logic processes, \nwhile allowing for flexibility to capture extended information.",
-        "schema": "https://json-schema.org/draft-07/schema"
+        "description": "TBD.\nBut roughly, will be:\n\n1. A way to identify where the presentation template is intended to be used.\n2. Optional CSS to control the presentation.\n3. A Handlebars templated HTML or Markdown file data which defines the presentation."
       },
       "signers": {
         "roles": {
           "admin": [
-            "Root Admin",
-            "Brand Admin"
+            "Brand Admin",
+            "Campaign Admin"
           ],
           "user": []
         },
@@ -1628,7 +1500,133 @@
         }
       },
       "type": [
-        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
+        "cb99b9bd-681a-49d8-9836-89107c02e8ef",
+        "b679ded3-0e7c-41ba-89f8-da62a17898ea",
+        "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Version.",
+          "modified": "2025-05-05",
+          "version": "0.04"
+        }
+      ]
+    },
+    "Proposal Form Template": {
+      "authors": {},
+      "description": "## Proposal Form Template Document\n\t\nA Proposal Form Template defines both:\n\n* The data that is entered in the Form.\n* Formatting hints for the collection of the data in a form.\n\nA Proposal Form Template is a JSON Schema Document.\n\nProposal entry *SHOULD* use the hints when collecting \ndata defined by the Proposal Form Template to provide a \nconsistent user interface.\nIt *CAN* also use those hints when re-displaying the full forms data.\n\nAlternatively a Proposal Presentation Template can be used to\nformat the Proposal data for presentation.\n\nThe Proposal Document is intentionally general, \nhowever it may be linked to a brand/campaign or category \nvia the template used by the Proposal.\n\nThe payload of a Proposal is controlled by its template.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/schema+json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "format": "Document Reference",
+          "linked_refs": [
+            "template"
+          ],
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "JSON Schema document which defines the valid contents and \nformatting hints for the collection of data for a \nProposal Document."
+      },
+      "signers": {
+        "roles": {
+          "admin": [
+            "Brand Admin",
+            "Campaign Admin"
+          ],
+          "user": []
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
         "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
         "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
       ],
@@ -1642,6 +1640,11 @@
           "changes": "* Use generalized parameters.",
           "modified": "2025-05-05",
           "version": "0.03"
+        },
+        {
+          "changes": "* Generalize the Form Template definitions.",
+          "modified": "2025-05-05",
+          "version": "0.04"
         }
       ]
     },
@@ -1758,6 +1761,130 @@
           "changes": "* First Published Version",
           "modified": "2025-04-04",
           "version": "0.01"
+        }
+      ]
+    },
+    "Proposal Presentation Template": {
+      "authors": {},
+      "description": "## Proposal Presentation Template Document\n\t\nA Proposal Presentation Template defines how the data\ncaptured by the Proposal Form Template is to be displayed.\n\nMultiple Proposal Presentation Templates can exist for the \nsame Proposal Form Template.\nEach can be used to display the form data under different \ncircumstances.\n\nProposal Presentation Templates can reference any data contained\nin the Proposal Document, as well as any documents linked by:\n\n* `ref`\n* `reply`\n* `parameters`\n\nThe presentation of the payload of a Proposal is controlled by \nits Proposal Presentation Template/s.",
+      "headers": {
+        "content type": {
+          "coseLabel": 3,
+          "description": "Media Type/s allowed in the Payload",
+          "format": "Media Type",
+          "required": "yes",
+          "value": "application/schema+json"
+        },
+        "content-encoding": {
+          "coseLabel": "content-encoding",
+          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
+          "format": "HTTP Content Encoding",
+          "required": "optional",
+          "value": [
+            "br"
+          ]
+        }
+      },
+      "metadata": {
+        "chain": {
+          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
+          "format": "Chain Link",
+          "required": "excluded",
+          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
+        },
+        "collaborators": {
+          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
+          "format": "Collaborators Reference List",
+          "required": "excluded",
+          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
+        },
+        "id": {
+          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
+          "format": "Document Id",
+          "required": "yes",
+          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
+        },
+        "parameters": {
+          "description": "A reference to the Parameters Document this document lies under.",
+          "format": "Document Reference",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
+          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
+        },
+        "ref": {
+          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
+        },
+        "reply": {
+          "description": "Reference to a Comment document type being referred to.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
+        },
+        "revocations": {
+          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
+          "format": "Version Revocations",
+          "required": "excluded",
+          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
+        },
+        "section": {
+          "description": "A Reference to the original document, or the comment being replied to.",
+          "format": "Section Reference",
+          "required": "excluded",
+          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
+        },
+        "template": {
+          "description": "Reference to the template used to create and/or validate this document.",
+          "format": "Document Reference",
+          "required": "excluded",
+          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
+        },
+        "type": {
+          "description": "The document TYPE.",
+          "format": "Document Type",
+          "required": "yes",
+          "validation": "**MUST** be a known document type."
+        },
+        "ver": {
+          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
+          "format": "Document Ver",
+          "required": "yes",
+          "validation": "The document version must always be >= the document ID."
+        }
+      },
+      "notes": [],
+      "payload": {
+        "description": "TBD.\nBut roughly, will be:\n\n1. A way to identify where the presentation template is intended to be used.\n2. Optional CSS to control the presentation.\n3. A Handlebars templated HTML or Markdown file data which defines the presentation."
+      },
+      "signers": {
+        "roles": {
+          "admin": [
+            "Brand Admin",
+            "Campaign Admin"
+          ],
+          "user": []
+        },
+        "update": {
+          "author": true
+        }
+      },
+      "type": [
+        "cb99b9bd-681a-49d8-9836-89107c02e8ef",
+        "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
+      ],
+      "versions": [
+        {
+          "changes": "* First Version.",
+          "modified": "2025-05-05",
+          "version": "0.04"
         }
       ]
     },
@@ -1949,140 +2076,6 @@
         "78927329-cfd9-4ea1-9c71-0e019b126a65"
       ],
       "validation": "No validation is required beyond as defined by:\n\n* [metadata](#metadata) \n* [payload](#payload)\n* [signers](#signers)",
-      "versions": [
-        {
-          "changes": "* First Published Version",
-          "modified": "2025-04-04",
-          "version": "0.01"
-        },
-        {
-          "changes": "* Use generalized parameters.",
-          "modified": "2025-05-05",
-          "version": "0.03"
-        }
-      ]
-    },
-    "Proposal Template": {
-      "authors": {},
-      "description": "## Proposal Template Document\n\nA Proposal Template defines the allowed payload contents of a\nlinked proposal.\n\nProposals themselves are intentionally general, however they may be\nlinked to a brand/campaign or category via the template used by the proposal.\n\nThe payload of a proposal is controlled by its template.",
-      "headers": {
-        "content type": {
-          "coseLabel": 3,
-          "description": "Media Type/s allowed in the Payload",
-          "format": "Media Type",
-          "required": "yes",
-          "value": "application/schema+json"
-        },
-        "content-encoding": {
-          "coseLabel": "content-encoding",
-          "description": "Supported HTTP Encodings of the Payload.\nIf no compression or encoding is used, then this field must not be present.",
-          "format": "HTTP Content Encoding",
-          "required": "optional",
-          "value": [
-            "br"
-          ]
-        }
-      },
-      "metadata": {
-        "chain": {
-          "description": "An immutable link to the previous document in a chained sequence of documents.\nBecause ID/Ver only defines values for the current document, and is not intended \nby itself to prevent insertion of documents in a sequence, the `chain`\nmetadata allows for the latest document to directly point to its previous iteration.\n\nIt also aids in discoverability, where the latest document may be pinned but prior\ndocuments can be discovered automatically by following the chain.",
-          "format": "Chain Link",
-          "required": "excluded",
-          "validation": "Chained Documents do not support collaborators.\nAny document which is attempted to be published in the sequence\nwhich is *NOT* published by the author of the first document in the\nsequence is fraudulent, and to be discarded.\n\nIn addition, the chained document *MUST*:\n\n* Not have `collaborators`;\n* Have the same `id` as the document being chained to;\n* Have a `ver` that is greater than the `ver` being chained to;\n* Have the same `type` as the chained document;\n* Have `parameters` match;\n* Have not be chaining to a document already chained to by another document;\n* Have its absolute `height` exactly one more than the `height` of the document being chained to.\n\nIF any of these validations fail, then the entire sequence of documents is INVALID.\nNot just the current document."
-        },
-        "collaborators": {
-          "description": "A list of collaborators who may also publish updates to versions of this document.\nThis should include all parties who have not signed this document directly.\n\nEvery subsequent version can amend the collaborators list.\nHowever, the initial Author can never be removed from being able to\npublish a new version of the document.",
-          "format": "Collaborators Reference List",
-          "required": "excluded",
-          "validation": "This list does not imply these collaborators have consented to collaborate, only that the author/s\nare permitting these potential collaborators to participate in the drafting and submission process.\nHowever, any document submission referencing a proposal MUST be signed by all collaborators in\naddition to the author."
-        },
-        "id": {
-          "description": "Document ID, created the first time the document is created.\nThis must be a properly created UUIDv7 which contains the \ntimestamp of when the document was created.",
-          "format": "Document Id",
-          "required": "yes",
-          "validation": "IF `ver` does not == `id` then a document with \n`id` and `ver` being equal *MUST* exist."
-        },
-        "parameters": {
-          "description": "A reference to the Parameters Document this document lies under.",
-          "format": "Document Reference",
-          "linked_refs": [
-            "template"
-          ],
-          "multiple": false,
-          "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
-          "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
-        },
-        "ref": {
-          "description": "Reference to a Linked Document or Documents.  \nThis is the primary hierarchical reference to a related document.\t\t\t\n\nIf a reference is defined as required, there must be at least 1 reference specified.\nSome documents allow multiple references, and they are documented as required.\n\nThe document reference serves two purposes:\n  \n1. It ensures that the document referenced by an ID/Version is not substituted.\n\tIn other words, that the document intended to be referenced, is actually referenced.\n2. It Allows the document to be unambiguously located in decentralized storage systems.\n\nThere can be any number of Document Locations in any reference.\nThe currently defined locations are:\n\n* `cid` : A CBOR Encoded IPLD Content Identifier ( AKA an IPFS CID ).\n* Others may be added when further storage mechanisms are defined.\n\nThe document location does not guarantee that the document is actually stored.\nIt only defines that if it were stored, this is the identifier\nthat is required to retrieve it.\nTherefore it is required that Document References\nare unique and reproducible, given a documents contents.",
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "The following must be true for a valid reference:\n\n* The Referenced Document **MUST** Exist\n* Every value in the `document_locator` must consistently reference the exact same document.\n* The `document_id` and `document_ver` **MUST** match the values in the referenced document."
-        },
-        "reply": {
-          "description": "Reference to a Comment document type being referred to.",
-          "format": "Document Reference",
-          "required": "excluded",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe `ref` of the `reply` document must be the same as\nthe original comment document."
-        },
-        "revocations": {
-          "description": "A document may include a list of any prior versions which are considered to be revoked.\nOnly the revocation list in the latest version of the document applies.\nRevoked documents are flagged as no longer valid, and should not be displayed.\nAs a special case, if the revocations are set to `true` then all versions of the document\nare revoked, including the latest document.\n\nIn this case, when the latest document is revoked, the payload may be empty.\nAny older document that has `revocations` set to `true` is always to be filtered\nand its payload is to be assumed to be invalid.\n\nThis allows for an entire document and any/all published versions to be revoked.\nA new version of the document that is published after this, may reinstate prior\ndocument versions, by not listing them as revoked.  \nHowever, any document where revocations was set `true` can never be reinstated.",
-          "format": "Version Revocations",
-          "required": "excluded",
-          "validation": "If the field is `true` the payload may be absent or invalid.\nSuch documents may never be submitted."
-        },
-        "section": {
-          "description": "A Reference to the original document, or the comment being replied to.",
-          "format": "Section Reference",
-          "required": "excluded",
-          "validation": "For a non-reply this must be a valid section reference into the referenced document.\nFor a reply, this must be a valid section reference into the comment being replied to."
-        },
-        "template": {
-          "description": "Reference to the template used to create and/or validate this document.",
-          "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "optional",
-          "type": "Proposal Meta Template",
-          "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
-        },
-        "type": {
-          "description": "The document TYPE.",
-          "format": "Document Type",
-          "required": "yes",
-          "validation": "**MUST** be a known document type."
-        },
-        "ver": {
-          "description": "The unique version of the document.\nThe first version of the document must set `ver` == `id`\n\n`ver` represents new versions of the same document as it changes over time.",
-          "format": "Document Ver",
-          "required": "yes",
-          "validation": "The document version must always be >= the document ID."
-        }
-      },
-      "notes": [],
-      "payload": {
-        "description": "JSON Schema document which defines the valid contents of a proposal document."
-      },
-      "signers": {
-        "roles": {
-          "admin": [
-            "Brand Admin",
-            "Campaign Admin"
-          ],
-          "user": []
-        },
-        "update": {
-          "author": true
-        }
-      },
-      "type": [
-        "0ce8ab38-9258-4fbc-a62e-7faa6e58318f",
-        "7808d2ba-d511-40af-84e8-c0d1625fdfdc"
-      ],
       "versions": [
         {
           "changes": "* First Published Version",
@@ -3397,11 +3390,11 @@
         "multiple": false,
         "required": "optional",
         "type": [
-          "Proposal Meta Template",
-          "Proposal Template",
+          "Proposal Form Template",
+          "Proposal Presentation Template",
           "Proposal",
-          "Proposal Comment Meta Template",
-          "Proposal Comment Template",
+          "Proposal Comment Form Template",
+          "Proposal Comment Presentation Template",
           "Proposal Comment",
           "Proposal Submission Action",
           "Proposal Moderation Action",
@@ -3443,10 +3436,8 @@
         "multiple": false,
         "required": "optional",
         "type": [
-          "Proposal Meta Template",
-          "Proposal Template",
-          "Proposal Comment Meta Template",
-          "Proposal Comment Template"
+          "Proposal Form Template",
+          "Proposal Comment Form Template"
         ],
         "validation": "In addition to the validation performed for `Document Reference` type fields, \nThe document payload is not valid if it does not validate completely against the referenced template."
       },
@@ -3473,7 +3464,8 @@
       "section",
       "collaborators",
       "revocations",
-      "parameters"
+      "parameters",
+      "chain"
     ]
   }
 }

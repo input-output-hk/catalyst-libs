@@ -28,13 +28,13 @@ Relationships"
     ];
 
 
-    "Proposal Comment Template" [
-        id="Proposal Comment Template";
+    "Proposal Comment Form Template" [
+        id="Proposal Comment Form Template";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Comment Template </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_form_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment Form Template </B></FONT>
                 </TD>
             </TR>
 
@@ -107,7 +107,7 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">template</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Proposal Comment Template</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Proposal Comment Form Template</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -225,7 +225,7 @@ Relationships"
     }
 
     "Proposal Comment":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Comment":"template":e -> "Proposal Comment Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Proposal Comment":"template":e -> "Proposal Comment Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"reply":e -> "Proposal Comment":"title":n [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Comment Moderation Action":"title":e -> "Proposal Comment":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
