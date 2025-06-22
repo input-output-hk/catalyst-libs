@@ -146,7 +146,7 @@ The following must be true for a valid reference:
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Proposal Comment Template](proposal_comment_template.md) |
+| Valid References | [Proposal Comment Form Template](proposal_comment_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 

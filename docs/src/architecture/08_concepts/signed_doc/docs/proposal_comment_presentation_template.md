@@ -1,18 +1,31 @@
-# Proposal Comment Meta Template
+# Proposal Comment Presentation Template
 
 ## Description
 
-## Proposal Comment Meta Template Document
+## Proposal Comment Presentation Template Document
 
-A Proposal Comment Meta Template is used to enforce functional requirements
-are met in any Proposal Comment Template.
+A Proposal Comment Presentation Template defines how the data
+captured by the Proposal Comment Form Template is to be displayed.
 
-The payload of a proposal comment template is controlled by its meta template.
+Multiple Proposal Comment Presentation Templates can exist for the
+same Proposal Comment Form Template.
+Each can be used to display the form data under different
+circumstances.
+
+Proposal Comment Presentation Templates can reference any data contained
+in the Proposal Comment Document, as well as any documents linked by:
+
+* [`ref`](../metadata.md#ref)
+* [`reply`](../metadata.md#reply)
+* [`parameters`](../metadata.md#parameters)
+
+The presentation of the payload of a Proposal Comment is controlled by
+its Proposal Comment Presentation Template/s.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot proposal_comment_meta_template.dot.svg
-{{ include_file('./../diagrams/proposal_comment_meta_template.dot', indent=4) }}
+```graphviz dot proposal_comment_presentation_template.dot.svg
+{{ include_file('./../diagrams/proposal_comment_presentation_template.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -54,7 +67,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | `cb99b9bd-681a-49d8-9836-89107c02e8ef`,<br/>`b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -118,20 +131,19 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Payload
 
-[JSON Schema][JSON Schema-2020-12] document which ensures the minimum required functional requirements
-of the Proposal Comment Template are met.
+TBD.
+But roughly, will be:
 
-This ensures that payloads can be reliably interpreted by business logic processes,
-while allowing for flexibility to capture extended information.
-
-Must be a valid according to <https://json-schema.org/draft-07/schema>.
+1. A way to identify where the presentation template is intended to be used.
+2. Optional [CSS] to control the presentation.
+3. A [Handlebars] templated [HTML][HTML5] or [Markdown][CommonMark] file data which defines the presentation.
 
 ## Signers
 
 The following Admin roles may sign documents of this type:
 
-* Root Admin
 * Brand Admin
+* Campaign Admin
 
 New versions of this document may be published by:
 
@@ -149,15 +161,14 @@ New versions of this document may be published by:
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### 0.04 (2025-05-05)
 
-* First Published Version
-
-#### 0.03 (2025-05-05)
-
-* Use generalized parameters.
+* First Version.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
+[Handlebars]: https://handlebarsjs.com/
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[CommonMark]: https://spec.commonmark.org/0.31.2/
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
+[CSS]: https://www.w3.org/Style/CSS/

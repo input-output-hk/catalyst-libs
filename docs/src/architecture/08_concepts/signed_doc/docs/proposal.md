@@ -121,7 +121,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Proposal Template](proposal_template.md) |
+| Valid References | [Proposal Form Template](proposal_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
