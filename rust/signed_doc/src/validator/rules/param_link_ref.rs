@@ -66,9 +66,11 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use crate::{
+        builder::tests::Builder,
+        metadata::SupportedField,
         providers::tests::TestCatalystSignedDocumentProvider,
         validator::rules::param_link_ref::{LinkField, ParameterLinkRefRule},
-        Builder,
+        DocLocator, DocumentRef,
     };
     #[tokio::test]
     async fn param_link_ref_specified_test() {
@@ -93,47 +95,48 @@ mod tests {
         {
             // Doc being referenced - parameter MUST match
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": doc1_id.to_string(),
-                    "ver": doc1_ver.to_string(),
-                    "type": doc_type.to_string(),
-                    "parameters": [{"id": category_id.to_string(), "ver": category_ver.to_string(), "cid": "0x" }, {"id": campaign_id.to_string(), "ver": campaign_ver.to_string(), "cid": "0x" }]
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(doc1_id))
+                .with_metadata_field(SupportedField::Ver(doc1_ver))
+                .with_metadata_field(SupportedField::Type(doc_type.into()))
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![
+                        DocumentRef::new(category_id, category_ver, DocLocator::default()),
+                        DocumentRef::new(campaign_id, campaign_ver, DocLocator::default()),
+                    ]
+                    .into(),
+                ))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
             // Doc being referenced - parameter does not match
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": doc2_id.to_string(),
-                    "ver": doc2_ver.to_string(),
-                    "type": doc_type.to_string(),
-                    "parameters": [{"id": campaign_id.to_string(), "ver": campaign_ver.to_string(),  "cid": "0x" }]
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(doc2_id))
+                .with_metadata_field(SupportedField::Ver(doc2_ver))
+                .with_metadata_field(SupportedField::Type(doc_type.into()))
+                .with_metadata_field(SupportedField::Parameters(
+                    vec![DocumentRef::new(
+                        campaign_id,
+                        campaign_ver,
+                        DocLocator::default(),
+                    )]
+                    .into(),
+                ))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
             // Category doc
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": category_id.to_string(),
-                    "ver": category_ver.to_string(),
-                    "type": category_type.to_string(),
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(category_id))
+                .with_metadata_field(SupportedField::Ver(category_ver))
+                .with_metadata_field(SupportedField::Type(category_type.into()))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
             // Campaign doc
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": campaign_id.to_string(),
-                    "ver": campaign_ver.to_string(),
-                    "type": campaign_type.to_string(),
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(campaign_id))
+                .with_metadata_field(SupportedField::Ver(campaign_ver))
+                .with_metadata_field(SupportedField::Type(campaign_type.into()))
                 .build();
             provider.add_document(None, &doc).unwrap();
         }
@@ -144,23 +147,31 @@ mod tests {
         };
         // Parameter must match
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "ref": [{"id": doc1_id.to_string(), "ver": doc1_ver.to_string(), "cid": "0x" }],
-                "parameters":
-                [{"id": category_id.to_string(), "ver": category_ver.to_string(), "cid": "0x" }, {"id": campaign_id.to_string(), "ver": campaign_ver.to_string(), "cid": "0x" }]
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Ref(
+                vec![DocumentRef::new(doc1_id, doc1_ver, DocLocator::default())].into(),
+            ))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![
+                    DocumentRef::new(category_id, category_ver, DocLocator::default()),
+                    DocumentRef::new(campaign_id, campaign_ver, DocLocator::default()),
+                ]
+                .into(),
+            ))
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // Parameter does not match
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "ref": {"id": doc2_id.to_string(), "ver": doc2_ver.to_string()},
-                "parameters":
-                [{"id": category_id.to_string(), "ver": category_ver.to_string(), "cid": "0x" }, {"id": campaign_id.to_string(), "ver": campaign_ver.to_string(), "cid": "0x" }]
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Ref(
+                vec![DocumentRef::new(doc2_id, doc2_ver, DocLocator::default())].into(),
+            ))
+            .with_metadata_field(SupportedField::Parameters(
+                vec![
+                    DocumentRef::new(category_id, category_ver, DocLocator::default()),
+                    DocumentRef::new(campaign_id, campaign_ver, DocLocator::default()),
+                ]
+                .into(),
+            ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }

@@ -43,15 +43,12 @@ impl SectionRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Builder;
+    use crate::{builder::tests::Builder, metadata::SupportedField};
 
     #[tokio::test]
     async fn section_rule_specified_test() {
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "section": "$".to_string()
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
         let rule = SectionRule::Specified { optional: false };
         assert!(rule.check(&doc).await.unwrap());
@@ -73,10 +70,7 @@ mod tests {
         assert!(rule.check(&doc).await.unwrap());
 
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "section": "$".to_string()
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Section("$".parse().unwrap()))
             .build();
         assert!(!rule.check(&doc).await.unwrap());
     }

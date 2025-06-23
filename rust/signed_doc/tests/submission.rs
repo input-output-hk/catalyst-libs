@@ -2,12 +2,45 @@
 //! Require fields: type, id, ver, ref, parameters
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
 
+use std::sync::LazyLock;
+
 use catalyst_signed_doc::{
     doc_types::deprecated, providers::tests::TestCatalystSignedDocumentProvider, *,
 };
-use catalyst_types::catalyst_id::role_index::RoleId;
 
-mod common;
+#[allow(clippy::unwrap_used)]
+static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::PROPOSAL.clone(),
+            "parameters": {
+                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .empty_content()
+        .build()
+        .unwrap()
+});
+
+#[allow(clippy::unwrap_used)]
+static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
+    Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": doc_types::BRAND_PARAMETERS.clone(),
+        }))
+        .unwrap()
+        .empty_content()
+        .build()
+        .unwrap()
+});
 
 // Given a proposal comment document `doc`:
 //
@@ -18,60 +51,35 @@ mod common;
 // `parameters` value as `doc`.
 #[tokio::test]
 async fn test_valid_submission_action() {
-    let (brand_doc, brand_doc_id, brand_doc_ver) =
-        common::create_dummy_doc(&doc_types::BRAND_PARAMETERS.clone()).unwrap();
-
-    let proposal_doc_id = UuidV7::new();
-    let proposal_doc_ver = UuidV7::new();
-    let (proposal_doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL.clone(),
-            "id": proposal_doc_id.to_string(),
-            "ver": proposal_doc_ver.to_string(),
-            "ref": {
-                "id": UuidV7::new(),
-                "ver": UuidV7::new()
-            },
-            "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
-        }),
-        serde_json::to_vec(&serde_json::json!({
-            "action": "final"
-        }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
-
-    let doc_id = UuidV7::new();
-    let doc_ver = UuidV7::new();
     // Create a main proposal submission doc, contain all fields mention in the document
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": doc_id.to_string(),
-            "ver": doc_ver.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
+                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
             },
-            "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
-        }),
-        serde_json::to_vec(&serde_json::json!({
+            "parameters": {
+                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
-    provider.add_document(None, &proposal_doc).unwrap();
-    provider.add_document(None, &brand_doc).unwrap();
+    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
+    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid, "{:?}", doc.problem_report());
@@ -79,176 +87,137 @@ async fn test_valid_submission_action() {
 
 #[tokio::test]
 async fn test_valid_submission_action_old_type() {
-    let (brand_doc, brand_doc_id, brand_doc_ver) =
-        common::create_dummy_doc(&doc_types::BRAND_PARAMETERS.clone()).unwrap();
-
-    let proposal_doc_id = UuidV7::new();
-    let proposal_doc_ver = UuidV7::new();
-    let (proposal_doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.clone(),
-            "id": proposal_doc_id.to_string(),
-            "ver": proposal_doc_ver.to_string(),
+            "type": deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
             "ref": {
-                "id": UuidV7::new(),
-                "ver": UuidV7::new()
+                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
+                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
             },
-            "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
-        }),
-        serde_json::to_vec(&serde_json::json!({
+            "parameters": {
+                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
-
-    let doc_id = UuidV7::new();
-    let doc_ver = UuidV7::new();
-    // Create a main proposal submission doc, contain all fields mention in the document
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE.clone(),
-            "id": doc_id.to_string(),
-            "ver": doc_ver.to_string(),
-            "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
-            },
-            "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
-        }),
-        serde_json::to_vec(&serde_json::json!({
-            "action": "final"
-        }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
-    provider.add_document(None, &proposal_doc).unwrap();
-    provider.add_document(None, &brand_doc).unwrap();
+    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
+    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid, "{:?}", doc.problem_report());
 }
 
 #[tokio::test]
-async fn test_valid_submission_action_with_empty_provider() {
-    let proposal_doc_id = UuidV7::new();
-    let proposal_doc_ver = UuidV7::new();
-
-    let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+async fn test_invalid_submission_action_corrupted_json() {
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": uuid_v7.to_string(),
-            "ver": uuid_v7.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
+                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
             },
-        }),
-        serde_json::to_vec(&serde_json::json!({
-            "action": "final"
+            "parameters": {
+                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+            }
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .with_json_content(&serde_json::Value::Null)
+        .unwrap()
+        .build()
+        .unwrap();
 
-    let provider = TestCatalystSignedDocumentProvider::default();
+    let mut provider = TestCatalystSignedDocumentProvider::default();
+
+    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
+    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
 }
 
 #[tokio::test]
-async fn test_invalid_submission_action() {
-    let uuid_v7 = UuidV7::new();
-    // missing `ref` field
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+async fn test_invalid_submission_action_missing_ref() {
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": uuid_v7.to_string(),
-            "ver": uuid_v7.to_string(),
-            "ref": serde_json::Value::Null,
-        }),
-        serde_json::to_vec(&serde_json::json!({
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            // "ref": {
+            //     "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
+            //     "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
+            // },
+            "parameters": {
+                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+            }
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({
             "action": "final"
         }))
-        .unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
-
-    let provider = TestCatalystSignedDocumentProvider::default();
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert!(!is_valid);
-
-    // corrupted JSON
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(&deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap())
-            .unwrap();
-    let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-            "id": uuid_v7.to_string(),
-            "ver": uuid_v7.to_string(),
-            "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
-            },
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
+        .unwrap()
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
-    provider.add_document(None, &proposal_doc).unwrap();
+    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
+    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
+}
 
-    // empty content
-    let (proposal_doc, proposal_doc_id, proposal_doc_ver) =
-        common::create_dummy_doc(&deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap())
-            .unwrap();
-    let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
+#[tokio::test]
+async fn test_invalid_submission_action_missing_parameters() {
+    let doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
             "type": doc_types::PROPOSAL_SUBMISSION_ACTION.clone(),
-            "id": uuid_v7.to_string(),
-            "ver": uuid_v7.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
             "ref": {
-                "id": proposal_doc_id,
-                "ver": proposal_doc_ver
+                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
+                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
             },
-        }),
-        vec![],
-        RoleId::Proposer,
-    )
-    .unwrap();
+            // "parameters": {
+            //     "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+            //     "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+            // }
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({
+            "action": "final"
+        }))
+        .unwrap()
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
-    provider.add_document(None, &proposal_doc).unwrap();
+    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
+    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
