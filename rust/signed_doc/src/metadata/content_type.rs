@@ -86,6 +86,25 @@ impl minicbor::Encode<()> for ContentType {
     }
 }
 
+impl minicbor::Decode<'_, ()> for ContentType {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        match d.int() {
+            // CoAP Content Format JSON
+            Ok(val) if val == minicbor::data::Int::from(50_u8) => Ok(Self::Json),
+            // CoAP Content Format CBOR
+            Ok(val) if val == minicbor::data::Int::from(60_u8) => Ok(Self::Cbor),
+            Ok(val) => {
+                Err(minicbor::decode::Error::message(format!(
+                    "unsupported CoAP Content Formats value: {val}"
+                )))
+            },
+            Err(_) => d.str()?.parse().map_err(minicbor::decode::Error::message),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

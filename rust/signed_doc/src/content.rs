@@ -36,3 +36,13 @@ impl minicbor::Encode<()> for Content {
         Ok(())
     }
 }
+
+impl minicbor::Decode<'_, ()> for Content {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        d.null()
+            .map(|()| Self(Vec::new()))
+            .or(d.bytes().map(Vec::from).map(Self))
+    }
+}
