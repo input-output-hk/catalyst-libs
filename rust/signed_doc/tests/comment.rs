@@ -60,12 +60,19 @@ async fn test_valid_comment_doc() {
         serde_json::json!(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_TEMPLATE.clone(),
+            "type": doc_types::PROPOSAL_COMMENT_TEMPLATE.clone(),
             "id": template_doc_id.to_string(),
             "ver": template_doc_ver.to_string(),
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }))
+        .unwrap(),
         RoleId::Role0,
     )
     .unwrap();
@@ -95,7 +102,8 @@ async fn test_valid_comment_doc() {
             },
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        // Validate against the ref template
+        serde_json::to_vec(&serde_json::json!({})).unwrap(),
         RoleId::Role0,
     )
     .unwrap();
@@ -152,12 +160,19 @@ async fn test_valid_comment_doc_old_type() {
         serde_json::json!(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_TEMPLATE.clone(),
+            "type": doc_types::PROPOSAL_COMMENT_TEMPLATE.clone(),
             "id": template_doc_id.to_string(),
             "ver": template_doc_ver.to_string(),
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }))
+        .unwrap(),
         RoleId::Role0,
     )
     .unwrap();
@@ -187,7 +202,7 @@ async fn test_valid_comment_doc_old_type() {
             },
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({})).unwrap(),
         RoleId::Role0,
     )
     .unwrap();

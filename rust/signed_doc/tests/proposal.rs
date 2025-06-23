@@ -33,7 +33,14 @@ async fn test_valid_proposal_doc() {
             "ver": template_doc_ver.to_string(),
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }))
+        .unwrap(),
         RoleId::Role0,
     )
     .unwrap();
@@ -58,7 +65,7 @@ async fn test_valid_proposal_doc() {
                 "ver": brand_doc_ver
             }
         }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({})).unwrap(),
         RoleId::Proposer,
     )
     .unwrap();
@@ -90,7 +97,14 @@ async fn test_valid_proposal_doc_old_type() {
             "ver": template_doc_ver.to_string(),
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "type": "object",
+            "properties": {},
+            "required": [],
+            "additionalProperties": false
+        }))
+        .unwrap(),
         RoleId::Role0,
     )
     .unwrap();
@@ -115,7 +129,7 @@ async fn test_valid_proposal_doc_old_type() {
                 "ver": brand_doc_ver
             }
         }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
+        serde_json::to_vec(&serde_json::json!({})).unwrap(),
         RoleId::Proposer,
     )
     .unwrap();
