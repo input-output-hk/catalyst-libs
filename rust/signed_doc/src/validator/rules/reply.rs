@@ -51,7 +51,17 @@ impl ReplyRule {
                     };
 
                     // Checking the ref field of ref doc, it should match the ref field of the doc
-                    ref_doc_dr == doc_dr
+                    // If not record the error
+                    if ref_doc_dr != doc_dr {
+                        doc.report().invalid_value(
+                            "ref",
+                            &format!("Reference doc ref: {ref_doc_dr}"),
+                            &format!("Doc ref: {doc_dr}"),
+                            &format!("{context}, ref must be the same"),
+                        );
+                        return false;
+                    }
+                    true
                 };
                 return validate_doc_refs(reply_ref, provider, doc.report(), reply_validator).await;
             } else if !optional {
