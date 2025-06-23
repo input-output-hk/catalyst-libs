@@ -2,8 +2,6 @@
 
 ## Description
 
-## Proposal Presentation Template Document
-
 A Proposal Presentation Template defines how the data
 captured by the Proposal Form Template is to be displayed.
 

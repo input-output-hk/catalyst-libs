@@ -1,9 +1,9 @@
-# Campaign Parameters
+# Contest Parameters
 
 ## Description
 
-Campaign Parameters define the parameter data required for the
-system at the Campaign level.
+Contest Parameters define the parameter data required for the
+system at the Contest level.
 
 Parameter Data includes things such as:
 
@@ -12,27 +12,27 @@ Parameter Data includes things such as:
 * Branded Content and Copy
 
 The content of the parameters is defined solely by the
-Campaign Parameters Form Template.
+Contest Parameters Form Template.
 
 This allows parameters to vary based on individual system
 requirements over time.
 
 Functional Parameters are mapped using the (TBD Functional Parameters Map).
 
-The payload of a Campaign is controlled by its template.
+The payload of a Contest is controlled by its template.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot campaign_parameters.dot.svg
-{{ include_file('./../diagrams/campaign_parameters.dot', indent=4) }}
+```graphviz dot contest_parameters.dot.svg
+{{ include_file('./../diagrams/contest_parameters.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
-The Campaign Parameters Document *MUST* be linked through [`parameters`](../metadata.md#parameters) to
-its Brand Parameters Document.
+The Contest Parameters Document *MUST* be linked through [`parameters`](../metadata.md#parameters) to
+its Brand/Campaign/Category Parameters Document.
 
 ### Business Logic
 
@@ -64,7 +64,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `5ef32d5d-f240-462c-a7a4-ba4af221fa23`,<br/>`60185874-7e13-407c-a06c-238ffe637ae6` |
+| Type | `788ff4c6-d65a-451f-bb33-575fe056b411`,<br/>`60185874-7e13-407c-a06c-238ffe637ae6` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -113,7 +113,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Campaign Parameters Form Template](campaign_parameters_form_template.md) |
+| Valid References | [Contest Parameters Form Template](contest_parameters_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
@@ -180,6 +180,8 @@ Such documents may never be submitted.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Brand Parameters](brand_parameters.md) |
+|  | [Campaign Parameters](campaign_parameters.md) |
+|  | [Category Parameters](category_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -192,8 +194,8 @@ In addition to the validation performed for [Document Reference](../metadata.md#
 
 ## Payload
 
-Campaign Parameters Document controlling the Campaign
-within a Brand.
+Contest Parameters Document controlling the Contest
+within a Brand/Campaign/Category.
 
 Must be valid according to the schema contained within the
 [Document Reference](../metadata.md#document-reference) from the [`template`](../metadata.md#template) metadata.

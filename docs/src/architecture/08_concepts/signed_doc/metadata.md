@@ -202,8 +202,8 @@ The first version of the document must set [`ver`](metadata.md#ver) == [`id`](me
 [`ver`](metadata.md#ver) represents either:
 
 * when a document changes over time, such as
-   with a new version of a particular document that supersedes an
-  earlier one.
+    with a new version of a particular document that supersedes an
+    earlier one.
 * when a new document in a sequence of documents is produced.
 
 Because the most common use [`ver`](metadata.md#ver) is a new version of the same document
@@ -231,9 +231,13 @@ The document version must always be >= the document ID.
 |  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |
 |  | [Comment Moderation Action](./docs/comment_moderation_action.md) |
 |  | [Brand Parameters](./docs/brand_parameters.md) |
+|  | [Brand Parameters Form Template](./docs/brand_parameters_form_template.md) |
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
+|  | [Campaign Parameters Form Template](./docs/campaign_parameters_form_template.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
-|  | [Decision Parameters](./docs/decision_parameters.md) |
+|  | [Category Parameters Form Template](./docs/category_parameters_form_template.md) |
+|  | [Contest Parameters](./docs/contest_parameters.md) |
+|  | [Contest Parameters Form Template](./docs/contest_parameters_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -276,6 +280,10 @@ The following must be true for a valid reference:
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Proposal Form Template](./docs/proposal_form_template.md) |
 |  | [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) |
+|  | [Brand Parameters Form Template](./docs/brand_parameters_form_template.md) |
+|  | [Campaign Parameters Form Template](./docs/campaign_parameters_form_template.md) |
+|  | [Category Parameters Form Template](./docs/category_parameters_form_template.md) |
+|  | [Contest Parameters Form Template](./docs/contest_parameters_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
@@ -355,7 +363,7 @@ addition to the author.
 | Valid References | [Brand Parameters](./docs/brand_parameters.md) |
 |  | [Campaign Parameters](./docs/campaign_parameters.md) |
 |  | [Category Parameters](./docs/category_parameters.md) |
-|  | [Decision Parameters](./docs/decision_parameters.md) |
+|  | [Contest Parameters](./docs/contest_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -406,7 +414,7 @@ Not just the current document.
 
 <!-- markdownlint-disable MD046 -->
 ``` mermaid
-   classDiagram
+classDiagram
     direction LR
     class Last {
         type: "=Intermediate.Document Type"
@@ -459,7 +467,7 @@ as they are signed by the author of the chain.
 
 <!-- markdownlint-disable MD046 -->
 ``` mermaid
- classDiagram
+classDiagram
     direction LR
 
     class Last {
@@ -540,7 +548,7 @@ as its not signed by the author of the chained documents.
 
 <!-- markdownlint-disable MD046 -->
 ``` mermaid
-    classDiagram
+classDiagram
     direction LR
     class Last {
         type: "=Intermediate.Document Type"

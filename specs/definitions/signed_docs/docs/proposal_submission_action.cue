@@ -6,7 +6,7 @@ package signed_docs
 docs: #DocumentDefinitions & {
 	"Proposal Submission Action": {
 		description: """
-			## Proposal Submission Action
+			Proposal Submission Action
 
 			A Proposal Submission Action is a document which can attempt to either submit a 
 			particular version of a proposal into a campaign, or withdraw it.

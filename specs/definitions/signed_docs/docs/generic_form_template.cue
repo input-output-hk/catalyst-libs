@@ -1,10 +1,7 @@
+// Template Standardized Descriptions
 package signed_docs
 
-// Template Standardized Descriptions
-
 _form_template_description: """
-	## {{ .doc }} Form Template Document
-		
 	A {{ .doc }} Form Template defines both:
 	
 	* The data that is entered in the Form.
@@ -57,9 +54,8 @@ _form_template_payload_description: """
 		user: []
 
 		// Brand Admin and Lower may publish this document.
-		admin: [
+		admin: _ | *[
 			"Brand Admin",
-			"Campaign Admin",
 		]
 	}
 

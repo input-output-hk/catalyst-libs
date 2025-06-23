@@ -2,7 +2,7 @@
 
 ## Description
 
-## Proposal Submission Action
+Proposal Submission Action
 
 A Proposal Submission Action is a document which can attempt to either submit a
 particular version of a proposal into a campaign, or withdraw it.
@@ -141,7 +141,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-  In other words, that the document intended to be referenced, is actually referenced.
+    In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.
@@ -198,8 +198,8 @@ States:
 * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
 * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
 * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-       `hide` is only actioned if sent by the author,
-      for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+         `hide` is only actioned if sent by the author,
+         for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
 ### Schema
 
@@ -214,8 +214,8 @@ States:
     * `final` : All collaborators must publish a `final` status for the proposal to be `final`.
     * `draft` : Reverses the previous `final` state for a signer and accepts collaborator status to a document.
     * `hide`  : Requests the proposal be hidden (not final, but a hidden draft).
-           `hide` is only actioned if sent by the author,
-          for a collaborator it identified that they do not wish to be listed as a `collaborator`.
+             `hide` is only actioned if sent by the author,
+             for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
     ```json
     {

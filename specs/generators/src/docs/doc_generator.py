@@ -187,7 +187,7 @@ class DocGenerator:
 
         Args:
             text (str): The input text containing tabs.
-            tabstop (int): The number of characters per tab stop. Default is 8.
+            tabstop (int): The number of characters per tab stop. Default is 4.
 
         Returns:
             str: Text with tabs replaced by spaces, aligned at each tab stop.
@@ -202,9 +202,15 @@ class DocGenerator:
             return " " * (tabstop - (position % tabstop))
 
         # Substitute tabs with spaces, using a custom replacement function
-        no_tabs_text = re.sub(pattern, replace_tab, self._filedata)
+        lines = list[str](
+            self._filedata.splitlines()  # type: ignore  # noqa: PGH003
+        )
+        no_tabs: list[str] = []
+        for line in lines:
+            new_line = re.sub(pattern, replace_tab, line)
+            no_tabs.append(new_line)
 
-        self._filedata = no_tabs_text
+        self._filedata = "\n".join(no_tabs)
 
     def insert_copyright(self, *, changelog: bool = True) -> str:
         """Generate a copyright notice into the given document data.

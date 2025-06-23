@@ -17,7 +17,8 @@ _allDocTypes: {
 	Brand:                "ebcabeeb-5bc5-4f95-91e8-cab8ca724172"
 	Campaign:             "5ef32d5d-f240-462c-a7a4-ba4af221fa23"
 	Category:             "818938c3-3139-4daa-afe6-974c78488e95"
-	Decision:             "788ff4c6-d65a-451f-bb33-575fe056b411"
+	Contest:              "788ff4c6-d65a-451f-bb33-575fe056b411"
+	Parameters:           "60185874-7e13-407c-a06c-238ffe637ae6"
 }
 
 // Source of truth for ALL Document Types and their matching UUID's.
@@ -67,17 +68,40 @@ _allDocs: {
 	]
 	"Brand Parameters": [
 		_allDocTypes["Brand"],
+		_allDocTypes["Parameters"],
+	]
+	"Brand Parameters Form Template": [
+		_allDocTypes["Brand"],
+		_allDocTypes["Parameters"],
+		_allDocTypes["FormTemplate"],
 	]
 	"Campaign Parameters": [
 		_allDocTypes["Campaign"],
+		_allDocTypes["Parameters"],
+	]
+	"Campaign Parameters Form Template": [
+		_allDocTypes["Campaign"],
+		_allDocTypes["Parameters"],
+		_allDocTypes["FormTemplate"],
 	]
 	"Category Parameters": [
 		_allDocTypes["Category"],
+		_allDocTypes["Parameters"],
 	]
-	"Decision Parameters": [
-		_allDocTypes["Decision"],
+	"Category Parameters Form Template": [
+		_allDocTypes["Category"],
+		_allDocTypes["Parameters"],
+		_allDocTypes["FormTemplate"],
 	]
-
+	"Contest Parameters": [
+		_allDocTypes["Contest"],
+		_allDocTypes["Parameters"],
+	]
+	"Contest Parameters Form Template": [
+		_allDocTypes["Contest"],
+		_allDocTypes["Parameters"],
+		_allDocTypes["FormTemplate"],
+	]
 }
 
 // Document Cluster Definition
@@ -88,7 +112,7 @@ _allDocs: {
 #DocClusters: [string]: #DocumentCluster
 
 doc_clusters: #DocClusters & {
-	// System parameters define the system, excludes Decisions.
+	// System parameters define the system, excludes Contests.
 	"System Parameters": {
 		docs: [
 			"Brand Parameters",

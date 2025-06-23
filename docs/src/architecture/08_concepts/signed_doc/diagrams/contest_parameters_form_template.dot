@@ -1,11 +1,12 @@
-digraph "Decision Parameters" {
+digraph "Contest Parameters Form Template" {
     rankdir="LR"
     graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
     node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
     edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
 
     labelloc="t"
-    label="Decision Parameters Document
+    label="Contest Parameters Form
+Template Document
 Relationships"
     fontcolor="#1d71b8"
     fontsize=50
@@ -64,13 +65,13 @@ Relationships"
 
     }
 
-    "Decision Parameters" [
-        id="Decision Parameters";
+    "Contest Parameters Form Template" [
+        id="Contest Parameters Form Template";
         label=<
             <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
             <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../decision_parameters/">
-                    <FONT COLOR="#ffffff"><B> Decision Parameters </B></FONT>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters_form_template/">
+                    <FONT COLOR="#ffffff"><B> Contest Parameters Form Template </B></FONT>
                 </TD>
             </TR>
             <TR>
@@ -78,7 +79,7 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/json</I></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/schema+json</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -88,7 +89,7 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>788ff4c6-d65a-451f-bb33-575fe056b411</I></B></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>788ff4c6-d65a-451f-bb33-575fe056b411<BR />60185874-7e13-407c-a06c-238ffe637ae6<BR />0ce8ab38-9258-4fbc-a62e-7faa6e58318f</I></B></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -129,5 +130,21 @@ Relationships"
     ];
 
 
-    "Decision Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Contest Parameters" [
+        id="Contest Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters/">
+                    <FONT COLOR="#ffffff"><B> Contest Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Contest Parameters Form Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Contest Parameters":"title":e -> "Contest Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }
