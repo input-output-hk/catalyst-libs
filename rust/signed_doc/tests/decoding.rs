@@ -21,6 +21,7 @@ struct TestCase {
 }
 
 // `parameters` value along with its aliases are not allowed to be presented
+#[allow(clippy::unwrap_used)]
 fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -39,7 +40,7 @@ fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> 
                 // protected headers (metadata fields)
                 e.bytes({
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(5 + u64::try_from(aliases.len()).unwrap())?;
+                    p_headers.map(5u64.checked_add(u64::try_from(aliases.len()).unwrap()).unwrap())?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
                     p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
                     p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
