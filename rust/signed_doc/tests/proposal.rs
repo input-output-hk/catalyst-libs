@@ -65,6 +65,7 @@ async fn test_valid_proposal_doc() {
                 "ver": brand_doc_ver
             }
         }),
+        // Validate against the ref template
         serde_json::to_vec(&serde_json::json!({})).unwrap(),
         RoleId::Proposer,
     )

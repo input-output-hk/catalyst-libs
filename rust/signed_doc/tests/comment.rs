@@ -202,6 +202,7 @@ async fn test_valid_comment_doc_old_type() {
             },
             "parameters": { "id": brand_doc_id, "ver": brand_doc_ver }
         })),
+        // Validate against the ref template
         serde_json::to_vec(&serde_json::json!({})).unwrap(),
         RoleId::Role0,
     )
