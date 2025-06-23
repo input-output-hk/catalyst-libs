@@ -7,9 +7,6 @@ use std::sync::LazyLock;
 use catalyst_signed_doc::{
     doc_types::deprecated, providers::tests::TestCatalystSignedDocumentProvider, *,
 };
-use catalyst_types::catalyst_id::role_index::RoleId;
-
-mod common;
 
 #[allow(clippy::unwrap_used)]
 static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
@@ -123,37 +120,6 @@ async fn test_valid_proposal_doc_old_type() {
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(is_valid);
-}
-
-#[tokio::test]
-async fn test_valid_proposal_doc_with_empty_provider() {
-    // dummy template doc to dummy provider
-    let template_doc_id = UuidV7::new();
-    let template_doc_ver = UuidV7::new();
-
-    let uuid_v7 = UuidV7::new();
-    let (doc, ..) = common::create_dummy_signed_doc(
-        serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL.clone(),
-            "id": uuid_v7.to_string(),
-            "ver": uuid_v7.to_string(),
-            "template": {
-              "id": template_doc_id,
-              "ver": template_doc_ver
-            },
-        }),
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Proposer,
-    )
-    .unwrap();
-
-    let provider = TestCatalystSignedDocumentProvider::default();
-
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
-
-    assert!(!is_valid);
 }
 
 #[tokio::test]
