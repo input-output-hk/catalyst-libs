@@ -175,7 +175,13 @@ fn decoding_empty_bytes_case() -> TestCase {
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-
+    let dr: DocumentRefs = vec![DocumentRef::new(
+        UuidV7::new(),
+        UuidV7::new(),
+        DocLocator::default(),
+    )]
+    .into();
+    let check_dr = dr.clone();
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
         bytes_gen: Box::new({
@@ -188,12 +194,15 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                 // protected headers (metadata fields)
                 let mut p_headers = Encoder::new(Vec::new());
 
-                p_headers.map(4)?;
+                p_headers.map(8)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
                 p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
                 p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
                 p_headers.str("ver")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-
+                p_headers.str("ref")?.encode_with(dr.clone(), &mut ())?;
+                p_headers.str("reply")?.encode_with(dr.clone(), &mut ())?;
+                p_headers.str("template")?.encode_with(dr.clone(), &mut ())?;
+                p_headers.str("parameters")?.encode_with(dr.clone(), &mut ())?;
                 e.bytes(p_headers.into_writer().as_slice())?;
                 // empty unprotected headers
                 e.map(0)?;
@@ -220,6 +229,10 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                     && (doc.doc_id().unwrap() == uuid_v7)
                     && (doc.doc_ver().unwrap() == uuid_v7)
                     && (doc.doc_content_type().unwrap() == ContentType::Json)
+                    && doc.doc_meta().doc_ref().unwrap() == &check_dr
+                    && doc.doc_meta().template().unwrap() == &check_dr
+                    && doc.doc_meta().reply().unwrap() == &check_dr
+                    && doc.doc_meta().parameters().unwrap() == &check_dr
                     && (doc.encoded_content()
                         == serde_json::to_vec(&serde_json::Value::Null).unwrap()) && doc.kids().len() == 1
             }

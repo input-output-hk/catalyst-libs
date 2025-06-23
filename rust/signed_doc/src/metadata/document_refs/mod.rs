@@ -4,10 +4,7 @@ mod doc_locator;
 mod doc_ref;
 use std::{fmt::Display, str::FromStr};
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{CborContext, UuidV7},
-};
+use catalyst_types::uuid::{CborContext, UuidV7};
 use coset::cbor::Value;
 pub use doc_locator::DocLocator;
 pub use doc_ref::DocumentRef;
@@ -267,6 +264,7 @@ impl<'de> Deserialize<'de> for DocumentRefs {
 #[cfg(test)]
 mod tests {
 
+    use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
 
@@ -352,11 +350,11 @@ mod tests {
         let doc_refs = DocumentRefs(vec![doc_ref.clone(), doc_ref]);
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
-        doc_refs.encode(&mut encoder, &mut report).unwrap();
+        doc_refs.encode(&mut encoder, &mut ()).unwrap();
         let mut decoder = Decoder::new(&buffer);
         let mut decoded_context = DecodeContext {
             compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report.clone(),
+            report: &mut report,
         };
         let decoded_doc_refs = DocumentRefs::decode(&mut decoder, &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_refs, doc_refs);
