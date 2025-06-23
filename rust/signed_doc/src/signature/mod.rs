@@ -4,7 +4,7 @@ pub use catalyst_types::catalyst_id::CatalystId;
 use catalyst_types::problem_report::ProblemReport;
 use coset::CoseSignature;
 
-use crate::{Content, Metadata};
+use crate::{decode_context::DecodeContext, Content, Metadata};
 
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]
@@ -114,7 +114,7 @@ pub(crate) fn tbs_data(
         // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
         "Signature",
         <minicbor::bytes::ByteVec>::from(minicbor::to_vec(metadata)?),
-        <minicbor::bytes::ByteVec>::from(protected_header_bytes(kid)?),
+        <minicbor::bytes::ByteVec>::from(protected_header_encode(kid)?),
         minicbor::bytes::ByteArray::from([]),
         content,
     ))?)
@@ -126,7 +126,7 @@ impl minicbor::Encode<()> for Signature {
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(3)?;
         e.bytes(
-            protected_header_bytes(&self.kid)
+            protected_header_encode(&self.kid)
                 .map_err(minicbor::encode::Error::message)?
                 .as_slice(),
         )?;
@@ -134,6 +134,43 @@ impl minicbor::Encode<()> for Signature {
         e.map(0)?;
         e.bytes(&self.signature)?;
         Ok(())
+    }
+}
+
+impl minicbor::Decode<'_, DecodeContext<'_>> for Signature {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext<'_>,
+    ) -> Result<Self, minicbor::decode::Error> {
+        if !matches!(d.array()?, Some(3)) {
+            return Err(minicbor::decode::Error::message(
+                "COSE signature object must be a definite size array with 3 elements",
+            ));
+        }
+
+        let kid = protected_header_decode(d.bytes()?).map_err(minicbor::decode::Error::message)?;
+
+        if kid.is_id() {
+            ctx.report.invalid_value(
+                    "COSE signature protected header key ID",
+                    &kid.to_string(),
+                    &format!(
+                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}",
+                        CatalystId::SCHEME
+                    ),
+                    "Converting COSE signature header key ID to CatalystId",
+                );
+        }
+
+        // empty unprotected headers
+        if !matches!(d.map()?, Some(0)) {
+            return Err(minicbor::decode::Error::message(
+                "COSE signature unprotected headers must be a definite size empty map",
+            ));
+        }
+
+        let signature = d.bytes()?.to_vec();
+
+        Ok(Self { kid, signature })
     }
 }
 
@@ -154,12 +191,69 @@ impl minicbor::Encode<()> for Signatures {
     }
 }
 
+impl minicbor::Decode<'_, DecodeContext<'_>> for Signatures {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext<'_>,
+    ) -> Result<Self, minicbor::decode::Error> {
+        let Some(signatures_len) = d.array()? else {
+            return Err(minicbor::decode::Error::message(
+                "COSE signatures array must be a definite size array",
+            ));
+        };
+
+        let mut signatures = Vec::new();
+        for idx in 0..signatures_len {
+            match d.decode_with(ctx) {
+                Ok(signature) => signatures.push(signature),
+                Err(e) => {
+                    ctx.report.other(
+                        &format!("COSE signature at id {idx}, error: {e}"),
+                        "Cannot decode a signle COSE signature from the array of signatures",
+                    );
+                },
+            }
+        }
+
+        Ok(Signatures(signatures))
+    }
+}
+
 /// Signatures protected header bytes
 ///
 /// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
-fn protected_header_bytes(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
-    let mut p_headers = minicbor::Encoder::new(Vec::new());
+fn protected_header_encode(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
+    let mut p_header = minicbor::Encoder::new(Vec::new());
     // protected headers (kid field)
-    p_headers.map(1)?.u8(4)?.encode(kid)?;
-    Ok(p_headers.into_writer())
+    p_header
+        .map(1)?
+        .u8(4)?
+        .bytes(Vec::<u8>::from(kid).as_slice())?;
+    Ok(p_header.into_writer())
+}
+
+/// Signatures protected header decode from bytes.
+///
+/// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
+fn protected_header_decode(bytes: &[u8]) -> anyhow::Result<CatalystId> {
+    let mut map = cbork_utils::deterministic_helper::decode_map_deterministically(
+        &mut minicbor::Decoder::new(bytes),
+    )?
+    .into_iter();
+
+    let Some(entry) = map.next() else {
+        anyhow::bail!("COSE signature protected header must be at least one entry");
+    };
+
+    // protected headers (kid field)
+    anyhow::ensure!(
+        matches!(
+            minicbor::Decoder::new(entry.key_bytes.as_slice()).u8(),
+            Ok(4)
+        ),
+        "Missing COSE signature protected header `kid` field"
+    );
+    let kid: CatalystId = minicbor::Decoder::new(entry.key_bytes.as_slice())
+        .bytes()?
+        .try_into()?;
+    Ok(kid)
 }
