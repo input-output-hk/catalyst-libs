@@ -112,7 +112,7 @@ async fn test_valid_proposal_doc() {
 }
 
 #[tokio::test]
-async fn test_ivalid_proposal_doc_wrong_role() {
+async fn test_invalid_proposal_doc_wrong_role() {
     let (sk, _pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
 
     // Create a main proposal doc, contain all fields mention in the document (except
