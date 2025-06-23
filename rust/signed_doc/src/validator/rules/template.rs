@@ -235,8 +235,8 @@ mod tests {
 
             // missing `content-type` field in the referenced document
             let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(missing_content_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(missing_content_template_doc_id))
+                .with_metadata_field(SupportedField::Id(missing_content_type_template_doc_id))
+                .with_metadata_field(SupportedField::Ver(missing_content_type_template_doc_id))
                 .with_metadata_field(SupportedField::Type(exp_template_type.into()))
                 .with_content(json_schema.clone())
                 .build();
@@ -244,8 +244,8 @@ mod tests {
 
             // missing content
             let ref_doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(valid_template_doc_id))
-                .with_metadata_field(SupportedField::Ver(valid_template_doc_id))
+                .with_metadata_field(SupportedField::Id(missing_content_template_doc_id))
+                .with_metadata_field(SupportedField::Ver(missing_content_template_doc_id))
                 .with_metadata_field(SupportedField::Type(exp_template_type.into()))
                 .with_metadata_field(SupportedField::ContentType(content_type))
                 .build();

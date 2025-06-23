@@ -41,12 +41,13 @@ impl ReplyRule {
 
                     // Get `ref` from both the doc and the ref doc
                     let Some(ref_doc_dr) = ref_doc.doc_meta().doc_ref() else {
-                        doc.report().missing_field("Ref doc `ref` field", context);
+                        doc.report()
+                            .missing_field("Referenced doc `ref` field", context);
                         return false;
                     };
 
                     let Some(doc_dr) = doc.doc_meta().doc_ref() else {
-                        doc.report().missing_field("Doc `ref` field", context);
+                        doc.report().missing_field("Document `ref` field", context);
                         return false;
                     };
 
@@ -155,8 +156,8 @@ mod tests {
 
             // Missing `ref` field in the referenced document
             let doc = Builder::new()
-                .with_metadata_field(SupportedField::Id(valid_replied_doc_id))
-                .with_metadata_field(SupportedField::Ver(valid_replied_doc_ver))
+                .with_metadata_field(SupportedField::Id(missing_ref_replied_doc_id))
+                .with_metadata_field(SupportedField::Ver(missing_ref_replied_doc_ver))
                 .with_metadata_field(SupportedField::Type(exp_reply_type.into()))
                 .build();
             provider.add_document(None, &doc).unwrap();
@@ -169,7 +170,8 @@ mod tests {
             optional: false,
         };
 
-        // Doc1 ref reply to doc2. Doc1 ref filed should match doc2 ref field
+        // common_ref_id ref reply to valid_replied_doc_id. common_ref_id ref filed should match
+        // valid_replied_doc_id ref field
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Reply(
                 vec![DocumentRef::new(
@@ -188,7 +190,11 @@ mod tests {
                 .into(),
             ))
             .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
+        assert!(
+            rule.check(&doc, &provider).await.unwrap(),
+            "{:?}",
+            doc.problem_report()
+        );
 
         // all correct, `reply` field is missing, but its optional
         let rule = ReplyRule::Specified {
