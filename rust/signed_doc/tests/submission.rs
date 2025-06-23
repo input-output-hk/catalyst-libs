@@ -24,6 +24,7 @@ static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .unwrap()
         .empty_content()
         .build()
+        .unwrap()
 });
 
 #[allow(clippy::unwrap_used)]
@@ -38,6 +39,7 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .unwrap()
         .empty_content()
         .build()
+        .unwrap()
 });
 
 // Given a proposal comment document `doc`:
@@ -71,7 +73,8 @@ async fn test_valid_submission_action() {
             "action": "final"
         }))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -105,7 +108,8 @@ async fn test_valid_submission_action_old_type() {
             "action": "final"
         }))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -137,7 +141,8 @@ async fn test_invalid_submission_action_corrupted_json() {
         .unwrap()
         .with_json_content(&serde_json::Value::Null)
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -171,7 +176,8 @@ async fn test_invalid_submission_action_missing_ref() {
             "action": "final"
         }))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -205,7 +211,8 @@ async fn test_invalid_submission_action_missing_parameters() {
             "action": "final"
         }))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 

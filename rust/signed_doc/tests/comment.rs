@@ -20,6 +20,7 @@ static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .unwrap()
         .empty_content()
         .build()
+        .unwrap()
 });
 
 #[allow(clippy::unwrap_used)]
@@ -34,6 +35,7 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .unwrap()
         .empty_content()
         .build()
+        .unwrap()
 });
 
 #[allow(clippy::unwrap_used)]
@@ -60,6 +62,7 @@ static COMMENT_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(||
         }))
         .unwrap()
         .build()
+        .unwrap()
 });
 
 #[allow(clippy::unwrap_used)]
@@ -88,6 +91,7 @@ static COMMENT_REF_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .with_json_content(&serde_json::json!({}))
         .unwrap()
         .build()
+        .unwrap()
 });
 
 // Given a proposal comment document `doc`:
@@ -132,7 +136,8 @@ async fn test_valid_comment_doc() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -174,7 +179,8 @@ async fn test_valid_comment_doc_old_type() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -215,7 +221,8 @@ async fn test_invalid_comment_doc_missing_parameters() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -256,7 +263,8 @@ async fn test_invalid_comment_doc_missing_template() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
@@ -297,7 +305,8 @@ async fn test_invalid_comment_doc_missing_ref() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
     provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();

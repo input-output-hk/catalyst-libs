@@ -29,6 +29,8 @@ pub use metadata::{
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
+use crate::builder::SignaturesBuilder;
+
 /// A problem report content string
 const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
 
@@ -203,7 +205,7 @@ impl CatalystSignedDocument {
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
     #[must_use]
-    pub fn into_builder(&self) -> Builder {
+    pub fn into_builder(&self) -> SignaturesBuilder {
         self.into()
     }
 }

@@ -20,6 +20,7 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         .unwrap()
         .empty_content()
         .build()
+        .unwrap()
 });
 
 #[allow(clippy::unwrap_used)]
@@ -46,6 +47,7 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
         }))
         .unwrap()
         .build()
+        .unwrap()
 });
 
 // Given a proposal document `doc`:
@@ -78,7 +80,8 @@ async fn test_valid_proposal_doc() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -110,7 +113,8 @@ async fn test_valid_proposal_doc_old_type() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -142,7 +146,8 @@ async fn test_invalid_proposal_doc_missing_template() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
@@ -174,7 +179,8 @@ async fn test_invalid_proposal_doc_missing_parameters() {
         .unwrap()
         .with_json_content(&serde_json::json!({}))
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     let mut provider = TestCatalystSignedDocumentProvider::default();
 
