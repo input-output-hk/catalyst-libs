@@ -31,12 +31,21 @@ impl ParameterLinkRefRule {
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: CatalystSignedDocumentProvider {
+        let context: &str = "Parameter link ref rule check";
         if let Self::Specified { field } = self {
             let param_link_ref_validator = |ref_doc: CatalystSignedDocument| {
-                // The parameters MUST be the same
-                doc.doc_meta().parameters() == ref_doc.doc_meta().parameters()
+                // The parameters MUST be the same, if not record the error
+                if doc.doc_meta().parameters() != ref_doc.doc_meta().parameters() {
+                    doc.report().invalid_value(
+                        "parameters",
+                        &format!("Reference doc param: {:?}", ref_doc.doc_meta().parameters()),
+                        &format!("Doc param: {:?}", doc.doc_meta().parameters()),
+                        &format!("{context}, parameters must be the same"),
+                    );
+                    return false;
+                }
+                true
             };
-
             // Which field is use for linked reference
             let param_link_ref = match field {
                 LinkField::Ref => doc.doc_meta().doc_ref(),
@@ -45,7 +54,7 @@ impl ParameterLinkRefRule {
 
             let Some(param_link_ref) = param_link_ref else {
                 doc.report()
-                    .missing_field("Link ref", "Invalid link reference");
+                    .missing_field("Link ref", &format!("{context}: Invalid link reference"));
                 return Ok(false);
             };
 
