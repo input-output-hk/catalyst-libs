@@ -24,12 +24,8 @@ struct TestCase {
 fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let doc_ref = DocumentRef::new(
-        UuidV7::new(),
-        UuidV7::new(),
-        DocLocator::default(),
-    );
-    
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+
     TestCase {
         name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once. [INVALID]",
         bytes_gen: Box::new({
@@ -172,11 +168,14 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_parameters_and_aliases(vec!["category_id".into()], false),
         signed_doc_with_parameters_and_aliases(vec!["brand_id".into()], false),
         signed_doc_with_parameters_and_aliases(vec!["campaign_id".into()], false),
-        signed_doc_with_parameters_and_aliases(vec![
-            "category_id".into(),
-            "brand_id".into(),
-            "campaign_id".into()
-        ], false),
+        signed_doc_with_parameters_and_aliases(
+            vec![
+                "category_id".into(),
+                "brand_id".into(),
+                "campaign_id".into(),
+            ],
+            false,
+        ),
     ];
 
     for case in test_cases {
