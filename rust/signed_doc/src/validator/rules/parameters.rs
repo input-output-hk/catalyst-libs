@@ -76,7 +76,10 @@ mod tests {
     use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
-    use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
+    use crate::{
+        builder::tests::Builder, metadata::SupportedField,
+        providers::tests::TestCatalystSignedDocumentProvider, DocumentRef,
+    };
 
     #[tokio::test]
     async fn ref_rule_specified_test() {
@@ -105,44 +108,32 @@ mod tests {
         {
             // Category doc
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": valid_category_doc_id.to_string(),
-                    "ver": valid_category_doc_ver.to_string(),
-                    "type": exp_parameters_cat_type.to_string(),
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(valid_category_doc_id))
+                .with_metadata_field(SupportedField::Ver(valid_category_doc_ver))
+                .with_metadata_field(SupportedField::Type(exp_parameters_cat_type.into()))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
             // Brand doc
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": valid_brand_doc_id.to_string(),
-                    "ver": valid_brand_doc_ver.to_string(),
-                    "type": exp_parameters_cat_type.to_string(),
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(valid_brand_doc_id))
+                .with_metadata_field(SupportedField::Ver(valid_brand_doc_ver))
+                .with_metadata_field(SupportedField::Type(exp_parameters_cat_type.into()))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
             // Other type
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": another_type_category_doc_id.to_string(),
-                    "ver": another_type_category_doc_ver.to_string(),
-                    "type": UuidV4::new().to_string()
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(another_type_category_doc_id))
+                .with_metadata_field(SupportedField::Ver(another_type_category_doc_ver))
+                .with_metadata_field(SupportedField::Type(UuidV4::new().into()))
                 .build();
             provider.add_document(None, &doc).unwrap();
 
             // Missing `type` field in the referenced document
             let doc = Builder::new()
-                .with_json_metadata(serde_json::json!({
-                    "id": missing_type_category_doc_id.to_string(),
-                    "ver": missing_type_category_doc_ver.to_string(),
-                }))
-                .unwrap()
+                .with_metadata_field(SupportedField::Id(missing_type_category_doc_id))
+                .with_metadata_field(SupportedField::Ver(missing_type_category_doc_ver))
                 .build();
             provider.add_document(None, &doc).unwrap();
         }
@@ -154,45 +145,48 @@ mod tests {
             optional: false,
         };
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": 
-                [{"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string(), "cid": "0x" }]
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![DocumentRef::new(
+                    valid_category_doc_id,
+                    valid_category_doc_ver,
+                    Default::default(),
+                )]
+                .into(),
+            ))
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // Parameters contain multiple ref
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": 
-                [{"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string(), "cid": "0x" },
-                {"id": valid_brand_doc_id.to_string(), "ver": valid_brand_doc_ver.to_string(), "cid": "0x" }]
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![
+                    DocumentRef::new(
+                        valid_category_doc_id,
+                        valid_category_doc_ver,
+                        Default::default(),
+                    ),
+                    DocumentRef::new(valid_brand_doc_id, valid_brand_doc_ver, Default::default()),
+                ]
+                .into(),
+            ))
             .build();
         assert!(rule.check(&doc, &provider).await.unwrap());
 
         // Parameters contain multiple ref, but one of them is invalid (not registered).
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": 
-                [{"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string(), "cid": "0x" },
-                {"id": UuidV7::new().to_string() , "ver": UuidV7::new().to_string(), "cid": "0x" }]
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![
+                    DocumentRef::new(
+                        valid_category_doc_id,
+                        valid_category_doc_ver,
+                        Default::default(),
+                    ),
+                    DocumentRef::new(UuidV7::new(), UuidV7::new(), Default::default()),
+                ]
+                .into(),
+            ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
-
-        // Checking backward compatible
-        let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters":
-                {"id": valid_category_doc_id.to_string(), "ver": valid_category_doc_ver.to_string()}
-            }))
-            .unwrap()
-            .build();
-        assert!(rule.check(&doc, &provider).await.unwrap());
 
         // All correct, `parameters` field is missing, but its optional
         let rule = ParametersRule::Specified {
@@ -212,28 +206,40 @@ mod tests {
 
         // Reference to the document with another `type` field
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": another_type_category_doc_id.to_string(), "ver": another_type_category_doc_ver.to_string() }
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![DocumentRef::new(
+                    another_type_category_doc_id,
+                    another_type_category_doc_ver,
+                    Default::default(),
+                )]
+                .into(),
+            ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // Missing `type` field in the referenced document
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": missing_type_category_doc_id.to_string(), "ver": missing_type_category_doc_ver.to_string() }
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![DocumentRef::new(
+                    missing_type_category_doc_id,
+                    missing_type_category_doc_ver,
+                    Default::default(),
+                )]
+                .into(),
+            ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // Cannot find a referenced document
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({
-                "parameters": {"id": UuidV7::new().to_string(), "ver": UuidV7::new().to_string() }
-            }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![DocumentRef::new(
+                    UuidV7::new(),
+                    UuidV7::new(),
+                    Default::default(),
+                )]
+                .into(),
+            ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }
@@ -249,8 +255,9 @@ mod tests {
         let ref_id = UuidV7::new();
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({"parameters": {"id": ref_id.to_string(), "ver": ref_ver.to_string() } }))
-            .unwrap()
+            .with_metadata_field(SupportedField::Parameters(
+                vec![DocumentRef::new(ref_id, ref_ver, Default::default())].into(),
+            ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
     }

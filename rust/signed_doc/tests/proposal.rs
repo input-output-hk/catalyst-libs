@@ -18,8 +18,7 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
             "type": doc_types::BRAND_PARAMETERS.clone(),
         }))
         .unwrap()
-        .with_json_content(&serde_json::json!({}))
-        .unwrap()
+        .empty_content()
         .build()
 });
 
