@@ -39,7 +39,7 @@ fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> 
                 // protected headers (metadata fields)
                 e.bytes({
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(5 + aliases.len() as u64)?;
+                    p_headers.map(5 + u64::try_from(aliases.len()).unwrap())?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
                     p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
                     p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
