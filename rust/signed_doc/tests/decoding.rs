@@ -1,10 +1,8 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::{doc_types::deprecated, providers::tests::TestVerifyingKeyProvider, *};
+use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
-use coset::{CborSerializable, TaggedCborSerializable};
-use ed25519_dalek::ed25519::signature::Signer;
 use minicbor::{data::Tag, Encoder};
 
 mod common;
@@ -22,204 +20,66 @@ struct TestCase {
     post_checks: Option<Box<PostCheck>>,
 }
 
-#[tokio::test]
-async fn catalyst_signed_doc_parameters_aliases_test() {
-    catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
-    catalyst_signed_doc_parameters_aliases(common::test_metadata_specific_type(
-        Some(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.try_into().unwrap()),
-        None,
-    ))
-    .await;
-}
-
-#[allow(clippy::unwrap_used)]
-#[allow(clippy::too_many_lines)]
-async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_json::Value)) {
-    let (_, _, metadata_fields) = data;
-    let (sk, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
-    let mut provider = TestVerifyingKeyProvider::default();
-    provider.add_pk(kid.clone(), pk);
-
-    let content = serde_json::to_vec(&serde_json::Value::Null).unwrap();
-
-    let doc = Builder::new()
-        .with_json_metadata(metadata_fields.clone())
-        .unwrap()
-        .with_decoded_content(content.clone())
-        .unwrap()
-        .build();
-    assert!(!doc.problem_report().is_problematic());
-
-    let parameters_val = doc.doc_meta().parameters().unwrap();
-    let parameters_val_cbor =
-        coset::cbor::Value::from_slice(minicbor::to_vec(parameters_val).unwrap().as_slice())
-            .unwrap();
-    // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
-    let bytes: Vec<u8> = doc.try_into().unwrap();
-    let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();
-    cose.protected.original_data = None;
-    cose.protected
-        .header
-        .rest
-        .retain(|(l, _)| l != &coset::Label::Text("parameters".to_string()));
-
-    let doc: CatalystSignedDocument = cose
-        .clone()
-        .to_tagged_vec()
-        .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
-    assert!(!doc.problem_report().is_problematic());
-    assert!(doc.doc_meta().parameters().is_none());
-
-    // case: `category_id`.
-    let mut cose_with_category_id = cose.clone();
-    cose_with_category_id.protected.header.rest.push((
-        coset::Label::Text("category_id".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-
-    let cbor_bytes = cose_with_category_id.to_tagged_vec().unwrap();
-    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
-    let doc = doc
-        .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
-        .unwrap()
-        .build();
-    assert!(!doc.problem_report().is_problematic());
-    assert!(doc.doc_meta().parameters().is_some());
-    assert!(validator::validate_signatures(&doc, &provider)
-        .await
-        .unwrap());
-
-    // case: `brand_id`.
-    let mut cose_with_brand_id = cose.clone();
-    cose_with_brand_id.protected.header.rest.push((
-        coset::Label::Text("brand_id".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-
-    let cbor_bytes = cose_with_brand_id.to_tagged_vec().unwrap();
-    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
-    let doc = doc
-        .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
-        .unwrap()
-        .build();
-    assert!(!doc.problem_report().is_problematic());
-    assert!(doc.doc_meta().parameters().is_some());
-    assert!(validator::validate_signatures(&doc, &provider)
-        .await
-        .unwrap());
-
-    // case: `campaign_id`.
-    let mut cose_with_campaign_id = cose.clone();
-    cose_with_campaign_id.protected.header.rest.push((
-        coset::Label::Text("campaign_id".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-
-    let cbor_bytes = cose_with_campaign_id.to_tagged_vec().unwrap();
-    let doc: CatalystSignedDocument = cbor_bytes.as_slice().try_into().unwrap();
-    let doc = doc
-        .into_builder()
-        .add_signature(|m| sk.sign(&m).to_vec(), kid)
-        .unwrap()
-        .build();
-    assert!(!doc.problem_report().is_problematic());
-    assert!(doc.doc_meta().parameters().is_some());
-    assert!(validator::validate_signatures(&doc, &provider)
-        .await
-        .unwrap());
-
-    // `parameters` value along with its aliases are not allowed to be present at the
-    let mut cose_with_category_id = cose.clone();
-    cose_with_category_id.protected.header.rest.push((
-        coset::Label::Text("parameters".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-    cose_with_category_id.protected.header.rest.push((
-        coset::Label::Text("category_id".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-    cose_with_category_id.protected.header.rest.push((
-        coset::Label::Text("brand_id".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-    cose_with_category_id.protected.header.rest.push((
-        coset::Label::Text("campaign_id".to_string()),
-        parameters_val_cbor.clone(),
-    ));
-
-    let doc: CatalystSignedDocument = cose_with_category_id
-        .to_tagged_vec()
-        .unwrap()
-        .as_slice()
-        .try_into()
-        .unwrap();
+// `parameters` value along with its aliases are not allowed to be presented
+fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let doc_ref = DocumentRef::new(
+        UuidV7::new(),
+        UuidV7::new(),
+        DocLocator::default(),
+    );
     
-    assert!(doc.problem_report().is_problematic());
-}
-
-fn signed_doc_with_parameters_and_aliases() -> TestCase {
     TestCase {
         name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once. [INVALID]",
         bytes_gen: Box::new({
             move || {
-                let (_, _, metadata_fields) = common::test_metadata();
+                let (_, _, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
 
-                let doc = Builder::new()
-                    .with_json_metadata(metadata_fields)
-                    .unwrap()
-                    .with_decoded_content({
-                        serde_json::to_vec(&serde_json::Value::Null).unwrap()
-                    })
-                    .unwrap()
-                    .build();
-                assert!(!doc.problem_report().is_problematic());
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
 
-                let parameters_val = doc.doc_meta().parameters().unwrap();
-                let parameters_val_cbor =
-                    coset::cbor::Value::from_slice(minicbor::to_vec(parameters_val).unwrap().as_slice())
-                        .unwrap();
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(5 + aliases.len() as u64)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("ver")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("parameters")?.encode_with(doc_ref.clone(), &mut ())?;
 
-                // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
-                let bytes: Vec<u8> = doc.try_into().unwrap();
-                let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();
-                cose.protected.original_data = None;
-                cose.protected
-                    .header
-                    .rest
-                    .retain(|(l, _)| l != &coset::Label::Text("parameters".to_string()));
+                    for alias in aliases.clone() {
+                        p_headers.str(&alias)?.encode_with(doc_ref.clone(), &mut ())?;
+                    }
 
-                // `parameters` value along with its aliases are not allowed to be present at the
-                cose.protected.header.rest.push((
-                    coset::Label::Text("parameters".to_string()),
-                    parameters_val_cbor.clone(),
-                ));
-                cose.protected.header.rest.push((
-                    coset::Label::Text("category_id".to_string()),
-                    parameters_val_cbor.clone(),
-                ));
-                cose.protected.header.rest.push((
-                    coset::Label::Text("brand_id".to_string()),
-                    parameters_val_cbor.clone(),
-                ));
-                cose.protected.header.rest.push((
-                    coset::Label::Text("campaign_id".to_string()),
-                    parameters_val_cbor.clone(),
-                ));
+                    p_headers.into_writer().as_slice()
+                })?;
 
-                let doc_bytes = cose
-                    .to_tagged_vec()
-                    .unwrap();
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                e.bytes({
+                    let mut p_headers = minicbor::Encoder::new(Vec::new());
+                    p_headers.map(1)?.u8(4)?.encode(kid)?;
 
-                Ok(Encoder::new(doc_bytes))
+                    p_headers.into_writer().as_slice()
+                })?;
+                e.map(0)?;
+                e.bytes(&[1,2,3])?;
+
+                Ok(e)
             }
         }),
         can_decode: true,
-        valid_doc: false,
+        valid_doc: valid,
         post_checks: None,
     }
 }
@@ -308,7 +168,15 @@ fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
-        signed_doc_with_parameters_and_aliases()
+        signed_doc_with_parameters_and_aliases(vec![], true),
+        signed_doc_with_parameters_and_aliases(vec!["category_id".into()], false),
+        signed_doc_with_parameters_and_aliases(vec!["brand_id".into()], false),
+        signed_doc_with_parameters_and_aliases(vec!["campaign_id".into()], false),
+        signed_doc_with_parameters_and_aliases(vec![
+            "category_id".into(),
+            "brand_id".into(),
+            "campaign_id".into()
+        ], false),
     ];
 
     for case in test_cases {
