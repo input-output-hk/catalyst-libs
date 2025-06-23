@@ -9,6 +9,19 @@ use minicbor::{data::Tag, Encoder};
 
 mod common;
 
+type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
+
+struct TestCase {
+    name: &'static str,
+    bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
+    // If the provided bytes can be even decoded without error (valid COSE or not).
+    // If set to `false` all further checks will not even happen.
+    can_decode: bool,
+    // If the decoded doc is a valid `CatalystSignedDocument`, underlying problem report is empty.
+    valid_doc: bool,
+    post_checks: Option<Box<PostCheck>>,
+}
+
 #[tokio::test]
 async fn catalyst_signed_doc_parameters_aliases_test() {
     catalyst_signed_doc_parameters_aliases(common::test_metadata()).await;
@@ -145,20 +158,73 @@ async fn catalyst_signed_doc_parameters_aliases(data: (UuidV7, UuidV4, serde_jso
         .as_slice()
         .try_into()
         .unwrap();
+    
     assert!(doc.problem_report().is_problematic());
 }
 
-type PostCheck = dyn Fn(&CatalystSignedDocument) -> bool;
+fn signed_doc_with_parameters_and_aliases() -> TestCase {
+    TestCase {
+        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once. [INVALID]",
+        bytes_gen: Box::new({
+            move || {
+                let (_, _, metadata_fields) = common::test_metadata();
+                let (_, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
+                let mut provider = TestVerifyingKeyProvider::default();
+                provider.add_pk(kid.clone(), pk);
 
-struct TestCase {
-    name: &'static str,
-    bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
-    // If the provided bytes can be even decoded without error (valid COSE or not).
-    // If set to `false` all further checks will not even happen.
-    can_decode: bool,
-    // If the decoded doc is a valid `CatalystSignedDocument`, underlying problem report is empty.
-    valid_doc: bool,
-    post_checks: Option<Box<PostCheck>>,
+                let doc = Builder::new()
+                    .with_json_metadata(metadata_fields.clone())
+                    .unwrap()
+                    .with_decoded_content({
+                        serde_json::to_vec(&serde_json::Value::Null).unwrap()
+                    })
+                    .unwrap()
+                    .build();
+                assert!(!doc.problem_report().is_problematic());
+
+                let parameters_val = doc.doc_meta().parameters().unwrap();
+                let parameters_val_cbor =
+                    coset::cbor::Value::from_slice(minicbor::to_vec(parameters_val).unwrap().as_slice())
+                        .unwrap();
+                    
+                // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
+                let bytes: Vec<u8> = doc.try_into().unwrap();
+                let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();
+                cose.protected.original_data = None;
+                cose.protected
+                    .header
+                    .rest
+                    .retain(|(l, _)| l != &coset::Label::Text("parameters".to_string()));
+
+                // `parameters` value along with its aliases are not allowed to be present at the
+                cose.protected.header.rest.push((
+                    coset::Label::Text("parameters".to_string()),
+                    parameters_val_cbor.clone(),
+                ));
+                cose.protected.header.rest.push((
+                    coset::Label::Text("category_id".to_string()),
+                    parameters_val_cbor.clone(),
+                ));
+                cose.protected.header.rest.push((
+                    coset::Label::Text("brand_id".to_string()),
+                    parameters_val_cbor.clone(),
+                ));
+                cose.protected.header.rest.push((
+                    coset::Label::Text("campaign_id".to_string()),
+                    parameters_val_cbor.clone(),
+                ));
+
+                let doc_bytes = cose
+                    .to_tagged_vec()
+                    .unwrap();
+
+                Ok(Encoder::new(doc_bytes))
+            }
+        }),
+        can_decode: true,
+        valid_doc: false,
+        post_checks: None,
+    }
 }
 
 fn decoding_empty_bytes_case() -> TestCase {
@@ -232,6 +298,7 @@ fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
+        signed_doc_with_parameters_and_aliases()
     ];
 
     for case in test_cases {
