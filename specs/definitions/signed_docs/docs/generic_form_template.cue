@@ -41,9 +41,6 @@ _form_template_payload_description: """
 		parameters: {
 			required: "yes"
 			type:     doc_clusters."System Parameters".docs
-			linked_refs: [
-				"template",
-			]
 		}
 	}
 
