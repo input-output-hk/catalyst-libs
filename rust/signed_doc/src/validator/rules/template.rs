@@ -4,10 +4,8 @@ use std::fmt::Write;
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::{ContentType, DocType},
-    providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc,
-    CatalystSignedDocument,
+    metadata::ContentType, providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_doc_refs, CatalystSignedDocument, DocType,
 };
 
 /// Enum represents different content schemas, against which documents content would be
@@ -21,6 +19,7 @@ pub(crate) enum ContentSchema {
 /// Document's content validation rule
 pub(crate) enum ContentRule {
     /// Based on the 'template' field and loaded corresponding template document
+    #[allow(dead_code)]
     Templated {
         /// expected `type` field of the template
         exp_template_type: DocType,
@@ -36,27 +35,27 @@ pub(crate) enum ContentRule {
 
 impl ContentRule {
     /// Field validation rule
+    #[allow(dead_code)]
     pub(crate) async fn check<Provider>(
         &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
     where Provider: CatalystSignedDocumentProvider {
+        let context = "Content/Template rule check";
         if let Self::Templated { exp_template_type } = self {
             let Some(template_ref) = doc.doc_meta().template() else {
                 doc.report()
-                    .missing_field("template", "Document must have a template field");
+                    .missing_field("template", &format!("{context}, doc"));
                 return Ok(false);
             };
-
             let template_validator = |template_doc: CatalystSignedDocument| {
                 if !referenced_doc_check(&template_doc, exp_template_type, "template", doc.report())
                 {
                     return false;
                 }
-
                 let Ok(template_content_type) = template_doc.doc_content_type() else {
                     doc.report().missing_field(
                         "content-type",
-                        "Referenced template document must have a content-type field",
+                        &format!("{context}, referenced document must have a content-type field"),
                     );
                     return false;
                 };
@@ -68,20 +67,15 @@ impl ContentRule {
                     },
                 }
             };
-            return validate_provided_doc(
-                &template_ref,
-                provider,
-                doc.report(),
-                template_validator,
-            )
-            .await;
+            return validate_doc_refs(template_ref, provider, doc.report(), template_validator)
+                .await;
         }
         if let Self::Static(content_schema) = self {
             if let Some(template) = doc.doc_meta().template() {
                 doc.report().unknown_field(
                     "template",
                     &template.to_string(),
-                    "Document does not expect to have a template field",
+                    &format!("{context} Static, Document does not expect to have a template field",)
                 );
                 return Ok(false);
             }
@@ -93,7 +87,7 @@ impl ContentRule {
                 doc.report().unknown_field(
                     "template",
                     &template.to_string(),
-                    "Document does not expect to have a template field",
+                    &format!("{context} Not Specified, Document does not expect to have a template field",)
                 );
                 return Ok(false);
             }
@@ -135,7 +129,7 @@ fn templated_json_schema_check(
 
     content_schema_check(doc, &ContentSchema::Json(schema_validator))
 }
-
+#[allow(dead_code)]
 /// Validating the document's content against the provided schema
 fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) -> bool {
     let Ok(doc_content) = doc.decoded_content() else {
@@ -206,9 +200,9 @@ mod tests {
         let missing_content_template_doc_id = UuidV7::new();
         let invalid_content_template_doc_id = UuidV7::new();
 
-        // prepare replied documents
+        // Prepare provider documents
         {
-            let ref_doc = Builder::new()
+            let doc = Builder::new()
                 .with_json_metadata(serde_json::json!({
                     "id": valid_template_doc_id.to_string(),
                     "ver": valid_template_doc_id.to_string(),
@@ -219,7 +213,7 @@ mod tests {
                 .with_decoded_content(json_schema.clone())
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &doc).unwrap();
 
             // reply doc with other `type` field
             let ref_doc = Builder::new()
@@ -233,7 +227,7 @@ mod tests {
                 .with_decoded_content(json_schema.clone())
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &ref_doc).unwrap();
 
             // missing `type` field in the referenced document
             let ref_doc = Builder::new()
@@ -246,7 +240,7 @@ mod tests {
                 .with_decoded_content(json_schema.clone())
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &ref_doc).unwrap();
 
             // missing `content-type` field in the referenced document
             let ref_doc = Builder::new()
@@ -259,7 +253,7 @@ mod tests {
                 .with_decoded_content(json_schema.clone())
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &ref_doc).unwrap();
 
             // missing content
             let ref_doc = Builder::new()
@@ -271,7 +265,7 @@ mod tests {
                 }))
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &ref_doc).unwrap();
 
             // invalid content, must be json encoded
             let ref_doc = Builder::new()
@@ -285,16 +279,28 @@ mod tests {
                 .with_decoded_content(vec![])
                 .unwrap()
                 .build();
-            provider.add_document(ref_doc).unwrap();
+            provider.add_document(None, &ref_doc).unwrap();
         }
 
-        // all correct
+        // Create a document where `templates` field is required and referencing a valid document
+        // in provider. Using doc ref of new implementation.
         let rule = ContentRule::Templated {
             exp_template_type: exp_template_type.into(),
         };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
-                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
+                "template": [{"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string(), "cid": "0x" }]
+            }))
+            .unwrap()
+            .with_decoded_content(json_content.clone())
+            .unwrap()
+            .build();
+        assert!(rule.check(&doc, &provider).await.unwrap());
+
+        // Checking backward compatible
+        let doc = Builder::new()
+            .with_json_metadata(serde_json::json!({
+                "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string()}
             }))
             .unwrap()
             .with_decoded_content(json_content.clone()).unwrap()
