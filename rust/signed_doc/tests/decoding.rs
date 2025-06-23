@@ -175,7 +175,12 @@ fn decoding_empty_bytes_case() -> TestCase {
 fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let dr: DocumentRefs = vec![DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default())].into();
+    let dr: DocumentRefs = vec![DocumentRef::new(
+        UuidV7::new(),
+        UuidV7::new(),
+        DocLocator::default(),
+    )]
+    .into();
     let check_dr = dr.clone();
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
