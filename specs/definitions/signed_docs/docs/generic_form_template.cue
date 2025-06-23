@@ -30,19 +30,18 @@ _form_template_payload_description: """
 	{{ .doc }} Document.
 	"""
 
+_metadataFieldSystemParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type:     doc_clusters."System Parameters".docs
+}
+
 #generic_form_template: #signedDocument & {
 	description: _
 
 	headers: "content type": value: "application/schema+json"
 
-	metadata: {
-		template: required: "excluded"
-
-		parameters: {
-			required: "yes"
-			type:     doc_clusters."System Parameters".docs
-		}
-	}
+	metadata: template: required: "excluded"
 
 	payload: description: _
 

@@ -8,6 +8,7 @@ _proposal_comment_form_data: doc: "Proposal Comment"
 docs: #DocumentDefinitions & {
 	"Proposal Comment Form Template": #generic_form_template & {
 		description: template.Execute(_form_template_description, _proposal_comment_form_data)
+		metadata: parameters: _metadataFieldSystemParameters
 		payload: description: template.Execute(_form_template_payload_description, _proposal_comment_form_data)
 		versions: _generic_form_template_versions
 	}

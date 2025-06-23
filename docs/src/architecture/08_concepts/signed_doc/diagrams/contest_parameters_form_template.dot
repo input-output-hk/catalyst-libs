@@ -14,57 +14,6 @@ Relationships"
 
 
 
-    subgraph cluster_system_parameters {
-        label = "System Parameters";
-        color=blue
-        penwidth=20
-
-        "Brand Parameters" [
-            id="Brand Parameters";
-            label=<
-                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-                <TR>
-                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters/">
-                        <FONT COLOR="#ffffff"><B> Brand Parameters </B></FONT>
-                    </TD>
-                </TR>
-
-                </TABLE>
-            >
-        ];
-
-
-        "Campaign Parameters" [
-            id="Campaign Parameters";
-            label=<
-                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-                <TR>
-                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
-                        <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
-                    </TD>
-                </TR>
-
-                </TABLE>
-            >
-        ];
-
-
-        "Category Parameters" [
-            id="Category Parameters";
-            label=<
-                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-                <TR>
-                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
-                        <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
-                    </TD>
-                </TR>
-
-                </TABLE>
-            >
-        ];
-
-    }
-
     "Contest Parameters Form Template" [
         id="Contest Parameters Form Template";
         label=<
@@ -114,16 +63,6 @@ Relationships"
                     </TABLE>
                 </TD>
             </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
 
             </TABLE>
         >
@@ -145,6 +84,5 @@ Relationships"
     ];
 
 
-    "Contest Parameters Form Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Contest Parameters":"title":e -> "Contest Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

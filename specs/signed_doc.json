@@ -550,14 +550,7 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -816,14 +809,7 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -1082,14 +1068,7 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
@@ -1470,14 +1449,7 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "linked_refs": null,
-          "multiple": false,
-          "required": "yes",
-          "type": [
-            "Brand Parameters",
-            "Campaign Parameters",
-            "Category Parameters"
-          ],
+          "required": "excluded",
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document."
         },
         "ref": {
