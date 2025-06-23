@@ -14,10 +14,7 @@ docs: "Contest Parameters": #generic_parameters & {
 	validation:  template.Execute(_parameters_parent_validation, _data)
 	metadata: {
 		template: type: "\(_data.doc) Parameters Form Template"
-		parameters: {
-			required: "yes"
-			type:     doc_clusters."System Parameters".docs
-		}
+		parameters: _metadataFieldSystemParameters
 	}
 	payload: description: template.Execute(_parameters_payload_description, _data)
 	versions: _generic_parameters_versions
