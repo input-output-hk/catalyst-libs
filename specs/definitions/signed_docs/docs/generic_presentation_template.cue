@@ -3,8 +3,6 @@ package signed_docs
 // Template Standardized Descriptions
 
 _presentation_template_description: """
-	## {{ .doc }} Presentation Template Document
-		
 	A {{ .doc }} Presentation Template defines how the data
 	captured by the {{ .doc }} Form Template is to be displayed.
 

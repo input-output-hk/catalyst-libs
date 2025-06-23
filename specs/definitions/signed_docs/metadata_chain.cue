@@ -33,7 +33,7 @@ _chain_validation_examples: """
 
 	<!-- markdownlint-disable MD046 -->
 	``` mermaid
-		\(_chainValidMermaid)
+	\(_chainValidMermaid)
 	```
 	<!-- markdownlint-enable MD046 -->
 
@@ -45,7 +45,7 @@ _chain_validation_examples: """
 
 	<!-- markdownlint-disable MD046 -->
 	``` mermaid
-		\(_chainInvalidMermaid)
+	\(_chainInvalidMermaid)
 	```
 	<!-- markdownlint-enable MD046 -->
 
@@ -56,7 +56,7 @@ _chain_validation_examples: """
 
 	<!-- markdownlint-disable MD046 -->
 	``` mermaid
-		\(_chainFraudulentMermaid)
+	\(_chainFraudulentMermaid)
 	```
 	<!-- markdownlint-enable MD046 -->
 	"""

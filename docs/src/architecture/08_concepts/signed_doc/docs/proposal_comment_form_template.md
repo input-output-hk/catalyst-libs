@@ -2,8 +2,6 @@
 
 ## Description
 
-## Proposal Comment Form Template Document
-
 A Proposal Comment Form Template defines both:
 
 * The data that is entered in the Form.
@@ -147,7 +145,6 @@ Proposal Comment Document.
 The following Admin roles may sign documents of this type:
 
 * Brand Admin
-* Campaign Admin
 
 New versions of this document may be published by:
 

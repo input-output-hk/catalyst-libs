@@ -2,8 +2,6 @@
 
 ## Description
 
-## Proposal Comment Presentation Template Document
-
 A Proposal Comment Presentation Template defines how the data
 captured by the Proposal Comment Form Template is to be displayed.
 
