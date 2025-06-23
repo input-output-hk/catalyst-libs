@@ -2,20 +2,42 @@
 
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
-use common::test_metadata;
 use ed25519_dalek::ed25519::signature::Signer;
+
+use crate::common::create_dummy_key_pair;
 
 mod common;
 
+fn metadata() -> serde_json::Value {
+    serde_json::json!({
+        "content-type": ContentType::Json.to_string(),
+        "content-encoding": ContentEncoding::Brotli.to_string(),
+        "type": UuidV4::new(),
+        "id":  UuidV7::new(),
+        "ver":  UuidV7::new(),
+        "ref": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "reply": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "template": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+        "section": "$",
+        "collabs": vec!["Alex1", "Alex2"],
+        "parameters": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
+    })
+}
+
 #[tokio::test]
 async fn single_signature_validation_test() {
-    let (_, _, metadata) = test_metadata();
-    let (signed_doc, pk, kid) = common::create_dummy_signed_doc(
-        metadata,
-        serde_json::to_vec(&serde_json::Value::Null).unwrap(),
-        RoleId::Role0,
-    )
-    .unwrap();
+    let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
+
+    let signed_doc = Builder::new()
+        .with_json_metadata(metadata())
+        .unwrap()
+        .with_json_content(&serde_json::Value::Null)
+        .unwrap()
+        .add_signature(|m| sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build()
+        .unwrap();
+
     assert!(!signed_doc.problem_report().is_problematic());
 
     // case: has key
@@ -32,8 +54,31 @@ async fn single_signature_validation_test() {
             .unwrap()
     );
 
+    // case: signed with different key
+    let (another_sk, ..) = create_dummy_key_pair(RoleId::Role0).unwrap();
+    let invalid_doc = signed_doc
+        .into_builder()
+        .add_signature(|m| another_sk.sign(&m).to_vec(), kid.clone())
+        .unwrap()
+        .build()
+        .unwrap();
+    assert!(!validator::validate_signatures(&invalid_doc, &provider)
+        .await
+        .unwrap());
+
     // case: missing signatures
-    let (unsigned_doc, ..) = common::create_dummy_doc(&UuidV4::new().into()).unwrap();
+    let unsigned_doc = Builder::new()
+        .with_json_metadata(serde_json::json!({
+            "content-type": ContentType::Json.to_string(),
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": UuidV4::new(),
+        }))
+        .unwrap()
+        .with_json_content(&serde_json::json!({}))
+        .unwrap()
+        .build()
+        .unwrap();
     assert!(!validator::validate_signatures(&unsigned_doc, &provider)
         .await
         .unwrap());
@@ -47,9 +92,9 @@ async fn multiple_signatures_validation_test() {
     let (_, pk_n, kid_n) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
 
     let signed_doc = Builder::new()
-        .with_json_metadata(common::test_metadata().2)
+        .with_json_metadata(metadata())
         .unwrap()
-        .with_decoded_content(serde_json::to_vec(&serde_json::Value::Null).unwrap())
+        .with_json_content(&serde_json::Value::Null)
         .unwrap()
         .add_signature(|m| sk1.sign(&m).to_vec(), kid1.clone())
         .unwrap()
@@ -57,7 +102,8 @@ async fn multiple_signatures_validation_test() {
         .unwrap()
         .add_signature(|m| sk3.sign(&m).to_vec(), kid3.clone())
         .unwrap()
-        .build();
+        .build()
+        .unwrap();
 
     assert!(!signed_doc.problem_report().is_problematic());
 
@@ -68,27 +114,27 @@ async fn multiple_signatures_validation_test() {
     provider.add_pk(kid3.clone(), pk3);
     assert!(validator::validate_signatures(&signed_doc, &provider)
         .await
-        .is_ok_and(|v| v));
+        .unwrap());
 
     // case: partially available signatures
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid1.clone(), pk1);
     provider.add_pk(kid2.clone(), pk2);
-    assert!(validator::validate_signatures(&signed_doc, &provider)
+    assert!(!validator::validate_signatures(&signed_doc, &provider)
         .await
-        .is_ok_and(|v| !v));
+        .unwrap());
 
     // case: with unrecognized provider
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid_n.clone(), pk_n);
-    assert!(validator::validate_signatures(&signed_doc, &provider)
+    assert!(!validator::validate_signatures(&signed_doc, &provider)
         .await
-        .is_ok_and(|v| !v));
+        .unwrap());
 
     // case: no valid signatures available
     assert!(
-        validator::validate_signatures(&signed_doc, &TestVerifyingKeyProvider::default())
+        !validator::validate_signatures(&signed_doc, &TestVerifyingKeyProvider::default())
             .await
-            .is_ok_and(|v| !v)
+            .unwrap()
     );
 }
