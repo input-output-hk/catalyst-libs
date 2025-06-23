@@ -3,7 +3,7 @@ use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport};
 
 use crate::{
     signature::{tbs_data, Signature},
-    CatalystSignedDocument, Content, Metadata, Signatures,
+    CatalystSignedDocument, Content, ContentType, Metadata, Signatures,
 };
 
 /// Catalyst Signed Document Builder.
@@ -41,6 +41,28 @@ impl Builder {
     /// - Fails if it is invalid metadata fields JSON object.
     pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
         self.metadata = Metadata::from_json(json, &ProblemReport::new(""));
+        Ok(self)
+    }
+
+    /// Set the provided JSON content, applying already set `content-encoding`.
+    ///
+    /// # Errors
+    ///  - Verifies that `content-type` field is set to JSON
+    ///  - Cannot serialize provided JSON
+    ///  - Compression failure
+    pub fn with_json_content(mut self, json: &serde_json::Value) -> anyhow::Result<Self> {
+        anyhow::ensure!(
+            self.metadata.content_type()? == ContentType::Json,
+            "Already set metadata field `content-type` is not JSON value"
+        );
+
+        let content = serde_json::to_vec(&json)?;
+        if let Some(encoding) = self.metadata.content_encoding() {
+            self.content = encoding.encode(&content)?.into();
+        } else {
+            self.content = content.into();
+        }
+
         Ok(self)
     }
 
