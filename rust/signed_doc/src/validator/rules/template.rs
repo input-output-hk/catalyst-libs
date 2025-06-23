@@ -183,7 +183,7 @@ mod tests {
     use super::*;
     use crate::{
         builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocumentRef,
+        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
     };
 
     #[allow(clippy::too_many_lines)]
@@ -272,7 +272,7 @@ mod tests {
                 vec![DocumentRef::new(
                     valid_template_doc_id,
                     valid_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -293,7 +293,7 @@ mod tests {
                 vec![DocumentRef::new(
                     valid_template_doc_id,
                     valid_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -309,7 +309,7 @@ mod tests {
                 vec![DocumentRef::new(
                     valid_template_doc_id,
                     valid_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -323,7 +323,7 @@ mod tests {
                 vec![DocumentRef::new(
                     another_type_template_doc_id,
                     another_type_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -337,7 +337,7 @@ mod tests {
                 vec![DocumentRef::new(
                     missing_type_template_doc_id,
                     missing_type_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -354,7 +354,7 @@ mod tests {
                 vec![DocumentRef::new(
                     missing_content_type_template_doc_id,
                     missing_content_type_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -368,7 +368,7 @@ mod tests {
                 vec![DocumentRef::new(
                     missing_content_template_doc_id,
                     missing_content_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -382,7 +382,7 @@ mod tests {
                 vec![DocumentRef::new(
                     invalid_content_template_doc_id,
                     invalid_content_template_doc_id,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -396,7 +396,7 @@ mod tests {
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -436,7 +436,7 @@ mod tests {
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(ref_id, ref_ver, Default::default())].into(),
+                vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
             ))
             .with_content(json_content)
             .build();
@@ -456,7 +456,7 @@ mod tests {
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Template(
-                vec![DocumentRef::new(ref_id, ref_ver, Default::default())].into(),
+                vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
             ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());

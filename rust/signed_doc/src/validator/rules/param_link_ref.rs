@@ -70,7 +70,7 @@ mod tests {
         metadata::SupportedField,
         providers::tests::TestCatalystSignedDocumentProvider,
         validator::rules::param_link_ref::{LinkField, ParameterLinkRefRule},
-        DocumentRef,
+        DocLocator, DocumentRef,
     };
     #[tokio::test]
     async fn param_link_ref_specified_test() {
@@ -100,8 +100,8 @@ mod tests {
                 .with_metadata_field(SupportedField::Type(doc_type.into()))
                 .with_metadata_field(SupportedField::Parameters(
                     vec![
-                        DocumentRef::new(category_id, category_ver, Default::default()),
-                        DocumentRef::new(campaign_id, campaign_ver, Default::default()),
+                        DocumentRef::new(category_id, category_ver, DocLocator::default()),
+                        DocumentRef::new(campaign_id, campaign_ver, DocLocator::default()),
                     ]
                     .into(),
                 ))
@@ -117,7 +117,7 @@ mod tests {
                     vec![DocumentRef::new(
                         campaign_id,
                         campaign_ver,
-                        Default::default(),
+                        DocLocator::default(),
                     )]
                     .into(),
                 ))
@@ -148,12 +148,12 @@ mod tests {
         // Parameter must match
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(doc1_id, doc1_ver, Default::default())].into(),
+                vec![DocumentRef::new(doc1_id, doc1_ver, DocLocator::default())].into(),
             ))
             .with_metadata_field(SupportedField::Parameters(
                 vec![
-                    DocumentRef::new(category_id, category_ver, Default::default()),
-                    DocumentRef::new(campaign_id, campaign_ver, Default::default()),
+                    DocumentRef::new(category_id, category_ver, DocLocator::default()),
+                    DocumentRef::new(campaign_id, campaign_ver, DocLocator::default()),
                 ]
                 .into(),
             ))
@@ -163,12 +163,12 @@ mod tests {
         // Parameter does not match
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(doc2_id, doc2_ver, Default::default())].into(),
+                vec![DocumentRef::new(doc2_id, doc2_ver, DocLocator::default())].into(),
             ))
             .with_metadata_field(SupportedField::Parameters(
                 vec![
-                    DocumentRef::new(category_id, category_ver, Default::default()),
-                    DocumentRef::new(campaign_id, campaign_ver, Default::default()),
+                    DocumentRef::new(category_id, category_ver, DocLocator::default()),
+                    DocumentRef::new(campaign_id, campaign_ver, DocLocator::default()),
                 ]
                 .into(),
             ))

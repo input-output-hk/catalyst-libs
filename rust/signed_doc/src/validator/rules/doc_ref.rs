@@ -152,7 +152,7 @@ mod tests {
                 vec![DocumentRef::new(
                     valid_referenced_doc_id,
                     valid_referenced_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -167,12 +167,12 @@ mod tests {
                     DocumentRef::new(
                         valid_referenced_doc_id,
                         valid_referenced_doc_ver,
-                        Default::default(),
+                        DocLocator::default(),
                     ),
                     DocumentRef::new(
                         different_id_and_ver_referenced_doc_id,
                         different_id_and_ver_referenced_doc_ver,
-                        Default::default(),
+                        DocLocator::default(),
                     ),
                 ]
                 .into(),
@@ -186,7 +186,7 @@ mod tests {
                 vec![DocumentRef::new(
                     different_id_and_ver_referenced_doc_id,
                     different_id_and_ver_referenced_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -215,7 +215,7 @@ mod tests {
                 vec![DocumentRef::new(
                     another_type_referenced_doc_id,
                     another_type_referenced_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -228,7 +228,7 @@ mod tests {
                 vec![DocumentRef::new(
                     missing_type_referenced_doc_id,
                     missing_type_referenced_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -241,7 +241,7 @@ mod tests {
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -261,7 +261,7 @@ mod tests {
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Ref(
-                vec![DocumentRef::new(ref_id, ref_ver, Default::default())].into(),
+                vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
             ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());

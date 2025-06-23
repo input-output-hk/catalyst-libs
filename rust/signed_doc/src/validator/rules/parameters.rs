@@ -78,7 +78,7 @@ mod tests {
     use super::*;
     use crate::{
         builder::tests::Builder, metadata::SupportedField,
-        providers::tests::TestCatalystSignedDocumentProvider, DocumentRef,
+        providers::tests::TestCatalystSignedDocumentProvider, DocLocator, DocumentRef,
     };
 
     #[tokio::test]
@@ -149,7 +149,7 @@ mod tests {
                 vec![DocumentRef::new(
                     valid_category_doc_id,
                     valid_category_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -163,9 +163,13 @@ mod tests {
                     DocumentRef::new(
                         valid_category_doc_id,
                         valid_category_doc_ver,
-                        Default::default(),
+                        DocLocator::default(),
                     ),
-                    DocumentRef::new(valid_brand_doc_id, valid_brand_doc_ver, Default::default()),
+                    DocumentRef::new(
+                        valid_brand_doc_id,
+                        valid_brand_doc_ver,
+                        DocLocator::default(),
+                    ),
                 ]
                 .into(),
             ))
@@ -179,9 +183,9 @@ mod tests {
                     DocumentRef::new(
                         valid_category_doc_id,
                         valid_category_doc_ver,
-                        Default::default(),
+                        DocLocator::default(),
                     ),
-                    DocumentRef::new(UuidV7::new(), UuidV7::new(), Default::default()),
+                    DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default()),
                 ]
                 .into(),
             ))
@@ -210,7 +214,7 @@ mod tests {
                 vec![DocumentRef::new(
                     another_type_category_doc_id,
                     another_type_category_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -223,7 +227,7 @@ mod tests {
                 vec![DocumentRef::new(
                     missing_type_category_doc_id,
                     missing_type_category_doc_ver,
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -236,7 +240,7 @@ mod tests {
                 vec![DocumentRef::new(
                     UuidV7::new(),
                     UuidV7::new(),
-                    Default::default(),
+                    DocLocator::default(),
                 )]
                 .into(),
             ))
@@ -256,7 +260,7 @@ mod tests {
         let ref_ver = UuidV7::new();
         let doc = Builder::new()
             .with_metadata_field(SupportedField::Parameters(
-                vec![DocumentRef::new(ref_id, ref_ver, Default::default())].into(),
+                vec![DocumentRef::new(ref_id, ref_ver, DocLocator::default())].into(),
             ))
             .build();
         assert!(!rule.check(&doc, &provider).await.unwrap());
