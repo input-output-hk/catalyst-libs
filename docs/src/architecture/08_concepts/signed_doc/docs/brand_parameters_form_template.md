@@ -110,26 +110,6 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
-### [`parameters`](../metadata.md#parameters)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | yes |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Brand Parameters](brand_parameters.md) |
-|  | [Campaign Parameters](campaign_parameters.md) |
-|  | [Category Parameters](category_parameters.md) |
-<!-- markdownlint-enable MD033 -->
-A reference to the Parameters Document this document lies under.
-
-#### [`parameters`](../metadata.md#parameters) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
-
-* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
-[`parameters`](../metadata.md#parameters) of the referencing document.
-
 ## Payload
 
 [JSON Schema][JSON Schema-2020-12] document which defines the valid contents and

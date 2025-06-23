@@ -28,36 +28,6 @@ Relationships"
     ];
 
 
-    "Brand Parameters Form Template" [
-        id="Brand Parameters Form Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../brand_parameters_form_template/">
-                    <FONT COLOR="#ffffff"><B> Brand Parameters Form Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Category Parameters Form Template" [
-        id="Category Parameters Form Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters_form_template/">
-                    <FONT COLOR="#ffffff"><B> Category Parameters Form Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
     "Contest Parameters" [
         id="Contest Parameters";
         label=<
@@ -65,21 +35,6 @@ Relationships"
             <TR>
                 <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters/">
                     <FONT COLOR="#ffffff"><B> Contest Parameters </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Contest Parameters Form Template" [
-        id="Contest Parameters Form Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters_form_template/">
-                    <FONT COLOR="#ffffff"><B> Contest Parameters Form Template </B></FONT>
                 </TD>
             </TR>
 
@@ -326,12 +281,8 @@ Relationships"
 
     "Campaign Parameters":"template":e -> "Campaign Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Campaign Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Brand Parameters Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Campaign Parameters Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Category Parameters":"title":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Category Parameters Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Contest Parameters":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Contest Parameters Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
