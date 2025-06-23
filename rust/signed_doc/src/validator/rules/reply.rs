@@ -2,7 +2,7 @@
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
     CatalystSignedDocument, DocType,
 };
 
@@ -32,7 +32,7 @@ impl ReplyRule {
             optional,
         } = self
         {
-            if let Some(reply) = doc.doc_meta().reply() {
+            if let Some(reply_ref) = doc.doc_meta().reply() {
                 let reply_validator = |ref_doc: CatalystSignedDocument| {
                     // Validate type
                     if !referenced_doc_check(&ref_doc, exp_reply_type, "reply", doc.report()) {
@@ -53,18 +53,12 @@ impl ReplyRule {
                     // Checking the ref field of ref doc, it should match the ref field of the doc
                     ref_doc_dr == doc_dr
                 };
-
-                for dr in reply.doc_refs() {
-                    let result =
-                        validate_provided_doc(dr, provider, doc.report(), reply_validator).await?;
-                    // Reference ALL of them
-                    if !result {
-                        return Ok(false);
-                    };
-                }
-                return Ok(true);
+                return validate_doc_refs(reply_ref, provider, doc.report(), reply_validator).await;
             } else if !optional {
-                doc.report().missing_field("reply", context);
+                doc.report().missing_field(
+                    "reply",
+                    &format!("{context}, document must have reply field"),
+                );
                 return Ok(false);
             }
         }

@@ -2,7 +2,9 @@
 
 use catalyst_types::problem_report::ProblemReport;
 
-use crate::{providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef};
+use crate::{
+    providers::CatalystSignedDocumentProvider, CatalystSignedDocument, DocumentRef, DocumentRefs,
+};
 
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.
@@ -45,4 +47,24 @@ where
         );
         Ok(false)
     }
+}
+
+/// Validate the document references
+/// Document all possible error in doc report (no fail fast)
+pub(crate) async fn validate_doc_refs<Provider, Validator>(
+    doc_refs: &DocumentRefs, provider: &Provider, report: &ProblemReport, validator: Validator,
+) -> anyhow::Result<bool>
+where
+    Provider: CatalystSignedDocumentProvider,
+    Validator: Fn(CatalystSignedDocument) -> bool,
+{
+    let mut all_valid = true;
+
+    for dr in doc_refs.doc_refs() {
+        let is_valid = validate_provided_doc(dr, provider, report, &validator).await?;
+        if !is_valid {
+            all_valid = false;
+        }
+    }
+    Ok(all_valid)
 }

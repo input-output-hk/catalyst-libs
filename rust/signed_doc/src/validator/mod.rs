@@ -43,22 +43,17 @@ where
     t.try_into().expect("Failed to convert to DocType")
 }
 
-/// `DOCUMENT_RULES` initialization function
-#[allow(clippy::expect_used, clippy::too_many_lines)]
-fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
+/// Proposal
+/// Require field: type, id, ver, template, parameters
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal/>
+fn proposal_rule() -> Rules {
     // Parameter can be either brand, campaign or category
     let parameters = vec![
         BRAND_PARAMETERS.clone(),
         CAMPAIGN_PARAMETERS.clone(),
         CATEGORY_PARAMETERS.clone(),
     ];
-
-    let mut document_rules_map = HashMap::new();
-
-    // Proposal
-    // Require field: type, id, ver, template, parameters
-    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal/>
-    let proposal_rules = Rules {
+    Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -82,12 +77,20 @@ fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
         param_link_ref: ParameterLinkRefRule::Specified {
             field: LinkField::Template,
         },
-    };
+    }
+}
 
-    // Proposal Comment
-    // Require field: type, id, ver, ref, template, parameters
-    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment_template/>
-    let proposal_comment_rules = Rules {
+/// Proposal Comment
+/// Require field: type, id, ver, ref, template, parameters
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_comment_template/>
+fn proposal_comment_rule() -> Rules {
+    // Parameter can be either brand, campaign or category
+    let parameters = vec![
+        BRAND_PARAMETERS.clone(),
+        CAMPAIGN_PARAMETERS.clone(),
+        CATEGORY_PARAMETERS.clone(),
+    ];
+    Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -118,7 +121,20 @@ fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
         param_link_ref: ParameterLinkRefRule::Specified {
             field: LinkField::Template,
         },
-    };
+    }
+}
+
+/// Proposal Submission Action
+/// Require fields: type, id, ver, ref, parameters
+/// <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
+#[allow(clippy::expect_used)]
+fn proposal_submission_action_rule() -> Rules {
+    // Parameter can be either brand, campaign or category
+    let parameters = vec![
+        BRAND_PARAMETERS.clone(),
+        CAMPAIGN_PARAMETERS.clone(),
+        CATEGORY_PARAMETERS.clone(),
+    ];
 
     let proposal_action_json_schema = jsonschema::options()
     .with_draft(jsonschema::Draft::Draft7)
@@ -130,10 +146,7 @@ fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
     )
     .expect("Must be a valid json scheme file");
 
-    // Proposal Submission Action
-    // Require fields: type, id, ver, ref, parameters
-    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/docs/proposal_submission_action/>
-    let proposal_submission_action_rules = Rules {
+    Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
         },
@@ -158,11 +171,16 @@ fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
         param_link_ref: ParameterLinkRefRule::Specified {
             field: LinkField::Ref,
         },
-    };
+    }
+}
 
-    let proposal_rules = Arc::new(proposal_rules);
-    let comment_rules = Arc::new(proposal_comment_rules);
-    let action_rules = Arc::new(proposal_submission_action_rules);
+/// `DOCUMENT_RULES` initialization function
+fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
+    let mut document_rules_map = HashMap::new();
+
+    let proposal_rules = Arc::new(proposal_rule());
+    let comment_rules = Arc::new(proposal_comment_rule());
+    let action_rules = Arc::new(proposal_submission_action_rule());
 
     document_rules_map.insert(PROPOSAL.clone(), Arc::clone(&proposal_rules));
     document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));

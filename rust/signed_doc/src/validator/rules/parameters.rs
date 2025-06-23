@@ -2,7 +2,7 @@
 
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
     CatalystSignedDocument, DocType,
 };
 
@@ -33,25 +33,25 @@ impl ParametersRule {
             optional,
         } = self
         {
-            if let Some(parameters) = doc.doc_meta().parameters() {
+            if let Some(parameters_ref) = doc.doc_meta().parameters() {
                 let parameters_validator = |ref_doc: CatalystSignedDocument| {
                     // Check that the type matches one of the expected ones
                     exp_parameters_type.iter().any(|exp_type| {
                         referenced_doc_check(&ref_doc, exp_type, "parameters", doc.report())
                     })
                 };
-                for dr in parameters.doc_refs() {
-                    let result =
-                        validate_provided_doc(dr, provider, doc.report(), parameters_validator)
-                            .await?;
-                    // Reference ALL of them
-                    if !result {
-                        return Ok(false);
-                    }
-                }
-                return Ok(true);
+                return validate_doc_refs(
+                    parameters_ref,
+                    provider,
+                    doc.report(),
+                    parameters_validator,
+                )
+                .await;
             } else if !optional {
-                doc.report().missing_field("parameters", context);
+                doc.report().missing_field(
+                    "parameters",
+                    &format!("{context}, document must have parameters field"),
+                );
                 return Ok(false);
             }
         }

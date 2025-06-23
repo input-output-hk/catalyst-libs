@@ -3,7 +3,7 @@
 use catalyst_types::problem_report::ProblemReport;
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
     CatalystSignedDocument, DocType,
 };
 
@@ -36,17 +36,10 @@ impl RefRule {
                 let ref_validator = |ref_doc: CatalystSignedDocument| {
                     referenced_doc_check(&ref_doc, exp_ref_type, "ref", doc.report())
                 };
-                for dr in doc_ref.doc_refs() {
-                    let result =
-                        validate_provided_doc(dr, provider, doc.report(), ref_validator).await?;
-                    // Reference ALL of them
-                    if !result {
-                        return Ok(false);
-                    }
-                }
-                return Ok(true);
+                return validate_doc_refs(doc_ref, provider, doc.report(), ref_validator).await;
             } else if !optional {
-                doc.report().missing_field("ref", context);
+                doc.report()
+                    .missing_field("ref", &format!("{context}, document must have ref field"));
                 return Ok(false);
             }
         }

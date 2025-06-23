@@ -5,7 +5,7 @@ use std::fmt::Write;
 use super::doc_ref::referenced_doc_check;
 use crate::{
     metadata::ContentType, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument, DocType,
+    validator::utils::validate_doc_refs, CatalystSignedDocument, DocType,
 };
 
 /// Enum represents different content schemas, against which documents content would be
@@ -67,14 +67,8 @@ impl ContentRule {
                     },
                 }
             };
-            for dr in template_ref.doc_refs() {
-                let result =
-                    validate_provided_doc(dr, provider, doc.report(), template_validator).await?;
-                if !result {
-                    return Ok(false);
-                }
-            }
-            return Ok(true);
+            return validate_doc_refs(template_ref, provider, doc.report(), template_validator)
+                .await;
         }
         if let Self::Static(content_schema) = self {
             if let Some(template) = doc.doc_meta().template() {

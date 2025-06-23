@@ -33,7 +33,6 @@ pub(crate) struct Rules {
     pub(crate) content_encoding: ContentEncodingRule,
     /// 'ref' field validation rule
     pub(crate) doc_ref: RefRule,
-    #[allow(dead_code)]
     /// document's content validation rule
     pub(crate) content: ContentRule,
     /// 'reply' field validation rule
@@ -57,6 +56,7 @@ impl Rules {
         let rules = [
             self.content_type.check(doc).boxed(),
             self.content_encoding.check(doc).boxed(),
+            self.content.check(doc, provider).boxed(),
             self.doc_ref.check(doc, provider).boxed(),
             self.reply.check(doc, provider).boxed(),
             self.section.check(doc).boxed(),
