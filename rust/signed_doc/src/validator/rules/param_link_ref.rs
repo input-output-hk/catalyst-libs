@@ -1,7 +1,7 @@
 //! Parameter linked reference rule impl.
 
 use crate::{
-    providers::CatalystSignedDocumentProvider, validator::utils::validate_provided_doc,
+    providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
     CatalystSignedDocument,
 };
 
@@ -49,14 +49,13 @@ impl ParameterLinkRefRule {
                 return Ok(false);
             };
 
-            for dr in param_link_ref.doc_refs() {
-                let result =
-                    validate_provided_doc(dr, provider, doc.report(), param_link_ref_validator)
-                        .await?;
-                if !result {
-                    return Ok(false);
-                }
-            }
+            return validate_doc_refs(
+                param_link_ref,
+                provider,
+                doc.report(),
+                param_link_ref_validator,
+            )
+            .await;
         }
         Ok(true)
     }
