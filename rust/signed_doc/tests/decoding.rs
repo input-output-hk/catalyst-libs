@@ -168,12 +168,9 @@ fn signed_doc_with_parameters_and_aliases() -> TestCase {
         bytes_gen: Box::new({
             move || {
                 let (_, _, metadata_fields) = common::test_metadata();
-                let (_, pk, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
-                let mut provider = TestVerifyingKeyProvider::default();
-                provider.add_pk(kid.clone(), pk);
 
                 let doc = Builder::new()
-                    .with_json_metadata(metadata_fields.clone())
+                    .with_json_metadata(metadata_fields)
                     .unwrap()
                     .with_decoded_content({
                         serde_json::to_vec(&serde_json::Value::Null).unwrap()
@@ -186,7 +183,7 @@ fn signed_doc_with_parameters_and_aliases() -> TestCase {
                 let parameters_val_cbor =
                     coset::cbor::Value::from_slice(minicbor::to_vec(parameters_val).unwrap().as_slice())
                         .unwrap();
-                    
+
                 // replace parameters with the alias values `category_id`, `brand_id`, `campaign_id`.
                 let bytes: Vec<u8> = doc.try_into().unwrap();
                 let mut cose = coset::CoseSign::from_tagged_slice(bytes.as_slice()).unwrap();
