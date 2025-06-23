@@ -16,10 +16,6 @@ static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
             "id": UuidV7::new(),
             "ver": UuidV7::new(),
             "type": doc_types::PROPOSAL.clone(),
-            "ref": {
-                "id": UuidV7::new(),
-                "ver": UuidV7::new(),
-            },
             "parameters": {
                 "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
                 "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
