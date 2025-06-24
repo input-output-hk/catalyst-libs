@@ -35,8 +35,10 @@ import (
 
 	notes: [...string] | *[]
 
-	// Fixed headers in every document
-	headers: _coseHeaders
+	if payload.nil == _|_ {
+		// Fixed headers in every document with a payload.
+		headers: _coseHeaders
+	}
 
 	// The Metadata fields in this document (non cose standard)
 	metadata: #metadata

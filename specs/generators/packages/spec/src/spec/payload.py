@@ -53,6 +53,7 @@ class Payload(BaseModel):
     """Payload Deserialized Specification."""
 
     description: str
+    nil: bool = Field(default=False)
     doc_schema: HttpUrl | dict[str, Any] | None = Field(default=None, alias="schema")
     examples: list[PayloadExample] = Field(default_factory=PayloadExample.default)
 
@@ -96,6 +97,13 @@ class Payload(BaseModel):
     def __str__(self) -> str:
         """Get the examples properly formatted as markdown."""
         docs = self.description + "\n"
+
+        if self.nil:
+            docs += """
+This document has no payload.
+It must be encoded as a CBOR `null (0xf6)`.
+"""
+            return docs
 
         schema = self.doc_schema
         if schema is not None:

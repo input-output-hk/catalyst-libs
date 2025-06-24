@@ -12,6 +12,7 @@ All Document Types are defined by composing these base document types:
 | Category | `818938c3-3139-4daa-afe6-974c78488e95` | `37(h'818938c331394daaafe6974c78488e95')` |
 | Comment | `b679ded3-0e7c-41ba-89f8-da62a17898ea` | `37(h'b679ded30e7c41ba89f8da62a17898ea')` |
 | Contest | `788ff4c6-d65a-451f-bb33-575fe056b411` | `37(h'788ff4c6d65a451fbb33575fe056b411')` |
+| Delegation | `764f17fb-cc50-4979-b14a-b213dbac5994` | `37(h'764f17fbcc504979b14ab213dbac5994')` |
 | FormTemplate | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f` | `37(h'0ce8ab3892584fbca62e7faa6e58318f')` |
 | ModerationAction | `a5d232b8-5e03-4117-9afd-be32b878fcdd` | `37(h'a5d232b85e0341179afdbe32b878fcdd')` |
 | Nomination | `bf9abd97-5d1f-4429-8e80-740fea371a9c` | `37(h'bf9abd975d1f44298e80740fea371a9c')` |
@@ -38,6 +39,7 @@ All Defined Document Types
 | [Category Parameters](./docs/category_parameters.md) | Parameters/Category | [37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'818938c331394daaafe6974c78488e95')] |
 | [Category Parameters Form Template](./docs/category_parameters_form_template.md) | FormTemplate/Parameters/Category | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'818938c331394daaafe6974c78488e95')] |
 | [Comment Moderation Action](./docs/comment_moderation_action.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Contest Delegation](./docs/contest_delegation.md) | Delegation/Contest | [37(h'764f17fbcc504979b14ab213dbac5994'),<br/>37(h'788ff4c6d65a451fbb33575fe056b411')] |
 | [Contest Parameters](./docs/contest_parameters.md) | Parameters/Contest | [37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'788ff4c6d65a451fbb33575fe056b411')] |
 | [Contest Parameters Form Template](./docs/contest_parameters_form_template.md) | FormTemplate/Parameters/Contest | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'788ff4c6d65a451fbb33575fe056b411')] |
 | [Proposal](./docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |

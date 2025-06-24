@@ -242,6 +242,7 @@ The document version must always be >= the document ID.
 |  | [Rep Profile Form Template](./docs/rep_profile_form_template.md) |
 |  | [Rep Nomination](./docs/rep_nomination.md) |
 |  | [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) |
+|  | [Contest Delegation](./docs/contest_delegation.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -378,7 +379,8 @@ A reference to the Parameters Document this document lies under.
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
 
 * Any linked referenced document that includes a [`parameters`](metadata.md#parameters) metadata must match the
-[`parameters`](metadata.md#parameters) of the referencing document, or a parent of those [`parameters`](metadata.md#parameters).
+[`parameters`](metadata.md#parameters) of the referencing document,
+or a parent of those [`parameters`](metadata.md#parameters).
 
 For example, a linked reference to [Contest Parameters](./docs/contest_parameters.md) is transitively a reference to
 the Parameters document it references, and each parameters document they reference

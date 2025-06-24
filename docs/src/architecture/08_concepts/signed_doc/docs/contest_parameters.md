@@ -190,7 +190,8 @@ A reference to the Parameters Document this document lies under.
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
 * Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
-[`parameters`](../metadata.md#parameters) of the referencing document, or a parent of those [`parameters`](../metadata.md#parameters).
+[`parameters`](../metadata.md#parameters) of the referencing document,
+or a parent of those [`parameters`](../metadata.md#parameters).
 
 For example, a linked reference to [Contest Parameters](contest_parameters.md) is transitively a reference to
 the Parameters document it references, and each parameters document they reference

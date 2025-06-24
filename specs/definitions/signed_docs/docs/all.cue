@@ -24,6 +24,7 @@ _allDocTypes: {
 	RegisteredProposer:   "7311c63b-95c6-402e-a258-f9bf622093eb"
 	Profile:              "0f2c86a2-ffda-40b0-ad38-23709e1c10b3"
 	Nomination:           "bf9abd97-5d1f-4429-8e80-740fea371a9c"
+	Delegation:           "764f17fb-cc50-4979-b14a-b213dbac5994"
 }
 
 // Source of truth for ALL Document Types and their matching UUID's.
@@ -124,6 +125,10 @@ _allDocs: {
 		_allDocTypes["FormTemplate"],  // Form Template
 		_allDocTypes["Nomination"],    // For a Nomination
 		_allDocTypes["RegisteredRep"], // Of a Registered Rep
+	]
+	"Contest Delegation": [
+		_allDocTypes["Delegation"], // A Delegation
+		_allDocTypes["Contest"],    // For a Contest
 	]
 }
 

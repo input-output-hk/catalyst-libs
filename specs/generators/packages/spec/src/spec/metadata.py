@@ -60,6 +60,7 @@ class MetadataHeader(GenericHeader):
 
         for ref in self.linked_refs:
             validation += f"""
+
 * The Document referenced by `{ref}`
   * MUST contain `{self._name}` metadata; AND
   * MUST match the referencing documents `{self._name}` value."""

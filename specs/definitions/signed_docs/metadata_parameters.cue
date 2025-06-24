@@ -16,7 +16,8 @@ _metadata: _parameters: {
 		In addition to the validation performed for `Document Reference` type fields: 
 
 		* Any linked referenced document that includes a `parameters` metadata must match the 
-		`parameters` of the referencing document, or a parent of those `parameters`.
+		`parameters` of the referencing document,
+		or a parent of those `parameters`.
 
 		For example, a linked reference to `Contest Parameters` is transitively a reference to
 		the Parameters document it references, and each parameters document they reference 
