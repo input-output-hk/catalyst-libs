@@ -59,3 +59,11 @@ impl minicbor::Encode<()> for Section {
         Ok(())
     }
 }
+
+impl minicbor::Decode<'_, ()> for Section {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        d.str()?.parse().map_err(minicbor::decode::Error::message)
+    }
+}
