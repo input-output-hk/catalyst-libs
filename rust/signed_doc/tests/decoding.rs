@@ -141,7 +141,6 @@ fn signed_doc_with_all_fields_case() -> TestCase {
 }
 
 #[test]
-#[ignore]
 fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
