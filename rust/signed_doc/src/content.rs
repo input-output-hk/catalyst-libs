@@ -43,6 +43,7 @@ impl minicbor::Decode<'_, ()> for Content {
     ) -> Result<Self, minicbor::decode::Error> {
         d.null()
             .map(|()| Self(Vec::new()))
-            .or(d.bytes().map(Vec::from).map(Self))
+            // important to use `or_else` so it will lazy evaluated at the time when it is needed
+            .or_else(|_| d.bytes().map(Vec::from).map(Self))
     }
 }
