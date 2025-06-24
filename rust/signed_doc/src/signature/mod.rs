@@ -215,10 +215,10 @@ fn protected_header_decode(
                 &hex::encode(entry.value.as_slice()),
                 &format!("{e:?}"),
                 "Converting COSE signature header `kid` to CatalystId",
-            )
+            );
         })
         .ok()
-        .map(|kid: CatalystId| {
+        .inspect(|kid: &CatalystId| {
             if kid.is_id() {
                 ctx.report.invalid_value(
                     "COSE signature protected header key ID",
@@ -230,7 +230,6 @@ fn protected_header_decode(
                     "Converting COSE signature header key ID to CatalystId",
                 );
             }
-            kid
         });
     Ok(kid)
 }

@@ -230,9 +230,9 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         }
 
         if !matches!(d.array()?, Some(4)) {
-            return Err(minicbor::decode::Error::message(format!(
-                "Must be a definite size array of 4 elements"
-            )));
+            return Err(minicbor::decode::Error::message(
+                "Must be a definite size array of 4 elements",
+            ));
         }
 
         let metadata_bytes = d.bytes()?;

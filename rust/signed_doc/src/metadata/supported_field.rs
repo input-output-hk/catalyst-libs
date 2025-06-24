@@ -293,12 +293,12 @@ impl minicbor::Encode<()> for SupportedField {
     }
 }
 
+/// `collabs` CBOR decode.
 fn collabs_decode(d: &mut minicbor::Decoder<'_>) -> anyhow::Result<Vec<String>> {
     let Some(items) = d.array()? else {
         anyhow::bail!("Must a definite size array");
     };
     let collabs = (0..items)
-        .into_iter()
         .map(|_| Ok(d.str()?.to_string()))
         .collect::<anyhow::Result<_>>()?;
     Ok(collabs)
