@@ -5,8 +5,7 @@ use std::{
     hash::{Hash, Hasher},
 };
 
-use catalyst_types::uuid::{CborContext, Uuid, UuidV4, UUID_CBOR_TAG};
-use coset::cbor::Value;
+use catalyst_types::uuid::{CborContext, Uuid, UuidV4};
 use minicbor::{Decode, Decoder, Encode};
 use serde::{Deserialize, Deserializer};
 use tracing::warn;
@@ -296,23 +295,6 @@ impl<'de> Deserialize<'de> for DocType {
     }
 }
 
-impl From<DocType> for Value {
-    fn from(value: DocType) -> Self {
-        Value::Array(
-            value
-                .0
-                .iter()
-                .map(|uuidv4| {
-                    Value::Tag(
-                        UUID_CBOR_TAG,
-                        Box::new(Value::Bytes(uuidv4.uuid().as_bytes().to_vec())),
-                    )
-                })
-                .collect(),
-        )
-    }
-}
-
 // This is needed to preserve backward compatibility with the old solution.
 impl PartialEq for DocType {
     fn eq(&self, other: &Self) -> bool {
@@ -446,18 +428,6 @@ mod tests {
         let input = vec!["not-a-uuid".to_string()];
         let result = DocType::try_from(input);
         assert!(matches!(result, Err(DocTypeError::StringConversion(s)) if s == "not-a-uuid"));
-    }
-
-    #[test]
-    fn test_doc_type_to_value() {
-        let uuid = uuid::Uuid::new_v4();
-        let doc_type: Value = DocType(vec![UuidV4::try_from(uuid).unwrap()]).into();
-
-        for d in &doc_type.into_array().unwrap() {
-            let t = d.clone().into_tag().unwrap();
-            assert_eq!(t.0, UUID_CBOR_TAG);
-            assert_eq!(t.1.as_bytes().unwrap().len(), 16);
-        }
     }
 
     #[test]

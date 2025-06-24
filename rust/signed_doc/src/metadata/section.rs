@@ -2,7 +2,6 @@
 
 use std::{fmt::Display, str::FromStr};
 
-use coset::cbor::Value;
 use serde::{Deserialize, Serialize};
 
 /// 'section' field type definition, which is a JSON path string
@@ -37,17 +36,6 @@ impl FromStr for Section {
         Ok(Self(
             jsonpath_rust::JsonPath::<serde_json::Value>::from_str(s)?,
         ))
-    }
-}
-
-impl TryFrom<&Value> for Section {
-    type Error = anyhow::Error;
-
-    fn try_from(val: &Value) -> anyhow::Result<Self> {
-        let str = val
-            .as_text()
-            .ok_or(anyhow::anyhow!("Not a cbor string type"))?;
-        Self::from_str(str)
     }
 }
 

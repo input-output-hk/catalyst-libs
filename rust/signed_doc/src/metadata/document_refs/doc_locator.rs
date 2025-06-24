@@ -5,7 +5,6 @@
 use std::fmt::Display;
 
 use catalyst_types::problem_report::ProblemReport;
-use coset::cbor::Value;
 use minicbor::{Decode, Decoder, Encode};
 
 /// CBOR tag of IPLD content identifiers (CIDs).
@@ -44,15 +43,6 @@ impl From<Vec<u8>> for DocLocator {
 impl Display for DocLocator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "cid: 0x{}", hex::encode(self.0.as_slice()))
-    }
-}
-
-impl From<DocLocator> for Value {
-    fn from(value: DocLocator) -> Self {
-        Value::Map(vec![(
-            Value::Text(CID_MAP_KEY.to_string()),
-            Value::Tag(CID_TAG, Box::new(Value::Bytes(value.0.clone()))),
-        )])
     }
 }
 
@@ -156,20 +146,5 @@ mod tests {
         let mut decoder = Decoder::new(&buffer);
         let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut report).unwrap();
         assert_eq!(locator, decoded_doc_loc);
-    }
-
-    #[test]
-    #[allow(clippy::indexing_slicing)]
-    fn test_doc_locator_to_value() {
-        let data = vec![1, 2, 3, 4];
-        let locator = DocLocator(data.clone());
-        let value: Value = locator.into();
-        let map = value.into_map().unwrap();
-        assert_eq!(map.len(), usize::try_from(DOC_LOC_MAP_ITEM).unwrap());
-        let key = map[0].0.clone().into_text().unwrap();
-        assert_eq!(key, CID_MAP_KEY);
-        let (tag, value) = map[0].1.clone().into_tag().unwrap();
-        assert_eq!(tag, CID_TAG);
-        assert_eq!(value.into_bytes().unwrap(), data);
     }
 }

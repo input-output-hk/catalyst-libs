@@ -72,19 +72,6 @@ impl<'de> Deserialize<'de> for ContentEncoding {
     }
 }
 
-impl TryFrom<&coset::cbor::Value> for ContentEncoding {
-    type Error = anyhow::Error;
-
-    fn try_from(val: &coset::cbor::Value) -> anyhow::Result<ContentEncoding> {
-        match val.as_text() {
-            Some(encoding) => encoding.parse(),
-            None => {
-                anyhow::bail!("Expected Content Encoding to be a string");
-            },
-        }
-    }
-}
-
 impl minicbor::Encode<()> for ContentEncoding {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
