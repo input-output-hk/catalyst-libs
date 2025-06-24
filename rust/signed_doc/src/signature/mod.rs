@@ -157,7 +157,7 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Signatures {
                 None => {
                     ctx.report.other(
                         &format!("COSE signature at id {idx}"),
-                        "Cannot decode a signle COSE signature from the array of signatures",
+                        "Cannot decode a single COSE signature from the array of signatures",
                     );
                 },
             }
