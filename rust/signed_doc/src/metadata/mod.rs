@@ -1,6 +1,6 @@
 //! Catalyst Signed Document Metadata.
 use std::{
-    collections::HashMap,
+    collections::BTreeMap,
     fmt::{Display, Formatter},
 };
 
@@ -57,7 +57,7 @@ const CATEGORY_ID_KEY: &str = "category_id";
 ///
 /// These values are extracted from the COSE Sign protected header.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct Metadata(HashMap<SupportedLabel, SupportedField>);
+pub struct Metadata(BTreeMap<SupportedLabel, SupportedField>);
 
 impl Metadata {
     /// Return Document Type `DocType` - a list of `UUIDv4`.
@@ -181,7 +181,7 @@ impl Metadata {
     pub(crate) fn from_fields(fields: Vec<SupportedField>, report: &ProblemReport) -> Self {
         const REPORT_CONTEXT: &str = "Metadata building";
 
-        let mut metadata = Metadata(HashMap::new());
+        let mut metadata = Metadata(BTreeMap::new());
         for v in fields {
             let k = v.discriminant();
             if metadata.0.insert(k, v).is_some() {
@@ -444,7 +444,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata decoding";
 
-        let mut metadata_map = HashMap::new();
+        let mut metadata_map = BTreeMap::new();
         let map = cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
         for entry in map {
             let entry_bytes = [entry.key_bytes, entry.value].concat();
