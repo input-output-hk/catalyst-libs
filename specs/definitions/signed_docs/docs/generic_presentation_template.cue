@@ -31,7 +31,7 @@ _presentation_template_payload_description: """
 	3. A Handlebars templated HTML or Markdown file data which defines the presentation.
 	"""
 
-_generic_presentation_template: #signedDocument & {
+#generic_presentation_template: #signedDocument & {
 	description: _
 
 	headers: "content type": value: "application/schema+json"

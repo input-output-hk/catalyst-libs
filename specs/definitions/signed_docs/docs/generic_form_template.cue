@@ -30,10 +30,25 @@ _form_template_payload_description: """
 	{{ .doc }} Document.
 	"""
 
+// Used for documents that can link to any system parameter.
 _metadataFieldSystemParameters: #metadataField & {
 	// Is the field required to be present.
 	required: "yes"
 	type:     doc_clusters."System Parameters".docs
+}
+
+// Used for documents that can only link to brand parameters.
+_metadataFieldBrandParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Brand Parameters"]
+}
+
+// Used for documents that can only link to contest parameters.
+_metadataFieldContestParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type:     "Contest Parameters"
 }
 
 #generic_form_template: #signedDocument & {

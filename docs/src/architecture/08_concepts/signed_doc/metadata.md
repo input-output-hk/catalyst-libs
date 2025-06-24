@@ -238,6 +238,10 @@ The document version must always be >= the document ID.
 |  | [Category Parameters Form Template](./docs/category_parameters_form_template.md) |
 |  | [Contest Parameters](./docs/contest_parameters.md) |
 |  | [Contest Parameters Form Template](./docs/contest_parameters_form_template.md) |
+|  | [Rep Profile](./docs/rep_profile.md) |
+|  | [Rep Profile Form Template](./docs/rep_profile_form_template.md) |
+|  | [Rep Nomination](./docs/rep_nomination.md) |
+|  | [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -284,6 +288,8 @@ The following must be true for a valid reference:
 |  | [Campaign Parameters Form Template](./docs/campaign_parameters_form_template.md) |
 |  | [Category Parameters Form Template](./docs/category_parameters_form_template.md) |
 |  | [Contest Parameters Form Template](./docs/contest_parameters_form_template.md) |
+|  | [Rep Profile Form Template](./docs/rep_profile_form_template.md) |
+|  | [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
@@ -372,7 +378,16 @@ A reference to the Parameters Document this document lies under.
 In addition to the validation performed for [Document Reference](metadata.md#document-reference) type fields:
 
 * Any linked referenced document that includes a [`parameters`](metadata.md#parameters) metadata must match the
-[`parameters`](metadata.md#parameters) of the referencing document.
+[`parameters`](metadata.md#parameters) of the referencing document, or a parent of those [`parameters`](metadata.md#parameters).
+
+For example, a linked reference to [Contest Parameters](./docs/contest_parameters.md) is transitively a reference to
+the Parameters document it references, and each parameters document they reference
+until the `Brand` parameters document is reached.
+
+The use case here is for Templates.
+The profile template, or proposal templates could be defined at any of these
+levels, and as long as they all refer to the same chain of parameters in the
+hierarchy they are all valid.
 
 ### `chain`
 

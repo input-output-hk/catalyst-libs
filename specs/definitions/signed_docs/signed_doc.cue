@@ -97,14 +97,6 @@ _allDocNamesList: [...string] & [
 		!strings.Contains(k, "Action") {k},
 ]
 
-// List of all Parameters Docs (not templates or actions)
-#parameterDocNamesList: [...string] & [
-	for k, _ in _allDocs
-	if strings.Contains(k, "Parameter") &&
-		!strings.Contains(k, "Template") &&
-		!strings.Contains(k, "Action") {k},
-]
-
 // List of all the document names we have defined.
 _allDocNames: or(_allDocNamesList)
 
