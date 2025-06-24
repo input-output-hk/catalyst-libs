@@ -1,7 +1,6 @@
 //! Catalyst Signed Document Metadata.
 use std::{
-    collections::{btree_map, BTreeMap},
-    error::Error,
+    collections::HashMap,
     fmt::{Display, Formatter},
 };
 
@@ -58,7 +57,7 @@ const CATEGORY_ID_KEY: &str = "category_id";
 ///
 /// These values are extracted from the COSE Sign protected header.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct Metadata(BTreeMap<SupportedLabel, SupportedField>);
+pub struct Metadata(HashMap<SupportedLabel, SupportedField>);
 
 impl Metadata {
     /// Return Document Type `DocType` - a list of `UUIDv4`.
@@ -182,7 +181,7 @@ impl Metadata {
     pub(crate) fn from_fields(fields: Vec<SupportedField>, report: &ProblemReport) -> Self {
         const REPORT_CONTEXT: &str = "Metadata building";
 
-        let mut metadata = Metadata(BTreeMap::new());
+        let mut metadata = Metadata(HashMap::new());
         for v in fields {
             let k = v.discriminant();
             if metadata.0.insert(k, v).is_some() {
@@ -430,27 +429,6 @@ impl minicbor::Encode<()> for Metadata {
     }
 }
 
-/// An error that's been reported, but doesn't affect the further decoding.
-/// [`minicbor::Decoder`] should be assumed to be in a correct state and advanced towards
-/// the next item.
-///
-/// The wrapped error can be returned up the call stack.
-#[derive(Debug, thiserror::Error)]
-#[error(transparent)]
-pub struct TransientDecodeError(pub minicbor::decode::Error);
-
-/// Creates a [`TransientDecodeError`] and wraps it in a
-/// [`minicbor::decode::Error::custom`].
-fn custom_transient_decode_error(
-    message: &str, position: Option<usize>,
-) -> minicbor::decode::Error {
-    let mut inner = minicbor::decode::Error::message(message);
-    if let Some(pos) = position {
-        inner = inner.at(pos);
-    }
-    minicbor::decode::Error::custom(TransientDecodeError(inner))
-}
-
 impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata {
     /// Decode from a CBOR map.
     ///
@@ -466,51 +444,26 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata decoding";
 
-        let Some(len) = d.map()? else {
-            return Err(minicbor::decode::Error::message(
-                "Indefinite map is not supported",
-            ));
-        };
-
-        // TODO: verify key order.
-        // TODO: use helpers from <https://github.com/input-output-hk/catalyst-libs/pull/360> once it's merged.
-
-        let mut metadata_map = BTreeMap::new();
-        let mut first_err = None;
-
-        // This will return an error on the end of input.
-        for _ in 0..len {
-            let entry_pos = d.position();
-            match d.decode_with::<_, SupportedField>(ctx) {
-                Ok(field) => {
-                    let label = field.discriminant();
-                    let entry = metadata_map.entry(label);
-                    if let btree_map::Entry::Vacant(entry) = entry {
-                        entry.insert(field);
-                    } else {
-                        ctx.report.duplicate_field(
-                            &label.to_string(),
-                            "Duplicate metadata fields are not allowed",
-                            REPORT_CONTEXT,
-                        );
-                        first_err.get_or_insert(custom_transient_decode_error(
-                            "Duplicate fields",
-                            Some(entry_pos),
-                        ));
-                    }
-                },
-                Err(err)
-                    if err
-                        .source()
-                        .is_some_and(<dyn std::error::Error>::is::<TransientDecodeError>) =>
-                {
-                    first_err.get_or_insert(err);
-                },
-                Err(err) => return Err(err),
+        let mut metadata_map = HashMap::new();
+        let map = cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
+        for entry in map {
+            let entry_bytes = [entry.key_bytes, entry.value].concat();
+            let Some(field) =
+                Option::<SupportedField>::decode(&mut minicbor::Decoder::new(&entry_bytes), ctx)?
+            else {
+                continue;
+            };
+            let field_label = field.discriminant();
+            if metadata_map.insert(field_label, field).is_some() {
+                ctx.report.duplicate_field(
+                    &field_label.to_string(),
+                    "Duplicate metadata fields are not allowed",
+                    REPORT_CONTEXT,
+                );
             }
         }
 
-        first_err.map_or(Ok(Self(metadata_map)), Err)
+        Ok(Self(metadata_map))
     }
 }
 
