@@ -27,11 +27,9 @@ fn signed_doc_with_parameters_and_aliases(aliases: &'static [&'static str]) -> T
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
-        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once. [INVALID]",
+        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once.",
         bytes_gen: Box::new({
             move || {
-                let (_, _, kid) = common::create_dummy_key_pair(RoleId::Role0)?;
-
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
                 e.array(4)?;
@@ -56,19 +54,8 @@ fn signed_doc_with_parameters_and_aliases(aliases: &'static [&'static str]) -> T
                 e.map(0)?;
                 // content
                 e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
-                // signatures
-                // one signature
-                e.array(1)?;
-                e.array(3)?;
-                // protected headers (kid field)
-                e.bytes({
-                    let mut p_headers = minicbor::Encoder::new(Vec::new());
-                    p_headers.map(1)?.u8(4)?.encode(kid)?;
-
-                    p_headers.into_writer().as_slice()
-                })?;
-                e.map(0)?;
-                e.bytes(&[1,2,3])?;
+                // zero signatures
+                e.array(0)?;
 
                 Ok(e)
             }
