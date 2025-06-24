@@ -1,56 +1,7 @@
 //! Utility functions for metadata decoding fields
 
-use catalyst_types::{
-    problem_report::ProblemReport,
-    uuid::{CborContext, UuidV7},
-};
-use coset::{CborSerializable, Label, ProtectedHeader};
-use minicbor::{Decode, Decoder};
-
-/// Decode cose protected header value using minicbor decoder.
-pub(crate) fn decode_cose_protected_header_value<C, T>(
-    protected: &ProtectedHeader, context: &mut C, label: &str,
-) -> Option<T>
-where T: for<'a> Decode<'a, C> {
-    cose_protected_header_find(protected, |key| matches!(key, Label::Text(l) if l == label))
-        .and_then(|value| {
-            let bytes = value.clone().to_vec().unwrap_or_default();
-            Decoder::new(&bytes).decode_with(context).ok()
-        })
-}
-
-/// Find a value for a predicate in the protected header.
-pub(crate) fn cose_protected_header_find(
-    protected: &coset::ProtectedHeader, mut predicate: impl FnMut(&coset::Label) -> bool,
-) -> Option<&coset::cbor::Value> {
-    protected
-        .header
-        .rest
-        .iter()
-        .find(|(key, _)| predicate(key))
-        .map(|(_, value)| value)
-}
-
-/// Tries to decode field by the `field_name` from the COSE protected header
-pub(crate) fn decode_document_field_from_protected_header<T>(
-    protected: &ProtectedHeader, field_name: &str, report_content: &str, report: &ProblemReport,
-) -> Option<T>
-where T: for<'a> TryFrom<&'a coset::cbor::Value> {
-    if let Some(cbor_doc_field) =
-        cose_protected_header_find(protected, |key| key == &Label::Text(field_name.to_string()))
-    {
-        if let Ok(field) = T::try_from(cbor_doc_field) {
-            return Some(field);
-        }
-        report.conversion_error(
-            &format!("CBOR COSE protected header {field_name}"),
-            &format!("{cbor_doc_field:?}"),
-            "Expected a CBOR UUID",
-            &format!("{report_content}, decoding CBOR UUID for {field_name}",),
-        );
-    }
-    None
-}
+use catalyst_types::uuid::{CborContext, UuidV7};
+use coset::CborSerializable;
 
 /// A convenient wrapper over the `UuidV7` type, to implement
 /// `TryFrom<coset::cbor::Value>` and `TryFrom<Self> for coset::cbor::Value` traits.

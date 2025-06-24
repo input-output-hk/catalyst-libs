@@ -1,8 +1,6 @@
 //! Catalyst Signed Document COSE Signature information.
 
 pub use catalyst_types::catalyst_id::CatalystId;
-use catalyst_types::problem_report::ProblemReport;
-use coset::CoseSignature;
 
 use crate::{decode_context::DecodeContext, Content, Metadata};
 
@@ -29,33 +27,6 @@ impl Signature {
     /// Return raw signature bytes itself
     pub fn signature(&self) -> &[u8] {
         &self.signature
-    }
-
-    /// Convert COSE Signature to `Signature`.
-    pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
-        match CatalystId::try_from(signature.protected.header.key_id.as_ref()) {
-            Ok(kid) if kid.is_uri() => Some(Self::new(kid, signature.signature)),
-            Ok(kid) => {
-                report.invalid_value(
-                    "COSE signature protected header key ID",
-                    &kid.to_string(),
-                    &format!(
-                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}", CatalystId::SCHEME
-                    ),
-                    "Converting COSE signature header key ID to CatalystId",
-                );
-                None
-            },
-            Err(e) => {
-                report.conversion_error(
-                    "COSE signature protected header key ID",
-                    &format!("{:?}", &signature.protected.header.key_id),
-                    &format!("{e:?}"),
-                    "Converting COSE signature header key ID to CatalystId",
-                );
-                None
-            },
-        }
     }
 }
 
@@ -84,23 +55,6 @@ impl Signatures {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
-    }
-
-    /// Convert list of COSE Signature to `Signatures`.
-    pub(crate) fn from_cose_sig_list(cose_sigs: &[CoseSignature], report: &ProblemReport) -> Self {
-        let res = cose_sigs
-            .iter()
-            .cloned()
-            .enumerate()
-            .filter_map(|(idx, signature)| {
-                let sign = Signature::from_cose_sig(signature, report);
-                if sign.is_none() {
-                    report.other(&format!("COSE signature protected header key ID at id {idx}"), "Converting COSE signatures list to Catalyst Signed Documents signatures list",);
-                }
-                sign
-            }).collect();
-
-        Self(res)
     }
 }
 
