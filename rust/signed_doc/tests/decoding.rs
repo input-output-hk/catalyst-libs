@@ -51,7 +51,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
 
                     for alias in aliases {
                         p_headers
-                            .str(&alias)?
+                            .str(alias)?
                             .encode_with(doc_ref.clone(), &mut ())?;
                     }
 
