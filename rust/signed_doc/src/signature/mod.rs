@@ -137,7 +137,7 @@ impl minicbor::Encode<()> for Signature {
     }
 }
 
-impl minicbor::Decode<'_, DecodeContext<'_>> for Signature {
+impl minicbor::Decode<'_, DecodeContext<'_>> for Option<Signature> {
     fn decode(
         d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
@@ -147,19 +147,8 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Signature {
             ));
         }
 
-        let kid = protected_header_decode(d.bytes()?).map_err(minicbor::decode::Error::message)?;
-
-        if kid.is_id() {
-            ctx.report.invalid_value(
-                    "COSE signature protected header key ID",
-                    &kid.to_string(),
-                    &format!(
-                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}",
-                        CatalystId::SCHEME
-                    ),
-                    "Converting COSE signature header key ID to CatalystId",
-                );
-        }
+        let kid =
+            protected_header_decode(d.bytes()?, ctx).map_err(minicbor::decode::Error::message)?;
 
         // empty unprotected headers
         if !matches!(d.map()?, Some(0)) {
@@ -170,7 +159,11 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Signature {
 
         let signature = d.bytes()?.to_vec();
 
-        Ok(Self { kid, signature })
+        if let Some(kid) = kid {
+            Ok(Some(Signature { kid, signature }))
+        } else {
+            Ok(None)
+        }
     }
 }
 
@@ -203,11 +196,11 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Signatures {
 
         let mut signatures = Vec::new();
         for idx in 0..signatures_len {
-            match d.decode_with(ctx) {
-                Ok(signature) => signatures.push(signature),
-                Err(e) => {
+            match d.decode_with(ctx)? {
+                Some(signature) => signatures.push(signature),
+                None => {
                     ctx.report.other(
-                        &format!("COSE signature at id {idx}, error: {e}"),
+                        &format!("COSE signature at id {idx}"),
                         "Cannot decode a signle COSE signature from the array of signatures",
                     );
                 },
@@ -232,9 +225,13 @@ fn protected_header_encode(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
 }
 
 /// Signatures protected header decode from bytes.
+/// Return error if its an invalid CBOR sequence.
+/// Return None if cannot decode `CatalystId` bytes.
 ///
 /// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
-fn protected_header_decode(bytes: &[u8]) -> anyhow::Result<CatalystId> {
+fn protected_header_decode(
+    bytes: &[u8], ctx: &mut DecodeContext<'_>,
+) -> anyhow::Result<Option<CatalystId>> {
     let mut map = cbork_utils::deterministic_helper::decode_map_deterministically(
         &mut minicbor::Decoder::new(bytes),
     )?
@@ -252,8 +249,29 @@ fn protected_header_decode(bytes: &[u8]) -> anyhow::Result<CatalystId> {
         ),
         "Missing COSE signature protected header `kid` field"
     );
-    let kid: CatalystId = minicbor::Decoder::new(entry.key_bytes.as_slice())
-        .bytes()?
-        .try_into()?;
-    Ok(kid)
+    Ok(minicbor::Decoder::new(entry.value.as_slice())
+    .bytes()?
+    .try_into()
+    .inspect_err(|e| {
+        ctx.report.conversion_error(
+            "COSE signature protected header `kid`",
+            &hex::encode(entry.value.as_slice()),
+            &format!("{e:?}"),
+            "Converting COSE signature header `kid` to CatalystId",
+        )
+    }).map(|kid: CatalystId| {
+        if kid.is_id() {
+            ctx.report.invalid_value(
+                    "COSE signature protected header key ID",
+                    &kid.to_string(),
+                    &format!(
+                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}",
+                        CatalystId::SCHEME
+                    ),
+                    "Converting COSE signature header key ID to CatalystId",
+                );
+        }
+        kid
+    })
+    .ok())
 }
