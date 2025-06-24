@@ -1,54 +1,61 @@
-# Category Parameters
+# Rep Nomination
 
 ## Description
 
-Category Parameters define the parameter data required for the
-system at the Category level.
+A Representative Nomination Document is created to opt
+in as a Representative Voter for a specific Contest on a Brand/Campaign or Category.
 
-Parameter Data includes things such as:
+This Document is a kind of `Profile` that is primarily used to
+help justify the Representatives Nomination to prospective delegators.
 
-* Functional parameters
-* Timeline data
-* Branded Content and Copy
+The user must have registered as a Representative.
+The presence of this document signifies the user's intent to participate in that
+contest as a Representative.
 
-The content of the parameters is defined solely by the
-Category Parameters Form Template.
+The document's structure is defined by the associated
+Rep Nomination Form Template.
+This allows an Admin to specify contest-specific requirements.
 
-This allows parameters to vary based on individual system
-requirements over time.
+The Representative can retract their nomination by using the `revoke` metadata to
+revoke this Nomination document.
 
-Functional Parameters are mapped using the (TBD Functional Parameters Map).
+It is an extension of all other profiles attached to the same Catalyst ID.
 
-The payload of a Category is controlled by its template.
+Profiles themselves are intentionally general, however they may be
+linked to a Brand/Campaign/Category via the template used by the profile.
+
+The payload of a profile is controlled by its template.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot category_parameters.dot.svg
-{{ include_file('./../diagrams/category_parameters.dot', indent=4) }}
+```graphviz dot rep_nomination.dot.svg
+{{ include_file('./../diagrams/rep_nomination.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
-The Category Parameters Document *MUST* be linked through [`parameters`](../metadata.md#parameters) to
-its Campaign Parameters Document.
+* The signer MUST be a registered 'Representative'.
+* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.
+* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.
+* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.
+* The payload MUST be valid against the [JSON schema][JSON Schema-2020-12] defined in the referenced template.
+* Other rules may apply as defined by the Contest or other parameters which can
+    control who may validly nominate as a representative in a Contest.
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* Allows a Representative to create or update their profile for a category.
+* The Representative sets their status to 'active' to be discoverable for delegation.
+* The Representative can set their status to 'revoked' to signal they are no longer participating in the category, without having to revoke the document.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
+* The system will only consider Representatives with an 'active' status as eligible for delegation.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -64,7 +71,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`818938c3-3139-4daa-afe6-974c78488e95` |
+| Type | `bf9abd97-5d1f-4429-8e80-740fea371a9c`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -106,6 +113,47 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
+### [`ref`](../metadata.md#ref)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Rep Profile](rep_profile.md) |
+<!-- markdownlint-enable MD033 -->
+Reference to a Linked Document or Documents.
+This is the primary hierarchical reference to a related document.
+
+If a reference is defined as required, there must be at least 1 reference specified.
+Some documents allow multiple references, and they are documented as required.
+
+The document reference serves two purposes:
+
+1. It ensures that the document referenced by an ID/Version is not substituted.
+    In other words, that the document intended to be referenced, is actually referenced.
+2. It Allows the document to be unambiguously located in decentralized storage systems.
+
+There can be any number of Document Locations in any reference.
+The currently defined locations are:
+
+* `cid` : A [CBOR Encoded IPLD Content Identifier][CBOR-TAG-42] ( AKA an [IPFS CID][IPFS-CID] ).
+* Others may be added when further storage mechanisms are defined.
+
+The document location does not guarantee that the document is actually stored.
+It only defines that if it were stored, this is the identifier
+that is required to retrieve it.
+Therefore it is required that Document References
+are unique and reproducible, given a documents contents.
+
+#### [`ref`](../metadata.md#ref) Validation
+
+The following must be true for a valid reference:
+
+* The Referenced Document **MUST** Exist
+* Every value in the `document_locator` must consistently reference the exact same document.
+* The `document_id` and `document_ver` **MUST** match the values in the referenced document.
+
 ### [`template`](../metadata.md#template)
 
 <!-- markdownlint-disable MD033 -->
@@ -113,7 +161,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Category Parameters Form Template](category_parameters_form_template.md) |
+| Valid References | [Rep Nomination Form Template](rep_nomination_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
@@ -121,28 +169,6 @@ Reference to the template used to create and/or validate this document.
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
-
-### [`collaborators`](../metadata.md#collaborators)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Collaborators Reference List](../metadata.md#collaborators-reference-list) |
-<!-- markdownlint-enable MD033 -->
-A list of collaborators who may also publish updates to versions of this document.
-This should include all parties who have not signed this document directly.
-
-Every subsequent version can amend the collaborators list.
-However, the initial Author can never be removed from being able to
-publish a new version of the document.
-
-#### [`collaborators`](../metadata.md#collaborators) Validation
-
-This list does not imply these collaborators have consented to collaborate, only that the author/s
-are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
 
 ### [`revocations`](../metadata.md#revocations)
 
@@ -179,7 +205,8 @@ Such documents may never be submitted.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Campaign Parameters](campaign_parameters.md) |
+| Valid References | [Contest Parameters](contest_parameters.md) |
+| Linked Reference Metadata | [`template`](#template) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -198,25 +225,26 @@ The use case here is for Templates.
 The profile template, or proposal templates could be defined at any of these
 levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
-Category Parameters Document controlling the Category
-within a Campaign.
+The Representative's profile data for a specific contest.
+Its structure is defined by the referenced template document.
 
-Must be valid according to the schema contained within the
-[Document Reference](../metadata.md#document-reference) from the [`template`](../metadata.md#template) metadata.
+In the case of Revoking a nomination the payload is `nil`.
 
 ## Signers
 
-The following Admin roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
-* Brand Admin
+* Representative
 
 New versions of this document may be published by:
 
 * author
-* collaborators
 
 ## Copyright
 
@@ -224,21 +252,20 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-20 |
+| Modified | 2025-06-19 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
-| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### 0.01 (2025-06-19)
 
 * First Published Version
 
-#### 0.02 (2025-06-20)
-
-* Generalized as another kind of form data document
-
+[CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7

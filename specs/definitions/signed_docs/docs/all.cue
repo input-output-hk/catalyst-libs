@@ -19,6 +19,11 @@ _allDocTypes: {
 	Category:             "818938c3-3139-4daa-afe6-974c78488e95"
 	Contest:              "788ff4c6-d65a-451f-bb33-575fe056b411"
 	Parameters:           "60185874-7e13-407c-a06c-238ffe637ae6"
+	RegisteredUser:       "ff4b7724-3db5-44cd-a433-78ba6d29505e"
+	RegisteredRep:        "94579df1-a6dc-433b-a8e8-910c5dc2f0e3"
+	RegisteredProposer:   "7311c63b-95c6-402e-a258-f9bf622093eb"
+	Profile:              "0f2c86a2-ffda-40b0-ad38-23709e1c10b3"
+	Nomination:           "bf9abd97-5d1f-4429-8e80-740fea371a9c"
 }
 
 // Source of truth for ALL Document Types and their matching UUID's.
@@ -67,40 +72,58 @@ _allDocs: {
 		_allDocTypes["ModerationAction"], // On Moderation
 	]
 	"Brand Parameters": [
-		_allDocTypes["Brand"],
-		_allDocTypes["Parameters"],
+		_allDocTypes["Parameters"], // Parameters
+		_allDocTypes["Brand"],      // Of a Brand
 	]
 	"Brand Parameters Form Template": [
-		_allDocTypes["Brand"],
-		_allDocTypes["Parameters"],
-		_allDocTypes["FormTemplate"],
+		_allDocTypes["FormTemplate"], // Form Template
+		_allDocTypes["Parameters"],   // For Parameters
+		_allDocTypes["Brand"],        // Of a Brand
 	]
 	"Campaign Parameters": [
-		_allDocTypes["Campaign"],
-		_allDocTypes["Parameters"],
+		_allDocTypes["Parameters"], // Parameters
+		_allDocTypes["Campaign"],   // Of a Campaign
 	]
 	"Campaign Parameters Form Template": [
-		_allDocTypes["Campaign"],
-		_allDocTypes["Parameters"],
-		_allDocTypes["FormTemplate"],
+		_allDocTypes["FormTemplate"], // Form Template
+		_allDocTypes["Parameters"],   // For Parameters
+		_allDocTypes["Campaign"],     // Of a Campaign
 	]
 	"Category Parameters": [
-		_allDocTypes["Category"],
-		_allDocTypes["Parameters"],
+		_allDocTypes["Parameters"], // Parameters
+		_allDocTypes["Category"],   // Of a Category
 	]
 	"Category Parameters Form Template": [
-		_allDocTypes["Category"],
-		_allDocTypes["Parameters"],
-		_allDocTypes["FormTemplate"],
+		_allDocTypes["FormTemplate"], // Form Template
+		_allDocTypes["Parameters"],   // For Parameters
+		_allDocTypes["Category"],     // Of a Category
 	]
 	"Contest Parameters": [
-		_allDocTypes["Contest"],
-		_allDocTypes["Parameters"],
+		_allDocTypes["Parameters"], // Parameters
+		_allDocTypes["Contest"],    // Of a Contest
 	]
 	"Contest Parameters Form Template": [
-		_allDocTypes["Contest"],
-		_allDocTypes["Parameters"],
-		_allDocTypes["FormTemplate"],
+		_allDocTypes["FormTemplate"], // Form Template
+		_allDocTypes["Parameters"],   // For Parameters
+		_allDocTypes["Contest"],      // Of a Contest
+	]
+	"Rep Profile": [
+		_allDocTypes["Profile"],       // Profile
+		_allDocTypes["RegisteredRep"], // Of a Registered Rep
+	]
+	"Rep Profile Form Template": [
+		_allDocTypes["FormTemplate"],  // Form Template
+		_allDocTypes["Profile"],       // For a Profile
+		_allDocTypes["RegisteredRep"], // Of a Registered Rep
+	]
+	"Rep Nomination": [
+		_allDocTypes["Nomination"],    // Nomination
+		_allDocTypes["RegisteredRep"], // Of a Registered Rep
+	]
+	"Rep Nomination Form Template": [
+		_allDocTypes["FormTemplate"],  // Form Template
+		_allDocTypes["Nomination"],    // For a Nomination
+		_allDocTypes["RegisteredRep"], // Of a Registered Rep
 	]
 }
 

@@ -249,16 +249,6 @@ _allMetadataNames: or([
 			"""
 	}
 
-	parameters: {
-		description: "A reference to the Parameters Document this document lies under."
-		validation: """
-			In addition to the validation performed for `Document Reference` type fields: 
-
-			* Any linked referenced document that includes a `parameters` metadata must match the 
-			`parameters` of the referencing document.
-			"""
-	}
-
 }
 
 // Note: we make all normally excluded fields optional at the global level, because they are globally optional
@@ -272,8 +262,6 @@ metadata: headers: {
 	reply: type:             #commentDocNamesList
 	section: required:       "optional"
 	collaborators: required: "optional"
-	parameters: required:    "optional"
-	parameters: type:        #parameterDocNamesList
 }
 
 // Preferred display order

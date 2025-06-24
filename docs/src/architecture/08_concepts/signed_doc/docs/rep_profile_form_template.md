@@ -1,29 +1,32 @@
-# Proposal Comment Presentation Template
+# Rep Profile Form Template
 
 ## Description
 
-A Proposal Comment Presentation Template defines how the data
-captured by the Proposal Comment Form Template is to be displayed.
+A Rep Profile Form Template defines both:
 
-Multiple Proposal Comment Presentation Templates can exist for the
-same Proposal Comment Form Template.
-Each can be used to display the form data under different
-circumstances.
+* The data that is entered in the Form.
+* Formatting hints for the collection of the data in a form.
 
-Proposal Comment Presentation Templates can reference any data contained
-in the Proposal Comment Document, as well as any documents linked by:
+A Rep Profile Form Template is a [JSON Schema][JSON Schema-2020-12] Document.
 
-* [`ref`](../metadata.md#ref)
-* [`reply`](../metadata.md#reply)
-* [`parameters`](../metadata.md#parameters)
+Rep Profile entry *SHOULD* use the hints when collecting
+data defined by the Rep Profile Form Template to provide a
+consistent user interface.
+It *CAN* also use those hints when re-displaying the full forms data.
 
-The presentation of the payload of a Proposal Comment is controlled by
-its Proposal Comment Presentation Template/s.
+Alternatively a Rep Profile Presentation Template can be used to
+format the Rep Profile data for presentation.
+
+The Rep Profile Document is intentionally general,
+however it may be linked to a brand/campaign or category
+via the template used by the Rep Profile.
+
+The payload of a Rep Profile is controlled by its template.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot proposal_comment_presentation_template.dot.svg
-{{ include_file('./../diagrams/proposal_comment_presentation_template.dot', indent=4) }}
+```graphviz dot rep_profile_form_template.dot.svg
+{{ include_file('./../diagrams/rep_profile_form_template.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -65,7 +68,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `cb99b9bd-681a-49d8-9836-89107c02e8ef`,<br/>`b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`0f2c86a2-ffda-40b0-ad38-23709e1c10b3`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -115,8 +118,6 @@ The document version must always be >= the document ID.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Brand Parameters](brand_parameters.md) |
-|  | [Campaign Parameters](campaign_parameters.md) |
-|  | [Category Parameters](category_parameters.md) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -138,19 +139,15 @@ hierarchy they are all valid.
 
 ## Payload
 
-TBD.
-But roughly, will be:
-
-1. A way to identify where the presentation template is intended to be used.
-2. Optional [CSS] to control the presentation.
-3. A [Handlebars] templated [HTML][HTML5] or [Markdown][CommonMark] file data which defines the presentation.
+[JSON Schema][JSON Schema-2020-12] document which defines the valid contents and
+formatting hints for the collection of data for a
+Rep Profile Document.
 
 ## Signers
 
 The following Admin roles may sign documents of this type:
 
 * Brand Admin
-* Campaign Admin
 
 New versions of this document may be published by:
 
@@ -168,14 +165,19 @@ New versions of this document may be published by:
 
 ### Changelog
 
+#### 0.01 (2025-04-04)
+
+* First Published Version
+
+#### 0.03 (2025-05-05)
+
+* Use generalized parameters.
+
 #### 0.04 (2025-05-05)
 
-* First Version.
+* Generalize the Form Template definitions.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[Handlebars]: https://handlebarsjs.com/
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
-[CommonMark]: https://spec.commonmark.org/0.31.2/
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
-[CSS]: https://www.w3.org/Style/CSS/

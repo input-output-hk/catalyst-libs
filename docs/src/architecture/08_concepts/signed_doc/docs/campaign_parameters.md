@@ -64,7 +64,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `5ef32d5d-f240-462c-a7a4-ba4af221fa23`,<br/>`60185874-7e13-407c-a06c-238ffe637ae6` |
+| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`5ef32d5d-f240-462c-a7a4-ba4af221fa23` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -188,7 +188,16 @@ A reference to the Parameters Document this document lies under.
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
 * Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
-[`parameters`](../metadata.md#parameters) of the referencing document.
+[`parameters`](../metadata.md#parameters) of the referencing document, or a parent of those [`parameters`](../metadata.md#parameters).
+
+For example, a linked reference to [Contest Parameters](contest_parameters.md) is transitively a reference to
+the Parameters document it references, and each parameters document they reference
+until the `Brand` parameters document is reached.
+
+The use case here is for Templates.
+The profile template, or proposal templates could be defined at any of these
+levels, and as long as they all refer to the same chain of parameters in the
+hierarchy they are all valid.
 
 ## Payload
 

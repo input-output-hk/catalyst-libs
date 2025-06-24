@@ -1,54 +1,43 @@
-# Category Parameters
+# Rep Profile
 
 ## Description
 
-Category Parameters define the parameter data required for the
-system at the Category level.
+A Rep Profile allows a representative voter to publish information
+about themselves to help explain who they are and why someone should
+consider delegating to them.
 
-Parameter Data includes things such as:
+It is an extension of all other profiles attached to the same Catalyst ID.
 
-* Functional parameters
-* Timeline data
-* Branded Content and Copy
+Profiles themselves are intentionally general, however they may be
+linked to a brand via the template used by the profile.
 
-The content of the parameters is defined solely by the
-Category Parameters Form Template.
-
-This allows parameters to vary based on individual system
-requirements over time.
-
-Functional Parameters are mapped using the (TBD Functional Parameters Map).
-
-The payload of a Category is controlled by its template.
+The payload of a profile is controlled by its template.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot category_parameters.dot.svg
-{{ include_file('./../diagrams/category_parameters.dot', indent=4) }}
+```graphviz dot rep_profile.dot.svg
+{{ include_file('./../diagrams/rep_profile.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
-The Category Parameters Document *MUST* be linked through [`parameters`](../metadata.md#parameters) to
-its Campaign Parameters Document.
+* The signer MUST be a registered 'Representative'.
+* The payload MUST be valid against the [JSON schema][JSON Schema-2020-12] defined in the referenced
+'Rep Profile Template'.
 
 ### Business Logic
 
 #### Front End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* Display and allow editing of the Representative's core profile fields.
+* This profile serves as the central hub for a Representative's public identity.
 
 #### Back End
 
-This specification outlines the required definitions for the current features.
-The document will be incrementally improved in future iterations as more functionality
-and features are added.
-This section will be included and updated in future iterations.
+* Validate Representative profile data against the referenced 'Rep Profile Template' and store/index it.
+* This global profile is the foundational document referenced by all of the Rep's contest specific profiles.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
@@ -64,7 +53,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`818938c3-3139-4daa-afe6-974c78488e95` |
+| Type | `0f2c86a2-ffda-40b0-ad38-23709e1c10b3`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -113,7 +102,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Category Parameters Form Template](category_parameters_form_template.md) |
+| Valid References | [Rep Profile Form Template](rep_profile_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
@@ -121,28 +110,6 @@ Reference to the template used to create and/or validate this document.
 
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
 The document payload is not valid if it does not validate completely against the referenced template.
-
-### [`collaborators`](../metadata.md#collaborators)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Collaborators Reference List](../metadata.md#collaborators-reference-list) |
-<!-- markdownlint-enable MD033 -->
-A list of collaborators who may also publish updates to versions of this document.
-This should include all parties who have not signed this document directly.
-
-Every subsequent version can amend the collaborators list.
-However, the initial Author can never be removed from being able to
-publish a new version of the document.
-
-#### [`collaborators`](../metadata.md#collaborators) Validation
-
-This list does not imply these collaborators have consented to collaborate, only that the author/s
-are permitting these potential collaborators to participate in the drafting and submission process.
-However, any document submission referencing a proposal MUST be signed by all collaborators in
-addition to the author.
 
 ### [`revocations`](../metadata.md#revocations)
 
@@ -179,7 +146,8 @@ Such documents may never be submitted.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Campaign Parameters](campaign_parameters.md) |
+| Valid References | [Brand Parameters](brand_parameters.md) |
+| Linked Reference Metadata | [`template`](#template) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -198,25 +166,27 @@ The use case here is for Templates.
 The profile template, or proposal templates could be defined at any of these
 levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
+* The Document referenced by [`template`](../metadata.md#template)
+  * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
+  * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
-Category Parameters Document controlling the Category
-within a Campaign.
+The Representative profile payload contains all Representative-specific fields.
+Its structure is defined by the referenced Rep Profile Template.
 
 Must be valid according to the schema contained within the
 [Document Reference](../metadata.md#document-reference) from the [`template`](../metadata.md#template) metadata.
 
 ## Signers
 
-The following Admin roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
-* Brand Admin
+* Representative
 
 New versions of this document may be published by:
 
 * author
-* collaborators
 
 ## Copyright
 
@@ -224,21 +194,18 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-20 |
+| Modified | 2025-06-19 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
-| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### 0.01 (2025-06-19)
 
 * First Published Version
 
-#### 0.02 (2025-06-20)
-
-* Generalized as another kind of form data document
-
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
+[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
