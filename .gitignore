@@ -81,6 +81,9 @@ $RECYCLE.BIN/
 !/.vscode/settings.recommended.json
 !/.vscode/tasks.recommended.json
 
+venv/
+# Python virtual environments
+
 # Dart stuff
 /pubspec.lock
 /.dart_tool/**/*

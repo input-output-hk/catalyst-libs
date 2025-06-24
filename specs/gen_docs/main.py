@@ -1,4 +1,4 @@
-#!/usr/bin/env -S uv run
+#!/usr/bin/env python3
 """Autogenerate Documentation Pages from the specification."""
 
 import argparse
@@ -76,6 +76,10 @@ def main(args: argparse.Namespace) -> None:
     good &= TypesMd(args, spec).save_or_validate()
     good &= MetadataMd(args, spec).save_or_validate()
     good &= IndividualDocMd.save_or_validate_all(args, spec)
+
+    # Add generation for Brand, Campaign, Category, and Decision documents
+    for doc_name in ["Brand Parameters", "Campaign Parameters", "Category Parameters", "Decision Parameters"]:
+        good &= IndividualDocMd(args, spec, doc_name).save_or_validate()
 
     if not good:
         rich.print("File Comparisons Failed, Documentation is not current.")

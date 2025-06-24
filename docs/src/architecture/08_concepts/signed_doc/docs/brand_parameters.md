@@ -2,7 +2,10 @@
 
 ## Description
 
-Parameters which define this brand within the system.
+This specification outlines the required definitions for the current features.
+The document will be incrementally improved in future iterations as more functionality
+and features are added.
+This section will be included and updated in future iterations.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
@@ -118,9 +121,13 @@ New versions of this document may be published by:
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### v1 (2024-06-07)
 
-* First Published Version
+Initial version. Structure aligned with global metadata requirements.
+
+#### v2 (2025-04-04)
+
+Updated to include common definitions and examples.
 
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode

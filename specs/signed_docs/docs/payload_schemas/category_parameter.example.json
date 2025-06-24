@@ -1,0 +1,8 @@
+{
+    "campaignTitle": "Cardano Open Innovation",
+    "minimumBudgetRequestPerProposal": 15000,
+    "maximumBudgetRequestPerProposal": "200000 (variable per challenge)",
+    "proposalFundingLogic": "top N by votes",
+    "proposalAcceptanceThreshold": 60,
+    "votingOptions": ["Yes", "No", "Abstain"]
+}
