@@ -31,7 +31,7 @@ fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> 
         name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once. [INVALID]",
         bytes_gen: Box::new({
             move || {
-                let (_, _, kid) = common::create_dummy_key_pair(RoleId::Role0).unwrap();
+                let (_, _, kid) = common::create_dummy_key_pair(RoleId::Role0);
 
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
