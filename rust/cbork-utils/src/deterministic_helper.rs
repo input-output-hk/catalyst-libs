@@ -74,8 +74,7 @@ impl Ord for MapEntry {
     }
 }
 
-/// Decodes a CBOR map with deterministic encoding validation (RFC 8949 Section 4.2.3)
-/// Returns the raw bytes of the map if it passes all deterministic validation rules.
+/// Decodes a CBOR map with deterministic encoding validation (RFC 8949 Section 4.2)
 ///
 /// From RFC 8949 Section 4.2.3:
 /// "The keys in every map must be sorted in the following order:
