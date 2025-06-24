@@ -26,7 +26,8 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
-        name: "Provided category_id, brand_id, campaign_id field should be processed as parameters.",
+        name:
+            "Provided category_id, brand_id, campaign_id field should be processed as parameters.",
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
