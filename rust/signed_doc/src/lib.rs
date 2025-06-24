@@ -218,20 +218,26 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         };
         let start = d.position();
 
+        let p = d.position();
         if let Ok(tag) = d.tag() {
             if tag != COSE_SIGN_CBOR_TAG {
                 return Err(minicbor::decode::Error::message(format!(
                     "Must be equal to the COSE_Sign tag value: {COSE_SIGN_CBOR_TAG}"
                 )));
             }
+        } else {
+            d.set_position(p);
         }
+
         if !matches!(d.array()?, Some(4)) {
             return Err(minicbor::decode::Error::message(format!(
                 "Must be a definite size array of 4 elements"
             )));
         }
+
         let metadata_bytes = d.bytes()?;
         let metadata = Metadata::decode(&mut minicbor::Decoder::new(metadata_bytes), &mut ctx)?;
+
         // empty unprotected headers
         let mut map =
             cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();

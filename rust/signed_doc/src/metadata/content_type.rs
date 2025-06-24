@@ -5,7 +5,6 @@ use std::{
     str::FromStr,
 };
 
-use coset::iana::CoapContentFormat;
 use serde::{de, Deserialize, Deserializer};
 use strum::VariantArray;
 
@@ -55,27 +54,6 @@ impl<'de> Deserialize<'de> for ContentType {
     }
 }
 
-impl TryFrom<&coset::ContentType> for ContentType {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &coset::ContentType) -> Result<Self, Self::Error> {
-        match value {
-            coset::ContentType::Assigned(CoapContentFormat::Json) => Ok(ContentType::Json),
-            coset::ContentType::Assigned(CoapContentFormat::Cbor) => Ok(ContentType::Cbor),
-            coset::ContentType::Text(str) => str.parse(),
-            coset::RegisteredLabel::Assigned(_) => {
-                anyhow::bail!(
-                    "Unsupported Content Type: {value:?}, Supported only: {:?}",
-                    ContentType::VARIANTS
-                        .iter()
-                        .map(ToString::to_string)
-                        .collect::<Vec<_>>()
-                )
-            },
-        }
-    }
-}
-
 impl minicbor::Encode<()> for ContentType {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
@@ -90,6 +68,7 @@ impl minicbor::Decode<'_, ()> for ContentType {
     fn decode(
         d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
+        let p = d.position();
         match d.int() {
             // CoAP Content Format JSON
             Ok(val) if val == minicbor::data::Int::from(50_u8) => Ok(Self::Json),
@@ -100,7 +79,10 @@ impl minicbor::Decode<'_, ()> for ContentType {
                     "unsupported CoAP Content Formats value: {val}"
                 )))
             },
-            Err(_) => d.str()?.parse().map_err(minicbor::decode::Error::message),
+            Err(_) => {
+                d.set_position(p);
+                d.str()?.parse().map_err(minicbor::decode::Error::message)
+            },
         }
     }
 }
