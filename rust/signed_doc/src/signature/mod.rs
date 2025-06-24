@@ -151,9 +151,11 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Option<Signature> {
             protected_header_decode(d.bytes()?, ctx).map_err(minicbor::decode::Error::message)?;
 
         // empty unprotected headers
-        if !matches!(d.map()?, Some(0)) {
+        let mut map =
+            cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
+        if map.next().is_some() {
             return Err(minicbor::decode::Error::message(
-                "COSE signature unprotected headers must be a definite size empty map",
+                "COSE signature unprotected headers must be empty",
             ));
         }
 
@@ -249,19 +251,22 @@ fn protected_header_decode(
         ),
         "Missing COSE signature protected header `kid` field"
     );
-    Ok(minicbor::Decoder::new(entry.value.as_slice())
-    .bytes()?
-    .try_into()
-    .inspect_err(|e| {
-        ctx.report.conversion_error(
-            "COSE signature protected header `kid`",
-            &hex::encode(entry.value.as_slice()),
-            &format!("{e:?}"),
-            "Converting COSE signature header `kid` to CatalystId",
-        )
-    }).map(|kid: CatalystId| {
-        if kid.is_id() {
-            ctx.report.invalid_value(
+
+    let kid = minicbor::Decoder::new(entry.value.as_slice())
+        .bytes()?
+        .try_into()
+        .inspect_err(|e| {
+            ctx.report.conversion_error(
+                "COSE signature protected header `kid`",
+                &hex::encode(entry.value.as_slice()),
+                &format!("{e:?}"),
+                "Converting COSE signature header `kid` to CatalystId",
+            )
+        })
+        .ok()
+        .map(|kid: CatalystId| {
+            if kid.is_id() {
+                ctx.report.invalid_value(
                     "COSE signature protected header key ID",
                     &kid.to_string(),
                     &format!(
@@ -270,8 +275,8 @@ fn protected_header_decode(
                     ),
                     "Converting COSE signature header key ID to CatalystId",
                 );
-        }
-        kid
-    })
-    .ok())
+            }
+            kid
+        });
+    Ok(kid)
 }
