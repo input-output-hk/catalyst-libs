@@ -5,7 +5,6 @@ mod doc_ref;
 use std::{fmt::Display, str::FromStr};
 
 use catalyst_types::uuid::{CborContext, UuidV7};
-use coset::cbor::Value;
 pub use doc_locator::DocLocator;
 pub use doc_ref::DocumentRef;
 use minicbor::{Decode, Decoder, Encode};
@@ -21,12 +20,6 @@ pub struct DocumentRefs(Vec<DocumentRef>);
 /// Document reference error.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum DocRefError {
-    /// Invalid `UUIDv7`.
-    #[error("Invalid UUID: {0} for field {1}")]
-    InvalidUuidV7(UuidV7, String),
-    /// `DocRef` cannot be empty.
-    #[error("DocType cannot be empty")]
-    Empty,
     /// Invalid string conversion
     #[error("Invalid string conversion: {0}")]
     StringConversion(String),
@@ -165,32 +158,6 @@ impl Encode<()> for DocumentRefs {
             doc_ref.encode(e, ctx)?;
         }
         Ok(())
-    }
-}
-
-impl TryFrom<DocumentRefs> for Value {
-    type Error = DocRefError;
-
-    fn try_from(value: DocumentRefs) -> Result<Self, Self::Error> {
-        if value.0.is_empty() {
-            return Err(DocRefError::Empty);
-        }
-
-        let array_values: Result<Vec<Value>, Self::Error> = value
-            .0
-            .iter()
-            .map(|inner| Value::try_from(inner.to_owned()))
-            .collect();
-
-        Ok(Value::Array(array_values?))
-    }
-}
-
-impl TryFrom<&DocumentRefs> for Value {
-    type Error = DocRefError;
-
-    fn try_from(value: &DocumentRefs) -> Result<Self, Self::Error> {
-        value.clone().try_into()
     }
 }
 
@@ -358,15 +325,6 @@ mod tests {
         };
         let decoded_doc_refs = DocumentRefs::decode(&mut decoder, &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_refs, doc_refs);
-    }
-
-    #[test]
-    fn test_doc_refs_to_value() {
-        let uuidv7 = UuidV7::new();
-        let doc_ref = DocumentRef::new(uuidv7, uuidv7, vec![1, 2, 3].into());
-        let doc_ref = DocumentRefs(vec![doc_ref.clone(), doc_ref]);
-        let value: Value = doc_ref.try_into().unwrap();
-        assert_eq!(value.as_array().unwrap().len(), 2);
     }
 
     #[test]

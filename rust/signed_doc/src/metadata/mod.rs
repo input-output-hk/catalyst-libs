@@ -10,7 +10,6 @@ pub(crate) mod doc_type;
 mod document_refs;
 mod section;
 mod supported_field;
-pub(crate) mod utils;
 
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
