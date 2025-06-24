@@ -1,58 +1,40 @@
-# Rep Nomination
+# Contest Delegation
 
 ## Description
 
-A Representative Nomination Document is created to opt
-in as a Representative Voter for a specific Contest on a Brand/Campaign or Category.
+Delegation by a Registered User to a Representative for
+a contest.
 
-This Document is a kind of `Profile` that is primarily used to
-help justify the Representatives Nomination to prospective delegators.
+This delegation allows votes cast by the Representative
+to use the voting power of the delegating User, in addition
+to their own personal voting power and that of all other Users
+who delegate to the same Representative.
 
-The user must have registered as a Representative.
-The presence of this document signifies the user's intent to participate in that
-contest as a Representative.
+Delegation is for a specific Contest.
+Multiple Delegations must be published if there are multiple
+Contests within a Brand/Campaign or Category.
 
-The document's structure is defined by the associated
-Rep Nomination Form Template.
-This allows an Admin to specify contest-specific requirements.
-
-The Representative can retract their nomination by using the `revoke` metadata to
-revoke this Nomination document.
-
-It is an extension of all other profiles attached to the same Catalyst ID.
-
-Profiles themselves are intentionally general, however they may be
-linked to a Brand/Campaign/Category via the template used by the profile.
-
-The payload of a profile is controlled by its template.
+This is because different Contests may have different
+rules.  And not all Representatives will choose to nominate
+for every Contest.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot rep_nomination.dot.svg
-{{ include_file('./../diagrams/rep_nomination.dot', indent=4) }}
+```graphviz dot contest_delegation.dot.svg
+{{ include_file('./../diagrams/contest_delegation.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Validation
 
-* The signer MUST be a registered 'Representative'.
-* The 'ref' metadata field MUST point to a valid 'Representative Profile' document.
-* The 'parameters' metadata field MUST point to a valid 'Contest Parameters' document.
-* The 'template' metadata field MUST point to a valid 'Representative Nomination Form Template' document.
-* The payload MUST be valid against the [JSON schema][JSON Schema-2020-12] defined in the referenced template.
-* Other rules may apply as defined by the Contest or other parameters which can
-    control who may validly nominate as a representative in a Contest.
+* The [`parameters`](../metadata.md#parameters) metadata *MUST* point to the same Contest as the
+    Nomination of the Representative.
+* The 'ref' metadata field MUST point to a valid 'Representative Nomination'.
+* The payload MUST be nil.
 
-No Nomination is valid unless the latest Contest Delegation of the Delegate
-refers to their own Nomination.
-This requires that Nominating is a two step process:
-
-1. Post the Nomination Document.
-2. Post a Contest Delegation delegating to the new Nomination Document.
-
-Updating the Nomination Document will invalidate all Nominations to the
-Representative.
+A Representative *MUST* Delegate to their latest Nomination for a Category,
+otherwise their Nomination is invalid.
 
 This is because Delegation points to a *SPECIFIC* Nomination, and it
 *MUST* be the latest for the Representative on the Contest.
@@ -66,24 +48,17 @@ latest Nomination for a Representative.
 
 #### Front End
 
-* Allows a Representative to create or update their profile for a category.
-* The Representative sets their status to 'active' to be discoverable for delegation.
-* The Representative `revokes` the Nomination to signal they are no longer
-    participating in the category.
-* Nominations are not valid if the latest Delegation by the Representative does NOT
-    reference their latest Nomination.
+* Allows a voter to select a Representative from a list of eligible candidates for a category.
+* The voter signs this document to confirm their delegation choice.
 
 #### Back End
 
-* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
-* The system will only consider Representatives as having valid Nominations if:
-  * Their latest Nomination in a Contest is not Revoked.
-  * Their latest Delegation in a Contest references their latest Nomination.
+* Verifies that the voter and Representative are valid and registered for the category.
+* Records the delegation of voting power from the voter to the Representative.
 
 ## [COSE Header Parameters][RFC9052-HeaderParameters]
 
-* [content type](../spec.md#content-type) = `application/json`
-* [content-encoding](../spec.md#content-encoding) = `[br]`
+No Headers are defined for this document.
 
 ## Metadata
 
@@ -94,7 +69,7 @@ latest Nomination for a Representative.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `bf9abd97-5d1f-4429-8e80-740fea371a9c`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
+| Type | `764f17fb-cc50-4979-b14a-b213dbac5994`,<br/>`788ff4c6-d65a-451f-bb33-575fe056b411` |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -143,7 +118,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Rep Profile](rep_profile.md) |
+| Valid References | [Rep Nomination](rep_nomination.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to a Linked Document or Documents.
 This is the primary hierarchical reference to a related document.
@@ -177,50 +152,6 @@ The following must be true for a valid reference:
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
-### [`template`](../metadata.md#template)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | yes |
-| Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Rep Nomination Form Template](rep_nomination_form_template.md) |
-<!-- markdownlint-enable MD033 -->
-Reference to the template used to create and/or validate this document.
-
-#### [`template`](../metadata.md#template) Validation
-
-In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields,
-The document payload is not valid if it does not validate completely against the referenced template.
-
-### [`revocations`](../metadata.md#revocations)
-
-<!-- markdownlint-disable MD033 -->
-| Parameter | Value |
-| --- | --- |
-| Required | optional |
-| Format | [Version Revocations](../metadata.md#version-revocations) |
-<!-- markdownlint-enable MD033 -->
-A document may include a list of any prior versions which are considered to be revoked.
-Only the revocation list in the latest version of the document applies.
-Revoked documents are flagged as no longer valid, and should not be displayed.
-As a special case, if the revocations are set to `true` then all versions of the document
-are revoked, including the latest document.
-
-In this case, when the latest document is revoked, the payload may be empty.
-Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
-and its payload is to be assumed to be invalid.
-
-This allows for an entire document and any/all published versions to be revoked.
-A new version of the document that is published after this, may reinstate prior
-document versions, by not listing them as revoked.
-However, any document where revocations was set `true` can never be reinstated.
-
-#### [`revocations`](../metadata.md#revocations) Validation
-
-If the field is `true` the payload may be absent or invalid.
-Such documents may never be submitted.
-
 ### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
@@ -229,7 +160,7 @@ Such documents may never be submitted.
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
 | Valid References | [Contest Parameters](contest_parameters.md) |
-| Linked Reference Metadata | [`template`](#template) |
+| Linked Reference Metadata | [`ref`](#ref) |
 <!-- markdownlint-enable MD033 -->
 A reference to the Parameters Document this document lies under.
 
@@ -250,22 +181,25 @@ The profile template, or proposal templates could be defined at any of these
 levels, and as long as they all refer to the same chain of parameters in the
 hierarchy they are all valid.
 
-* The Document referenced by [`template`](../metadata.md#template)
+* The Document referenced by [`ref`](../metadata.md#ref)
   * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
   * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
 
 ## Payload
 
-The Representative's profile data for a specific contest.
-Its structure is defined by the referenced template document.
+  A minimal payload indicating the intended status of the delegation.
+  'active' creates or affirms the delegation.
+  'revoked' withdraws the delegation.
 
-In the case of Revoking a nomination the payload is `nil`.
+This document has no payload.
+It must be encoded as a [CBOR][RFC8949] `null (0xf6)`.
+
 
 ## Signers
 
 The following User roles may sign documents of this type:
 
-* Representative
+* Registered
 
 New versions of this document may be published by:
 
@@ -290,7 +224,7 @@ New versions of this document may be published by:
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
 [IPFS-CID]: https://docs.ipfs.tech/concepts/content-addressing/#what-is-a-cid
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
+[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html

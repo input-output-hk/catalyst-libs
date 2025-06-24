@@ -39,7 +39,7 @@ class Document(BaseModel):
         default_factory=DocumentBusinessLogic,
     )
     notes: list[str]
-    headers: CoseHeaders
+    headers: CoseHeaders | None = Field(default=None)
     metadata: MetadataHeaders
     payload: Payload | None = Field(default=None)
     signers: Signers
@@ -98,6 +98,8 @@ class Document(BaseModel):
     @property
     def content_type(self) -> str | list[str]:
         """Get document content type."""
+        if self.headers is None:
+            return "Undefined"
         content_type = self.headers.get("content type")
         if content_type.value is None:
             return "Undefined"

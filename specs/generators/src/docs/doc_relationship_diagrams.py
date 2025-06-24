@@ -67,8 +67,9 @@ class DocRelationshipFile(DocGenerator):
             doc_data = self._spec.docs.get(doc)
             doc_type = doc_data.type.formatted_ids(prefix="", separator="<BR />", suffix="", cbor=False)
 
-            # Add content type explicitely to table.
-            doc_table.add_row(TableRow(name="content type", value=doc_data.content_type))
+            if doc_data.headers is not None:
+                # Add content type explicitely to table.
+                doc_table.add_row(TableRow(name="content type", value=doc_data.content_type))
 
             # Add all used Metadata to table.
             for meta in self._spec.metadata.headers.names:

@@ -123,6 +123,21 @@ Relationships"
     ];
 
 
+    "Contest Delegation" [
+        id="Contest Delegation";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_delegation/">
+                    <FONT COLOR="#ffffff"><B> Contest Delegation </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
     "Rep Nomination" [
         id="Rep Nomination";
         label=<
@@ -206,6 +221,7 @@ Relationships"
 
     "Contest Parameters":"template":e -> "Contest Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Contest Delegation":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Rep Nomination":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Rep Nomination Form Template":"title":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

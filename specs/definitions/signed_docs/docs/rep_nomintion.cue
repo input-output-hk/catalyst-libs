@@ -3,6 +3,16 @@ package signed_docs
 // Proposal Document Definition
 
 docs: "Rep Nomination": {
+	_latest_nomination_note: """
+		This is because Delegation points to a *SPECIFIC* Nomination, and it
+		*MUST* be the latest for the Representative on the Contest.
+		As the Nomination contains information that the User relies on
+		when choosing to delegate, changing that information could have a 
+		real and detrimental result in the Delegation choice.
+		Therefore, for a Delegation to be valid, it *MUST* point to the
+		latest Nomination for a Representative.
+		"""
+
 	description: """
 		A Representative Nomination Document is created to opt
 		in as a Representative Voter for a specific Contest on a Brand/Campaign or Category.
@@ -37,6 +47,18 @@ docs: "Rep Nomination": {
 		* The payload MUST be valid against the JSON schema defined in the referenced template.
 		* Other rules may apply as defined by the Contest or other parameters which can
 			control who may validly nominate as a representative in a Contest.
+
+		No Nomination is valid unless the latest Contest Delegation of the Delegate
+		refers to their own Nomination.
+		This requires that Nominating is a two step process:
+
+		1. Post the Nomination Document.
+		2. Post a Contest Delegation delegating to the new Nomination Document.
+		
+		Updating the Nomination Document will invalidate all Nominations to the 
+		Representative.
+
+		\(_latest_nomination_note)
 		"""
 
 	business_logic: {
@@ -44,12 +66,17 @@ docs: "Rep Nomination": {
 		front_end: """
 			* Allows a Representative to create or update their profile for a category.
 			* The Representative sets their status to 'active' to be discoverable for delegation.
-			* The Representative can set their status to 'revoked' to signal they are no longer participating in the category, without having to revoke the document.
+			* The Representative `revokes` the Nomination to signal they are no longer 
+				participating in the category.
+			* Nominations are not valid if the latest Delegation by the Representative does NOT
+				reference their latest Nomination.
 			"""
 
 		back_end: """
 			* The backend MUST verify the signer is a 'Representative' and that all referenced documents exist.
-			* The system will only consider Representatives with an 'active' status as eligible for delegation.
+			* The system will only consider Representatives as having valid Nominations if:
+			  * Their latest Nomination in a Contest is not Revoked.
+			  * Their latest Delegation in a Contest references their latest Nomination.
 			"""
 	}
 	headers: "content type": value: "application/json"

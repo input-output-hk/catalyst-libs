@@ -46,6 +46,10 @@ This section will be included and updated in future iterations.
     def header_parameter_summary(self) -> str:
         """Generate concrete Cose header parameter settings for a specific document."""
         headers = self._doc.headers
+
+        if headers is None:
+            return "No Headers are defined for this document."
+
         header_docs = ""
         for header in headers.names:
             value = headers.get(header).value
