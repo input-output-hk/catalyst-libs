@@ -21,7 +21,7 @@ struct TestCase {
 }
 
 // `parameters` value along with its aliases are not allowed to be presented
-fn signed_doc_with_parameters_and_aliases(aliases: &'static [&'static str]) -> TestCase {
+fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str]) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
@@ -39,12 +39,20 @@ fn signed_doc_with_parameters_and_aliases(aliases: &'static [&'static str]) -> T
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(4u64.overflowing_add(u64::try_from(aliases.len())?).0)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.str("ver")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
 
                     for alias in aliases {
-                        p_headers.str(&alias)?.encode_with(doc_ref.clone(), &mut ())?;
+                        p_headers
+                            .str(&alias)?
+                            .encode_with(doc_ref.clone(), &mut ())?;
                     }
 
                     p_headers.into_writer().as_slice()
@@ -137,14 +145,14 @@ fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
-        signed_doc_with_parameters_and_aliases(&["parameters", "category_id"]),
-        signed_doc_with_parameters_and_aliases(&["parameters", "brand_id"]),
-        signed_doc_with_parameters_and_aliases(&["parameters", "campaign_id"]),
-        signed_doc_with_parameters_and_aliases(&["category_id", "campaign_id"]),
-        signed_doc_with_parameters_and_aliases(&["category_id", "brand_id"]),
-        signed_doc_with_parameters_and_aliases(&["brand_id", "campaign_id"]),
-        signed_doc_with_parameters_and_aliases(&["category_id", "brand_id", "campaign_id"]),
-        signed_doc_with_parameters_and_aliases(&[
+        signed_doc_with_parameters_and_aliases_case(&["parameters", "category_id"]),
+        signed_doc_with_parameters_and_aliases_case(&["parameters", "brand_id"]),
+        signed_doc_with_parameters_and_aliases_case(&["parameters", "campaign_id"]),
+        signed_doc_with_parameters_and_aliases_case(&["category_id", "campaign_id"]),
+        signed_doc_with_parameters_and_aliases_case(&["category_id", "brand_id"]),
+        signed_doc_with_parameters_and_aliases_case(&["brand_id", "campaign_id"]),
+        signed_doc_with_parameters_and_aliases_case(&["category_id", "brand_id", "campaign_id"]),
+        signed_doc_with_parameters_and_aliases_case(&[
             "parameters",
             "category_id",
             "brand_id",
