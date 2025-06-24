@@ -22,7 +22,7 @@ struct TestCase {
 
 // `parameters` value along with its aliases are not allowed to be presented
 #[allow(clippy::unwrap_used)]
-fn signed_doc_with_parameters_and_aliases(aliases: Vec<String>, valid: bool) -> TestCase {
+fn signed_doc_with_parameters_and_aliases(aliases: &[&'static str]) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
