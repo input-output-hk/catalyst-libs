@@ -147,11 +147,14 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_fields(fields: Vec<SupportedField>, report: &ProblemReport) -> Self {
+    pub(crate) fn from_fields<E>(
+        fields: impl Iterator<Item = Result<SupportedField, E>>, report: &ProblemReport,
+    ) -> Result<Self, E> {
         const REPORT_CONTEXT: &str = "Metadata building";
 
         let mut metadata = Metadata(BTreeMap::new());
         for v in fields {
+            let v = v?;
             let k = v.discriminant();
             if metadata.0.insert(k, v).is_some() {
                 report.duplicate_field(
@@ -175,14 +178,17 @@ impl Metadata {
             report.missing_field("content-type", REPORT_CONTEXT);
         }
 
-        metadata
+        Ok(metadata)
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
-        let metadata = Self::from_fields(fields, &report);
+        let metadata = Self::from_fields(
+            fields.into_iter().map(|v| anyhow::Result::<_>::Ok(v)),
+            &report,
+        )?;
         anyhow::ensure!(!report.is_problematic(), "{:?}", report);
         Ok(metadata)
     }
@@ -247,9 +253,6 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
     fn decode(
         d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
-        const REPORT_CONTEXT: &str = "Metadata decoding";
-        let mut metadata_map = BTreeMap::new();
-
         // TODO: use helpers from `cbork-utils` crate to verify that's the map is
         // deterministically CBOR encoded map.
 
@@ -259,21 +262,12 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
             ));
         };
 
-        for _ in 0..length {
-            let Some(field) = Option::<SupportedField>::decode(d, ctx)? else {
-                continue;
-            };
-            let field_label = field.discriminant();
-            if metadata_map.insert(field_label, field).is_some() {
-                ctx.report.duplicate_field(
-                    &field_label.to_string(),
-                    "Duplicate metadata fields are not allowed",
-                    REPORT_CONTEXT,
-                );
-            }
-        }
+        let report = ctx.report.clone();
+        let fields = (0..length)
+            .map(|_| Option::<SupportedField>::decode(d, ctx))
+            .filter_map(|v| v.transpose());
 
-        Ok(Self(metadata_map))
+        Self::from_fields(fields, &report)
     }
 }
 
