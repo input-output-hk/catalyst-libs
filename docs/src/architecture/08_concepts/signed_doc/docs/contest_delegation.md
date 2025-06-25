@@ -187,7 +187,7 @@ hierarchy they are all valid.
 
 ## Payload
 
-  A minimal payload indicating the intended status of the delegation.
+A minimal payload indicating the intended status of the delegation.
   'active' creates or affirms the delegation.
   'revoked' withdraws the delegation.
 
