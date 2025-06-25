@@ -218,7 +218,6 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         };
         let start = d.position();
 
-        let p = d.position();
         if let Ok(tag) = d.tag() {
             if tag != COSE_SIGN_CBOR_TAG {
                 return Err(minicbor::decode::Error::message(format!(
@@ -226,7 +225,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 )));
             }
         } else {
-            d.set_position(p);
+            d.set_position(start);
         }
 
         if !matches!(d.array()?, Some(4)) {
