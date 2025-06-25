@@ -19,7 +19,7 @@ docs: "Contest Delegation": {
 		This is because different Contests may have different rules.
 		And not all Representatives will choose to nominate
 		for every Contest.
-		"""""""
+		"""
 	validation: """
 			* The `parameters` metadata *MUST* point to the same Contest as the 
 				Nomination of the Representative.
