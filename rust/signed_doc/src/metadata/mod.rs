@@ -20,7 +20,6 @@ use minicbor::Decoder;
 pub use section::Section;
 use strum::IntoDiscriminant as _;
 
-use crate::decode_context::CompatibilityPolicy;
 pub(crate) use crate::metadata::supported_field::{SupportedField, SupportedLabel};
 
 /// Document Metadata.
@@ -251,20 +250,14 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
         const REPORT_CONTEXT: &str = "Metadata decoding";
         let mut metadata_map = BTreeMap::new();
 
-        let map = match ctx.compatibility_policy {
-            CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                cbork_utils::decode_helper::decode_map(d)?.into_iter()
-            },
-            CompatibilityPolicy::Fail => {
-                cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter()
-            },
+        let Some(length) = d.map()? else {
+            return Err(minicbor::decode::Error::message(
+                "COSE protected headers object must be a definite size map ",
+            ));
         };
 
-        for entry in map {
-            let entry_bytes = [entry.key_bytes, entry.value].concat();
-            let Some(field) =
-                Option::<SupportedField>::decode(&mut minicbor::Decoder::new(&entry_bytes), ctx)?
-            else {
+        for _ in 0..length {
+            let Some(field) = Option::<SupportedField>::decode(d, ctx)? else {
                 continue;
             };
             let field_label = field.discriminant();
