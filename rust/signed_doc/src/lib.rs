@@ -241,9 +241,11 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let mut map =
             cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
         if map.next().is_some() {
-            return Err(minicbor::decode::Error::message(
+            ctx.report.unknown_field(
+                "unprotected headers",
+                "non empty unprotected headers",
                 "COSE unprotected headers must be empty",
-            ));
+            );
         }
 
         let content = Content::decode(d, &mut ())?;

@@ -108,9 +108,11 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Option<Signature> {
         let mut map =
             cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
         if map.next().is_some() {
-            return Err(minicbor::decode::Error::message(
+            ctx.report.unknown_field(
+                "unprotected headers",
+                "non empty unprotected headers",
                 "COSE signature unprotected headers must be empty",
-            ));
+            );
         }
 
         let signature = d.bytes()?.to_vec();
