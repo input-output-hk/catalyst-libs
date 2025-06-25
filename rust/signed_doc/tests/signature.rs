@@ -43,9 +43,13 @@ async fn single_signature_validation_test() {
     // case: has key
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid.clone(), pk);
-    assert!(validator::validate_signatures(&signed_doc, &provider)
-        .await
-        .unwrap());
+    assert!(
+        validator::validate_signatures(&signed_doc, &provider)
+            .await
+            .unwrap(),
+        "{:?}",
+        signed_doc.problem_report()
+    );
 
     // case: empty provider
     assert!(

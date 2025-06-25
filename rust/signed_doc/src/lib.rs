@@ -21,7 +21,6 @@ pub use catalyst_types::{
     uuid::{Uuid, UuidV4, UuidV7},
 };
 pub use content::Content;
-use coset::{CborSerializable, TaggedCborSerializable};
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
     ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, DocumentRefs, Metadata, Section,
@@ -31,8 +30,8 @@ pub use signature::{CatalystId, Signatures};
 
 use crate::builder::SignaturesBuilder;
 
-/// A problem report content string
-const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
+/// `COSE_Sign` object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
+const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Debug)]
@@ -212,34 +211,51 @@ impl CatalystSignedDocument {
 
 impl Decode<'_, ()> for CatalystSignedDocument {
     fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, decode::Error> {
+        let mut report = ProblemReport::new("Catalyst Signed Document Decoding");
+        let mut ctx = DecodeContext {
+            compatibility_policy: CompatibilityPolicy::Accept,
+            report: &mut report,
+        };
         let start = d.position();
-        d.skip()?;
+
+        if let Ok(tag) = d.tag() {
+            if tag != COSE_SIGN_CBOR_TAG {
+                return Err(minicbor::decode::Error::message(format!(
+                    "Must be equal to the COSE_Sign tag value: {COSE_SIGN_CBOR_TAG}"
+                )));
+            }
+        } else {
+            d.set_position(start);
+        }
+
+        if !matches!(d.array()?, Some(4)) {
+            return Err(minicbor::decode::Error::message(
+                "Must be a definite size array of 4 elements",
+            ));
+        }
+
+        let metadata_bytes = d.bytes()?;
+        let metadata = Metadata::decode(&mut minicbor::Decoder::new(metadata_bytes), &mut ctx)?;
+
+        // empty unprotected headers
+        let mut map =
+            cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
+        if map.next().is_some() {
+            ctx.report.unknown_field(
+                "unprotected headers",
+                "non empty unprotected headers",
+                "COSE unprotected headers must be empty",
+            );
+        }
+
+        let content = Content::decode(d, &mut ())?;
+        let signatures = Signatures::decode(d, &mut ctx)?;
+
         let end = d.position();
         let cose_bytes = d
             .input()
             .get(start..end)
             .ok_or(minicbor::decode::Error::end_of_input())?;
-
-        let cose_sign = coset::CoseSign::from_tagged_slice(cose_bytes)
-            .or_else(|_| coset::CoseSign::from_slice(cose_bytes))
-            .map_err(|e| {
-                minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
-            })?;
-
-        let mut report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        let mut ctx = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report,
-        };
-        let metadata = Metadata::from_protected_header(&cose_sign.protected, &mut ctx);
-        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
-
-        let content = if let Some(payload) = cose_sign.payload {
-            payload.into()
-        } else {
-            report.missing_field("COSE Sign Payload", "Missing document content (payload)");
-            Content::default()
-        };
 
         Ok(InnerCatalystSignedDocument {
             metadata,

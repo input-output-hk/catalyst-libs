@@ -9,7 +9,7 @@ use serde::Deserialize;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
 use crate::{
-    metadata::custom_transient_decode_error, ContentEncoding, ContentType, DocType, DocumentRefs,
+    metadata::collaborators::Collaborators, ContentEncoding, ContentType, DocType, DocumentRefs,
     Section,
 };
 
@@ -89,7 +89,7 @@ impl Display for Label<'_> {
 #[derive(Clone, Debug, PartialEq, EnumDiscriminants, EnumTryAs)]
 #[strum_discriminants(
     name(SupportedLabel),
-    derive(Ord, PartialOrd, serde::Deserialize),
+    derive(Ord, PartialOrd, serde::Deserialize, Hash),
     serde(rename_all = "kebab-case"),
     cfg_attr(test, derive(strum::VariantArray))
 )]
@@ -112,7 +112,7 @@ pub(crate) enum SupportedField {
     /// `reply` field.
     Reply(DocumentRefs) = 5,
     /// `collabs` field.
-    Collabs(Vec<String>) = 7,
+    Collabs(Collaborators) = 7,
     /// `section` field.
     Section(Section) = 8,
     /// `template` field.
@@ -197,14 +197,12 @@ impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
     }
 }
 
-impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for SupportedField {
-    #[allow(clippy::todo, reason = "Not migrated to `minicbor` yet.")]
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Option<SupportedField> {
     fn decode(
         d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
 
-        let label_pos = d.position();
         let label = Label::decode(d, &mut ())?;
         let Some(key) = SupportedLabel::from_cose(label) else {
             let value_start = d.position();
@@ -218,31 +216,40 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Supporte
             .to_string();
             ctx.report
                 .unknown_field(&label.to_string(), &value, REPORT_CONTEXT);
-            return Err(custom_transient_decode_error(
-                "Not a supported key",
-                Some(label_pos),
-            ));
+            return Ok(None);
         };
 
+        let cbor_bytes = cbork_utils::decode_helper::decode_any(d, REPORT_CONTEXT)?;
+        let mut d = minicbor::Decoder::new(cbor_bytes);
+
         let field = match key {
-            SupportedLabel::ContentType => todo!(),
+            SupportedLabel::ContentType => d.decode().map(SupportedField::ContentType),
             SupportedLabel::Id => {
                 d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                    .map(Self::Id)
+                    .map(SupportedField::Id)
             },
-            SupportedLabel::Ref => d.decode_with(ctx).map(Self::Ref),
+            SupportedLabel::Ref => d.decode_with(ctx).map(SupportedField::Ref),
             SupportedLabel::Ver => {
                 d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
-                    .map(Self::Ver)
+                    .map(SupportedField::Ver)
             },
-            SupportedLabel::Type => d.decode_with(ctx).map(Self::Type),
-            SupportedLabel::Reply => d.decode_with(ctx).map(Self::Reply),
-            SupportedLabel::Collabs => todo!(),
-            SupportedLabel::Section => todo!(),
-            SupportedLabel::Template => d.decode_with(ctx).map(Self::Template),
-            SupportedLabel::Parameters => d.decode_with(ctx).map(Self::Parameters),
-            SupportedLabel::ContentEncoding => todo!(),
-        }?;
+            SupportedLabel::Type => d.decode_with(ctx).map(SupportedField::Type),
+            SupportedLabel::Reply => d.decode_with(ctx).map(SupportedField::Reply),
+            SupportedLabel::Collabs => d.decode().map(SupportedField::Collabs),
+            SupportedLabel::Section => d.decode().map(SupportedField::Section),
+            SupportedLabel::Template => d.decode_with(ctx).map(SupportedField::Template),
+            SupportedLabel::Parameters => d.decode_with(ctx).map(SupportedField::Parameters),
+            SupportedLabel::ContentEncoding => d.decode().map(SupportedField::ContentEncoding),
+        }
+        .inspect_err(|e| {
+            ctx.report.invalid_value(
+                &format!("CBOR COSE protected header {key}"),
+                &hex::encode(cbor_bytes),
+                &format!("{e}"),
+                REPORT_CONTEXT,
+            );
+        })
+        .ok();
 
         Ok(field)
     }
@@ -265,20 +272,7 @@ impl minicbor::Encode<()> for SupportedField {
             | SupportedField::Template(document_ref)
             | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
             SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
-            SupportedField::Collabs(collabs) => {
-                if !collabs.is_empty() {
-                    e.array(
-                        collabs
-                            .len()
-                            .try_into()
-                            .map_err(minicbor::encode::Error::message)?,
-                    )?;
-                    for c in collabs {
-                        e.str(c)?;
-                    }
-                }
-                Ok(())
-            },
+            SupportedField::Collabs(collabs) => collabs.encode(e, ctx),
             SupportedField::Section(section) => section.encode(e, ctx),
             SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }

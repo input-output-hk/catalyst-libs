@@ -1,17 +1,16 @@
 //! Catalyst Signed Document Metadata.
 use std::{
-    collections::{btree_map, BTreeMap},
-    error::Error,
+    collections::BTreeMap,
     fmt::{Display, Formatter},
 };
 
+mod collaborators;
 mod content_encoding;
 mod content_type;
 pub(crate) mod doc_type;
 mod document_refs;
 mod section;
 mod supported_field;
-pub(crate) mod utils;
 
 use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
@@ -21,38 +20,8 @@ pub use document_refs::{DocLocator, DocumentRef, DocumentRefs};
 use minicbor::Decoder;
 pub use section::Section;
 use strum::IntoDiscriminant as _;
-use utils::{cose_protected_header_find, decode_document_field_from_protected_header, CborUuidV7};
 
 pub(crate) use crate::metadata::supported_field::{SupportedField, SupportedLabel};
-use crate::{decode_context::DecodeContext, metadata::utils::decode_cose_protected_header_value};
-
-/// `content_encoding` field COSE key value
-const CONTENT_ENCODING_KEY: &str = "Content-Encoding";
-/// `doc_type` field COSE key value
-const TYPE_KEY: &str = "type";
-/// `id` field COSE key value
-const ID_KEY: &str = "id";
-/// `ver` field COSE key value
-const VER_KEY: &str = "ver";
-
-/// `ref` field COSE key value
-const REF_KEY: &str = "ref";
-/// `template` field COSE key value
-const TEMPLATE_KEY: &str = "template";
-/// `reply` field COSE key value
-const REPLY_KEY: &str = "reply";
-/// `section` field COSE key value
-const SECTION_KEY: &str = "section";
-/// `collabs` field COSE key value
-const COLLABS_KEY: &str = "collabs";
-/// `parameters` field COSE key value
-const PARAMETERS_KEY: &str = "parameters";
-/// `brand_id` field COSE key value (alias of the `parameters` field)
-const BRAND_ID_KEY: &str = "brand_id";
-/// `campaign_id` field COSE key value (alias of the `parameters` field)
-const CAMPAIGN_ID_KEY: &str = "campaign_id";
-/// `category_id` field COSE key value (alias of the `parameters` field)
-const CATEGORY_ID_KEY: &str = "category_id";
 
 /// Document Metadata.
 ///
@@ -155,7 +124,7 @@ impl Metadata {
         self.0
             .get(&SupportedLabel::Collabs)
             .and_then(SupportedField::try_as_collabs_ref)
-            .map_or(&[], Vec::as_slice)
+            .map_or(&[], |v| &**v)
     }
 
     /// Return `parameters` field.
@@ -179,11 +148,14 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_fields(fields: Vec<SupportedField>, report: &ProblemReport) -> Self {
+    pub(crate) fn from_fields<E>(
+        fields: impl Iterator<Item = Result<SupportedField, E>>, report: &ProblemReport,
+    ) -> Result<Self, E> {
         const REPORT_CONTEXT: &str = "Metadata building";
 
         let mut metadata = Metadata(BTreeMap::new());
         for v in fields {
+            let v = v?;
             let k = v.discriminant();
             if metadata.0.insert(k, v).is_some() {
                 report.duplicate_field(
@@ -207,180 +179,16 @@ impl Metadata {
             report.missing_field("content-type", REPORT_CONTEXT);
         }
 
-        metadata
+        Ok(metadata)
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
-        let metadata = Self::from_fields(fields, &report);
+        let metadata = Self::from_fields(fields.into_iter().map(anyhow::Result::<_>::Ok), &report)?;
         anyhow::ensure!(!report.is_problematic(), "{:?}", report);
         Ok(metadata)
-    }
-}
-
-impl Metadata {
-    /// Converting COSE Protected Header to Metadata fields, collecting decoding report
-    /// issues.
-    #[allow(
-        clippy::too_many_lines,
-        reason = "This is a compilation of `coset` decoding and should be replaced once migrated to `minicbor`."
-    )]
-    pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, context: &mut DecodeContext,
-    ) -> Self {
-        /// Context for problem report messages during decoding from COSE protected
-        /// header.
-        const COSE_DECODING_CONTEXT: &str = "COSE Protected Header to Metadata";
-
-        let mut metadata_fields = vec![];
-
-        if let Some(value) = protected.header.content_type.as_ref() {
-            match ContentType::try_from(value) {
-                Ok(ct) => metadata_fields.push(SupportedField::ContentType(ct)),
-                Err(e) => {
-                    context.report.conversion_error(
-                        "COSE protected header content type",
-                        &format!("{value:?}"),
-                        &format!("Expected ContentType: {e}"),
-                        &format!("{COSE_DECODING_CONTEXT}, ContentType"),
-                    );
-                },
-            }
-        }
-
-        if let Some(value) = cose_protected_header_find(
-            protected,
-            |key| matches!(key, coset::Label::Text(label) if label.eq_ignore_ascii_case(CONTENT_ENCODING_KEY)),
-        ) {
-            match ContentEncoding::try_from(value) {
-                Ok(ce) => metadata_fields.push(SupportedField::ContentEncoding(ce)),
-                Err(e) => {
-                    context.report.conversion_error(
-                        "COSE protected header content encoding",
-                        &format!("{value:?}"),
-                        &format!("Expected ContentEncoding: {e}"),
-                        &format!("{COSE_DECODING_CONTEXT}, ContentEncoding"),
-                    );
-                },
-            }
-        }
-
-        if let Some(value) = decode_document_field_from_protected_header::<CborUuidV7>(
-            protected,
-            ID_KEY,
-            COSE_DECODING_CONTEXT,
-            context.report,
-        )
-        .map(|v| v.0)
-        {
-            metadata_fields.push(SupportedField::Id(value));
-        }
-
-        if let Some(value) = decode_document_field_from_protected_header::<CborUuidV7>(
-            protected,
-            VER_KEY,
-            COSE_DECODING_CONTEXT,
-            context.report,
-        )
-        .map(|v| v.0)
-        {
-            metadata_fields.push(SupportedField::Ver(value));
-        }
-
-        // DocType and DocRef now using minicbor decoding.
-        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocType>(
-            protected, context, TYPE_KEY,
-        ) {
-            metadata_fields.push(SupportedField::Type(value));
-        };
-        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocumentRefs>(
-            protected, context, REF_KEY,
-        ) {
-            metadata_fields.push(SupportedField::Ref(value));
-        };
-        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocumentRefs>(
-            protected,
-            context,
-            TEMPLATE_KEY,
-        ) {
-            metadata_fields.push(SupportedField::Template(value));
-        }
-        if let Some(value) = decode_cose_protected_header_value::<DecodeContext, DocumentRefs>(
-            protected, context, REPLY_KEY,
-        ) {
-            metadata_fields.push(SupportedField::Reply(value));
-        }
-
-        if let Some(value) = decode_document_field_from_protected_header(
-            protected,
-            SECTION_KEY,
-            COSE_DECODING_CONTEXT,
-            context.report,
-        ) {
-            metadata_fields.push(SupportedField::Section(value));
-        }
-
-        // process `parameters` field and all its aliases
-        let (parameters, has_multiple_fields) = [
-            PARAMETERS_KEY,
-            BRAND_ID_KEY,
-            CAMPAIGN_ID_KEY,
-            CATEGORY_ID_KEY,
-        ]
-        .iter()
-        .filter_map(|field_name| -> Option<DocumentRefs> {
-            decode_cose_protected_header_value(protected, context, field_name)
-        })
-        .fold((None, false), |(res, _), v| (Some(v), res.is_some()));
-        if has_multiple_fields {
-            context.report.duplicate_field(
-                    "Parameters field", 
-                    "Only one parameter can be used at a time: either brand_id, campaign_id, category_id", 
-                    COSE_DECODING_CONTEXT
-                );
-        }
-        if let Some(value) = parameters {
-            metadata_fields.push(SupportedField::Parameters(value));
-        }
-
-        if let Some(cbor_doc_collabs) = cose_protected_header_find(protected, |key| {
-            key == &coset::Label::Text(COLLABS_KEY.to_string())
-        }) {
-            if let Ok(collabs) = cbor_doc_collabs.clone().into_array() {
-                let mut c = Vec::new();
-                for (ids, collaborator) in collabs.iter().cloned().enumerate() {
-                    match collaborator.clone().into_text() {
-                        Ok(collaborator) => {
-                            c.push(collaborator);
-                        },
-                        Err(_) => {
-                            context.report.conversion_error(
-                                &format!("COSE protected header collaborator index {ids}"),
-                                &format!("{collaborator:?}"),
-                                "Expected a CBOR String",
-                                &format!(
-                                    "{COSE_DECODING_CONTEXT}, converting collaborator to String",
-                                ),
-                            );
-                        },
-                    }
-                }
-                if !c.is_empty() {
-                    metadata_fields.push(SupportedField::Collabs(c));
-                }
-            } else {
-                context.report.conversion_error(
-                    "CBOR COSE protected header collaborators",
-                    &format!("{cbor_doc_collabs:?}"),
-                    "Expected a CBOR Array",
-                    &format!("{COSE_DECODING_CONTEXT}, converting collaborators to Array",),
-                );
-            };
-        }
-
-        Self::from_fields(metadata_fields, context.report)
     }
 }
 
@@ -430,27 +238,6 @@ impl minicbor::Encode<()> for Metadata {
     }
 }
 
-/// An error that's been reported, but doesn't affect the further decoding.
-/// [`minicbor::Decoder`] should be assumed to be in a correct state and advanced towards
-/// the next item.
-///
-/// The wrapped error can be returned up the call stack.
-#[derive(Debug, thiserror::Error)]
-#[error(transparent)]
-pub struct TransientDecodeError(pub minicbor::decode::Error);
-
-/// Creates a [`TransientDecodeError`] and wraps it in a
-/// [`minicbor::decode::Error::custom`].
-fn custom_transient_decode_error(
-    message: &str, position: Option<usize>,
-) -> minicbor::decode::Error {
-    let mut inner = minicbor::decode::Error::message(message);
-    if let Some(pos) = position {
-        inner = inner.at(pos);
-    }
-    minicbor::decode::Error::custom(TransientDecodeError(inner))
-}
-
 impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata {
     /// Decode from a CBOR map.
     ///
@@ -464,53 +251,21 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
     fn decode(
         d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
-        const REPORT_CONTEXT: &str = "Metadata decoding";
+        // TODO: use helpers from `cbork-utils` crate to verify that's the map is
+        // deterministically CBOR encoded map.
 
-        let Some(len) = d.map()? else {
+        let Some(length) = d.map()? else {
             return Err(minicbor::decode::Error::message(
-                "Indefinite map is not supported",
+                "COSE protected headers object must be a definite size map ",
             ));
         };
 
-        // TODO: verify key order.
-        // TODO: use helpers from <https://github.com/input-output-hk/catalyst-libs/pull/360> once it's merged.
+        let report = ctx.report.clone();
+        let fields = (0..length)
+            .map(|_| Option::<SupportedField>::decode(d, ctx))
+            .filter_map(Result::transpose);
 
-        let mut metadata_map = BTreeMap::new();
-        let mut first_err = None;
-
-        // This will return an error on the end of input.
-        for _ in 0..len {
-            let entry_pos = d.position();
-            match d.decode_with::<_, SupportedField>(ctx) {
-                Ok(field) => {
-                    let label = field.discriminant();
-                    let entry = metadata_map.entry(label);
-                    if let btree_map::Entry::Vacant(entry) = entry {
-                        entry.insert(field);
-                    } else {
-                        ctx.report.duplicate_field(
-                            &label.to_string(),
-                            "Duplicate metadata fields are not allowed",
-                            REPORT_CONTEXT,
-                        );
-                        first_err.get_or_insert(custom_transient_decode_error(
-                            "Duplicate fields",
-                            Some(entry_pos),
-                        ));
-                    }
-                },
-                Err(err)
-                    if err
-                        .source()
-                        .is_some_and(<dyn std::error::Error>::is::<TransientDecodeError>) =>
-                {
-                    first_err.get_or_insert(err);
-                },
-                Err(err) => return Err(err),
-            }
-        }
-
-        first_err.map_or(Ok(Self(metadata_map)), Err)
+        Self::from_fields(fields, &report)
     }
 }
 

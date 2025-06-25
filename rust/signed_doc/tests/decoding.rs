@@ -175,7 +175,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
                 e.array(3)?;
                 // protected headers (kid field)
                 let mut p_headers = minicbor::Encoder::new(Vec::new());
-                p_headers.map(1)?.u8(4)?.encode(kid)?;
+                p_headers.map(1)?.u8(4)?.bytes(Vec::<u8>::from(&kid).as_slice())?;
                 e.bytes(p_headers.into_writer().as_slice())?;
                 e.map(0)?;
                 e.bytes(&[1,2,3])?;

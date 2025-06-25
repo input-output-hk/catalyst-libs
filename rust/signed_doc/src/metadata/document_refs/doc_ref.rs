@@ -3,11 +3,10 @@
 use std::fmt::Display;
 
 use catalyst_types::uuid::{CborContext, UuidV7};
-use coset::cbor::Value;
 use minicbor::{Decode, Decoder, Encode};
 
-use super::{doc_locator::DocLocator, DocRefError};
-use crate::{metadata::utils::CborUuidV7, DecodeContext};
+use super::doc_locator::DocLocator;
+use crate::DecodeContext;
 
 /// Number of item that should be in each document reference instance.
 const DOC_REF_ARR_ITEM: u64 = 3;
@@ -60,22 +59,6 @@ impl Display for DocumentRef {
             "id: {}, ver: {}, document_locator: {}",
             self.id, self.ver, self.doc_locator
         )
-    }
-}
-
-impl TryFrom<DocumentRef> for Value {
-    type Error = DocRefError;
-
-    fn try_from(value: DocumentRef) -> Result<Self, Self::Error> {
-        let id = Value::try_from(CborUuidV7(value.id))
-            .map_err(|_| DocRefError::InvalidUuidV7(value.id, "id".to_string()))?;
-
-        let ver = Value::try_from(CborUuidV7(value.ver))
-            .map_err(|_| DocRefError::InvalidUuidV7(value.ver, "ver".to_string()))?;
-
-        let locator = value.doc_locator.clone().into();
-
-        Ok(Value::Array(vec![id, ver, locator]))
     }
 }
 
@@ -141,31 +124,5 @@ impl Encode<()> for DocumentRef {
         self.ver.encode(e, &mut CborContext::Tagged)?;
         self.doc_locator.encode(e, ctx)?;
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod test {
-    use catalyst_types::uuid::{UuidV7, UUID_CBOR_TAG};
-    use coset::cbor::Value;
-
-    use crate::metadata::document_refs::{doc_ref::DOC_REF_ARR_ITEM, DocumentRef};
-
-    #[test]
-    #[allow(clippy::indexing_slicing)]
-    fn test_doc_refs_to_value() {
-        let uuidv7 = UuidV7::new();
-        let doc_ref = DocumentRef::new(uuidv7, uuidv7, vec![1, 2, 3].into());
-        let value: Value = doc_ref.try_into().unwrap();
-        let arr = value.into_array().unwrap();
-        assert_eq!(arr.len(), usize::try_from(DOC_REF_ARR_ITEM).unwrap());
-        let (id_tag, value) = arr[0].clone().into_tag().unwrap();
-        assert_eq!(id_tag, UUID_CBOR_TAG);
-        assert_eq!(value.as_bytes().unwrap().len(), 16);
-        let (ver_tag, value) = arr[1].clone().into_tag().unwrap();
-        assert_eq!(ver_tag, UUID_CBOR_TAG);
-        assert_eq!(value.as_bytes().unwrap().len(), 16);
-        let map = arr[2].clone().into_map().unwrap();
-        assert_eq!(map.len(), 1);
     }
 }

@@ -98,11 +98,10 @@ impl Ord for MapEntry {
 /// - Map keys are not properly sorted (`UnorderedMapKeys`)
 /// - Duplicate keys are found (`DuplicateMapKey`)
 /// - Map key or value decoding fails (`DecoderError`)
-pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor::decode::Error> {
+pub fn decode_map_deterministically(
+    d: &mut Decoder,
+) -> Result<Vec<MapEntry>, minicbor::decode::Error> {
     validate_input_not_empty(d)?;
-
-    // Store the starting position BEFORE consuming the map header
-    let map_start = d.position();
 
     // From RFC 8949 Section 4.2.2:
     // "Indefinite-length items must be made definite-length items."
@@ -115,7 +114,6 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor
     })?;
 
     let header_end_pos = d.position();
-
     check_map_minimal_length(d, header_end_pos, map_len)?;
 
     // Decode entries to validate them
@@ -123,10 +121,7 @@ pub fn decode_map_deterministically(d: &mut Decoder) -> Result<Vec<u8>, minicbor
 
     validate_map_ordering(&entries)?;
 
-    // Get the ending position after validation
-    let map_end = d.position();
-
-    get_bytes(d, map_start, map_end)
+    Ok(entries)
 }
 
 /// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
@@ -501,7 +496,21 @@ mod tests {
         let result = decode_map_deterministically(&mut decoder).unwrap();
 
         // Verify we got back exactly the same bytes
-        assert_eq!(result, valid_map);
+
+        assert_eq!(result, vec![
+            MapEntry {
+                // Key 1: 2-byte string
+                key_bytes: vec![0x42, 0x01, 0x02],
+                // Value 1: 1-byte string
+                value: vec![0x41, 0x01]
+            },
+            MapEntry {
+                // Key 2: 3-byte string
+                key_bytes: vec![0x43, 0x01, 0x02, 0x03,],
+                // Value 2: 1-byte string
+                value: vec![0x41, 0x02,]
+            }
+        ]);
     }
 
     /// Test cases for lexicographic ordering of map keys as specified in RFC 8949 Section

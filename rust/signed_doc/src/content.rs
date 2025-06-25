@@ -36,3 +36,18 @@ impl minicbor::Encode<()> for Content {
         Ok(())
     }
 }
+
+impl minicbor::Decode<'_, ()> for Content {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        let p = d.position();
+        d.null()
+            .map(|()| Self(Vec::new()))
+            // important to use `or_else` so it will lazy evaluated at the time when it is needed
+            .or_else(|_| {
+                d.set_position(p);
+                d.bytes().map(Vec::from).map(Self)
+            })
+    }
+}
