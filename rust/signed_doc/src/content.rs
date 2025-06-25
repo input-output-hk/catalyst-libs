@@ -47,10 +47,7 @@ impl minicbor::Decode<'_, ()> for Content {
             // important to use `or_else` so it will lazy evaluated at the time when it is needed
             .or_else(|_| {
                 d.set_position(p);
-                d.bytes()
-                    .map_err(|_| minicbor::decode::Error::message("fuck you"))
-                    .map(Vec::from)
-                    .map(Self)
+                d.bytes().map(Vec::from).map(Self)
             })
     }
 }
