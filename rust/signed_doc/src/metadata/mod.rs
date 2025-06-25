@@ -2,8 +2,10 @@
 use std::{
     collections::BTreeMap,
     fmt::{Display, Formatter},
+    ops::Deref,
 };
 
+mod collaborators;
 mod content_encoding;
 mod content_type;
 pub(crate) mod doc_type;
@@ -123,7 +125,7 @@ impl Metadata {
         self.0
             .get(&SupportedLabel::Collabs)
             .and_then(SupportedField::try_as_collabs_ref)
-            .map_or(&[], Vec::as_slice)
+            .map_or(&[], |v| v.deref())
     }
 
     /// Return `parameters` field.

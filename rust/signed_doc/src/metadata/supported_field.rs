@@ -8,7 +8,10 @@ use catalyst_types::uuid::UuidV7;
 use serde::Deserialize;
 use strum::{EnumDiscriminants, EnumTryAs, IntoDiscriminant as _};
 
-use crate::{ContentEncoding, ContentType, DocType, DocumentRefs, Section};
+use crate::{
+    metadata::collaborators::Collaborators, ContentEncoding, ContentType, DocType, DocumentRefs,
+    Section,
+};
 
 /// COSE label. May be either a signed integer or a string.
 #[derive(Copy, Clone, Eq, PartialEq)]
@@ -109,7 +112,7 @@ pub(crate) enum SupportedField {
     /// `reply` field.
     Reply(DocumentRefs) = 5,
     /// `collabs` field.
-    Collabs(Vec<String>) = 7,
+    Collabs(Collaborators) = 7,
     /// `section` field.
     Section(Section) = 8,
     /// `template` field.
@@ -232,11 +235,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Option<S
             },
             SupportedLabel::Type => d.decode_with(ctx).map(SupportedField::Type),
             SupportedLabel::Reply => d.decode_with(ctx).map(SupportedField::Reply),
-            SupportedLabel::Collabs => {
-                collabs_decode(&mut d)
-                    .map_err(minicbor::decode::Error::message)
-                    .map(SupportedField::Collabs)
-            },
+            SupportedLabel::Collabs => d.decode().map(SupportedField::Collabs),
             SupportedLabel::Section => d.decode().map(SupportedField::Section),
             SupportedLabel::Template => d.decode_with(ctx).map(SupportedField::Template),
             SupportedLabel::Parameters => d.decode_with(ctx).map(SupportedField::Parameters),
@@ -273,35 +272,11 @@ impl minicbor::Encode<()> for SupportedField {
             | SupportedField::Template(document_ref)
             | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
             SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
-            SupportedField::Collabs(collabs) => {
-                if !collabs.is_empty() {
-                    e.array(
-                        collabs
-                            .len()
-                            .try_into()
-                            .map_err(minicbor::encode::Error::message)?,
-                    )?;
-                    for c in collabs {
-                        e.str(c)?;
-                    }
-                }
-                Ok(())
-            },
+            SupportedField::Collabs(collabs) => collabs.encode(e, ctx),
             SupportedField::Section(section) => section.encode(e, ctx),
             SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }
     }
-}
-
-/// `collabs` CBOR decode.
-fn collabs_decode(d: &mut minicbor::Decoder<'_>) -> anyhow::Result<Vec<String>> {
-    let Some(items) = d.array()? else {
-        anyhow::bail!("Must a definite size array");
-    };
-    let collabs = (0..items)
-        .map(|_| Ok(d.str()?.to_string()))
-        .collect::<anyhow::Result<_>>()?;
-    Ok(collabs)
 }
 
 #[cfg(test)]
