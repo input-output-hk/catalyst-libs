@@ -194,7 +194,6 @@ hierarchy they are all valid.
 This document has no payload.
 It must be encoded as a [CBOR][RFC8949] `null (0xf6)`.
 
-
 ## Signers
 
 The following User roles may sign documents of this type:
