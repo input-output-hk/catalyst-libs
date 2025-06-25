@@ -30,7 +30,7 @@ pub use signature::{CatalystId, Signatures};
 
 use crate::builder::SignaturesBuilder;
 
-/// <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
+/// COSE_Sign object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
 const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
