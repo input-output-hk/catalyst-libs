@@ -103,7 +103,7 @@ class Payload(BaseModel):
 This document has no payload.
 It must be encoded as a CBOR `null (0xf6)`.
 """
-            return docs
+            return docs.strip()
 
         schema = self.doc_schema
         if schema is not None:
