@@ -15,8 +15,8 @@ docs: "Contest Delegation": {
 		Multiple Delegations must be published if there are multiple
 		Contests within a Brand/Campaign or Category.
 		
-		This is because different Contests may have different
-		rules.  And not all Representatives will choose to nominate
+		This is because different Contests may have different rules.  
+		And not all Representatives will choose to nominate
 		for every Contest.
 		"""
 	validation: """
