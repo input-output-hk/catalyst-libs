@@ -24,7 +24,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
-    let doc_ref_id = doc_ref.id().clone();
+    let doc_ref_cloned = doc_ref.clone();
 
     TestCase {
         name:
@@ -70,11 +70,8 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc
-                    .doc_meta()
-                    .parameters()
-                    .and_then(|v| v.doc_refs().first())
-                    .is_some_and(|v| v.id() == &doc_ref_id));
+                let cmp = DocumentRefs::from(vec![doc_ref_cloned.clone()]);
+                anyhow::ensure!(doc.doc_meta().parameters() == Some(&cmp));
                 Ok(())
             }
         })),
