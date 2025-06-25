@@ -250,6 +250,9 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
         const REPORT_CONTEXT: &str = "Metadata decoding";
         let mut metadata_map = BTreeMap::new();
 
+        // TODO: use helpers from `cbork-utils` crate to verify that's the map is
+        // deterministically CBOR encoded map.
+
         let Some(length) = d.map()? else {
             return Err(minicbor::decode::Error::message(
                 "COSE protected headers object must be a definite size map ",
