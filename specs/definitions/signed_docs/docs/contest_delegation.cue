@@ -17,7 +17,8 @@ docs: "Contest Delegation": {
 		Contests within a Brand/Campaign or Category.
 		
 		This is because different Contests may have different
-		rules.  And not all Representatives will choose to nominate
+		rules.
+        And not all Representatives will choose to nominate
 		for every Contest.
 		"""
 	validation: """
