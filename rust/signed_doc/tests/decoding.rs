@@ -191,6 +191,119 @@ fn signed_doc_with_all_fields_case() -> TestCase {
     }
 }
 
+#[allow(clippy::unwrap_used)]
+fn minimally_valid_tagged_signed_doc() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged.",
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_type().unwrap() == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_id().unwrap() == uuid_v7);
+                anyhow::ensure!(doc.doc_ver().unwrap() == uuid_v7);
+                anyhow::ensure!(doc.doc_content_type().unwrap() == ContentType::Json);
+                anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
+                anyhow::ensure!(doc.doc_meta().template().is_none());
+                anyhow::ensure!(doc.doc_meta().reply().is_none());
+                anyhow::ensure!(doc.doc_meta().parameters().is_none());
+                anyhow::ensure!(
+                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null).unwrap()
+                );
+                Ok(())
+            }
+        })),
+    }
+}
+
+#[allow(clippy::unwrap_used)]
+fn minimally_valid_untagged_signed_doc() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged.",
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_type().unwrap() == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_id().unwrap() == uuid_v7);
+                anyhow::ensure!(doc.doc_ver().unwrap() == uuid_v7);
+                anyhow::ensure!(doc.doc_content_type().unwrap() == ContentType::Json);
+                anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
+                anyhow::ensure!(doc.doc_meta().template().is_none());
+                anyhow::ensure!(doc.doc_meta().reply().is_none());
+                anyhow::ensure!(doc.doc_meta().parameters().is_none());
+                anyhow::ensure!(
+                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null).unwrap()
+                );
+                Ok(())
+            }
+        })),
+    }
+}
+
 #[test]
 fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
@@ -212,6 +325,8 @@ fn catalyst_signed_doc_decoding_test() {
             "brand_id",
             "campaign_id",
         ]),
+        minimally_valid_tagged_signed_doc(),
+        minimally_valid_untagged_signed_doc(),
     ];
 
     for case in test_cases {
