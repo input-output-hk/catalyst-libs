@@ -6,18 +6,18 @@ docs: "Contest Delegation": {
 	description: """
 		Delegation by a Registered User to a Representative for 
 		a contest.
-
+		
 		This delegation allows votes cast by the Representative
 		to use the voting power of the delegating User, in addition
-		to their own personal voting power and that of all other Users 
-		who delegate to the same Representative.
+		to their own personal voting power and that of all other Users who delegate to the same Representative.
 		
 		Delegation is for a specific Contest.
 		Multiple Delegations must be published if there are multiple
 		Contests within a Brand/Campaign or Category.
 		
-		This is because different Contests may have different rules.
-		And not all Representatives will choose to nominate for every Contest.
+		This is because different Contests may have different
+		rules.  And not all Representatives will choose to nominate
+		for every Contest.
 		"""
 	validation: """
 			* The `parameters` metadata *MUST* point to the same Contest as the 
