@@ -14,8 +14,6 @@ use std::cmp::Ordering;
 
 use minicbor::Decoder;
 
-use crate::decode_helper::{decode_map_entries, MapEntry};
-
 /// Major type indicator for CBOR maps (major type 5: 101 in top 3 bits)
 /// As per RFC 8949 Section 4.2.3, maps in deterministic encoding must:
 /// - Have keys sorted by length first, then byte wise lexicographically
@@ -38,7 +36,46 @@ const CBOR_MAX_TINY_VALUE: u64 = 23;
 /// Used when encoding CBOR maps with lengths between 24 and 255 elements.
 const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length encoding
 
-/// Decodes a CBOR map with deterministic encoding validation (RFC 8949 Section 4.2)
+/// Represents a CBOR map key-value pair where the key must be deterministically encoded
+/// according to RFC 8949 Section 4.2.3.
+///
+/// This type stores the raw bytes of both key and value to enable:
+/// 1. Length-first ordering of keys (shorter keys before longer ones)
+/// 2. Lexicographic comparison of equal-length keys
+/// 3. Preservation of the original encoded form
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct MapEntry {
+    /// Raw bytes of the encoded key, used for deterministic ordering
+    pub key_bytes: Vec<u8>,
+    /// Raw bytes of the encoded value
+    pub value: Vec<u8>,
+}
+
+impl PartialOrd for MapEntry {
+    /// Compare map entries according to RFC 8949 Section 4.2.3 rules:
+    /// 1. Compare by length of encoded key
+    /// 2. If lengths equal, compare byte wise lexicographically
+    ///
+    /// Returns Some(ordering) since comparison is always defined for these types
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for MapEntry {
+    /// Compare map entries according to RFC 8949 Section 4.2.3 rules:
+    /// 1. Compare by length of encoded key
+    /// 2. If lengths equal, compare byte wise lexicographically
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.key_bytes
+            .len()
+            .cmp(&other.key_bytes.len())
+            .then_with(|| self.key_bytes.cmp(&other.key_bytes))
+    }
+}
+
+/// Decodes a CBOR map with deterministic encoding validation (RFC 8949 Section 4.2.3)
+/// Returns the raw bytes of the map if it passes all deterministic validation rules.
 ///
 /// From RFC 8949 Section 4.2.3:
 /// "The keys in every map must be sorted in the following order:
@@ -80,9 +117,60 @@ pub fn decode_map_deterministically(
     check_map_minimal_length(d, header_end_pos, map_len)?;
 
     // Decode entries to validate them
-    let entries = decode_map_entries(d, map_len, map_keys_are_deterministic)?;
+    let entries = decode_map_entries(d, map_len)?;
 
     validate_map_ordering(&entries)?;
+
+    Ok(entries)
+}
+
+/// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
+/// This function retrieves the raw byte representation of a CBOR map between the given
+/// start and end positions from the decoder's underlying buffer.
+fn get_bytes(
+    d: &Decoder<'_>, map_start: usize, map_end: usize,
+) -> Result<Vec<u8>, minicbor::decode::Error> {
+    d.input()
+        .get(map_start..map_end)
+        .ok_or_else(|| {
+            minicbor::decode::Error::message("Invalid map byte range: indices out of bounds")
+        })
+        .map(<[u8]>::to_vec)
+}
+
+/// Decodes all key-value pairs in the map
+fn decode_map_entries(
+    d: &mut Decoder, length: u64,
+) -> Result<Vec<MapEntry>, minicbor::decode::Error> {
+    let capacity = usize::try_from(length).map_err(|_| {
+        minicbor::decode::Error::message("Map length too large for current platform")
+    })?;
+    let mut entries = Vec::with_capacity(capacity);
+
+    // Decode each key-value pair
+    for _ in 0..length {
+        // Record the starting position of the key
+        let key_start = d.position();
+
+        // Skip over the key to find its end position
+        d.skip()?;
+        let key_end = d.position();
+
+        // Record the starting position of the value
+        let value_start = d.position();
+
+        // Skip over the value to find its end position
+        d.skip()?;
+        let value_end = d.position();
+
+        // The keys themselves must be deterministically encoded (4.2.1)
+        let key_bytes = get_bytes(d, key_start, key_end)?;
+        map_keys_are_deterministic(&key_bytes)?;
+
+        let value = get_bytes(d, value_start, value_end)?;
+
+        entries.push(MapEntry { key_bytes, value });
+    }
 
     Ok(entries)
 }
