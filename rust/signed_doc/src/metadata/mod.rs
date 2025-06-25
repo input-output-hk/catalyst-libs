@@ -2,7 +2,6 @@
 use std::{
     collections::BTreeMap,
     fmt::{Display, Formatter},
-    ops::Deref,
 };
 
 mod collaborators;
@@ -125,7 +124,7 @@ impl Metadata {
         self.0
             .get(&SupportedLabel::Collabs)
             .and_then(SupportedField::try_as_collabs_ref)
-            .map_or(&[], |v| v.deref())
+            .map_or(&[], |v| &**v)
     }
 
     /// Return `parameters` field.
@@ -187,10 +186,7 @@ impl Metadata {
     pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
-        let metadata = Self::from_fields(
-            fields.into_iter().map(|v| anyhow::Result::<_>::Ok(v)),
-            &report,
-        )?;
+        let metadata = Self::from_fields(fields.into_iter().map(anyhow::Result::<_>::Ok), &report)?;
         anyhow::ensure!(!report.is_problematic(), "{:?}", report);
         Ok(metadata)
     }
@@ -267,7 +263,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
         let report = ctx.report.clone();
         let fields = (0..length)
             .map(|_| Option::<SupportedField>::decode(d, ctx))
-            .filter_map(|v| v.transpose());
+            .filter_map(Result::transpose);
 
         Self::from_fields(fields, &report)
     }
