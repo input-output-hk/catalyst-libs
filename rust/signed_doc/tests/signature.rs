@@ -143,102 +143,115 @@ async fn multiple_signatures_validation_test() {
     );
 }
 
+fn null_content(
+    sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
+    let mut e = minicbor::Encoder::new(Vec::new());
+    e.array(4)?;
+    // protected headers (empty metadata fields)
+    let mut m_p_headers = minicbor::Encoder::new(Vec::new());
+    m_p_headers.map(0)?;
+    let m_p_headers = m_p_headers.into_writer();
+    e.bytes(m_p_headers.as_slice())?;
+    // empty unprotected headers
+    e.map(0)?;
+    // content (null)
+    e.null()?;
+    // signatures
+    // one signature
+    e.array(1)?;
+    e.array(3)?;
+    // protected headers (kid field)
+    let mut s_p_headers = minicbor::Encoder::new(Vec::new());
+    s_p_headers
+        .map(1)?
+        .u8(4)?
+        .bytes(Vec::<u8>::from(kid).as_slice())?;
+    let s_p_headers = s_p_headers.into_writer();
+    let tbs = minicbor::to_vec((
+        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
+        "Signature",
+        <minicbor::bytes::ByteVec>::from(m_p_headers),
+        <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
+        minicbor::bytes::ByteArray::from([]),
+        minicbor::data::Token::Null, // null content
+    ))?;
+    e.bytes(s_p_headers.as_slice())?;
+    e.map(0)?;
+    e.bytes(&sk.sign(&tbs).to_bytes())?;
+    Ok(e)
+}
+
+fn zero_bytes_content(
+    sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
+    let mut e = minicbor::Encoder::new(Vec::new());
+    e.array(4)?;
+    // protected headers (empty metadata fields)
+    let mut m_p_headers = minicbor::Encoder::new(Vec::new());
+    m_p_headers.map(0)?;
+    let m_p_headers = m_p_headers.into_writer();
+    e.bytes(m_p_headers.as_slice())?;
+    // empty unprotected headers
+    e.map(0)?;
+    // content (zero bytes)
+    e.bytes(&[])?;
+    // signatures
+    // one signature
+    e.array(1)?;
+    e.array(3)?;
+    // protected headers (kid field)
+    let mut s_p_headers = minicbor::Encoder::new(Vec::new());
+    s_p_headers
+        .map(1)?
+        .u8(4)?
+        .bytes(Vec::<u8>::from(kid).as_slice())?;
+    let s_p_headers = s_p_headers.into_writer();
+    let tbs = minicbor::to_vec((
+        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
+        "Signature",
+        <minicbor::bytes::ByteVec>::from(m_p_headers),
+        <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
+        minicbor::bytes::ByteArray::from([]),
+        minicbor::bytes::ByteArray::from([]), // zero bytes content
+    ))?;
+    e.bytes(s_p_headers.as_slice())?;
+    e.map(0)?;
+    e.bytes(&sk.sign(&tbs).to_bytes())?;
+    Ok(e)
+}
+
 #[tokio::test]
 async fn special_cbor_cases() {
-    struct TestCase<'a> {
-        name: &'static str,
-        doc_bytes_fn: &'a dyn Fn() -> anyhow::Result<minicbor::Encoder<Vec<u8>>>,
-    }
-
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid.clone(), pk);
 
-    let null_content = TestCase {
-        name: "null_content",
-        doc_bytes_fn: &|| -> anyhow::Result<_> {
-            let mut e = minicbor::Encoder::new(Vec::new());
-            e.array(4)?;
-            // protected headers (empty metadata fields)
-            let mut m_p_headers = minicbor::Encoder::new(Vec::new());
-            m_p_headers.map(0)?;
-            let m_p_headers = m_p_headers.into_writer();
-            e.bytes(m_p_headers.as_slice())?;
-            // empty unprotected headers
-            e.map(0)?;
-            // content (null)
-            e.null()?;
-            // signatures
-            // one signature
-            e.array(1)?;
-            e.array(3)?;
-            // protected headers (kid field)
-            let mut s_p_headers = minicbor::Encoder::new(Vec::new());
-            s_p_headers
-                .map(1)?
-                .u8(4)?
-                .bytes(Vec::<u8>::from(&kid).as_slice())?;
-            let s_p_headers = s_p_headers.into_writer();
-            let tbs = minicbor::to_vec((
-                // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
-                "Signature",
-                <minicbor::bytes::ByteVec>::from(m_p_headers),
-                <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
-                minicbor::bytes::ByteArray::from([]),
-                minicbor::data::Token::Null, // null content
-            ))?;
-            e.bytes(s_p_headers.as_slice())?;
-            e.map(0)?;
-            e.bytes(&sk.sign(&tbs).to_bytes())?;
-            Ok(e)
-        },
-    };
+    struct SpecialCborTestCase<'a> {
+        name: &'static str,
+        doc_bytes_fn: &'a dyn Fn(
+            &ed25519_dalek::SigningKey,
+            &CatalystId,
+        ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>>,
+    }
 
-    let zero_bytes_content = TestCase {
-        name: "zero_bytes_content",
-        doc_bytes_fn: &|| -> anyhow::Result<_> {
-            let mut e = minicbor::Encoder::new(Vec::new());
-            e.array(4)?;
-            // protected headers (empty metadata fields)
-            let mut m_p_headers = minicbor::Encoder::new(Vec::new());
-            m_p_headers.map(0)?;
-            let m_p_headers = m_p_headers.into_writer();
-            e.bytes(m_p_headers.as_slice())?;
-            // empty unprotected headers
-            e.map(0)?;
-            // content (zero bytes)
-            e.bytes(&[])?;
-            // signatures
-            // one signature
-            e.array(1)?;
-            e.array(3)?;
-            // protected headers (kid field)
-            let mut s_p_headers = minicbor::Encoder::new(Vec::new());
-            s_p_headers
-                .map(1)?
-                .u8(4)?
-                .bytes(Vec::<u8>::from(&kid).as_slice())?;
-            let s_p_headers = s_p_headers.into_writer();
-            let tbs = minicbor::to_vec((
-                // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
-                "Signature",
-                <minicbor::bytes::ByteVec>::from(m_p_headers),
-                <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
-                minicbor::bytes::ByteArray::from([]),
-                minicbor::bytes::ByteArray::from([]), // zero bytes content
-            ))?;
-            e.bytes(s_p_headers.as_slice())?;
-            e.map(0)?;
-            e.bytes(&sk.sign(&tbs).to_bytes())?;
-            Ok(e)
+    let test_cases: &[SpecialCborTestCase] = &[
+        SpecialCborTestCase {
+            name: "null_content",
+            doc_bytes_fn: &null_content,
         },
-    };
-
-    let test_cases: &[TestCase] = &[null_content, zero_bytes_content];
+        SpecialCborTestCase {
+            name: "zero_bytes_content",
+            doc_bytes_fn: &zero_bytes_content,
+        },
+    ];
 
     for case in test_cases {
         let doc = CatalystSignedDocument::try_from(
-            (case.doc_bytes_fn)().unwrap().into_writer().as_slice(),
+            (case.doc_bytes_fn)(&sk, &kid)
+                .unwrap()
+                .into_writer()
+                .as_slice(),
         )
         .unwrap();
 
