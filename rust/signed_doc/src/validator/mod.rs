@@ -383,7 +383,6 @@ where Provider: VerifyingKeyProvider {
     let (metadata_bytes, content_bytes) = doc.metadata_and_content_bytes().context("Probably a bug, cannot retrieve a metadata cbor bytes and content cbor bytes from the structurally valid signed document.")?;
 
     let tbs_data = tbs_data(kid, metadata_bytes, content_bytes).context("Probably a bug, cannot build CBOR COSE bytes for signature verification from the structurally valid COSE object.")?;
-    println!("validation {}", hex::encode(&tbs_data));
 
     let Ok(signature_bytes) = sign.signature().try_into() else {
         report.invalid_value(

@@ -222,6 +222,50 @@ fn zero_bytes_content(
     Ok(e)
 }
 
+fn parameters_aliase_field(
+    aliase: &str, sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
+    let mut e = minicbor::Encoder::new(Vec::new());
+    e.array(4)?;
+    // protected headers (empty metadata fields)
+    let mut m_p_headers = minicbor::Encoder::new(Vec::new());
+    m_p_headers.map(0)?;
+    let m_p_headers = m_p_headers.into_writer();
+    e.bytes(m_p_headers.as_slice())?;
+    // empty unprotected headers
+    e.map(1)?;
+    e.str(aliase)?.encode_with(
+        DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default()),
+        &mut (),
+    )?;
+    // content (random bytes)
+    let content = [1, 2, 3];
+    e.bytes(&content)?;
+    // signatures
+    // one signature
+    e.array(1)?;
+    e.array(3)?;
+    // protected headers (kid field)
+    let mut s_p_headers = minicbor::Encoder::new(Vec::new());
+    s_p_headers
+        .map(1)?
+        .u8(4)?
+        .bytes(Vec::<u8>::from(kid).as_slice())?;
+    let s_p_headers = s_p_headers.into_writer();
+    let tbs = minicbor::to_vec((
+        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
+        "Signature",
+        <minicbor::bytes::ByteVec>::from(m_p_headers),
+        <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
+        minicbor::bytes::ByteArray::from([]),
+        minicbor::bytes::ByteArray::from(content),
+    ))?;
+    e.bytes(s_p_headers.as_slice())?;
+    e.map(0)?;
+    e.bytes(&sk.sign(&tbs).to_bytes())?;
+    Ok(e)
+}
+
 #[tokio::test]
 async fn special_cbor_cases() {
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
@@ -244,6 +288,18 @@ async fn special_cbor_cases() {
         SpecialCborTestCase {
             name: "zero_bytes_content",
             doc_bytes_fn: &zero_bytes_content,
+        },
+        SpecialCborTestCase {
+            name: "parameters_aliase_category_id_field",
+            doc_bytes_fn: &|sk, kid| parameters_aliase_field("category_id", sk, kid),
+        },
+        SpecialCborTestCase {
+            name: "parameters_aliase_brand_id_field",
+            doc_bytes_fn: &|sk, kid| parameters_aliase_field("brand_id", sk, kid),
+        },
+        SpecialCborTestCase {
+            name: "parameters_aliase_campaign_id_field",
+            doc_bytes_fn: &|sk, kid| parameters_aliase_field("campaign_id", sk, kid),
         },
     ];
 
