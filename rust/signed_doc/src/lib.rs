@@ -46,11 +46,6 @@ struct InnerCatalystSignedDocument {
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
-
-    /// raw CBOR bytes of the `CatalystSignedDocument` object.
-    /// It is important to keep them to have a consistency what comes from the decoding
-    /// process, so we would return the same data again
-    raw_bytes: Vec<u8>,
 }
 
 /// Keep all the contents private.
@@ -116,7 +111,7 @@ impl CatalystSignedDocument {
 
     /// Return document content object.
     #[must_use]
-    pub(crate) fn content(&self) -> &Content {
+    pub(crate) fn content(&self) -> &WithCborBytes<Content> {
         &self.inner.content
     }
 
@@ -155,7 +150,7 @@ impl CatalystSignedDocument {
     /// Return document metadata content.
     // TODO: remove this and provide getters from metadata like the rest of its fields have.
     #[must_use]
-    pub fn doc_meta(&self) -> &Metadata {
+    pub fn doc_meta(&self) -> &WithCborBytes<Metadata> {
         &self.inner.metadata
     }
 
@@ -211,33 +206,6 @@ impl CatalystSignedDocument {
     pub fn into_builder(&self) -> anyhow::Result<SignaturesBuilder> {
         self.try_into()
     }
-
-    /// Returns data which is used in signing: COSE protected header bytes, COSE payload
-    /// bytes.
-    pub(crate) fn metadata_and_content_bytes(&self) -> anyhow::Result<(&[u8], &[u8])> {
-        let mut d = minicbor::Decoder::new(self.inner.raw_bytes.as_slice());
-
-        let p = d.position();
-        drop(d.tag().inspect_err(|_| d.set_position(p)));
-        d.array()?;
-
-        // metadata bytes
-        let metadata_bytes = d.bytes()?;
-
-        // unprotected header
-        d.skip()?;
-
-        // content bytes
-        let content_start_p = d.position();
-        d.skip()?;
-        let content_end_p = d.position();
-        let content_bytes = d
-            .input()
-            .get(content_start_p..content_end_p)
-            .ok_or(anyhow::anyhow!("Cannot read content bytes"))?;
-
-        Ok((metadata_bytes, content_bytes))
-    }
 }
 
 impl Decode<'_, ()> for CatalystSignedDocument {
@@ -247,8 +215,8 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             compatibility_policy: CompatibilityPolicy::Accept,
             report: &mut report,
         };
-        let start = d.position();
 
+        let p = d.position();
         if let Ok(tag) = d.tag() {
             if tag != COSE_SIGN_CBOR_TAG {
                 return Err(minicbor::decode::Error::message(format!(
@@ -256,7 +224,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 )));
             }
         } else {
-            d.set_position(start);
+            d.set_position(p);
         }
 
         if !matches!(d.array()?, Some(4)) {
@@ -285,18 +253,11 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         let content = WithCborBytes::<Content>::decode(d, &mut ())?;
         let signatures = Signatures::decode(d, &mut ctx)?;
 
-        let end = d.position();
-        let cose_bytes = d
-            .input()
-            .get(start..end)
-            .ok_or(minicbor::decode::Error::end_of_input())?;
-
         Ok(InnerCatalystSignedDocument {
             metadata,
             content,
             signatures,
             report,
-            raw_bytes: cose_bytes.to_vec(),
         }
         .into())
     }
