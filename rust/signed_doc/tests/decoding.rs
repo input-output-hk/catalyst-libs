@@ -11,7 +11,7 @@ mod common;
 type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
 
 struct TestCase {
-    name: &'static str,
+    name: String,
     bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
     // If the provided bytes can be even decoded without error (valid COSE or not).
     // If set to `false` all further checks will not even happen.
@@ -28,8 +28,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let doc_ref_cloned = doc_ref.clone();
 
     TestCase {
-        name:
-            "Provided category_id, brand_id, campaign_id field should be processed as parameters.",
+        name: format!("Provided '{alias}' field should be processed as parameters."),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -85,7 +84,7 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
-        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once.",
+        name: format!("Catalyst Signed Doc with missing '{field}' header."),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -134,7 +133,24 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
         }),
         can_decode: true,
         valid_doc: false,
-        post_checks: None,
+        post_checks: Some(Box::new({
+            move |doc| {
+                if field == "content-type" {
+                    anyhow::ensure!(doc.doc_meta().content_type().is_err());
+                }
+                if field == "type" {
+                    anyhow::ensure!(doc.doc_meta().doc_type().is_err());
+                }
+                if field == "id" {
+                    anyhow::ensure!(doc.doc_meta().doc_id().is_err());
+                }
+                if field == "ver" {
+                    anyhow::ensure!(doc.doc_meta().doc_ver().is_err());
+                }
+
+                Ok(())
+            }
+        })),
     }
 }
 
@@ -144,7 +160,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
-        name: "Header field with random bytes.",
+        name: format!("Catalyst Signed Doc with random bytes in '{field}' header field."),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -256,7 +272,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
-        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once.",
+        name: format!("Multiple definitions of '{}' at once.", aliases.join(", ")),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -305,7 +321,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
 
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
-        name: "Decoding empty bytes",
+        name: format!("Decoding empty bytes"),
         bytes_gen: Box::new(|| Ok(Encoder::new(Vec::new()))),
         can_decode: false,
         valid_doc: false,
@@ -318,7 +334,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v4 = UuidV4::new();
 
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
+        name: format!("Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged."),
         bytes_gen: Box::new({
             move || {
                 let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
@@ -374,7 +390,9 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged.",
+        name: format!(
+            "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged."
+        ),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -431,7 +449,9 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged.",
+        name: format!(
+            "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged."
+        ),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
