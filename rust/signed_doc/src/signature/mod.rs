@@ -70,7 +70,7 @@ pub(crate) fn tbs_data(
 
     e.array(5)?;
     e.str("Signature")?;
-    e.writer_mut().write_all(metadata_bytes)?;
+    e.bytes(metadata_bytes)?;
     e.bytes(protected_header_encode(kid)?.as_slice())?;
     e.bytes(&[])?;
     e.writer_mut().write_all(content_bytes)?;

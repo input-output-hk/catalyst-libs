@@ -173,7 +173,7 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
     type Error = anyhow::Error;
 
     fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
-        let (metadata_bytes, content_bytes) = value.tbs_data().context("Probably a bug, cannot retrieve a metadata cbor bytes and content cbor bytes from the structurally valid signed document.")?;
+        let (metadata_bytes, content_bytes) = value.metadata_and_content_bytes().context("Probably a bug, cannot retrieve a metadata cbor bytes and content cbor bytes from the structurally valid signed document.")?;
         Ok(Self {
             metadata_bytes: metadata_bytes.to_vec(),
             content_bytes: content_bytes.to_vec(),

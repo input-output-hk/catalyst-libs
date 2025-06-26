@@ -210,7 +210,7 @@ impl CatalystSignedDocument {
 
     /// Returns data which is used in signing: COSE protected header bytes, COSE payload
     /// bytes.
-    pub(crate) fn tbs_data(&self) -> anyhow::Result<(&[u8], &[u8])> {
+    pub(crate) fn metadata_and_content_bytes(&self) -> anyhow::Result<(&[u8], &[u8])> {
         let mut d = minicbor::Decoder::new(self.inner.raw_bytes.as_slice());
 
         let p = d.position();
@@ -218,13 +218,7 @@ impl CatalystSignedDocument {
         d.array()?;
 
         // metadata bytes
-        let metadata_start_p = d.position();
-        d.skip()?;
-        let metadata_end_p = d.position();
-        let metadata_bytes = d
-            .input()
-            .get(metadata_start_p..metadata_end_p)
-            .ok_or(anyhow::anyhow!("Cannot read metadata bytes"))?;
+        let metadata_bytes = d.bytes()?;
 
         // unprotected header
         d.skip()?;
