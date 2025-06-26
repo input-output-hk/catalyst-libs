@@ -203,7 +203,10 @@ impl CatalystSignedDocument {
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
-    #[must_use]
+    ///
+    /// # Errors
+    ///  - If error returned its probably a bug. `CatalystSignedDocument` must be a valid
+    ///    COSE structure.
     pub fn into_builder(&self) -> anyhow::Result<SignaturesBuilder> {
         self.try_into()
     }

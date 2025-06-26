@@ -45,7 +45,7 @@ impl MetadataBuilder {
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
         Self {
-            metadata: Default::default(),
+            metadata: Metadata::default(),
         }
     }
 
@@ -58,7 +58,7 @@ impl MetadataBuilder {
         self.metadata = Metadata::from_json(json)?;
         Ok(ContentBuilder {
             metadata: self.metadata,
-            content: Default::default(),
+            content: Content::default(),
         })
     }
 }
@@ -69,7 +69,7 @@ impl ContentBuilder {
         Ok(SignaturesBuilder {
             metadata_bytes: minicbor::to_vec(self.metadata)?,
             content_bytes: minicbor::to_vec(self.content)?,
-            signatures: Default::default(),
+            signatures: Signatures::default(),
         })
     }
 
@@ -160,6 +160,8 @@ fn build_document(
     CatalystSignedDocument::try_from(e.into_writer().as_slice())
 }
 
+/// Builds a `Signature` object by signing provided `metadata_bytes`, `content_bytes` and
+/// `kid` params.
 fn build_signature(
     sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId, metadata_bytes: &[u8],
     content_bytes: &[u8],

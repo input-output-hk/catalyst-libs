@@ -159,7 +159,7 @@ fn content(
     // empty unprotected headers
     e.map(0)?;
     // content
-    e.writer_mut().write(content_bytes)?;
+    let _ = e.writer_mut().write(content_bytes)?;
     // signatures
     // one signature
     e.array(1)?;
@@ -233,19 +233,19 @@ fn parameters_aliase_field(
     Ok(e)
 }
 
+type DocBytesGenerator =
+    dyn Fn(&ed25519_dalek::SigningKey, &CatalystId) -> anyhow::Result<minicbor::Encoder<Vec<u8>>>;
+
+struct SpecialCborTestCase<'a> {
+    name: &'static str,
+    doc_bytes_fn: &'a DocBytesGenerator,
+}
+
 #[tokio::test]
 async fn special_cbor_cases() {
     let (sk, pk, kid) = create_dummy_key_pair(RoleId::Role0).unwrap();
     let mut provider = TestVerifyingKeyProvider::default();
     provider.add_pk(kid.clone(), pk);
-
-    struct SpecialCborTestCase<'a> {
-        name: &'static str,
-        doc_bytes_fn: &'a dyn Fn(
-            &ed25519_dalek::SigningKey,
-            &CatalystId,
-        ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>>,
-    }
 
     let test_cases: &[SpecialCborTestCase] = &[
         SpecialCborTestCase {
