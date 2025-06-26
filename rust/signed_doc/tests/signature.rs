@@ -1,5 +1,7 @@
 //! Integration test for signature validation part.
 
+use std::io::Write;
+
 use catalyst_signed_doc::{providers::tests::TestVerifyingKeyProvider, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use ed25519_dalek::ed25519::signature::Signer;
@@ -144,8 +146,8 @@ async fn multiple_signatures_validation_test() {
     );
 }
 
-fn null_content(
-    sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+fn content(
+    content_bytes: &[u8], sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
 ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
     let mut e = minicbor::Encoder::new(Vec::new());
     e.array(4)?;
@@ -156,8 +158,8 @@ fn null_content(
     e.bytes(m_p_headers.as_slice())?;
     // empty unprotected headers
     e.map(0)?;
-    // content (null)
-    e.null()?;
+    // content
+    e.writer_mut().write(content_bytes)?;
     // signatures
     // one signature
     e.array(1)?;
@@ -169,56 +171,19 @@ fn null_content(
         .u8(4)?
         .bytes(Vec::<u8>::from(kid).as_slice())?;
     let s_p_headers = s_p_headers.into_writer();
-    // [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4)
-    let tbs = minicbor::to_vec((
-        "Signature",
-        <minicbor::bytes::ByteVec>::from(m_p_headers),
-        <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
-        minicbor::bytes::ByteArray::from([]),
-        minicbor::data::Token::Null, // null content
-    ))?;
-    e.bytes(s_p_headers.as_slice())?;
-    e.map(0)?;
-    e.bytes(&sk.sign(&tbs).to_bytes())?;
-    Ok(e)
-}
 
-fn zero_bytes_content(
-    sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
-) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
-    let mut e = minicbor::Encoder::new(Vec::new());
-    e.array(4)?;
-    // protected headers (empty metadata fields)
-    let mut m_p_headers = minicbor::Encoder::new(Vec::new());
-    m_p_headers.map(0)?;
-    let m_p_headers = m_p_headers.into_writer();
-    e.bytes(m_p_headers.as_slice())?;
-    // empty unprotected headers
-    e.map(0)?;
-    // content (zero bytes)
-    e.bytes(&[])?;
-    // signatures
-    // one signature
-    e.array(1)?;
-    e.array(3)?;
-    // protected headers (kid field)
-    let mut s_p_headers = minicbor::Encoder::new(Vec::new());
-    s_p_headers
-        .map(1)?
-        .u8(4)?
-        .bytes(Vec::<u8>::from(kid).as_slice())?;
-    let s_p_headers = s_p_headers.into_writer();
     // [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4)
-    let tbs = minicbor::to_vec((
-        "Signature",
-        <minicbor::bytes::ByteVec>::from(m_p_headers),
-        <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
-        minicbor::bytes::ByteArray::from([]),
-        minicbor::bytes::ByteArray::from([]), // zero bytes content
-    ))?;
+    let mut tbs: minicbor::Encoder<Vec<u8>> = minicbor::Encoder::new(Vec::new());
+    tbs.array(5)?;
+    tbs.str("Signature")?;
+    tbs.bytes(&m_p_headers)?; // `body_protected`
+    tbs.bytes(&s_p_headers)?; // `sign_protected`
+    tbs.bytes(&[])?; // empty `external_aad`
+    tbs.writer_mut().write_all(content_bytes)?; // `payload`
+
     e.bytes(s_p_headers.as_slice())?;
     e.map(0)?;
-    e.bytes(&sk.sign(&tbs).to_bytes())?;
+    e.bytes(&sk.sign(tbs.writer()).to_bytes())?;
     Ok(e)
 }
 
@@ -252,17 +217,19 @@ fn parameters_aliase_field(
         .u8(4)?
         .bytes(Vec::<u8>::from(kid).as_slice())?;
     let s_p_headers = s_p_headers.into_writer();
+
     // [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4)
-    let tbs = minicbor::to_vec((
-        "Signature",
-        <minicbor::bytes::ByteVec>::from(m_p_headers),
-        <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
-        minicbor::bytes::ByteArray::from([]),
-        minicbor::bytes::ByteArray::from(content),
-    ))?;
+    let mut tbs: minicbor::Encoder<Vec<u8>> = minicbor::Encoder::new(Vec::new());
+    tbs.array(5)?;
+    tbs.str("Signature")?;
+    tbs.bytes(&m_p_headers)?; // `body_protected`
+    tbs.bytes(&s_p_headers)?; // `sign_protected`
+    tbs.bytes(&[])?; // empty `external_aad`
+    tbs.bytes(&content)?; // `payload`
+
     e.bytes(s_p_headers.as_slice())?;
     e.map(0)?;
-    e.bytes(&sk.sign(&tbs).to_bytes())?;
+    e.bytes(&sk.sign(tbs.writer()).to_bytes())?;
     Ok(e)
 }
 
@@ -282,23 +249,29 @@ async fn special_cbor_cases() {
 
     let test_cases: &[SpecialCborTestCase] = &[
         SpecialCborTestCase {
-            name: "null_content",
-            doc_bytes_fn: &null_content,
+            name: "content encoded as cbor null",
+            doc_bytes_fn: &|sk, kid| {
+                let mut e = minicbor::Encoder::new(Vec::new());
+                content(e.null()?.writer().as_slice(), sk, kid)
+            },
         },
         SpecialCborTestCase {
-            name: "zero_bytes_content",
-            doc_bytes_fn: &zero_bytes_content,
+            name: "content encoded empty bstr e.g. &[]",
+            doc_bytes_fn: &|sk, kid| {
+                let mut e = minicbor::Encoder::new(Vec::new());
+                content(e.bytes(&[])?.writer().as_slice(), sk, kid)
+            },
         },
         SpecialCborTestCase {
-            name: "parameters_aliase_category_id_field",
+            name: "parameters aliase `category_id` field",
             doc_bytes_fn: &|sk, kid| parameters_aliase_field("category_id", sk, kid),
         },
         SpecialCborTestCase {
-            name: "parameters_aliase_brand_id_field",
+            name: "parameters aliase `brand_id` field",
             doc_bytes_fn: &|sk, kid| parameters_aliase_field("brand_id", sk, kid),
         },
         SpecialCborTestCase {
-            name: "parameters_aliase_campaign_id_field",
+            name: "`parameters` aliase `campaign_id` field",
             doc_bytes_fn: &|sk, kid| parameters_aliase_field("campaign_id", sk, kid),
         },
     ];
