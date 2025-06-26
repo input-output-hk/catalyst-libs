@@ -23,6 +23,9 @@ impl<T> Deref for WithCborBytes<T> {
 impl<T> WithCborBytes<T> {
     /// Creates a new instance of the `WithCborBytes` from the provided `obj` by encoding
     /// it and storing resulted `cbor_bytes`.
+    ///
+    /// # Errors
+    ///  - Infallible
     pub fn new<C>(obj: T, ctx: &mut C) -> Result<Self, minicbor::encode::Error<Infallible>>
     where T: minicbor::Encode<C> {
         let cbor_bytes = minicbor::to_vec_with(&obj, ctx)?;
