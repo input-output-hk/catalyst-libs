@@ -203,9 +203,39 @@ impl CatalystSignedDocument {
 
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
-    #[must_use]
-    pub fn into_builder(&self) -> SignaturesBuilder {
-        self.into()
+    ///
+    /// # Errors
+    ///  - If error returned its probably a bug. `CatalystSignedDocument` must be a valid
+    ///    COSE structure.
+    pub fn into_builder(&self) -> anyhow::Result<SignaturesBuilder> {
+        self.try_into()
+    }
+
+    /// Returns data which is used in signing: COSE protected header bytes, COSE payload
+    /// bytes.
+    pub(crate) fn metadata_and_content_bytes(&self) -> anyhow::Result<(&[u8], &[u8])> {
+        let mut d = minicbor::Decoder::new(self.inner.raw_bytes.as_slice());
+
+        let p = d.position();
+        drop(d.tag().inspect_err(|_| d.set_position(p)));
+        d.array()?;
+
+        // metadata bytes
+        let metadata_bytes = d.bytes()?;
+
+        // unprotected header
+        d.skip()?;
+
+        // content bytes
+        let content_start_p = d.position();
+        d.skip()?;
+        let content_end_p = d.position();
+        let content_bytes = d
+            .input()
+            .get(content_start_p..content_end_p)
+            .ok_or(anyhow::anyhow!("Cannot read content bytes"))?;
+
+        Ok((metadata_bytes, content_bytes))
     }
 }
 

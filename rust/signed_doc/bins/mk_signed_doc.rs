@@ -80,7 +80,7 @@ impl Cli {
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
 
                 let new_signed_doc = signed_doc
-                    .into_builder()
+                    .into_builder()?
                     .add_signature(
                         |message| sk.sign::<()>(&message).to_bytes().to_vec(),
                         kid.clone(),
