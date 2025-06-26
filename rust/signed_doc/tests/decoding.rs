@@ -4,6 +4,7 @@ use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use minicbor::{data::Tag, Encoder};
+use rand::Rng;
 
 mod common;
 
@@ -72,6 +73,149 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
             move |doc| {
                 let cmp = DocumentRefs::from(vec![doc_ref_cloned.clone()]);
                 anyhow::ensure!(doc.doc_meta().parameters() == Some(&cmp));
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_with_random_content_header_field_case(field: &'static str) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+
+    TestCase {
+        name: "Header field with random bytes.",
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut rng = rand::thread_rng();
+                    let mut rand_buf = [0u8; 128];
+                    rng.try_fill(&mut rand_buf)?;
+
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(if field == "parameters" { 5 } else { 6 })?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("parameters")?
+                        .encode_with(doc_ref.clone(), &mut ())?;
+
+                    p_headers.str(field)?.encode_with(rand_buf, &mut ())?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_meta().content_encoding().is_none());
+                anyhow::ensure!(matches!(
+                    doc.doc_meta().content_type(),
+                    Ok(ContentType::Json)
+                ));
+
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+
+    TestCase {
+        name: "Header field with random bytes.",
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut rng = rand::thread_rng();
+                    let mut rand_buf = [0u8; 128];
+                    rng.try_fill(&mut rand_buf)?;
+
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(if field == "parameters" { 5 } else { 6 })?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+
+                    if field == "parameters" {
+                        p_headers
+                            .str("parameters")?
+                            .encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("parameters")?
+                            .encode_with(doc_ref.clone(), &mut ())?;
+
+                        p_headers.str(field)?.encode_with(rand_buf, &mut ())?;
+                    }
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: false,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
+                anyhow::ensure!(doc.doc_meta().template().is_none());
+                anyhow::ensure!(doc.doc_meta().reply().is_none());
+                anyhow::ensure!(doc.doc_meta().section().is_none());
+                anyhow::ensure!(doc.doc_meta().collabs().is_empty());
+
+                if field == "parameters" {
+                    anyhow::ensure!(doc.doc_meta().parameters().is_none());
+                }
+
                 Ok(())
             }
         })),
@@ -319,6 +463,14 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_valid_alias_case("category_id"),
         signed_doc_with_valid_alias_case("brand_id"),
         signed_doc_with_valid_alias_case("campaign_id"),
+        signed_doc_with_random_content_header_field_case("content_type"),
+        signed_doc_with_random_content_header_field_case("content_encoding"),
+        signed_doc_with_random_header_field_case("ref"),
+        signed_doc_with_random_header_field_case("template"),
+        signed_doc_with_random_header_field_case("reply"),
+        signed_doc_with_random_header_field_case("section"),
+        signed_doc_with_random_header_field_case("collabs"),
+        signed_doc_with_random_header_field_case("parameters"),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "category_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "brand_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "campaign_id"]),
