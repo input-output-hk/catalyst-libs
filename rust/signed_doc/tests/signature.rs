@@ -169,8 +169,8 @@ fn null_content(
         .u8(4)?
         .bytes(Vec::<u8>::from(kid).as_slice())?;
     let s_p_headers = s_p_headers.into_writer();
+    // [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4)
     let tbs = minicbor::to_vec((
-        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
         "Signature",
         <minicbor::bytes::ByteVec>::from(m_p_headers),
         <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
@@ -208,8 +208,8 @@ fn zero_bytes_content(
         .u8(4)?
         .bytes(Vec::<u8>::from(kid).as_slice())?;
     let s_p_headers = s_p_headers.into_writer();
+    // [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4)
     let tbs = minicbor::to_vec((
-        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
         "Signature",
         <minicbor::bytes::ByteVec>::from(m_p_headers),
         <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
@@ -252,8 +252,8 @@ fn parameters_aliase_field(
         .u8(4)?
         .bytes(Vec::<u8>::from(kid).as_slice())?;
     let s_p_headers = s_p_headers.into_writer();
+    // [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4)
     let tbs = minicbor::to_vec((
-        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
         "Signature",
         <minicbor::bytes::ByteVec>::from(m_p_headers),
         <&minicbor::bytes::ByteSlice>::from(s_p_headers.as_slice()),
