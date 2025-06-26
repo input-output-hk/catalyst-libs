@@ -98,23 +98,38 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                     let mut rand_buf = [0u8; 128];
                     rng.try_fill(&mut rand_buf)?;
 
+                    let is_required_header = ["type", "id", "ver", "parameters"]
+                        .iter()
+                        .any(|v| v == &field);
+
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(if field == "parameters" { 5 } else { 6 })?;
+                    p_headers.map(if is_required_header { 5 } else { 6 })?;
                     if field == "content-type" {
                         p_headers.u8(3)?.encode_with(rand_buf, &mut ())?;
                     } else {
                         p_headers.u8(3)?.encode(ContentType::Json)?;
                     }
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers
-                        .str("id")?
-                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers
-                        .str("ver")?
-                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-
+                    if field == "type" {
+                        p_headers.str("type")?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("type")?
+                            .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field == "id" {
+                        p_headers.str("id")?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("id")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field == "ver" {
+                        p_headers.str("ver")?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("ver")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
                     if field == "parameters" {
                         p_headers
                             .str("parameters")?
@@ -123,7 +138,9 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                         p_headers
                             .str("parameters")?
                             .encode_with(doc_ref.clone(), &mut ())?;
+                    }
 
+                    if !is_required_header {
                         p_headers.str(field)?.encode_with(rand_buf, &mut ())?;
                     }
 
@@ -151,11 +168,20 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 anyhow::ensure!(doc.doc_meta().section().is_none());
                 anyhow::ensure!(doc.doc_meta().collabs().is_empty());
 
-                if field == "parameters" {
-                    anyhow::ensure!(doc.doc_meta().parameters().is_none());
-                }
                 if field == "content-type" {
                     anyhow::ensure!(doc.doc_meta().content_type().is_err());
+                }
+                if field == "type" {
+                    anyhow::ensure!(doc.doc_meta().doc_type().is_err());
+                }
+                if field == "id" {
+                    anyhow::ensure!(doc.doc_meta().doc_id().is_err());
+                }
+                if field == "ver" {
+                    anyhow::ensure!(doc.doc_meta().doc_ver().is_err());
+                }
+                if field == "parameters" {
+                    anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 }
 
                 Ok(())
@@ -405,6 +431,10 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_valid_alias_case("category_id"),
         signed_doc_with_valid_alias_case("brand_id"),
         signed_doc_with_valid_alias_case("campaign_id"),
+        signed_doc_with_random_header_field_case("content-type"),
+        signed_doc_with_random_header_field_case("type"),
+        signed_doc_with_random_header_field_case("id"),
+        signed_doc_with_random_header_field_case("ver"),
         signed_doc_with_random_header_field_case("ref"),
         signed_doc_with_random_header_field_case("template"),
         signed_doc_with_random_header_field_case("reply"),
@@ -412,7 +442,6 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_random_header_field_case("collabs"),
         signed_doc_with_random_header_field_case("parameters"),
         signed_doc_with_random_header_field_case("content-encoding"),
-        signed_doc_with_random_header_field_case("content-type"),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "category_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "brand_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "campaign_id"]),
