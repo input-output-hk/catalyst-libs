@@ -20,6 +20,7 @@ pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
+use cbork_utils::with_cbor_bytes::WithCborBytes;
 pub use content::Content;
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
@@ -37,9 +38,9 @@ const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
 #[derive(Debug)]
 struct InnerCatalystSignedDocument {
     /// Document Metadata
-    metadata: Metadata,
+    metadata: WithCborBytes<Metadata>,
     /// Document Content
-    content: Content,
+    content: WithCborBytes<Content>,
     /// Signatures
     signatures: Signatures,
     /// A comprehensive problem report, which could include a decoding errors along with
@@ -64,7 +65,7 @@ pub struct CatalystSignedDocument {
 
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        writeln!(f, "{}", self.inner.metadata)?;
+        self.inner.metadata.fmt(f)?;
         writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
         if self.inner.signatures.is_empty() {
@@ -265,7 +266,10 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         }
 
         let metadata_bytes = d.bytes()?;
-        let metadata = Metadata::decode(&mut minicbor::Decoder::new(metadata_bytes), &mut ctx)?;
+        let metadata = WithCborBytes::<Metadata>::decode(
+            &mut minicbor::Decoder::new(metadata_bytes),
+            &mut ctx,
+        )?;
 
         // empty unprotected headers
         let mut map =
@@ -278,7 +282,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             );
         }
 
-        let content = Content::decode(d, &mut ())?;
+        let content = WithCborBytes::<Content>::decode(d, &mut ())?;
         let signatures = Signatures::decode(d, &mut ctx)?;
 
         let end = d.position();
@@ -302,10 +306,22 @@ impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        let raw_bytes = &self.inner.raw_bytes;
-        e.writer_mut()
-            .write_all(raw_bytes)
-            .map_err(minicbor::encode::Error::write)?;
+        // COSE_Sign tag
+        // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+        e.tag(minicbor::data::Tag::new(98))?;
+        e.array(4)?;
+        // protected headers (metadata fields)
+        e.bytes(
+            minicbor::to_vec(&self.inner.metadata)
+                .map_err(minicbor::encode::Error::message)?
+                .as_slice(),
+        )?;
+        // empty unprotected headers
+        e.map(0)?;
+        // content
+        e.encode(&self.inner.content)?;
+        // signatures
+        e.encode(&self.inner.signatures)?;
         Ok(())
     }
 }
