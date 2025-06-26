@@ -1,8 +1,10 @@
 //! Catalyst Signed Document COSE Signature information.
 
+use std::io::Write;
+
 pub use catalyst_types::catalyst_id::CatalystId;
 
-use crate::{decode_context::DecodeContext, Content, Metadata};
+use crate::decode_context::DecodeContext;
 
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]
@@ -60,18 +62,20 @@ impl Signatures {
 
 /// Create a binary blob that will be signed. No support for unprotected headers.
 ///
-/// Described in [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
+/// Described in [section 4.4 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
 pub(crate) fn tbs_data(
-    kid: &CatalystId, metadata: &Metadata, content: &Content,
+    kid: &CatalystId, metadata_bytes: &[u8], content_bytes: &[u8],
 ) -> anyhow::Result<Vec<u8>> {
-    Ok(minicbor::to_vec((
-        // The context string as per [RFC 8152 section 4.4](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
-        "Signature",
-        <minicbor::bytes::ByteVec>::from(minicbor::to_vec(metadata)?),
-        <minicbor::bytes::ByteVec>::from(protected_header_encode(kid)?),
-        minicbor::bytes::ByteArray::from([]),
-        content,
-    ))?)
+    let mut e = minicbor::Encoder::new(Vec::new());
+
+    e.array(5)?;
+    e.str("Signature")?;
+    e.bytes(metadata_bytes)?; // `body_protected`
+    e.bytes(protected_header_encode(kid)?.as_slice())?; // `sign_protected`
+    e.bytes(&[])?; // empty `external_aad`
+    e.writer_mut().write_all(content_bytes)?; // `payload`
+
+    Ok(e.into_writer())
 }
 
 impl minicbor::Encode<()> for Signature {

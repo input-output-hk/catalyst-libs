@@ -27,6 +27,7 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         }))
         .unwrap()
         .empty_content()
+        .unwrap()
         .build()
         .unwrap()
 });

@@ -379,13 +379,9 @@ where Provider: VerifyingKeyProvider {
         return Ok(false);
     };
 
-    let Ok(tbs_data) = tbs_data(kid, doc.doc_meta(), doc.content()) else {
-        doc.report().other(
-            "Cannot build a COSE to be signed data",
-            "During creating COSE to be signed data",
-        );
-        return Ok(false);
-    };
+    let (metadata_bytes, content_bytes) = doc.metadata_and_content_bytes().context("Probably a bug, cannot retrieve a metadata cbor bytes and content cbor bytes from the structurally valid signed document.")?;
+
+    let tbs_data = tbs_data(kid, metadata_bytes, content_bytes).context("Probably a bug, cannot build CBOR COSE bytes for signature verification from the structurally valid COSE object.")?;
 
     let Ok(signature_bytes) = sign.signature().try_into() else {
         report.invalid_value(
