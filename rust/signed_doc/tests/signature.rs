@@ -188,7 +188,7 @@ fn content(
 }
 
 fn parameters_aliase_field(
-    aliase: &str, sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+    alias: &str, sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
 ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
     let mut e = minicbor::Encoder::new(Vec::new());
     e.array(4)?;
@@ -199,7 +199,7 @@ fn parameters_aliase_field(
     e.bytes(m_p_headers.as_slice())?;
     // empty unprotected headers
     e.map(1)?;
-    e.str(aliase)?.encode_with(
+    e.str(alias)?.encode_with(
         DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default()),
         &mut (),
     )?;
@@ -263,15 +263,15 @@ async fn special_cbor_cases() {
             },
         },
         SpecialCborTestCase {
-            name: "parameters aliase `category_id` field",
+            name: "parameters alias `category_id` field",
             doc_bytes_fn: &|sk, kid| parameters_aliase_field("category_id", sk, kid),
         },
         SpecialCborTestCase {
-            name: "parameters aliase `brand_id` field",
+            name: "parameters alias `brand_id` field",
             doc_bytes_fn: &|sk, kid| parameters_aliase_field("brand_id", sk, kid),
         },
         SpecialCborTestCase {
-            name: "`parameters` aliase `campaign_id` field",
+            name: "`parameters` alias `campaign_id` field",
             doc_bytes_fn: &|sk, kid| parameters_aliase_field("campaign_id", sk, kid),
         },
     ];
