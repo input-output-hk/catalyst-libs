@@ -4,13 +4,14 @@ use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use minicbor::{data::Tag, Encoder};
+use rand::Rng;
 
 mod common;
 
 type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
 
 struct TestCase {
-    name: &'static str,
+    name: String,
     bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
     // If the provided bytes can be even decoded without error (valid COSE or not).
     // If set to `false` all further checks will not even happen.
@@ -27,8 +28,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let doc_ref_cloned = doc_ref.clone();
 
     TestCase {
-        name:
-            "Provided category_id, brand_id, campaign_id field should be processed as parameters.",
+        name: format!("Provided '{alias}' field should be processed as parameters."),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -78,6 +78,193 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     }
 }
 
+fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+
+    TestCase {
+        name: format!("Catalyst Signed Doc with missing '{field}' header."),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(4)?;
+                    if field != "content-type" {
+                        p_headers.u8(3)?.encode(ContentType::Json)?;
+                    }
+                    if field != "type" {
+                        p_headers
+                            .str("type")?
+                            .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field != "id" {
+                        p_headers
+                            .str("id")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field != "ver" {
+                        p_headers
+                            .str("ver")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+
+                    p_headers
+                        .str("parameters")?
+                        .encode_with(doc_ref.clone(), &mut ())?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: false,
+        post_checks: Some(Box::new({
+            move |doc| {
+                if field == "content-type" {
+                    anyhow::ensure!(doc.doc_meta().content_type().is_err());
+                }
+                if field == "type" {
+                    anyhow::ensure!(doc.doc_meta().doc_type().is_err());
+                }
+                if field == "id" {
+                    anyhow::ensure!(doc.doc_meta().doc_id().is_err());
+                }
+                if field == "ver" {
+                    anyhow::ensure!(doc.doc_meta().doc_ver().is_err());
+                }
+
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+
+    TestCase {
+        name: format!("Catalyst Signed Doc with random bytes in '{field}' header field."),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut rng = rand::thread_rng();
+                    let mut rand_buf = [0u8; 128];
+                    rng.try_fill(&mut rand_buf)?;
+
+                    let is_required_header = ["type", "id", "ver", "parameters"]
+                        .iter()
+                        .any(|v| v == &field);
+
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(if is_required_header { 5 } else { 6 })?;
+                    if field == "content-type" {
+                        p_headers.u8(3)?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers.u8(3)?.encode(ContentType::Json)?;
+                    }
+                    if field == "type" {
+                        p_headers.str("type")?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("type")?
+                            .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field == "id" {
+                        p_headers.str("id")?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("id")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field == "ver" {
+                        p_headers.str("ver")?.encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("ver")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field == "parameters" {
+                        p_headers
+                            .str("parameters")?
+                            .encode_with(rand_buf, &mut ())?;
+                    } else {
+                        p_headers
+                            .str("parameters")?
+                            .encode_with(doc_ref.clone(), &mut ())?;
+                    }
+
+                    if !is_required_header {
+                        p_headers.str(field)?.encode_with(rand_buf, &mut ())?;
+                    }
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: false,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_meta().content_encoding().is_none());
+                anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
+                anyhow::ensure!(doc.doc_meta().template().is_none());
+                anyhow::ensure!(doc.doc_meta().reply().is_none());
+                anyhow::ensure!(doc.doc_meta().section().is_none());
+                anyhow::ensure!(doc.doc_meta().collabs().is_empty());
+
+                if field == "content-type" {
+                    anyhow::ensure!(doc.doc_meta().content_type().is_err());
+                }
+                if field == "type" {
+                    anyhow::ensure!(doc.doc_meta().doc_type().is_err());
+                }
+                if field == "id" {
+                    anyhow::ensure!(doc.doc_meta().doc_id().is_err());
+                }
+                if field == "ver" {
+                    anyhow::ensure!(doc.doc_meta().doc_ver().is_err());
+                }
+                if field == "parameters" {
+                    anyhow::ensure!(doc.doc_meta().parameters().is_none());
+                }
+
+                Ok(())
+            }
+        })),
+    }
+}
+
 // `parameters` value along with its aliases are not allowed to be presented
 fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str]) -> TestCase {
     let uuid_v7 = UuidV7::new();
@@ -85,7 +272,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
-        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once.",
+        name: format!("Multiple definitions of '{}' at once.", aliases.join(", ")),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -134,7 +321,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
 
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
-        name: "Decoding empty bytes",
+        name: "Decoding empty bytes".to_string(),
         bytes_gen: Box::new(|| Ok(Encoder::new(Vec::new()))),
         can_decode: false,
         valid_doc: false,
@@ -147,7 +334,7 @@ fn signed_doc_with_all_fields_case() -> TestCase {
     let uuid_v4 = UuidV4::new();
 
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.".to_string(),
         bytes_gen: Box::new({
             move || {
                 let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
@@ -203,7 +390,8 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged.",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged."
+            .to_string(),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -260,7 +448,8 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
     TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged.",
+        name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged."
+            .to_string(),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
@@ -319,6 +508,21 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_valid_alias_case("category_id"),
         signed_doc_with_valid_alias_case("brand_id"),
         signed_doc_with_valid_alias_case("campaign_id"),
+        signed_doc_with_missing_header_field_case("content-type"),
+        signed_doc_with_missing_header_field_case("type"),
+        signed_doc_with_missing_header_field_case("id"),
+        signed_doc_with_missing_header_field_case("ver"),
+        signed_doc_with_random_header_field_case("content-type"),
+        signed_doc_with_random_header_field_case("type"),
+        signed_doc_with_random_header_field_case("id"),
+        signed_doc_with_random_header_field_case("ver"),
+        signed_doc_with_random_header_field_case("ref"),
+        signed_doc_with_random_header_field_case("template"),
+        signed_doc_with_random_header_field_case("reply"),
+        signed_doc_with_random_header_field_case("section"),
+        signed_doc_with_random_header_field_case("collabs"),
+        signed_doc_with_random_header_field_case("parameters"),
+        signed_doc_with_random_header_field_case("content-encoding"),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "category_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "brand_id"]),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "campaign_id"]),
