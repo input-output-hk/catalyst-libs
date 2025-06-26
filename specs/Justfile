@@ -10,34 +10,40 @@ default:
 # Fix cue files.  This also sets all the file times on the cue files to NOW.
 # So it should only be run when required.
 fix:
-    cue fix ./signed_docs/docs:signed_docs
+    cue fix ./definitions/signed_docs/docs:signed_docs
+    cue fix ./definitions/form_template/fields:form_template
 
 # Fix the format of cue files
 format:
-    cue fmt --files .
+    cue fmt -s --files ./definitions
 
 # Check the signed document cue files are valid.
 check: format
-    cue vet ./signed_docs/docs:signed_docs -c
+    cd definitions; cue vet ./signed_docs/docs:signed_docs -c
+    cd definitions; cue vet ./form_template/fields:form_template -c
 
 # Regenerate the full signed document specification json file.
 regenerate-signed-doc-json:
     # Make sure keys are sorted so its both reproducible, AND diffs easily.
-    cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > signed_doc.json
+    cd definitions; cue export -f -s ./signed_docs/docs:signed_docs --out json | jq -S > ../signed_doc.json
 
 # Fix and Check Markdown files
 regenerate: check regenerate-signed-doc-json validate && validate-docs
     # Generate the markdown docs from the specification.
-    cd gen_docs; ./main.py -g -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    cd generators; uv run docs -g -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
 
 # Validate the generated signed_docs.json is correct against the cue schema.
 validate:
-    cue vet ./signed_docs/docs:signed_docs  signed_doc.json
+    # Generate the intermediate compiled schema data.
+    cd definitions; CUE_EXPERIMENT=evalv3=0 cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+    # cd definitions; cue vet ./signed_docs/docs:signed_docs  ../signed_doc.json
+    # Check the Model is valid.
+    cd generators; uv run validator ../signed_doc.json
 
 # Validate the generated docs is correct against the signed_docs.json.
 validate-docs:
     # Check our validation code actually works properly
-    cd gen_docs; ./main.py -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
+    cd generators; uv run docs -o "../../docs/src/architecture/08_concepts/signed_doc" ../signed_doc.json 
 
 # Pre Push Checks - intended to be run by a git pre-push hook.
 pre-push: format-python-code lint-python regenerate validate

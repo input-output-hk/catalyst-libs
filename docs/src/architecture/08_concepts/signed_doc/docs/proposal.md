@@ -108,6 +108,8 @@ IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a docu
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
+[`ver`](../metadata.md#ver) represents new versions of the same document as it changes over time.
+
 #### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
@@ -119,7 +121,7 @@ The document version must always be >= the document ID.
 | --- | --- |
 | Required | yes |
 | Format | [Document Reference](../metadata.md#document-reference) |
-| Valid References | [Proposal Template](proposal_template.md) |
+| Valid References | [Proposal Form Template](proposal_form_template.md) |
 <!-- markdownlint-enable MD033 -->
 Reference to the template used to create and/or validate this document.
 
@@ -197,7 +199,18 @@ A reference to the Parameters Document this document lies under.
 In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
 
 * Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
-[`parameters`](../metadata.md#parameters) of the referencing document.
+[`parameters`](../metadata.md#parameters) of the referencing document,
+or a parent of those [`parameters`](../metadata.md#parameters).
+
+For example, a linked reference to [Contest Parameters](contest_parameters.md) is transitively a reference to
+the Parameters document it references, and each parameters document they reference
+until the `Brand` parameters document is reached.
+
+The use case here is for Templates.
+The profile template, or proposal templates could be defined at any of these
+levels, and as long as they all refer to the same chain of parameters in the
+hierarchy they are all valid.
+
 * The Document referenced by [`template`](../metadata.md#template)
   * MUST contain [`parameters`](../metadata.md#parameters) metadata; AND
   * MUST match the referencing documents [`parameters`](../metadata.md#parameters) value.
@@ -211,7 +224,7 @@ Must be valid according to the schema contained within the
 
 ## Signers
 
-The following user roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
 * Proposer
 
@@ -226,7 +239,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-05 |
+| Modified | 2025-05-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
