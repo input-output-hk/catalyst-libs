@@ -1,4 +1,7 @@
 //! Catalyst Signed Document Builder.
+use std::io::Write;
+
+use anyhow::Context;
 use catalyst_types::catalyst_id::CatalystId;
 
 use crate::{
@@ -13,21 +16,25 @@ use crate::{
 pub type Builder = MetadataBuilder;
 
 /// Only `metadata` builder part
-pub struct MetadataBuilder(BuilderInner);
+pub struct MetadataBuilder {
+    /// metadata
+    metadata: Metadata,
+}
 
 /// Only `content` builder part
-pub struct ContentBuilder(BuilderInner);
-
-/// Only `Signatures` builder part
-pub struct SignaturesBuilder(BuilderInner);
-
-/// Inner state of the Catalyst Signed Documents `Builder`
-#[derive(Default)]
-pub struct BuilderInner {
+pub struct ContentBuilder {
     /// metadata
     metadata: Metadata,
     /// content
     content: Content,
+}
+
+/// Only `Signatures` builder part
+pub struct SignaturesBuilder {
+    /// metadata raw CBOR bytes
+    metadata_bytes: Vec<u8>,
+    /// content raw CBOR bytes
+    content_bytes: Vec<u8>,
     /// signatures
     signatures: Signatures,
 }
@@ -37,7 +44,9 @@ impl MetadataBuilder {
     #[must_use]
     #[allow(clippy::new_without_default)]
     pub fn new() -> Self {
-        Self(BuilderInner::default())
+        Self {
+            metadata: Default::default(),
+        }
     }
 
     /// Set document metadata in JSON format
@@ -46,15 +55,29 @@ impl MetadataBuilder {
     /// # Errors
     /// - Fails if it is invalid metadata fields JSON object.
     pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<ContentBuilder> {
-        self.0.metadata = Metadata::from_json(json)?;
-        Ok(ContentBuilder(self.0))
+        self.metadata = Metadata::from_json(json)?;
+        Ok(ContentBuilder {
+            metadata: self.metadata,
+            content: Default::default(),
+        })
     }
 }
 
 impl ContentBuilder {
+    /// Prepares a `SignaturesBuilder` from the current `ContentBuilder`
+    #[allow(clippy::unwrap_used)]
+    fn into_signatures_builder(self) -> SignaturesBuilder {
+        SignaturesBuilder {
+            metadata_bytes: minicbor::to_vec(self.metadata).unwrap(),
+            content_bytes: minicbor::to_vec(self.content).unwrap(),
+            signatures: Default::default(),
+        }
+    }
+
     /// Sets an empty content
+    #[allow(clippy::unwrap_used)]
     pub fn empty_content(self) -> SignaturesBuilder {
-        SignaturesBuilder(self.0)
+        self.into_signatures_builder()
     }
 
     /// Set the provided JSON content, applying already set `content-encoding`.
@@ -67,18 +90,18 @@ impl ContentBuilder {
         mut self, json: &serde_json::Value,
     ) -> anyhow::Result<SignaturesBuilder> {
         anyhow::ensure!(
-            self.0.metadata.content_type()? == ContentType::Json,
+            self.metadata.content_type()? == ContentType::Json,
             "Already set metadata field `content-type` is not JSON value"
         );
 
         let content = serde_json::to_vec(&json)?;
-        if let Some(encoding) = self.0.metadata.content_encoding() {
-            self.0.content = encoding.encode(&content)?.into();
+        if let Some(encoding) = self.metadata.content_encoding() {
+            self.content = encoding.encode(&content)?.into();
         } else {
-            self.0.content = content.into();
+            self.content = content.into();
         }
 
-        Ok(SignaturesBuilder(self.0))
+        Ok(self.into_signatures_builder())
     }
 }
 
@@ -96,9 +119,13 @@ impl SignaturesBuilder {
         if kid.is_id() {
             anyhow::bail!("Provided kid should be in a uri format, kid: {kid}");
         }
-        let data_to_sign = tbs_data(&kid, &self.0.metadata, &self.0.content)?;
-        let sign_bytes = sign_fn(data_to_sign);
-        self.0.signatures.push(Signature::new(kid, sign_bytes));
+
+        self.signatures.push(build_signature(
+            sign_fn,
+            kid,
+            &self.metadata_bytes,
+            &self.content_bytes,
+        )?);
 
         Ok(self)
     }
@@ -108,7 +135,8 @@ impl SignaturesBuilder {
     /// # Errors:
     ///  - CBOR encoding/decoding failures
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
-        let doc = build_document(&self.0.metadata, &self.0.content, &self.0.signatures)?;
+        let signature_bytes = minicbor::to_vec(&self.signatures)?;
+        let doc = build_document(&self.metadata_bytes, &self.content_bytes, &signature_bytes)?;
         Ok(doc)
     }
 }
@@ -116,7 +144,7 @@ impl SignaturesBuilder {
 /// Build document from the provided `metadata`, `content` and `signatures`, performs all
 /// the decoding validation and collects a problem report.
 fn build_document(
-    metadata: &Metadata, content: &Content, signatures: &Signatures,
+    metadata_bytes: &[u8], content_bytes: &[u8], signatures_bytes: &[u8],
 ) -> anyhow::Result<CatalystSignedDocument> {
     let mut e = minicbor::Encoder::new(Vec::new());
     // COSE_Sign tag
@@ -124,21 +152,33 @@ fn build_document(
     e.tag(minicbor::data::Tag::new(98))?;
     e.array(4)?;
     // protected headers (metadata fields)
-    e.bytes(minicbor::to_vec(metadata)?.as_slice())?;
+    e.bytes(metadata_bytes)?;
     // empty unprotected headers
     e.map(0)?;
     // content
-    e.encode(content)?;
+    e.writer_mut().write_all(content_bytes)?;
     // signatures
-    e.encode(signatures)?;
+    e.writer_mut().write_all(signatures_bytes)?;
     CatalystSignedDocument::try_from(e.into_writer().as_slice())
 }
 
-impl From<&CatalystSignedDocument> for SignaturesBuilder {
-    fn from(value: &CatalystSignedDocument) -> Self {
-        Self(BuilderInner {
-            metadata: value.inner.metadata.clone(),
-            content: value.inner.content.clone(),
+fn build_signature(
+    sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId, metadata_bytes: &[u8],
+    content_bytes: &[u8],
+) -> anyhow::Result<Signature> {
+    let data_to_sign = tbs_data(&kid, metadata_bytes, content_bytes)?;
+    let sign_bytes = sign_fn(data_to_sign);
+    Ok(Signature::new(kid, sign_bytes))
+}
+
+impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
+        let (metadata_bytes, content_bytes) = value.tbs_data().context("Probably a bug, cannot retrieve a metadata cbor bytes and content cbor bytes from the structurally valid signed document.")?;
+        Ok(Self {
+            metadata_bytes: metadata_bytes.to_vec(),
+            content_bytes: content_bytes.to_vec(),
             signatures: value.inner.signatures.clone(),
         })
     }
@@ -146,30 +186,30 @@ impl From<&CatalystSignedDocument> for SignaturesBuilder {
 
 #[cfg(test)]
 pub(crate) mod tests {
-    use crate::builder::SignaturesBuilder;
-
     /// A test version of the builder, which allows to build a not fully valid catalyst
     /// signed document
-    pub(crate) struct Builder(super::BuilderInner);
-
-    impl Default for Builder {
-        fn default() -> Self {
-            Self::new()
-        }
+    #[derive(Default)]
+    pub(crate) struct Builder {
+        /// metadata
+        metadata: super::Metadata,
+        /// content
+        content: super::Content,
+        /// signatures
+        signatures: super::Signatures,
     }
 
     impl Builder {
         /// Start building a signed document
         #[must_use]
         pub(crate) fn new() -> Self {
-            Self(super::BuilderInner::default())
+            Self::default()
         }
 
         /// Add provided `SupportedField` into the `Metadata`.
         pub(crate) fn with_metadata_field(
             mut self, field: crate::metadata::SupportedField,
         ) -> Self {
-            self.0.metadata.add_field(field);
+            self.metadata.add_field(field);
             self
         }
 
@@ -178,7 +218,7 @@ pub(crate) mod tests {
         /// `content-type` and `content-encoding` fields are aligned with the
         /// provided content bytes.
         pub(crate) fn with_content(mut self, content: Vec<u8>) -> Self {
-            self.0.content = content.into();
+            self.content = content.into();
             self
         }
 
@@ -186,14 +226,24 @@ pub(crate) mod tests {
         pub(crate) fn add_signature(
             mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: super::CatalystId,
         ) -> anyhow::Result<Self> {
-            self.0 = SignaturesBuilder(self.0).add_signature(sign_fn, kid)?.0;
+            let metadata_bytes = minicbor::to_vec(&self.metadata).unwrap();
+            let content_bytes = minicbor::to_vec(&self.content).unwrap();
+            self.signatures.push(super::build_signature(
+                sign_fn,
+                kid,
+                &metadata_bytes,
+                &content_bytes,
+            )?);
             Ok(self)
         }
 
         /// Build a signed document with the collected error report.
         /// Could provide an invalid document.
         pub(crate) fn build(self) -> super::CatalystSignedDocument {
-            super::build_document(&self.0.metadata, &self.0.content, &self.0.signatures).unwrap()
+            let metadata_bytes = minicbor::to_vec(self.metadata).unwrap();
+            let content_bytes = minicbor::to_vec(self.content).unwrap();
+            let signature_bytes = minicbor::to_vec(self.signatures).unwrap();
+            super::build_document(&metadata_bytes, &content_bytes, &signature_bytes).unwrap()
         }
     }
 }

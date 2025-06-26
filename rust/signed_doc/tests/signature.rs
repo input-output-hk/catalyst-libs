@@ -62,6 +62,7 @@ async fn single_signature_validation_test() {
     let (another_sk, ..) = create_dummy_key_pair(RoleId::Role0).unwrap();
     let invalid_doc = signed_doc
         .into_builder()
+        .unwrap()
         .add_signature(|m| another_sk.sign(&m).to_vec(), kid.clone())
         .unwrap()
         .build()
