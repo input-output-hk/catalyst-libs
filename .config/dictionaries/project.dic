@@ -4,12 +4,14 @@ ABNF
 addrr
 addrs
 adminer
+admon
 anypolicy
 apskhem
 Arissara
 asyncio
 Attributes
 auditability
+Auliffe
 auxdata
 babystep
 backpressure
@@ -21,6 +23,7 @@ blockdiag
 blockfetch
 blosc
 bmac
+Bogale
 bootstrapper
 BROTLI
 Cabe
@@ -80,6 +83,7 @@ elgamal
 encryptor
 Errno
 Eternl
+evalv
 excalidraw
 explicitely
 extn
@@ -160,6 +164,8 @@ ltail
 maindbname
 mapref
 markdownlint
+mdformat
+mdit
 mdlint
 mdns
 MEMMAP
@@ -175,6 +181,7 @@ mitigations
 mkcron
 mkdelay
 mkdirat
+mkdocs
 Mmap
 moderations
 moka
@@ -230,6 +237,7 @@ pypackages
 pytest
 pytype
 qpsg
+qrcode
 quic
 rankdir
 rapidoc

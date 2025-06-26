@@ -85,6 +85,8 @@ IF [`ver`](../metadata.md#ver) does not == [`id`](../metadata.md#id) then a docu
 The unique version of the document.
 The first version of the document must set [`ver`](../metadata.md#ver) == [`id`](../metadata.md#id)
 
+[`ver`](../metadata.md#ver) represents new versions of the same document as it changes over time.
+
 #### [`ver`](../metadata.md#ver) Validation
 
 The document version must always be >= the document ID.
@@ -107,7 +109,7 @@ Some documents allow multiple references, and they are documented as required.
 The document reference serves two purposes:
 
 1. It ensures that the document referenced by an ID/Version is not substituted.
-  In other words, that the document intended to be referenced, is actually referenced.
+    In other words, that the document intended to be referenced, is actually referenced.
 2. It Allows the document to be unambiguously located in decentralized storage systems.
 
 There can be any number of Document Locations in any reference.
@@ -139,7 +141,7 @@ This section will be included and updated in future iterations.
 
 ## Signers
 
-The following user roles may sign documents of this type:
+The following User roles may sign documents of this type:
 
 * Registered
 
@@ -153,7 +155,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-05 |
+| Modified | 2025-05-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

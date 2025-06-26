@@ -1,0 +1,113 @@
+digraph "Contest Delegation" {
+    rankdir="LR"
+    graph [fontname="helvetica", fontsize="32", fontcolor="#29235c", bgcolor="white"];
+    node [penwidth="0", margin="0", fontname="helvetica", fontsize="32", fontcolor="#29235c"];
+    edge [fontname="helvetica", fontsize="32", fontcolor="red", color="#29235c"];
+
+    labelloc="t"
+    label="Contest Delegation Document
+Relationships"
+    fontcolor="#1d71b8"
+    fontsize=50
+    compound=true
+
+
+
+    "Rep Nomination" [
+        id="Rep Nomination";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../rep_nomination/">
+                    <FONT COLOR="#ffffff"><B> Rep Nomination </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Contest Parameters" [
+        id="Contest Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters/">
+                    <FONT COLOR="#ffffff"><B> Contest Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Contest Delegation" [
+        id="Contest Delegation";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_delegation/">
+                    <FONT COLOR="#ffffff"><B> Contest Delegation </B></FONT>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>764f17fb-cc50-4979-b14a-b213dbac5994<BR />788ff4c6-d65a-451f-bb33-575fe056b411</I></B></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Id</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ver</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Ver</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="ref" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ref</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Rep Nomination</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Contest Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Contest Delegation":"ref":e -> "Rep Nomination":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Contest Delegation":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+}
