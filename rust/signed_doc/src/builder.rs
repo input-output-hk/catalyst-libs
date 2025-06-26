@@ -139,7 +139,8 @@ impl SignaturesBuilder {
     }
 }
 
-/// Build document from the provided **CBOR encoded** `metadata`, `content` and `signatures`.
+/// Build document from the provided **CBOR encoded** `metadata`, `content` and
+/// `signatures`.
 fn build_document(
     metadata_bytes: &[u8], content_bytes: &[u8], signatures_bytes: &[u8],
 ) -> anyhow::Result<CatalystSignedDocument> {
