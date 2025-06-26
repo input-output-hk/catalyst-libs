@@ -187,7 +187,7 @@ fn content(
     Ok(e)
 }
 
-fn parameters_aliase_field(
+fn parameters_alias_field(
     alias: &str, sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
 ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
     let mut e = minicbor::Encoder::new(Vec::new());
@@ -264,15 +264,15 @@ async fn special_cbor_cases() {
         },
         SpecialCborTestCase {
             name: "parameters alias `category_id` field",
-            doc_bytes_fn: &|sk, kid| parameters_aliase_field("category_id", sk, kid),
+            doc_bytes_fn: &|sk, kid| parameters_alias_field("category_id", sk, kid),
         },
         SpecialCborTestCase {
             name: "parameters alias `brand_id` field",
-            doc_bytes_fn: &|sk, kid| parameters_aliase_field("brand_id", sk, kid),
+            doc_bytes_fn: &|sk, kid| parameters_alias_field("brand_id", sk, kid),
         },
         SpecialCborTestCase {
             name: "`parameters` alias `campaign_id` field",
-            doc_bytes_fn: &|sk, kid| parameters_aliase_field("campaign_id", sk, kid),
+            doc_bytes_fn: &|sk, kid| parameters_alias_field("campaign_id", sk, kid),
         },
     ];
 
