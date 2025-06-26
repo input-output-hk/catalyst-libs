@@ -65,18 +65,16 @@ impl MetadataBuilder {
 
 impl ContentBuilder {
     /// Prepares a `SignaturesBuilder` from the current `ContentBuilder`
-    #[allow(clippy::unwrap_used)]
-    fn into_signatures_builder(self) -> SignaturesBuilder {
-        SignaturesBuilder {
-            metadata_bytes: minicbor::to_vec(self.metadata).unwrap(),
-            content_bytes: minicbor::to_vec(self.content).unwrap(),
+    fn into_signatures_builder(self) -> anyhow::Result<SignaturesBuilder> {
+        Ok(SignaturesBuilder {
+            metadata_bytes: minicbor::to_vec(self.metadata)?,
+            content_bytes: minicbor::to_vec(self.content)?,
             signatures: Default::default(),
-        }
+        })
     }
 
     /// Sets an empty content
-    #[allow(clippy::unwrap_used)]
-    pub fn empty_content(self) -> SignaturesBuilder {
+    pub fn empty_content(self) -> anyhow::Result<SignaturesBuilder> {
         self.into_signatures_builder()
     }
 
@@ -101,7 +99,7 @@ impl ContentBuilder {
             self.content = content.into();
         }
 
-        Ok(self.into_signatures_builder())
+        self.into_signatures_builder()
     }
 }
 

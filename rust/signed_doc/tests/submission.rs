@@ -31,6 +31,7 @@ static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         }))
         .unwrap()
         .empty_content()
+        .unwrap()
         .build()
         .unwrap()
 });
@@ -46,6 +47,7 @@ static DUMMY_BRAND_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
         }))
         .unwrap()
         .empty_content()
+        .unwrap()
         .build()
         .unwrap()
 });
