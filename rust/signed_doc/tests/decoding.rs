@@ -79,6 +79,65 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     }
 }
 
+fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+
+    TestCase {
+        name: "Multiple definitions of campaign_id, brand_id, category_id and parameters at once.",
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(4)?;
+                    if field != "content-type" {
+                        p_headers.u8(3)?.encode(ContentType::Json)?;
+                    }
+                    if field != "type" {
+                        p_headers
+                            .str("type")?
+                            .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field != "id" {
+                        p_headers
+                            .str("id")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+                    if field != "ver" {
+                        p_headers
+                            .str("ver")?
+                            .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    }
+
+                    p_headers
+                        .str("parameters")?
+                        .encode_with(doc_ref.clone(), &mut ())?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
 fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -431,6 +490,10 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_valid_alias_case("category_id"),
         signed_doc_with_valid_alias_case("brand_id"),
         signed_doc_with_valid_alias_case("campaign_id"),
+        signed_doc_with_missing_header_field_case("content-type"),
+        signed_doc_with_missing_header_field_case("type"),
+        signed_doc_with_missing_header_field_case("id"),
+        signed_doc_with_missing_header_field_case("ver"),
         signed_doc_with_random_header_field_case("content-type"),
         signed_doc_with_random_header_field_case("type"),
         signed_doc_with_random_header_field_case("id"),
