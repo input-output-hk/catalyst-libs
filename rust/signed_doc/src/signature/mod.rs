@@ -62,7 +62,7 @@ impl Signatures {
 
 /// Create a binary blob that will be signed. No support for unprotected headers.
 ///
-/// Described in [section 2 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-2).
+/// Described in [section 4.4 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
 pub(crate) fn tbs_data(
     kid: &CatalystId, metadata_bytes: &[u8], content_bytes: &[u8],
 ) -> anyhow::Result<Vec<u8>> {
@@ -70,10 +70,10 @@ pub(crate) fn tbs_data(
 
     e.array(5)?;
     e.str("Signature")?;
-    e.bytes(metadata_bytes)?;
-    e.bytes(protected_header_encode(kid)?.as_slice())?;
-    e.bytes(&[])?;
-    e.writer_mut().write_all(content_bytes)?;
+    e.bytes(metadata_bytes)?; // `body_protected`
+    e.bytes(protected_header_encode(kid)?.as_slice())?; // `sign_protected`
+    e.bytes(&[])?; // empty `external_aad`
+    e.writer_mut().write_all(content_bytes)?; // `payload`
 
     Ok(e.into_writer())
 }
