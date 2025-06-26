@@ -13,6 +13,141 @@ Relationships"
 
 
 
+    "Campaign Parameters Form Template" [
+        id="Campaign Parameters Form Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters_form_template/">
+                    <FONT COLOR="#ffffff"><B> Campaign Parameters Form Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Contest Parameters" [
+        id="Contest Parameters";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters/">
+                    <FONT COLOR="#ffffff"><B> Contest Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal" [
+        id="Proposal";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal/">
+                    <FONT COLOR="#ffffff"><B> Proposal </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Comment" [
+        id="Proposal Comment";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Comment Form Template" [
+        id="Proposal Comment Form Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_form_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment Form Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Comment Presentation Template" [
+        id="Proposal Comment Presentation Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_presentation_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Comment Presentation Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Form Template" [
+        id="Proposal Form Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_form_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Form Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Presentation Template" [
+        id="Proposal Presentation Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_presentation_template/">
+                    <FONT COLOR="#ffffff"><B> Proposal Presentation Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Proposal Submission Action" [
+        id="Proposal Submission Action";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_submission_action/">
+                    <FONT COLOR="#ffffff"><B> Proposal Submission Action </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
     subgraph cluster_system_parameters {
         label = "System Parameters";
         color=blue
@@ -57,7 +192,7 @@ Relationships"
                         <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                             <TR>
                                 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                                <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>5ef32d5d-f240-462c-a7a4-ba4af221fa23</I></B></FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>60185874-7e13-407c-a06c-238ffe637ae6<BR />5ef32d5d-f240-462c-a7a4-ba4af221fa23</I></B></FONT></TD>
                             </TR>
                         </TABLE>
                     </TD>
@@ -83,7 +218,37 @@ Relationships"
                     </TD>
                 </TR>
                 <TR>
-                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                    <TD ALIGN="LEFT" PORT="template" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">template</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Campaign Parameters Form Template</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="collaborators" BGCOLOR="#b8b5b0">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">collaborators</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Collaborators Reference List</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="revocations" BGCOLOR="#e7e2dd">
+                        <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                            <TR>
+                                <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">revocations</FONT></TD>
+                                <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Version Revocations</I></FONT></TD>
+                            </TR>
+                        </TABLE>
+                    </TD>
+                </TR>
+                <TR>
+                    <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#b8b5b0">
                         <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                             <TR>
                                 <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
@@ -114,134 +279,15 @@ Relationships"
 
     }
 
-    "Decision Parameters" [
-        id="Decision Parameters";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../decision_parameters/">
-                    <FONT COLOR="#ffffff"><B> Decision Parameters </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal" [
-        id="Proposal";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal/">
-                    <FONT COLOR="#ffffff"><B> Proposal </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Comment" [
-        id="Proposal Comment";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment/">
-                    <FONT COLOR="#ffffff"><B> Proposal Comment </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Comment Meta Template" [
-        id="Proposal Comment Meta Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_meta_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Comment Meta Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Comment Template" [
-        id="Proposal Comment Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_comment_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Comment Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Meta Template" [
-        id="Proposal Meta Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_meta_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Meta Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Submission Action" [
-        id="Proposal Submission Action";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_submission_action/">
-                    <FONT COLOR="#ffffff"><B> Proposal Submission Action </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Template" [
-        id="Proposal Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../proposal_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Template </B></FONT>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
+    "Campaign Parameters":"template":e -> "Campaign Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Campaign Parameters":"parameters":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Category Parameters":"title":e -> "Campaign Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Decision Parameters":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Contest Parameters":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Proposal Comment Meta Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Proposal Comment Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Proposal Meta Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Proposal Comment Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Proposal Comment Presentation Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Proposal Form Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Proposal Presentation Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Submission Action":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Proposal Template":"title":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
 }

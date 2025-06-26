@@ -137,15 +137,14 @@ fn proposal_submission_action_rule() -> Rules {
     ];
 
     let proposal_action_json_schema = jsonschema::options()
-    .with_draft(jsonschema::Draft::Draft7)
-    .build(
-        &serde_json::from_str(include_str!(
-            "./../../../../specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
-        ))
-        .expect("Must be a valid json file"),
-    )
-    .expect("Must be a valid json scheme file");
-
+        .with_draft(jsonschema::Draft::Draft7)
+        .build(
+            &serde_json::from_str(include_str!(
+                "./../../../../specs/definitions/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json"
+            ))
+            .expect("Must be a valid json file"),
+        )
+        .expect("Must be a valid json scheme file");
     Rules {
         content_type: ContentTypeRule {
             exp: ContentType::Json,
