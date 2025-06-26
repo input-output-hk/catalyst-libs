@@ -139,8 +139,7 @@ impl SignaturesBuilder {
     }
 }
 
-/// Build document from the provided `metadata`, `content` and `signatures`, performs all
-/// the decoding validation and collects a problem report.
+/// Build document from the provided **CBOR encoded** `metadata`, `content` and `signatures`.
 fn build_document(
     metadata_bytes: &[u8], content_bytes: &[u8], signatures_bytes: &[u8],
 ) -> anyhow::Result<CatalystSignedDocument> {
