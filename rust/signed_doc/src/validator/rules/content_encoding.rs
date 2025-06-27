@@ -24,6 +24,17 @@ impl ContentEncodingRule {
                 );
                 return Ok(false);
             }
+            if content_encoding.decode(doc.encoded_content()).is_err() {
+                doc.report().invalid_value(
+                    "payload",
+                    &hex::encode(doc.encoded_content()),
+                    &format!(
+                        "Document content (payload) must decodable by the set content encoding type: {content_encoding}"
+                    ),
+                    "Invalid Document content value",
+                );
+                return Ok(false);
+            }
         } else if !self.optional {
             doc.report().missing_field(
                 "content-encoding",
@@ -38,7 +49,7 @@ impl ContentEncodingRule {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::Builder;
+    use crate::{builder::tests::Builder, metadata::SupportedField};
 
     #[tokio::test]
     async fn content_encoding_rule_test() {
@@ -50,17 +61,18 @@ mod tests {
         };
 
         let doc = Builder::new()
-            .with_json_metadata(
-                serde_json::json!({"content-encoding": content_encoding.to_string() }),
-            )
-            .unwrap()
+            .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
+            .with_content(content_encoding.encode(&[1, 2, 3]).unwrap())
             .build();
         assert!(rule.check(&doc).await.unwrap());
 
+        // empty content (empty bytes) could not be brotli decoded
         let doc = Builder::new()
-            .with_json_metadata(serde_json::json!({}))
-            .unwrap()
+            .with_metadata_field(SupportedField::ContentEncoding(content_encoding))
             .build();
+        assert!(!rule.check(&doc).await.unwrap());
+
+        let doc = Builder::new().build();
         assert!(rule.check(&doc).await.unwrap());
 
         rule.optional = false;

@@ -676,6 +676,12 @@ impl TryFrom<&[u8]> for CatalystId {
     }
 }
 
+impl From<&CatalystId> for Vec<u8> {
+    fn from(value: &CatalystId) -> Self {
+        value.to_string().into_bytes()
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use chrono::{DateTime, Utc};
