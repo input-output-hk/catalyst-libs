@@ -57,6 +57,9 @@ impl ContentTypeRule {
                     anyhow::bail!("Invalid {} content: {e}", self.exp)
                 }
             },
+            ContentType::Cddl => {
+                // TODO: not implemented yet
+            },
             ContentType::Cbor => {
                 let mut decoder = minicbor::Decoder::new(content);
 
@@ -65,6 +68,9 @@ impl ContentTypeRule {
                 if decoder.position() != content.len() {
                     anyhow::bail!("Unused bytes remain in the input after decoding")
                 }
+            },
+            ContentType::JsonSchema => {
+                // TODO: not implemented yet
             },
         }
         Ok(())
