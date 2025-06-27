@@ -163,7 +163,7 @@ impl MultiEraBlock {
     /// The decoded block data, which can easily be processed by a consumer.
     #[must_use]
     #[allow(clippy::missing_panics_doc)]
-    pub fn decode(&self) -> &pallas::ledger::traverse::MultiEraBlock {
+    pub fn decode(&self) -> &pallas::ledger::traverse::MultiEraBlock<'_> {
         self.inner.data.borrow_block()
     }
 
@@ -275,12 +275,12 @@ impl MultiEraBlock {
 
     /// Returns a list of transactions withing this block.
     #[must_use]
-    pub fn txs(&self) -> Vec<MultiEraTx> {
+    pub fn txs(&self) -> Vec<MultiEraTx<'_>> {
         self.decode().txs()
     }
 
     /// Returns an iterator over `(TxnIndex, MultiEraTx)` pair.
-    pub fn enumerate_txs(&self) -> impl Iterator<Item = (TxnIndex, MultiEraTx)> {
+    pub fn enumerate_txs(&self) -> impl Iterator<Item = (TxnIndex, MultiEraTx<'_>)> {
         self.txs()
             .into_iter()
             .enumerate()
