@@ -371,13 +371,6 @@ fn catalyst_signed_doc_decoding_test() {
                     post_checks_res.err()
                 );
             }
-
-            // assert_eq!(
-            //     hex::encode(bytes),
-            //     hex::encode(Vec::<u8>::try_from(doc).unwrap()),
-            //     "Case: [{}]. Asymmetric encoding and decoding procedure",
-            //     case.name
-            // );
         }
     }
 }
