@@ -1,8 +1,8 @@
-//! Catalyst Signed Document `collabs` field type definition.
+//! Catalyst Signed Document `collaborators` field type definition.
 
 use std::ops::Deref;
 
-/// 'collabs' field type definition, which is a JSON path string
+/// 'collaborators' field type definition, which is a JSON path string
 #[derive(Clone, Debug, PartialEq)]
 pub struct Collaborators(Vec<String>);
 
@@ -42,10 +42,10 @@ impl minicbor::Decode<'_, ()> for Collaborators {
                 "Must a definite size array",
             ));
         };
-        let collabs = (0..items)
+        let collaborators = (0..items)
             .map(|_| Ok(d.str()?.to_string()))
             .collect::<Result<_, _>>()?;
-        Ok(Self(collabs))
+        Ok(Self(collaborators))
     }
 }
 

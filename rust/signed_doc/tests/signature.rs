@@ -21,7 +21,7 @@ fn metadata() -> serde_json::Value {
         "reply": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
         "template": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
         "section": "$",
-        "collabs": vec!["Alex1", "Alex2"],
+        "collaborators": vec!["Alex1", "Alex2"],
         "parameters": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
     })
 }

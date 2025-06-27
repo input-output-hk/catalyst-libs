@@ -118,12 +118,12 @@ impl Metadata {
             .and_then(SupportedField::try_as_section_ref)
     }
 
-    /// Return `collabs` field.
+    /// Return `collaborators` field.
     #[must_use]
-    pub fn collabs(&self) -> &[String] {
+    pub fn collaborators(&self) -> &[String] {
         self.0
-            .get(&SupportedLabel::Collabs)
-            .and_then(SupportedField::try_as_collabs_ref)
+            .get(&SupportedLabel::Collaborators)
+            .and_then(SupportedField::try_as_collaborators_ref)
             .map_or(&[], |v| &**v)
     }
 
@@ -205,7 +205,7 @@ impl Display for Metadata {
         writeln!(f, "    template: {:?},", self.template())?;
         writeln!(f, "    reply: {:?},", self.reply())?;
         writeln!(f, "    section: {:?},", self.section())?;
-        writeln!(f, "    collabs: {:?},", self.collabs())?;
+        writeln!(f, "    collaborators: {:?},", self.collaborators())?;
         writeln!(f, "    parameters: {:?},", self.parameters())?;
         writeln!(f, "  }},")?;
         writeln!(f, "}}")

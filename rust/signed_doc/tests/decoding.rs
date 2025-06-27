@@ -241,7 +241,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
                 anyhow::ensure!(doc.doc_meta().section().is_none());
-                anyhow::ensure!(doc.doc_meta().collabs().is_empty());
+                anyhow::ensure!(doc.doc_meta().collaborators().is_empty());
 
                 if field == "content-type" {
                     anyhow::ensure!(doc.doc_meta().content_type().is_err());
@@ -520,7 +520,7 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_random_header_field_case("template"),
         signed_doc_with_random_header_field_case("reply"),
         signed_doc_with_random_header_field_case("section"),
-        signed_doc_with_random_header_field_case("collabs"),
+        signed_doc_with_random_header_field_case("collaborators"),
         signed_doc_with_random_header_field_case("parameters"),
         signed_doc_with_random_header_field_case("content-encoding"),
         signed_doc_with_parameters_and_aliases_case(&["parameters", "category_id"]),

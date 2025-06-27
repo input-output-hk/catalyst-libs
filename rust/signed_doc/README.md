@@ -1,4 +1,4 @@
-<!-- cspell: words collabs -->
+<!-- cspell: words collaborators -->
 
 # Catalyst signed document
 
