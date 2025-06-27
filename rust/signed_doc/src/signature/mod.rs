@@ -1,10 +1,9 @@
 //! Catalyst Signed Document COSE Signature information.
 
-use std::io::Write;
-
 pub use catalyst_types::catalyst_id::CatalystId;
+use cbork_utils::with_cbor_bytes::WithCborBytes;
 
-use crate::decode_context::DecodeContext;
+use crate::{decode_context::DecodeContext, Content, Metadata};
 
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]
@@ -64,16 +63,16 @@ impl Signatures {
 ///
 /// Described in [section 4.4 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
 pub(crate) fn tbs_data(
-    kid: &CatalystId, metadata_bytes: &[u8], content_bytes: &[u8],
+    kid: &CatalystId, metadata: &WithCborBytes<Metadata>, content: &WithCborBytes<Content>,
 ) -> anyhow::Result<Vec<u8>> {
     let mut e = minicbor::Encoder::new(Vec::new());
 
     e.array(5)?;
     e.str("Signature")?;
-    e.bytes(metadata_bytes)?; // `body_protected`
+    e.bytes(minicbor::to_vec(metadata)?.as_slice())?; // `body_protected`
     e.bytes(protected_header_encode(kid)?.as_slice())?; // `sign_protected`
     e.bytes(&[])?; // empty `external_aad`
-    e.writer_mut().write_all(content_bytes)?; // `payload`
+    e.encode(content)?; // `payload`
 
     Ok(e.into_writer())
 }

@@ -1,8 +1,8 @@
 //! Catalyst Signed Document Builder.
 use std::io::Write;
 
-use anyhow::Context;
 use catalyst_types::catalyst_id::CatalystId;
+use cbork_utils::with_cbor_bytes::WithCborBytes;
 
 use crate::{
     signature::{tbs_data, Signature},
@@ -31,10 +31,10 @@ pub struct ContentBuilder {
 
 /// Only `Signatures` builder part
 pub struct SignaturesBuilder {
-    /// metadata raw CBOR bytes
-    metadata_bytes: Vec<u8>,
-    /// content raw CBOR bytes
-    content_bytes: Vec<u8>,
+    /// metadata
+    metadata: WithCborBytes<Metadata>,
+    /// content
+    content: WithCborBytes<Content>,
     /// signatures
     signatures: Signatures,
 }
@@ -67,8 +67,8 @@ impl ContentBuilder {
     /// Prepares a `SignaturesBuilder` from the current `ContentBuilder`
     fn into_signatures_builder(self) -> anyhow::Result<SignaturesBuilder> {
         Ok(SignaturesBuilder {
-            metadata_bytes: minicbor::to_vec(self.metadata)?,
-            content_bytes: minicbor::to_vec(self.content)?,
+            metadata: WithCborBytes::new(self.metadata, &mut ())?,
+            content: WithCborBytes::new(self.content, &mut ())?,
             signatures: Signatures::default(),
         })
     }
@@ -121,8 +121,8 @@ impl SignaturesBuilder {
         self.signatures.push(build_signature(
             sign_fn,
             kid,
-            &self.metadata_bytes,
-            &self.content_bytes,
+            &self.metadata,
+            &self.content,
         )?);
 
         Ok(self)
@@ -133,8 +133,10 @@ impl SignaturesBuilder {
     /// # Errors:
     ///  - CBOR encoding/decoding failures
     pub fn build(self) -> anyhow::Result<CatalystSignedDocument> {
+        let metadata_bytes = minicbor::to_vec(&self.metadata)?;
+        let content_bytes = minicbor::to_vec(&self.content)?;
         let signature_bytes = minicbor::to_vec(&self.signatures)?;
-        let doc = build_document(&self.metadata_bytes, &self.content_bytes, &signature_bytes)?;
+        let doc = build_document(&metadata_bytes, &content_bytes, &signature_bytes)?;
         Ok(doc)
     }
 }
@@ -163,10 +165,10 @@ fn build_document(
 /// Builds a `Signature` object by signing provided `metadata_bytes`, `content_bytes` and
 /// `kid` params.
 fn build_signature(
-    sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId, metadata_bytes: &[u8],
-    content_bytes: &[u8],
+    sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId, metadata: &WithCborBytes<Metadata>,
+    content: &WithCborBytes<Content>,
 ) -> anyhow::Result<Signature> {
-    let data_to_sign = tbs_data(&kid, metadata_bytes, content_bytes)?;
+    let data_to_sign = tbs_data(&kid, metadata, content)?;
     let sign_bytes = sign_fn(data_to_sign);
     Ok(Signature::new(kid, sign_bytes))
 }
@@ -175,10 +177,9 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
     type Error = anyhow::Error;
 
     fn try_from(value: &CatalystSignedDocument) -> Result<Self, Self::Error> {
-        let (metadata_bytes, content_bytes) = value.metadata_and_content_bytes().context("Probably a bug, cannot retrieve a metadata cbor bytes and content cbor bytes from the structurally valid signed document.")?;
         Ok(Self {
-            metadata_bytes: metadata_bytes.to_vec(),
-            content_bytes: content_bytes.to_vec(),
+            metadata: value.inner.metadata.clone(),
+            content: value.inner.content.clone(),
             signatures: value.inner.signatures.clone(),
         })
     }
@@ -186,6 +187,8 @@ impl TryFrom<&CatalystSignedDocument> for SignaturesBuilder {
 
 #[cfg(test)]
 pub(crate) mod tests {
+    use cbork_utils::with_cbor_bytes::WithCborBytes;
+
     /// A test version of the builder, which allows to build a not fully valid catalyst
     /// signed document
     #[derive(Default)]
@@ -226,14 +229,12 @@ pub(crate) mod tests {
         pub(crate) fn add_signature(
             mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: super::CatalystId,
         ) -> anyhow::Result<Self> {
-            let metadata_bytes = minicbor::to_vec(&self.metadata).unwrap();
-            let content_bytes = minicbor::to_vec(&self.content).unwrap();
-            self.signatures.push(super::build_signature(
-                sign_fn,
-                kid,
-                &metadata_bytes,
-                &content_bytes,
-            )?);
+            let metadata = WithCborBytes::new(self.metadata, &mut ())?;
+            let content = WithCborBytes::new(self.content, &mut ())?;
+            self.signatures
+                .push(super::build_signature(sign_fn, kid, &metadata, &content)?);
+            self.metadata = metadata.inner();
+            self.content = content.inner();
             Ok(self)
         }
 
