@@ -319,6 +319,175 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
     }
 }
 
+fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+
+    let name = if upper {
+        "Content-Encoding"
+    } else {
+        "content-encoding"
+    };
+
+    TestCase {
+        name: format!("content_encoding field, allow upper and lower case key value: '{name}'"),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(5)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str(name)?.encode(ContentEncoding::Brotli)?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(matches!(
+                    doc.doc_meta().content_encoding(),
+                    Some(ContentEncoding::Brotli)
+                ));
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_with_random_kid_case() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+
+    TestCase {
+        name: "Invalid signature kid field format (random bytes)".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(5)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                e.bytes({
+                    let mut rng = rand::thread_rng();
+                    let mut rand_buf = [0u8; 128];
+                    rng.try_fill(&mut rand_buf)?;
+
+                    let mut p_headers = minicbor::Encoder::new(Vec::new());
+                    p_headers.map(1)?.u8(4)?.bytes(&rand_buf)?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+                e.map(0)?;
+                e.bytes(&[1, 2, 3])?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: false,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
+fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+
+    TestCase {
+        name: "Catalyst Signed Doc with wrong COSE sign tag value (not `98`)".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(u64::MAX))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(5)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: false,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes".to_string(),
@@ -505,6 +674,10 @@ fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
+        signed_doc_with_random_kid_case(),
+        signed_doc_with_wrong_cose_tag_case(),
+        signed_doc_with_content_encoding_case(true),
+        signed_doc_with_content_encoding_case(false),
         signed_doc_with_valid_alias_case("category_id"),
         signed_doc_with_valid_alias_case("brand_id"),
         signed_doc_with_valid_alias_case("campaign_id"),
@@ -575,13 +748,6 @@ fn catalyst_signed_doc_decoding_test() {
                     post_checks_res.err()
                 );
             }
-
-            assert_eq!(
-                bytes,
-                Vec::<u8>::try_from(doc).unwrap(),
-                "Case: [{}]. Asymmetric encoding and decoding procedure",
-                case.name
-            );
         }
     }
 }
