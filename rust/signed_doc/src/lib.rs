@@ -269,7 +269,7 @@ impl<C> Encode<C> for CatalystSignedDocument {
     ) -> Result<(), encode::Error<W::Error>> {
         // COSE_Sign tag
         // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
-        e.tag(minicbor::data::Tag::new(98))?;
+        e.tag(COSE_SIGN_CBOR_TAG)?;
         e.array(4)?;
         // protected headers (metadata fields)
         e.bytes(
