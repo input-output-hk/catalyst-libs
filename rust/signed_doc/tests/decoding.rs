@@ -441,6 +441,53 @@ fn signed_doc_with_random_kid_case() -> TestCase {
     }
 }
 
+fn signed_doc_with_wrong_cose_sign_tag_case() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+
+    TestCase {
+        name: "Catalyst Signed Doc with wrong COSE sign tag value (not `98`)".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(u64::MAX))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(5)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        can_decode: false,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
 fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes".to_string(),
@@ -628,6 +675,7 @@ fn catalyst_signed_doc_decoding_test() {
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
         signed_doc_with_random_kid_case(),
+        signed_doc_with_wrong_cose_sign_tag_case(),
         signed_doc_with_content_encoding_case(true),
         signed_doc_with_content_encoding_case(false),
         signed_doc_with_valid_alias_case("category_id"),
