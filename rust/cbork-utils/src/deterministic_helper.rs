@@ -93,11 +93,6 @@ pub fn get_declared_length(bytes: &[u8]) -> Result<Option<usize>, minicbor::deco
 /// - The input uses indefinite length encoding (additional info = 31)
 /// - The additional information value is invalid
 pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Error> {
-    // Check if input is empty, which is invalid CBOR
-    if bytes.is_empty() {
-        minicbor::decode::Error::message("Empty cbor bytes");
-    }
-
     // Extract the first byte which contains both major type and additional info
     let first_byte = bytes
         .first()

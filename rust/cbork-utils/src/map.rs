@@ -157,8 +157,8 @@ fn check_map_minimal_length(
     // Only check minimality for map length encodings using uint8
     // Immediate values (0-23) are already minimal by definition
     if initial_byte == CBOR_MAP_LENGTH_UINT8 && value <= CBOR_MAX_TINY_VALUE {
-        minicbor::decode::Error::message(minicbor::decode::Error::message(
-            "map minimal length failure",
+        return Err(minicbor::decode::Error::message(
+            minicbor::decode::Error::message("map minimal length failure"),
         ));
     }
 
@@ -214,9 +214,9 @@ fn map_keys_are_deterministic(key_bytes: &[u8]) -> Result<(), minicbor::decode::
         })?;
 
         if key_declared_length != actual_content_size {
-            minicbor::decode::Error::message(
+            return Err(minicbor::decode::Error::message(
                 "Declared length does not match the actual length. Non deterministic map key.",
-            );
+            ));
         }
     }
     Ok(())
