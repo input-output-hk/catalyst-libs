@@ -105,6 +105,9 @@ impl minicbor::Decode<'_, ()> for Map {
     fn decode(
         d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
+        // Capture position before reading the map header
+        let header_start_pos = d.position();
+
         // From RFC 8949 Section 4.2.2:
         // "Indefinite-length items must be made definite-length items."
         // The specification explicitly prohibits indefinite-length items in
@@ -115,8 +118,7 @@ impl minicbor::Decode<'_, ()> for Map {
             )
         })?;
 
-        let header_end_pos = d.position();
-        check_map_minimal_length(d, header_end_pos, map_len)?;
+        check_map_minimal_length(d, header_start_pos, map_len)?;
 
         // Decode entries to validate them
         let entries = decode_map_entries(d, map_len)?;
@@ -142,23 +144,26 @@ impl minicbor::Decode<'_, ()> for Map {
 /// "The length of arrays, maps, and strings MUST be encoded using the smallest possible
 /// CBOR additional information value."
 fn check_map_minimal_length(
-    decoder: &minicbor::Decoder, position: usize, value: u64,
+    decoder: &minicbor::Decoder, header_start_pos: usize, value: u64,
 ) -> Result<(), minicbor::decode::Error> {
     // For zero length, 0xA0 is always the minimal encoding
     if value == 0 {
         return Ok(());
     }
 
-    let initial_byte = decoder.input().get(position).copied().ok_or_else(|| {
-        minicbor::decode::Error::message(minicbor::decode::Error::message(
-            "Cannot read initial byte for minimality check",
-        ))
-    })?;
+    let initial_byte = decoder
+        .input()
+        .get(header_start_pos)
+        .copied()
+        .ok_or_else(|| {
+            minicbor::decode::Error::message("Cannot read initial byte for minimality check")
+        })?;
+
     // Only check minimality for map length encodings using uint8
     // Immediate values (0-23) are already minimal by definition
     if initial_byte == CBOR_MAP_LENGTH_UINT8 && value <= CBOR_MAX_TINY_VALUE {
         return Err(minicbor::decode::Error::message(
-            minicbor::decode::Error::message("map minimal length failure"),
+            "map minimal length failure",
         ));
     }
 
