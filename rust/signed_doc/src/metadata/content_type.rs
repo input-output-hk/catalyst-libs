@@ -11,17 +11,23 @@ use strum::VariantArray;
 /// Payload Content Type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray)]
 pub enum ContentType {
-    /// 'application/cbor'
+    /// `application/cbor`
     Cbor,
-    /// 'application/json'
+    /// `application/cddl`
+    Cddl,
+    /// `application/json`
     Json,
+    /// `application/json+schema`
+    JsonSchema,
 }
 
 impl Display for ContentType {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         match self {
             Self::Cbor => write!(f, "application/cbor"),
+            Self::Cddl => write!(f, "application/cddl"),
             Self::Json => write!(f, "application/json"),
+            Self::JsonSchema => write!(f, "application/json+schema"),
         }
     }
 }
@@ -32,7 +38,9 @@ impl FromStr for ContentType {
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s {
             "application/cbor" => Ok(Self::Cbor),
+            "application/cddl" => Ok(Self::Cddl),
             "application/json" => Ok(Self::Json),
+            "application/json+schema" => Ok(Self::JsonSchema),
             _ => {
                 anyhow::bail!(
                     "Unsupported Content Type: {s:?}, Supported only: {:?}",
@@ -98,16 +106,32 @@ mod tests {
             ContentType::Cbor
         );
         assert_eq!(
+            ContentType::from_str("application/cddl").unwrap(),
+            ContentType::Cddl
+        );
+        assert_eq!(
             ContentType::from_str("application/json").unwrap(),
             ContentType::Json
+        );
+        assert_eq!(
+            ContentType::from_str("application/json+schema").unwrap(),
+            ContentType::JsonSchema
         );
         assert_eq!(
             "application/cbor".parse::<ContentType>().unwrap(),
             ContentType::Cbor
         );
         assert_eq!(
+            "application/cddl".parse::<ContentType>().unwrap(),
+            ContentType::Cddl
+        );
+        assert_eq!(
             "application/json".parse::<ContentType>().unwrap(),
             ContentType::Json
+        );
+        assert_eq!(
+            "application/json+schema".parse::<ContentType>().unwrap(),
+            ContentType::JsonSchema
         );
     }
 }
