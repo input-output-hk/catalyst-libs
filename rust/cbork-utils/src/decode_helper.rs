@@ -92,6 +92,18 @@ pub fn decode_any<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decod
     Ok(bytes)
 }
 
+/// Extracts the raw bytes of a CBOR map from a decoder based on specified positions.
+/// This function retrieves the raw byte representation of a CBOR map between the given
+/// start and end positions from the decoder's underlying buffer.
+pub fn get_bytes(
+    d: &Decoder<'_>, map_start: usize, map_end: usize,
+) -> Result<Vec<u8>, decode::Error> {
+    d.input()
+        .get(map_start..map_end)
+        .ok_or_else(|| decode::Error::message("Invalid map byte range: indices out of bounds"))
+        .map(<[u8]>::to_vec)
+}
+
 #[cfg(test)]
 mod tests {
     use minicbor::Encoder;
