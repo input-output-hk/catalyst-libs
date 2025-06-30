@@ -20,6 +20,7 @@ pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
+use cbork_utils::with_cbor_bytes::WithCborBytes;
 pub use content::Content;
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
@@ -37,19 +38,14 @@ const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
 #[derive(Debug)]
 struct InnerCatalystSignedDocument {
     /// Document Metadata
-    metadata: Metadata,
+    metadata: WithCborBytes<Metadata>,
     /// Document Content
-    content: Content,
+    content: WithCborBytes<Content>,
     /// Signatures
     signatures: Signatures,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
-
-    /// raw CBOR bytes of the `CatalystSignedDocument` object.
-    /// It is important to keep them to have a consistency what comes from the decoding
-    /// process, so we would return the same data again
-    raw_bytes: Vec<u8>,
 }
 
 /// Keep all the contents private.
@@ -64,7 +60,7 @@ pub struct CatalystSignedDocument {
 
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        writeln!(f, "{}", self.inner.metadata)?;
+        self.inner.metadata.fmt(f)?;
         writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
         if self.inner.signatures.is_empty() {
@@ -115,7 +111,7 @@ impl CatalystSignedDocument {
 
     /// Return document content object.
     #[must_use]
-    pub(crate) fn content(&self) -> &Content {
+    pub(crate) fn content(&self) -> &WithCborBytes<Content> {
         &self.inner.content
     }
 
@@ -154,7 +150,7 @@ impl CatalystSignedDocument {
     /// Return document metadata content.
     // TODO: remove this and provide getters from metadata like the rest of its fields have.
     #[must_use]
-    pub fn doc_meta(&self) -> &Metadata {
+    pub fn doc_meta(&self) -> &WithCborBytes<Metadata> {
         &self.inner.metadata
     }
 
@@ -210,33 +206,6 @@ impl CatalystSignedDocument {
     pub fn into_builder(&self) -> anyhow::Result<SignaturesBuilder> {
         self.try_into()
     }
-
-    /// Returns data which is used in signing: COSE protected header bytes, COSE payload
-    /// bytes.
-    pub(crate) fn metadata_and_content_bytes(&self) -> anyhow::Result<(&[u8], &[u8])> {
-        let mut d = minicbor::Decoder::new(self.inner.raw_bytes.as_slice());
-
-        let p = d.position();
-        drop(d.tag().inspect_err(|_| d.set_position(p)));
-        d.array()?;
-
-        // metadata bytes
-        let metadata_bytes = d.bytes()?;
-
-        // unprotected header
-        d.skip()?;
-
-        // content bytes
-        let content_start_p = d.position();
-        d.skip()?;
-        let content_end_p = d.position();
-        let content_bytes = d
-            .input()
-            .get(content_start_p..content_end_p)
-            .ok_or(anyhow::anyhow!("Cannot read content bytes"))?;
-
-        Ok((metadata_bytes, content_bytes))
-    }
 }
 
 impl Decode<'_, ()> for CatalystSignedDocument {
@@ -246,8 +215,8 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             compatibility_policy: CompatibilityPolicy::Accept,
             report: &mut report,
         };
-        let start = d.position();
 
+        let p = d.position();
         if let Ok(tag) = d.tag() {
             if tag != COSE_SIGN_CBOR_TAG {
                 return Err(minicbor::decode::Error::message(format!(
@@ -255,7 +224,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
                 )));
             }
         } else {
-            d.set_position(start);
+            d.set_position(p);
         }
 
         if !matches!(d.array()?, Some(4)) {
@@ -265,7 +234,10 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         }
 
         let metadata_bytes = d.bytes()?;
-        let metadata = Metadata::decode(&mut minicbor::Decoder::new(metadata_bytes), &mut ctx)?;
+        let metadata = WithCborBytes::<Metadata>::decode(
+            &mut minicbor::Decoder::new(metadata_bytes),
+            &mut ctx,
+        )?;
 
         // empty unprotected headers
         let mut map =
@@ -278,21 +250,14 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             );
         }
 
-        let content = Content::decode(d, &mut ())?;
+        let content = WithCborBytes::<Content>::decode(d, &mut ())?;
         let signatures = Signatures::decode(d, &mut ctx)?;
-
-        let end = d.position();
-        let cose_bytes = d
-            .input()
-            .get(start..end)
-            .ok_or(minicbor::decode::Error::end_of_input())?;
 
         Ok(InnerCatalystSignedDocument {
             metadata,
             content,
             signatures,
             report,
-            raw_bytes: cose_bytes.to_vec(),
         }
         .into())
     }
@@ -302,10 +267,22 @@ impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
         &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        let raw_bytes = &self.inner.raw_bytes;
-        e.writer_mut()
-            .write_all(raw_bytes)
-            .map_err(minicbor::encode::Error::write)?;
+        // COSE_Sign tag
+        // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+        e.tag(COSE_SIGN_CBOR_TAG)?;
+        e.array(4)?;
+        // protected headers (metadata fields)
+        e.bytes(
+            minicbor::to_vec(&self.inner.metadata)
+                .map_err(minicbor::encode::Error::message)?
+                .as_slice(),
+        )?;
+        // empty unprotected headers
+        e.map(0)?;
+        // content
+        e.encode(&self.inner.content)?;
+        // signatures
+        e.encode(&self.inner.signatures)?;
         Ok(())
     }
 }
