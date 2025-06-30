@@ -59,6 +59,7 @@ impl ContentTypeRule {
             },
             ContentType::Cddl => {
                 // TODO: not implemented yet
+                anyhow::bail!("`application/cddl` is valid but unavailable yet")
             },
             ContentType::Cbor => {
                 let mut decoder = minicbor::Decoder::new(content);
@@ -71,6 +72,7 @@ impl ContentTypeRule {
             },
             ContentType::JsonSchema => {
                 // TODO: not implemented yet
+                anyhow::bail!("`application/json+schema` is valid but unavailable yet")
             },
         }
         Ok(())

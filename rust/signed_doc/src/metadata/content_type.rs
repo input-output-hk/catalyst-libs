@@ -11,11 +11,11 @@ use strum::VariantArray;
 /// Payload Content Type.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, VariantArray)]
 pub enum ContentType {
-    /// 'application/cbor'
+    /// `application/cbor`
     Cbor,
-    /// 'application/cddl'
+    /// `application/cddl`
     Cddl,
-    /// 'application/json'
+    /// `application/json`
     Json,
     /// `application/json+schema`
     JsonSchema,
