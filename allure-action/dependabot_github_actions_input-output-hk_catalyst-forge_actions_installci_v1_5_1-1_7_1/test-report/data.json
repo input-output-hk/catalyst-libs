@@ -1,0 +1,102 @@
+[
+  {
+    "runId": 13387145020,
+    "runUniqueId": "13387145020_1739870564804",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 287,
+        "unknown": 0,
+        "total": 287
+      },
+      "time": {
+        "minDuration": 3,
+        "maxDuration": 37833,
+        "sumDuration": 99454
+      }
+    }
+  },
+  {
+    "runId": 13387090560,
+    "runUniqueId": "13387090560_1739870383220",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 287,
+        "unknown": 0,
+        "total": 287
+      },
+      "time": {
+        "minDuration": 3,
+        "maxDuration": 37833,
+        "sumDuration": 99454
+      }
+    }
+  },
+  {
+    "runId": 13383980116,
+    "runUniqueId": "13383980116_1739857656831",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 287,
+        "unknown": 0,
+        "total": 287
+      },
+      "time": {
+        "minDuration": 3,
+        "maxDuration": 37833,
+        "sumDuration": 99454
+      }
+    }
+  },
+  {
+    "runId": 13325546858,
+    "runUniqueId": "13325546858_1739522667038",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 287,
+        "unknown": 0,
+        "total": 287
+      },
+      "time": {
+        "minDuration": 4,
+        "maxDuration": 39452,
+        "sumDuration": 102682
+      }
+    }
+  },
+  {
+    "runId": 13093459492,
+    "runUniqueId": "13093459492_1738452930630",
+    "testResult": "PASS",
+    "summary": {
+      "statistic": {
+        "failed": 0,
+        "broken": 0,
+        "skipped": 0,
+        "passed": 273,
+        "unknown": 0,
+        "total": 273
+      },
+      "time": {
+        "minDuration": 6,
+        "maxDuration": 41678,
+        "sumDuration": 105040
+      }
+    }
+  }
+]

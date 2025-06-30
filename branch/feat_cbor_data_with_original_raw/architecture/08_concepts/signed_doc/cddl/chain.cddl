@@ -1,0 +1,50 @@
+; chain
+
+
+; Reference to the previous Signed Document in a sequence.
+; * `height` is of the CURRENT block.
+; * `document_ref` is *ONLY* omitted in the very first document in a sequence.
+chain = [height, ? document_ref]
+
+; The consecutive sequence number of the current document
+; in the chain.
+; The very first document in a sequence is numbered `0` and it
+; *MUST ONLY* increment by one for each successive document in
+; the sequence.
+;
+; The FINAL sequence number is encoded with the current height
+; sequence value, negated.
+;
+; For example the following values for height define a chain
+; that has 5 documents in the sequence 0-4, the final height
+; is negated to indicate the end of the chain:
+; `0, 1, 2, 3, -4`
+;
+; No subsequent document can be chained to a sequence that has
+; a final chain height.
+height = int
+
+; Reference to a single Signed Document
+document_ref = [
+  document_id,
+  document_ver,
+  document_locator
+]
+
+; Document ID
+document_id = uuid_v7
+
+; UUIDv7
+uuid_v7 = #6.37(bytes .size 16)
+
+; Document Version
+document_ver = uuid_v7
+
+; Where a document can be located, must be a unique identifier.
+document_locator = {
+  "cid" => cid
+}
+
+; IPLD content identifier
+; TODO: add size limits if possible
+cid = #6.42(bytes)
