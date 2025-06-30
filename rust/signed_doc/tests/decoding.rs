@@ -441,7 +441,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
     }
 }
 
-fn signed_doc_with_wrong_cose_sign_tag_case() -> TestCase {
+fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
 
@@ -675,7 +675,7 @@ fn catalyst_signed_doc_decoding_test() {
         decoding_empty_bytes_case(),
         signed_doc_with_all_fields_case(),
         signed_doc_with_random_kid_case(),
-        signed_doc_with_wrong_cose_sign_tag_case(),
+        signed_doc_with_wrong_cose_tag_case(),
         signed_doc_with_content_encoding_case(true),
         signed_doc_with_content_encoding_case(false),
         signed_doc_with_valid_alias_case("category_id"),
