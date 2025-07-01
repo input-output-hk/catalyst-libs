@@ -1,6 +1,6 @@
 //! Catalyst Signed Document Metadata.
 use std::{
-    collections::BTreeMap,
+    collections::HashMap,
     fmt::{Display, Formatter},
 };
 
@@ -28,7 +28,7 @@ pub(crate) use crate::metadata::supported_field::{SupportedField, SupportedLabel
 ///
 /// These values are extracted from the COSE Sign protected header.
 #[derive(Clone, Debug, PartialEq, Default)]
-pub struct Metadata(BTreeMap<SupportedLabel, SupportedField>);
+pub struct Metadata(HashMap<SupportedLabel, SupportedField>);
 
 impl Metadata {
     /// Return Document Type `DocType` - a list of `UUIDv4`.
@@ -154,7 +154,7 @@ impl Metadata {
     ) -> Result<Self, E> {
         const REPORT_CONTEXT: &str = "Metadata building";
 
-        let mut metadata = Metadata(BTreeMap::new());
+        let mut metadata = Metadata(HashMap::new());
         for v in fields {
             let v = v?;
             let k = v.discriminant();
