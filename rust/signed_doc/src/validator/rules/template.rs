@@ -61,7 +61,7 @@ impl ContentRule {
                 };
                 match template_content_type {
                     ContentType::Json => templated_json_schema_check(doc, &template_doc),
-                    ContentType::Cbor => {
+                    ContentType::Cddl | ContentType::Cbor | ContentType::JsonSchema => {
                         // TODO: not implemented yet
                         true
                     },
