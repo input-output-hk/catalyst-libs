@@ -373,14 +373,7 @@ class DotLink(BaseModel):
 
     def __hash__(self) -> int:
         """Hash."""
-        return hash(
-            (
-                self.src,
-                self.dst,
-                self.directed,
-                self.theme
-            )
-        )
+        return hash((self.src, self.dst, self.directed, self.theme))
 
     def __repr__(self) -> str:
         """Repr."""
