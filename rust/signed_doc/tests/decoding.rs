@@ -498,7 +498,6 @@ fn decoding_empty_bytes_case() -> TestCase {
     }
 }
 
-#[allow(dead_code)]
 fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -564,7 +563,6 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
     }
 }
 
-#[allow(dead_code)]
 fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -640,7 +638,6 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
     }
 }
 
-#[allow(clippy::unwrap_used)]
 fn minimally_valid_tagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -681,16 +678,16 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type().unwrap() == &DocType::from(uuid_v4));
-                anyhow::ensure!(doc.doc_id().unwrap() == uuid_v7);
-                anyhow::ensure!(doc.doc_ver().unwrap() == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type().unwrap() == ContentType::Json);
+                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_id()? == uuid_v7);
+                anyhow::ensure!(doc.doc_ver()? == uuid_v7);
+                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
                 anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
                 anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 anyhow::ensure!(
-                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null).unwrap()
+                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
                 Ok(())
             }
@@ -698,7 +695,6 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
     }
 }
 
-#[allow(clippy::unwrap_used)]
 fn minimally_valid_untagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -738,16 +734,16 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type().unwrap() == &DocType::from(uuid_v4));
-                anyhow::ensure!(doc.doc_id().unwrap() == uuid_v7);
-                anyhow::ensure!(doc.doc_ver().unwrap() == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type().unwrap() == ContentType::Json);
+                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_id()? == uuid_v7);
+                anyhow::ensure!(doc.doc_ver()? == uuid_v7);
+                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
                 anyhow::ensure!(doc.doc_meta().doc_ref().is_none());
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
                 anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 anyhow::ensure!(
-                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null).unwrap()
+                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
                 Ok(())
             }
