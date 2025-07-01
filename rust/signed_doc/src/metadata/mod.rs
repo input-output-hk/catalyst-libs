@@ -21,6 +21,7 @@ use minicbor::Decoder;
 pub use section::Section;
 use strum::IntoDiscriminant as _;
 
+use crate::decode_context::CompatibilityPolicy;
 pub(crate) use crate::metadata::supported_field::{SupportedField, SupportedLabel};
 
 /// Document Metadata.
@@ -251,18 +252,30 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
     fn decode(
         d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
     ) -> Result<Self, minicbor::decode::Error> {
-        // TODO: use helpers from `cbork-utils` crate to verify that's the map is
-        // deterministically CBOR encoded map.
-
-        let Some(length) = d.map()? else {
-            return Err(minicbor::decode::Error::message(
-                "COSE protected headers object must be a definite size map ",
-            ));
+        let mut map_ctx = match ctx.compatibility_policy {
+            CompatibilityPolicy::Accept => {
+                cbork_utils::decode_context::DecodeCtx::non_deterministic()
+            },
+            CompatibilityPolicy::Warn => {
+                cbork_utils::decode_context::DecodeCtx::non_deterministic_with_handler(|error| {
+                    tracing::warn!(
+                        error = ?error,
+                        "Catalyst Signed Document non deterministically encoded metadata field",
+                    );
+                    Ok(())
+                })
+            },
+            CompatibilityPolicy::Fail => cbork_utils::decode_context::DecodeCtx::Deterministic,
         };
 
         let report = ctx.report.clone();
-        let fields = (0..length)
-            .map(|_| Option::<SupportedField>::decode(d, ctx))
+        let fields = cbork_utils::map::Map::decode(d, &mut map_ctx)?
+            .into_iter()
+            .map(|e| {
+                let mut bytes = e.key_bytes;
+                bytes.extend(e.value);
+                Option::<SupportedField>::decode(&mut minicbor::Decoder::new(&bytes), ctx)
+            })
             .filter_map(Result::transpose);
 
         Self::from_fields(fields, &report)

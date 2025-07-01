@@ -2,7 +2,7 @@
 
 /// a type alias for the deterministic error handler function
 pub type DeterministicErrorHandler =
-    dyn FnMut(minicbor::decode::Error) -> Result<(), minicbor::decode::Error>;
+    Box<dyn FnMut(minicbor::decode::Error) -> Result<(), minicbor::decode::Error>>;
 
 /// CBOR `minicbor::Decode` context struct.
 pub enum DecodeCtx {
@@ -15,13 +15,29 @@ pub enum DecodeCtx {
     /// Optionally it could carry an deterministic decoding error handler, so if provided
     /// deterministic decoding rule is applied and the error message transpases to the
     /// handler function
-    NonDeterministic(Option<Box<DeterministicErrorHandler>>),
+    NonDeterministic(Option<DeterministicErrorHandler>),
 }
 
 impl DecodeCtx {
     /// Returns `DecodeCtx::NonDeterministic` variant
+    /// Decode a CBOR object **NOT** applying deterministic decoding rules (RFC 8949
+    /// Section 4.2).
+    #[must_use]
     pub fn non_deterministic() -> Self {
         Self::NonDeterministic(None)
+    }
+
+    /// Returns `DecodeCtx::NonDeterministic` variant
+    /// Decode a CBOR object **NOT** applying deterministic decoding rules (RFC 8949
+    /// Section 4.2).
+    ///
+    /// When deterministic decoding rule is applied, the error message transpases to
+    /// the provided `handler`
+    #[must_use]
+    pub fn non_deterministic_with_handler(
+        handler: impl FnMut(minicbor::decode::Error) -> Result<(), minicbor::decode::Error> + 'static,
+    ) -> Self {
+        Self::NonDeterministic(Some(Box::new(handler)))
     }
 
     /// Depends on the set `DecodeCtx` variant applies the provided deterministic
