@@ -201,6 +201,10 @@ subgraph {self.label} {{
             return NotImplemented
         return self.name == other.name
 
+    def __hash__(self) -> int:
+        """Hash."""
+        return hash(self.name)
+
 
 class DotSignedDoc(BaseModel):
     """Table representing a single signed document."""
@@ -328,6 +332,16 @@ class DotLinkEnd(BaseModel):
 
         return self.id == other.id and self.port == other.port
 
+    def __hash__(self) -> int:
+        """Hash."""
+        return hash(
+            (
+                self.id,
+                self.port,
+                self.dir,
+            )
+        )
+
     def __repr__(self) -> str:
         """Repr."""
         return "DotLinkEnd()"
@@ -356,6 +370,10 @@ class DotLink(BaseModel):
             return NotImplemented
 
         return self.src == other.src and self.dst == other.dst
+
+    def __hash__(self) -> int:
+        """Hash."""
+        return hash((self.src, self.dst, self.directed, self.theme))
 
     def __repr__(self) -> str:
         """Repr."""
