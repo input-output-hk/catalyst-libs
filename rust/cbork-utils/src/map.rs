@@ -181,7 +181,7 @@ fn check_map_minimal_length(
 
 /// Decodes all key-value pairs in the map
 fn decode_map_entries(
-    d: &mut minicbor::Decoder, length: u64, ctx: &DecodeCtx,
+    d: &mut minicbor::Decoder, length: u64, ctx: &mut DecodeCtx,
 ) -> Result<Vec<MapEntry>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Map length too large for current platform")
@@ -351,7 +351,7 @@ mod tests {
         ];
         let mut decoder = Decoder::new(&invalid_map);
         assert!(Map::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
-        assert!(Map::decode(&mut decoder, &mut DecodeCtx::NonDeterministic).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::non_deterministic()).is_ok());
     }
 
     /// Test empty map handling - special case mentioned in RFC 8949.
@@ -409,7 +409,7 @@ mod tests {
         ];
         let mut decoder = Decoder::new(&invalid_small);
         assert!(Map::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
-        assert!(Map::decode(&mut decoder, &mut DecodeCtx::NonDeterministic).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::non_deterministic()).is_ok());
     }
 
     /// Test handling of complex key structures while maintaining canonical ordering
@@ -479,7 +479,7 @@ mod tests {
         ];
         let mut decoder = Decoder::new(&map_with_duplicates);
         assert!(Map::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
-        assert!(Map::decode(&mut decoder, &mut DecodeCtx::NonDeterministic).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::non_deterministic()).is_ok());
     }
 
     #[test]
