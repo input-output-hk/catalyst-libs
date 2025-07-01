@@ -2,9 +2,10 @@
 //! Supports deterministically encoded rules (RFC 8949 Section 4.2) if corresponding
 //! option is enabled.
 
-use std::{cmp::Ordering, vec::IntoIter};
+use std::{cmp::Ordering, ops::Deref, vec::IntoIter};
 
 use crate::{
+    decode_context::DecodeCtx,
     decode_helper::get_bytes,
     deterministic_helper::{get_cbor_header_size, get_declared_length, CBOR_MAX_TINY_VALUE},
 };
@@ -12,6 +13,14 @@ use crate::{
 /// Represents a CBOR map key-value pair, preserving original decoding order of values.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Map(pub Vec<MapEntry>);
+
+impl Deref for Map {
+    type Target = Vec<MapEntry>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl IntoIterator for Map {
     type IntoIter = IntoIter<MapEntry>;
@@ -101,9 +110,9 @@ const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length 
 /// - Map keys are not properly sorted (`UnorderedMapKeys`)
 /// - Duplicate keys are found (`DuplicateMapKey`)
 /// - Map key or value decoding fails (`DecoderError`)
-impl minicbor::Decode<'_, ()> for Map {
+impl minicbor::Decode<'_, DecodeCtx> for Map {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeCtx,
     ) -> Result<Self, minicbor::decode::Error> {
         // Capture position before reading the map header
         let header_start_pos = d.position();
@@ -118,12 +127,12 @@ impl minicbor::Decode<'_, ()> for Map {
             )
         })?;
 
-        check_map_minimal_length(d, header_start_pos, map_len)?;
+        ctx.try_check(|| check_map_minimal_length(d, header_start_pos, map_len))?;
 
         // Decode entries to validate them
-        let entries = decode_map_entries(d, map_len)?;
+        let entries = decode_map_entries(d, map_len, ctx)?;
 
-        validate_map_ordering(&entries)?;
+        ctx.try_check(|| validate_map_ordering(&entries))?;
 
         Ok(Self(entries))
     }
@@ -172,7 +181,7 @@ fn check_map_minimal_length(
 
 /// Decodes all key-value pairs in the map
 fn decode_map_entries(
-    d: &mut minicbor::Decoder, length: u64,
+    d: &mut minicbor::Decoder, length: u64, ctx: &DecodeCtx,
 ) -> Result<Vec<MapEntry>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Map length too large for current platform")
@@ -197,7 +206,8 @@ fn decode_map_entries(
 
         // The keys themselves must be deterministically encoded (4.2.1)
         let key_bytes = get_bytes(d, key_start, key_end)?;
-        map_keys_are_deterministic(&key_bytes)?;
+
+        ctx.try_check(|| map_keys_are_deterministic(&key_bytes))?;
 
         let value = get_bytes(d, value_start, value_end)?;
 
@@ -284,7 +294,7 @@ mod tests {
         ];
 
         let mut decoder = Decoder::new(&valid_map);
-        let result = Map::decode(&mut decoder, &mut ()).unwrap();
+        let result = Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).unwrap();
 
         // Verify we got back exactly the same bytes
 
@@ -327,7 +337,7 @@ mod tests {
             0x41, 0x02, // Value 2
         ];
         let mut decoder = Decoder::new(&valid_map);
-        assert!(Map::decode(&mut decoder, &mut ()).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
 
         // Invalid ordering - violates RFC 8949 Section 4.2.3 rule 2:
         // "If two keys have the same length, the one with the lower value in
@@ -340,7 +350,8 @@ mod tests {
             0x41, 0x02, // Value 2
         ];
         let mut decoder = Decoder::new(&invalid_map);
-        assert!(Map::decode(&mut decoder, &mut ()).is_err());
+        assert!(Map::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::NonDeterministic).is_ok());
     }
 
     /// Test empty map handling - special case mentioned in RFC 8949.
@@ -352,7 +363,7 @@ mod tests {
             0xA0, // Map with 0 pairs - encoded with immediate value as per Section 4.2.1
         ];
         let mut decoder = Decoder::new(&empty_map);
-        assert!(Map::decode(&mut decoder, &mut ()).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
     /// Test minimal length encoding rules for maps as specified in RFC 8949 Section 4.2.1
@@ -387,7 +398,7 @@ mod tests {
         ];
         let mut decoder = Decoder::new(&valid_small);
 
-        assert!(Map::decode(&mut decoder, &mut ()).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
 
         // Test case 2: Invalid non-minimal encoding (using additional info 24 for length 1)
         let invalid_small = vec![
@@ -397,7 +408,8 @@ mod tests {
             0x02, // Value: unsigned int 2
         ];
         let mut decoder = Decoder::new(&invalid_small);
-        assert!(Map::decode(&mut decoder, &mut ()).is_err());
+        assert!(Map::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::NonDeterministic).is_ok());
     }
 
     /// Test handling of complex key structures while maintaining canonical ordering
@@ -418,7 +430,7 @@ mod tests {
             0x41, 0x02, // Value 2
         ];
         let mut decoder = Decoder::new(&valid_complex);
-        assert!(Map::decode(&mut decoder, &mut ()).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
     /// Test edge cases for map encoding while maintaining compliance with RFC 8949
@@ -437,7 +449,7 @@ mod tests {
             0x41, 0x02, // Value: 1-byte string
         ];
         let mut decoder = Decoder::new(&single_entry);
-        assert!(Map::decode(&mut decoder, &mut ()).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
 
         // Map with zero-length string key - tests smallest possible key case
         // Still must follow sorting rules from Section 4.2.3
@@ -447,7 +459,7 @@ mod tests {
             0x41, 0x01, // Value: 1-byte string
         ];
         let mut decoder = Decoder::new(&zero_length_key);
-        assert!(Map::decode(&mut decoder, &mut ()).is_ok());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
     /// Test duplicate key detection as required by RFC 8949 Section 4.2.3
@@ -466,7 +478,8 @@ mod tests {
             0x41, 0x03, // Value 2
         ];
         let mut decoder = Decoder::new(&map_with_duplicates);
-        assert!(Map::decode(&mut decoder, &mut ()).is_err());
+        assert!(Map::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Map::decode(&mut decoder, &mut DecodeCtx::NonDeterministic).is_ok());
     }
 
     #[test]

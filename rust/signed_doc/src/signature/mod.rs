@@ -109,7 +109,11 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Option<Signature> {
             protected_header_decode(d.bytes()?, ctx).map_err(minicbor::decode::Error::message)?;
 
         // empty unprotected headers
-        let mut map = cbork_utils::map::Map::decode(d, &mut ())?.into_iter();
+        let mut map = cbork_utils::map::Map::decode(
+            d,
+            &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+        )?
+        .into_iter();
         if map.next().is_some() {
             ctx.report.unknown_field(
                 "unprotected headers",
@@ -193,12 +197,22 @@ fn protected_header_encode(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
 fn protected_header_decode(
     bytes: &[u8], ctx: &mut DecodeContext<'_>,
 ) -> anyhow::Result<Option<CatalystId>> {
-    let mut map =
-        cbork_utils::map::Map::decode(&mut minicbor::Decoder::new(bytes), &mut ())?.into_iter();
+    let mut map = cbork_utils::map::Map::decode(
+        &mut minicbor::Decoder::new(bytes),
+        &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+    )?
+    .into_iter();
 
     let Some(entry) = map.next() else {
         anyhow::bail!("COSE signature protected header must be at least one entry");
     };
+
+    if map.len() > 1 {
+        ctx.report.functional_validation(
+            "COSE signature protected header must have only one `kid` field",
+            "COSE signature protected header decoding",
+        );
+    }
 
     // protected headers (kid field)
     anyhow::ensure!(
