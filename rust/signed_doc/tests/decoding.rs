@@ -597,7 +597,12 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                     .encode_with(doc_ref.clone(), &mut ())?;
                 p_headers.str("section")?.encode("$")?;
 
-                p_headers.str("collabs")?.encode(["collaborator 1", "collaborator 2"])?;
+                p_headers.str("collaborators")?.encode([
+                    /* cspell:disable */
+                    "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
+                    "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3"
+                    /* cspell:enable */
+                ])?;
                 p_headers.str("parameters")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
 
                 e.bytes(p_headers.into_writer().as_slice())?;
