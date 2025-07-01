@@ -184,7 +184,9 @@ impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
             SupportedLabel::Ver => Deserialize::deserialize(d).map(SupportedField::Ver),
             SupportedLabel::Type => Deserialize::deserialize(d).map(SupportedField::Type),
             SupportedLabel::Reply => Deserialize::deserialize(d).map(SupportedField::Reply),
-            SupportedLabel::Collaborators => Deserialize::deserialize(d).map(SupportedField::Collaborators),
+            SupportedLabel::Collaborators => {
+                Deserialize::deserialize(d).map(SupportedField::Collaborators)
+            },
             SupportedLabel::Section => Deserialize::deserialize(d).map(SupportedField::Section),
             SupportedLabel::Template => Deserialize::deserialize(d).map(SupportedField::Template),
             SupportedLabel::Parameters => {

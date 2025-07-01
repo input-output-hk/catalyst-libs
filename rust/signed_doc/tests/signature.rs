@@ -21,7 +21,10 @@ fn metadata() -> serde_json::Value {
         "reply": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
         "template": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
         "section": "$",
-        "collaborators": vec!["Alex1", "Alex2"],
+        "collaborators": vec![
+            "cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE",
+            "id.catalyst://preprod.cardano/FftxFnOrj2qmTuB2oZG2v0YEWJfKvQ9Gg8AgNAhDsKE/7/3"
+        ],
         "parameters": {"id":  UuidV7::new(), "ver":  UuidV7::new()},
     })
 }

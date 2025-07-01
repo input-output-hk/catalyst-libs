@@ -12,7 +12,7 @@ mod document_refs;
 mod section;
 mod supported_field;
 
-use catalyst_types::{problem_report::ProblemReport, uuid::UuidV7};
+use catalyst_types::{catalyst_id::CatalystId, problem_report::ProblemReport, uuid::UuidV7};
 pub use content_encoding::ContentEncoding;
 pub use content_type::ContentType;
 pub use doc_type::DocType;
@@ -120,7 +120,7 @@ impl Metadata {
 
     /// Return `collaborators` field.
     #[must_use]
-    pub fn collaborators(&self) -> &[String] {
+    pub fn collaborators(&self) -> &[CatalystId] {
         self.0
             .get(&SupportedLabel::Collaborators)
             .and_then(SupportedField::try_as_collaborators_ref)
