@@ -13,7 +13,7 @@ pub enum DecodeCtx {
     /// Section 4.2).
     ///
     /// Optionally it could carry an deterministic decoding error handler, so if provided
-    /// deterministic decoding rule is applied and the error message transpases to the
+    /// deterministic decoding rule is applied and the error message transpassed to the
     /// handler function
     NonDeterministic(Option<DeterministicErrorHandler>),
 }
