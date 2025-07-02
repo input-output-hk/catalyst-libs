@@ -205,11 +205,11 @@ fn decode_map_entries(
         let value_end = d.position();
 
         // The keys themselves must be deterministically encoded (4.2.1)
-        let key_bytes = get_bytes(d, key_start, key_end)?;
+        let key_bytes = get_bytes(d, key_start, key_end)?.to_vec();
 
         ctx.try_check(|| map_keys_are_deterministic(&key_bytes))?;
 
-        let value = get_bytes(d, value_start, value_end)?;
+        let value = get_bytes(d, value_start, value_end)?.to_vec();
 
         entries.push(MapEntry { key_bytes, value });
     }

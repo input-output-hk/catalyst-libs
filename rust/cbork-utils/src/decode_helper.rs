@@ -98,13 +98,12 @@ pub fn decode_any<'d>(d: &mut Decoder<'d>, from: &str) -> Result<&'d [u8], decod
 ///
 /// # Errors
 ///  - Invalid map byte range: indices out of bounds
-pub fn get_bytes(
-    d: &Decoder<'_>, map_start: usize, map_end: usize,
-) -> Result<Vec<u8>, decode::Error> {
+pub fn get_bytes<'a>(
+    d: &Decoder<'a>, map_start: usize, map_end: usize,
+) -> Result<&'a [u8], decode::Error> {
     d.input()
         .get(map_start..map_end)
         .ok_or_else(|| decode::Error::message("Invalid map byte range: indices out of bounds"))
-        .map(<[u8]>::to_vec)
 }
 
 #[cfg(test)]

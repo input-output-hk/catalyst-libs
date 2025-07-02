@@ -13,7 +13,7 @@ pub enum DecodeCtx {
     /// Section 4.2).
     ///
     /// Optionally it could carry an deterministic decoding error handler, so if provided
-    /// deterministic decoding rule is applied and the error message transpassed to the
+    /// deterministic decoding rule is applied and the error message passed to the
     /// handler function
     NonDeterministic(Option<DeterministicErrorHandler>),
 }
@@ -31,7 +31,7 @@ impl DecodeCtx {
     /// Decode a CBOR object **NOT** applying deterministic decoding rules (RFC 8949
     /// Section 4.2).
     ///
-    /// When deterministic decoding rule is applied, the error message transpases to
+    /// When deterministic decoding rule is applied, the error message passed to
     /// the provided `handler`
     #[must_use]
     pub fn non_deterministic_with_handler(
