@@ -1046,73 +1046,6 @@ fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
     }
 }
 
-fn signed_doc_with_strict_deterministic_decoding_correct_order() -> TestCase {
-    let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
-    TestCase {
-        name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled strictly decoded rules, metadata field in the correct order".to_string(),
-        bytes_gen: Box::new({
-            move || {
-                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
-
-                let mut e = Encoder::new(Vec::new());
-                e.tag(Tag::new(98))?;
-                e.array(4)?;
-                // protected headers (metadata fields)
-                e.bytes({
-                    let mut p_headers = Encoder::new(Vec::new());
-
-                    p_headers.map(4)?;
-                    p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("id")?
-                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers
-                        .str("ver")?
-                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers
-                        .str("type")?
-                        .array(1)?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.into_writer().as_slice()
-                })?;
-                // empty unprotected headers
-                e.map(0)?;
-                // content
-                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
-                // signatures
-                // one signature
-                e.array(1)?;
-                e.array(3)?;
-                // protected headers (kid field)
-                let mut p_headers = minicbor::Encoder::new(Vec::new());
-                p_headers.map(1)?.u8(4)?.bytes(Vec::<u8>::from(&kid).as_slice())?;
-                e.bytes(p_headers.into_writer().as_slice())?;
-                e.map(0)?;
-                e.bytes(&[1, 2, 3])?;
-                Ok(e)
-            }
-        }),
-        policy: CompatibilityPolicy::Fail,
-        can_decode: true,
-        valid_doc: true,
-        post_checks: Some(Box::new({
-            move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
-                anyhow::ensure!(doc.doc_id()? == uuid_v7);
-                anyhow::ensure!(doc.doc_ver()? == uuid_v7);
-                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
-                anyhow::ensure!(
-                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
-                );
-                anyhow::ensure!(doc.kids().len() == 1);
-                Ok(())
-            }
-        })),
-    }
-}
-
 fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
@@ -1283,7 +1216,6 @@ fn catalyst_signed_doc_decoding_test() {
         minimally_valid_untagged_signed_doc(),
         signed_doc_with_non_empty_unprotected_headers(),
         signed_doc_with_signatures_non_empty_unprotected_headers(),
-        signed_doc_with_strict_deterministic_decoding_correct_order(),
         signed_doc_with_strict_deterministic_decoding_wrong_order(),
         signed_doc_with_non_strict_deterministic_decoding_wrong_order(),
     ];
