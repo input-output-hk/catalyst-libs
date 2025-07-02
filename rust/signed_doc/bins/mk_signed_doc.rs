@@ -129,7 +129,7 @@ fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow
 }
 
 fn signed_doc_from_bytes(cose_bytes: &[u8]) -> anyhow::Result<CatalystSignedDocument> {
-    minicbor::decode(cose_bytes).context("Invalid Catalyst Document")
+    cose_bytes.try_into().context("Invalid Catalyst Document")
 }
 
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>

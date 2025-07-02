@@ -182,9 +182,9 @@ impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
     }
 }
 
-impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Option<SupportedField> {
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<SupportedField> {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
+        d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
 
@@ -199,7 +199,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Option<S
                 d.input().get(value_start..value_end).unwrap_or_default(),
             )
             .to_string();
-            ctx.report
+            ctx.report()
                 .unknown_field(&label.to_string(), &value, REPORT_CONTEXT);
             return Ok(None);
         };
@@ -227,7 +227,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Option<S
             SupportedLabel::ContentEncoding => d.decode().map(SupportedField::ContentEncoding),
         }
         .inspect_err(|e| {
-            ctx.report.invalid_value(
+            ctx.report().invalid_value(
                 &format!("CBOR COSE protected header {key}"),
                 &hex::encode(cbor_bytes),
                 &format!("{e}"),

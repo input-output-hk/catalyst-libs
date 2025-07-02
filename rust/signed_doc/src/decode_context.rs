@@ -3,9 +3,8 @@
 use catalyst_types::problem_report::ProblemReport;
 
 /// Compatibility policy
-#[allow(dead_code)]
 #[derive(Copy, Clone)]
-pub(crate) enum CompatibilityPolicy {
+pub enum CompatibilityPolicy {
     /// Silently allow obsoleted type conversions or non deterministic encoding.
     Accept,
     /// Allow but log Warnings for all obsoleted type conversions or non deterministic
@@ -17,9 +16,35 @@ pub(crate) enum CompatibilityPolicy {
 }
 
 /// A context use to pass to decoder.
-pub(crate) struct DecodeContext<'r> {
+pub(crate) struct DecodeContext {
     /// Compatibility policy.
-    pub compatibility_policy: CompatibilityPolicy,
+    compatibility_policy: CompatibilityPolicy,
     /// Problem report.
-    pub report: &'r mut ProblemReport,
+    report: ProblemReport,
+}
+
+impl DecodeContext {
+    /// Creates a new instance of the `DecodeContext`
+    pub(crate) fn new(compatibility_policy: CompatibilityPolicy, report: ProblemReport) -> Self {
+        Self {
+            compatibility_policy,
+            report,
+        }
+    }
+
+    /// Returns `CompatibilityPolicy`
+    pub(crate) fn policy(&self) -> &CompatibilityPolicy {
+        &self.compatibility_policy
+    }
+
+    /// Returns `ProblemReport`
+    pub(crate) fn report(&mut self) -> &mut ProblemReport {
+        &mut self.report
+    }
+
+    /// Consuming the current `DecodeContext` by returning the underlying `ProblemReport`
+    /// instance
+    pub(crate) fn into_report(self) -> ProblemReport {
+        self.report
+    }
 }
