@@ -144,7 +144,7 @@ impl Display for DocType {
 // document_type = [ 1* uuid_v4 ]
 // ; UUIDv4
 // uuid_v4 = #6.37(bytes .size 16)
-impl Decode<'_, DecodeContext<'_>> for DocType {
+impl Decode<'_, DecodeContext> for DocType {
     fn decode(
         d: &mut Decoder, decode_context: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
@@ -155,7 +155,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
             minicbor::data::Type::Array => {
                 let len = d.array()?.ok_or_else(|| {
                     decode_context
-                        .report
+                        .report()
                         .other("Unable to decode array length", CONTEXT);
                     minicbor::decode::Error::message(format!(
                         "{CONTEXT}: Unable to decode array length"
@@ -163,7 +163,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                 })?;
 
                 if len == 0 {
-                    decode_context.report.invalid_value(
+                    decode_context.report().invalid_value(
                         "array length",
                         "0",
                         "must contain at least one UUIDv4",
@@ -180,7 +180,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                     .map(Self)
                     .map_err(|e| {
                         decode_context
-                            .report
+                            .report()
                             .other(&format!("Invalid UUIDv4 in array: {e}"), CONTEXT);
                         minicbor::decode::Error::message(format!(
                             "{CONTEXT}: Invalid UUIDv4 in array: {e}"
@@ -189,18 +189,15 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
             },
             minicbor::data::Type::Tag => {
                 // Handle single tagged UUID
-                match decode_context.compatibility_policy {
+                match decode_context.policy() {
                     CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(
-                            decode_context.compatibility_policy,
-                            CompatibilityPolicy::Warn
-                        ) {
+                        if matches!(decode_context.policy(), CompatibilityPolicy::Warn) {
                             warn!("{CONTEXT}: Conversion of document type single UUID to type DocType");
                         }
 
                         let uuid = parse_uuid(d).map_err(|e| {
                             let msg = format!("Cannot decode single UUIDv4: {e}");
-                            decode_context.report.invalid_value(
+                            decode_context.report().invalid_value(
                                 "Decode single UUIDv4",
                                 &e.to_string(),
                                 &msg,
@@ -214,7 +211,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
 
                     CompatibilityPolicy::Fail => {
                         let msg = "Conversion of document type single UUID to type DocType is not allowed";
-                        decode_context.report.other(msg, CONTEXT);
+                        decode_context.report().other(msg, CONTEXT);
                         Err(minicbor::decode::Error::message(format!(
                             "{CONTEXT}: {msg}"
                         )))
@@ -222,7 +219,7 @@ impl Decode<'_, DecodeContext<'_>> for DocType {
                 }
             },
             other => {
-                decode_context.report.invalid_value(
+                decode_context.report().invalid_value(
                     "decoding type",
                     &format!("{other:?}"),
                     "array or tag cbor",
@@ -342,49 +339,45 @@ mod tests {
     fn test_empty_doc_type_cbor_decode() {
         assert!(<DocType as TryFrom<Vec<UuidV4>>>::try_from(vec![]).is_err());
 
-        let mut report = ProblemReport::new("Test empty doc type");
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Accept,
+            ProblemReport::new("Test empty doc type"),
+        );
         let mut decoder = Decoder::new(&[]);
         assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
     }
 
     #[test]
     fn test_single_uuid_doc_type_fail_policy_cbor_decode() {
-        let mut report = ProblemReport::new("Test single uuid doc type - fail");
         let data = hex::decode(PSA).unwrap();
         let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Fail,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Fail,
+            ProblemReport::new("Test single uuid doc type - fail"),
+        );
         assert!(DocType::decode(&mut decoder.clone(), &mut decoded_context).is_err());
     }
 
     #[test]
     fn test_single_uuid_doc_type_warn_policy_cbor_decode() {
-        let mut report = ProblemReport::new("Test single uuid doc type - warn");
         let data = hex::decode(PSA).unwrap();
         let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Warn,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Warn,
+            ProblemReport::new("Test single uuid doc type - warn"),
+        );
         let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_type.doc_types().len(), 3);
     }
 
     #[test]
     fn test_single_uuid_doc_type_accept_policy_cbor_decode() {
-        let mut report = ProblemReport::new("Test single uuid doc type - accept");
         let data = hex::decode(PSA).unwrap();
         let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Accept,
+            ProblemReport::new("Test single uuid doc type - accept"),
+        );
         let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_type.doc_types().len(), 3);
     }
@@ -398,10 +391,7 @@ mod tests {
         let mut encoder = Encoder::new(&mut buffer);
         doc_type_list.encode(&mut encoder, &mut report).unwrap();
         let mut decoder = Decoder::new(&buffer);
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report.clone(),
-        };
+        let mut decoded_context = DecodeContext::new(CompatibilityPolicy::Accept, report);
         let decoded_doc_type = DocType::decode(&mut decoder, &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_type, doc_type_list);
     }

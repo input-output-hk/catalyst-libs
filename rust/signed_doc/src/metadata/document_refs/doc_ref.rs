@@ -62,21 +62,21 @@ impl Display for DocumentRef {
     }
 }
 
-impl Decode<'_, DecodeContext<'_>> for DocumentRef {
+impl Decode<'_, DecodeContext> for DocumentRef {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, decode_context: &mut DecodeContext<'_>,
+        d: &mut minicbor::Decoder<'_>, decode_context: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRef decoding";
         let parse_uuid = |d: &mut Decoder| UuidV7::decode(d, &mut CborContext::Tagged);
 
         let arr = d.array()?.ok_or_else(|| {
             decode_context
-                .report
+                .report()
                 .other("Unable to decode array length", CONTEXT);
             minicbor::decode::Error::message(format!("{CONTEXT}: Unable to decode array length"))
         })?;
         if arr != DOC_REF_ARR_ITEM {
-            decode_context.report.invalid_value(
+            decode_context.report().invalid_value(
                 "Array length",
                 &arr.to_string(),
                 &DOC_REF_ARR_ITEM.to_string(),
@@ -88,21 +88,21 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRef {
         }
         let id = parse_uuid(d).map_err(|e| {
             decode_context
-                .report
+                .report()
                 .other(&format!("Invalid ID UUIDv7: {e}"), CONTEXT);
             e.with_message("Invalid ID UUIDv7")
         })?;
 
         let ver = parse_uuid(d).map_err(|e| {
             decode_context
-                .report
+                .report()
                 .other(&format!("Invalid Ver UUIDv7: {e}"), CONTEXT);
             e.with_message("Invalid Ver UUIDv7")
         })?;
 
-        let locator = DocLocator::decode(d, decode_context.report).map_err(|e| {
+        let locator = DocLocator::decode(d, decode_context.report()).map_err(|e| {
             decode_context
-                .report
+                .report()
                 .other(&format!("Failed to decode locator {e}"), CONTEXT);
             e.with_message("Failed to decode locator")
         })?;

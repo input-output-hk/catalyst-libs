@@ -3,7 +3,7 @@
 use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
-use minicbor::{data::Tag, Encoder};
+use minicbor::{data::Tag, Decode, Encoder};
 use rand::Rng;
 
 mod common;
@@ -1088,7 +1088,7 @@ fn catalyst_signed_doc_decoding_test() {
             bytes_res.err()
         );
         let bytes = bytes_res.unwrap().into_writer();
-        let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
+        let doc_res = CatalystSignedDocument::decode(&mut minicbor::Decoder::new(&bytes), &mut ());
         assert_eq!(
             doc_res.is_ok(),
             case.can_decode,
