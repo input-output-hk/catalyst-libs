@@ -157,7 +157,6 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
 fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
         name: format!("Catalyst Signed Doc with random bytes in '{field}' header field."),
@@ -173,12 +172,12 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                     let mut rand_buf = [0u8; 128];
                     rng.try_fill(&mut rand_buf)?;
 
-                    let is_required_header = ["type", "id", "ver", "parameters"]
+                    let is_required_header = ["content-type", "type", "id", "ver"]
                         .iter()
                         .any(|v| v == &field);
 
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(if is_required_header { 5 } else { 6 })?;
+                    p_headers.map(if is_required_header { 4 } else { 5 })?;
                     if field == "content-type" {
                         p_headers.u8(3)?.encode_with(rand_buf, &mut ())?;
                     } else {
@@ -204,15 +203,6 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                         p_headers
                             .str("ver")?
                             .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    }
-                    if field == "parameters" {
-                        p_headers
-                            .str("parameters")?
-                            .encode_with(rand_buf, &mut ())?;
-                    } else {
-                        p_headers
-                            .str("parameters")?
-                            .encode_with(doc_ref.clone(), &mut ())?;
                     }
 
                     if !is_required_header {
@@ -241,6 +231,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
                 anyhow::ensure!(doc.doc_meta().section().is_none());
+                anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 anyhow::ensure!(doc.doc_meta().collabs().is_empty());
 
                 if field == "content-type" {
@@ -254,9 +245,6 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 }
                 if field == "ver" {
                     anyhow::ensure!(doc.doc_meta().doc_ver().is_err());
-                }
-                if field == "parameters" {
-                    anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 }
 
                 Ok(())
