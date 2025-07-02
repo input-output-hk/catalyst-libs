@@ -240,8 +240,11 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         )?;
 
         // empty unprotected headers
-        let mut map =
-            cbork_utils::deterministic_helper::decode_map_deterministically(d)?.into_iter();
+        let mut map = cbork_utils::map::Map::decode(
+            d,
+            &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+        )?
+        .into_iter();
         if map.next().is_some() {
             ctx.report.unknown_field(
                 "unprotected headers",

@@ -1,8 +1,6 @@
 //! Catalyst Signed Document unified metadata field.
 
 use std::fmt::{self, Display};
-#[cfg(test)]
-use std::{cmp, convert::Infallible};
 
 use catalyst_types::uuid::UuidV7;
 use serde::Deserialize;
@@ -55,21 +53,6 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
     }
 }
 
-#[cfg(test)]
-impl Label<'_> {
-    /// Compare by [RFC 8949 section 4.2.1] specification.
-    ///
-    ///  [RFC 8949 section 4.2.1]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.1
-    fn rfc8949_cmp(
-        &self, other: &Self,
-    ) -> Result<cmp::Ordering, minicbor::encode::Error<Infallible>> {
-        let lhs = minicbor::to_vec(self)?;
-        let rhs = minicbor::to_vec(other)?;
-        let ord = lhs.len().cmp(&rhs.len()).then_with(|| lhs.cmp(&rhs));
-        Ok(ord)
-    }
-}
-
 impl Display for Label<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
@@ -89,7 +72,7 @@ impl Display for Label<'_> {
 #[derive(Clone, Debug, PartialEq, EnumDiscriminants, EnumTryAs)]
 #[strum_discriminants(
     name(SupportedLabel),
-    derive(Ord, PartialOrd, serde::Deserialize, Hash),
+    derive(serde::Deserialize, Hash),
     serde(rename_all = "kebab-case"),
     cfg_attr(test, derive(strum::VariantArray))
 )]
@@ -276,52 +259,5 @@ impl minicbor::Encode<()> for SupportedField {
             SupportedField::Section(section) => section.encode(e, ctx),
             SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use strum::VariantArray as _;
-
-    use super::*;
-
-    /// Checks that [`Label::rfc8949_cmp`] ordering is compliant with the RFC.
-    #[test]
-    fn label_rfc8949_cmp() {
-        assert_eq!(
-            Label::Str("a").rfc8949_cmp(&Label::Str("a")).unwrap(),
-            cmp::Ordering::Equal
-        );
-        assert_eq!(
-            Label::Str("a").rfc8949_cmp(&Label::Str("aa")).unwrap(),
-            cmp::Ordering::Less
-        );
-        assert_eq!(
-            Label::Str("a").rfc8949_cmp(&Label::Str("b")).unwrap(),
-            cmp::Ordering::Less
-        );
-        assert_eq!(
-            Label::Str("aa").rfc8949_cmp(&Label::Str("b")).unwrap(),
-            cmp::Ordering::Greater
-        );
-        assert_eq!(
-            Label::U8(3).rfc8949_cmp(&Label::Str("id")).unwrap(),
-            cmp::Ordering::Less
-        );
-    }
-
-    /// Checks that [`SupportedLabel`] enum integer values correspond to
-    /// [`Label::rfc8949_cmp`] ordering.
-    #[test]
-    fn supported_label_rfc8949_ord() {
-        let mut enum_ord = SupportedLabel::VARIANTS.to_vec();
-        // Sorting by the Rust enum representation.
-        enum_ord.sort_unstable();
-
-        let mut cose_ord = SupportedLabel::VARIANTS.to_vec();
-        // Sorting by the corresponding COSE labels.
-        cose_ord.sort_unstable_by(|lhs, rhs| lhs.to_cose().rfc8949_cmp(&rhs.to_cose()).unwrap());
-
-        assert_eq!(enum_ord, cose_ord);
     }
 }
