@@ -15,3 +15,4 @@ minicbor = { version = "0.25.1", features = ["std"] }
 
 [dev-dependencies]
 proptest = { version = "1.6.0", features = ["attr-macro"] }
+test-case = "3.3.1"

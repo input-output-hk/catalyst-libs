@@ -143,54 +143,26 @@ pub fn get_cbor_header_size(bytes: &[u8]) -> Result<usize, minicbor::decode::Err
 
 #[cfg(test)]
 mod tests {
+    use test_case::test_case;
+
     use super::*;
 
-    /// Test `get_declared_length` for all CBOR major types per RFC 8949
-    #[test]
-    fn test_get_declared_length() {
-        // Example 1: Empty byte string
-        // Encoding: [0x40]
-        // - 0x40 = 0b010_00000 (major type 2, additional info 0)
-        // - Length: 0 bytes
-        // - Content: none
-        let empty_bytes = vec![0x40];
-
-        let declared_length = get_declared_length(&empty_bytes).unwrap().unwrap();
-
-        assert_eq!(declared_length, 0);
-
-        // Example 2: 2-byte string with immediate length encoding
-        // Encoding: [0x42, 0x01, 0x02]
-        // - 0x42 = 0b010_00010 (major type 2, additional info 2)
-        // - Length: 2 bytes (encoded immediately in additional info)
-        // - Content: [0x01, 0x02]
-        let short_bytes = vec![0x42, 0x01, 0x02];
-
-        let declared_length = get_declared_length(&short_bytes).unwrap().unwrap();
-
-        assert_eq!(declared_length, 2);
-
-        // Example 3: 24-byte string requiring uint8 length encoding
-        // Encoding: [0x58, 0x18, 0x01, 0x02, ..., 0x18]
-        // - 0x58 = 0b010_11000 (major type 2, additional info 24)
-        // - Length: 24 (encoded as uint8 in next byte: 0x18 = 24)
-        // - Content: 24 bytes [0x01, 0x02, ..., 0x18]
-        let mut medium_bytes = vec![0x58, 0x18]; // Header: byte string, uint8 length 24
-        medium_bytes.extend((1..=24).collect::<Vec<u8>>()); // Content: 24 bytes
-
-        let declared_length = get_declared_length(&medium_bytes).unwrap().unwrap();
-        assert_eq!(declared_length, 24);
-
-        // Example 4: 256-byte string requiring uint16 length encoding
-        // Encoding: [0x59, 0x01, 0x00, 0x00, 0x00, ..., 0xFF]
-        // - 0x59 = 0b010_11001 (major type 2, additional info 25)
-        // - Length: 256 (encoded as uint16 big-endian: [0x01, 0x00])
-        // - Content: 256 bytes [0x00, 0x00, ..., 0xFF]
-        let mut large_bytes = vec![0x59, 0x01, 0x00]; // Header: byte string, uint16 length 256
-        large_bytes.extend(vec![0x00; 256]); // Content: 256 zero bytes
-
-        let declared_length = get_declared_length(&large_bytes).unwrap().unwrap();
-        assert_eq!(declared_length, 256);
+    #[test_case(vec![0x40] => 0; "Empty byte string")]
+    #[test_case(vec![0x42, 0x01, 0x02] => 2; "2-byte string with immediate length")]
+    #[test_case({
+        let mut v = vec![0x58, 0x18];
+        v.extend(1..=24);
+        v
+    } => 24; "24-byte string with uint8 length")]
+    #[test_case({
+        let mut v = vec![0x59, 0x01, 0x00];
+        v.extend(vec![0x00; 256]);
+        v
+    } => 256; "256-byte string with uint16 length")]
+    fn test_get_declared_length(input: Vec<u8>) -> usize {
+        get_declared_length(&input)
+            .expect("Failed to get declared length")
+            .expect("Declared length missing")
     }
 
     #[test]
