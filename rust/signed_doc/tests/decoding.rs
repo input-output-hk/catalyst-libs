@@ -751,12 +751,205 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
     }
 }
 
+fn signed_doc_valid_doc_type_from_uuid() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with 'type' defined as UUIDv4 (OLD).".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_valid_doc_type_from_non_empty_uuid_array() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with 'type' defined as UUIDv4.".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .array(1)?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_type()? == &DocType::try_from(vec![uuid_v4])?);
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_valid_null_as_no_content() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with 'content' defined as Null.".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .array(1)?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(
+                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
+                );
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with 'content' defined as empty bstr.".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .array(1)?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes("".as_bytes())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.encoded_content() == Vec::<u8>::new());
+                Ok(())
+            }
+        })),
+    }
+}
+
 #[test]
 fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
         signed_doc_with_minimal_metadata_fields_case(),
         signed_doc_with_complete_metadata_fields_case(),
+        signed_doc_valid_doc_type_from_uuid(),
+        signed_doc_valid_doc_type_from_non_empty_uuid_array(),
+        signed_doc_valid_null_as_no_content(),
+        signed_doc_valid_empty_bstr_as_no_content(),
         signed_doc_with_random_kid_case(),
         signed_doc_with_wrong_cose_tag_case(),
         signed_doc_with_content_encoding_case(true),
