@@ -24,6 +24,7 @@ pub(crate) struct DecodeContext {
 }
 
 impl DecodeContext {
+    /// Creates a new instance of the `DecodeContext`
     pub(crate) fn new(compatibility_policy: CompatibilityPolicy, report: ProblemReport) -> Self {
         Self {
             compatibility_policy,
@@ -31,14 +32,18 @@ impl DecodeContext {
         }
     }
 
+    /// Returns `CompatibilityPolicy`
     pub(crate) fn policy(&self) -> &CompatibilityPolicy {
         &self.compatibility_policy
     }
 
+    /// Returns `ProblemReport`
     pub(crate) fn report(&mut self) -> &mut ProblemReport {
         &mut self.report
     }
 
+    /// Consuming the current `DecodeContext` by returning the underlying `ProblemReport`
+    /// instance
     pub(crate) fn into_report(self) -> ProblemReport {
         self.report
     }
