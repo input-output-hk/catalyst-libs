@@ -28,7 +28,7 @@ impl minicbor::Encode<()> for Collaborators {
                     .map_err(minicbor::encode::Error::message)?,
             )?;
             for c in &self.0 {
-                e.str(c.to_string().as_str())?;
+                e.bytes(&c.to_string().into_bytes())?;
             }
         }
         Ok(())
@@ -46,10 +46,10 @@ impl minicbor::Decode<'_, ()> for Collaborators {
         };
 
         (0..items)
-            .map(|_| d.str())
+            .map(|_| d.bytes())
             .collect::<Result<Vec<_>, _>>()?
             .into_iter()
-            .map(CatalystId::from_str)
+            .map(CatalystId::try_from)
             .collect::<Result<_, _>>()
             .map(Self)
             .map_err(minicbor::decode::Error::custom)
