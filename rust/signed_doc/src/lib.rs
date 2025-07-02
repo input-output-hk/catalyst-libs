@@ -2,7 +2,7 @@
 
 mod builder;
 mod content;
-mod decode_context;
+pub mod decode_context;
 pub mod doc_types;
 mod metadata;
 pub mod providers;
@@ -208,13 +208,12 @@ impl CatalystSignedDocument {
     }
 }
 
-impl Decode<'_, ()> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        let mut report = ProblemReport::new("Catalyst Signed Document Decoding");
-        let mut ctx = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report,
-        };
+impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut CompatibilityPolicy) -> Result<Self, decode::Error> {
+        let mut ctx = DecodeContext::new(
+            *ctx,
+            ProblemReport::new("Catalyst Signed Document Decoding"),
+        );
 
         let p = d.position();
         if let Ok(tag) = d.tag() {
@@ -246,7 +245,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
         )?
         .into_iter();
         if map.next().is_some() {
-            ctx.report.unknown_field(
+            ctx.report().unknown_field(
                 "unprotected headers",
                 "non empty unprotected headers",
                 "COSE unprotected headers must be empty",
@@ -260,7 +259,7 @@ impl Decode<'_, ()> for CatalystSignedDocument {
             metadata,
             content,
             signatures,
-            report,
+            report: ctx.into_report(),
         }
         .into())
     }
@@ -294,7 +293,10 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(minicbor::decode(value)?)
+        Ok(minicbor::decode_with(
+            value,
+            &mut CompatibilityPolicy::Accept,
+        )?)
     }
 }
 

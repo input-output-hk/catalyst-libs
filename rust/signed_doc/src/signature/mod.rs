@@ -95,9 +95,9 @@ impl minicbor::Encode<()> for Signature {
     }
 }
 
-impl minicbor::Decode<'_, DecodeContext<'_>> for Option<Signature> {
+impl minicbor::Decode<'_, DecodeContext> for Option<Signature> {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext<'_>,
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         if !matches!(d.array()?, Some(3)) {
             return Err(minicbor::decode::Error::message(
@@ -115,7 +115,7 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Option<Signature> {
         )?
         .into_iter();
         if map.next().is_some() {
-            ctx.report.unknown_field(
+            ctx.report().unknown_field(
                 "unprotected headers",
                 "non empty unprotected headers",
                 "COSE signature unprotected headers must be empty",
@@ -149,9 +149,9 @@ impl minicbor::Encode<()> for Signatures {
     }
 }
 
-impl minicbor::Decode<'_, DecodeContext<'_>> for Signatures {
+impl minicbor::Decode<'_, DecodeContext> for Signatures {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext<'_>,
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let Some(signatures_len) = d.array()? else {
             return Err(minicbor::decode::Error::message(
@@ -164,7 +164,7 @@ impl minicbor::Decode<'_, DecodeContext<'_>> for Signatures {
             match d.decode_with(ctx)? {
                 Some(signature) => signatures.push(signature),
                 None => {
-                    ctx.report.other(
+                    ctx.report().other(
                         &format!("COSE signature at id {idx}"),
                         "Cannot decode a single COSE signature from the array of signatures",
                     );
@@ -195,7 +195,7 @@ fn protected_header_encode(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
 ///
 /// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
 fn protected_header_decode(
-    bytes: &[u8], ctx: &mut DecodeContext<'_>,
+    bytes: &[u8], ctx: &mut DecodeContext,
 ) -> anyhow::Result<Option<CatalystId>> {
     let mut map = cbork_utils::map::Map::decode(
         &mut minicbor::Decoder::new(bytes),
@@ -208,7 +208,7 @@ fn protected_header_decode(
     };
 
     if map.len() > 1 {
-        ctx.report.functional_validation(
+        ctx.report().functional_validation(
             "COSE signature protected header must have only one `kid` field",
             "COSE signature protected header decoding",
         );
@@ -227,7 +227,7 @@ fn protected_header_decode(
         .bytes()?
         .try_into()
         .inspect_err(|e| {
-            ctx.report.conversion_error(
+            ctx.report().conversion_error(
                 "COSE signature protected header `kid`",
                 &hex::encode(entry.value.as_slice()),
                 &format!("{e:?}"),
@@ -237,7 +237,7 @@ fn protected_header_decode(
         .ok()
         .inspect(|kid: &CatalystId| {
             if kid.is_id() {
-                ctx.report.invalid_value(
+                ctx.report().invalid_value(
                     "COSE signature protected header key ID",
                     &kid.to_string(),
                     &format!(

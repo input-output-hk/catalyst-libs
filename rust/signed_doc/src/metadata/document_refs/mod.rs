@@ -54,9 +54,9 @@ impl Display for DocumentRefs {
     }
 }
 
-impl Decode<'_, DecodeContext<'_>> for DocumentRefs {
+impl Decode<'_, DecodeContext> for DocumentRefs {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, decode_context: &mut DecodeContext<'_>,
+        d: &mut minicbor::Decoder<'_>, decode_context: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRefs decoding";
         let parse_uuid = |d: &mut Decoder| UuidV7::decode(d, &mut CborContext::Tagged);
@@ -64,7 +64,7 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRefs {
         // Old: [id, ver]
         // New: [ 1* [id, ver, locator] ]
         let outer_arr = d.array()?.ok_or_else(|| {
-            decode_context.report.invalid_value(
+            decode_context.report().invalid_value(
                 "Array",
                 "Invalid array length",
                 "Valid array length",
@@ -85,23 +85,20 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRefs {
             },
             // Old structure [id, ver]
             minicbor::data::Type::Tag => {
-                match decode_context.compatibility_policy {
+                match decode_context.policy() {
                     CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(
-                            decode_context.compatibility_policy,
-                            CompatibilityPolicy::Warn
-                        ) {
+                        if matches!(decode_context.policy(), CompatibilityPolicy::Warn) {
                             warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
                         }
                         let id = parse_uuid(d).map_err(|e| {
                             decode_context
-                                .report
+                                .report()
                                 .other(&format!("Invalid ID UUIDv7: {e}"), CONTEXT);
                             e.with_message("Invalid ID UUIDv7")
                         })?;
                         let ver = parse_uuid(d).map_err(|e| {
                             decode_context
-                                .report
+                                .report()
                                 .other(&format!("Invalid Ver UUIDv7: {e}"), CONTEXT);
                             e.with_message("Invalid Ver UUIDv7")
                         })?;
@@ -115,7 +112,7 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRefs {
                     },
                     CompatibilityPolicy::Fail => {
                         let msg = "Conversion of document reference id and version to list of document reference with doc locator is not allowed";
-                        decode_context.report.other(msg, CONTEXT);
+                        decode_context.report().other(msg, CONTEXT);
                         Err(minicbor::decode::Error::message(format!(
                             "{CONTEXT}: {msg}"
                         )))
@@ -123,7 +120,7 @@ impl Decode<'_, DecodeContext<'_>> for DocumentRefs {
                 }
             },
             other => {
-                decode_context.report.invalid_value(
+                decode_context.report().invalid_value(
                     "Decoding type",
                     &other.to_string(),
                     "Array or tag",
@@ -249,11 +246,10 @@ mod tests {
 
     #[test]
     fn test_old_doc_refs_fail_policy_cbor_decode() {
-        let mut report = ProblemReport::new("Test doc ref fail policy");
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Fail,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Fail,
+            ProblemReport::new("Test doc ref fail policy"),
+        );
         let uuidv7 = UuidV7::new();
         let old_doc_ref = gen_old_doc_ref(uuidv7, uuidv7);
         let decoder = Decoder::new(&old_doc_ref);
@@ -262,11 +258,10 @@ mod tests {
 
     #[test]
     fn test_old_doc_refs_warn_policy_cbor_decode() {
-        let mut report = ProblemReport::new("Test doc ref warn policy");
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Warn,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Warn,
+            ProblemReport::new("Test doc ref warn policy"),
+        );
         let uuidv7 = UuidV7::new();
         let old_doc_ref = gen_old_doc_ref(uuidv7, uuidv7);
         let decoder = Decoder::new(&old_doc_ref);
@@ -286,11 +281,10 @@ mod tests {
 
     #[test]
     fn test_old_doc_refs_accept_policy_cbor_decode() {
-        let mut report = ProblemReport::new("Test doc ref accept policy");
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Accept,
+            ProblemReport::new("Test doc ref accept policy"),
+        );
         let uuidv7 = UuidV7::new();
         let old_doc_ref = gen_old_doc_ref(uuidv7, uuidv7);
         let decoder = Decoder::new(&old_doc_ref);
@@ -310,8 +304,6 @@ mod tests {
 
     #[test]
     fn test_doc_refs_cbor_encode_decode() {
-        let mut report = ProblemReport::new("Test doc refs");
-
         let uuidv7 = UuidV7::new();
         let doc_ref = DocumentRef::new(uuidv7, uuidv7, vec![1, 2, 3, 4].into());
         let doc_refs = DocumentRefs(vec![doc_ref.clone(), doc_ref]);
@@ -319,10 +311,10 @@ mod tests {
         let mut encoder = Encoder::new(&mut buffer);
         doc_refs.encode(&mut encoder, &mut ()).unwrap();
         let mut decoder = Decoder::new(&buffer);
-        let mut decoded_context = DecodeContext {
-            compatibility_policy: CompatibilityPolicy::Accept,
-            report: &mut report,
-        };
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Accept,
+            ProblemReport::new("Test doc refs"),
+        );
         let decoded_doc_refs = DocumentRefs::decode(&mut decoder, &mut decoded_context).unwrap();
         assert_eq!(decoded_doc_refs, doc_refs);
     }

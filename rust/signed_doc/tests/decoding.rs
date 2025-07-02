@@ -1,9 +1,9 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::*;
+use catalyst_signed_doc::{decode_context::CompatibilityPolicy, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
-use minicbor::{data::Tag, Encoder};
+use minicbor::{data::Tag, Decode, Encoder};
 use rand::Rng;
 
 mod common;
@@ -13,6 +13,7 @@ type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
 struct TestCase {
     name: String,
     bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
+    policy: CompatibilityPolicy,
     // If the provided bytes can be even decoded without error (valid COSE or not).
     // If set to `false` all further checks will not even happen.
     can_decode: bool,
@@ -66,6 +67,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -131,6 +133,7 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: Some(Box::new({
@@ -157,7 +160,6 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
 fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
 
     TestCase {
         name: format!("Catalyst Signed Doc with random bytes in '{field}' header field."),
@@ -173,12 +175,12 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                     let mut rand_buf = [0u8; 128];
                     rng.try_fill(&mut rand_buf)?;
 
-                    let is_required_header = ["type", "id", "ver", "parameters"]
+                    let is_required_header = ["content-type", "type", "id", "ver"]
                         .iter()
                         .any(|v| v == &field);
 
                     let mut p_headers = Encoder::new(Vec::new());
-                    p_headers.map(if is_required_header { 5 } else { 6 })?;
+                    p_headers.map(if is_required_header { 4 } else { 5 })?;
                     if field == "content-type" {
                         p_headers.u8(3)?.encode_with(rand_buf, &mut ())?;
                     } else {
@@ -205,15 +207,6 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                             .str("ver")?
                             .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
                     }
-                    if field == "parameters" {
-                        p_headers
-                            .str("parameters")?
-                            .encode_with(rand_buf, &mut ())?;
-                    } else {
-                        p_headers
-                            .str("parameters")?
-                            .encode_with(doc_ref.clone(), &mut ())?;
-                    }
 
                     if !is_required_header {
                         p_headers.str(field)?.encode_with(rand_buf, &mut ())?;
@@ -232,6 +225,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: Some(Box::new({
@@ -241,6 +235,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 anyhow::ensure!(doc.doc_meta().template().is_none());
                 anyhow::ensure!(doc.doc_meta().reply().is_none());
                 anyhow::ensure!(doc.doc_meta().section().is_none());
+                anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 anyhow::ensure!(doc.doc_meta().collabs().is_empty());
 
                 if field == "content-type" {
@@ -254,9 +249,6 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 }
                 if field == "ver" {
                     anyhow::ensure!(doc.doc_meta().doc_ver().is_err());
-                }
-                if field == "parameters" {
-                    anyhow::ensure!(doc.doc_meta().parameters().is_none());
                 }
 
                 Ok(())
@@ -313,6 +305,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: None,
@@ -366,6 +359,7 @@ fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -435,6 +429,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -482,6 +477,7 @@ fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -492,6 +488,7 @@ fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes".to_string(),
         bytes_gen: Box::new(|| Ok(Encoder::new(Vec::new()))),
+        policy: CompatibilityPolicy::Accept,
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -545,6 +542,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -618,6 +616,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -674,6 +673,7 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -730,6 +730,7 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -786,6 +787,7 @@ fn signed_doc_valid_doc_type_from_uuid() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -833,6 +835,7 @@ fn signed_doc_valid_doc_type_from_non_empty_uuid_array() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -880,6 +883,7 @@ fn signed_doc_valid_null_as_no_content() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -929,11 +933,233 @@ fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
                 anyhow::ensure!(doc.encoded_content() == Vec::<u8>::new());
+                Ok(())
+            }
+        })),
+    }
+}
+
+fn signed_doc_with_non_empty_unprotected_headers() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with non empty unprotected headers".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .array(1)?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // non empty unprotected headers
+                e.map(1)?;
+                e.str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // no signature
+                e.array(0)?;
+                Ok(e)
+            }
+        }),
+        policy: CompatibilityPolicy::Accept,
+        can_decode: true,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
+fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+    TestCase {
+        name: "Catalyst Signed Doc with signatures non empty unprotected headers".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                let mut p_headers = Encoder::new(Vec::new());
+
+                p_headers.map(4)?;
+                p_headers.u8(3)?.encode(ContentType::Json)?;
+                p_headers
+                    .str("type")?
+                    .array(1)?
+                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("id")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers
+                    .str("ver")?
+                    .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                let mut p_headers = minicbor::Encoder::new(Vec::new());
+                p_headers
+                    .map(1)?
+                    .u8(4)?
+                    .bytes(Vec::<u8>::from(&kid).as_slice())?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                // non empty unprotected headers
+                e.map(1)?.u8(4)?.bytes(Vec::<u8>::from(&kid).as_slice())?;
+                e.bytes(&[1, 2, 3])?;
+                Ok(e)
+            }
+        }),
+        policy: CompatibilityPolicy::Accept,
+        can_decode: true,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
+fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+
+    TestCase {
+        name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled strictly decoded rules, metadata field in the wrong order".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+
+                    p_headers.map(4)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?.array(1)?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.into_writer().as_slice()
+                })?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                let mut p_headers = minicbor::Encoder::new(Vec::new());
+                p_headers.map(1)?.u8(4)?.bytes(Vec::<u8>::from(&kid).as_slice())?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                e.map(0)?;
+                e.bytes(&[1, 2, 3])?;
+                Ok(e)
+            }
+        }),
+        policy: CompatibilityPolicy::Fail,
+        can_decode: false,
+        valid_doc: false,
+        post_checks: None,
+    }
+}
+
+fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let uuid_v4 = UuidV4::new();
+
+    TestCase {
+        name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled non strictly (warn) decoded rules, metadata field in the wrong order".to_string(),
+        bytes_gen: Box::new({
+            move || {
+                let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
+
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+
+                    p_headers.map(4)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("type")?.array(1)?
+                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.into_writer().as_slice()
+                })?;
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // signatures
+                // one signature
+                e.array(1)?;
+                e.array(3)?;
+                // protected headers (kid field)
+                let mut p_headers = minicbor::Encoder::new(Vec::new());
+                p_headers.map(1)?.u8(4)?.bytes(Vec::<u8>::from(&kid).as_slice())?;
+                e.bytes(p_headers.into_writer().as_slice())?;
+                e.map(0)?;
+                e.bytes(&[1, 2, 3])?;
+                Ok(e)
+            }
+        }),
+        policy: CompatibilityPolicy::Warn,
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_id()? == uuid_v7);
+                anyhow::ensure!(doc.doc_ver()? == uuid_v7);
+                anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
+                anyhow::ensure!(
+                    doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
+                );
+                anyhow::ensure!(doc.kids().len() == 1);
                 Ok(())
             }
         })),
@@ -988,9 +1214,13 @@ fn catalyst_signed_doc_decoding_test() {
         ]),
         minimally_valid_tagged_signed_doc(),
         minimally_valid_untagged_signed_doc(),
+        signed_doc_with_non_empty_unprotected_headers(),
+        signed_doc_with_signatures_non_empty_unprotected_headers(),
+        signed_doc_with_strict_deterministic_decoding_wrong_order(),
+        signed_doc_with_non_strict_deterministic_decoding_wrong_order(),
     ];
 
-    for case in test_cases {
+    for mut case in test_cases {
         let bytes_res = case.bytes_gen.as_ref()();
         assert!(
             bytes_res.is_ok(),
@@ -999,7 +1229,8 @@ fn catalyst_signed_doc_decoding_test() {
             bytes_res.err()
         );
         let bytes = bytes_res.unwrap().into_writer();
-        let doc_res = CatalystSignedDocument::try_from(bytes.as_slice());
+        let doc_res =
+            CatalystSignedDocument::decode(&mut minicbor::Decoder::new(&bytes), &mut case.policy);
         assert_eq!(
             doc_res.is_ok(),
             case.can_decode,

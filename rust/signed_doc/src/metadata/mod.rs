@@ -239,7 +239,7 @@ impl minicbor::Encode<()> for Metadata {
     }
 }
 
-impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata {
+impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Metadata {
     /// Decode from a CBOR map.
     ///
     /// Note that this won't decode an [RFC 8152] protected header as is.
@@ -250,9 +250,9 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
     fn decode(
-        d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext<'_>,
+        d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
-        let mut map_ctx = match ctx.compatibility_policy {
+        let mut map_ctx = match ctx.policy() {
             CompatibilityPolicy::Accept => {
                 cbork_utils::decode_context::DecodeCtx::non_deterministic()
             },
@@ -268,7 +268,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext<'_>> for Metadata
             CompatibilityPolicy::Fail => cbork_utils::decode_context::DecodeCtx::Deterministic,
         };
 
-        let report = ctx.report.clone();
+        let report = ctx.report().clone();
         let fields = cbork_utils::map::Map::decode(d, &mut map_ctx)?
             .into_iter()
             .map(|e| {
