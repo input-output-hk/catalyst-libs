@@ -1,6 +1,6 @@
 //! Integration test for COSE decoding part.
 
-use catalyst_signed_doc::*;
+use catalyst_signed_doc::{decode_context::CompatibilityPolicy, *};
 use catalyst_types::catalyst_id::role_index::RoleId;
 use common::create_dummy_key_pair;
 use minicbor::{data::Tag, Decode, Encoder};
@@ -13,6 +13,7 @@ type PostCheck = dyn Fn(&CatalystSignedDocument) -> anyhow::Result<()>;
 struct TestCase {
     name: String,
     bytes_gen: Box<dyn Fn() -> anyhow::Result<Encoder<Vec<u8>>>>,
+    policy: CompatibilityPolicy,
     // If the provided bytes can be even decoded without error (valid COSE or not).
     // If set to `false` all further checks will not even happen.
     can_decode: bool,
@@ -66,6 +67,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -131,6 +133,7 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: Some(Box::new({
@@ -222,6 +225,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: Some(Box::new({
@@ -301,6 +305,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: None,
@@ -354,6 +359,7 @@ fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -423,6 +429,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -470,6 +477,7 @@ fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -480,6 +488,7 @@ fn decoding_empty_bytes_case() -> TestCase {
     TestCase {
         name: "Decoding empty bytes".to_string(),
         bytes_gen: Box::new(|| Ok(Encoder::new(Vec::new()))),
+        policy: CompatibilityPolicy::Accept,
         can_decode: false,
         valid_doc: false,
         post_checks: None,
@@ -533,6 +542,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -606,6 +616,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -662,6 +673,7 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -718,6 +730,7 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -774,6 +787,7 @@ fn signed_doc_valid_doc_type_from_uuid() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -821,6 +835,7 @@ fn signed_doc_valid_doc_type_from_non_empty_uuid_array() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -868,6 +883,7 @@ fn signed_doc_valid_null_as_no_content() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -917,6 +933,7 @@ fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: true,
         post_checks: Some(Box::new({
@@ -966,6 +983,7 @@ fn signed_doc_with_non_empty_unprotected_headers() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: None,
@@ -1021,6 +1039,7 @@ fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
                 Ok(e)
             }
         }),
+        policy: CompatibilityPolicy::Accept,
         can_decode: true,
         valid_doc: false,
         post_checks: None,
@@ -1079,7 +1098,7 @@ fn catalyst_signed_doc_decoding_test() {
         signed_doc_with_signatures_non_empty_unprotected_headers(),
     ];
 
-    for case in test_cases {
+    for mut case in test_cases {
         let bytes_res = case.bytes_gen.as_ref()();
         assert!(
             bytes_res.is_ok(),
@@ -1088,7 +1107,8 @@ fn catalyst_signed_doc_decoding_test() {
             bytes_res.err()
         );
         let bytes = bytes_res.unwrap().into_writer();
-        let doc_res = CatalystSignedDocument::decode(&mut minicbor::Decoder::new(&bytes), &mut ());
+        let doc_res =
+            CatalystSignedDocument::decode(&mut minicbor::Decoder::new(&bytes), &mut case.policy);
         assert_eq!(
             doc_res.is_ok(),
             case.can_decode,

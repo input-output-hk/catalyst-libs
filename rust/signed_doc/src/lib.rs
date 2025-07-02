@@ -208,10 +208,10 @@ impl CatalystSignedDocument {
     }
 }
 
-impl Decode<'_, ()> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, decode::Error> {
+impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut CompatibilityPolicy) -> Result<Self, decode::Error> {
         let mut ctx = DecodeContext::new(
-            CompatibilityPolicy::Accept,
+            *ctx,
             ProblemReport::new("Catalyst Signed Document Decoding"),
         );
 
@@ -293,7 +293,10 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(minicbor::decode(value)?)
+        Ok(minicbor::decode_with(
+            value,
+            &mut CompatibilityPolicy::Accept,
+        )?)
     }
 }
 
