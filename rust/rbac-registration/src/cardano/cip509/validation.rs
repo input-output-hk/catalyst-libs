@@ -75,7 +75,7 @@ pub fn validate_txn_inputs_hash(
         report.invalid_value(
             "txn_inputs_hash",
             &format!("{hash:?}"),
-            &format!("Must be equal to the value in Cip509 ({hash:?})"),
+            &format!("Must be equal to the value in Cip509 ({calculated_hash:?})"),
             context,
         );
     }
