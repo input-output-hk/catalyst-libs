@@ -94,16 +94,16 @@ pub(crate) enum SupportedField {
     Type(DocType) = 4,
     /// `reply` field.
     Reply(DocumentRefs) = 5,
-    /// `collabs` field.
-    Collabs(Collaborators) = 7,
     /// `section` field.
-    Section(Section) = 8,
+    Section(Section) = 6,
     /// `template` field.
-    Template(DocumentRefs) = 9,
+    Template(DocumentRefs) = 7,
     /// `parameters` field.
-    Parameters(DocumentRefs) = 10,
+    Parameters(DocumentRefs) = 8,
+    /// `collaborators` field.
+    Collaborators(Collaborators) = 9,
     /// `Content-Encoding` field.
-    ContentEncoding(ContentEncoding) = 11,
+    ContentEncoding(ContentEncoding) = 10,
 }
 
 impl SupportedLabel {
@@ -117,7 +117,7 @@ impl SupportedLabel {
             Label::Str("ver") => Some(Self::Ver),
             Label::Str("type") => Some(Self::Type),
             Label::Str("reply") => Some(Self::Reply),
-            Label::Str("collabs") => Some(Self::Collabs),
+            Label::Str("collaborators") => Some(Self::Collaborators),
             Label::Str("section") => Some(Self::Section),
             Label::Str("template") => Some(Self::Template),
             Label::Str("parameters" | "brand_id" | "campaign_id" | "category_id") => {
@@ -139,7 +139,7 @@ impl SupportedLabel {
             Self::Ver => Label::Str("ver"),
             Self::Type => Label::Str("type"),
             Self::Reply => Label::Str("reply"),
-            Self::Collabs => Label::Str("collabs"),
+            Self::Collaborators => Label::Str("collaborators"),
             Self::Section => Label::Str("section"),
             Self::Template => Label::Str("template"),
             Self::Parameters => Label::Str("parameters"),
@@ -167,7 +167,9 @@ impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
             SupportedLabel::Ver => Deserialize::deserialize(d).map(SupportedField::Ver),
             SupportedLabel::Type => Deserialize::deserialize(d).map(SupportedField::Type),
             SupportedLabel::Reply => Deserialize::deserialize(d).map(SupportedField::Reply),
-            SupportedLabel::Collabs => Deserialize::deserialize(d).map(SupportedField::Collabs),
+            SupportedLabel::Collaborators => {
+                Deserialize::deserialize(d).map(SupportedField::Collaborators)
+            },
             SupportedLabel::Section => Deserialize::deserialize(d).map(SupportedField::Section),
             SupportedLabel::Template => Deserialize::deserialize(d).map(SupportedField::Template),
             SupportedLabel::Parameters => {
@@ -218,7 +220,7 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<Suppo
             },
             SupportedLabel::Type => d.decode_with(ctx).map(SupportedField::Type),
             SupportedLabel::Reply => d.decode_with(ctx).map(SupportedField::Reply),
-            SupportedLabel::Collabs => d.decode().map(SupportedField::Collabs),
+            SupportedLabel::Collaborators => d.decode().map(SupportedField::Collaborators),
             SupportedLabel::Section => d.decode().map(SupportedField::Section),
             SupportedLabel::Template => d.decode_with(ctx).map(SupportedField::Template),
             SupportedLabel::Parameters => d.decode_with(ctx).map(SupportedField::Parameters),
@@ -255,7 +257,7 @@ impl minicbor::Encode<()> for SupportedField {
             | SupportedField::Template(document_ref)
             | SupportedField::Parameters(document_ref) => document_ref.encode(e, ctx),
             SupportedField::Type(doc_type) => doc_type.encode(e, ctx),
-            SupportedField::Collabs(collabs) => collabs.encode(e, ctx),
+            SupportedField::Collaborators(collaborators) => collaborators.encode(e, ctx),
             SupportedField::Section(section) => section.encode(e, ctx),
             SupportedField::ContentEncoding(content_encoding) => content_encoding.encode(e, ctx),
         }

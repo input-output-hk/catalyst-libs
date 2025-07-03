@@ -1,13 +1,15 @@
-//! Catalyst Signed Document `collabs` field type definition.
+//! Catalyst Signed Document `collaborators` field type definition.
 
-use std::ops::Deref;
+use std::{ops::Deref, str::FromStr};
 
-/// 'collabs' field type definition, which is a JSON path string
+use catalyst_types::catalyst_id::CatalystId;
+
+/// 'collaborators' field type definition, which is a JSON path string
 #[derive(Clone, Debug, PartialEq)]
-pub struct Collaborators(Vec<String>);
+pub struct Collaborators(Vec<CatalystId>);
 
 impl Deref for Collaborators {
-    type Target = Vec<String>;
+    type Target = Vec<CatalystId>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -26,7 +28,7 @@ impl minicbor::Encode<()> for Collaborators {
                     .map_err(minicbor::encode::Error::message)?,
             )?;
             for c in &self.0 {
-                e.str(c)?;
+                e.bytes(&c.to_string().into_bytes())?;
             }
         }
         Ok(())
@@ -42,16 +44,26 @@ impl minicbor::Decode<'_, ()> for Collaborators {
                 "Must a definite size array",
             ));
         };
-        let collabs = (0..items)
-            .map(|_| Ok(d.str()?.to_string()))
-            .collect::<Result<_, _>>()?;
-        Ok(Self(collabs))
+
+        (0..items)
+            .map(|_| d.bytes())
+            .collect::<Result<Vec<_>, _>>()?
+            .into_iter()
+            .map(CatalystId::try_from)
+            .collect::<Result<_, _>>()
+            .map(Self)
+            .map_err(minicbor::decode::Error::custom)
     }
 }
 
 impl<'de> serde::Deserialize<'de> for Collaborators {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
-        Ok(Self(Vec::<String>::deserialize(deserializer)?))
+        Vec::<String>::deserialize(deserializer)?
+            .into_iter()
+            .map(|id| CatalystId::from_str(&id))
+            .collect::<Result<_, _>>()
+            .map(Self)
+            .map_err(serde::de::Error::custom)
     }
 }
