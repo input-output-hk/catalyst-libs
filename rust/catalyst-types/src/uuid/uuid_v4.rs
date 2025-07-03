@@ -1,5 +1,8 @@
 //! `UUIDv4` Type.
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
 use minicbor::{Decode, Decoder, Encode};
 use uuid::Uuid;
@@ -7,7 +10,7 @@ use uuid::Uuid;
 use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
 
 /// Type representing a `UUIDv4`.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, PartialOrd, serde::Serialize)]
 pub struct UuidV4(Uuid);
 
 impl UuidV4 {
@@ -103,6 +106,15 @@ impl<'de> serde::Deserialize<'de> for UuidV4 {
         } else {
             Err(serde::de::Error::custom(UuidError::InvalidUuidV4(uuid)))
         }
+    }
+}
+
+impl FromStr for UuidV4 {
+    type Err = UuidError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let uuid = Uuid::parse_str(s).map_err(|_| UuidError::StringConversion(s.to_string()))?;
+        UuidV4::try_from(uuid).map_err(|_| UuidError::InvalidUuidV4(uuid))
     }
 }
 

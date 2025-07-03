@@ -63,13 +63,11 @@ impl Cli {
                 println!("{metadata}");
                 // Load Document from JSON file
                 let json_doc: serde_json::Value = load_json_from_file(&doc)?;
-                // Possibly encode if Metadata has an encoding set.
-                let payload = serde_json::to_vec(&json_doc)?;
                 // Start with no signatures.
                 let signed_doc = Builder::new()
-                    .with_decoded_content(payload)
                     .with_json_metadata(metadata)?
-                    .build();
+                    .with_json_content(&json_doc)?
+                    .build()?;
                 println!(
                     "report {}",
                     serde_json::to_string(&signed_doc.problem_report())?
@@ -82,9 +80,12 @@ impl Cli {
                 let signed_doc = signed_doc_from_bytes(cose_bytes.as_slice())?;
 
                 let new_signed_doc = signed_doc
-                    .into_builder()
-                    .add_signature(|message| sk.sign::<()>(&message).to_bytes().to_vec(), &kid)?
-                    .build();
+                    .into_builder()?
+                    .add_signature(
+                        |message| sk.sign::<()>(&message).to_bytes().to_vec(),
+                        kid.clone(),
+                    )?
+                    .build()?;
                 save_signed_doc(new_signed_doc, &doc)?;
             },
             Self::Inspect { path } => {
@@ -128,7 +129,7 @@ fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow
 }
 
 fn signed_doc_from_bytes(cose_bytes: &[u8]) -> anyhow::Result<CatalystSignedDocument> {
-    minicbor::decode(cose_bytes).context("Invalid Catalyst Document")
+    cose_bytes.try_into().context("Invalid Catalyst Document")
 }
 
 fn load_json_from_file<T>(path: &PathBuf) -> anyhow::Result<T>
