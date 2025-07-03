@@ -203,16 +203,16 @@ fn protected_header_decode(
     )?
     .into_iter();
 
-    let Some(entry) = map.next() else {
-        anyhow::bail!("COSE signature protected header must be at least one entry");
-    };
-
     if map.len() > 1 {
         ctx.report().functional_validation(
-            "COSE signature protected header must have only one `kid` field",
+            "COSE signature protected header must only include the `kid` field",
             "COSE signature protected header decoding",
         );
     }
+
+    let Some(entry) = map.next() else {
+        anyhow::bail!("COSE signature protected header must include at least one entry");
+    };
 
     // protected headers (kid field)
     anyhow::ensure!(
