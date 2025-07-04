@@ -2,12 +2,12 @@
 
 use std::fmt::Write;
 
-use catalyst_types::uuid::UuidV4;
-
 use super::doc_ref::referenced_doc_check;
 use crate::{
-    metadata::ContentType, providers::CatalystSignedDocumentProvider,
-    validator::utils::validate_provided_doc, CatalystSignedDocument,
+    metadata::{ContentType, DocType},
+    providers::CatalystSignedDocumentProvider,
+    validator::utils::validate_provided_doc,
+    CatalystSignedDocument,
 };
 
 /// Enum represents different content schemas, against which documents content would be
@@ -23,7 +23,7 @@ pub(crate) enum ContentRule {
     /// Based on the 'template' field and loaded corresponding template document
     Templated {
         /// expected `type` field of the template
-        exp_template_type: UuidV4,
+        exp_template_type: DocType,
     },
     /// Statically defined document's content schema.
     /// `template` field should not been specified
@@ -48,12 +48,8 @@ impl ContentRule {
             };
 
             let template_validator = |template_doc: CatalystSignedDocument| {
-                if !referenced_doc_check(
-                    &template_doc,
-                    exp_template_type.uuid(),
-                    "template",
-                    doc.report(),
-                ) {
+                if !referenced_doc_check(&template_doc, exp_template_type, "template", doc.report())
+                {
                     return false;
                 }
 
@@ -181,7 +177,7 @@ fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) ->
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::uuid::UuidV7;
+    use catalyst_types::uuid::{UuidV4, UuidV7};
 
     use super::*;
     use crate::{providers::tests::TestCatalystSignedDocumentProvider, Builder};
@@ -281,7 +277,9 @@ mod tests {
         }
 
         // all correct
-        let rule = ContentRule::Templated { exp_template_type };
+        let rule = ContentRule::Templated {
+            exp_template_type: exp_template_type.into(),
+        };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
@@ -300,7 +298,9 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing content
-        let rule = ContentRule::Templated { exp_template_type };
+        let rule = ContentRule::Templated {
+            exp_template_type: exp_template_type.into(),
+        };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
@@ -310,7 +310,9 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // content not a json encoded
-        let rule = ContentRule::Templated { exp_template_type };
+        let rule = ContentRule::Templated {
+            exp_template_type: exp_template_type.into(),
+        };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": valid_template_doc_id.to_string(), "ver": valid_template_doc_id.to_string() }
@@ -341,7 +343,9 @@ mod tests {
         assert!(!rule.check(&doc, &provider).await.unwrap());
 
         // missing `content-type` field in the referenced doc
-        let rule = ContentRule::Templated { exp_template_type };
+        let rule = ContentRule::Templated {
+            exp_template_type: exp_template_type.into(),
+        };
         let doc = Builder::new()
             .with_json_metadata(serde_json::json!({
                 "template": {"id": missing_content_type_template_doc_id.to_string(), "ver": missing_content_type_template_doc_id.to_string() }
