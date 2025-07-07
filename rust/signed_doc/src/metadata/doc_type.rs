@@ -16,7 +16,7 @@ use crate::{
 };
 
 /// List of `UUIDv4` document type.
-#[derive(Clone, Debug, serde::Serialize, Eq)]
+#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq)]
 pub struct DocType(Vec<UuidV4>);
 
 /// `DocType` Errors.
@@ -292,35 +292,6 @@ impl<'de> Deserialize<'de> for DocType {
     }
 }
 
-// This is needed to preserve backward compatibility with the old solution.
-impl PartialEq for DocType {
-    fn eq(&self, other: &Self) -> bool {
-        // List of special-case (single UUID) -> new DocType
-        // The old one should equal to the new one
-        let special_cases = [
-            (deprecated::PROPOSAL_DOCUMENT_UUID_TYPE, &*PROPOSAL),
-            (deprecated::COMMENT_DOCUMENT_UUID_TYPE, &*PROPOSAL_COMMENT),
-            (
-                deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-                &*PROPOSAL_SUBMISSION_ACTION,
-            ),
-        ];
-        for (uuid, expected) in special_cases {
-            match DocType::try_from(uuid) {
-                Ok(single) => {
-                    if (self.0 == single.0 && other.0 == expected.0)
-                        || (other.0 == single.0 && self.0 == expected.0)
-                    {
-                        return true;
-                    }
-                },
-                Err(_) => return false,
-            }
-        }
-        self.0 == other.0
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use catalyst_types::problem_report::ProblemReport;
@@ -337,12 +308,22 @@ mod tests {
 
     #[test]
     fn test_empty_doc_type_cbor_decode() {
-        assert!(<DocType as TryFrom<Vec<UuidV4>>>::try_from(vec![]).is_err());
-
         let mut decoded_context = DecodeContext::new(
             CompatibilityPolicy::Accept,
             ProblemReport::new("Test empty doc type"),
         );
+
+        let mut decoder = Decoder::new(&[]);
+        assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
+    }
+
+    #[test]
+    fn test_cbor_decode_empty_array() {
+        let mut decoded_context = DecodeContext::new(
+            CompatibilityPolicy::Accept,
+            ProblemReport::new("Test empty doc type"),
+        );
+
         let mut decoder = Decoder::new(&[]);
         assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
     }
@@ -397,44 +378,57 @@ mod tests {
     }
 
     #[test]
-    fn test_valid_vec_string() {
-        let uuid = Uuid::new_v4().to_string();
-        let input = vec![uuid.clone()];
-        let doc_type = DocType::try_from(input).expect("should succeed");
+    fn test_valid_vec_try_from() {
+        let uuid = Uuid::new_v4();
 
+        // string
+        let doc_type = DocType::try_from(vec![uuid.to_string()]).unwrap();
         assert_eq!(doc_type.0.len(), 1);
-        assert_eq!(doc_type.0.first().unwrap().to_string(), uuid);
+        assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
+
+        // Uuid
+        let doc_type = DocType::try_from(vec![uuid]).unwrap();
+        assert_eq!(doc_type.0.len(), 1);
+        assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
+
+        // UuidV4
+        let doc_type = DocType::try_from(vec![UuidV4::try_from(uuid).unwrap()]).unwrap();
+        assert_eq!(doc_type.0.len(), 1);
+        assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
     }
 
     #[test]
-    fn test_empty_vec_string_fails() {
-        let input: Vec<String> = vec![];
-        let result = DocType::try_from(input);
-        assert!(matches!(result, Err(DocTypeError::Empty)));
+    fn test_empty_vec_fails_try_from() {
+        // string
+        assert!(matches!(
+            DocType::try_from(Vec::<String>::new()),
+            Err(DocTypeError::Empty)
+        ));
+
+        // Uuid
+        assert!(matches!(
+            DocType::try_from(Vec::<Uuid>::new()),
+            Err(DocTypeError::Empty)
+        ));
+
+        // UuidV4
+        assert!(matches!(
+            DocType::try_from(Vec::<UuidV4>::new()),
+            Err(DocTypeError::Empty)
+        ));
     }
 
     #[test]
-    fn test_invalid_uuid_vec_string() {
-        let input = vec!["not-a-uuid".to_string()];
-        let result = DocType::try_from(input);
-        assert!(matches!(result, Err(DocTypeError::StringConversion(s)) if s == "not-a-uuid"));
-    }
+    fn test_invalid_uuid_vec_string_try_from() {
+        assert!(matches!(
+            DocType::try_from(vec!["not-a-uuid".to_string()]),
+            Err(DocTypeError::StringConversion(_))
+        ));
 
-    #[test]
-    fn test_doctype_equal_special_cases() {
-        // Direct equal
-        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE;
-        let dt1 = DocType::try_from(vec![uuid]).unwrap();
-        let dt2 = DocType::try_from(vec![uuid]).unwrap();
-        assert_eq!(dt1, dt2);
-
-        // single -> special mapped type
-        let single = DocType::try_from(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL);
-        let single = DocType::try_from(deprecated::COMMENT_DOCUMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_COMMENT);
-        let single = DocType::try_from(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_SUBMISSION_ACTION);
+        assert!(matches!(
+            DocType::try_from(Uuid::now_v7()),
+            Err(DocTypeError::InvalidUuid(_))
+        ));
     }
 
     #[test]
