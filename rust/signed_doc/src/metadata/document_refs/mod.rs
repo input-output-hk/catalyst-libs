@@ -64,12 +64,6 @@ impl Decode<'_, DecodeContext> for DocumentRefs {
         // Old: [id, ver]
         // New: [ 1* [id, ver, locator] ]
         let outer_arr = d.array()?.ok_or_else(|| {
-            decode_context.report().invalid_value(
-                "Array",
-                "Invalid array length",
-                "Valid array length",
-                CONTEXT,
-            );
             minicbor::decode::Error::message(format!("{CONTEXT}: expected valid array length"))
         })?;
 
@@ -91,15 +85,10 @@ impl Decode<'_, DecodeContext> for DocumentRefs {
                             warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
                         }
                         let id = parse_uuid(d).map_err(|e| {
-                            decode_context
-                                .report()
-                                .other(&format!("Invalid ID UUIDv7: {e}"), CONTEXT);
                             e.with_message("Invalid ID UUIDv7")
                         })?;
                         let ver = parse_uuid(d).map_err(|e| {
-                            decode_context
-                                .report()
-                                .other(&format!("Invalid Ver UUIDv7: {e}"), CONTEXT);
+
                             e.with_message("Invalid Ver UUIDv7")
                         })?;
 
@@ -111,21 +100,13 @@ impl Decode<'_, DecodeContext> for DocumentRefs {
                         )]))
                     },
                     CompatibilityPolicy::Fail => {
-                        let msg = "Conversion of document reference id and version to list of document reference with doc locator is not allowed";
-                        decode_context.report().other(msg, CONTEXT);
                         Err(minicbor::decode::Error::message(format!(
-                            "{CONTEXT}: {msg}"
+                            "{CONTEXT}: Conversion of document reference id and version to list of document reference with doc locator is not allowed"
                         )))
                     },
                 }
             },
             other => {
-                decode_context.report().invalid_value(
-                    "Decoding type",
-                    &other.to_string(),
-                    "Array or tag",
-                    CONTEXT,
-                );
                 Err(minicbor::decode::Error::message(format!(
                     "{CONTEXT}: Expected array of document reference, or tag of version and id, found {other}"
                 )))

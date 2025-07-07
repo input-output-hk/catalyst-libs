@@ -201,7 +201,7 @@ impl Decode<'_, DecodeContext> for DocType {
             },
             other => {
                 Err(minicbor::decode::Error::message(format!(
-                    "{CONTEXT}: expected array of UUIDor tagged UUIDv4, got {other:?}",
+                    "{CONTEXT}: expected array of UUIDor tagged UUIDv4, got {other}",
                 )))
             },
         }
