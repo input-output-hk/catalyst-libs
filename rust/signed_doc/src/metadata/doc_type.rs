@@ -307,64 +307,106 @@ mod tests {
     // 37(h'78927329cfd94ea19c710e019b126a65')]
     const PSA: &str = "D825505E60E623AD024A1BA1AC406DB978EE48";
 
-    #[test]
-    fn test_empty_doc_type_cbor_decode() {
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test empty doc type"),
-        );
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            Encoder::new(Vec::new())
+        } ; 
+        "Invalid empty CBOR bytes"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(0).unwrap();
+            e
+        } ; 
+        "Invalid empty CBOR array"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Fail,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(UuidV4::new(), &mut CborContext::Tagged).unwrap();
+            e
+        } ; 
+        "Valid single uuid v4 (old format), fail policy"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(UuidV4::new(), &mut CborContext::Untagged).unwrap();
+            e
+        } ; 
+        "Invalid single untagged uuid v4 (old format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap().encode_with(UuidV4::new(), &mut CborContext::Untagged).unwrap();
+            e
+        } ;
+        "Invalid untagged uuid v4 array (new format)"
+    )]
+    fn test_invalid_cbor_decode(policy: CompatibilityPolicy, e: Encoder<Vec<u8>>) {
+        let mut decoded_context = DecodeContext::new(policy, ProblemReport::new(""));
 
-        let mut decoder = Decoder::new(&[]);
-        assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
+        assert!(DocType::decode(
+            &mut Decoder::new(e.into_writer().as_slice()),
+            &mut decoded_context
+        )
+        .is_err());
     }
 
-    #[test]
-    fn test_single_uuid_doc_type_fail_policy_cbor_decode() {
-        let data = hex::decode(PSA).unwrap();
-        let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Fail,
-            ProblemReport::new("Test single uuid doc type - fail"),
-        );
-        assert!(DocType::decode(&mut decoder.clone(), &mut decoded_context).is_err());
-    }
 
-    #[test]
-    fn test_single_uuid_doc_type_warn_policy_cbor_decode() {
-        let data = hex::decode(PSA).unwrap();
-        let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Warn,
-            ProblemReport::new("Test single uuid doc type - warn"),
-        );
-        let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_type.doc_types().len(), 3);
-    }
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ; 
+        "Valid single uuid v4 (old format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Warn,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ; 
+        "Valid single uuid v4 (old format), warn policy"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap().encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Array of uuid v4 (new format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Fail,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap().encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Array of uuid v4 (new format), fail policy"
+    )]
+    fn test_valid_cbor_decode(policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV4) -> Encoder<Vec<u8>>) {
+        let uuid = UuidV4::new();
+        let e = e_gen(uuid);
+        let mut decoded_context = DecodeContext::new(policy, ProblemReport::new(""));
 
-    #[test]
-    fn test_single_uuid_doc_type_accept_policy_cbor_decode() {
-        let data = hex::decode(PSA).unwrap();
-        let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test single uuid doc type - accept"),
-        );
-        let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_type.doc_types().len(), 3);
-    }
-
-    #[test]
-    fn test_multi_uuid_doc_type_cbor_decode_encode() {
-        let uuidv4 = UuidV4::new();
-        let mut report = ProblemReport::new("Test multi uuid doc type");
-        let doc_type_list: DocType = vec![uuidv4, uuidv4].try_into().unwrap();
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        doc_type_list.encode(&mut encoder, &mut report).unwrap();
-        let mut decoder = Decoder::new(&buffer);
-        let mut decoded_context = DecodeContext::new(CompatibilityPolicy::Accept, report);
-        let decoded_doc_type = DocType::decode(&mut decoder, &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_type, doc_type_list);
+        let doc_type = DocType::decode(
+            &mut Decoder::new(e.into_writer().as_slice()),
+            &mut decoded_context
+        ).unwrap();
+        assert_eq!(doc_type.0, vec![uuid]);
     }
 
     #[test]
