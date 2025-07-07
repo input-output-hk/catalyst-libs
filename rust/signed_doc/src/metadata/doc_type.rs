@@ -154,21 +154,12 @@ impl Decode<'_, DecodeContext> for DocType {
         match d.datatype()? {
             minicbor::data::Type::Array => {
                 let len = d.array()?.ok_or_else(|| {
-                    decode_context
-                        .report()
-                        .other("Unable to decode array length", CONTEXT);
                     minicbor::decode::Error::message(format!(
                         "{CONTEXT}: Unable to decode array length"
                     ))
                 })?;
 
                 if len == 0 {
-                    decode_context.report().invalid_value(
-                        "array length",
-                        "0",
-                        "must contain at least one UUIDv4",
-                        CONTEXT,
-                    );
                     return Err(minicbor::decode::Error::message(format!(
                         "{CONTEXT}: empty array"
                     )));
@@ -179,9 +170,6 @@ impl Decode<'_, DecodeContext> for DocType {
                     .collect::<Result<Vec<_>, _>>()
                     .map(Self)
                     .map_err(|e| {
-                        decode_context
-                            .report()
-                            .other(&format!("Invalid UUIDv4 in array: {e}"), CONTEXT);
                         minicbor::decode::Error::message(format!(
                             "{CONTEXT}: Invalid UUIDv4 in array: {e}"
                         ))
@@ -196,35 +184,22 @@ impl Decode<'_, DecodeContext> for DocType {
                         }
 
                         let uuid = parse_uuid(d).map_err(|e| {
-                            let msg = format!("Cannot decode single UUIDv4: {e}");
-                            decode_context.report().invalid_value(
-                                "Decode single UUIDv4",
-                                &e.to_string(),
-                                &msg,
-                                CONTEXT,
-                            );
-                            minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
+                            minicbor::decode::Error::message(format!(
+                                "{CONTEXT}: Cannot decode single UUIDv4: {e}"
+                            ))
                         })?;
 
                         Ok(map_doc_type(uuid))
                     },
 
                     CompatibilityPolicy::Fail => {
-                        let msg = "Conversion of document type single UUID to type DocType is not allowed";
-                        decode_context.report().other(msg, CONTEXT);
                         Err(minicbor::decode::Error::message(format!(
-                            "{CONTEXT}: {msg}"
+                            "{CONTEXT}: Conversion of document type single UUID to type DocType is not allowed"
                         )))
                     },
                 }
             },
             other => {
-                decode_context.report().invalid_value(
-                    "decoding type",
-                    &format!("{other:?}"),
-                    "array or tag cbor",
-                    CONTEXT,
-                );
                 Err(minicbor::decode::Error::message(format!(
                     "{CONTEXT}: expected array of UUIDor tagged UUIDv4, got {other:?}",
                 )))
