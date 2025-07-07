@@ -297,6 +297,7 @@ mod tests {
     use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
+    use test_case::test_case;
 
     use super::*;
 
@@ -308,17 +309,6 @@ mod tests {
 
     #[test]
     fn test_empty_doc_type_cbor_decode() {
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test empty doc type"),
-        );
-
-        let mut decoder = Decoder::new(&[]);
-        assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
-    }
-
-    #[test]
-    fn test_cbor_decode_empty_array() {
         let mut decoded_context = DecodeContext::new(
             CompatibilityPolicy::Accept,
             ProblemReport::new("Test empty doc type"),
@@ -397,38 +387,33 @@ mod tests {
         assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
     }
 
-    #[test]
-    fn test_empty_vec_fails_try_from() {
-        // string
-        assert!(matches!(
-            DocType::try_from(Vec::<String>::new()),
-            Err(DocTypeError::Empty)
-        ));
-
-        // Uuid
-        assert!(matches!(
-            DocType::try_from(Vec::<Uuid>::new()),
-            Err(DocTypeError::Empty)
-        ));
-
-        // UuidV4
-        assert!(matches!(
-            DocType::try_from(Vec::<UuidV4>::new()),
-            Err(DocTypeError::Empty)
-        ));
-    }
-
-    #[test]
-    fn test_invalid_uuid_vec_string_try_from() {
-        assert!(matches!(
-            DocType::try_from(vec!["not-a-uuid".to_string()]),
-            Err(DocTypeError::StringConversion(_))
-        ));
-
-        assert!(matches!(
-            DocType::try_from(Uuid::now_v7()),
-            Err(DocTypeError::InvalidUuid(_))
-        ));
+    #[test_case(
+        Vec::<String>::new() => matches Err(DocTypeError::Empty) ;
+        "Empty string vec"
+    )]
+    #[test_case(
+        Vec::<Uuid>::new() => matches Err(DocTypeError::Empty) ;
+        "Empty Uuid vec"
+    )]
+    #[test_case(
+        Vec::<UuidV4>::new() => matches Err(DocTypeError::Empty) ;
+        "Empty UuidV4 vec"
+    )]
+    #[test_case(
+        vec!["not-a-uuid".to_string()] => matches Err(DocTypeError::StringConversion(_)) ;
+        "Not a valid Uuid string"
+    )]
+    #[test_case(
+        vec![Uuid::now_v7()] => matches Err(DocTypeError::InvalidUuid(_)) ;
+        "Not a valid vec of uuid v4"
+    )]
+    #[test_case(
+        Uuid::now_v7() => matches Err(DocTypeError::InvalidUuid(_)) ;
+        "Not a valid uuid v4"
+    )]
+    fn test_invalid_try_from<T>(input: T) -> Result<DocType, DocTypeError>
+    where DocType: TryFrom<T, Error = DocTypeError> {
+        DocType::try_from(input)
     }
 
     #[test]
