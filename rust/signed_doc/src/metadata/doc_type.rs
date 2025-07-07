@@ -301,12 +301,6 @@ mod tests {
 
     use super::*;
 
-    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
-    // Proposal Submission Action = 37(h'5e60e623ad024a1ba1ac406db978ee48') should map to
-    // [37(h'5e60e623ad024a1ba1ac406db978ee48'), 37(h'7808d2bad51140af84e8c0d1625fdfdc'),
-    // 37(h'78927329cfd94ea19c710e019b126a65')]
-    const PSA: &str = "D825505E60E623AD024A1BA1AC406DB978EE48";
-
     #[test_case(
         CompatibilityPolicy::Accept,
         {
@@ -409,22 +403,26 @@ mod tests {
         assert_eq!(doc_type.0, vec![uuid]);
     }
 
-    #[test]
-    fn test_valid_vec_try_from() {
+    #[test_case(
+        |uuid: Uuid| { vec![uuid.to_string()] } ;
+        "vec of strings"
+    )]
+    #[test_case(
+        |uuid: Uuid| { vec![uuid] } ;
+        "vec of uuid"
+    )]
+    #[test_case(
+        |uuid: Uuid| { vec![UuidV4::try_from(uuid).unwrap()] } ;
+        "vec of UuidV4"
+    )]
+    #[test_case(
+        |uuid: Uuid| { uuid } ;
+        "signle uuid"
+    )]
+    fn test_valid_try_from<T>(input_gen: impl FnOnce(Uuid) -> T)
+    where DocType: TryFrom<T, Error = DocTypeError> {
         let uuid = Uuid::new_v4();
-
-        // string
-        let doc_type = DocType::try_from(vec![uuid.to_string()]).unwrap();
-        assert_eq!(doc_type.0.len(), 1);
-        assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
-
-        // Uuid
-        let doc_type = DocType::try_from(vec![uuid]).unwrap();
-        assert_eq!(doc_type.0.len(), 1);
-        assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
-
-        // UuidV4
-        let doc_type = DocType::try_from(vec![UuidV4::try_from(uuid).unwrap()]).unwrap();
+        let doc_type = DocType::try_from(input_gen(uuid)).unwrap();
         assert_eq!(doc_type.0.len(), 1);
         assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
     }
@@ -458,6 +456,37 @@ mod tests {
         DocType::try_from(input)
     }
 
+    #[test_case(
+        deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => PROPOSAL.clone() ;
+        "deprecated proposal document type"
+    )]
+    #[test_case(
+        deprecated::COMMENT_DOCUMENT_UUID_TYPE => PROPOSAL_COMMENT.clone() ;
+        "deprecated proposal comment document type"
+    )]
+    #[test_case(
+        deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => PROPOSAL_SUBMISSION_ACTION.clone() ;
+        "deprecated proposal submission action type"
+    )]
+    fn test_compatibility_mapping(uuid: Uuid) -> DocType {
+        let mut e = Encoder::new(Vec::new());
+        e.encode_with(UuidV4::try_from(uuid).unwrap(), &mut CborContext::Tagged).unwrap();
+
+        // cbor decoding
+       let cbor_doc_type =  DocType::decode(
+            &mut Decoder::new(e.into_writer().as_slice()),
+            &mut DecodeContext::new(CompatibilityPolicy::Accept, ProblemReport::new(""))
+        ).unwrap();
+
+        // json decoding
+        let json = json!(uuid);
+        let json_doc_type   = serde_json::from_value(json).unwrap();
+
+        assert!(cbor_doc_type == json_doc_type);
+
+        cbor_doc_type
+    }
+
     #[test]
     fn test_deserialize_single_uuid_normal() {
         let uuid = uuid::Uuid::new_v4().to_string();
@@ -480,14 +509,5 @@ mod tests {
                 .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>();
         assert_eq!(actual, vec![uuid1, uuid2]);
-    }
-
-    #[test]
-    fn test_deserialize_special_case() {
-        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.to_string();
-        let json = json!(uuid);
-        let dt: DocType = serde_json::from_value(json).unwrap();
-
-        assert_eq!(dt, *PROPOSAL);
     }
 }
