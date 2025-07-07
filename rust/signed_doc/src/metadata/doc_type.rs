@@ -305,7 +305,7 @@ mod tests {
         CompatibilityPolicy::Accept,
         {
             Encoder::new(Vec::new())
-        } ; 
+        } ;
         "Invalid empty CBOR bytes"
     )]
     #[test_case(
@@ -314,7 +314,7 @@ mod tests {
             let mut e = Encoder::new(Vec::new());
             e.array(0).unwrap();
             e
-        } ; 
+        } ;
         "Invalid empty CBOR array"
     )]
     #[test_case(
@@ -323,7 +323,7 @@ mod tests {
             let mut e = Encoder::new(Vec::new());
             e.encode_with(UuidV4::new(), &mut CborContext::Tagged).unwrap();
             e
-        } ; 
+        } ;
         "Valid single uuid v4 (old format), fail policy"
     )]
     #[test_case(
@@ -332,7 +332,7 @@ mod tests {
             let mut e = Encoder::new(Vec::new());
             e.encode_with(UuidV4::new(), &mut CborContext::Untagged).unwrap();
             e
-        } ; 
+        } ;
         "Invalid single untagged uuid v4 (old format)"
     )]
     #[test_case(
@@ -354,14 +354,13 @@ mod tests {
         .is_err());
     }
 
-
     #[test_case(
         CompatibilityPolicy::Accept,
         |uuid: UuidV4| {
             let mut e = Encoder::new(Vec::new());
             e.encode_with(uuid, &mut CborContext::Tagged).unwrap();
             e
-        } ; 
+        } ;
         "Valid single uuid v4 (old format)"
     )]
     #[test_case(
@@ -370,7 +369,7 @@ mod tests {
             let mut e = Encoder::new(Vec::new());
             e.encode_with(uuid, &mut CborContext::Tagged).unwrap();
             e
-        } ; 
+        } ;
         "Valid single uuid v4 (old format), warn policy"
     )]
     #[test_case(
@@ -391,15 +390,18 @@ mod tests {
         } ;
         "Array of uuid v4 (new format), fail policy"
     )]
-    fn test_valid_cbor_decode(policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV4) -> Encoder<Vec<u8>>) {
+    fn test_valid_cbor_decode(
+        policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV4) -> Encoder<Vec<u8>>,
+    ) {
         let uuid = UuidV4::new();
         let e = e_gen(uuid);
         let mut decoded_context = DecodeContext::new(policy, ProblemReport::new(""));
 
         let doc_type = DocType::decode(
             &mut Decoder::new(e.into_writer().as_slice()),
-            &mut decoded_context
-        ).unwrap();
+            &mut decoded_context,
+        )
+        .unwrap();
         assert_eq!(doc_type.0, vec![uuid]);
     }
 
@@ -417,7 +419,7 @@ mod tests {
     )]
     #[test_case(
         |uuid: Uuid| { uuid } ;
-        "signle uuid"
+        "single uuid"
     )]
     fn test_valid_try_from<T>(input_gen: impl FnOnce(Uuid) -> T)
     where DocType: TryFrom<T, Error = DocTypeError> {
@@ -470,17 +472,19 @@ mod tests {
     )]
     fn test_compatibility_mapping(uuid: Uuid) -> DocType {
         let mut e = Encoder::new(Vec::new());
-        e.encode_with(UuidV4::try_from(uuid).unwrap(), &mut CborContext::Tagged).unwrap();
+        e.encode_with(UuidV4::try_from(uuid).unwrap(), &mut CborContext::Tagged)
+            .unwrap();
 
         // cbor decoding
-       let cbor_doc_type =  DocType::decode(
+        let cbor_doc_type = DocType::decode(
             &mut Decoder::new(e.into_writer().as_slice()),
-            &mut DecodeContext::new(CompatibilityPolicy::Accept, ProblemReport::new(""))
-        ).unwrap();
+            &mut DecodeContext::new(CompatibilityPolicy::Accept, ProblemReport::new("")),
+        )
+        .unwrap();
 
         // json decoding
         let json = json!(uuid);
-        let json_doc_type   = serde_json::from_value(json).unwrap();
+        let json_doc_type = serde_json::from_value(json).unwrap();
 
         assert!(cbor_doc_type == json_doc_type);
 
