@@ -297,6 +297,17 @@ mod tests {
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
     }
 
+    #[test]
+    fn test_array_with_indefinite_bytes() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0x5F, 0x45, 0x68, 0x65, 0x6C, 0x6C, 0x6F, 0xFF, // (_ h'68656C6C6F')
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
+    }
+
     /// For floating-point values, the preferred encoding uses the smallest format
     /// that preserves the value exactly—i.e., if a value can be represented in
     /// half-precision (16 bits) or single-precision (32 bits), it must be encoded in
@@ -306,11 +317,33 @@ mod tests {
     /// If a value requires more bits for exact representation, use the smallest format
     /// sufficient to encode it losslessly.
     #[test]
-    fn test_array_with_64_bit_float() {
+    fn test_array_with_verbose_float() {
         let decoder = Decoder::new(&[
             0x81, // 1 element
             0xFB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, // 0.0 encoded as 64-bit float
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
+    }
+
+    #[test]
+    fn test_array_with_verbose_int() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0x18, 0x00, // unsigned(0)
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
+    }
+
+    #[test]
+    fn test_array_with_verbose_string() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0x78, 0x02, 0x68, 0x69, // text(2) "hi"
         ]);
 
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
