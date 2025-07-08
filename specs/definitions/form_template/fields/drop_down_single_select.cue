@@ -7,25 +7,23 @@ import (
 
 )
 
-dictionary: #formTemplate & {
-	dropDownSingleSelect: {
-		description: """
-			UI - Drop Down Selection of a single entry from the defined enum.
+dictionary: dropDownSingleSelect: {
+	description: """
+		UI - Drop Down Selection of a single entry from the defined enum.
 
-			Select one option from a selector styled as a dropdown menu.
-			Only one choice is allowed.
-			"""
-		parent: "section"
-		definition: {
-			type:             "string"
-			contentMediaType: "text/plain"
-			pattern:          regex.def.singleLine.pattern
-		}
-		parameters: {
-			title: {}
-			description: {}
-			enum: {}
-			"x-guidance": {}
-		}
+		Select one option from a selector styled as a dropdown menu.
+		Only one choice is allowed.
+		"""
+	parent: "section"
+	definition: {
+		type:             "string"
+		contentMediaType: "text/plain"
+		pattern:          regex.def.singleLine.pattern
+	}
+	parameters: {
+		title: {}
+		description: {}
+		enum: {}
+		"x-guidance": {}
 	}
 }

@@ -7,26 +7,24 @@ import (
 
 )
 
-dictionary: #formTemplate & {
-	radioButtonSelect: {
-		description: """
-			UI - Radio Button Selection.
+dictionary: radioButtonSelect: {
+	description: """
+		UI - Radio Button Selection.
 
-			Select one option from a list of text options.
-			Selector is styled as a set of Radio Buttons.
-			"""
-		parent: "section"
+		Select one option from a list of text options.
+		Selector is styled as a set of Radio Buttons.
+		"""
+	parent: "section"
 
-		definition: {
-			type:             "string"
-			contentMediaType: "text/plain"
-			pattern:          regex.def.singleLine.pattern
-		}
-		parameters: {
-			title: {}
-			description: {}
-			enum: {}
-			"x-guidance": {}
-		}
+	definition: {
+		type:             "string"
+		contentMediaType: "text/plain"
+		pattern:          regex.def.singleLine.pattern
+	}
+	parameters: {
+		title: {}
+		description: {}
+		enum: {}
+		"x-guidance": {}
 	}
 }

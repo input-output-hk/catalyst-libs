@@ -6,30 +6,28 @@ import (
 
 )
 
-dictionary: #formTemplate & {
-	multiLineTextEntryMarkdown: {
-		description: """
-			UI - Multiline text entry with Markdown content.
-			Use Markdown formatting for rich text. 
-			Markdown formatting is as defined by CommonMark.
+dictionary: multiLineTextEntryMarkdown: {
+	description: """
+		UI - Multiline text entry with Markdown content.
+		Use Markdown formatting for rich text. 
+		Markdown formatting is as defined by CommonMark.
 
-			The following Markdown Extensions are also supported:
+		The following Markdown Extensions are also supported:
 
-			* None
-			"""
-		definition: {
-			type:             "string"
-			contentMediaType: "text/markdown"
-			pattern:          regex.def.multiLine.pattern
-		}
-		parent: "section"
-		parameters: {
-			title: {}
-			description: {}
-			minLength: {}
-			maxLength: {}
-			"x-guidance": {}
-			"x-placeholder": {}
-		}
+		* None
+		"""
+	definition: {
+		type:             "string"
+		contentMediaType: "text/markdown"
+		pattern:          regex.def.multiLine.pattern
+	}
+	parent: "section"
+	parameters: {
+		title: {}
+		description: {}
+		minLength: {}
+		maxLength: {}
+		"x-guidance": {}
+		"x-placeholder": {}
 	}
 }
