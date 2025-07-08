@@ -40,6 +40,6 @@ class Element(BaseModel):
         name = self._name
         example_name = "example" + name[0].upper() + name[1:]
         example: dict[str, Any] = {example_name: self.parameters.example}
-        example["$ref"] = f"#/$defs/{name}"
+        example[example_name]["$ref"] = f"#/$defs/{name}"
 
         return example

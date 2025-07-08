@@ -3369,1150 +3369,1541 @@
     }
   },
   "formTemplate": {
-    "dropDownSingleSelect": {
-      "definition": {
-        "contentMediaType": "text/plain",
-        "pattern": "^[^\\n]*$",
-        "type": "string"
-      },
-      "description": "UI - Drop Down Selection of a single entry from the defined enum.\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
+    "elements": {
+      "dropDownSingleSelect": {
+        "definition": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "enum": {
-          "description": "An array of string to select from.",
-          "items": {
-            "description": "An element of the Enum.",
-            "required": "excluded",
+        "description": "UI - Drop Down Selection of a single entry from the defined enum.\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.",
+        "parameters": {
+          "default": {
+            "description": "The option from the enum which is chosen by default.",
+            "example": "option 1",
+            "required": "yes",
             "type": "string"
           },
-          "required": "yes",
-          "type": "array"
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "example": "Drop Down Single Selector.\nChoose a value from the options presented.",
+            "required": "optional",
+            "type": "string"
+          },
+          "enum": {
+            "description": "An array of string to select from.",
+            "example": [
+              "option 1",
+              "option 2",
+              "option 3"
+            ],
+            "items": {
+              "description": "An element of the Enum.",
+              "required": "excluded",
+              "type": "string"
+            },
+            "required": "yes",
+            "type": "array"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "example": "Selector",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "example": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-icon": {
+            "choices": [
+              "'all spaces menu'",
+              "'all spaces menu-1'",
+              "academic-cap",
+              "ada",
+              "adjustments",
+              "annotation",
+              "archive",
+              "arrow-circle-down",
+              "arrow-circle-left",
+              "arrow-circle-right",
+              "arrow-circle-up",
+              "arrow-down",
+              "arrow-left",
+              "arrow-narrow-down",
+              "arrow-narrow-left",
+              "arrow-narrow-right",
+              "arrow-narrow-up",
+              "arrow-right",
+              "arrow-triangle-down",
+              "arrow-triangle-up",
+              "arrow-up",
+              "arrows-expand",
+              "at-symbol",
+              "avatar_placeholder",
+              "backspace",
+              "badge-check",
+              "ban",
+              "beaker",
+              "bell",
+              "book-open",
+              "bookmark",
+              "bookmark-alt",
+              "bottom-main-content",
+              "bottom-rail-toggle",
+              "bottom-rail-toggle-1",
+              "briefcase",
+              "cake",
+              "calculator",
+              "calendar",
+              "camera",
+              "cash",
+              "chart-bar",
+              "chart-pie",
+              "chart-square-bar",
+              "chat",
+              "chat-alt",
+              "chat-alt-2",
+              "check",
+              "check-circle",
+              "chevron-double-down",
+              "chevron-double-left",
+              "chevron-double-right",
+              "chevron-double-up",
+              "chevron-down",
+              "chevron-down-1",
+              "chevron-left",
+              "chevron-right",
+              "chevron-up",
+              "chip",
+              "clipboard",
+              "clipboard-check",
+              "clipboard-copy",
+              "clipboard-list",
+              "clock",
+              "cloud",
+              "cloud-download",
+              "cloud-upload",
+              "code",
+              "cog-gear",
+              "collection",
+              "color-swatch",
+              "credit-card",
+              "cube",
+              "cube-transparent",
+              "currency-bangladeshi",
+              "currency-dollar",
+              "currency-euro",
+              "currency-pound",
+              "currency-rupee",
+              "currency-yen",
+              "cursor-click",
+              "curved-arrow-right",
+              "database",
+              "desktop-computer",
+              "device-mobile",
+              "device-tablet",
+              "document",
+              "document-add",
+              "document-remove",
+              "document-report",
+              "document-search",
+              "document-text",
+              "dots-circle-horizontal",
+              "dots-horizontal",
+              "dots-vertical",
+              "double_check",
+              "download",
+              "duplicate",
+              "emoji-happy",
+              "emoji-sad",
+              "exclamation",
+              "exclamation-circle",
+              "external-link",
+              "eye",
+              "eye-off",
+              "facebook",
+              "fast-forward",
+              "film",
+              "filter",
+              "finger-print",
+              "fire",
+              "flag",
+              "folder",
+              "folder-add",
+              "folder-download",
+              "folder-open",
+              "folder-remove",
+              "fund",
+              "gift",
+              "globe",
+              "globe-alt",
+              "hand",
+              "hashtag",
+              "heart",
+              "home",
+              "icon-user-remove",
+              "identification",
+              "inbox",
+              "inbox-in",
+              "information-circle",
+              "key",
+              "left-rail-toggle",
+              "library",
+              "light-bulb",
+              "lightning-bolt",
+              "link",
+              "linkedin",
+              "location-marker",
+              "lock-closed",
+              "lock-open",
+              "logout",
+              "logout-1",
+              "mail",
+              "mail-open",
+              "map",
+              "maximize-toggle",
+              "menu",
+              "menu-alt-1",
+              "menu-alt-2",
+              "menu-alt-3",
+              "menu-alt-4",
+              "microphone",
+              "minimize-toggle",
+              "minus",
+              "minus-circle",
+              "moon",
+              "move-item",
+              "music-note",
+              "newspaper",
+              "node-closed",
+              "node-line",
+              "node-line-end",
+              "node-open",
+              "office-building",
+              "paper-airplane",
+              "paper-clip",
+              "pause",
+              "pencil",
+              "pencil-alt",
+              "phone",
+              "phone-incoming",
+              "phone-missed-call",
+              "phone-outgoing",
+              "photograph",
+              "play",
+              "plus",
+              "plus_circle_filled",
+              "plus_circle_outlined",
+              "presentation-chart-bar",
+              "presentation-chart-line",
+              "printer",
+              "progress-track-warning",
+              "puzzle",
+              "qrcode",
+              "question-mark-circle",
+              "receipt-refund",
+              "receipt-tax",
+              "reddit",
+              "refresh",
+              "reply",
+              "rewind",
+              "right-rail-toggle",
+              "rss",
+              "rt_bold",
+              "rt_decrease_indent",
+              "rt_heading",
+              "rt_increase_indent",
+              "rt_italic",
+              "rt_ordered_list",
+              "rt_unordered_list",
+              "save",
+              "save-as",
+              "scale",
+              "scissors",
+              "search",
+              "search-circle",
+              "selector",
+              "send-airplane",
+              "server",
+              "share",
+              "shield-check",
+              "shield-exclamation",
+              "shopping-bag",
+              "shopping-cart",
+              "sm-view-grid-add",
+              "sort-ascending",
+              "sort-descending",
+              "sparkles",
+              "speakerphone",
+              "star_filled",
+              "star_outlined",
+              "status-offline",
+              "status-online",
+              "stop",
+              "summary",
+              "sun",
+              "support",
+              "switch-horizontal",
+              "switch-vertical",
+              "table",
+              "tag",
+              "template",
+              "terminal",
+              "thumb-down",
+              "thumb-up",
+              "ticket",
+              "top-bar",
+              "top-bar-filled",
+              "translate",
+              "trash",
+              "trending-down",
+              "trending-up",
+              "truck",
+              "unlink",
+              "upload",
+              "user",
+              "user-add",
+              "user-circle",
+              "user-group",
+              "users",
+              "variable",
+              "video-camera",
+              "view-boards",
+              "view-grid",
+              "view-list",
+              "volume-off",
+              "volume-up",
+              "vote",
+              "wallet",
+              "wifi",
+              "x",
+              "x-circle",
+              "xTwitter",
+              "zoom-in",
+              "zoom-out"
+            ],
+            "description": "The name of the Icon to display with the field.",
+            "example": "emoji-happy",
+            "required": "optional",
+            "type": "string"
+          }
         },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "section"
       },
-      "parent": "section"
-    },
-    "multiLineTextEntry": {
-      "definition": {
-        "contentMediaType": "text/plain",
-        "pattern": "^[\\S\\s]*$",
-        "type": "string"
-      },
-      "description": "UI - One or more Lines of text entry.\nLine breaks, and special characters are allowed.\nSpecial formatted markup, such as Markdown are not allowed.\nEnter multiple lines of plain text. You can use line breaks but no special formatting.",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "maxLength": {
-          "description": "Maximum number of characters allowed in the field.",
-          "required": "yes",
-          "type": "integer"
-        },
-        "minLength": {
-          "description": "Minimum number of characters allowed in the field.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
-          "type": "string"
-        }
-      },
-      "parent": "section"
-    },
-    "multiLineTextEntryListMarkdown": {
-      "definition": {
-        "items": {
-          "contentMediaType": "text/markdown",
-          "minLength": 1,
+      "multiLineTextEntry": {
+        "definition": {
+          "contentMediaType": "text/plain",
           "pattern": "^[\\S\\s]*$",
           "type": "string"
         },
-        "type": "array",
-        "uniqueItems": true
-      },
-      "description": "UI - A Growable List of markdown formatted text fields.\nEach entry is a multiline markdown formatted string.\nMarkdown Formatting, line breaks, or special characters are allowed.\nAdd multiple text entries.\nEach entry should be unique.",
-      "parameters": {
-        "contains": {
-          "description": "The choices the multi select can contain.",
-          "items": {
-            "description": "An individual Choice.",
-            "required": "excluded",
+        "description": "UI - One or more Lines of text entry.\nLine breaks, and special characters are allowed.\nSpecial formatted markup, such as Markdown are not allowed.\nEnter multiple lines of plain text. You can use line breaks but no special formatting.",
+        "parameters": {
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
             "type": "string"
           },
-          "required": "yes",
-          "type": "array"
+          "maxLength": {
+            "description": "Maximum number of characters allowed in the field.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minLength": {
+            "description": "Minimum number of characters allowed in the field.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
         },
-        "default": {
-          "description": "Default Array of text can be supplied.",
-          "required": "optional",
-          "type": "string"
-        },
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "maxItems": {
-          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
-          "required": "yes",
-          "type": "integer"
-        },
-        "minItems": {
-          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "section"
       },
-      "parent": "section"
-    },
-    "multiLineTextEntryMarkdown": {
-      "definition": {
-        "contentMediaType": "text/markdown",
-        "pattern": "^[\\S\\s]*$",
-        "type": "string"
+      "multiLineTextEntryListMarkdown": {
+        "definition": {
+          "items": {
+            "contentMediaType": "text/markdown",
+            "minLength": 1,
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "description": "UI - A Growable List of markdown formatted text fields.\nEach entry is a multiline markdown formatted string.\nMarkdown Formatting, line breaks, or special characters are allowed.\nAdd multiple text entries.\nEach entry should be unique.",
+        "parameters": {
+          "contains": {
+            "description": "The choices the multi select can contain.",
+            "items": {
+              "description": "An individual Choice.",
+              "required": "excluded",
+              "type": "string"
+            },
+            "required": "yes",
+            "type": "array"
+          },
+          "default": {
+            "description": "Default Array of text can be supplied.",
+            "required": "optional",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "maxItems": {
+            "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minItems": {
+            "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
+        },
+        "parent": "section"
       },
-      "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
+      "multiLineTextEntryMarkdown": {
+        "definition": {
+          "contentMediaType": "text/markdown",
+          "pattern": "^[\\S\\s]*$",
           "type": "string"
         },
-        "maxLength": {
-          "description": "Maximum number of characters allowed in the field.",
-          "required": "yes",
-          "type": "integer"
+        "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
+        "parameters": {
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "maxLength": {
+            "description": "Maximum number of characters allowed in the field.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minLength": {
+            "description": "Minimum number of characters allowed in the field.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
         },
-        "minLength": {
-          "description": "Minimum number of characters allowed in the field.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "section"
       },
-      "parent": "section"
-    },
-    "multiSelect": {
-      "definition": {
-        "items": {
+      "multiSelect": {
+        "definition": {
+          "items": {
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "description": "UI - Multiselect from the given items.\n\nSelect multiple options from the dropdown menu.\nMultiple choices are allowed.\nAll choices MUST be unique.",
+        "parameters": {
+          "contains": {
+            "description": "The choices the multi select can contain.",
+            "items": {
+              "description": "An individual Choice.",
+              "required": "excluded",
+              "type": "string"
+            },
+            "required": "yes",
+            "type": "array"
+          },
+          "default": {
+            "description": "Default selections can be supplied.",
+            "required": "optional",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "maxItems": {
+            "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minItems": {
+            "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          }
+        },
+        "parent": "section"
+      },
+      "radioButtonSelect": {
+        "definition": {
+          "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "type": "array",
-        "uniqueItems": true
-      },
-      "description": "UI - Multiselect from the given items.\n\nSelect multiple options from the dropdown menu.\nMultiple choices are allowed.\nAll choices MUST be unique.",
-      "parameters": {
-        "contains": {
-          "description": "The choices the multi select can contain.",
-          "items": {
-            "description": "An individual Choice.",
-            "required": "excluded",
+        "description": "UI - Radio Button Selection.\n\nSelect one option from a list of text options.\nSelector is styled as a set of Radio Buttons.",
+        "parameters": {
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
             "type": "string"
           },
-          "required": "yes",
-          "type": "array"
-        },
-        "default": {
-          "description": "Default selections can be supplied.",
-          "required": "optional",
-          "type": "string"
-        },
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "maxItems": {
-          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
-          "required": "yes",
-          "type": "integer"
-        },
-        "minItems": {
-          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        }
-      },
-      "parent": "section"
-    },
-    "radioButtonSelect": {
-      "definition": {
-        "contentMediaType": "text/plain",
-        "pattern": "^[^\\n]*$",
-        "type": "string"
-      },
-      "description": "UI - Radio Button Selection.\n\nSelect one option from a list of text options.\nSelector is styled as a set of Radio Buttons.",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "enum": {
-          "description": "An array of string to select from.",
-          "items": {
-            "description": "An element of the Enum.",
-            "required": "excluded",
+          "enum": {
+            "description": "An array of string to select from.",
+            "items": {
+              "description": "An element of the Enum.",
+              "required": "excluded",
+              "type": "string"
+            },
+            "required": "yes",
+            "type": "array"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
             "type": "string"
           },
-          "required": "yes",
-          "type": "array"
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          }
         },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "section"
       },
-      "parent": "section"
-    },
-    "schemaReferenceNonUI": {
-      "definition": {
-        "readOnly": true,
-        "type": "string"
-      },
-      "description": "Enforces the json document having a proper reference to the schema.",
-      "parameters": {
-        "const": {
-          "description": "The path must always be this value. **MUST** match `default`.",
-          "required": "yes",
+      "schemaReferenceNonUI": {
+        "definition": {
+          "readOnly": true,
           "type": "string"
         },
-        "default": {
-          "description": "The path that is defined to find the matching json schema.",
-          "required": "yes",
-          "type": "string"
-        }
-      },
-      "parent": "section"
-    },
-    "section": {
-      "definition": {
-        "additionalProperties": false,
-        "type": "object"
-      },
-      "description": "UI - Logical Document Sub-Section Break.\nSubsections containing specific details about the proposal.",
-      "parameters": {
-        "description": {
-          "description": "The displayable description attached to the section.  Markdown formatted contents.",
-          "required": "optional",
-          "type": "string"
-        },
-        "properties": {
-          "description": "The sub fields of the section.",
-          "required": "yes",
-          "type": "string"
-        },
-        "required": {
-          "description": "Which fields MUST appear in the segment.",
-          "required": "optional",
-          "type": "string"
-        },
-        "title": {
-          "description": "The title of the section.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-icon": {
-          "choices": [
-            "'all spaces menu'",
-            "'all spaces menu-1'",
-            "academic-cap",
-            "ada",
-            "adjustments",
-            "annotation",
-            "archive",
-            "arrow-circle-down",
-            "arrow-circle-left",
-            "arrow-circle-right",
-            "arrow-circle-up",
-            "arrow-down",
-            "arrow-left",
-            "arrow-narrow-down",
-            "arrow-narrow-left",
-            "arrow-narrow-right",
-            "arrow-narrow-up",
-            "arrow-right",
-            "arrow-triangle-down",
-            "arrow-triangle-up",
-            "arrow-up",
-            "arrows-expand",
-            "at-symbol",
-            "avatar_placeholder",
-            "backspace",
-            "badge-check",
-            "ban",
-            "beaker",
-            "bell",
-            "book-open",
-            "bookmark",
-            "bookmark-alt",
-            "bottom-main-content",
-            "bottom-rail-toggle",
-            "bottom-rail-toggle-1",
-            "briefcase",
-            "cake",
-            "calculator",
-            "calendar",
-            "camera",
-            "cash",
-            "chart-bar",
-            "chart-pie",
-            "chart-square-bar",
-            "chat",
-            "chat-alt",
-            "chat-alt-2",
-            "check",
-            "check-circle",
-            "chevron-double-down",
-            "chevron-double-left",
-            "chevron-double-right",
-            "chevron-double-up",
-            "chevron-down",
-            "chevron-down-1",
-            "chevron-left",
-            "chevron-right",
-            "chevron-up",
-            "chip",
-            "clipboard",
-            "clipboard-check",
-            "clipboard-copy",
-            "clipboard-list",
-            "clock",
-            "cloud",
-            "cloud-download",
-            "cloud-upload",
-            "code",
-            "cog-gear",
-            "collection",
-            "color-swatch",
-            "credit-card",
-            "cube",
-            "cube-transparent",
-            "currency-bangladeshi",
-            "currency-dollar",
-            "currency-euro",
-            "currency-pound",
-            "currency-rupee",
-            "currency-yen",
-            "cursor-click",
-            "curved-arrow-right",
-            "database",
-            "desktop-computer",
-            "device-mobile",
-            "device-tablet",
-            "document",
-            "document-add",
-            "document-remove",
-            "document-report",
-            "document-search",
-            "document-text",
-            "dots-circle-horizontal",
-            "dots-horizontal",
-            "dots-vertical",
-            "double_check",
-            "download",
-            "duplicate",
-            "emoji-happy",
-            "emoji-sad",
-            "exclamation",
-            "exclamation-circle",
-            "external-link",
-            "eye",
-            "eye-off",
-            "facebook",
-            "fast-forward",
-            "film",
-            "filter",
-            "finger-print",
-            "fire",
-            "flag",
-            "folder",
-            "folder-add",
-            "folder-download",
-            "folder-open",
-            "folder-remove",
-            "fund",
-            "gift",
-            "globe",
-            "globe-alt",
-            "hand",
-            "hashtag",
-            "heart",
-            "home",
-            "icon-user-remove",
-            "identification",
-            "inbox",
-            "inbox-in",
-            "information-circle",
-            "key",
-            "left-rail-toggle",
-            "library",
-            "light-bulb",
-            "lightning-bolt",
-            "link",
-            "linkedin",
-            "location-marker",
-            "lock-closed",
-            "lock-open",
-            "logout",
-            "logout-1",
-            "mail",
-            "mail-open",
-            "map",
-            "maximize-toggle",
-            "menu",
-            "menu-alt-1",
-            "menu-alt-2",
-            "menu-alt-3",
-            "menu-alt-4",
-            "microphone",
-            "minimize-toggle",
-            "minus",
-            "minus-circle",
-            "moon",
-            "move-item",
-            "music-note",
-            "newspaper",
-            "node-closed",
-            "node-line",
-            "node-line-end",
-            "node-open",
-            "office-building",
-            "paper-airplane",
-            "paper-clip",
-            "pause",
-            "pencil",
-            "pencil-alt",
-            "phone",
-            "phone-incoming",
-            "phone-missed-call",
-            "phone-outgoing",
-            "photograph",
-            "play",
-            "plus",
-            "plus_circle_filled",
-            "plus_circle_outlined",
-            "presentation-chart-bar",
-            "presentation-chart-line",
-            "printer",
-            "progress-track-warning",
-            "puzzle",
-            "qrcode",
-            "question-mark-circle",
-            "receipt-refund",
-            "receipt-tax",
-            "reddit",
-            "refresh",
-            "reply",
-            "rewind",
-            "right-rail-toggle",
-            "rss",
-            "rt_bold",
-            "rt_decrease_indent",
-            "rt_heading",
-            "rt_increase_indent",
-            "rt_italic",
-            "rt_ordered_list",
-            "rt_unordered_list",
-            "save",
-            "save-as",
-            "scale",
-            "scissors",
-            "search",
-            "search-circle",
-            "selector",
-            "send-airplane",
-            "server",
-            "share",
-            "shield-check",
-            "shield-exclamation",
-            "shopping-bag",
-            "shopping-cart",
-            "sm-view-grid-add",
-            "sort-ascending",
-            "sort-descending",
-            "sparkles",
-            "speakerphone",
-            "star_filled",
-            "star_outlined",
-            "status-offline",
-            "status-online",
-            "stop",
-            "summary",
-            "sun",
-            "support",
-            "switch-horizontal",
-            "switch-vertical",
-            "table",
-            "tag",
-            "template",
-            "terminal",
-            "thumb-down",
-            "thumb-up",
-            "ticket",
-            "top-bar",
-            "top-bar-filled",
-            "translate",
-            "trash",
-            "trending-down",
-            "trending-up",
-            "truck",
-            "unlink",
-            "upload",
-            "user",
-            "user-add",
-            "user-circle",
-            "user-group",
-            "users",
-            "variable",
-            "video-camera",
-            "view-boards",
-            "view-grid",
-            "view-list",
-            "volume-off",
-            "volume-up",
-            "vote",
-            "wallet",
-            "wifi",
-            "x",
-            "x-circle",
-            "xTwitter",
-            "zoom-in",
-            "zoom-out"
-          ],
-          "description": "The name of the Icon to display with the field.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-order": {
-          "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an arbitrary order.",
-          "required": "yes",
-          "type": "string"
-        }
-      },
-      "parent": "segment"
-    },
-    "segment": {
-      "definition": {
-        "additionalProperties": false,
-        "type": "object"
-      },
-      "description": "Logical Document Section - Grouping Only - Highest Level Group\n\"x-note\": \"\n\tMajor sections of the proposal. Each segment contains sections of information grouped together.\n\t\"",
-      "parameters": {
-        "description": {
-          "description": "The displayable description attached to the segment.  Markdown formatted contents.",
-          "required": "optional",
-          "type": "string"
-        },
-        "properties": {
-          "description": "The sub fields of the segment.",
-          "required": "yes",
-          "type": "string"
-        },
-        "required": {
-          "description": "Which fields MUST appear in the segment.",
-          "required": "optional",
-          "type": "string"
-        },
-        "title": {
-          "description": "The title of the segment.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-icon": {
-          "choices": [
-            "'all spaces menu'",
-            "'all spaces menu-1'",
-            "academic-cap",
-            "ada",
-            "adjustments",
-            "annotation",
-            "archive",
-            "arrow-circle-down",
-            "arrow-circle-left",
-            "arrow-circle-right",
-            "arrow-circle-up",
-            "arrow-down",
-            "arrow-left",
-            "arrow-narrow-down",
-            "arrow-narrow-left",
-            "arrow-narrow-right",
-            "arrow-narrow-up",
-            "arrow-right",
-            "arrow-triangle-down",
-            "arrow-triangle-up",
-            "arrow-up",
-            "arrows-expand",
-            "at-symbol",
-            "avatar_placeholder",
-            "backspace",
-            "badge-check",
-            "ban",
-            "beaker",
-            "bell",
-            "book-open",
-            "bookmark",
-            "bookmark-alt",
-            "bottom-main-content",
-            "bottom-rail-toggle",
-            "bottom-rail-toggle-1",
-            "briefcase",
-            "cake",
-            "calculator",
-            "calendar",
-            "camera",
-            "cash",
-            "chart-bar",
-            "chart-pie",
-            "chart-square-bar",
-            "chat",
-            "chat-alt",
-            "chat-alt-2",
-            "check",
-            "check-circle",
-            "chevron-double-down",
-            "chevron-double-left",
-            "chevron-double-right",
-            "chevron-double-up",
-            "chevron-down",
-            "chevron-down-1",
-            "chevron-left",
-            "chevron-right",
-            "chevron-up",
-            "chip",
-            "clipboard",
-            "clipboard-check",
-            "clipboard-copy",
-            "clipboard-list",
-            "clock",
-            "cloud",
-            "cloud-download",
-            "cloud-upload",
-            "code",
-            "cog-gear",
-            "collection",
-            "color-swatch",
-            "credit-card",
-            "cube",
-            "cube-transparent",
-            "currency-bangladeshi",
-            "currency-dollar",
-            "currency-euro",
-            "currency-pound",
-            "currency-rupee",
-            "currency-yen",
-            "cursor-click",
-            "curved-arrow-right",
-            "database",
-            "desktop-computer",
-            "device-mobile",
-            "device-tablet",
-            "document",
-            "document-add",
-            "document-remove",
-            "document-report",
-            "document-search",
-            "document-text",
-            "dots-circle-horizontal",
-            "dots-horizontal",
-            "dots-vertical",
-            "double_check",
-            "download",
-            "duplicate",
-            "emoji-happy",
-            "emoji-sad",
-            "exclamation",
-            "exclamation-circle",
-            "external-link",
-            "eye",
-            "eye-off",
-            "facebook",
-            "fast-forward",
-            "film",
-            "filter",
-            "finger-print",
-            "fire",
-            "flag",
-            "folder",
-            "folder-add",
-            "folder-download",
-            "folder-open",
-            "folder-remove",
-            "fund",
-            "gift",
-            "globe",
-            "globe-alt",
-            "hand",
-            "hashtag",
-            "heart",
-            "home",
-            "icon-user-remove",
-            "identification",
-            "inbox",
-            "inbox-in",
-            "information-circle",
-            "key",
-            "left-rail-toggle",
-            "library",
-            "light-bulb",
-            "lightning-bolt",
-            "link",
-            "linkedin",
-            "location-marker",
-            "lock-closed",
-            "lock-open",
-            "logout",
-            "logout-1",
-            "mail",
-            "mail-open",
-            "map",
-            "maximize-toggle",
-            "menu",
-            "menu-alt-1",
-            "menu-alt-2",
-            "menu-alt-3",
-            "menu-alt-4",
-            "microphone",
-            "minimize-toggle",
-            "minus",
-            "minus-circle",
-            "moon",
-            "move-item",
-            "music-note",
-            "newspaper",
-            "node-closed",
-            "node-line",
-            "node-line-end",
-            "node-open",
-            "office-building",
-            "paper-airplane",
-            "paper-clip",
-            "pause",
-            "pencil",
-            "pencil-alt",
-            "phone",
-            "phone-incoming",
-            "phone-missed-call",
-            "phone-outgoing",
-            "photograph",
-            "play",
-            "plus",
-            "plus_circle_filled",
-            "plus_circle_outlined",
-            "presentation-chart-bar",
-            "presentation-chart-line",
-            "printer",
-            "progress-track-warning",
-            "puzzle",
-            "qrcode",
-            "question-mark-circle",
-            "receipt-refund",
-            "receipt-tax",
-            "reddit",
-            "refresh",
-            "reply",
-            "rewind",
-            "right-rail-toggle",
-            "rss",
-            "rt_bold",
-            "rt_decrease_indent",
-            "rt_heading",
-            "rt_increase_indent",
-            "rt_italic",
-            "rt_ordered_list",
-            "rt_unordered_list",
-            "save",
-            "save-as",
-            "scale",
-            "scissors",
-            "search",
-            "search-circle",
-            "selector",
-            "send-airplane",
-            "server",
-            "share",
-            "shield-check",
-            "shield-exclamation",
-            "shopping-bag",
-            "shopping-cart",
-            "sm-view-grid-add",
-            "sort-ascending",
-            "sort-descending",
-            "sparkles",
-            "speakerphone",
-            "star_filled",
-            "star_outlined",
-            "status-offline",
-            "status-online",
-            "stop",
-            "summary",
-            "sun",
-            "support",
-            "switch-horizontal",
-            "switch-vertical",
-            "table",
-            "tag",
-            "template",
-            "terminal",
-            "thumb-down",
-            "thumb-up",
-            "ticket",
-            "top-bar",
-            "top-bar-filled",
-            "translate",
-            "trash",
-            "trending-down",
-            "trending-up",
-            "truck",
-            "unlink",
-            "upload",
-            "user",
-            "user-add",
-            "user-circle",
-            "user-group",
-            "users",
-            "variable",
-            "video-camera",
-            "view-boards",
-            "view-grid",
-            "view-list",
-            "volume-off",
-            "volume-up",
-            "vote",
-            "wallet",
-            "wifi",
-            "x",
-            "x-circle",
-            "xTwitter",
-            "zoom-in",
-            "zoom-out"
-          ],
-          "description": "The name of the Icon to display with the field.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-order": {
-          "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an arbitrary order.",
-          "required": "yes",
-          "type": "string"
-        }
-      },
-      "parent": "{}"
-    },
-    "singleGroupedTagSelector": {
-      "definition": {
-        "additionalProperties": false,
-        "required": [
-          "group",
-          "tag"
-        ],
-        "type": "object"
-      },
-      "description": "UI - A selector where a top level group selection, allows a single choice from a list of tags.\nSelect one option from the dropdown menu. \nOnly one choice is allowed.\n\nThe contents of the `singleGroupedTagSelector` *MUST* have the following format:\n\n```json\n\"oneOf\": [\n\t{\n\t\t\"properties\": {\n\t\t\t\"group\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\t\"const\": \"Governance\"\n\t\t\t},\n\t\t\t\"tag\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\t\"enum\": [\n\t\t\t\t\t\"Governance\",\n\t\t\t\t\t\"DAO\"\n\t\t\t\t]\n\t\t\t}\n\t\t}\n\t},\n```",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "oneOf_groupedTags": {
-          "description": "A set of tags with a group selector.",
-          "items": {
-            "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
-            "required": "excluded",
-            "type": "object"
+        "description": "Enforces the json document having a proper reference to the schema.",
+        "parameters": {
+          "const": {
+            "description": "The path must always be this value. **MUST** match `default`.",
+            "required": "yes",
+            "type": "string"
           },
-          "property": "oneOf",
-          "required": "excluded",
-          "type": "array"
+          "default": {
+            "description": "The path that is defined to find the matching json schema.",
+            "required": "yes",
+            "type": "string"
+          }
         },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "section"
       },
-      "parent": "section"
-    },
-    "singleLineHttpsURLEntry": {
-      "definition": {
-        "format": "uri",
-        "pattern": "^https://[^\\s]+$",
-        "type": "string"
+      "section": {
+        "definition": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "description": "UI - Logical Document Sub-Section Break.\nSubsections containing specific details about the proposal.",
+        "parameters": {
+          "description": {
+            "description": "The displayable description attached to the section.  Markdown formatted contents.",
+            "required": "optional",
+            "type": "string"
+          },
+          "properties": {
+            "description": "The sub fields of the section.",
+            "required": "yes",
+            "type": "string"
+          },
+          "required": {
+            "description": "Which fields MUST appear in the segment.",
+            "required": "optional",
+            "type": "string"
+          },
+          "title": {
+            "description": "The title of the section.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-icon": {
+            "choices": [
+              "'all spaces menu'",
+              "'all spaces menu-1'",
+              "academic-cap",
+              "ada",
+              "adjustments",
+              "annotation",
+              "archive",
+              "arrow-circle-down",
+              "arrow-circle-left",
+              "arrow-circle-right",
+              "arrow-circle-up",
+              "arrow-down",
+              "arrow-left",
+              "arrow-narrow-down",
+              "arrow-narrow-left",
+              "arrow-narrow-right",
+              "arrow-narrow-up",
+              "arrow-right",
+              "arrow-triangle-down",
+              "arrow-triangle-up",
+              "arrow-up",
+              "arrows-expand",
+              "at-symbol",
+              "avatar_placeholder",
+              "backspace",
+              "badge-check",
+              "ban",
+              "beaker",
+              "bell",
+              "book-open",
+              "bookmark",
+              "bookmark-alt",
+              "bottom-main-content",
+              "bottom-rail-toggle",
+              "bottom-rail-toggle-1",
+              "briefcase",
+              "cake",
+              "calculator",
+              "calendar",
+              "camera",
+              "cash",
+              "chart-bar",
+              "chart-pie",
+              "chart-square-bar",
+              "chat",
+              "chat-alt",
+              "chat-alt-2",
+              "check",
+              "check-circle",
+              "chevron-double-down",
+              "chevron-double-left",
+              "chevron-double-right",
+              "chevron-double-up",
+              "chevron-down",
+              "chevron-down-1",
+              "chevron-left",
+              "chevron-right",
+              "chevron-up",
+              "chip",
+              "clipboard",
+              "clipboard-check",
+              "clipboard-copy",
+              "clipboard-list",
+              "clock",
+              "cloud",
+              "cloud-download",
+              "cloud-upload",
+              "code",
+              "cog-gear",
+              "collection",
+              "color-swatch",
+              "credit-card",
+              "cube",
+              "cube-transparent",
+              "currency-bangladeshi",
+              "currency-dollar",
+              "currency-euro",
+              "currency-pound",
+              "currency-rupee",
+              "currency-yen",
+              "cursor-click",
+              "curved-arrow-right",
+              "database",
+              "desktop-computer",
+              "device-mobile",
+              "device-tablet",
+              "document",
+              "document-add",
+              "document-remove",
+              "document-report",
+              "document-search",
+              "document-text",
+              "dots-circle-horizontal",
+              "dots-horizontal",
+              "dots-vertical",
+              "double_check",
+              "download",
+              "duplicate",
+              "emoji-happy",
+              "emoji-sad",
+              "exclamation",
+              "exclamation-circle",
+              "external-link",
+              "eye",
+              "eye-off",
+              "facebook",
+              "fast-forward",
+              "film",
+              "filter",
+              "finger-print",
+              "fire",
+              "flag",
+              "folder",
+              "folder-add",
+              "folder-download",
+              "folder-open",
+              "folder-remove",
+              "fund",
+              "gift",
+              "globe",
+              "globe-alt",
+              "hand",
+              "hashtag",
+              "heart",
+              "home",
+              "icon-user-remove",
+              "identification",
+              "inbox",
+              "inbox-in",
+              "information-circle",
+              "key",
+              "left-rail-toggle",
+              "library",
+              "light-bulb",
+              "lightning-bolt",
+              "link",
+              "linkedin",
+              "location-marker",
+              "lock-closed",
+              "lock-open",
+              "logout",
+              "logout-1",
+              "mail",
+              "mail-open",
+              "map",
+              "maximize-toggle",
+              "menu",
+              "menu-alt-1",
+              "menu-alt-2",
+              "menu-alt-3",
+              "menu-alt-4",
+              "microphone",
+              "minimize-toggle",
+              "minus",
+              "minus-circle",
+              "moon",
+              "move-item",
+              "music-note",
+              "newspaper",
+              "node-closed",
+              "node-line",
+              "node-line-end",
+              "node-open",
+              "office-building",
+              "paper-airplane",
+              "paper-clip",
+              "pause",
+              "pencil",
+              "pencil-alt",
+              "phone",
+              "phone-incoming",
+              "phone-missed-call",
+              "phone-outgoing",
+              "photograph",
+              "play",
+              "plus",
+              "plus_circle_filled",
+              "plus_circle_outlined",
+              "presentation-chart-bar",
+              "presentation-chart-line",
+              "printer",
+              "progress-track-warning",
+              "puzzle",
+              "qrcode",
+              "question-mark-circle",
+              "receipt-refund",
+              "receipt-tax",
+              "reddit",
+              "refresh",
+              "reply",
+              "rewind",
+              "right-rail-toggle",
+              "rss",
+              "rt_bold",
+              "rt_decrease_indent",
+              "rt_heading",
+              "rt_increase_indent",
+              "rt_italic",
+              "rt_ordered_list",
+              "rt_unordered_list",
+              "save",
+              "save-as",
+              "scale",
+              "scissors",
+              "search",
+              "search-circle",
+              "selector",
+              "send-airplane",
+              "server",
+              "share",
+              "shield-check",
+              "shield-exclamation",
+              "shopping-bag",
+              "shopping-cart",
+              "sm-view-grid-add",
+              "sort-ascending",
+              "sort-descending",
+              "sparkles",
+              "speakerphone",
+              "star_filled",
+              "star_outlined",
+              "status-offline",
+              "status-online",
+              "stop",
+              "summary",
+              "sun",
+              "support",
+              "switch-horizontal",
+              "switch-vertical",
+              "table",
+              "tag",
+              "template",
+              "terminal",
+              "thumb-down",
+              "thumb-up",
+              "ticket",
+              "top-bar",
+              "top-bar-filled",
+              "translate",
+              "trash",
+              "trending-down",
+              "trending-up",
+              "truck",
+              "unlink",
+              "upload",
+              "user",
+              "user-add",
+              "user-circle",
+              "user-group",
+              "users",
+              "variable",
+              "video-camera",
+              "view-boards",
+              "view-grid",
+              "view-list",
+              "volume-off",
+              "volume-up",
+              "vote",
+              "wallet",
+              "wifi",
+              "x",
+              "x-circle",
+              "xTwitter",
+              "zoom-in",
+              "zoom-out"
+            ],
+            "description": "The name of the Icon to display with the field.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-order": {
+            "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an alphabetical order following the listed fields.",
+            "required": "yes",
+            "type": "string"
+          }
+        },
+        "parent": "segment"
       },
-      "description": "UI - Single Line text entry for HTTPS Urls.\n\"x-note\": \n\tMust start with 'https://' and is followed by one or more \n\tnon-whitespace characters, ending at the end of the string.\n\t",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
+      "segment": {
+        "definition": {
+          "additionalProperties": false,
+          "type": "object"
         },
-        "maxLength": {
-          "description": "Maximum number of characters allowed in the field.",
-          "required": "yes",
-          "type": "integer"
+        "description": "Logical Document Section - Grouping Only - Highest Level Group\n\"x-note\": \"\n\tMajor sections of the proposal. Each segment contains sections of information grouped together.\n\t\"",
+        "parameters": {
+          "description": {
+            "description": "The displayable description attached to the segment.  Markdown formatted contents.",
+            "required": "optional",
+            "type": "string"
+          },
+          "properties": {
+            "description": "The sub fields of the segment.",
+            "required": "yes",
+            "type": "string"
+          },
+          "required": {
+            "description": "Which fields MUST appear in the segment.",
+            "required": "optional",
+            "type": "string"
+          },
+          "title": {
+            "description": "The title of the segment.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-icon": {
+            "choices": [
+              "'all spaces menu'",
+              "'all spaces menu-1'",
+              "academic-cap",
+              "ada",
+              "adjustments",
+              "annotation",
+              "archive",
+              "arrow-circle-down",
+              "arrow-circle-left",
+              "arrow-circle-right",
+              "arrow-circle-up",
+              "arrow-down",
+              "arrow-left",
+              "arrow-narrow-down",
+              "arrow-narrow-left",
+              "arrow-narrow-right",
+              "arrow-narrow-up",
+              "arrow-right",
+              "arrow-triangle-down",
+              "arrow-triangle-up",
+              "arrow-up",
+              "arrows-expand",
+              "at-symbol",
+              "avatar_placeholder",
+              "backspace",
+              "badge-check",
+              "ban",
+              "beaker",
+              "bell",
+              "book-open",
+              "bookmark",
+              "bookmark-alt",
+              "bottom-main-content",
+              "bottom-rail-toggle",
+              "bottom-rail-toggle-1",
+              "briefcase",
+              "cake",
+              "calculator",
+              "calendar",
+              "camera",
+              "cash",
+              "chart-bar",
+              "chart-pie",
+              "chart-square-bar",
+              "chat",
+              "chat-alt",
+              "chat-alt-2",
+              "check",
+              "check-circle",
+              "chevron-double-down",
+              "chevron-double-left",
+              "chevron-double-right",
+              "chevron-double-up",
+              "chevron-down",
+              "chevron-down-1",
+              "chevron-left",
+              "chevron-right",
+              "chevron-up",
+              "chip",
+              "clipboard",
+              "clipboard-check",
+              "clipboard-copy",
+              "clipboard-list",
+              "clock",
+              "cloud",
+              "cloud-download",
+              "cloud-upload",
+              "code",
+              "cog-gear",
+              "collection",
+              "color-swatch",
+              "credit-card",
+              "cube",
+              "cube-transparent",
+              "currency-bangladeshi",
+              "currency-dollar",
+              "currency-euro",
+              "currency-pound",
+              "currency-rupee",
+              "currency-yen",
+              "cursor-click",
+              "curved-arrow-right",
+              "database",
+              "desktop-computer",
+              "device-mobile",
+              "device-tablet",
+              "document",
+              "document-add",
+              "document-remove",
+              "document-report",
+              "document-search",
+              "document-text",
+              "dots-circle-horizontal",
+              "dots-horizontal",
+              "dots-vertical",
+              "double_check",
+              "download",
+              "duplicate",
+              "emoji-happy",
+              "emoji-sad",
+              "exclamation",
+              "exclamation-circle",
+              "external-link",
+              "eye",
+              "eye-off",
+              "facebook",
+              "fast-forward",
+              "film",
+              "filter",
+              "finger-print",
+              "fire",
+              "flag",
+              "folder",
+              "folder-add",
+              "folder-download",
+              "folder-open",
+              "folder-remove",
+              "fund",
+              "gift",
+              "globe",
+              "globe-alt",
+              "hand",
+              "hashtag",
+              "heart",
+              "home",
+              "icon-user-remove",
+              "identification",
+              "inbox",
+              "inbox-in",
+              "information-circle",
+              "key",
+              "left-rail-toggle",
+              "library",
+              "light-bulb",
+              "lightning-bolt",
+              "link",
+              "linkedin",
+              "location-marker",
+              "lock-closed",
+              "lock-open",
+              "logout",
+              "logout-1",
+              "mail",
+              "mail-open",
+              "map",
+              "maximize-toggle",
+              "menu",
+              "menu-alt-1",
+              "menu-alt-2",
+              "menu-alt-3",
+              "menu-alt-4",
+              "microphone",
+              "minimize-toggle",
+              "minus",
+              "minus-circle",
+              "moon",
+              "move-item",
+              "music-note",
+              "newspaper",
+              "node-closed",
+              "node-line",
+              "node-line-end",
+              "node-open",
+              "office-building",
+              "paper-airplane",
+              "paper-clip",
+              "pause",
+              "pencil",
+              "pencil-alt",
+              "phone",
+              "phone-incoming",
+              "phone-missed-call",
+              "phone-outgoing",
+              "photograph",
+              "play",
+              "plus",
+              "plus_circle_filled",
+              "plus_circle_outlined",
+              "presentation-chart-bar",
+              "presentation-chart-line",
+              "printer",
+              "progress-track-warning",
+              "puzzle",
+              "qrcode",
+              "question-mark-circle",
+              "receipt-refund",
+              "receipt-tax",
+              "reddit",
+              "refresh",
+              "reply",
+              "rewind",
+              "right-rail-toggle",
+              "rss",
+              "rt_bold",
+              "rt_decrease_indent",
+              "rt_heading",
+              "rt_increase_indent",
+              "rt_italic",
+              "rt_ordered_list",
+              "rt_unordered_list",
+              "save",
+              "save-as",
+              "scale",
+              "scissors",
+              "search",
+              "search-circle",
+              "selector",
+              "send-airplane",
+              "server",
+              "share",
+              "shield-check",
+              "shield-exclamation",
+              "shopping-bag",
+              "shopping-cart",
+              "sm-view-grid-add",
+              "sort-ascending",
+              "sort-descending",
+              "sparkles",
+              "speakerphone",
+              "star_filled",
+              "star_outlined",
+              "status-offline",
+              "status-online",
+              "stop",
+              "summary",
+              "sun",
+              "support",
+              "switch-horizontal",
+              "switch-vertical",
+              "table",
+              "tag",
+              "template",
+              "terminal",
+              "thumb-down",
+              "thumb-up",
+              "ticket",
+              "top-bar",
+              "top-bar-filled",
+              "translate",
+              "trash",
+              "trending-down",
+              "trending-up",
+              "truck",
+              "unlink",
+              "upload",
+              "user",
+              "user-add",
+              "user-circle",
+              "user-group",
+              "users",
+              "variable",
+              "video-camera",
+              "view-boards",
+              "view-grid",
+              "view-list",
+              "volume-off",
+              "volume-up",
+              "vote",
+              "wallet",
+              "wifi",
+              "x",
+              "x-circle",
+              "xTwitter",
+              "zoom-in",
+              "zoom-out"
+            ],
+            "description": "The name of the Icon to display with the field.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-order": {
+            "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an alphabetical order following the listed fields.",
+            "required": "yes",
+            "type": "string"
+          }
         },
-        "minLength": {
-          "description": "Minimum number of characters allowed in the field.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "{}"
       },
-      "parent": "section"
-    },
-    "singleLineHttpsURLEntryList": {
-      "definition": {
-        "items": {
+      "singleGroupedTagSelector": {
+        "definition": {
+          "additionalProperties": false,
+          "required": [
+            "group",
+            "tag"
+          ],
+          "type": "object"
+        },
+        "description": "UI - A selector where a top level group selection, allows a single choice from a list of tags.\nSelect one option from the dropdown menu. \nOnly one choice is allowed.\n\nThe contents of the `singleGroupedTagSelector` *MUST* have the following format:\n\n```json\n\"oneOf\": [\n\t{\n\t\t\"properties\": {\n\t\t\t\"group\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\t\"const\": \"Governance\"\n\t\t\t},\n\t\t\t\"tag\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\t\"enum\": [\n\t\t\t\t\t\"Governance\",\n\t\t\t\t\t\"DAO\"\n\t\t\t\t]\n\t\t\t}\n\t\t}\n\t},\n```",
+        "parameters": {
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "oneOf_groupedTags": {
+            "description": "A set of tags with a group selector.",
+            "items": {
+              "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
+              "required": "excluded",
+              "type": "object"
+            },
+            "property": "oneOf",
+            "required": "excluded",
+            "type": "array"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          }
+        },
+        "parent": "section"
+      },
+      "singleLineHttpsURLEntry": {
+        "definition": {
           "format": "uri",
-          "minLength": 1,
           "pattern": "^https://[^\\s]+$",
           "type": "string"
         },
-        "type": "array",
-        "uniqueItems": true
-      },
-      "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
-      "parameters": {
-        "contains": {
-          "description": "The choices the multi select can contain.",
-          "items": {
-            "description": "An individual Choice.",
-            "required": "excluded",
+        "description": "UI - Single Line text entry for HTTPS Urls.\n\"x-note\": \n\tMust start with 'https://' and is followed by one or more \n\tnon-whitespace characters, ending at the end of the string.\n\t",
+        "parameters": {
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
             "type": "string"
           },
-          "required": "yes",
-          "type": "array"
+          "maxLength": {
+            "description": "Maximum number of characters allowed in the field.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minLength": {
+            "description": "Minimum number of characters allowed in the field.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
         },
-        "default": {
-          "description": "Default Array of URLs can be supplied.",
-          "required": "optional",
-          "type": "string"
-        },
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "maxItems": {
-          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
-          "required": "yes",
-          "type": "integer"
-        },
-        "minItems": {
-          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
-          "type": "string"
-        }
+        "parent": "section"
       },
-      "parent": "section"
-    },
-    "singleLineTextEntry": {
-      "definition": {
-        "pattern": "^[^\\n]*$",
-        "type": "string"
+      "singleLineHttpsURLEntryList": {
+        "definition": {
+          "items": {
+            "format": "uri",
+            "minLength": 1,
+            "pattern": "^https://[^\\s]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
+        "parameters": {
+          "contains": {
+            "description": "The choices the multi select can contain.",
+            "items": {
+              "description": "An individual Choice.",
+              "required": "excluded",
+              "type": "string"
+            },
+            "required": "yes",
+            "type": "array"
+          },
+          "default": {
+            "description": "Default Array of URLs can be supplied.",
+            "required": "optional",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "maxItems": {
+            "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minItems": {
+            "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
+        },
+        "parent": "section"
       },
-      "description": "UI - Single Line text entry without any markup or rich text capability.\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.",
-      "parameters": {
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
-          "type": "string"
-        },
-        "maxLength": {
-          "description": "Maximum number of characters allowed in the field.",
-          "required": "yes",
-          "type": "integer"
-        },
-        "minLength": {
-          "description": "Minimum number of characters allowed in the field.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
-          "type": "string"
-        },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
-          "type": "string"
-        },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
-          "type": "string"
-        }
-      },
-      "parent": "section"
-    },
-    "singleLineTextEntryList": {
-      "definition": {
-        "items": {
-          "minLength": 1,
+      "singleLineTextEntry": {
+        "definition": {
           "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "type": "array",
-        "uniqueItems": true
-      },
-      "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
-      "parameters": {
-        "contains": {
-          "description": "The choices the multi select can contain.",
-          "items": {
-            "description": "An individual Choice.",
-            "required": "excluded",
+        "description": "UI - Single Line text entry without any markup or rich text capability.\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.",
+        "parameters": {
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
             "type": "string"
           },
-          "required": "yes",
-          "type": "array"
+          "maxLength": {
+            "description": "Maximum number of characters allowed in the field.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minLength": {
+            "description": "Minimum number of characters allowed in the field.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
         },
-        "default": {
-          "description": "Default Array of text can be supplied.",
-          "required": "optional",
+        "parent": "section"
+      },
+      "singleLineTextEntryList": {
+        "definition": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "description": "UI - A Growable List of single line text\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.\nAdd multiple single-line text entries.\nEach entry should be unique.",
+        "parameters": {
+          "contains": {
+            "description": "The choices the multi select can contain.",
+            "items": {
+              "description": "An individual Choice.",
+              "required": "excluded",
+              "type": "string"
+            },
+            "required": "yes",
+            "type": "array"
+          },
+          "default": {
+            "description": "Default Array of text can be supplied.",
+            "required": "optional",
+            "type": "string"
+          },
+          "description": {
+            "description": "The description of the field presented during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "maxItems": {
+            "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minItems": {
+            "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
+        },
+        "parent": "section"
+      }
+    },
+    "schema": {
+      "$defs": {
+        "dropDownSingleSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "description": {
-          "description": "The description of the field presented during data entry.",
-          "required": "optional",
+        "multiLineTextEntry": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[\\S\\s]*$",
           "type": "string"
         },
-        "maxItems": {
-          "description": "An array instance is valid against \"maxItems\" if its size is less than, or equal to, the value of this keyword.",
-          "required": "yes",
-          "type": "integer"
+        "multiLineTextEntryListMarkdown": {
+          "items": {
+            "contentMediaType": "text/markdown",
+            "minLength": 1,
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
         },
-        "minItems": {
-          "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
-          "required": "optional",
-          "type": "integer"
-        },
-        "title": {
-          "description": "The label attached to the field.",
-          "required": "yes",
+        "multiLineTextEntryMarkdown": {
+          "contentMediaType": "text/markdown",
+          "pattern": "^[\\S\\s]*$",
           "type": "string"
         },
-        "x-guidance": {
-          "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-          "required": "optional",
+        "multiSelect": {
+          "items": {
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "radioButtonSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "x-placeholder": {
-          "description": "Placeholder text to display inside the field if it is empty.",
-          "required": "optional",
+        "schemaReferenceNonUI": {
+          "readOnly": true,
           "type": "string"
+        },
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "segment": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "singleGroupedTagSelector": {
+          "additionalProperties": false,
+          "required": [
+            "group",
+            "tag"
+          ],
+          "type": "object"
+        },
+        "singleLineHttpsURLEntry": {
+          "format": "uri",
+          "pattern": "^https://[^\\s]+$",
+          "type": "string"
+        },
+        "singleLineHttpsURLEntryList": {
+          "items": {
+            "format": "uri",
+            "minLength": 1,
+            "pattern": "^https://[^\\s]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "singleLineTextEntry": {
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
+        "singleLineTextEntryList": {
+          "items": {
+            "minLength": 1,
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
         }
       },
-      "parent": "section"
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "description": "Generic Template Schema.",
+      "maintainers": [
+        {
+          "name": "Catalyst Team",
+          "url": "https://projectcatalyst.io/"
+        }
+      ],
+      "properties": {},
+      "title": "Form Template",
+      "type": "object"
     }
   },
   "metadata": {

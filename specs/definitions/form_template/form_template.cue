@@ -8,9 +8,16 @@ package form_template
 
 // Generic Form Template
 formTemplate: {
-	$schema: "https://json-schema.org/draft/2020-12/schema"
-	title:   "Form Template"
-	type:    "object"
+	$schema:     "https://json-schema.org/draft/2020-12/schema"
+	title:       "Form Template"
+	description: "Generic Template Schema."
+	maintainers: [{
+		name: "Catalyst Team"
+		url:  "https://projectcatalyst.io/"
+	}]
+	type: "object"
 	properties: {}
+	additionalProperties: false
+
 	$defs: _defs
 }

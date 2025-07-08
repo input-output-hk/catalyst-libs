@@ -169,7 +169,7 @@ _allParameters: {
 		required: "yes"
 		description: """
 			The ordering of the properties to be enforced when displayed.
-			Any field not listed here will get displayed in an arbitrary order.
+			Any field not listed here will get displayed in an alphabetical order following the listed fields.
 			"""
 	}
 	"x-subsection"?: #parameter & {

@@ -2,9 +2,6 @@
 
 import argparse
 import json
-from typing import Any
-
-import jsonschema
 
 from spec.signed_doc import SignedDoc
 
@@ -22,19 +19,8 @@ class TemplateExampleSchemaJson(DocGenerator):
 
     def generate(self) -> bool:
         """Generate a `template_example.schema.json` file from the definitions."""
-        schema: dict[str, Any] = {
-            "$schema": "https://json-schema.org/draft/2020-12/schema#",
-            "title": "Example Template Schema",
-            "description": "Example Template Schema showing all defined field types.",
-            "maintainers": [{"name": "Catalyst Team", "url": "https://projectcatalyst.io/"}],
-            "$defs": self._spec.form_template.json_definition,
-            "type": "object",
-            "additionalProperties": False,
-            "properties": self._spec.form_template.example,
-        }
-
+        schema = self._spec.form_template.generic_schema.example(properties=self._spec.form_template.elements.example)
         template_schema = json.dumps(schema, indent=4)
-        jsonschema.Draft202012Validator.check_schema(schema)
 
         self._filedata = template_schema
 

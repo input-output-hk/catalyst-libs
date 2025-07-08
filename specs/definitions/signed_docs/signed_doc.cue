@@ -105,4 +105,7 @@ _allDocNames: or(_allDocNamesList)
 // Individual Valid Document Name constraint.
 #DocumentName: _allDocNames
 
-formTemplate: form_template.dictionary
+formTemplate: {
+	elements: form_template.dictionary
+	schema:   form_template.formTemplate
+}

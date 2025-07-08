@@ -90,5 +90,6 @@ class Parameters(RootModel[dict[str, Parameter]]):
         example: dict[str, Any] = {}
 
         for name, value in self.root.items():
-            example[name] = value.example
+            if value.example is not None:
+                example[name] = value.example
         return example

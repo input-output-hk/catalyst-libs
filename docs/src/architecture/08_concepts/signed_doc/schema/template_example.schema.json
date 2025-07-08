@@ -1,13 +1,4 @@
 {
-    "$schema": "https://json-schema.org/draft/2020-12/schema#",
-    "title": "Example Template Schema",
-    "description": "Example Template Schema showing all defined field types.",
-    "maintainers": [
-        {
-            "name": "Catalyst Team",
-            "url": "https://projectcatalyst.io/"
-        }
-    ],
     "$defs": {
         "dropDownSingleSelect": {
             "contentMediaType": "text/plain",
@@ -96,159 +87,69 @@
             "uniqueItems": true
         }
     },
-    "type": "object",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
     "additionalProperties": false,
+    "description": "Example Template Schema showing all defined field types.",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "url": "https://projectcatalyst.io/"
+        }
+    ],
     "properties": {
-        "dropDownSingleSelect": {
-            "exampleDropDownSingleSelect": {
-                "description": null,
-                "enum": null,
-                "title": null,
-                "x-guidance": null
-            },
+        "exampleDropDownSingleSelect": {
+            "default": "option 1",
+            "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+            "enum": [
+                "option 1",
+                "option 2",
+                "option 3"
+            ],
+            "title": "Selector",
+            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+            "x-icon": "emoji-happy",
             "$ref": "#/$defs/dropDownSingleSelect"
         },
-        "multiLineTextEntry": {
-            "exampleMultiLineTextEntry": {
-                "description": null,
-                "maxLength": null,
-                "minLength": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleMultiLineTextEntry": {
             "$ref": "#/$defs/multiLineTextEntry"
         },
-        "multiLineTextEntryListMarkdown": {
-            "exampleMultiLineTextEntryListMarkdown": {
-                "contains": null,
-                "default": null,
-                "description": null,
-                "maxItems": null,
-                "minItems": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleMultiLineTextEntryListMarkdown": {
             "$ref": "#/$defs/multiLineTextEntryListMarkdown"
         },
-        "multiLineTextEntryMarkdown": {
-            "exampleMultiLineTextEntryMarkdown": {
-                "description": null,
-                "maxLength": null,
-                "minLength": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleMultiLineTextEntryMarkdown": {
             "$ref": "#/$defs/multiLineTextEntryMarkdown"
         },
-        "multiSelect": {
-            "exampleMultiSelect": {
-                "contains": null,
-                "default": null,
-                "description": null,
-                "maxItems": null,
-                "minItems": null,
-                "title": null,
-                "x-guidance": null
-            },
+        "exampleMultiSelect": {
             "$ref": "#/$defs/multiSelect"
         },
-        "radioButtonSelect": {
-            "exampleRadioButtonSelect": {
-                "description": null,
-                "enum": null,
-                "title": null,
-                "x-guidance": null
-            },
+        "exampleRadioButtonSelect": {
             "$ref": "#/$defs/radioButtonSelect"
         },
-        "schemaReferenceNonUI": {
-            "exampleSchemaReferenceNonUI": {
-                "const": null,
-                "default": null
-            },
+        "exampleSchemaReferenceNonUI": {
             "$ref": "#/$defs/schemaReferenceNonUI"
         },
-        "section": {
-            "exampleSection": {
-                "description": null,
-                "properties": null,
-                "required": null,
-                "title": null,
-                "x-icon": null,
-                "x-order": null
-            },
+        "exampleSection": {
             "$ref": "#/$defs/section"
         },
-        "segment": {
-            "exampleSegment": {
-                "description": null,
-                "properties": null,
-                "required": null,
-                "title": null,
-                "x-icon": null,
-                "x-order": null
-            },
+        "exampleSegment": {
             "$ref": "#/$defs/segment"
         },
-        "singleGroupedTagSelector": {
-            "exampleSingleGroupedTagSelector": {
-                "description": null,
-                "oneOf_groupedTags": null,
-                "title": null,
-                "x-guidance": null
-            },
+        "exampleSingleGroupedTagSelector": {
             "$ref": "#/$defs/singleGroupedTagSelector"
         },
-        "singleLineHttpsURLEntry": {
-            "exampleSingleLineHttpsURLEntry": {
-                "description": null,
-                "maxLength": null,
-                "minLength": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleSingleLineHttpsURLEntry": {
             "$ref": "#/$defs/singleLineHttpsURLEntry"
         },
-        "singleLineHttpsURLEntryList": {
-            "exampleSingleLineHttpsURLEntryList": {
-                "contains": null,
-                "default": null,
-                "description": null,
-                "maxItems": null,
-                "minItems": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleSingleLineHttpsURLEntryList": {
             "$ref": "#/$defs/singleLineHttpsURLEntryList"
         },
-        "singleLineTextEntry": {
-            "exampleSingleLineTextEntry": {
-                "description": null,
-                "maxLength": null,
-                "minLength": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleSingleLineTextEntry": {
             "$ref": "#/$defs/singleLineTextEntry"
         },
-        "singleLineTextEntryList": {
-            "exampleSingleLineTextEntryList": {
-                "contains": null,
-                "default": null,
-                "description": null,
-                "maxItems": null,
-                "minItems": null,
-                "title": null,
-                "x-guidance": null,
-                "x-placeholder": null
-            },
+        "exampleSingleLineTextEntryList": {
             "$ref": "#/$defs/singleLineTextEntryList"
         }
-    }
+    },
+    "title": "Example Template Schema.",
+    "type": "object"
 }
