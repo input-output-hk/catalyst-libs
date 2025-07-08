@@ -213,17 +213,32 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<Suppo
                 d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
                     .map(SupportedField::Id)
             },
-            SupportedLabel::Ref => d.decode_with(ctx).map(SupportedField::Ref),
+            SupportedLabel::Ref => {
+                d.decode_with(&mut ctx.policy().clone())
+                    .map(SupportedField::Ref)
+            },
             SupportedLabel::Ver => {
                 d.decode_with(&mut catalyst_types::uuid::CborContext::Tagged)
                     .map(SupportedField::Ver)
             },
-            SupportedLabel::Type => d.decode_with(ctx).map(SupportedField::Type),
-            SupportedLabel::Reply => d.decode_with(ctx).map(SupportedField::Reply),
+            SupportedLabel::Type => {
+                d.decode_with(&mut ctx.policy().clone())
+                    .map(SupportedField::Type)
+            },
+            SupportedLabel::Reply => {
+                d.decode_with(&mut ctx.policy().clone())
+                    .map(SupportedField::Reply)
+            },
             SupportedLabel::Collaborators => d.decode().map(SupportedField::Collaborators),
             SupportedLabel::Section => d.decode().map(SupportedField::Section),
-            SupportedLabel::Template => d.decode_with(ctx).map(SupportedField::Template),
-            SupportedLabel::Parameters => d.decode_with(ctx).map(SupportedField::Parameters),
+            SupportedLabel::Template => {
+                d.decode_with(&mut ctx.policy().clone())
+                    .map(SupportedField::Template)
+            },
+            SupportedLabel::Parameters => {
+                d.decode_with(&mut ctx.policy().clone())
+                    .map(SupportedField::Parameters)
+            },
             SupportedLabel::ContentEncoding => d.decode().map(SupportedField::ContentEncoding),
         }
         .inspect_err(|e| {
