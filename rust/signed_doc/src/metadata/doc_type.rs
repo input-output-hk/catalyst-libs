@@ -11,7 +11,7 @@ use serde::{Deserialize, Deserializer};
 use tracing::warn;
 
 use crate::{
-    decode_context::{CompatibilityPolicy, DecodeContext},
+    decode_context::CompatibilityPolicy,
     doc_types::{deprecated, PROPOSAL, PROPOSAL_COMMENT, PROPOSAL_SUBMISSION_ACTION},
 };
 
@@ -144,9 +144,9 @@ impl Display for DocType {
 // document_type = [ 1* uuid_v4 ]
 // ; UUIDv4
 // uuid_v4 = #6.37(bytes .size 16)
-impl Decode<'_, DecodeContext> for DocType {
+impl Decode<'_, CompatibilityPolicy> for DocType {
     fn decode(
-        d: &mut Decoder, decode_context: &mut DecodeContext,
+        d: &mut Decoder, policy: &mut CompatibilityPolicy,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocType decoding";
         let parse_uuid = |d: &mut Decoder| UuidV4::decode(d, &mut CborContext::Tagged);
@@ -177,9 +177,9 @@ impl Decode<'_, DecodeContext> for DocType {
             },
             minicbor::data::Type::Tag => {
                 // Handle single tagged UUID
-                match decode_context.policy() {
+                match policy {
                     CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(decode_context.policy(), CompatibilityPolicy::Warn) {
+                        if matches!(policy, CompatibilityPolicy::Warn) {
                             warn!("{CONTEXT}: Conversion of document type single UUID to type DocType");
                         }
 
@@ -269,7 +269,6 @@ impl<'de> Deserialize<'de> for DocType {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
     use test_case::test_case;
@@ -319,14 +318,10 @@ mod tests {
         } ;
         "Invalid untagged uuid v4 array (new format)"
     )]
-    fn test_invalid_cbor_decode(policy: CompatibilityPolicy, e: Encoder<Vec<u8>>) {
-        let mut decoded_context = DecodeContext::new(policy, ProblemReport::new(""));
-
-        assert!(DocType::decode(
-            &mut Decoder::new(e.into_writer().as_slice()),
-            &mut decoded_context
-        )
-        .is_err());
+    fn test_invalid_cbor_decode(mut policy: CompatibilityPolicy, e: Encoder<Vec<u8>>) {
+        assert!(
+            DocType::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy).is_err()
+        );
     }
 
     #[test_case(
@@ -366,17 +361,13 @@ mod tests {
         "Array of uuid v4 (new format), fail policy"
     )]
     fn test_valid_cbor_decode(
-        policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV4) -> Encoder<Vec<u8>>,
+        mut policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV4) -> Encoder<Vec<u8>>,
     ) {
         let uuid = UuidV4::new();
         let e = e_gen(uuid);
-        let mut decoded_context = DecodeContext::new(policy, ProblemReport::new(""));
 
-        let doc_type = DocType::decode(
-            &mut Decoder::new(e.into_writer().as_slice()),
-            &mut decoded_context,
-        )
-        .unwrap();
+        let doc_type =
+            DocType::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy).unwrap();
         assert_eq!(doc_type.0, vec![uuid]);
     }
 
@@ -453,7 +444,7 @@ mod tests {
         // cbor decoding
         let cbor_doc_type = DocType::decode(
             &mut Decoder::new(e.into_writer().as_slice()),
-            &mut DecodeContext::new(CompatibilityPolicy::Accept, ProblemReport::new("")),
+            &mut CompatibilityPolicy::Accept,
         )
         .unwrap();
 

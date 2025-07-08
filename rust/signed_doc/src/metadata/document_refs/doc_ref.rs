@@ -6,7 +6,6 @@ use catalyst_types::uuid::{CborContext, UuidV7};
 use minicbor::{Decode, Decoder, Encode};
 
 use super::doc_locator::DocLocator;
-use crate::DecodeContext;
 
 /// Number of item that should be in each document reference instance.
 const DOC_REF_ARR_ITEM: u64 = 3;
@@ -62,50 +61,28 @@ impl Display for DocumentRef {
     }
 }
 
-impl Decode<'_, DecodeContext> for DocumentRef {
+impl Decode<'_, ()> for DocumentRef {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, decode_context: &mut DecodeContext,
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRef decoding";
         let parse_uuid = |d: &mut Decoder| UuidV7::decode(d, &mut CborContext::Tagged);
 
         let arr = d.array()?.ok_or_else(|| {
-            decode_context
-                .report()
-                .other("Unable to decode array length", CONTEXT);
             minicbor::decode::Error::message(format!("{CONTEXT}: Unable to decode array length"))
         })?;
         if arr != DOC_REF_ARR_ITEM {
-            decode_context.report().invalid_value(
-                "Array length",
-                &arr.to_string(),
-                &DOC_REF_ARR_ITEM.to_string(),
-                CONTEXT,
-            );
             return Err(minicbor::decode::Error::message(format!(
                 "{CONTEXT}: expected {DOC_REF_ARR_ITEM} items, found {arr}"
             )));
         }
-        let id = parse_uuid(d).map_err(|e| {
-            decode_context
-                .report()
-                .other(&format!("Invalid ID UUIDv7: {e}"), CONTEXT);
-            e.with_message("Invalid ID UUIDv7")
-        })?;
+        let id = parse_uuid(d).map_err(|e| e.with_message("Invalid ID UUIDv7"))?;
 
-        let ver = parse_uuid(d).map_err(|e| {
-            decode_context
-                .report()
-                .other(&format!("Invalid Ver UUIDv7: {e}"), CONTEXT);
-            e.with_message("Invalid Ver UUIDv7")
-        })?;
+        let ver = parse_uuid(d).map_err(|e| e.with_message("Invalid Ver UUIDv7"))?;
 
-        let locator = DocLocator::decode(d, decode_context.report()).map_err(|e| {
-            decode_context
-                .report()
-                .other(&format!("Failed to decode locator {e}"), CONTEXT);
-            e.with_message("Failed to decode locator")
-        })?;
+        let locator = d
+            .decode::<DocLocator>()
+            .map_err(|e| e.with_message("Failed to decode locator"))?;
 
         Ok(DocumentRef {
             id,
