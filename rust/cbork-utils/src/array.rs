@@ -247,23 +247,74 @@ mod tests {
     #[test]
     fn test_array_bytes_roundtrip() {
         // Create a valid deterministic array encoding
-        let valid_array = vec![
-            0x82, // Array with 2 elements
-            0x41, 0x01, // Element 1: 1-byte string
-            0x42, 0x01, 0x02, // Element 2: 2-byte string
-        ];
-
-        let mut decoder = Decoder::new(&valid_array);
+        let mut decoder = Decoder::new(&[
+            0x82, // 2 elements
+            0x41, 0x01, // h'01'
+            0x42, 0x01, 0x02, // h'0102'
+        ]);
         let result = Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).unwrap();
 
         // Verify we got back exactly the same bytes
         assert_eq!(
             result,
             Array(vec![
-                vec![0x41, 0x01],       // Element 1: 1-byte string
-                vec![0x42, 0x01, 0x02], // Element 2: 2-byte string
+                vec![0x41, 0x01],       // h'01'
+                vec![0x42, 0x01, 0x02], // h'0102'
             ])
         );
+    }
+
+    #[test]
+    fn test_array_with_indefinite_array() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0x9F, 0x01, 0x02, 0xFF, // [_, 1, 2]
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
+    }
+
+    #[test]
+    fn test_array_with_indefinite_map() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0xBF, 0x61, 0x61, 0x01, 0x61, 0x62, 0x02, 0xFF, // {_ "a": 1, "b": 2}
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
+    }
+
+    #[test]
+    fn test_array_with_indefinite_string() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0x7F, 0x62, 0x68, 0x69, 0xFF, // (_ "hi")
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
+    }
+
+    /// For floating-point values, the preferred encoding uses the smallest format
+    /// that preserves the value exactly—i.e., if a value can be represented in
+    /// half-precision (16 bits) or single-precision (32 bits), it must be encoded in
+    /// that format rather than a larger format.
+    ///
+    /// If 0.0 can be exactly represented in half-precision, you must use half-precision.
+    /// If a value requires more bits for exact representation, use the smallest format
+    /// sufficient to encode it losslessly.
+    #[test]
+    fn test_array_with_64_bit_float() {
+        let decoder = Decoder::new(&[
+            0x81, // 1 element
+            0xFB, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            0x00, // 0.0 encoded as 64-bit float
+        ]);
+
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_ok());
     }
 
     /// Test empty array handling - special case mentioned in RFC 8949.
@@ -271,10 +322,9 @@ mod tests {
     /// from Section 4.2.1.
     #[test]
     fn test_empty_array() {
-        let empty_array = vec![
+        let mut decoder = Decoder::new(&[
             0x80, // Array with 0 elements - encoded with immediate value as per Section 4.2.1
-        ];
-        let mut decoder = Decoder::new(&empty_array);
+        ]);
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
@@ -288,20 +338,18 @@ mod tests {
     #[test]
     fn test_array_minimal_length_encoding() {
         // Test case 1: Valid minimal encoding (length = 1)
-        let valid_small = vec![
+        let mut decoder = Decoder::new(&[
             0x81, // Array, length 1 (major type 4 with immediate value 1)
             0x01, // Element: unsigned int 1
-        ];
-        let mut decoder = Decoder::new(&valid_small);
+        ]);
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
 
         // Test case 2: Invalid non-minimal encoding (using additional info 24 for length 1)
-        let invalid_small = vec![
+        let mut decoder = Decoder::new(&[
             0x98, // Array with additional info = 24 (0x80 | 0x18)
             0x01, // Length encoded as uint8 = 1
             0x01, // Element: unsigned int 1
-        ];
-        let mut decoder = Decoder::new(&invalid_small);
+        ]);
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::non_deterministic()).is_ok());
     }
@@ -313,14 +361,13 @@ mod tests {
     /// "All contained items must also follow the same rules."
     #[test]
     fn test_array_complex_elements() {
-        // Test nested structures in elements
-        let valid_complex = vec![
-            0x83, // Array with 3 elements
+        let mut decoder = Decoder::new(&[
+            0x84, // Array with 4 elements
             0x41, 0x01, // Element 1: simple 1-byte string
             0x42, 0x01, 0x02, // Element 2: 2-byte string
-            0x43, 0x01, 0x02, 0x03, // Element 3: 3-byte string
-        ];
-        let mut decoder = Decoder::new(&valid_complex);
+            0x62, 0x68, 0x69, // Element 3: "hi"
+            0xF9, 0x00, 0x00, // Element 4: float 0.0 half-precision canonical encoding
+        ]);
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
@@ -334,19 +381,17 @@ mod tests {
     #[test]
     fn test_array_edge_cases() {
         // Single element array - must still follow minimal length encoding rules
-        let single_element = vec![
+        let mut decoder = Decoder::new(&[
             0x81, // Array with 1 element (using immediate value as per Section 4.2.1)
             0x41, 0x01, // Element: 1-byte string
-        ];
-        let mut decoder = Decoder::new(&single_element);
+        ]);
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
 
         // Array with zero-length string element - tests smallest possible element case
-        let zero_length_element = vec![
+        let mut decoder = Decoder::new(&[
             0x81, // Array with 1 element
             0x40, // Element: 0-byte string (smallest possible element)
-        ];
-        let mut decoder = Decoder::new(&zero_length_element);
+        ]);
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
@@ -354,13 +399,12 @@ mod tests {
     #[test]
     fn test_array_mixed_elements() {
         // Array with integer, string, and nested array elements
-        let mixed_array = vec![
+        let mut decoder = Decoder::new(&[
             0x83, // Array with 3 elements
             0x01, // Element 1: unsigned int 1
             0x41, 0x48, // Element 2: 1-byte string "H"
             0x81, 0x02, // Element 3: nested array with one element (unsigned int 2)
-        ];
-        let mut decoder = Decoder::new(&mixed_array);
+        ]);
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::Deterministic).is_ok());
     }
 
@@ -368,16 +412,14 @@ mod tests {
     #[test]
     fn test_array_larger_size() {
         // Test with a simple array of 5 single-byte strings
-        let array_5 = vec![
+        let mut decoder = Decoder::new(&[
             0x85, // Array with 5 elements
             0x41, 0x01, // Element 1: 1-byte string with value 0x01
             0x41, 0x02, // Element 2: 1-byte string with value 0x02
             0x41, 0x03, // Element 3: 1-byte string with value 0x03
             0x41, 0x04, // Element 4: 1-byte string with value 0x04
             0x41, 0x05, // Element 5: 1-byte string with value 0x05
-        ];
-
-        let mut decoder = Decoder::new(&array_5);
+        ]);
         let result = Array::decode(&mut decoder, &mut DecodeCtx::Deterministic);
         assert!(result.is_ok());
 
@@ -397,13 +439,12 @@ mod tests {
     #[test]
     fn test_indefinite_length_array_rejection() {
         // Indefinite-length array (not allowed in deterministic encoding)
-        let indefinite_array = vec![
+        let mut decoder = Decoder::new(&[
             0x9F, // Array with indefinite length
             0x01, // Element 1
             0x02, // Element 2
             0xFF, // Break code
-        ];
-        let mut decoder = Decoder::new(&indefinite_array);
+        ]);
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
         // Should work in non-deterministic mode
         assert!(Array::decode(&mut decoder, &mut DecodeCtx::non_deterministic()).is_ok());
