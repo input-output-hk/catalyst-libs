@@ -135,17 +135,6 @@ The "length-first core deterministic encoding requirements" variant of determini
 
 {signed_doc_cddl.markdown_reference(relative_doc=self)}
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
-??? note "CDDL"
-
-    * [{signed_doc_cddl.file_name()}]({signed_doc_cddl.file_path(self)})
-
-    ```cddl
-    {{{{ include_file('./{signed_doc_cddl.file_path(self)}', indent=4) }}}}
-    ```
-
-<!-- markdownlint-enable max-one-sentence-per-line -->
-
 ### COSE Header Parameters
 
 COSE documents define a set of standard COSE header parameters.

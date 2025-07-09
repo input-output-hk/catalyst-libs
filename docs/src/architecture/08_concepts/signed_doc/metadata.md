@@ -12,9 +12,9 @@ A link to a previous document in a chained sequence.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/chain.cddl](cddl/chain.cddl)
+    * [chain.cddl](cddl/chain.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/chain.cddl', indent=4) }}
     ```
 
@@ -27,9 +27,9 @@ A list of collaborators who can participate in drafting and submitting a documen
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/collaborators.cddl](cddl/collaborators.cddl)
+    * [collaborators.cddl](cddl/collaborators.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/collaborators.cddl', indent=4) }}
     ```
 
@@ -42,9 +42,9 @@ A unique document identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_id.cddl](cddl/document_id.cddl)
+    * [document_id.cddl](cddl/document_id.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_id.cddl', indent=4) }}
     ```
 
@@ -57,9 +57,9 @@ A document reference identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_refs.cddl](cddl/document_refs.cddl)
+    * [document_refs.cddl](cddl/document_refs.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_refs.cddl', indent=4) }}
     ```
 
@@ -72,9 +72,9 @@ A document type identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_type.cddl](cddl/document_type.cddl)
+    * [document_type.cddl](cddl/document_type.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_type.cddl', indent=4) }}
     ```
 
@@ -87,9 +87,9 @@ A unique chronological document version
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_ver.cddl](cddl/document_ver.cddl)
+    * [document_ver.cddl](cddl/document_ver.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_ver.cddl', indent=4) }}
     ```
 
@@ -102,9 +102,9 @@ A document section reference identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/section_ref.cddl](cddl/section_ref.cddl)
+    * [section_ref.cddl](cddl/section_ref.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/section_ref.cddl', indent=4) }}
     ```
 
@@ -117,9 +117,9 @@ Version 4 formatted [UUID][RFC9562]
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/uuid_v4.cddl](cddl/uuid_v4.cddl)
+    * [uuid_v4.cddl](cddl/uuid_v4.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
     ```
 
@@ -132,9 +132,9 @@ Version 7 formatted [UUID][RFC9562]
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/uuid_v7.cddl](cddl/uuid_v7.cddl)
+    * [uuid_v7.cddl](cddl/uuid_v7.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
     ```
 
@@ -147,9 +147,9 @@ A list of all versions of this document which are 'revoked'.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/revocations.cddl](cddl/revocations.cddl)
+    * [revocations.cddl](cddl/revocations.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/revocations.cddl', indent=4) }}
     ```
 

@@ -64,20 +64,9 @@ The "length-first core deterministic encoding requirements" variant of determini
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/signed_document.cddl](cddl/signed_document.cddl)
+    * [signed_document.cddl](cddl/signed_document.cddl)
 
-    ```cddl
-    {{ include_file('./cddl/signed_document.cddl', indent=4) }}
-    ```
-
-<!-- markdownlint-enable max-one-sentence-per-line -->
-
-<!-- markdownlint-disable max-one-sentence-per-line -->
-??? note "CDDL"
-
-    * [cddl/signed_document.cddl](cddl/signed_document.cddl)
-
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/signed_document.cddl', indent=4) }}
     ```
 

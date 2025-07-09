@@ -5,14 +5,28 @@
 import argparse
 import difflib
 import re
+import textwrap
 import typing
 from pathlib import Path
 
 import rich
 import rich.markdown
+from jinja2 import DictLoader, Environment, select_autoescape
 
 from docs.markdown import MarkdownHelpers
 from spec.signed_doc import SignedDoc
+
+__jinja_env: Environment | None = None
+
+
+def get_jinja_environment(spec: SignedDoc) -> Environment:
+    """Get the current jinja environment for rendering templates."""
+    global __jinja_env  # noqa: PLW0603
+    if __jinja_env is None:
+        __jinja_env = Environment(loader=DictLoader(spec.pages), autoescape=select_autoescape())
+        __jinja_env.globals["spec"] = spec  # type: ignore reportUnknownMemberType
+
+    return __jinja_env
 
 
 class DocGenerator:
@@ -255,6 +269,12 @@ class DocGenerator:
 
         return copyright_notice.strip()
 
+    def generate_from_page_template(self, page_name: str, **kwargs: typing.Any) -> None:  # noqa: ANN401
+        """Generate a Page from a Page Template inside the specifications."""
+        env = get_jinja_environment(self._spec)
+        template = env.get_template(page_name)
+        self._filedata = template.render(doc=self, **kwargs)
+
     def generate(self) -> bool:
         """Generate the document.
 
@@ -361,3 +381,31 @@ class DocGenerator:
             relative_path = relative_doc.file_path().parent
             return self._filepath.relative_to(relative_path, walk_up=True)
         return self._filepath
+
+    def markdown_reference(
+        self,
+        *,
+        indent: int = 0,
+        relative_doc: "DocGenerator | None" = None,
+        title: str = "Markdown Document",
+        filetype: str = "md",
+    ) -> str:
+        """Create a Markdown formatted reference for the file."""
+        file_path = self.file_path(relative_doc)
+        file_name = self.file_name().rsplit("/", 1)[-1]
+
+        return textwrap.indent(
+            f"""
+<!-- markdownlint-disable max-one-sentence-per-line -->
+??? note "{title}"
+
+    * [{file_name}]({file_path})
+
+    ``` {filetype}
+    {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
+    ```
+
+<!-- markdownlint-enable max-one-sentence-per-line -->
+""".strip(),
+            " " * indent,
+        )

@@ -82,6 +82,19 @@ class TemplateGenericSchema(RootModel[dict[str, Any]]):
 
         return schema
 
+    def basic(self) -> dict[str, typing.Any]:
+        """Generate a `form_template_basic.schema.json` file from the definitions."""
+        schema = self.root
+
+        # Just ensure the generated example is valid.
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except Exception:
+            print(json.dumps(schema, indent=4))
+            raise
+
+        return schema
+
 
 class FormTemplate(BaseModel):
     """Template Json Schema Definitions."""
