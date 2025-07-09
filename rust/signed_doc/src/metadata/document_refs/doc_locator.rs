@@ -4,7 +4,6 @@
 
 use std::fmt::Display;
 
-use catalyst_types::problem_report::ProblemReport;
 use minicbor::{Decode, Decoder, Encode};
 
 /// CBOR tag of IPLD content identifiers (CIDs).
@@ -47,58 +46,44 @@ impl Display for DocLocator {
 }
 
 // document_locator = { "cid" => cid }
-impl Decode<'_, ProblemReport> for DocLocator {
-    fn decode(
-        d: &mut Decoder, report: &mut ProblemReport,
-    ) -> Result<Self, minicbor::decode::Error> {
+impl Decode<'_, ()> for DocLocator {
+    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocLocator decoding";
 
         let len = d.map()?.ok_or_else(|| {
-            report.invalid_value("Map", "Invalid length", "Valid length", CONTEXT);
             minicbor::decode::Error::message(format!("{CONTEXT}: expected valid map length"))
         })?;
 
         if len != DOC_LOC_MAP_ITEM {
-            report.invalid_value(
-                "Map length",
-                &len.to_string(),
-                &DOC_LOC_MAP_ITEM.to_string(),
-                CONTEXT,
-            );
             return Err(minicbor::decode::Error::message(format!(
                 "{CONTEXT}: expected map length {DOC_LOC_MAP_ITEM}, found {len}"
             )));
         }
 
-        let key = d.str().map_err(|e| {
-            report.invalid_value("Key", "Not a string", "String", CONTEXT);
-            e.with_message(format!("{CONTEXT}: expected string"))
-        })?;
+        let key = d
+            .str()
+            .map_err(|e| e.with_message(format!("{CONTEXT}: expected string")))?;
 
         if key != "cid" {
-            report.invalid_value("Key", key, "'cid'", CONTEXT);
             return Err(minicbor::decode::Error::message(format!(
                 "{CONTEXT}: expected key 'cid', found '{key}'"
             )));
         }
 
-        let tag = d.tag().map_err(|e| {
-            report.invalid_value("CBOR tag", "Invalid tag", "Valid tag", CONTEXT);
-            e.with_message(format!("{CONTEXT}: expected tag"))
-        })?;
+        let tag = d
+            .tag()
+            .map_err(|e| e.with_message(format!("{CONTEXT}: expected tag")))?;
 
         if tag.as_u64() != CID_TAG {
-            report.invalid_value("CBOR tag", &tag.to_string(), &CID_TAG.to_string(), CONTEXT);
             return Err(minicbor::decode::Error::message(format!(
                 "{CONTEXT}: expected tag {CID_TAG}, found {tag}",
             )));
         }
 
         // No length limit
-        let cid_bytes = d.bytes().map_err(|e| {
-            report.invalid_value("CID bytes", "Invalid bytes", "Valid bytes", CONTEXT);
-            e.with_message(format!("{CONTEXT}: expected bytes"))
-        })?;
+        let cid_bytes = d
+            .bytes()
+            .map_err(|e| e.with_message(format!("{CONTEXT}: expected bytes")))?;
 
         Ok(DocLocator(cid_bytes.to_vec()))
     }
@@ -125,26 +110,24 @@ mod tests {
 
     #[test]
     fn test_doc_locator_encode_decode() {
-        let mut report = ProblemReport::new("Test doc locator");
         let locator = DocLocator(vec![1, 2, 3, 4]);
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
         locator.encode(&mut encoder, &mut ()).unwrap();
         let mut decoder = Decoder::new(&buffer);
-        let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut report).unwrap();
+        let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut ()).unwrap();
         assert_eq!(locator, decoded_doc_loc);
     }
 
     // Empty doc locator should not fail
     #[test]
     fn test_doc_locator_encode_decode_empty() {
-        let mut report = ProblemReport::new("Test doc locator empty");
         let locator = DocLocator(vec![]);
         let mut buffer = Vec::new();
         let mut encoder = Encoder::new(&mut buffer);
         locator.encode(&mut encoder, &mut ()).unwrap();
         let mut decoder = Decoder::new(&buffer);
-        let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut report).unwrap();
+        let decoded_doc_loc = DocLocator::decode(&mut decoder, &mut ()).unwrap();
         assert_eq!(locator, decoded_doc_loc);
     }
 }

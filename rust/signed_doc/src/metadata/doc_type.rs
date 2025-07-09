@@ -11,12 +11,12 @@ use serde::{Deserialize, Deserializer};
 use tracing::warn;
 
 use crate::{
-    decode_context::{CompatibilityPolicy, DecodeContext},
+    decode_context::CompatibilityPolicy,
     doc_types::{deprecated, PROPOSAL, PROPOSAL_COMMENT, PROPOSAL_SUBMISSION_ACTION},
 };
 
 /// List of `UUIDv4` document type.
-#[derive(Clone, Debug, serde::Serialize, Eq)]
+#[derive(Clone, Debug, serde::Serialize, PartialEq, Eq)]
 pub struct DocType(Vec<UuidV4>);
 
 /// `DocType` Errors.
@@ -144,9 +144,9 @@ impl Display for DocType {
 // document_type = [ 1* uuid_v4 ]
 // ; UUIDv4
 // uuid_v4 = #6.37(bytes .size 16)
-impl Decode<'_, DecodeContext> for DocType {
+impl Decode<'_, CompatibilityPolicy> for DocType {
     fn decode(
-        d: &mut Decoder, decode_context: &mut DecodeContext,
+        d: &mut Decoder, policy: &mut CompatibilityPolicy,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocType decoding";
         let parse_uuid = |d: &mut Decoder| UuidV4::decode(d, &mut CborContext::Tagged);
@@ -154,21 +154,12 @@ impl Decode<'_, DecodeContext> for DocType {
         match d.datatype()? {
             minicbor::data::Type::Array => {
                 let len = d.array()?.ok_or_else(|| {
-                    decode_context
-                        .report()
-                        .other("Unable to decode array length", CONTEXT);
                     minicbor::decode::Error::message(format!(
                         "{CONTEXT}: Unable to decode array length"
                     ))
                 })?;
 
                 if len == 0 {
-                    decode_context.report().invalid_value(
-                        "array length",
-                        "0",
-                        "must contain at least one UUIDv4",
-                        CONTEXT,
-                    );
                     return Err(minicbor::decode::Error::message(format!(
                         "{CONTEXT}: empty array"
                     )));
@@ -179,9 +170,6 @@ impl Decode<'_, DecodeContext> for DocType {
                     .collect::<Result<Vec<_>, _>>()
                     .map(Self)
                     .map_err(|e| {
-                        decode_context
-                            .report()
-                            .other(&format!("Invalid UUIDv4 in array: {e}"), CONTEXT);
                         minicbor::decode::Error::message(format!(
                             "{CONTEXT}: Invalid UUIDv4 in array: {e}"
                         ))
@@ -189,44 +177,31 @@ impl Decode<'_, DecodeContext> for DocType {
             },
             minicbor::data::Type::Tag => {
                 // Handle single tagged UUID
-                match decode_context.policy() {
+                match policy {
                     CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(decode_context.policy(), CompatibilityPolicy::Warn) {
+                        if matches!(policy, CompatibilityPolicy::Warn) {
                             warn!("{CONTEXT}: Conversion of document type single UUID to type DocType");
                         }
 
                         let uuid = parse_uuid(d).map_err(|e| {
-                            let msg = format!("Cannot decode single UUIDv4: {e}");
-                            decode_context.report().invalid_value(
-                                "Decode single UUIDv4",
-                                &e.to_string(),
-                                &msg,
-                                CONTEXT,
-                            );
-                            minicbor::decode::Error::message(format!("{CONTEXT}: {msg}"))
+                            minicbor::decode::Error::message(format!(
+                                "{CONTEXT}: Cannot decode single UUIDv4: {e}"
+                            ))
                         })?;
 
                         Ok(map_doc_type(uuid))
                     },
 
                     CompatibilityPolicy::Fail => {
-                        let msg = "Conversion of document type single UUID to type DocType is not allowed";
-                        decode_context.report().other(msg, CONTEXT);
                         Err(minicbor::decode::Error::message(format!(
-                            "{CONTEXT}: {msg}"
+                            "{CONTEXT}: Conversion of document type single UUID to type DocType is not allowed"
                         )))
                     },
                 }
             },
             other => {
-                decode_context.report().invalid_value(
-                    "decoding type",
-                    &format!("{other:?}"),
-                    "array or tag cbor",
-                    CONTEXT,
-                );
                 Err(minicbor::decode::Error::message(format!(
-                    "{CONTEXT}: expected array of UUIDor tagged UUIDv4, got {other:?}",
+                    "{CONTEXT}: expected array of UUIDor tagged UUIDv4, got {other}",
                 )))
             },
         }
@@ -292,149 +267,194 @@ impl<'de> Deserialize<'de> for DocType {
     }
 }
 
-// This is needed to preserve backward compatibility with the old solution.
-impl PartialEq for DocType {
-    fn eq(&self, other: &Self) -> bool {
-        // List of special-case (single UUID) -> new DocType
-        // The old one should equal to the new one
-        let special_cases = [
-            (deprecated::PROPOSAL_DOCUMENT_UUID_TYPE, &*PROPOSAL),
-            (deprecated::COMMENT_DOCUMENT_UUID_TYPE, &*PROPOSAL_COMMENT),
-            (
-                deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-                &*PROPOSAL_SUBMISSION_ACTION,
-            ),
-        ];
-        for (uuid, expected) in special_cases {
-            match DocType::try_from(uuid) {
-                Ok(single) => {
-                    if (self.0 == single.0 && other.0 == expected.0)
-                        || (other.0 == single.0 && self.0 == expected.0)
-                    {
-                        return true;
-                    }
-                },
-                Err(_) => return false,
-            }
-        }
-        self.0 == other.0
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
+    use test_case::test_case;
 
     use super::*;
 
-    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
-    // Proposal Submission Action = 37(h'5e60e623ad024a1ba1ac406db978ee48') should map to
-    // [37(h'5e60e623ad024a1ba1ac406db978ee48'), 37(h'7808d2bad51140af84e8c0d1625fdfdc'),
-    // 37(h'78927329cfd94ea19c710e019b126a65')]
-    const PSA: &str = "D825505E60E623AD024A1BA1AC406DB978EE48";
-
-    #[test]
-    fn test_empty_doc_type_cbor_decode() {
-        assert!(<DocType as TryFrom<Vec<UuidV4>>>::try_from(vec![]).is_err());
-
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test empty doc type"),
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            Encoder::new(Vec::new())
+        } ;
+        "Invalid empty CBOR bytes"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(0).unwrap();
+            e
+        } ;
+        "Invalid empty CBOR array"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Fail,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(UuidV4::new(), &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Valid single uuid v4 (old format), fail policy"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(UuidV4::new(), &mut CborContext::Untagged).unwrap();
+            e
+        } ;
+        "Invalid single untagged uuid v4 (old format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap().encode_with(UuidV4::new(), &mut CborContext::Untagged).unwrap();
+            e
+        } ;
+        "Invalid untagged uuid v4 array (new format)"
+    )]
+    fn test_invalid_cbor_decode(mut policy: CompatibilityPolicy, e: Encoder<Vec<u8>>) {
+        assert!(
+            DocType::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy).is_err()
         );
-        let mut decoder = Decoder::new(&[]);
-        assert!(DocType::decode(&mut decoder, &mut decoded_context).is_err());
     }
 
-    #[test]
-    fn test_single_uuid_doc_type_fail_policy_cbor_decode() {
-        let data = hex::decode(PSA).unwrap();
-        let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Fail,
-            ProblemReport::new("Test single uuid doc type - fail"),
-        );
-        assert!(DocType::decode(&mut decoder.clone(), &mut decoded_context).is_err());
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Valid single uuid v4 (old format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Warn,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Valid single uuid v4 (old format), warn policy"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap().encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Array of uuid v4 (new format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Fail,
+        |uuid: UuidV4| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1).unwrap().encode_with(uuid, &mut CborContext::Tagged).unwrap();
+            e
+        } ;
+        "Array of uuid v4 (new format), fail policy"
+    )]
+    fn test_valid_cbor_decode(
+        mut policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV4) -> Encoder<Vec<u8>>,
+    ) {
+        let uuid = UuidV4::new();
+        let e = e_gen(uuid);
+
+        let doc_type =
+            DocType::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy).unwrap();
+        assert_eq!(doc_type.0, vec![uuid]);
     }
 
-    #[test]
-    fn test_single_uuid_doc_type_warn_policy_cbor_decode() {
-        let data = hex::decode(PSA).unwrap();
-        let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Warn,
-            ProblemReport::new("Test single uuid doc type - warn"),
-        );
-        let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_type.doc_types().len(), 3);
-    }
-
-    #[test]
-    fn test_single_uuid_doc_type_accept_policy_cbor_decode() {
-        let data = hex::decode(PSA).unwrap();
-        let decoder = Decoder::new(&data);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test single uuid doc type - accept"),
-        );
-        let decoded_doc_type = DocType::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_type.doc_types().len(), 3);
-    }
-
-    #[test]
-    fn test_multi_uuid_doc_type_cbor_decode_encode() {
-        let uuidv4 = UuidV4::new();
-        let mut report = ProblemReport::new("Test multi uuid doc type");
-        let doc_type_list: DocType = vec![uuidv4, uuidv4].try_into().unwrap();
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        doc_type_list.encode(&mut encoder, &mut report).unwrap();
-        let mut decoder = Decoder::new(&buffer);
-        let mut decoded_context = DecodeContext::new(CompatibilityPolicy::Accept, report);
-        let decoded_doc_type = DocType::decode(&mut decoder, &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_type, doc_type_list);
-    }
-
-    #[test]
-    fn test_valid_vec_string() {
-        let uuid = Uuid::new_v4().to_string();
-        let input = vec![uuid.clone()];
-        let doc_type = DocType::try_from(input).expect("should succeed");
-
+    #[test_case(
+        |uuid: Uuid| { vec![uuid.to_string()] } ;
+        "vec of strings"
+    )]
+    #[test_case(
+        |uuid: Uuid| { vec![uuid] } ;
+        "vec of uuid"
+    )]
+    #[test_case(
+        |uuid: Uuid| { vec![UuidV4::try_from(uuid).unwrap()] } ;
+        "vec of UuidV4"
+    )]
+    #[test_case(
+        |uuid: Uuid| { uuid } ;
+        "single uuid"
+    )]
+    fn test_valid_try_from<T>(input_gen: impl FnOnce(Uuid) -> T)
+    where DocType: TryFrom<T, Error = DocTypeError> {
+        let uuid = Uuid::new_v4();
+        let doc_type = DocType::try_from(input_gen(uuid)).unwrap();
         assert_eq!(doc_type.0.len(), 1);
-        assert_eq!(doc_type.0.first().unwrap().to_string(), uuid);
+        assert_eq!(doc_type.0.first().unwrap().uuid(), uuid);
     }
 
-    #[test]
-    fn test_empty_vec_string_fails() {
-        let input: Vec<String> = vec![];
-        let result = DocType::try_from(input);
-        assert!(matches!(result, Err(DocTypeError::Empty)));
+    #[test_case(
+        Vec::<String>::new() => matches Err(DocTypeError::Empty) ;
+        "Empty string vec"
+    )]
+    #[test_case(
+        Vec::<Uuid>::new() => matches Err(DocTypeError::Empty) ;
+        "Empty Uuid vec"
+    )]
+    #[test_case(
+        Vec::<UuidV4>::new() => matches Err(DocTypeError::Empty) ;
+        "Empty UuidV4 vec"
+    )]
+    #[test_case(
+        vec!["not-a-uuid".to_string()] => matches Err(DocTypeError::StringConversion(_)) ;
+        "Not a valid Uuid string"
+    )]
+    #[test_case(
+        vec![Uuid::now_v7()] => matches Err(DocTypeError::InvalidUuid(_)) ;
+        "Not a valid vec of uuid v4"
+    )]
+    #[test_case(
+        Uuid::now_v7() => matches Err(DocTypeError::InvalidUuid(_)) ;
+        "Not a valid uuid v4"
+    )]
+    fn test_invalid_try_from<T>(input: T) -> Result<DocType, DocTypeError>
+    where DocType: TryFrom<T, Error = DocTypeError> {
+        DocType::try_from(input)
     }
 
-    #[test]
-    fn test_invalid_uuid_vec_string() {
-        let input = vec!["not-a-uuid".to_string()];
-        let result = DocType::try_from(input);
-        assert!(matches!(result, Err(DocTypeError::StringConversion(s)) if s == "not-a-uuid"));
-    }
+    #[test_case(
+        deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => PROPOSAL.clone() ;
+        "deprecated proposal document type"
+    )]
+    #[test_case(
+        deprecated::COMMENT_DOCUMENT_UUID_TYPE => PROPOSAL_COMMENT.clone() ;
+        "deprecated proposal comment document type"
+    )]
+    #[test_case(
+        deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE => PROPOSAL_SUBMISSION_ACTION.clone() ;
+        "deprecated proposal submission action type"
+    )]
+    fn test_compatibility_mapping(uuid: Uuid) -> DocType {
+        let mut e = Encoder::new(Vec::new());
+        e.encode_with(UuidV4::try_from(uuid).unwrap(), &mut CborContext::Tagged)
+            .unwrap();
 
-    #[test]
-    fn test_doctype_equal_special_cases() {
-        // Direct equal
-        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE;
-        let dt1 = DocType::try_from(vec![uuid]).unwrap();
-        let dt2 = DocType::try_from(vec![uuid]).unwrap();
-        assert_eq!(dt1, dt2);
+        // cbor decoding
+        let cbor_doc_type = DocType::decode(
+            &mut Decoder::new(e.into_writer().as_slice()),
+            &mut CompatibilityPolicy::Accept,
+        )
+        .unwrap();
 
-        // single -> special mapped type
-        let single = DocType::try_from(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL);
-        let single = DocType::try_from(deprecated::COMMENT_DOCUMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_COMMENT);
-        let single = DocType::try_from(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE).unwrap();
-        assert_eq!(single, *PROPOSAL_SUBMISSION_ACTION);
+        // json decoding
+        let json = json!(uuid);
+        let json_doc_type = serde_json::from_value(json).unwrap();
+
+        assert!(cbor_doc_type == json_doc_type);
+
+        cbor_doc_type
     }
 
     #[test]
@@ -459,14 +479,5 @@ mod tests {
                 .map(std::string::ToString::to_string)
                 .collect::<Vec<_>>();
         assert_eq!(actual, vec![uuid1, uuid2]);
-    }
-
-    #[test]
-    fn test_deserialize_special_case() {
-        let uuid = deprecated::PROPOSAL_DOCUMENT_UUID_TYPE.to_string();
-        let json = json!(uuid);
-        let dt: DocType = serde_json::from_value(json).unwrap();
-
-        assert_eq!(dt, *PROPOSAL);
     }
 }

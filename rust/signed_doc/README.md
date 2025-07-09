@@ -1,5 +1,3 @@
-<!-- cspell: words collabs -->
-
 # Catalyst signed document
 
 Catalyst signed document crate implementation based on this

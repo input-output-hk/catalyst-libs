@@ -11,7 +11,7 @@ use minicbor::{Decode, Decoder, Encode};
 use serde::{Deserialize, Deserializer};
 use tracing::warn;
 
-use crate::{CompatibilityPolicy, DecodeContext};
+use crate::CompatibilityPolicy;
 
 /// List of document reference instance.
 #[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Serialize)]
@@ -54,9 +54,9 @@ impl Display for DocumentRefs {
     }
 }
 
-impl Decode<'_, DecodeContext> for DocumentRefs {
+impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, decode_context: &mut DecodeContext,
+        d: &mut minicbor::Decoder<'_>, policy: &mut CompatibilityPolicy,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRefs decoding";
         let parse_uuid = |d: &mut Decoder| UuidV7::decode(d, &mut CborContext::Tagged);
@@ -64,12 +64,6 @@ impl Decode<'_, DecodeContext> for DocumentRefs {
         // Old: [id, ver]
         // New: [ 1* [id, ver, locator] ]
         let outer_arr = d.array()?.ok_or_else(|| {
-            decode_context.report().invalid_value(
-                "Array",
-                "Invalid array length",
-                "Valid array length",
-                CONTEXT,
-            );
             minicbor::decode::Error::message(format!("{CONTEXT}: expected valid array length"))
         })?;
 
@@ -78,28 +72,23 @@ impl Decode<'_, DecodeContext> for DocumentRefs {
             minicbor::data::Type::Array => {
                 let mut doc_refs = vec![];
                 for _ in 0..outer_arr {
-                    let doc_ref = DocumentRef::decode(d, decode_context)?;
+                    let doc_ref = d.decode::<DocumentRef>()?;
                     doc_refs.push(doc_ref);
                 }
                 Ok(DocumentRefs(doc_refs))
             },
             // Old structure [id, ver]
             minicbor::data::Type::Tag => {
-                match decode_context.policy() {
+                match policy {
                     CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(decode_context.policy(), CompatibilityPolicy::Warn) {
+                        if matches!(policy, CompatibilityPolicy::Warn) {
                             warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
                         }
                         let id = parse_uuid(d).map_err(|e| {
-                            decode_context
-                                .report()
-                                .other(&format!("Invalid ID UUIDv7: {e}"), CONTEXT);
                             e.with_message("Invalid ID UUIDv7")
                         })?;
                         let ver = parse_uuid(d).map_err(|e| {
-                            decode_context
-                                .report()
-                                .other(&format!("Invalid Ver UUIDv7: {e}"), CONTEXT);
+
                             e.with_message("Invalid Ver UUIDv7")
                         })?;
 
@@ -111,21 +100,13 @@ impl Decode<'_, DecodeContext> for DocumentRefs {
                         )]))
                     },
                     CompatibilityPolicy::Fail => {
-                        let msg = "Conversion of document reference id and version to list of document reference with doc locator is not allowed";
-                        decode_context.report().other(msg, CONTEXT);
                         Err(minicbor::decode::Error::message(format!(
-                            "{CONTEXT}: {msg}"
+                            "{CONTEXT}: Conversion of document reference id and version to list of document reference with doc locator is not allowed"
                         )))
                     },
                 }
             },
             other => {
-                decode_context.report().invalid_value(
-                    "Decoding type",
-                    &other.to_string(),
-                    "Array or tag",
-                    CONTEXT,
-                );
                 Err(minicbor::decode::Error::message(format!(
                     "{CONTEXT}: Expected array of document reference, or tag of version and id, found {other}"
                 )))
@@ -228,95 +209,156 @@ impl<'de> Deserialize<'de> for DocumentRefs {
 #[cfg(test)]
 mod tests {
 
-    use catalyst_types::problem_report::ProblemReport;
     use minicbor::Encoder;
     use serde_json::json;
+    use test_case::test_case;
 
     use super::*;
 
-    #[allow(clippy::unwrap_used)]
-    fn gen_old_doc_ref(id: UuidV7, ver: UuidV7) -> Vec<u8> {
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        encoder.array(2).unwrap();
-        id.encode(&mut encoder, &mut CborContext::Tagged).unwrap();
-        ver.encode(&mut encoder, &mut CborContext::Tagged).unwrap();
-        buffer
-    }
-
-    #[test]
-    fn test_old_doc_refs_fail_policy_cbor_decode() {
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Fail,
-            ProblemReport::new("Test doc ref fail policy"),
-        );
-        let uuidv7 = UuidV7::new();
-        let old_doc_ref = gen_old_doc_ref(uuidv7, uuidv7);
-        let decoder = Decoder::new(&old_doc_ref);
-        assert!(DocumentRefs::decode(&mut decoder.clone(), &mut decoded_context).is_err());
-    }
-
-    #[test]
-    fn test_old_doc_refs_warn_policy_cbor_decode() {
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Warn,
-            ProblemReport::new("Test doc ref warn policy"),
-        );
-        let uuidv7 = UuidV7::new();
-        let old_doc_ref = gen_old_doc_ref(uuidv7, uuidv7);
-        let decoder = Decoder::new(&old_doc_ref);
-        let decoded_doc_ref =
-            DocumentRefs::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_ref.doc_refs().len(), 1);
-        assert_eq!(
-            decoded_doc_ref
-                .doc_refs()
-                .first()
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            Encoder::new(Vec::new())
+        } ;
+        "Invalid empty CBOR bytes"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(0).unwrap();
+            e
+        } ;
+        "Invalid empty CBOR array"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Fail,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(2)
                 .unwrap()
-                .doc_locator()
-                .len(),
-            0
-        );
-    }
-
-    #[test]
-    fn test_old_doc_refs_accept_policy_cbor_decode() {
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test doc ref accept policy"),
-        );
-        let uuidv7 = UuidV7::new();
-        let old_doc_ref = gen_old_doc_ref(uuidv7, uuidv7);
-        let decoder = Decoder::new(&old_doc_ref);
-        let decoded_doc_ref =
-            DocumentRefs::decode(&mut decoder.clone(), &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_ref.doc_refs().len(), 1);
-        assert_eq!(
-            decoded_doc_ref
-                .doc_refs()
-                .first()
+                .encode_with(UuidV7::new(), &mut CborContext::Tagged)
                 .unwrap()
-                .doc_locator()
-                .len(),
-            0
+                .encode_with(UuidV7::new(), &mut CborContext::Tagged)
+                .unwrap();
+            e
+        } ;
+        "Valid array of two uuid v7 (old format), fail policy"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(2)
+                .unwrap()
+                .encode_with(UuidV7::new(), &mut CborContext::Untagged)
+                .unwrap()
+                .encode_with(UuidV7::new(), &mut CborContext::Untagged)
+                .unwrap();
+            e
+        } ;
+        "Invalid untagged uuids v7 (old format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1)
+                .unwrap()
+                .array(3)
+                .unwrap()
+                .encode_with(UuidV7::new(), &mut CborContext::Untagged)
+                .unwrap()
+                .encode_with(UuidV7::new(), &mut CborContext::Untagged)
+                .unwrap()
+                .encode(DocLocator::default())
+                .unwrap();
+            e
+        } ;
+        "Invalid untagged uuid uuids v7 (new format)"
+    )]
+    fn test_invalid_cbor_decode(mut policy: CompatibilityPolicy, e: Encoder<Vec<u8>>) {
+        assert!(
+            DocumentRefs::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy)
+                .is_err()
         );
     }
 
-    #[test]
-    fn test_doc_refs_cbor_encode_decode() {
-        let uuidv7 = UuidV7::new();
-        let doc_ref = DocumentRef::new(uuidv7, uuidv7, vec![1, 2, 3, 4].into());
-        let doc_refs = DocumentRefs(vec![doc_ref.clone(), doc_ref]);
-        let mut buffer = Vec::new();
-        let mut encoder = Encoder::new(&mut buffer);
-        doc_refs.encode(&mut encoder, &mut ()).unwrap();
-        let mut decoder = Decoder::new(&buffer);
-        let mut decoded_context = DecodeContext::new(
-            CompatibilityPolicy::Accept,
-            ProblemReport::new("Test doc refs"),
-        );
-        let decoded_doc_refs = DocumentRefs::decode(&mut decoder, &mut decoded_context).unwrap();
-        assert_eq!(decoded_doc_refs, doc_refs);
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        |uuid: UuidV7, _: DocLocator| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(2)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap();
+            e
+        } ;
+        "Valid single doc ref (old format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Warn,
+        |uuid: UuidV7, _: DocLocator| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(2)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap();
+            e
+        } ;
+        "Valid single doc ref (old format), warn policy"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Accept,
+        |uuid: UuidV7, doc_loc: DocLocator| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1)
+                .unwrap()
+                .array(3)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap()
+                .encode(doc_loc)
+                .unwrap();
+            e
+        } ;
+        "Array of new doc ref (new format)"
+    )]
+    #[test_case(
+        CompatibilityPolicy::Fail,
+        |uuid: UuidV7, doc_loc: DocLocator| {
+            let mut e = Encoder::new(Vec::new());
+            e.array(1)
+                .unwrap()
+                .array(3)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap()
+                .encode_with(uuid, &mut CborContext::Tagged)
+                .unwrap()
+                .encode(doc_loc)
+                .unwrap();
+            e
+        } ;
+        "Array of new doc ref (new format), fail policy"
+    )]
+    fn test_valid_cbor_decode(
+        mut policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV7, DocLocator) -> Encoder<Vec<u8>>,
+    ) {
+        let uuid = UuidV7::new();
+        let doc_loc = DocLocator::default();
+        let e = e_gen(uuid, doc_loc.clone());
+
+        let doc_refs =
+            DocumentRefs::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy)
+                .unwrap();
+        assert_eq!(doc_refs.0, vec![DocumentRef::new(uuid, uuid, doc_loc)]);
     }
 
     #[test]
