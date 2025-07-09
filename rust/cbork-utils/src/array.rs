@@ -77,61 +77,68 @@ impl minicbor::Decode<'_, DecodeCtx> for Array {
         // Handle both definite and indefinite-length arrays
         let array_len = d.array()?;
 
-        match array_len {
-            Some(length) => {
-                // Definite-length array
-                if matches!(ctx, DecodeCtx::Deterministic) {
-                    ctx.try_check(|| check_array_minimal_length(d, header_start_pos, length))?;
+        if let Some(length) = array_len {
+            // Definite-length array
+            if matches!(ctx, DecodeCtx::Deterministic) {
+                ctx.try_check(|| check_array_minimal_length(d, header_start_pos, length))?;
+            }
+
+            let elements = decode_array_elements(d, length, ctx)?;
+            Ok(Self(elements))
+        } else {
+            // Indefinite-length array
+            if matches!(ctx, DecodeCtx::Deterministic) {
+                return Err(minicbor::decode::Error::message(
+                    "Indefinite-length items must be made definite-length items",
+                ));
+            }
+
+            // In non-deterministic mode, accept indefinite-length arrays
+            // minicbor should handle the indefinite-length decoding for us
+            // We'll use Vec<minicbor::data::Type> to decode heterogeneous elements
+            let mut elements = Vec::new();
+
+            // Since we can't easily determine when indefinite arrays end,
+            // we'll need to work with the raw bytes approach
+            let Some(remaining_input) = &d.input().get(d.position()..) else {
+                return Err(minicbor::decode::Error::message("Invalid slicing position"));
+            };
+            let mut temp_decoder = minicbor::Decoder::new(remaining_input);
+
+            // Decode elements until we hit the break marker (0xFF)
+            while temp_decoder.position() < temp_decoder.input().len() {
+                // Check if we've hit the break marker
+                if temp_decoder.input().get(temp_decoder.position()) == Some(&0xFF) {
+                    // Skip the break marker
+                    temp_decoder.skip().ok();
+                    break;
                 }
 
-                let elements = decode_array_elements(d, length, ctx)?;
-                Ok(Self(elements))
-            },
-            None => {
-                // Indefinite-length array
-                if matches!(ctx, DecodeCtx::Deterministic) {
-                    return Err(minicbor::decode::Error::message(
-                        "Indefinite-length items must be made definite-length items",
-                    ));
+                let element_start = temp_decoder.position();
+                if temp_decoder.skip().is_err() {
+                    break;
                 }
+                let element_end = temp_decoder.position();
 
-                // In non-deterministic mode, accept indefinite-length arrays
-                // minicbor should handle the indefinite-length decoding for us
-                // We'll use Vec<minicbor::data::Type> to decode heterogeneous elements
-                let mut elements = Vec::new();
-
-                // Since we can't easily determine when indefinite arrays end,
-                // we'll need to work with the raw bytes approach
-                let remaining_input = &d.input()[d.position()..];
-                let mut temp_decoder = minicbor::Decoder::new(remaining_input);
-
-                // Decode elements until we hit the break marker (0xFF)
-                while temp_decoder.position() < temp_decoder.input().len() {
-                    // Check if we've hit the break marker
-                    if temp_decoder.input().get(temp_decoder.position()) == Some(&0xFF) {
-                        // Skip the break marker
-                        temp_decoder.skip().ok();
-                        break;
-                    }
-
-                    let element_start = temp_decoder.position();
-                    if temp_decoder.skip().is_err() {
-                        break;
-                    }
-                    let element_end = temp_decoder.position();
-
-                    if element_end > element_start {
-                        let element_bytes =
-                            temp_decoder.input()[element_start..element_end].to_vec();
-                        elements.push(element_bytes);
-                    }
+                if element_end > element_start {
+                    let Some(element_bytes) = temp_decoder.input().get(element_start..element_end)
+                    else {
+                        return Err(minicbor::decode::Error::message("Invalid slicing position"));
+                    };
+                    elements.push(element_bytes.to_vec());
                 }
+            }
 
-                // Update the main decoder position
-                d.set_position(d.position() + temp_decoder.position());
+            let Some(next_pos) = d.position().checked_add(temp_decoder.position()) else {
+                return Err(minicbor::decode::Error::message(
+                    "Addition of next positions overflowed",
+                ));
+            };
 
-                Ok(Self(elements))
-            },
+            // Update the main decoder position
+            d.set_position(next_pos);
+
+            Ok(Self(elements))
         }
     }
 }
@@ -356,6 +363,7 @@ mod tests {
     }
 
     /// Test array with multiple elements
+    #[allow(clippy::indexing_slicing)]
     #[test]
     fn test_array_larger_size() {
         // Test with a simple array of 5 single-byte strings
