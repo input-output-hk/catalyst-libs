@@ -12,7 +12,7 @@ use crate::{
 
 /// Represents a CBOR map key-value pair, preserving original decoding order of values.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Map(pub Vec<MapEntry>);
+pub struct Map(Vec<MapEntry>);
 
 impl Deref for Map {
     type Target = Vec<MapEntry>;

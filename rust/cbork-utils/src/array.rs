@@ -5,14 +5,12 @@
 use std::{ops::Deref, vec::IntoIter};
 
 use crate::{
-    decode_context::DecodeCtx,
-    decode_helper::get_bytes,
-    deterministic_helper::{get_cbor_header_size, get_declared_length, CBOR_MAX_TINY_VALUE},
+    decode_context::DecodeCtx, decode_helper::get_bytes, deterministic_helper::CBOR_MAX_TINY_VALUE,
 };
 
 /// Represents a CBOR array, preserving original decoding order of values.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct Array(pub Vec<Vec<u8>>);
+pub struct Array(Vec<Vec<u8>>);
 
 impl Deref for Array {
     type Target = Vec<Vec<u8>>;
@@ -75,71 +73,15 @@ impl minicbor::Decode<'_, DecodeCtx> for Array {
         let header_start_pos = d.position();
 
         // Handle both definite and indefinite-length arrays
-        let array_len = d.array()?;
+        let length = d.array()?.ok_or_else(|| {
+            minicbor::decode::Error::message(
+                "Indefinite-length items must be made definite-length items",
+            )
+        })?;
 
-        if let Some(length) = array_len {
-            // Definite-length array
-            if matches!(ctx, DecodeCtx::Deterministic) {
-                ctx.try_check(|| check_array_minimal_length(d, header_start_pos, length))?;
-            }
+        ctx.try_check(|| check_array_minimal_length(d, header_start_pos, length))?;
 
-            let elements = decode_array_elements(d, length, ctx)?;
-            Ok(Self(elements))
-        } else {
-            // Indefinite-length array
-            if matches!(ctx, DecodeCtx::Deterministic) {
-                return Err(minicbor::decode::Error::message(
-                    "Indefinite-length items must be made definite-length items",
-                ));
-            }
-
-            // In non-deterministic mode, accept indefinite-length arrays
-            // minicbor should handle the indefinite-length decoding for us
-            // We'll use Vec<minicbor::data::Type> to decode heterogeneous elements
-            let mut elements = Vec::new();
-
-            // Since we can't easily determine when indefinite arrays end,
-            // we'll need to work with the raw bytes approach
-            let Some(remaining_input) = &d.input().get(d.position()..) else {
-                return Err(minicbor::decode::Error::message("Invalid slicing position"));
-            };
-            let mut temp_decoder = minicbor::Decoder::new(remaining_input);
-
-            // Decode elements until we hit the break marker (0xFF)
-            while temp_decoder.position() < temp_decoder.input().len() {
-                // Check if we've hit the break marker
-                if temp_decoder.input().get(temp_decoder.position()) == Some(&0xFF) {
-                    // Skip the break marker
-                    temp_decoder.skip().ok();
-                    break;
-                }
-
-                let element_start = temp_decoder.position();
-                if temp_decoder.skip().is_err() {
-                    break;
-                }
-                let element_end = temp_decoder.position();
-
-                if element_end > element_start {
-                    let Some(element_bytes) = temp_decoder.input().get(element_start..element_end)
-                    else {
-                        return Err(minicbor::decode::Error::message("Invalid slicing position"));
-                    };
-                    elements.push(element_bytes.to_vec());
-                }
-            }
-
-            let Some(next_pos) = d.position().checked_add(temp_decoder.position()) else {
-                return Err(minicbor::decode::Error::message(
-                    "Addition of next positions overflowed",
-                ));
-            };
-
-            // Update the main decoder position
-            d.set_position(next_pos);
-
-            Ok(Self(elements))
-        }
+        decode_array_elements(d, length, ctx).map(Self)
     }
 }
 
@@ -186,7 +128,7 @@ fn check_array_minimal_length(
 
 /// Decodes all elements in the array
 fn decode_array_elements(
-    d: &mut minicbor::Decoder, length: u64, ctx: &mut DecodeCtx,
+    d: &mut minicbor::Decoder, length: u64, _ctx: &mut DecodeCtx,
 ) -> Result<Vec<Vec<u8>>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Array length too large for current platform")
@@ -205,40 +147,10 @@ fn decode_array_elements(
         // The elements themselves must be deterministically encoded (4.2.1)
         let element_bytes = get_bytes(d, element_start, element_end)?.to_vec();
 
-        // Only check deterministic encoding in deterministic mode
-        if matches!(ctx, DecodeCtx::Deterministic) {
-            ctx.try_check(|| array_elements_are_deterministic(&element_bytes))?;
-        }
-
         elements.push(element_bytes);
     }
 
     Ok(elements)
-}
-
-/// Validates that a CBOR array element follows the deterministic encoding rules as
-/// specified in RFC 8949. In this case, it validates that the elements themselves must be
-/// deterministically encoded (4.2.1).
-fn array_elements_are_deterministic(element_bytes: &[u8]) -> Result<(), minicbor::decode::Error> {
-    // if the array elements are not a txt string or byte string we cannot get a declared
-    // length
-    if let Some(element_declared_length) = get_declared_length(element_bytes)? {
-        let header_size = get_cbor_header_size(element_bytes)?;
-        let actual_content_size =
-            element_bytes
-                .len()
-                .checked_sub(header_size)
-                .ok_or_else(|| {
-                    minicbor::decode::Error::message("Integer overflow in content size calculation")
-                })?;
-
-        if element_declared_length != actual_content_size {
-            return Err(minicbor::decode::Error::message(
-                "Declared length does not match the actual length. Non deterministic array element.",
-            ));
-        }
-    }
-    Ok(())
 }
 
 #[cfg(test)]
@@ -392,16 +304,16 @@ mod tests {
     /// Test indefinite-length array rejection in deterministic mode
     /// and acceptance in non-deterministic mode
     #[test]
-    fn test_indefinite_length_array_rejection() {
+    fn test_array_with_indefinite_length() {
         // Indefinite-length array (not allowed in deterministic encoding)
-        let mut decoder = Decoder::new(&[
+        let decoder = Decoder::new(&[
             0x9F, // Array with indefinite length
             0x01, // Element 1
             0x02, // Element 2
             0xFF, // Break code
         ]);
         assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::Deterministic).is_err());
-        // Should work in non-deterministic mode
-        assert!(Array::decode(&mut decoder, &mut DecodeCtx::non_deterministic()).is_ok());
+        // Even it's non-deterministic, this should fail, as we enforce for the defined length.
+        assert!(Array::decode(&mut decoder.clone(), &mut DecodeCtx::non_deterministic()).is_err());
     }
 }
