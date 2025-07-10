@@ -2,22 +2,21 @@
 
 package form_template
 
-dictionary: singleLineTextEntryList: {
+dictionary: multiLineTextEntryListMarkdown: {
 	description: """
-		UI - A Growable List of single line text
-		A single line of text.
-		No formatting, markup, line breaks, or special characters are allowed.
-		Add multiple single-line text entries.
+		UI - A Growable List of markdown formatted text fields.
+		Each entry is a multiline markdown formatted string.
+		Markdown Formatting, line breaks, or special characters are allowed.
+		Add multiple text entries.
 		Each entry should be unique.
 		"""
-	parent: "section"
-
 	definition: {
 		type:  "array"
-		items: dictionary.singleLineTextEntry.definition
+		items: dictionary.multiLineTextEntryMarkdown.definition
 		items: minLength: 1
 		uniqueItems: true
 	}
+	parent: ["section"]
 	parameters: {
 		title: {}
 		description: {}

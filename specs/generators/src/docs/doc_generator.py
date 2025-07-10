@@ -23,7 +23,9 @@ def get_jinja_environment(spec: SignedDoc) -> Environment:
     """Get the current jinja environment for rendering templates."""
     global __jinja_env  # noqa: PLW0603
     if __jinja_env is None:
-        __jinja_env = Environment(loader=DictLoader(spec.pages), autoescape=select_autoescape())
+        __jinja_env = Environment(
+            loader=DictLoader(spec.pages), autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True
+        )
         __jinja_env.globals["spec"] = spec  # type: ignore reportUnknownMemberType
 
     return __jinja_env

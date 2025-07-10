@@ -16,6 +16,13 @@ class FormTemplatesMd(DocGenerator):
         """Initialise form_templates.md generator."""
         super().__init__(args, spec, "form_templates.md")
 
+    def all_form_elements(self) -> str:
+        """List and cross reference all defined form elements."""
+        # self._spec.form_template.elements.root.i
+        return """
+### TODO
+"""
+
     def generate(self) -> bool:
         """Generate a `form_templates.md` file from the definitions."""
         # Generate the example_template_schema.json file.

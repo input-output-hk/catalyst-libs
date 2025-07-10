@@ -5,7 +5,7 @@ dictionary: schemaReferenceNonUI: {
 	description: """
 		Enforces the json document having a proper reference to the schema.
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type:     "string"

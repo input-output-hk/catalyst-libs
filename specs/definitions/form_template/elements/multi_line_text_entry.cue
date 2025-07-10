@@ -6,22 +6,20 @@ import (
 
 )
 
-dictionary: multiLineTextEntryMarkdown: {
+dictionary: multiLineTextEntry: {
 	description: """
-		UI - Multiline text entry with Markdown content.
-		Use Markdown formatting for rich text. 
-		Markdown formatting is as defined by CommonMark.
-
-		The following Markdown Extensions are also supported:
-
-		* None
+		UI - One or more Lines of text entry.
+		Line breaks, and special characters are allowed.
+		Special formatted markup, such as Markdown are not allowed.
+		Enter multiple lines of plain text. You can use line breaks but no special formatting.
 		"""
+	parent: ["section"]
+
 	definition: {
 		type:             "string"
-		contentMediaType: "text/markdown"
+		contentMediaType: "text/plain"
 		pattern:          regex.def.multiLine.pattern
 	}
-	parent: "section"
 	parameters: {
 		title: {}
 		description: {}

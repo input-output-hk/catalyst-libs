@@ -14,7 +14,7 @@ dictionary: dropDownSingleSelect: {
 		Select one option from a selector styled as a dropdown menu.
 		Only one choice is allowed.
 		"""
-	parent: "section"
+	parent: ["section"]
 	definition: {
 		type:             "string"
 		contentMediaType: "text/plain"

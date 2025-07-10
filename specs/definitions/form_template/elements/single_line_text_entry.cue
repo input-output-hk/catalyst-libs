@@ -12,7 +12,7 @@ dictionary: singleLineTextEntry: {
 		A single line of text.
 		No formatting, markup, line breaks, or special characters are allowed.
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type:    "string"

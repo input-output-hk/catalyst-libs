@@ -10,7 +10,7 @@ dictionary: multiSelect: {
 		Multiple choices are allowed.
 		All choices MUST be unique.
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type:        "array"

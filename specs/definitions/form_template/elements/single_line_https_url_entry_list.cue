@@ -10,7 +10,7 @@ dictionary: singleLineHttpsURLEntryList: {
 		Add multiple single-line text entries.
 		Each entry should be unique.
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type:  "array"

@@ -51,6 +51,19 @@ import (
 
 }
 
+// An example of a particular form element.
+#formElementExample: {
+	// What is this example showing?
+	description: string
+
+	// What is the parent of this example?
+	parent: #formTemplateElementParent
+
+	// What Parameters to set for this example?
+	// Must only use parameters defined by the Form Element itself.
+	parameters: _
+}
+
 // An Element which can be present in a Templated Form.
 // Elements define both the data validation and the expected
 // type of data entry UI expected of the Element.
@@ -64,10 +77,9 @@ import (
 	definition: #formElementDefinition
 
 	// If this field type must appear only as a child of another field type.
-	// If `parent` is NOT defined, then the `parent` is the root of the template.
 	// The root object of the template is defined with the special string `{}`
 	// 
-	parent: #formTemplateElementNames | *"{}"
+	parent: #formTemplateElementParents
 
 	// The parameters supported by a particular field definition
 	parameters: _allParameters

@@ -14,7 +14,7 @@ dictionary: singleLineHttpsURLEntry: {
 			non-whitespace characters, ending at the end of the string.
 			
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type:    "string"

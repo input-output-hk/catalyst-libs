@@ -14,7 +14,7 @@ dictionary: radioButtonSelect: {
 		Select one option from a list of text options.
 		Selector is styled as a set of Radio Buttons.
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type:             "string"

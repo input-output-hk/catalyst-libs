@@ -121,5 +121,26 @@ possible Form Element.
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
+## Dictionary of all defined Form Elements
+
+| Name | Element |
+| --- | --- |
+| Drop Down Single Select | [dropDownSingleSelect](./form_template_elements/drop_down_single_select.md) |
+| Multi Line Text Entry | [multiLineTextEntry](./form_template_elements/multi_line_text_entry.md) |
+| Multi Line Text Entry List [Markdown][CommonMark] | [multiLineTextEntryListMarkdown](./form_template_elements/multi_line_text_entry_list_markdown.md) |
+| Multi Line Text Entry [Markdown][CommonMark] | [multiLineTextEntryMarkdown](./form_template_elements/multi_line_text_entry_markdown.md) |
+| Multi Select | [multiSelect](./form_template_elements/multi_select.md) |
+| Radio Button Select | [radioButtonSelect](./form_template_elements/radio_button_select.md) |
+| Schema Reference Non U I | [schemaReferenceNonUI](./form_template_elements/schema_reference_non_u_i.md) |
+| Section | [section](./form_template_elements/section.md) |
+| Single Grouped Tag Selector | [singleGroupedTagSelector](./form_template_elements/single_grouped_tag_selector.md) |
+| Single Line Https U R L Entry | [singleLineHttpsURLEntry](./form_template_elements/single_line_https_u_r_l_entry.md) |
+| Single Line Https U R L Entry List | [singleLineHttpsURLEntryList](./form_template_elements/single_line_https_u_r_l_entry_list.md) |
+| Single Line Text Entry | [singleLineTextEntry](./form_template_elements/single_line_text_entry.md) |
+| Single Line Text Entry List | [singleLineTextEntryList](./form_template_elements/single_line_text_entry_list.md) |
+
+### TODO
+
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
+[CommonMark]: https://spec.commonmark.org/0.31.2/
 [RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

@@ -28,7 +28,7 @@ dictionary: singleGroupedTagSelector: {
 			},
 		```
 		"""
-	parent: "section"
+	parent: ["section"]
 
 	definition: {
 		type: "object"

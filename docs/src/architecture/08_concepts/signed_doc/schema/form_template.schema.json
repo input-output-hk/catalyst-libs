@@ -46,10 +46,6 @@
             "additionalProperties": false,
             "type": "object"
         },
-        "segment": {
-            "additionalProperties": false,
-            "type": "object"
-        },
         "singleGroupedTagSelector": {
             "additionalProperties": false,
             "required": [
@@ -130,9 +126,6 @@
         },
         "exampleSection": {
             "$ref": "#/$defs/section"
-        },
-        "exampleSegment": {
-            "$ref": "#/$defs/segment"
         },
         "exampleSingleGroupedTagSelector": {
             "$ref": "#/$defs/singleGroupedTagSelector"

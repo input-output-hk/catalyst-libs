@@ -102,3 +102,13 @@ This is an Example Form Template which has a property shown for every
 possible Form Element.
 
 {{ example_schema.markdown_reference(relative_doc=doc) }}
+
+## Dictionary of all defined Form Elements
+
+| Name | Element |
+| --- | --- |
+{% for element, def in spec.form_template.elements.root.items()|sort %}
+| {{ def.title_name() }} | [{{ element }}](./form_template_elements/{{ def.snake_name() }}.md) |
+{% endfor %}
+
+{{ doc.all_form_elements() | trim}}

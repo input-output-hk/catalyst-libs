@@ -7,7 +7,7 @@ import (
 	"list"
 	"strings"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:uuid"
-	"github.com/input-output-hk/catalyst-libs/specs/form_template/fields:form_template"
+	"github.com/input-output-hk/catalyst-libs/specs/form_template/elements:form_template"
 )
 
 // Document Type must be a valid UUIDv4

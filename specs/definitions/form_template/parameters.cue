@@ -172,11 +172,13 @@ _allParameters: {
 			Any field not listed here will get displayed in an alphabetical order following the listed fields.
 			"""
 	}
-	"x-subsection"?: #parameter & {
+	"x-flatten"?: #parameter & {
+		type:     "boolean"
 		required: "optional"
-		type:     bool
 		description: """
-			TODO: Explain what this parameter does...
+			If present, and true, then form element is to be flattened into its parent.
+			Typically this parameter is only present in sections.
+			The UI is free to decide how it presents flattened sections.
 			"""
 	}
 }

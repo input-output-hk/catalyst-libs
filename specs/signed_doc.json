@@ -3692,7 +3692,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "multiLineTextEntry": {
         "definition": {
@@ -3733,7 +3735,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "multiLineTextEntryListMarkdown": {
         "definition": {
@@ -3794,7 +3798,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "multiLineTextEntryMarkdown": {
         "definition": {
@@ -3835,7 +3841,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "multiSelect": {
         "definition": {
@@ -3889,7 +3897,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "radioButtonSelect": {
         "definition": {
@@ -3925,7 +3935,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "schemaReferenceNonUI": {
         "definition": {
@@ -3945,14 +3957,16 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "section": {
         "definition": {
           "additionalProperties": false,
           "type": "object"
         },
-        "description": "UI - Logical Document Sub-Section Break.\nSubsections containing specific details about the proposal.",
+        "description": "UI - Logical Document Sub-Section Break.\nSubsections are logical breaks in the form structure.\nThe ONLY Element that can appear in the root of a Form is a `section`.\n`section` can be nested arbitrarily deep.\nThe form presentation can decide how deep, and what formatting it used\nfor each section at each level, however, even if the form is flattened and the section not\ndisplayed, then data must still follow the section nesting.",
         "parameters": {
           "description": {
             "description": "The displayable description attached to the section.  Markdown formatted contents.",
@@ -3974,312 +3988,10 @@
             "required": "yes",
             "type": "string"
           },
-          "x-icon": {
-            "choices": [
-              "'all spaces menu'",
-              "'all spaces menu-1'",
-              "academic-cap",
-              "ada",
-              "adjustments",
-              "annotation",
-              "archive",
-              "arrow-circle-down",
-              "arrow-circle-left",
-              "arrow-circle-right",
-              "arrow-circle-up",
-              "arrow-down",
-              "arrow-left",
-              "arrow-narrow-down",
-              "arrow-narrow-left",
-              "arrow-narrow-right",
-              "arrow-narrow-up",
-              "arrow-right",
-              "arrow-triangle-down",
-              "arrow-triangle-up",
-              "arrow-up",
-              "arrows-expand",
-              "at-symbol",
-              "avatar_placeholder",
-              "backspace",
-              "badge-check",
-              "ban",
-              "beaker",
-              "bell",
-              "book-open",
-              "bookmark",
-              "bookmark-alt",
-              "bottom-main-content",
-              "bottom-rail-toggle",
-              "bottom-rail-toggle-1",
-              "briefcase",
-              "cake",
-              "calculator",
-              "calendar",
-              "camera",
-              "cash",
-              "chart-bar",
-              "chart-pie",
-              "chart-square-bar",
-              "chat",
-              "chat-alt",
-              "chat-alt-2",
-              "check",
-              "check-circle",
-              "chevron-double-down",
-              "chevron-double-left",
-              "chevron-double-right",
-              "chevron-double-up",
-              "chevron-down",
-              "chevron-down-1",
-              "chevron-left",
-              "chevron-right",
-              "chevron-up",
-              "chip",
-              "clipboard",
-              "clipboard-check",
-              "clipboard-copy",
-              "clipboard-list",
-              "clock",
-              "cloud",
-              "cloud-download",
-              "cloud-upload",
-              "code",
-              "cog-gear",
-              "collection",
-              "color-swatch",
-              "credit-card",
-              "cube",
-              "cube-transparent",
-              "currency-bangladeshi",
-              "currency-dollar",
-              "currency-euro",
-              "currency-pound",
-              "currency-rupee",
-              "currency-yen",
-              "cursor-click",
-              "curved-arrow-right",
-              "database",
-              "desktop-computer",
-              "device-mobile",
-              "device-tablet",
-              "document",
-              "document-add",
-              "document-remove",
-              "document-report",
-              "document-search",
-              "document-text",
-              "dots-circle-horizontal",
-              "dots-horizontal",
-              "dots-vertical",
-              "double_check",
-              "download",
-              "duplicate",
-              "emoji-happy",
-              "emoji-sad",
-              "exclamation",
-              "exclamation-circle",
-              "external-link",
-              "eye",
-              "eye-off",
-              "facebook",
-              "fast-forward",
-              "film",
-              "filter",
-              "finger-print",
-              "fire",
-              "flag",
-              "folder",
-              "folder-add",
-              "folder-download",
-              "folder-open",
-              "folder-remove",
-              "fund",
-              "gift",
-              "globe",
-              "globe-alt",
-              "hand",
-              "hashtag",
-              "heart",
-              "home",
-              "icon-user-remove",
-              "identification",
-              "inbox",
-              "inbox-in",
-              "information-circle",
-              "key",
-              "left-rail-toggle",
-              "library",
-              "light-bulb",
-              "lightning-bolt",
-              "link",
-              "linkedin",
-              "location-marker",
-              "lock-closed",
-              "lock-open",
-              "logout",
-              "logout-1",
-              "mail",
-              "mail-open",
-              "map",
-              "maximize-toggle",
-              "menu",
-              "menu-alt-1",
-              "menu-alt-2",
-              "menu-alt-3",
-              "menu-alt-4",
-              "microphone",
-              "minimize-toggle",
-              "minus",
-              "minus-circle",
-              "moon",
-              "move-item",
-              "music-note",
-              "newspaper",
-              "node-closed",
-              "node-line",
-              "node-line-end",
-              "node-open",
-              "office-building",
-              "paper-airplane",
-              "paper-clip",
-              "pause",
-              "pencil",
-              "pencil-alt",
-              "phone",
-              "phone-incoming",
-              "phone-missed-call",
-              "phone-outgoing",
-              "photograph",
-              "play",
-              "plus",
-              "plus_circle_filled",
-              "plus_circle_outlined",
-              "presentation-chart-bar",
-              "presentation-chart-line",
-              "printer",
-              "progress-track-warning",
-              "puzzle",
-              "qrcode",
-              "question-mark-circle",
-              "receipt-refund",
-              "receipt-tax",
-              "reddit",
-              "refresh",
-              "reply",
-              "rewind",
-              "right-rail-toggle",
-              "rss",
-              "rt_bold",
-              "rt_decrease_indent",
-              "rt_heading",
-              "rt_increase_indent",
-              "rt_italic",
-              "rt_ordered_list",
-              "rt_unordered_list",
-              "save",
-              "save-as",
-              "scale",
-              "scissors",
-              "search",
-              "search-circle",
-              "selector",
-              "send-airplane",
-              "server",
-              "share",
-              "shield-check",
-              "shield-exclamation",
-              "shopping-bag",
-              "shopping-cart",
-              "sm-view-grid-add",
-              "sort-ascending",
-              "sort-descending",
-              "sparkles",
-              "speakerphone",
-              "star_filled",
-              "star_outlined",
-              "status-offline",
-              "status-online",
-              "stop",
-              "summary",
-              "sun",
-              "support",
-              "switch-horizontal",
-              "switch-vertical",
-              "table",
-              "tag",
-              "template",
-              "terminal",
-              "thumb-down",
-              "thumb-up",
-              "ticket",
-              "top-bar",
-              "top-bar-filled",
-              "translate",
-              "trash",
-              "trending-down",
-              "trending-up",
-              "truck",
-              "unlink",
-              "upload",
-              "user",
-              "user-add",
-              "user-circle",
-              "user-group",
-              "users",
-              "variable",
-              "video-camera",
-              "view-boards",
-              "view-grid",
-              "view-list",
-              "volume-off",
-              "volume-up",
-              "vote",
-              "wallet",
-              "wifi",
-              "x",
-              "x-circle",
-              "xTwitter",
-              "zoom-in",
-              "zoom-out"
-            ],
-            "description": "The name of the Icon to display with the field.",
+          "x-flatten": {
+            "description": "If present, and true, then form element is to be flattened into its parent.\nTypically this parameter is only present in sections.\nThe UI is free to decide how it presents flattened sections.",
             "required": "optional",
-            "type": "string"
-          },
-          "x-order": {
-            "description": "The ordering of the properties to be enforced when displayed.\nAny field not listed here will get displayed in an alphabetical order following the listed fields.",
-            "required": "yes",
-            "type": "string"
-          }
-        },
-        "parent": "segment"
-      },
-      "segment": {
-        "definition": {
-          "additionalProperties": false,
-          "type": "object"
-        },
-        "description": "Logical Document Section - Grouping Only - Highest Level Group\n\"x-note\": \"\n\tMajor sections of the proposal. Each segment contains sections of information grouped together.\n\t\"",
-        "parameters": {
-          "description": {
-            "description": "The displayable description attached to the segment.  Markdown formatted contents.",
-            "required": "optional",
-            "type": "string"
-          },
-          "properties": {
-            "description": "The sub fields of the segment.",
-            "required": "yes",
-            "type": "string"
-          },
-          "required": {
-            "description": "Which fields MUST appear in the segment.",
-            "required": "optional",
-            "type": "string"
-          },
-          "title": {
-            "description": "The title of the segment.",
-            "required": "yes",
-            "type": "string"
+            "type": "boolean"
           },
           "x-icon": {
             "choices": [
@@ -4559,7 +4271,10 @@
             "type": "string"
           }
         },
-        "parent": "{}"
+        "parent": [
+          "{}",
+          "section"
+        ]
       },
       "singleGroupedTagSelector": {
         "definition": {
@@ -4599,7 +4314,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "singleLineHttpsURLEntry": {
         "definition": {
@@ -4640,7 +4357,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "singleLineHttpsURLEntryList": {
         "definition": {
@@ -4701,7 +4420,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "singleLineTextEntry": {
         "definition": {
@@ -4741,7 +4462,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       },
       "singleLineTextEntryList": {
         "definition": {
@@ -4801,7 +4524,9 @@
             "type": "string"
           }
         },
-        "parent": "section"
+        "parent": [
+          "section"
+        ]
       }
     },
     "schema": {
@@ -4849,10 +4574,6 @@
           "type": "string"
         },
         "section": {
-          "additionalProperties": false,
-          "type": "object"
-        },
-        "segment": {
           "additionalProperties": false,
           "type": "object"
         },
@@ -5084,6 +4805,7 @@
     ]
   },
   "pages": {
-    "form_templates.md.jinja": "# Form Template Specification\n\nForm Templates are the basis by which most documents get and validate their payloads.\n\nForm Templates are generic, and not customized per document type.\nAll Specific Document Form Templates have the same capabilities.\n\n## Json Schema\n\nForm Templates are based on Json Schema version 2020-12.\nHowever, Json Schema is only a validation specification and does not\ninclude any details about how such a form should be displayed for data entry.\n\nForm Templates, take standard Json Schema and extend it in a backwards compatible way\nso that the Form Template can be interpreted with hints to aid in rendering a form\nfor data capture.\n\n### Basic Structure\n\nThe Base Form Template has the following format.\n\n{{ base_schema.markdown_reference(relative_doc=doc) }}\n\n#### `\"$defs\"`\n\nIn Json Schema, the `$defs` defines reusable definitions.\nWe extend the definition of `$defs`.\nEvery possible Form Element is defined in `$defs`.\nA fields *MUST* use a pre-defined Form Element from the `$defs` and\nit is impermissible for a Form Element to not use a reference to its\ndefinition, nor for a definition to be created which does not follow\nthis specification.\n\nIn any single Form Template, the `$defs` section of the Schema *MAY* only\ninclude definitions of Form Elements used by the template itself.\n\nThe definitions within the Base Form Template above serve as the dictionary\nof all available defined Form Elements.\n\n#### `\"properties\"`\n\nThe `\"properties\"` section of the form template contains all of the fields\nto be captured by the form, and each field is defined by its element type.\n\nForm Elements *MAY* and typically do have Parameters, the possible parameters\nper Form Element are documented with each Form Elements individual documentation.\nParameters are typically standard Json Schema properties on a type.\nAs not all parameters required are defined by Json Schema, extended parameters may exist that \nare prefixed by `x-`.\n\nExtended Parameters are intended to provide more information related to each Form element,\nto assist with presentation or using any particular Field.\nThey are not currently associated with validation.\n\n#### `\"$schema\"`\n\nThis defines that the template is a standard Json Schema version 2020-12 document.\nAny document derived from the template is only valid if it validates\naccording to Json Schema validation rules against the template.\n\n#### `\"title\"`\n\nThis is a name for the template.\nIt is not used by consumers of the template, but could be used by \ntemplate builders to help identify the template.\n\n#### `\"description\"`\n\nThis is a long multi line description about the template itself.\nIt is not used by consumers of the template, but could be used by\ntemplate builders to help identify and define the purpose of the template.\n\nThere is expected to be a number of templates used in the system, and both\n`\"title\"` and `\"description\"` help template builders organize templates.\n\n#### `\"maintainers\"`\n\nIs a list of the entities who have made or updated the template.\nIt is optional, but if it is included, it *MUST* be an array of objects.\nEach object must have two fields:\n\n* `\"name\"` : The name of the individual maintainer or group responsible for the template.\n* `\"url\"` : A link where more information about the maintainer or group can be found.\n    If there is no link, the field is still present, but an empty string (`\"\"`).\n\n#### `\"type\": \"object\"`\n\nThe Template *ONLY* supports a json type of Object at the root of the template.\nIt is not permissible to create templates which are bare strings, or numbers, etc.\n\n#### `\"additionalProperties\": false`\n\nAll Templates must be exhaustively defined.\nIt is not permissible to add fields to a document derived from a Form Template,\nthat are not present in the Form Template itself.\n\n`\"additionalProperties\": false`\n\n## Example Form Template\n\nThis is an Example Form Template which has a property shown for every\npossible Form Element.\n\n{{ example_schema.markdown_reference(relative_doc=doc) }}\n"
+    "form_templates.md.jinja": "# Form Template Specification\n\nForm Templates are the basis by which most documents get and validate their payloads.\n\nForm Templates are generic, and not customized per document type.\nAll Specific Document Form Templates have the same capabilities.\n\n## Json Schema\n\nForm Templates are based on Json Schema version 2020-12.\nHowever, Json Schema is only a validation specification and does not\ninclude any details about how such a form should be displayed for data entry.\n\nForm Templates, take standard Json Schema and extend it in a backwards compatible way\nso that the Form Template can be interpreted with hints to aid in rendering a form\nfor data capture.\n\n### Basic Structure\n\nThe Base Form Template has the following format.\n\n{{ base_schema.markdown_reference(relative_doc=doc) }}\n\n#### `\"$defs\"`\n\nIn Json Schema, the `$defs` defines reusable definitions.\nWe extend the definition of `$defs`.\nEvery possible Form Element is defined in `$defs`.\nA fields *MUST* use a pre-defined Form Element from the `$defs` and\nit is impermissible for a Form Element to not use a reference to its\ndefinition, nor for a definition to be created which does not follow\nthis specification.\n\nIn any single Form Template, the `$defs` section of the Schema *MAY* only\ninclude definitions of Form Elements used by the template itself.\n\nThe definitions within the Base Form Template above serve as the dictionary\nof all available defined Form Elements.\n\n#### `\"properties\"`\n\nThe `\"properties\"` section of the form template contains all of the fields\nto be captured by the form, and each field is defined by its element type.\n\nForm Elements *MAY* and typically do have Parameters, the possible parameters\nper Form Element are documented with each Form Elements individual documentation.\nParameters are typically standard Json Schema properties on a type.\nAs not all parameters required are defined by Json Schema, extended parameters may exist that \nare prefixed by `x-`.\n\nExtended Parameters are intended to provide more information related to each Form element,\nto assist with presentation or using any particular Field.\nThey are not currently associated with validation.\n\n#### `\"$schema\"`\n\nThis defines that the template is a standard Json Schema version 2020-12 document.\nAny document derived from the template is only valid if it validates\naccording to Json Schema validation rules against the template.\n\n#### `\"title\"`\n\nThis is a name for the template.\nIt is not used by consumers of the template, but could be used by \ntemplate builders to help identify the template.\n\n#### `\"description\"`\n\nThis is a long multi line description about the template itself.\nIt is not used by consumers of the template, but could be used by\ntemplate builders to help identify and define the purpose of the template.\n\nThere is expected to be a number of templates used in the system, and both\n`\"title\"` and `\"description\"` help template builders organize templates.\n\n#### `\"maintainers\"`\n\nIs a list of the entities who have made or updated the template.\nIt is optional, but if it is included, it *MUST* be an array of objects.\nEach object must have two fields:\n\n* `\"name\"` : The name of the individual maintainer or group responsible for the template.\n* `\"url\"` : A link where more information about the maintainer or group can be found.\n    If there is no link, the field is still present, but an empty string (`\"\"`).\n\n#### `\"type\": \"object\"`\n\nThe Template *ONLY* supports a json type of Object at the root of the template.\nIt is not permissible to create templates which are bare strings, or numbers, etc.\n\n#### `\"additionalProperties\": false`\n\nAll Templates must be exhaustively defined.\nIt is not permissible to add fields to a document derived from a Form Template,\nthat are not present in the Form Template itself.\n\n`\"additionalProperties\": false`\n\n## Example Form Template\n\nThis is an Example Form Template which has a property shown for every\npossible Form Element.\n\n{{ example_schema.markdown_reference(relative_doc=doc) }}\n\n## Dictionary of all defined Form Elements\n\n| Name | Element |\n| --- | --- |\n{% for element, def in spec.form_template.elements.root.items()|sort %}\n| {{ def.title_name() }} | [{{ element }}](./form_template_elements/{{ def.snake_name() }}.md) |\n{% endfor %}\n\n{{ doc.all_form_elements() | trim}}",
+    "form_templates_element.md.jinja": "# Form Template Element - {{ doc.element.name }}\n\n{{ doc.element.description }}\n\n## Parents\n\nThe {{ doc.element.name }} form element, can appear as a child of:\n\n{{ doc.parents }}\n\n## Definition\n\n{{ doc.definition }}\n\n## Parameters\n\nThe {{ doc.element.name }} form element takes the following parameters:\n\n{{ doc.parameters }}\n\n## Example Usage\n\nThis is an Example Form Template showing just the {{ doc.element.name }} form element, and its parents.\n\n{{ example_schema.markdown_reference(relative_doc=doc) }}\n"
   }
 }

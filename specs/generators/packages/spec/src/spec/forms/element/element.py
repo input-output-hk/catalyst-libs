@@ -1,9 +1,10 @@
 """Form Template Definition."""
 
+import re
 from functools import cached_property
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, computed_field
+from pydantic import BaseModel, ConfigDict, PrivateAttr, computed_field
 
 from spec.forms.element.parameters import Parameters
 
@@ -14,14 +15,22 @@ class Element(BaseModel):
     description: str
     definition: dict[str, Any]  # Raw definition from JSON
     parameters: Parameters
-    parent: str | None = Field(default=None)
+    parent: list[str]
     _name: str = PrivateAttr(default="Unknown")
 
     model_config = ConfigDict(extra="forbid")
 
     def name(self) -> str:
-        """Name Of the Parameter."""
+        """Name Of the Element."""
         return self._name
+
+    def snake_name(self) -> str:
+        """Name Of the Element in snake case."""
+        return re.sub(r"(?<!^)(?=[A-Z])", "_", self._name).lower()
+
+    def title_name(self) -> str:
+        """Name Of the Element in title case."""
+        return re.sub(r"(?<!^)(?=[A-Z])", " ", self._name).title()
 
     def set_name(self, val: str) -> None:
         """Set Name."""
