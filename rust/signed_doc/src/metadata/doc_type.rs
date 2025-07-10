@@ -463,7 +463,7 @@ mod tests {
     )]
     #[test_case(
         serde_json::json!([UuidV4::new(), UuidV4::new()]) ;
-        "Documen type new format"
+        "Document type new format"
     )]
     fn test_json_valid_serde(json: serde_json::Value) {
         let refs: DocType = serde_json::from_value(json.clone()).unwrap();

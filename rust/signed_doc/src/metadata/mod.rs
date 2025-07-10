@@ -188,7 +188,7 @@ impl Metadata {
     /// # Errors:
     ///   - Json deserialization failure.
     ///   - Duplicate fields.
-    ///   - Missing mandotory fields like `id`, `ver`, `type`.
+    ///   - Missing mandatory fields like `id`, `ver`, `type`.
     pub fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
