@@ -323,28 +323,60 @@ impl<'de> serde::de::Visitor<'de> for MetadataDeserializeVisitor {
 
 #[cfg(test)]
 mod tests {
-    use catalyst_types::uuid::UuidV4;
     use test_case::test_case;
 
     use super::*;
 
     #[test_case(
         serde_json::json!({
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": [ UuidV4::new() ],
-            "content-type": ContentType::Json,
+            "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "type": [ "ab7c2428-c353-4331-856e-385b2eb20546" ],
+            "content-type": "application/json",
         }) ;
         "minimally valid JSON, new format document type"
     )]
     #[test_case(
         serde_json::json!({
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type":  UuidV4::new(),
-            "content-type": ContentType::Json,
+            "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "type":  "ab7c2428-c353-4331-856e-385b2eb20546",
+            "content-type": "application/json",
         }) ;
         "minimally valid JSON, old format document type"
+    )]
+    #[test_case(
+        serde_json::json!(
+            {
+                "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "type":  [ "ab7c2428-c353-4331-856e-385b2eb20546" ],
+                "content-type": "application/json",
+                "ref":  [
+                    {
+                        "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                        "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                        "cid": "0x",
+                    },
+                ]
+            }
+        ) ;
+        "minimally valid JSON, old format document reference type new format"
+    )]
+    #[test_case(
+        serde_json::json!(
+            {
+                "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "type":  [ "ab7c2428-c353-4331-856e-385b2eb20546" ],
+                "content-type": "application/json",
+                "ref": {
+                    "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                    "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                },
+            }
+        ) ;
+        "minimally valid JSON, old format document reference type old format"
     )]
     fn test_json_valid_serde(json: serde_json::Value) {
         let metadata = Metadata::from_json(json.clone()).unwrap();

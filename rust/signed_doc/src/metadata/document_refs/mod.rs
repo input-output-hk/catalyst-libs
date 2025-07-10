@@ -2,19 +2,18 @@
 
 mod doc_locator;
 mod doc_ref;
-use std::{fmt::Display, str::FromStr};
+use std::fmt::Display;
 
 use catalyst_types::uuid::{CborContext, UuidV7};
 pub use doc_locator::DocLocator;
 pub use doc_ref::DocumentRef;
 use minicbor::{Decode, Decoder, Encode};
-use serde::{Deserialize, Deserializer};
 use tracing::warn;
 
 use crate::CompatibilityPolicy;
 
 /// List of document reference instance.
-#[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub struct DocumentRefs(Vec<DocumentRef>);
 
 /// Document reference error.
@@ -139,70 +138,98 @@ impl Encode<()> for DocumentRefs {
     }
 }
 
-impl<'de> Deserialize<'de> for DocumentRefs {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
-        /// Old structure deserialize as map {id, ver}
-        #[derive(Deserialize)]
-        struct OldRef {
-            /// "id": "uuidv7
-            id: String,
-            /// "ver": "uuidv7"
-            ver: String,
+mod serde_impl {
+    //! `serde::Deserialize` and `serde::Serialize` trait implementations
+
+    use std::str::FromStr;
+
+    use super::*;
+
+    /// Old structure deserialize as map {id, ver}
+    #[derive(serde::Deserialize)]
+    struct OldRef {
+        /// "id": "uuidv7
+        id: String,
+        /// "ver": "uuidv7"
+        ver: String,
+    }
+
+    /// New structure as deserialize as map {id, ver, cid}
+    #[derive(serde::Deserialize, serde::Serialize)]
+    struct NewRef {
+        /// "id": "uuidv7"
+        id: String,
+        /// "ver": "uuidv7"
+        ver: String,
+        /// "cid": "0x..."
+        cid: String,
+    }
+
+    #[derive(serde::Deserialize)]
+    #[serde(untagged)]
+    enum DocRefSerde {
+        /// Old structure of document reference.
+        Old(OldRef),
+        /// New structure of document reference.
+        New(Vec<NewRef>),
+    }
+
+    impl serde::Serialize for DocumentRefs {
+        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where S: serde::Serializer {
+            let iter = self
+                .0
+                .iter()
+                .map(|v| {
+                    NewRef {
+                        id: v.id().to_string(),
+                        ver: v.ver().to_string(),
+                        cid: v.doc_locator().to_string(),
+                    }
+                })
+                .into_iter();
+            serializer.collect_seq(iter)
         }
+    }
 
-        /// New structure as deserialize as map {id, ver, cid}
-        #[derive(Deserialize)]
-        struct NewRef {
-            /// "id": "uuidv7"
-            id: String,
-            /// "ver": "uuidv7"
-            ver: String,
-            /// "cid": "0x..."
-            cid: String,
-        }
-
-        #[derive(Deserialize)]
-        #[serde(untagged)]
-        enum DocRefInput {
-            /// Old structure of document reference.
-            Old(OldRef),
-            /// New structure of document reference.
-            New(Vec<NewRef>),
-        }
-
-        let input = DocRefInput::deserialize(deserializer)?;
-        let dr = match input {
-            DocRefInput::Old(value) => {
-                let id = UuidV7::from_str(&value.id).map_err(|_| {
-                    serde::de::Error::custom(DocRefError::StringConversion(value.id.clone()))
-                })?;
-                let ver = UuidV7::from_str(&value.ver).map_err(|_| {
-                    serde::de::Error::custom(DocRefError::StringConversion(value.ver.clone()))
-                })?;
-
-                DocumentRefs(vec![DocumentRef::new(id, ver, DocLocator::default())])
-            },
-            DocRefInput::New(value) => {
-                let mut dr = vec![];
-                for v in value {
+    impl<'de> serde::Deserialize<'de> for DocumentRefs {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where D: serde::Deserializer<'de> {
+            let input = DocRefSerde::deserialize(deserializer)?;
+            match input {
+                DocRefSerde::Old(v) => {
                     let id = UuidV7::from_str(&v.id).map_err(|_| {
                         serde::de::Error::custom(DocRefError::StringConversion(v.id.clone()))
                     })?;
                     let ver = UuidV7::from_str(&v.ver).map_err(|_| {
                         serde::de::Error::custom(DocRefError::StringConversion(v.ver.clone()))
                     })?;
-                    let cid = &v.cid.strip_prefix("0x").unwrap_or(&v.cid);
-                    let locator = hex::decode(cid).map_err(|_| {
-                        serde::de::Error::custom(DocRefError::HexDecode(v.cid.clone()))
-                    })?;
-                    dr.push(DocumentRef::new(id, ver, locator.into()));
-                }
-                DocumentRefs(dr)
-            },
-        };
 
-        Ok(dr)
+                    Ok(DocumentRefs(vec![DocumentRef::new(
+                        id,
+                        ver,
+                        DocLocator::default(),
+                    )]))
+                },
+                DocRefSerde::New(value) => {
+                    let mut dr = vec![];
+                    for v in value {
+                        let id = UuidV7::from_str(&v.id).map_err(|_| {
+                            serde::de::Error::custom(DocRefError::StringConversion(v.id.clone()))
+                        })?;
+                        let ver = UuidV7::from_str(&v.ver).map_err(|_| {
+                            serde::de::Error::custom(DocRefError::StringConversion(v.ver.clone()))
+                        })?;
+                        let cid = &v.cid.strip_prefix("0x").unwrap_or(&v.cid);
+                        let locator = hex::decode(cid).map_err(|_| {
+                            serde::de::Error::custom(DocRefError::HexDecode(v.cid.clone()))
+                        })?;
+                        dr.push(DocumentRef::new(id, ver, locator.into()));
+                    }
+                    Ok(DocumentRefs(dr))
+                },
+            }
+        }
     }
 }
 
