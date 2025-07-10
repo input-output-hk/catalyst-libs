@@ -200,9 +200,7 @@ impl Metadata {
     /// Serializes the current `Metadata` object into the JSON object.
     ///
     /// # Errors:
-    ///   - Json deserialization failure.
-    ///   - Duplicate fields.
-    ///   - Missing mandotory fields like `id`, `ver`, `type`.
+    ///   - Json serialization failure.
     pub fn to_json(&self) -> anyhow::Result<serde_json::Value> {
         let map = self
             .0
