@@ -184,12 +184,32 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
+    ///
+    /// # Errors:
+    ///   - Json deserialization failure.
+    ///   - Duplicate fields.
+    ///   - Missing mandotory fields like `id`, `ver`, `type`.
+    pub fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
         let metadata = Self::from_fields(fields.into_iter().map(anyhow::Result::<_>::Ok), &report)?;
         anyhow::ensure!(!report.is_problematic(), "{:?}", report);
         Ok(metadata)
+    }
+
+    /// Serializes the current `Metadata` object into the JSON object.
+    ///
+    /// # Errors:
+    ///   - Json deserialization failure.
+    ///   - Duplicate fields.
+    ///   - Missing mandotory fields like `id`, `ver`, `type`.
+    pub fn to_json(&self) -> anyhow::Result<serde_json::Value> {
+        let map = self
+            .0
+            .iter()
+            .map(|(k, v)| Ok((k.to_string(), serde_json::to_value(v)?)))
+            .collect::<anyhow::Result<serde_json::Map<_, _>>>()?;
+        Ok(serde_json::Value::Object(map))
     }
 }
 
@@ -300,5 +320,37 @@ impl<'de> serde::de::Visitor<'de> for MetadataDeserializeVisitor {
             res.push(v);
         }
         Ok(res)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use catalyst_types::uuid::UuidV4;
+    use test_case::test_case;
+
+    use super::*;
+
+    #[test_case(
+        serde_json::json!({
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type": [ UuidV4::new() ],
+            "content-type": ContentType::Json,
+        }) ;
+        "minimally valid JSON, new format document type"
+    )]
+    #[test_case(
+        serde_json::json!({
+            "id": UuidV7::new(),
+            "ver": UuidV7::new(),
+            "type":  UuidV4::new(),
+            "content-type": ContentType::Json,
+        }) ;
+        "minimally valid JSON, old format document type"
+    )]
+    fn test_json_valid_serde(json: serde_json::Value) {
+        let metadata = Metadata::from_json(json.clone()).unwrap();
+        let json_from_meta = metadata.to_json().unwrap();
+        assert_eq!(metadata, Metadata::from_json(json_from_meta).unwrap());
     }
 }
