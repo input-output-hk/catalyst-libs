@@ -5,9 +5,10 @@ mod doc_ref;
 use std::{fmt::Display, str::FromStr};
 
 use catalyst_types::uuid::{CborContext, UuidV7};
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
 pub use doc_locator::DocLocator;
 pub use doc_ref::DocumentRef;
-use minicbor::{Decode, Decoder, Encode};
+use minicbor::{Decode, Encode};
 use serde::{Deserialize, Deserializer};
 use tracing::warn;
 
@@ -59,56 +60,69 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
         d: &mut minicbor::Decoder<'_>, policy: &mut CompatibilityPolicy,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRefs decoding";
-        let parse_uuid = |d: &mut Decoder| UuidV7::decode(d, &mut CborContext::Tagged);
 
         // Old: [id, ver]
         // New: [ 1* [id, ver, locator] ]
-        let outer_arr = d.array()?.ok_or_else(|| {
-            minicbor::decode::Error::message(format!("{CONTEXT}: expected valid array length"))
-        })?;
+        let outer_arr = Array::decode(d, &mut DecodeCtx::Deterministic)
+            .map_err(|e| minicbor::decode::Error::message(format!("{CONTEXT}: {e}")))?;
 
-        match d.datatype()? {
-            // New structure inner part [id, ver, locator]
-            minicbor::data::Type::Array => {
-                let mut doc_refs = vec![];
-                for _ in 0..outer_arr {
-                    let doc_ref = d.decode::<DocumentRef>()?;
-                    doc_refs.push(doc_ref);
-                }
-                Ok(DocumentRefs(doc_refs))
-            },
-            // Old structure [id, ver]
-            minicbor::data::Type::Tag => {
-                match policy {
-                    CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
-                        if matches!(policy, CompatibilityPolicy::Warn) {
-                            warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
-                        }
-                        let id = parse_uuid(d).map_err(|e| {
-                            e.with_message("Invalid ID UUIDv7")
-                        })?;
-                        let ver = parse_uuid(d).map_err(|e| {
+        match outer_arr.as_slice() {
+            [first, rest @ ..] => {
+                match minicbor::Decoder::new(&first).datatype()? {
+                    // New structure inner part [id, ver, locator]
+                    minicbor::data::Type::Array => {
+                        let mut arr = vec![first];
+                        arr.extend(rest);
 
-                            e.with_message("Invalid Ver UUIDv7")
-                        })?;
+                        let doc_refs = arr
+                            .iter()
+                            .map(|bytes| minicbor::Decoder::new(bytes).decode())
+                            .collect::<Result<_, _>>()?;
 
-                        Ok(DocumentRefs(vec![DocumentRef::new(
-                            id,
-                            ver,
-                            // If old implementation is used, the locator will be empty
-                            DocLocator::default(),
-                        )]))
+                        Ok(DocumentRefs(doc_refs))
                     },
-                    CompatibilityPolicy::Fail => {
+                    // Old structure (id, ver)
+                    minicbor::data::Type::Tag => {
+                        match policy {
+                            CompatibilityPolicy::Accept | CompatibilityPolicy::Warn => {
+                                if matches!(policy, CompatibilityPolicy::Warn) {
+                                    warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
+                                }
+                                let id = UuidV7::decode(&mut minicbor::Decoder::new(first), &mut CborContext::Tagged).map_err(|e| {
+                                    e.with_message("Invalid ID UUIDv7")
+                                })?;
+                                let ver = rest
+                                    .first()
+                                    .map(|ver| UuidV7::decode(&mut minicbor::Decoder::new(ver), &mut CborContext::Tagged).map_err(|e| {
+                                        e.with_message("Invalid Ver UUIDv7")
+                                    }))
+                                    .transpose()?
+                                    .ok_or_else(|| minicbor::decode::Error::message(format!("{CONTEXT}: Missing document reference version after document reference id")))?;
+
+                                Ok(DocumentRefs(vec![DocumentRef::new(
+                                    id,
+                                    ver,
+                                    // If old implementation is used, the locator will be empty
+                                    DocLocator::default(),
+                                )]))
+                            },
+                            CompatibilityPolicy::Fail => {
+                                Err(minicbor::decode::Error::message(format!(
+                                    "{CONTEXT}: Conversion of document reference id and version to list of document reference with doc locator is not allowed"
+                                )))
+                            },
+                        }
+                    },
+                    other => {
                         Err(minicbor::decode::Error::message(format!(
-                            "{CONTEXT}: Conversion of document reference id and version to list of document reference with doc locator is not allowed"
+                            "{CONTEXT}: Expected array of document reference, or tag of version and id, found {other}",
                         )))
                     },
                 }
             },
-            other => {
+            _ => {
                 Err(minicbor::decode::Error::message(format!(
-                    "{CONTEXT}: Expected array of document reference, or tag of version and id, found {other}"
+                    "{CONTEXT}: Empty array",
                 )))
             },
         }
@@ -209,7 +223,7 @@ impl<'de> Deserialize<'de> for DocumentRefs {
 #[cfg(test)]
 mod tests {
 
-    use minicbor::Encoder;
+    use minicbor::{Decoder, Encoder};
     use serde_json::json;
     use test_case::test_case;
 

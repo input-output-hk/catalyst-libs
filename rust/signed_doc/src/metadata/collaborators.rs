@@ -3,6 +3,7 @@
 use std::{ops::Deref, str::FromStr};
 
 use catalyst_types::catalyst_id::CatalystId;
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
 
 /// 'collaborators' field type definition, which is a JSON path string
 #[derive(Clone, Debug, PartialEq)]
@@ -39,14 +40,9 @@ impl minicbor::Decode<'_, ()> for Collaborators {
     fn decode(
         d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
-        let Some(items) = d.array()? else {
-            return Err(minicbor::decode::Error::message(
-                "Must a definite size array",
-            ));
-        };
-
-        (0..items)
-            .map(|_| d.bytes())
+        Array::decode(d, &mut DecodeCtx::Deterministic)?
+            .iter()
+            .map(|item| minicbor::Decoder::new(item).bytes())
             .collect::<Result<Vec<_>, _>>()?
             .into_iter()
             .map(CatalystId::try_from)
