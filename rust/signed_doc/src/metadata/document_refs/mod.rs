@@ -237,7 +237,6 @@ mod serde_impl {
 mod tests {
 
     use minicbor::Encoder;
-    use serde_json::json;
     use test_case::test_case;
 
     use super::*;
@@ -388,45 +387,35 @@ mod tests {
         assert_eq!(doc_refs.0, vec![DocumentRef::new(uuid, uuid, doc_loc)]);
     }
 
-    #[test]
-    fn test_deserialize_old_doc_ref() {
-        let uuidv7 = UuidV7::new();
-        let json = json!(
+    #[test_case(
+        serde_json::json!(
             {
-                "id": uuidv7.to_string(),
-                "ver": uuidv7.to_string(),
+                "id": UuidV7::new(),
+                "ver": UuidV7::new(),
             }
-        );
-        let doc_ref: DocumentRefs = serde_json::from_value(json).unwrap();
-        let dr = doc_ref.doc_refs().first().unwrap();
-        assert_eq!(*dr.id(), uuidv7);
-        assert_eq!(*dr.ver(), uuidv7);
-        assert_eq!(dr.doc_locator().len(), 0);
-    }
-
-    #[test]
-    fn test_deserialize_new_doc_ref() {
-        let uuidv7 = UuidV7::new();
-        let data = vec![1, 2, 3, 4];
-        let hex_data = format!("0x{}", hex::encode(data.clone()));
-        let json = json!(
-            [{
-                "id": uuidv7.to_string(),
-                "ver": uuidv7.to_string(),
-                "cid": hex_data,
-            },
-            {
-                "id": uuidv7.to_string(),
-                "ver": uuidv7.to_string(),
-                "cid": hex_data,
-            },
+        ) ;
+        "Document reference type old format"
+    )]
+    #[test_case(
+        serde_json::json!(
+            [
+                {
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "cid": format!("0x{}", hex::encode([1, 2, 3]))
+                },
+                {
+                    "id": UuidV7::new(),
+                    "ver": UuidV7::new(),
+                    "cid": format!("0x{}", hex::encode([1, 2, 3]))
+                }
             ]
-        );
-        let doc_ref: DocumentRefs = serde_json::from_value(json).unwrap();
-        assert!(doc_ref.doc_refs().len() == 2);
-        let dr = doc_ref.doc_refs().first().unwrap();
-        assert_eq!(*dr.id(), uuidv7);
-        assert_eq!(*dr.ver(), uuidv7);
-        assert_eq!(*dr.doc_locator(), data.into());
+        ) ;
+        "Document reference type new format"
+    )]
+    fn test_json_valid_serde(json: serde_json::Value) {
+        let refs: DocumentRefs = serde_json::from_value(json.clone()).unwrap();
+        let json_from_refs = serde_json::to_value(&refs).unwrap();
+        assert_eq!(refs, serde_json::from_value(json_from_refs).unwrap());
     }
 }
