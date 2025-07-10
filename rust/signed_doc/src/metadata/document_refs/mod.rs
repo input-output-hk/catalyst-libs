@@ -68,7 +68,7 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
 
         match outer_arr.as_slice() {
             [first, rest @ ..] => {
-                match minicbor::Decoder::new(&first).datatype()? {
+                match minicbor::Decoder::new(first).datatype()? {
                     // New structure inner part [id, ver, locator]
                     minicbor::data::Type::Array => {
                         let mut arr = vec![first];
