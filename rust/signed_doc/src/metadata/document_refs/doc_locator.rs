@@ -54,8 +54,8 @@ impl Decode<'_, ()> for DocLocator {
         let entries = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
         match entries.as_slice() {
-            [item] => {
-                let key = minicbor::Decoder::new(&item.key_bytes)
+            [entry] => {
+                let key = minicbor::Decoder::new(&entry.key_bytes)
                     .str()
                     .map_err(|e| e.with_message(format!("{CONTEXT}: expected string")))?;
 
@@ -65,7 +65,7 @@ impl Decode<'_, ()> for DocLocator {
                     )));
                 }
 
-                let mut value_decoder = minicbor::Decoder::new(&item.value);
+                let mut value_decoder = minicbor::Decoder::new(&entry.value);
 
                 let tag = value_decoder
                     .tag()
