@@ -9,7 +9,7 @@ use std::{
 
 use anyhow::{bail, Context};
 use c509_certificate::c509::C509;
-use cardano_blockchain_types::{Point, StakeAddress, TransactionId};
+use cardano_blockchain_types::{Point, StakeAddress, TransactionId, TxnIndex};
 use catalyst_types::{
     catalyst_id::{key_rotation::KeyRotation, role_index::RoleId, CatalystId},
     conversion::zero_out_last_n_bytes,
@@ -89,11 +89,16 @@ impl RegistrationChain {
         *self.inner.current_tx_id_hash.data()
     }
 
-    /// Returns a point (slot and transaction index) of the latest transaction in the
-    /// registration chain.
+    /// Returns a point (slot) of the latest transaction in the registration chain.
     #[must_use]
     pub fn current_point(&self) -> &Point {
         self.inner.current_tx_id_hash.point()
+    }
+
+    /// Returns an index of the latest transaction in the registration chain.
+    #[must_use]
+    pub fn current_txn_index(&self) -> TxnIndex {
+        self.inner.current_tx_id_hash.txn_index()
     }
 
     /// Get a list of purpose for this registration chain.
