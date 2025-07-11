@@ -65,7 +65,7 @@ const DEFAULT_PREPROD_RELAY: &str = "preprod-node.play.dev.cardano.org:3001";
 const DEFAULT_PREPROD_MITHRIL_GENESIS_KEY: &str = include_str!("data/preprod-genesis.vkey");
 /// Default Mithril Aggregator to use.
 const DEFAULT_PREPROD_MITHRIL_AGGREGATOR: &str =
-    "https://aggregator.pre-release-preprod.api.mithril.network/aggregator";
+    "https://aggregator.release-preprod.api.mithril.network/aggregator";
 
 // Preview Defaults
 /// Preview Default Public Cardano Relay.
