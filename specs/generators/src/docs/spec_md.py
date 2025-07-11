@@ -74,7 +74,7 @@ class SpecMd(DocGenerator):
 
 {header.description}
 
-{self.wrap_html(table.as_raw_html(inline_css=True))}
+{self.wrap_html(table.as_raw_html())}
 """.strip()
             + "\n"
         )

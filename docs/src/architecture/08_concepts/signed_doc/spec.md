@@ -86,15 +86,61 @@ Media Type/s allowed in the Payload
 <!---HTML START-->
 <!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
 <div id="spec_content_type" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#spec_content_type table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
 
-<table class="gt_table" data-quarto-bootstrap="false" data-quarto-disable-processing="false" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;display: table;border-collapse: collapse;line-height: normal;margin-left: auto;margin-right: auto;color: #333333;font-size: 16px;font-weight: normal;font-style: normal;background-color: #FFFFFF;width: 100%;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-right-style: none;border-right-width: 2px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 2px;border-left-color: #D3D3D3;">
-<thead style="border-style: none;">
+#spec_content_type thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#spec_content_type p { margin: 0; padding: 0; }
+ #spec_content_type .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #spec_content_type .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #spec_content_type .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #spec_content_type .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #spec_content_type .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content_type .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content_type .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content_type .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #spec_content_type .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #spec_content_type .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #spec_content_type .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #spec_content_type .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #spec_content_type .gt_spanner_row { border-bottom-style: hidden; }
+ #spec_content_type .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #spec_content_type .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #spec_content_type .gt_from_md> :first-child { margin-top: 0; }
+ #spec_content_type .gt_from_md> :last-child { margin-bottom: 0; }
+ #spec_content_type .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #spec_content_type .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #spec_content_type .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #spec_content_type .gt_row_group_first td { border-top-width: 2px; }
+ #spec_content_type .gt_row_group_first th { border-top-width: 2px; }
+ #spec_content_type .gt_striped { background-color: #EDF7FC; }
+ #spec_content_type .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content_type .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #spec_content_type .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #spec_content_type .gt_left { text-align: left; }
+ #spec_content_type .gt_center { text-align: center; }
+ #spec_content_type .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #spec_content_type .gt_font_normal { font-weight: normal; }
+ #spec_content_type .gt_font_bold { font-weight: bold; }
+ #spec_content_type .gt_font_italic { font-style: italic; }
+ #spec_content_type .gt_super { font-size: 65%; }
+ #spec_content_type .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #spec_content_type .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
-  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
-    <td class="gt_heading gt_title gt_font_normal" colspan="3" style="border-style: none;color: #333333;font-size: 125%;font-weight: normal;padding-top: 4px;padding-bottom: 4px;padding-left: 5px;padding-right: 5px;border-bottom-color: #FFFFFF;border-bottom-width: 0;background-color: #FFFFFF;text-align: center;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">content type</td>
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">content type</td>
   </tr>
-  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
-    <td class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" colspan="3" style="border-style: none;color: #333333;font-size: 85%;font-weight: normal;padding-top: 3px;padding-bottom: 5px;padding-left: 5px;padding-right: 5px;border-top-color: #FFFFFF;border-top-width: 0;background-color: #FFFFFF;text-align: center;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;">
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Media Type/s allowed in the Payload
 
@@ -102,38 +148,38 @@ Media Type/s allowed in the Payload
   </tr>
 
 </thead>
-<tbody class="gt_table_body" style="border-style: none;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;">
-  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
-    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Definition</th>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Definition</th>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Required</th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">yes</td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Is the field required?</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">Is the field required?</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">3</td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped">3</td>
+    <td class="gt_row gt_left gt_striped"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Format</th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Media Type</td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">A Media Type string which identifies the payload.</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Format</th>
+    <td class="gt_row gt_left">Media Type</td>
+    <td class="gt_row gt_left">A Media Type string which identifies the payload.</td>
   </tr>
-  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
-    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Supported Values</th>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Supported Values</th>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.iana.org/assignments/media-types/application/cbor">application/cbor</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">An <a href="https://www.rfc-editor.org/rfc/rfc8949.html">RFC8949</a> Binary <a href="https://www.rfc-editor.org/rfc/rfc8949.html">CBOR</a> Encoded Document.</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.iana.org/assignments/media-types/application/cbor">application/cbor</a></td>
+    <td class="gt_row gt_left gt_striped">An <a href="https://www.rfc-editor.org/rfc/rfc8949.html">RFC8949</a> Binary <a href="https://www.rfc-editor.org/rfc/rfc8949.html">CBOR</a> Encoded Document.</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc8610">application/cddl</a></td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">A <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> Document.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8610">application/cddl</a></td>
+    <td class="gt_row gt_left">A <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> Document.<br>
+Note:</p>
 <ul>
 <li>This is an unofficial media type</li>
 <li><a href="https://www.rfc-editor.org/rfc/rfc9165">RFC9165</a> Additional Control Operators for <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> are supported.</li>
@@ -141,37 +187,37 @@ Note:<p style="margin: 0;padding: 0;"></p>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.iana.org/assignments/media-types/application/json">application/json</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Document</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.iana.org/assignments/media-types/application/json">application/json</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Document</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://json-schema.org/draft/2020-12">application/schema+json</a></td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">A <a href="https://json-schema.org/draft/2020-12"><a href="https://json-schema.org/draft/2020-12"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Schema</a> Draft 2020-12</a> Document.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://json-schema.org/draft/2020-12">application/schema+json</a></td>
+    <td class="gt_row gt_left">A <a href="https://json-schema.org/draft/2020-12"><a href="https://json-schema.org/draft/2020-12"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Schema</a> Draft 2020-12</a> Document.<br>
+Note:</p>
 <ul>
 <li>This is a draft/unofficial media type.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
+Note:</p>
 <ul>
 <li><a href="https://www.w3.org/Style/CSS/">CSS</a> should use the least set of features possible to achieve
 the desired presentation to ensure the broadest compatibility.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
+Note:</p>
 <ul>
 <li><a href="https://www.w3.org/Style/CSS/">CSS</a> should use the least set of features possible to achieve
 the desired presentation to ensure the broadest compatibility.</li>
@@ -180,21 +226,21 @@ processing and replacement prior to display.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
+Note:</p>
 <ul>
 <li>Only <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax is supported.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
+Note:</p>
 <ul>
 <li>Only <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax is supported.</li>
 <li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
@@ -202,11 +248,11 @@ processing and replacement prior to display.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
+Note:</p>
 <ul>
 <li><a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatting is as defined by <a href="https://spec.commonmark.org/0.31.2/">CommonMark</a>.</li>
 <li>IF the document includes <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>, then <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax only is supported.</li>
@@ -218,11 +264,11 @@ Note:<p style="margin: 0;padding: 0;"></p>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
+Note:</p>
 <ul>
 <li><a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatting is as defined by <a href="https://spec.commonmark.org/0.31.2/">CommonMark</a>.</li>
 <li>IF the document includes <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>, then <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax only is supported.</li>
@@ -236,22 +282,22 @@ processing and replacement prior to display.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Plain Text with no markup or special formatting.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped">Plain Text with no markup or special formatting.<br>
+Note:</p>
 <ul>
 <li>Multiline Plain Text <em>MUST</em> always interpret <code>\n</code>
 as a hard line break.</li>
 </ul>
 </td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Plain Text with no markup or special formatting.<br>
-Note:<p style="margin: 0;padding: 0;"></p>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left">Plain Text with no markup or special formatting.<br>
+Note:</p>
 <ul>
 <li>Multiline Plain Text <em>MUST</em> always interpret <code>\n</code>
 as a hard line break.</li>
@@ -266,6 +312,7 @@ processing and replacement prior to display.</li>
 </table>
 
 </div>
+
 
 <!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
 <!---HTML END-->
@@ -277,15 +324,61 @@ If no compression or encoding is used, then this field must not be present.
 <!---HTML START-->
 <!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
 <div id="spec_content-encoding" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#spec_content-encoding table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
 
-<table class="gt_table" data-quarto-bootstrap="false" data-quarto-disable-processing="false" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;display: table;border-collapse: collapse;line-height: normal;margin-left: auto;margin-right: auto;color: #333333;font-size: 16px;font-weight: normal;font-style: normal;background-color: #FFFFFF;width: 100%;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-right-style: none;border-right-width: 2px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 2px;border-left-color: #D3D3D3;">
-<thead style="border-style: none;">
+#spec_content-encoding thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#spec_content-encoding p { margin: 0; padding: 0; }
+ #spec_content-encoding .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #spec_content-encoding .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #spec_content-encoding .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #spec_content-encoding .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #spec_content-encoding .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content-encoding .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content-encoding .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_content-encoding .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #spec_content-encoding .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #spec_content-encoding .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #spec_content-encoding .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #spec_content-encoding .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #spec_content-encoding .gt_spanner_row { border-bottom-style: hidden; }
+ #spec_content-encoding .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #spec_content-encoding .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #spec_content-encoding .gt_from_md> :first-child { margin-top: 0; }
+ #spec_content-encoding .gt_from_md> :last-child { margin-bottom: 0; }
+ #spec_content-encoding .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #spec_content-encoding .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #spec_content-encoding .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #spec_content-encoding .gt_row_group_first td { border-top-width: 2px; }
+ #spec_content-encoding .gt_row_group_first th { border-top-width: 2px; }
+ #spec_content-encoding .gt_striped { background-color: #EDF7FC; }
+ #spec_content-encoding .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_content-encoding .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #spec_content-encoding .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #spec_content-encoding .gt_left { text-align: left; }
+ #spec_content-encoding .gt_center { text-align: center; }
+ #spec_content-encoding .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #spec_content-encoding .gt_font_normal { font-weight: normal; }
+ #spec_content-encoding .gt_font_bold { font-weight: bold; }
+ #spec_content-encoding .gt_font_italic { font-style: italic; }
+ #spec_content-encoding .gt_super { font-size: 65%; }
+ #spec_content-encoding .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #spec_content-encoding .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
-  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
-    <td class="gt_heading gt_title gt_font_normal" colspan="3" style="border-style: none;color: #333333;font-size: 125%;font-weight: normal;padding-top: 4px;padding-bottom: 4px;padding-left: 5px;padding-right: 5px;border-bottom-color: #FFFFFF;border-bottom-width: 0;background-color: #FFFFFF;text-align: center;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">content-encoding</td>
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">content-encoding</td>
   </tr>
-  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
-    <td class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" colspan="3" style="border-style: none;color: #333333;font-size: 85%;font-weight: normal;padding-top: 3px;padding-bottom: 5px;padding-left: 5px;padding-right: 5px;border-top-color: #FFFFFF;border-top-width: 0;background-color: #FFFFFF;text-align: center;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;">
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Supported HTTP Encodings of the Payload
 
@@ -293,32 +386,32 @@ Supported HTTP Encodings of the Payload
   </tr>
 
 </thead>
-<tbody class="gt_table_body" style="border-style: none;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;">
-  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
-    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Definition</th>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Definition</th>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Required</th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">optional</td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Is the field required?</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left">Is the field required?</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">content-encoding</td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Custom Header parameter label.</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped">content-encoding</td>
+    <td class="gt_row gt_left gt_striped">Custom Header parameter label.</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Format</th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">HTTP Content Encoding</td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Encoding, if any, of the payload.</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Format</th>
+    <td class="gt_row gt_left">HTTP Content Encoding</td>
+    <td class="gt_row gt_left">Encoding, if any, of the payload.</td>
   </tr>
-  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
-    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Supported Values</th>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Supported Values</th>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br">br</a></td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc7932">BROTLI</a> Compression</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub"></th>
+    <td class="gt_row gt_left gt_striped"><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br">br</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc7932">BROTLI</a> Compression</td>
   </tr>
 </tbody>
 
@@ -326,6 +419,7 @@ Supported HTTP Encodings of the Payload
 </table>
 
 </div>
+
 
 <!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
 <!---HTML END-->
@@ -357,15 +451,61 @@ used to sign the protected portion of the document.
 <!---HTML START-->
 <!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
 <div id="spec_kid" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#spec_kid table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
 
-<table class="gt_table" data-quarto-bootstrap="false" data-quarto-disable-processing="false" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;display: table;border-collapse: collapse;line-height: normal;margin-left: auto;margin-right: auto;color: #333333;font-size: 16px;font-weight: normal;font-style: normal;background-color: #FFFFFF;width: 100%;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-right-style: none;border-right-width: 2px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 2px;border-left-color: #D3D3D3;">
-<thead style="border-style: none;">
+#spec_kid thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#spec_kid p { margin: 0; padding: 0; }
+ #spec_kid .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #spec_kid .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #spec_kid .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #spec_kid .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #spec_kid .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_kid .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_kid .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #spec_kid .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #spec_kid .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #spec_kid .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #spec_kid .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #spec_kid .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #spec_kid .gt_spanner_row { border-bottom-style: hidden; }
+ #spec_kid .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #spec_kid .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #spec_kid .gt_from_md> :first-child { margin-top: 0; }
+ #spec_kid .gt_from_md> :last-child { margin-bottom: 0; }
+ #spec_kid .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #spec_kid .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #spec_kid .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #spec_kid .gt_row_group_first td { border-top-width: 2px; }
+ #spec_kid .gt_row_group_first th { border-top-width: 2px; }
+ #spec_kid .gt_striped { background-color: #EDF7FC; }
+ #spec_kid .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #spec_kid .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #spec_kid .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #spec_kid .gt_left { text-align: left; }
+ #spec_kid .gt_center { text-align: center; }
+ #spec_kid .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #spec_kid .gt_font_normal { font-weight: normal; }
+ #spec_kid .gt_font_bold { font-weight: bold; }
+ #spec_kid .gt_font_italic { font-style: italic; }
+ #spec_kid .gt_super { font-size: 65%; }
+ #spec_kid .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #spec_kid .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
-  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
-    <td class="gt_heading gt_title gt_font_normal" colspan="3" style="border-style: none;color: #333333;font-size: 125%;font-weight: normal;padding-top: 4px;padding-bottom: 4px;padding-left: 5px;padding-right: 5px;border-bottom-color: #FFFFFF;border-bottom-width: 0;background-color: #FFFFFF;text-align: center;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">kid</td>
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">kid</td>
   </tr>
-  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
-    <td class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" colspan="3" style="border-style: none;color: #333333;font-size: 85%;font-weight: normal;padding-top: 3px;padding-bottom: 5px;padding-left: 5px;padding-right: 5px;border-top-color: #FFFFFF;border-top-width: 0;background-color: #FFFFFF;text-align: center;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;">
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> identifying the Public Key
 
@@ -373,24 +513,24 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
   </tr>
 
 </thead>
-<tbody class="gt_table_body" style="border-style: none;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;">
-  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
-    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Definition</th>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">Definition</th>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Required</th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">yes</td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Is the field required?</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">Is the field required?</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">4</td>
-    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped">4</td>
+    <td class="gt_row gt_left gt_striped"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
   </tr>
-  <tr style="border-style: none;background-color: transparent;">
-    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Format</th>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Catalyst ID</td>
-    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">KID (Catalyst ID URI)</td>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Format</th>
+    <td class="gt_row gt_left">Catalyst ID</td>
+    <td class="gt_row gt_left">KID (Catalyst ID URI)</td>
   </tr>
 </tbody>
 
@@ -398,6 +538,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 </table>
 
 </div>
+
 
 <!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
 <!---HTML END-->
