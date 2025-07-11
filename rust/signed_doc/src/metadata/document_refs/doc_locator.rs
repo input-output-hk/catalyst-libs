@@ -16,7 +16,7 @@ const CID_MAP_KEY: &str = "cid";
 const DOC_LOC_MAP_ITEM: u64 = 1;
 
 /// Document locator, no size limit.
-#[derive(Clone, Debug, Default, PartialEq, Hash, Eq, serde::Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Hash, Eq)]
 pub struct DocLocator(Vec<u8>);
 
 impl DocLocator {
@@ -41,7 +41,7 @@ impl From<Vec<u8>> for DocLocator {
 
 impl Display for DocLocator {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "cid: 0x{}", hex::encode(self.0.as_slice()))
+        write!(f, "0x{}", hex::encode(self.0.as_slice()))
     }
 }
 

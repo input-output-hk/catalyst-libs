@@ -11,7 +11,7 @@ use super::doc_locator::DocLocator;
 const DOC_REF_ARR_ITEM: u64 = 3;
 
 /// Reference to a Document.
-#[derive(Clone, Debug, PartialEq, Hash, Eq, serde::Serialize)]
+#[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub struct DocumentRef {
     /// Reference to the Document Id
     id: UuidV7,
