@@ -185,7 +185,7 @@ impl Metadata {
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     ///
-    /// # Errors:
+    /// # Errors
     ///   - Json deserialization failure.
     ///   - Duplicate fields.
     ///   - Missing mandatory fields like `id`, `ver`, `type`.
@@ -199,7 +199,7 @@ impl Metadata {
 
     /// Serializes the current `Metadata` object into the JSON object.
     ///
-    /// # Errors:
+    /// # Errors
     ///   - Json serialization failure.
     pub fn to_json(&self) -> anyhow::Result<serde_json::Value> {
         let map = self
@@ -379,7 +379,7 @@ mod tests {
         "minimally valid JSON, old format document reference type old format"
     )]
     fn test_json_valid_serde(json: serde_json::Value) {
-        let metadata = Metadata::from_json(json.clone()).unwrap();
+        let metadata = Metadata::from_json(json).unwrap();
         let json_from_meta = metadata.to_json().unwrap();
         assert_eq!(metadata, Metadata::from_json(json_from_meta).unwrap());
     }

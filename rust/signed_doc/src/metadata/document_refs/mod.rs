@@ -143,7 +143,7 @@ mod serde_impl {
 
     use std::str::FromStr;
 
-    use super::*;
+    use super::{DocLocator, DocRefError, DocumentRef, DocumentRefs, UuidV7};
 
     /// Old structure deserialize as map {id, ver}
     #[derive(serde::Deserialize)]
@@ -177,17 +177,13 @@ mod serde_impl {
     impl serde::Serialize for DocumentRefs {
         fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
         where S: serde::Serializer {
-            let iter = self
-                .0
-                .iter()
-                .map(|v| {
-                    NewRef {
-                        id: v.id().to_string(),
-                        ver: v.ver().to_string(),
-                        cid: v.doc_locator().to_string(),
-                    }
-                })
-                .into_iter();
+            let iter = self.0.iter().map(|v| {
+                NewRef {
+                    id: v.id().to_string(),
+                    ver: v.ver().to_string(),
+                    cid: v.doc_locator().to_string(),
+                }
+            });
             serializer.collect_seq(iter)
         }
     }
@@ -414,7 +410,7 @@ mod tests {
         "Document reference type new format"
     )]
     fn test_json_valid_serde(json: serde_json::Value) {
-        let refs: DocumentRefs = serde_json::from_value(json.clone()).unwrap();
+        let refs: DocumentRefs = serde_json::from_value(json).unwrap();
         let json_from_refs = serde_json::to_value(&refs).unwrap();
         assert_eq!(refs, serde_json::from_value(json_from_refs).unwrap());
     }

@@ -71,7 +71,7 @@ impl<'de> serde::Deserialize<'de> for Collaborators {
 impl serde::Serialize for Collaborators {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
-        let iter = self.0.iter().map(|v| v.to_string()).into_iter();
+        let iter = self.0.iter().map(ToString::to_string);
         serializer.collect_seq(iter)
     }
 }

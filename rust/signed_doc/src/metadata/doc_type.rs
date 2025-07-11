@@ -466,7 +466,7 @@ mod tests {
         "Document type new format"
     )]
     fn test_json_valid_serde(json: serde_json::Value) {
-        let refs: DocType = serde_json::from_value(json.clone()).unwrap();
+        let refs: DocType = serde_json::from_value(json).unwrap();
         let json_from_refs = serde_json::to_value(&refs).unwrap();
         assert_eq!(refs, serde_json::from_value(json_from_refs).unwrap());
     }

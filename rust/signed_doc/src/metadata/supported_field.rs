@@ -161,17 +161,15 @@ impl serde::ser::Serialize for SupportedField {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where S: serde::Serializer {
         match self {
-            Self::Collaborators(v) => v.serialize(serializer),
-            Self::ContentEncoding(v) => v.serialize(serializer),
-            Self::ContentType(v) => v.serialize(serializer),
-            Self::Id(v) => v.serialize(serializer),
-            Self::Parameters(v) => v.serialize(serializer),
-            Self::Ref(v) => v.serialize(serializer),
-            Self::Reply(v) => v.serialize(serializer),
-            Self::Section(v) => v.serialize(serializer),
-            Self::Template(v) => v.serialize(serializer),
+            Self::Id(v) | Self::Ver(v) => v.serialize(serializer),
             Self::Type(v) => v.serialize(serializer),
-            Self::Ver(v) => v.serialize(serializer),
+            Self::ContentType(v) => v.serialize(serializer),
+            Self::ContentEncoding(v) => v.serialize(serializer),
+            Self::Ref(v) | Self::Reply(v) | Self::Template(v) | Self::Parameters(v) => {
+                v.serialize(serializer)
+            },
+            Self::Collaborators(v) => v.serialize(serializer),
+            Self::Section(v) => v.serialize(serializer),
         }
     }
 }
