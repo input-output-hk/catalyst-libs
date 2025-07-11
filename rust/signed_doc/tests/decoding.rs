@@ -25,7 +25,11 @@ struct TestCase {
 fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+    let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
+        UuidV7::new(),
+        UuidV7::new(),
+        DocLocator::default(),
+    )]);
     let doc_ref_cloned = doc_ref.clone();
 
     TestCase {
@@ -72,7 +76,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                let cmp = DocumentRefs::from(vec![doc_ref_cloned.clone()]);
+                let cmp = doc_ref_cloned.clone();
                 anyhow::ensure!(doc.doc_meta().parameters() == Some(&cmp));
                 Ok(())
             }
@@ -564,7 +568,11 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
 fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
     let uuid_v4 = UuidV4::new();
-    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+    let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
+        UuidV7::new(),
+        UuidV7::new(),
+        DocLocator::default(),
+    )]);
     let doc_ref_cloned = doc_ref.clone();
 
     TestCase {
@@ -626,7 +634,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                let refs = DocumentRefs::from(vec![doc_ref_cloned.clone()]);
+                let refs = doc_ref_cloned.clone();
                 anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);

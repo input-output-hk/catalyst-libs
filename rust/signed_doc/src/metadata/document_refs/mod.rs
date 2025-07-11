@@ -88,6 +88,12 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
                                 if matches!(policy, CompatibilityPolicy::Warn) {
                                     warn!("{CONTEXT}: Conversion of document reference, id and version, to list of document reference with doc locator");
                                 }
+                                if rest.len() != 1 {
+                                    return Err(minicbor::decode::Error::message(format!(
+                                        "{CONTEXT}: Must have extactly 2 elements inside array for document reference id and document reference version"
+                                    )));
+                                }
+
                                 let id = UuidV7::decode(&mut minicbor::Decoder::new(first), &mut CborContext::Tagged).map_err(|e| {
                                     e.with_message("Invalid ID UUIDv7")
                                 })?;
