@@ -7,7 +7,7 @@ use catalyst_types::conversion::from_saturating;
 use chrono::{DateTime, Utc};
 use pallas::{
     ledger::{addresses::Network as PallasNetwork, traverse::wellknown::GenesisValues},
-    network::miniprotocols::{MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC},
+    network::miniprotocols::{MAINNET_MAGIC, PREVIEW_MAGIC, PRE_PRODUCTION_MAGIC, TESTNET_MAGIC},
 };
 use tracing::debug;
 
@@ -45,6 +45,8 @@ pub enum Network {
     Preprod = 1,
     /// Cardano preview network.
     Preview = 2,
+    /// Cardano testnet network.
+    Devnet = 3
 }
 
 // Mainnet Defaults.
@@ -58,12 +60,12 @@ const DEFAULT_MAINNET_MITHRIL_AGGREGATOR: &str =
 
 // Preprod Defaults
 /// Preprod Default Public Cardano Relay.
-const DEFAULT_PREPROD_RELAY: &str = "127.0.0.1:3001";
+const DEFAULT_PREPROD_RELAY: &str = "preprod-node.play.dev.cardano.org:3001";
 /// Preprod network Mithril Signature genesis vkey.
 const DEFAULT_PREPROD_MITHRIL_GENESIS_KEY: &str = include_str!("data/preprod-genesis.vkey");
 /// Default Mithril Aggregator to use.
 const DEFAULT_PREPROD_MITHRIL_AGGREGATOR: &str =
-    "http://localhost:8080/aggregator";
+    "https://aggregator.pre-release-preprod.api.mithril.network/aggregator";
 
 // Preview Defaults
 /// Preview Default Public Cardano Relay.
@@ -74,6 +76,15 @@ const DEFAULT_PREVIEW_MITHRIL_GENESIS_KEY: &str = include_str!("data/preview-gen
 const DEFAULT_PREVIEW_MITHRIL_AGGREGATOR: &str =
     "https://aggregator.pre-release-preview.api.mithril.network/aggregator";
 
+// Devnet Defaults
+/// Devnet Default Public Cardano Relay.
+const DEFAULT_DEVNET_RELAY: &str = "127.0.0.1:3001";
+/// Preprod network Mithril Signature genesis vkey.
+const DEFAULT_DEVNET_MITHRIL_GENESIS_KEY: &str = include_str!("data/preprod-genesis.vkey");
+/// Default Mithril Aggregator to use.
+const DEFAULT_DEVNET_MITHRIL_AGGREGATOR: &str =
+    "http://localhost:8080/aggregator";
+
 impl Network {
     /// Get the default Relay for a blockchain network.
     #[must_use]
@@ -82,6 +93,7 @@ impl Network {
             Network::Mainnet => DEFAULT_MAINNET_RELAY.to_string(),
             Network::Preprod => DEFAULT_PREPROD_RELAY.to_string(),
             Network::Preview => DEFAULT_PREVIEW_RELAY.to_string(),
+            Network::Devnet => DEFAULT_DEVNET_RELAY.to_string(),
         }
     }
 
@@ -92,6 +104,7 @@ impl Network {
             Network::Mainnet => DEFAULT_MAINNET_MITHRIL_AGGREGATOR.to_string(),
             Network::Preprod => DEFAULT_PREPROD_MITHRIL_AGGREGATOR.to_string(),
             Network::Preview => DEFAULT_PREVIEW_MITHRIL_AGGREGATOR.to_string(),
+            Network::Devnet => DEFAULT_DEVNET_MITHRIL_AGGREGATOR.to_string(),
         }
     }
 
@@ -102,6 +115,7 @@ impl Network {
             Network::Mainnet => DEFAULT_MAINNET_MITHRIL_GENESIS_KEY.to_string(),
             Network::Preprod => DEFAULT_PREPROD_MITHRIL_GENESIS_KEY.to_string(),
             Network::Preview => DEFAULT_PREVIEW_MITHRIL_GENESIS_KEY.to_string(),
+             Network::Devnet => DEFAULT_DEVNET_MITHRIL_AGGREGATOR.to_string(),
         }
     }
 
@@ -155,6 +169,7 @@ impl Network {
             Network::Mainnet => GenesisValues::mainnet(),
             Network::Preprod => GenesisValues::preprod(),
             Network::Preview => GenesisValues::preview(),
+            Network::Devnet => GenesisValues::testnet(),
         }
     }
 
@@ -215,6 +230,7 @@ impl From<Network> for u64 {
             Network::Mainnet => MAINNET_MAGIC,
             Network::Preprod => PRE_PRODUCTION_MAGIC,
             Network::Preview => PREVIEW_MAGIC,
+            Network::Devnet => TESTNET_MAGIC,
         }
     }
 }
@@ -223,7 +239,7 @@ impl From<Network> for PallasNetwork {
     fn from(value: Network) -> Self {
         match value {
             Network::Mainnet => PallasNetwork::Mainnet,
-            Network::Preprod | Network::Preview => PallasNetwork::Testnet,
+            Network::Preprod | Network::Preview | Network::Devnet => PallasNetwork::Testnet,
         }
     }
 }

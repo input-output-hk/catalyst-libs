@@ -86,7 +86,7 @@ impl Cip36 {
 
         let valid = match self.network {
             Network::Mainnet => network_tag.value() == 1,
-            Network::Preprod | Network::Preview => network_tag.value() == 0,
+            Network::Preprod | Network::Preview | Network::Devnet => network_tag.value() == 0,
         };
 
         // Report invalid network tag if necessary
