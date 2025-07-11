@@ -84,7 +84,7 @@ The [COSE header parameters][RFC9052-HeaderParameters] defined and used by Catal
 Media Type/s allowed in the Payload
 
 <!---HTML START-->
-<!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!-- markdownlint-disable -->
 <div id="spec_content_type" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
 <style>
 #spec_content_type table {
@@ -314,7 +314,7 @@ processing and replacement prior to display.</li>
 </div>
 
 
-<!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!-- markdownlint-enable -->
 <!---HTML END-->
 #### `content-encoding`
 
@@ -322,7 +322,7 @@ Supported HTTP Encodings of the Payload.
 If no compression or encoding is used, then this field must not be present.
 
 <!---HTML START-->
-<!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!-- markdownlint-disable -->
 <div id="spec_content-encoding" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
 <style>
 #spec_content-encoding table {
@@ -421,7 +421,7 @@ Supported HTTP Encodings of the Payload
 </div>
 
 
-<!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!-- markdownlint-enable -->
 <!---HTML END-->
 
 ### Metadata
@@ -449,7 +449,7 @@ The Catalyst ID unambiguously defines both the signing keys and signing algorith
 used to sign the protected portion of the document.
 
 <!---HTML START-->
-<!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!-- markdownlint-disable -->
 <div id="spec_kid" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
 <style>
 #spec_kid table {
@@ -540,7 +540,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 </div>
 
 
-<!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!-- markdownlint-enable -->
 <!---HTML END-->
 
 ## Copyright

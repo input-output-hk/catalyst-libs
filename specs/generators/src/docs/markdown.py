@@ -9,11 +9,8 @@ class MarkdownHelpers:
 
     HTML_START = "<!---HTML START-->"
     HTML_END = "<!---HTML END-->"
-
-    # Multiple Line Blanks, Line Length, Inline HTML and max-sentence-per-line
-    MD_LINTS = "MD012 MD013 MD033 max-one-sentence-per-line"
-    ALLOW_HTML_IN_MD = f"<!-- markdownlint-disable {MD_LINTS} -->"
-    DISALLOW_HTML_IN_MD = f"<!-- markdownlint-enable {MD_LINTS} -->"
+    ALLOW_HTML_IN_MD = "<!-- markdownlint-disable -->"
+    DISALLOW_HTML_IN_MD = "<!-- markdownlint-enable -->"
 
     @staticmethod
     def format_link(name: str, depth: int = 0, *, file: str = "metadata.md", monospace: bool = False) -> str:

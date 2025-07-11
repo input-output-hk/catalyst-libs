@@ -172,6 +172,7 @@ mdns
 MEMMAP
 memx
 Metadatum
+metno
 mgrybyk
 mimalloc
 minicbor
@@ -278,6 +279,8 @@ sitedocs
 skiplist
 slotno
 smac
+sourcenote
+sourcenotes
 stevenj
 stringzilla
 subnetwork
