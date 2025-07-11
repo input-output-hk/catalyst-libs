@@ -89,7 +89,8 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
                                 }
                                 if rest.len() != 1 {
                                     return Err(minicbor::decode::Error::message(format!(
-                                        "{CONTEXT}: Must have exactly 2 elements inside array for document reference id and document reference version"
+                                        "{CONTEXT}: Must have exactly 2 elements inside array for document reference id and document reference version, found {}",
+                                        rest.len().overflowing_add(1).0
                                     )));
                                 }
 
