@@ -6,6 +6,7 @@ use std::{
 };
 
 use catalyst_types::uuid::{CborContext, Uuid, UuidV4};
+use cbork_utils::{array::Array, decode_context::DecodeCtx};
 use minicbor::{Decode, Decoder, Encode};
 use serde::{Deserialize, Deserializer};
 use tracing::warn;
@@ -149,25 +150,22 @@ impl Decode<'_, CompatibilityPolicy> for DocType {
         d: &mut Decoder, policy: &mut CompatibilityPolicy,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocType decoding";
-        let parse_uuid = |d: &mut Decoder| UuidV4::decode(d, &mut CborContext::Tagged);
 
         match d.datatype()? {
             minicbor::data::Type::Array => {
-                let len = d.array()?.ok_or_else(|| {
-                    minicbor::decode::Error::message(format!(
-                        "{CONTEXT}: Unable to decode array length"
-                    ))
-                })?;
+                let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
-                if len == 0 {
+                if arr.is_empty() {
                     return Err(minicbor::decode::Error::message(format!(
                         "{CONTEXT}: empty array"
                     )));
                 }
 
-                (0..len)
-                    .map(|_| parse_uuid(d))
-                    .collect::<Result<Vec<_>, _>>()
+                arr.into_iter()
+                    .map(|uuid| {
+                        UuidV4::decode(&mut minicbor::Decoder::new(&uuid), &mut CborContext::Tagged)
+                    })
+                    .collect::<Result<_, _>>()
                     .map(Self)
                     .map_err(|e| {
                         minicbor::decode::Error::message(format!(
@@ -183,7 +181,7 @@ impl Decode<'_, CompatibilityPolicy> for DocType {
                             warn!("{CONTEXT}: Conversion of document type single UUID to type DocType");
                         }
 
-                        let uuid = parse_uuid(d).map_err(|e| {
+                        let uuid = UuidV4::decode(d, &mut CborContext::Tagged).map_err(|e| {
                             minicbor::decode::Error::message(format!(
                                 "{CONTEXT}: Cannot decode single UUIDv4: {e}"
                             ))

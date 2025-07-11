@@ -4,6 +4,7 @@
 
 use std::fmt::Display;
 
+use cbork_utils::{decode_context::DecodeCtx, map::Map};
 use minicbor::{Decode, Decoder, Encode};
 
 /// CBOR tag of IPLD content identifiers (CIDs).
@@ -50,42 +51,46 @@ impl Decode<'_, ()> for DocLocator {
     fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocLocator decoding";
 
-        let len = d.map()?.ok_or_else(|| {
-            minicbor::decode::Error::message(format!("{CONTEXT}: expected valid map length"))
-        })?;
+        let entries = Map::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        if len != DOC_LOC_MAP_ITEM {
-            return Err(minicbor::decode::Error::message(format!(
-                "{CONTEXT}: expected map length {DOC_LOC_MAP_ITEM}, found {len}"
-            )));
+        match entries.as_slice() {
+            [entry] => {
+                let key = minicbor::Decoder::new(&entry.key_bytes)
+                    .str()
+                    .map_err(|e| e.with_message(format!("{CONTEXT}: expected string")))?;
+
+                if key != "cid" {
+                    return Err(minicbor::decode::Error::message(format!(
+                        "{CONTEXT}: expected key 'cid', found '{key}'"
+                    )));
+                }
+
+                let mut value_decoder = minicbor::Decoder::new(&entry.value);
+
+                let tag = value_decoder
+                    .tag()
+                    .map_err(|e| e.with_message(format!("{CONTEXT}: expected tag")))?;
+
+                if tag.as_u64() != CID_TAG {
+                    return Err(minicbor::decode::Error::message(format!(
+                        "{CONTEXT}: expected tag {CID_TAG}, found {tag}",
+                    )));
+                }
+
+                // No length limit
+                let cid_bytes = value_decoder
+                    .bytes()
+                    .map_err(|e| e.with_message(format!("{CONTEXT}: expected bytes")))?;
+
+                Ok(DocLocator(cid_bytes.to_vec()))
+            },
+            _ => {
+                Err(minicbor::decode::Error::message(format!(
+                    "{CONTEXT}: expected map length {DOC_LOC_MAP_ITEM}, found {}",
+                    entries.len()
+                )))
+            },
         }
-
-        let key = d
-            .str()
-            .map_err(|e| e.with_message(format!("{CONTEXT}: expected string")))?;
-
-        if key != "cid" {
-            return Err(minicbor::decode::Error::message(format!(
-                "{CONTEXT}: expected key 'cid', found '{key}'"
-            )));
-        }
-
-        let tag = d
-            .tag()
-            .map_err(|e| e.with_message(format!("{CONTEXT}: expected tag")))?;
-
-        if tag.as_u64() != CID_TAG {
-            return Err(minicbor::decode::Error::message(format!(
-                "{CONTEXT}: expected tag {CID_TAG}, found {tag}",
-            )));
-        }
-
-        // No length limit
-        let cid_bytes = d
-            .bytes()
-            .map_err(|e| e.with_message(format!("{CONTEXT}: expected bytes")))?;
-
-        Ok(DocLocator(cid_bytes.to_vec()))
     }
 }
 

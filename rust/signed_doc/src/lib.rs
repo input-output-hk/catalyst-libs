@@ -20,7 +20,7 @@ pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
-use cbork_utils::with_cbor_bytes::WithCborBytes;
+use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 pub use content::Content;
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
@@ -226,42 +226,55 @@ impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
             d.set_position(p);
         }
 
-        if !matches!(d.array()?, Some(4)) {
-            return Err(minicbor::decode::Error::message(
-                "Must be a definite size array of 4 elements",
-            ));
-        }
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        let metadata_bytes = d.bytes()?;
-        let metadata = WithCborBytes::<Metadata>::decode(
-            &mut minicbor::Decoder::new(metadata_bytes),
-            &mut ctx,
-        )?;
+        let signed_doc = match arr.as_slice() {
+            [metadata_bytes, headers_bytes, content_bytes, signatures_bytes] => {
+                let metadata_bytes = minicbor::Decoder::new(metadata_bytes).bytes()?;
+                let metadata = WithCborBytes::<Metadata>::decode(
+                    &mut minicbor::Decoder::new(metadata_bytes),
+                    &mut ctx,
+                )?;
 
-        // empty unprotected headers
-        let mut map = cbork_utils::map::Map::decode(
-            d,
-            &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
-        )?
-        .into_iter();
-        if map.next().is_some() {
-            ctx.report().unknown_field(
-                "unprotected headers",
-                "non empty unprotected headers",
-                "COSE unprotected headers must be empty",
-            );
-        }
+                // empty unprotected headers
+                let mut map = cbork_utils::map::Map::decode(
+                    &mut minicbor::Decoder::new(headers_bytes.as_slice()),
+                    &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+                )?
+                .into_iter();
+                if map.next().is_some() {
+                    ctx.report().unknown_field(
+                        "unprotected headers",
+                        "non empty unprotected headers",
+                        "COSE unprotected headers must be empty",
+                    );
+                }
 
-        let content = WithCborBytes::<Content>::decode(d, &mut ())?;
-        let signatures = Signatures::decode(d, &mut ctx)?;
+                let content = WithCborBytes::<Content>::decode(
+                    &mut minicbor::Decoder::new(content_bytes.as_slice()),
+                    &mut (),
+                )?;
 
-        Ok(InnerCatalystSignedDocument {
-            metadata,
-            content,
-            signatures,
-            report: ctx.into_report(),
-        }
-        .into())
+                let signatures = Signatures::decode(
+                    &mut minicbor::Decoder::new(signatures_bytes.as_slice()),
+                    &mut ctx,
+                )?;
+
+                InnerCatalystSignedDocument {
+                    metadata,
+                    content,
+                    signatures,
+                    report: ctx.into_report(),
+                }
+            },
+            _ => {
+                return Err(minicbor::decode::Error::message(
+                    "Must be a definite size array of 4 elements",
+                ));
+            },
+        };
+
+        Ok(signed_doc.into())
     }
 }
 

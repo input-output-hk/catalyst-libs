@@ -1,7 +1,7 @@
 //! Catalyst Signed Document COSE Signature information.
 
 pub use catalyst_types::catalyst_id::CatalystId;
-use cbork_utils::with_cbor_bytes::WithCborBytes;
+use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 use minicbor::Decode;
 
 use crate::{decode_context::DecodeContext, Content, Metadata};
@@ -99,35 +99,38 @@ impl minicbor::Decode<'_, DecodeContext> for Option<Signature> {
     fn decode(
         d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
-        if !matches!(d.array()?, Some(3)) {
-            return Err(minicbor::decode::Error::message(
-                "COSE signature object must be a definite size array with 3 elements",
-            ));
-        }
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
-        let kid =
-            protected_header_decode(d.bytes()?, ctx).map_err(minicbor::decode::Error::message)?;
+        match arr.as_slice() {
+            [kid_bytes, headers_bytes, signature_bytes] => {
+                let kid_bytes = minicbor::Decoder::new(kid_bytes).bytes()?;
+                let kid = protected_header_decode(kid_bytes, ctx)
+                    .map_err(minicbor::decode::Error::message)?;
 
-        // empty unprotected headers
-        let mut map = cbork_utils::map::Map::decode(
-            d,
-            &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
-        )?
-        .into_iter();
-        if map.next().is_some() {
-            ctx.report().unknown_field(
-                "unprotected headers",
-                "non empty unprotected headers",
-                "COSE signature unprotected headers must be empty",
-            );
-        }
+                // empty unprotected headers
+                let mut map = cbork_utils::map::Map::decode(
+                    &mut minicbor::Decoder::new(headers_bytes.as_slice()),
+                    &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+                )?
+                .into_iter();
+                if map.next().is_some() {
+                    ctx.report().unknown_field(
+                        "unprotected headers",
+                        "non empty unprotected headers",
+                        "COSE signature unprotected headers must be empty",
+                    );
+                }
 
-        let signature = d.bytes()?.to_vec();
+                let signature_bytes = minicbor::Decoder::new(signature_bytes).bytes()?;
+                let signature = signature_bytes.to_vec();
 
-        if let Some(kid) = kid {
-            Ok(Some(Signature { kid, signature }))
-        } else {
-            Ok(None)
+                Ok(kid.map(|kid| Signature { kid, signature }))
+            },
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "COSE signature object must be a definite size array with 3 elements",
+                ))
+            },
         }
     }
 }
@@ -153,15 +156,15 @@ impl minicbor::Decode<'_, DecodeContext> for Signatures {
     fn decode(
         d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
-        let Some(signatures_len) = d.array()? else {
-            return Err(minicbor::decode::Error::message(
-                "COSE signatures array must be a definite size array",
-            ));
-        };
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic).map_err(|e| {
+            minicbor::decode::Error::message(format!(
+                "COSE signatures array must be a definite size array: {e}"
+            ))
+        })?;
 
-        let mut signatures = Vec::new();
-        for idx in 0..signatures_len {
-            match d.decode_with(ctx)? {
+        let mut signatures = Vec::with_capacity(arr.len());
+        for (idx, bytes) in arr.iter().enumerate() {
+            match minicbor::Decoder::new(bytes).decode_with(ctx)? {
                 Some(signature) => signatures.push(signature),
                 None => {
                     ctx.report().other(
