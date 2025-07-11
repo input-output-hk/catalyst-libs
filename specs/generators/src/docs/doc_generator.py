@@ -137,66 +137,53 @@ class DocGenerator:
         stripped_lines = [line.rstrip() for line in lines]
         self._filedata = "\n".join(stripped_lines).strip() + "\n"
 
-    def code_block_aware_re_subn(
-        self,
-        link_name_regex: str | re.Pattern[str],
-        replacement: str | typing.Callable[[re.Match[str]], str],
-    ) -> bool:
-        """Do a multiline regex replacement, but ignore anything inside a code block."""
-        lines = self._filedata.splitlines()
-        new_file_data = ""
-        cnt = 0
-        in_code_block = False
-        for line in lines:
-            if line.strip().startswith("```"):
-                in_code_block = not in_code_block
-
-            if in_code_block:
-                this_cnt = 0
-            else:
-                (line, this_cnt) = re.subn(  # noqa: PLW2901
-                    link_name_regex,
-                    replacement,
-                    line,
-                    flags=re.IGNORECASE,
-                )
-            cnt += this_cnt
-            new_file_data += line + "\n"
-
-        self._filedata = new_file_data
-
-        return cnt != 0
-
-    def add_reference_links(self) -> None:
+    def add_reference_links(self, *, html: str | None = None) -> str | None:
         """Add Markdown reference links to the document.
 
         Only Reference links found to be used by the document will be added.
         """
         # Don't do this if the document does not have markdown style links
-        if not self._has_markdown_links:
-            return
+        if html is None and not self._has_markdown_links:
+            return None
+
+        doc_data = html if html is not None else self._filedata
 
         self.strip_end_whitespace()
 
         actual_links_used: dict[str, str] = {}
         for link_name in self._spec.documentation.links.all:
             esc_link_name = re.escape(link_name)
-            link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
+            html_start = "" if html is None else "|>"
+            html_end = "" if html is None else "|<"
+            link_name_regex = f"(^|\\s{html_start})({esc_link_name})(;|:|,|\\.|\\s{html_end}|$)"
             aka = self._spec.documentation.links.aka(link_name)
-            if aka is not None:
-                replacement = f"\\1[\\2][{aka}]\\3"
-                link_name = aka  # noqa: PLW2901
+            if html:
+                link_ref = link_name if aka is None else aka
+                replacement = f'\\1<a href="{self._spec.documentation.links.link(link_ref)}">\\2</a>\\3'
             else:
-                replacement = r"\1[\2]\3"
+                aka = self._spec.documentation.links.aka(link_name)
+                if aka is not None:
+                    replacement = f"\\1[\\2][{aka}]\\3"
+                    link_name = aka  # noqa: PLW2901
+                else:
+                    replacement = r"\1[\2]\3"
 
-            if self.code_block_aware_re_subn(
+            (doc_data, cnt) = MarkdownHelpers.block_aware_re_subn(
+                doc_data,
                 link_name_regex,
                 replacement,
-            ):
+            )
+
+            if html is None and cnt != 0:
                 actual_links_used[link_name] = self._spec.documentation.links.link(link_name)
 
-        for link, actual in actual_links_used.items():
-            self._filedata += f"\n[{link}]: {actual}"
+        if html is None:
+            for link, actual in actual_links_used.items():
+                doc_data += f"\n[{link}]: {actual}"
+            self._filedata = doc_data
+            return None
+
+        return doc_data
 
     def remove_tabs(self, tabstop: int = 4) -> None:
         """Replace tabs in the input text with spaces so that the text aligns on tab stops.
@@ -411,3 +398,20 @@ class DocGenerator:
 """.strip(),
             " " * indent,
         )
+
+    def wrap_html(self, html: str) -> str:
+        """Wrap HTML so it is OK inside the markdown.
+
+        Also, automatically link any words with known links.
+        """
+        # This is always returning a string when html is a string.
+        # but the type checker can't check that deeply.
+        html = self.add_reference_links(html=html)  # type: ignore reportAssignmentType
+
+        return f"""
+{MarkdownHelpers.HTML_START}
+{MarkdownHelpers.ALLOW_HTML_IN_MD}
+{html}
+{MarkdownHelpers.DISALLOW_HTML_IN_MD}
+{MarkdownHelpers.HTML_END}
+""".strip()

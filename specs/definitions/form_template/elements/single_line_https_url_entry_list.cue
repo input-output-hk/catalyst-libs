@@ -2,7 +2,7 @@
 
 package form_template
 
-dictionary: singleLineHttpsURLEntryList: {
+dictionary: singleLineHttpsUrlEntryList: {
 	description: """
 		UI - A Growable List of single line text
 		A single line of text.
@@ -14,7 +14,7 @@ dictionary: singleLineHttpsURLEntryList: {
 
 	definition: {
 		type:  "array"
-		items: dictionary.singleLineHttpsURLEntry.definition
+		items: dictionary.singleLineHttpsUrlEntry.definition
 		items: minLength: 1
 		uniqueItems: true
 	}

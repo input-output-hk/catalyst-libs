@@ -167,6 +167,7 @@ markdownlint
 mdformat
 mdit
 mdlint
+MDLINTS
 mdns
 MEMMAP
 memx
@@ -252,6 +253,7 @@ retriggering
 ristretto
 rlib
 rngs
+rowname
 rsplit
 rulelist
 RULENAME

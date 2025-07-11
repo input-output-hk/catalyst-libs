@@ -252,40 +252,40 @@
       "description": "An RFC8949 Binary CBOR Encoded Document."
     },
     "application/cddl": {
-      "description": "A CDDL Document.\n\nNote: \n\n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.  \n* Must not have Modules, schema must be self-contained."
+      "description": "A CDDL Document.<br>\nNote:\n* This is an unofficial media type\n* RFC9165 Additional Control Operators for CDDL are supported.\n* Must not have Modules, schema must be self-contained."
     },
     "application/json": {
       "coap_type": 50,
       "description": "JSON Document"
     },
     "application/schema+json": {
-      "description": "A JSON Schema Draft 2020-12 Document.\n\nNote: \n\n* This is currently an unofficial media type."
+      "description": "A JSON Schema Draft 2020-12 Document.<br>\nNote:\n* This is a draft/unofficial media type."
     },
     "text/css; charset=utf-8": {
       "coap_type": 20000,
-      "description": "CSS Content used for styling HTML.\nCSS should use the least set of features possible to achieve\nthe desired presentation to ensure the broadest compatibility."
+      "description": "CSS Content used for styling HTML.<br>\nNote:\n* CSS should use the least set of features possible to achieve\n  the desired presentation to ensure the broadest compatibility."
     },
     "text/css; charset=utf-8; template=handlebars": {
-      "description": "CSS Content used for styling HTML.\nCSS should use the least set of features possible to achieve\nthe desired presentation to ensure the broadest compatibility.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+      "description": "CSS Content used for styling HTML.<br>\nNote:\n* CSS should use the least set of features possible to achieve\n  the desired presentation to ensure the broadest compatibility.\n* The text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
     },
     "text/html; charset=utf-8": {
-      "description": "Formatted text using HTML5 markup for rich text. \nOnly HTML5 syntax is supported."
+      "description": "Formatted text using HTML5 markup for rich text.<br>\nNote:\n* Only HTML5 syntax is supported."
     },
     "text/html; charset=utf-8; template=handlebars": {
-      "description": "Formatted text using HTML5 markup for rich text. \nOnly HTML5 syntax is supported.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+      "description": "Formatted text using HTML5 markup for rich text.<br>\nNote:\n* Only HTML5 syntax is supported.\n* The text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
     },
     "text/markdown; charset=utf-8": {
-      "description": "Formatted text using Markdown for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nIF the document includes HTML, then HTML5 syntax only is supported.\n\nThe following Markdown Extensions are also supported:\n\n* None"
+      "description": "Formatted text using Markdown for rich text.<br>\nNote:\n* Markdown formatting is as defined by CommonMark.\n* IF the document includes HTML, then HTML5 syntax only is supported.\n* The following Markdown Extensions are also supported:\n\t* None"
     },
     "text/markdown; charset=utf-8; template=handlebars": {
-      "description": "Formatted text using Markdown for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nIF the document includes HTML, then HTML5 syntax only is supported.\n\nThe following Markdown Extensions are also supported:\n\n* None\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+      "description": "Formatted text using Markdown for rich text.<br>\nNote:\n* Markdown formatting is as defined by CommonMark.\n* IF the document includes HTML, then HTML5 syntax only is supported.\n* The following Markdown Extensions are also supported:\n\t* None\n* The text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
     },
     "text/plain; charset=utf-8": {
       "coap_type": 0,
-      "description": "Plain Text with no markup or special formatting.\nMultiline Plain Text *MUST* always interpret `\n` \nas a hard line break."
+      "description": "Plain Text with no markup or special formatting.<br>\nNote:\n* Multiline Plain Text *MUST* always interpret `\\n` \nas a hard line break."
     },
     "text/plain; charset=utf-8; template=handlebars": {
-      "description": "Plain Text with no markup or special formatting.\nMultiline Plain Text *MUST* always interpret `\n` \nas a hard line break.\n\nThe text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
+      "description": "Plain Text with no markup or special formatting.<br>\nNote:\n* Multiline Plain Text *MUST* always interpret `\\n` \nas a hard line break.\n* The text includes Handlebars type template fields that need\nprocessing and replacement prior to display."
     }
   },
   "copyright": {
@@ -323,7 +323,7 @@
       },
       "HTTP Content Encoding": {
         "cddl": "http_content_encoding",
-        "description": "Encoding if any on the payload."
+        "description": "Encoding, if any, of the payload."
       },
       "Media Type": {
         "cddl": "media_type",
@@ -3939,28 +3939,6 @@
           "section"
         ]
       },
-      "schemaReferenceNonUI": {
-        "definition": {
-          "readOnly": true,
-          "type": "string"
-        },
-        "description": "Enforces the json document having a proper reference to the schema.",
-        "parameters": {
-          "const": {
-            "description": "The path must always be this value. **MUST** match `default`.",
-            "required": "yes",
-            "type": "string"
-          },
-          "default": {
-            "description": "The path that is defined to find the matching json schema.",
-            "required": "yes",
-            "type": "string"
-          }
-        },
-        "parent": [
-          "section"
-        ]
-      },
       "section": {
         "definition": {
           "additionalProperties": false,
@@ -4318,7 +4296,7 @@
           "section"
         ]
       },
-      "singleLineHttpsURLEntry": {
+      "singleLineHttpsUrlEntry": {
         "definition": {
           "format": "uri",
           "pattern": "^https://[^\\s]+$",
@@ -4361,7 +4339,7 @@
           "section"
         ]
       },
-      "singleLineHttpsURLEntryList": {
+      "singleLineHttpsUrlEntryList": {
         "definition": {
           "items": {
             "format": "uri",
@@ -4569,10 +4547,6 @@
           "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "schemaReferenceNonUI": {
-          "readOnly": true,
-          "type": "string"
-        },
         "section": {
           "additionalProperties": false,
           "type": "object"
@@ -4585,12 +4559,12 @@
           ],
           "type": "object"
         },
-        "singleLineHttpsURLEntry": {
+        "singleLineHttpsUrlEntry": {
           "format": "uri",
           "pattern": "^https://[^\\s]+$",
           "type": "string"
         },
-        "singleLineHttpsURLEntryList": {
+        "singleLineHttpsUrlEntryList": {
           "items": {
             "format": "uri",
             "minLength": 1,
@@ -4805,7 +4779,7 @@
     ]
   },
   "pages": {
-    "form_templates.md.jinja": "# Form Template Specification\n\nForm Templates are the basis by which most documents get and validate their payloads.\n\nForm Templates are generic, and not customized per document type.\nAll Specific Document Form Templates have the same capabilities.\n\n## Json Schema\n\nForm Templates are based on Json Schema version 2020-12.\nHowever, Json Schema is only a validation specification and does not\ninclude any details about how such a form should be displayed for data entry.\n\nForm Templates, take standard Json Schema and extend it in a backwards compatible way\nso that the Form Template can be interpreted with hints to aid in rendering a form\nfor data capture.\n\n### Basic Structure\n\nThe Base Form Template has the following format.\n\n{{ base_schema.markdown_reference(relative_doc=doc) }}\n\n#### `\"$defs\"`\n\nIn Json Schema, the `$defs` defines reusable definitions.\nWe extend the definition of `$defs`.\nEvery possible Form Element is defined in `$defs`.\nA fields *MUST* use a pre-defined Form Element from the `$defs` and\nit is impermissible for a Form Element to not use a reference to its\ndefinition, nor for a definition to be created which does not follow\nthis specification.\n\nIn any single Form Template, the `$defs` section of the Schema *MAY* only\ninclude definitions of Form Elements used by the template itself.\n\nThe definitions within the Base Form Template above serve as the dictionary\nof all available defined Form Elements.\n\n#### `\"properties\"`\n\nThe `\"properties\"` section of the form template contains all of the fields\nto be captured by the form, and each field is defined by its element type.\n\nForm Elements *MAY* and typically do have Parameters, the possible parameters\nper Form Element are documented with each Form Elements individual documentation.\nParameters are typically standard Json Schema properties on a type.\nAs not all parameters required are defined by Json Schema, extended parameters may exist that \nare prefixed by `x-`.\n\nExtended Parameters are intended to provide more information related to each Form element,\nto assist with presentation or using any particular Field.\nThey are not currently associated with validation.\n\n#### `\"$schema\"`\n\nThis defines that the template is a standard Json Schema version 2020-12 document.\nAny document derived from the template is only valid if it validates\naccording to Json Schema validation rules against the template.\n\n#### `\"title\"`\n\nThis is a name for the template.\nIt is not used by consumers of the template, but could be used by \ntemplate builders to help identify the template.\n\n#### `\"description\"`\n\nThis is a long multi line description about the template itself.\nIt is not used by consumers of the template, but could be used by\ntemplate builders to help identify and define the purpose of the template.\n\nThere is expected to be a number of templates used in the system, and both\n`\"title\"` and `\"description\"` help template builders organize templates.\n\n#### `\"maintainers\"`\n\nIs a list of the entities who have made or updated the template.\nIt is optional, but if it is included, it *MUST* be an array of objects.\nEach object must have two fields:\n\n* `\"name\"` : The name of the individual maintainer or group responsible for the template.\n* `\"url\"` : A link where more information about the maintainer or group can be found.\n    If there is no link, the field is still present, but an empty string (`\"\"`).\n\n#### `\"type\": \"object\"`\n\nThe Template *ONLY* supports a json type of Object at the root of the template.\nIt is not permissible to create templates which are bare strings, or numbers, etc.\n\n#### `\"additionalProperties\": false`\n\nAll Templates must be exhaustively defined.\nIt is not permissible to add fields to a document derived from a Form Template,\nthat are not present in the Form Template itself.\n\n`\"additionalProperties\": false`\n\n## Example Form Template\n\nThis is an Example Form Template which has a property shown for every\npossible Form Element.\n\n{{ example_schema.markdown_reference(relative_doc=doc) }}\n\n## Dictionary of all defined Form Elements\n\n| Name | Element |\n| --- | --- |\n{% for element, def in spec.form_template.elements.root.items()|sort %}\n| {{ def.title_name() }} | [{{ element }}](./form_template_elements/{{ def.snake_name() }}.md) |\n{% endfor %}\n\n{{ doc.all_form_elements() | trim}}",
+    "form_templates.md.jinja": "# Form Template Specification\n\nForm Templates are the basis by which most documents get and validate their payloads.\n\nForm Templates are generic, and not customized per document type.\nAll Specific Document Form Templates have the same capabilities.\n\n## JSON Schema\n\nForm Templates are based on JSON Schema version 2020-12.\nHowever, JSON Schema is only a validation specification and does not\ninclude any details about how such a form should be displayed for data entry.\n\nForm Templates, take standard JSON Schema and extend it in a backwards compatible way\nso that the Form Template can be interpreted with hints to aid in rendering a form\nfor data capture.\n\n### Basic Structure\n\nThe Base Form Template has the following format.\n\n{{ base_schema.markdown_reference(relative_doc=doc) }}\n\n#### `\"$defs\"`\n\nIn JSON Schema the `$defs` defines reusable definitions.\nWe extend the definition of `$defs`.\nEvery possible Form Element is defined in `$defs`.\nA fields *MUST* use a pre-defined Form Element from the `$defs` and\nit is impermissible for a Form Element to not use a reference to its\ndefinition, nor for a definition to be created which does not follow\nthis specification.\n\nIn any single Form Template, the `$defs` section of the Schema *MAY* only\ninclude definitions of Form Elements used by the template itself.\n\nThe definitions within the Base Form Template above serve as the dictionary\nof all available defined Form Elements.\n\n#### `\"properties\"`\n\nThe `\"properties\"` section of the form template contains all of the fields\nto be captured by the form, and each field is defined by its element type.\n\nForm Elements *MAY* and typically do have Parameters, the possible parameters\nper Form Element are documented with each Form Elements individual documentation.\nParameters are typically standard JSON Schema properties on a type.\nAs not all parameters required are defined by JSON Schema, extended parameters may exist that \nare prefixed by `x-`.\n\nExtended Parameters are intended to provide more information related to each Form element,\nto assist with presentation or using any particular Field.\nThey are not currently associated with validation.\n\n#### `\"$schema\"`\n\nThis defines that the template is a standard JSON Schema version 2020-12 document.\nAny document derived from the template is only valid if it validates\naccording to JSON Schema validation rules against the template.\n\n#### `\"title\"`\n\nThis is a name for the template.\nIt is not used by consumers of the template, but could be used by \ntemplate builders to help identify the template.\n\n#### `\"description\"`\n\nThis is a long multi line description about the template itself.\nIt is not used by consumers of the template, but could be used by\ntemplate builders to help identify and define the purpose of the template.\n\nThere is expected to be a number of templates used in the system, and both\n`\"title\"` and `\"description\"` help template builders organize templates.\n\n#### `\"maintainers\"`\n\nIs a list of the entities who have made or updated the template.\nIt is optional, but if it is included, it *MUST* be an array of objects.\nEach object must have two fields:\n\n* `\"name\"` : The name of the individual maintainer or group responsible for the template.\n* `\"url\"` : A link where more information about the maintainer or group can be found.\n    If there is no link, the field is still present, but an empty string (`\"\"`).\n\n#### `\"type\": \"object\"`\n\nThe Template *ONLY* supports a json type of Object at the root of the template.\nIt is not permissible to create templates which are bare strings, or numbers, etc.\n\n#### `\"additionalProperties\": false`\n\nAll Templates must be exhaustively defined.\nIt is not permissible to add fields to a document derived from a Form Template,\nthat are not present in the Form Template itself.\n\n`\"additionalProperties\": false`\n\n## Example Form Template\n\nThis is an Example Form Template which has a property shown for every\npossible Form Element.\n\n{{ example_schema.markdown_reference(relative_doc=doc) }}\n\n## Dictionary of all defined Form Elements\n\n| Name | Element |\n| --- | --- |\n{% for element, def in spec.form_template.elements.root.items()|sort %}\n| {{ def.title_name() }} | `[{{ element }}](./form_template_elements/{{ def.snake_name() }}.md)` |\n{% endfor %}\n\n{{ doc.all_form_elements() | trim}}",
     "form_templates_element.md.jinja": "# Form Template Element - {{ doc.element.name }}\n\n{{ doc.element.description }}\n\n## Parents\n\nThe {{ doc.element.name }} form element, can appear as a child of:\n\n{{ doc.parents }}\n\n## Definition\n\n{{ doc.definition }}\n\n## Parameters\n\nThe {{ doc.element.name }} form element takes the following parameters:\n\n{{ doc.parameters }}\n\n## Example Usage\n\nThis is an Example Form Template showing just the {{ doc.element.name }} form element, and its parents.\n\n{{ example_schema.markdown_reference(relative_doc=doc) }}\n"
   }
 }

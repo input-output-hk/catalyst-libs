@@ -5,13 +5,13 @@ Form Templates are the basis by which most documents get and validate their payl
 Form Templates are generic, and not customized per document type.
 All Specific Document Form Templates have the same capabilities.
 
-## Json Schema
+## JSON Schema
 
-Form Templates are based on Json Schema version 2020-12.
-However, Json Schema is only a validation specification and does not
+Form Templates are based on JSON Schema version 2020-12.
+However, JSON Schema is only a validation specification and does not
 include any details about how such a form should be displayed for data entry.
 
-Form Templates, take standard Json Schema and extend it in a backwards compatible way
+Form Templates, take standard JSON Schema and extend it in a backwards compatible way
 so that the Form Template can be interpreted with hints to aid in rendering a form
 for data capture.
 
@@ -23,7 +23,7 @@ The Base Form Template has the following format.
 
 #### `"$defs"`
 
-In Json Schema, the `$defs` defines reusable definitions.
+In JSON Schema the `$defs` defines reusable definitions.
 We extend the definition of `$defs`.
 Every possible Form Element is defined in `$defs`.
 A fields *MUST* use a pre-defined Form Element from the `$defs` and
@@ -44,8 +44,8 @@ to be captured by the form, and each field is defined by its element type.
 
 Form Elements *MAY* and typically do have Parameters, the possible parameters
 per Form Element are documented with each Form Elements individual documentation.
-Parameters are typically standard Json Schema properties on a type.
-As not all parameters required are defined by Json Schema, extended parameters may exist that 
+Parameters are typically standard JSON Schema properties on a type.
+As not all parameters required are defined by JSON Schema, extended parameters may exist that 
 are prefixed by `x-`.
 
 Extended Parameters are intended to provide more information related to each Form element,
@@ -54,9 +54,9 @@ They are not currently associated with validation.
 
 #### `"$schema"`
 
-This defines that the template is a standard Json Schema version 2020-12 document.
+This defines that the template is a standard JSON Schema version 2020-12 document.
 Any document derived from the template is only valid if it validates
-according to Json Schema validation rules against the template.
+according to JSON Schema validation rules against the template.
 
 #### `"title"`
 
@@ -108,7 +108,7 @@ possible Form Element.
 | Name | Element |
 | --- | --- |
 {% for element, def in spec.form_template.elements.root.items()|sort %}
-| {{ def.title_name() }} | [{{ element }}](./form_template_elements/{{ def.snake_name() }}.md) |
+| {{ def.title_name() }} | `[{{ element }}](./form_template_elements/{{ def.snake_name() }}.md)` |
 {% endfor %}
 
 {{ doc.all_form_elements() | trim}}

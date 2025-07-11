@@ -38,10 +38,6 @@
             "pattern": "^[^\\n]*$",
             "type": "string"
         },
-        "schemaReferenceNonUI": {
-            "readOnly": true,
-            "type": "string"
-        },
         "section": {
             "additionalProperties": false,
             "type": "object"
@@ -54,12 +50,12 @@
             ],
             "type": "object"
         },
-        "singleLineHttpsURLEntry": {
+        "singleLineHttpsUrlEntry": {
             "format": "uri",
             "pattern": "^https://[^\\s]+$",
             "type": "string"
         },
-        "singleLineHttpsURLEntryList": {
+        "singleLineHttpsUrlEntryList": {
             "items": {
                 "format": "uri",
                 "minLength": 1,
@@ -121,20 +117,17 @@
         "exampleRadioButtonSelect": {
             "$ref": "#/$defs/radioButtonSelect"
         },
-        "exampleSchemaReferenceNonUI": {
-            "$ref": "#/$defs/schemaReferenceNonUI"
-        },
         "exampleSection": {
             "$ref": "#/$defs/section"
         },
         "exampleSingleGroupedTagSelector": {
             "$ref": "#/$defs/singleGroupedTagSelector"
         },
-        "exampleSingleLineHttpsURLEntry": {
-            "$ref": "#/$defs/singleLineHttpsURLEntry"
+        "exampleSingleLineHttpsUrlEntry": {
+            "$ref": "#/$defs/singleLineHttpsUrlEntry"
         },
-        "exampleSingleLineHttpsURLEntryList": {
-            "$ref": "#/$defs/singleLineHttpsURLEntryList"
+        "exampleSingleLineHttpsUrlEntryList": {
+            "$ref": "#/$defs/singleLineHttpsUrlEntryList"
         },
         "exampleSingleLineTextEntry": {
             "$ref": "#/$defs/singleLineTextEntry"

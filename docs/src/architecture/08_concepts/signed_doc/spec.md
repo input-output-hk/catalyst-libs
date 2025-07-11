@@ -83,94 +83,252 @@ The [COSE header parameters][RFC9052-HeaderParameters] defined and used by Catal
 
 Media Type/s allowed in the Payload
 
-* Required : yes
-* [Cose][RFC9052] Label : 3
-* Format : Media Type
-  * Supported Values:
-    * [application/cbor] :
-      An [RFC8949] Binary [CBOR][RFC8949] Encoded Document.
-    * [application/cddl][RFC8610] :
-      A [CDDL][RFC8610] Document.
+<!---HTML START-->
+<!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
+<div id="spec_content_type" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
 
-      Note:
+<table class="gt_table" data-quarto-bootstrap="false" data-quarto-disable-processing="false" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;display: table;border-collapse: collapse;line-height: normal;margin-left: auto;margin-right: auto;color: #333333;font-size: 16px;font-weight: normal;font-style: normal;background-color: #FFFFFF;width: 100%;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-right-style: none;border-right-width: 2px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 2px;border-left-color: #D3D3D3;">
+<thead style="border-style: none;">
 
-      * This is an unofficial media type
-      * [RFC9165] Additional Control Operators for [CDDL][RFC8610] are supported.
-      * Must not have Modules, schema must be self-contained.
-    * [application/json] :
-      [JSON][RFC8259] Document
-    * [application/schema+json][JSON Schema-2020-12] :
-      A [JSON Schema Draft 2020-12][JSON Schema-2020-12] Document.
+  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
+    <td class="gt_heading gt_title gt_font_normal" colspan="3" style="border-style: none;color: #333333;font-size: 125%;font-weight: normal;padding-top: 4px;padding-bottom: 4px;padding-left: 5px;padding-right: 5px;border-bottom-color: #FFFFFF;border-bottom-width: 0;background-color: #FFFFFF;text-align: center;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">content type</td>
+  </tr>
+  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
+    <td class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" colspan="3" style="border-style: none;color: #333333;font-size: 85%;font-weight: normal;padding-top: 3px;padding-bottom: 5px;padding-left: 5px;padding-right: 5px;border-top-color: #FFFFFF;border-top-width: 0;background-color: #FFFFFF;text-align: center;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;">
 
-      Note:
+Media Type/s allowed in the Payload
 
-      * This is currently an unofficial media type.
-    * [text/css;][text/css] [charset=utf-8][RFC3629] :
-      [CSS] Content used for styling [HTML][HTML5].
-      [CSS] should use the least set of features possible to achieve
-      the desired presentation to ensure the broadest compatibility.
-    * [text/css;][text/css] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      [CSS] Content used for styling [HTML][HTML5].
-      [CSS] should use the least set of features possible to achieve
-      the desired presentation to ensure the broadest compatibility.
+</td>
+  </tr>
 
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-    * [text/html;][HTML5] [charset=utf-8][RFC3629] :
-      Formatted text using [HTML5] markup for rich text.
-      Only [HTML5] syntax is supported.
-    * [text/html;][HTML5] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      Formatted text using [HTML5] markup for rich text.
-      Only [HTML5] syntax is supported.
+</thead>
+<tbody class="gt_table_body" style="border-style: none;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;">
+  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
+    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Definition</th>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Required</th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">yes</td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Is the field required?</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">3</td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Format</th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Media Type</td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">A Media Type string which identifies the payload.</td>
+  </tr>
+  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
+    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Supported Values</th>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.iana.org/assignments/media-types/application/cbor">application/cbor</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">An <a href="https://www.rfc-editor.org/rfc/rfc8949.html">RFC8949</a> Binary <a href="https://www.rfc-editor.org/rfc/rfc8949.html">CBOR</a> Encoded Document.</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc8610">application/cddl</a></td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">A <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> Document.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li>This is an unofficial media type</li>
+<li><a href="https://www.rfc-editor.org/rfc/rfc9165">RFC9165</a> Additional Control Operators for <a href="https://www.rfc-editor.org/rfc/rfc8610">CDDL</a> are supported.</li>
+<li>Must not have Modules, schema must be self-contained.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.iana.org/assignments/media-types/application/json">application/json</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Document</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://json-schema.org/draft/2020-12">application/schema+json</a></td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">A <a href="https://json-schema.org/draft/2020-12"><a href="https://json-schema.org/draft/2020-12"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Schema</a> Draft 2020-12</a> Document.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li>This is a draft/unofficial media type.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li><a href="https://www.w3.org/Style/CSS/">CSS</a> should use the least set of features possible to achieve
+the desired presentation to ensure the broadest compatibility.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2318.html"><a href="https://www.rfc-editor.org/rfc/rfc2318.html">text/css</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.w3.org/Style/CSS/">CSS</a> Content used for styling <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li><a href="https://www.w3.org/Style/CSS/">CSS</a> should use the least set of features possible to achieve
+the desired presentation to ensure the broadest compatibility.</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li>Only <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax is supported.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">text/html;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Formatted text using <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> markup for rich text.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li>Only <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax is supported.</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li><a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatting is as defined by <a href="https://spec.commonmark.org/0.31.2/">CommonMark</a>.</li>
+<li>IF the document includes <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>, then <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax only is supported.</li>
+<li>The following <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> Extensions are also supported:
+<ul>
+<li>None</li>
+</ul>
+</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Formatted text using <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> for rich text.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li><a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatting is as defined by <a href="https://spec.commonmark.org/0.31.2/">CommonMark</a>.</li>
+<li>IF the document includes <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML</a>, then <a href="https://html.spec.whatwg.org/multipage/syntax.html#syntax">HTML5</a> syntax only is supported.</li>
+<li>The following <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> Extensions are also supported:
+<ul>
+<li>None</li>
+</ul>
+</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Plain Text with no markup or special formatting.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li>Multiline Plain Text <em>MUST</em> always interpret <code>\n</code>
+as a hard line break.</li>
+</ul>
+</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc2046.html"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a>;</a> <a href="https://datatracker.ietf.org/doc/html/rfc3629"><a href="https://datatracker.ietf.org/doc/html/rfc3629">charset=utf-8</a>;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Plain Text with no markup or special formatting.<br>
+Note:<p style="margin: 0;padding: 0;"></p>
+<ul>
+<li>Multiline Plain Text <em>MUST</em> always interpret <code>\n</code>
+as a hard line break.</li>
+<li>The text includes <a href="https://handlebarsjs.com/">Handlebars</a> type template fields that need
+processing and replacement prior to display.</li>
+</ul>
+</td>
+  </tr>
+</tbody>
 
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-    * [text/markdown;][CommonMark] [charset=utf-8][RFC3629] :
-      Formatted text using [Markdown][CommonMark] for rich text.
-      [Markdown][CommonMark] formatting is as defined by [CommonMark].
 
-      IF the document includes HTML, then [HTML5] syntax only is supported.
+</table>
 
-      The following [Markdown][CommonMark] Extensions are also supported:
+</div>
 
-      * None
-    * [text/markdown;][CommonMark] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      Formatted text using [Markdown][CommonMark] for rich text.
-      [Markdown][CommonMark] formatting is as defined by [CommonMark].
-
-      IF the document includes HTML, then [HTML5] syntax only is supported.
-
-      The following [Markdown][CommonMark] Extensions are also supported:
-
-      * None
-
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-    * [text/plain;][text/plain] [charset=utf-8][RFC3629] :
-      Plain Text with no markup or special formatting.
-      Multiline Plain Text *MUST* always interpret `
-      `
-      as a hard line break.
-    * [text/plain;][text/plain] [charset=utf-8;][RFC3629] [template=handlebars][Handlebars] :
-      Plain Text with no markup or special formatting.
-      Multiline Plain Text *MUST* always interpret `
-      `
-      as a hard line break.
-
-      The text includes [Handlebars] type template fields that need
-      processing and replacement prior to display.
-
+<!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!---HTML END-->
 #### `content-encoding`
 
 Supported HTTP Encodings of the Payload.
 If no compression or encoding is used, then this field must not be present.
 
-* Required : optional
-* [Cose][RFC9052] Label : content-encoding ***Custom Header***
-* Format : HTTP Content Encoding
-  * Supported Values:
-    * [br] :
-      [BROTLI][RFC7932] Compression
+<!---HTML START-->
+<!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
+<div id="spec_content-encoding" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+
+<table class="gt_table" data-quarto-bootstrap="false" data-quarto-disable-processing="false" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;display: table;border-collapse: collapse;line-height: normal;margin-left: auto;margin-right: auto;color: #333333;font-size: 16px;font-weight: normal;font-style: normal;background-color: #FFFFFF;width: 100%;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-right-style: none;border-right-width: 2px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 2px;border-left-color: #D3D3D3;">
+<thead style="border-style: none;">
+
+  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
+    <td class="gt_heading gt_title gt_font_normal" colspan="3" style="border-style: none;color: #333333;font-size: 125%;font-weight: normal;padding-top: 4px;padding-bottom: 4px;padding-left: 5px;padding-right: 5px;border-bottom-color: #FFFFFF;border-bottom-width: 0;background-color: #FFFFFF;text-align: center;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">content-encoding</td>
+  </tr>
+  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
+    <td class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" colspan="3" style="border-style: none;color: #333333;font-size: 85%;font-weight: normal;padding-top: 3px;padding-bottom: 5px;padding-left: 5px;padding-right: 5px;border-top-color: #FFFFFF;border-top-width: 0;background-color: #FFFFFF;text-align: center;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;">
+
+Supported HTTP Encodings of the Payload
+
+</td>
+  </tr>
+
+</thead>
+<tbody class="gt_table_body" style="border-style: none;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;">
+  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
+    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Definition</th>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Required</th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">optional</td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Is the field required?</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">content-encoding</td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">Custom Header parameter label.</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Format</th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">HTTP Content Encoding</td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Encoding, if any, of the payload.</td>
+  </tr>
+  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
+    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Supported Values</th>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"></th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br">br</a></td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://www.rfc-editor.org/rfc/rfc7932">BROTLI</a> Compression</td>
+  </tr>
+</tbody>
+
+
+</table>
+
+</div>
+
+<!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!---HTML END-->
 
 ### Metadata
 
@@ -196,9 +354,53 @@ Any `kid` [URI][RFC3986] which conforms to the Catalyst ID specification may be 
 The Catalyst ID unambiguously defines both the signing keys and signing algorithm
 used to sign the protected portion of the document.
 
-* Required : yes
-* [Cose][RFC9052] Label : 4
-* Format : Catalyst ID
+<!---HTML START-->
+<!-- markdownlint-disable MD012 MD013 MD033 max-one-sentence-per-line -->
+<div id="spec_kid" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+
+<table class="gt_table" data-quarto-bootstrap="false" data-quarto-disable-processing="false" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;-webkit-font-smoothing: antialiased;-moz-osx-font-smoothing: grayscale;display: table;border-collapse: collapse;line-height: normal;margin-left: auto;margin-right: auto;color: #333333;font-size: 16px;font-weight: normal;font-style: normal;background-color: #FFFFFF;width: 100%;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-right-style: none;border-right-width: 2px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 2px;border-left-color: #D3D3D3;">
+<thead style="border-style: none;">
+
+  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
+    <td class="gt_heading gt_title gt_font_normal" colspan="3" style="border-style: none;color: #333333;font-size: 125%;font-weight: normal;padding-top: 4px;padding-bottom: 4px;padding-left: 5px;padding-right: 5px;border-bottom-color: #FFFFFF;border-bottom-width: 0;background-color: #FFFFFF;text-align: center;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">kid</td>
+  </tr>
+  <tr class="gt_heading" style="border-style: none;background-color: #FFFFFF;text-align: center;border-bottom-color: #FFFFFF;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;">
+    <td class="gt_heading gt_subtitle gt_font_normal gt_bottom_border" colspan="3" style="border-style: none;color: #333333;font-size: 85%;font-weight: normal;padding-top: 3px;padding-bottom: 5px;padding-left: 5px;padding-right: 5px;border-top-color: #FFFFFF;border-top-width: 0;background-color: #FFFFFF;text-align: center;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;border-bottom-style: solid;border-bottom-width: 2px;">
+
+Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> identifying the Public Key
+
+</td>
+  </tr>
+
+</thead>
+<tbody class="gt_table_body" style="border-style: none;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;">
+  <tr class="gt_group_heading_row" style="border-style: none;background-color: transparent;">
+    <th class="gt_group_heading" colspan="3" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;color: #333333;background-color: #FFFFFF;font-size: 100%;font-weight: initial;text-transform: inherit;border-top-style: solid;border-top-width: 2px;border-top-color: #5F5F5F;border-bottom-style: solid;border-bottom-width: 2px;border-bottom-color: #5F5F5F;border-left-style: none;border-left-width: 1px;border-left-color: #D3D3D3;border-right-style: none;border-right-width: 1px;border-right-color: #D3D3D3;vertical-align: middle;text-align: left;">Definition</th>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Required</th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">yes</td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Is the field required?</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">Cose</a> Label</th>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;">4</td>
+    <td class="gt_row gt_left gt_striped" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;background-color: #EDF7FC;text-align: left;"><a href="https://datatracker.ietf.org/doc/html/rfc9052">COSE</a> Standard header parameter label.</td>
+  </tr>
+  <tr style="border-style: none;background-color: transparent;">
+    <th class="gt_row gt_left gt_stub" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: solid;border-right-width: 2px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;color: #333333;background-color: #89D3FE;font-size: 100%;font-weight: initial;text-transform: inherit;text-align: left;">Format</th>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">Catalyst ID</td>
+    <td class="gt_row gt_left" style="border-style: none;padding-top: 8px;padding-bottom: 8px;padding-left: 5px;padding-right: 5px;margin: 10px;border-top-style: none;border-top-width: 1px;border-top-color: #D5D5D5;border-left-style: none;border-left-width: 1px;border-left-color: #D5D5D5;border-right-style: none;border-right-width: 1px;border-right-color: #D5D5D5;vertical-align: middle;overflow-x: hidden;text-align: left;">KID (Catalyst ID URI)</td>
+  </tr>
+</tbody>
+
+
+</table>
+
+</div>
+
+<!-- markdownlint-enable MD012 MD013 MD033 max-one-sentence-per-line -->
+<!---HTML END-->
 
 ## Copyright
 
@@ -233,24 +435,10 @@ used to sign the protected portion of the document.
 * TODO: Define Role 0 Profile.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
-[JSON Schema-2020-12]: https://json-schema.org/draft/2020-12
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[Handlebars]: https://handlebarsjs.com/
-[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
-[application/cbor]: https://www.iana.org/assignments/media-types/application/cbor
-[application/json]: https://www.iana.org/assignments/media-types/application/json
-[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
-[CommonMark]: https://spec.commonmark.org/0.31.2/
-[text/plain]: https://www.rfc-editor.org/rfc/rfc2046.html
-[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
 [RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
-[text/css]: https://www.rfc-editor.org/rfc/rfc2318.html
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
-[RFC8949]: https://www.rfc-editor.org/rfc/rfc8949.html
-[RFC9165]: https://www.rfc-editor.org/rfc/rfc9165
-[RFC7932]: https://www.rfc-editor.org/rfc/rfc7932
+[RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
+[RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [RFC9052]: https://datatracker.ietf.org/doc/html/rfc9052
-[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
 [RFC3986]: https://datatracker.ietf.org/doc/html/rfc3986
-[CSS]: https://www.w3.org/Style/CSS/
-[br]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Encoding#br

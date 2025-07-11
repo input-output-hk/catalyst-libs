@@ -5,13 +5,13 @@ Form Templates are the basis by which most documents get and validate their payl
 Form Templates are generic, and not customized per document type.
 All Specific Document Form Templates have the same capabilities.
 
-## [Json Schema][JSON Schema-2020-12]
+## [JSON Schema][JSON Schema-2020-12]
 
-Form Templates are based on [Json Schema version 2020-12][JSON Schema-2020-12].
-However, [Json Schema][JSON Schema-2020-12] is only a validation specification and does not
+Form Templates are based on [JSON Schema version 2020-12][JSON Schema-2020-12].
+However, [JSON Schema][JSON Schema-2020-12] is only a validation specification and does not
 include any details about how such a form should be displayed for data entry.
 
-Form Templates, take standard [Json Schema][JSON Schema-2020-12] and extend it in a backwards compatible way
+Form Templates, take standard [JSON Schema][JSON Schema-2020-12] and extend it in a backwards compatible way
 so that the Form Template can be interpreted with hints to aid in rendering a form
 for data capture.
 
@@ -32,7 +32,7 @@ The Base Form Template has the following format.
 
 #### `"$defs"`
 
-In [Json][RFC8259] Schema, the `$defs` defines reusable definitions.
+In [JSON Schema][JSON Schema-2020-12] the `$defs` defines reusable definitions.
 We extend the definition of `$defs`.
 Every possible Form Element is defined in `$defs`.
 A fields *MUST* use a pre-defined Form Element from the `$defs` and
@@ -53,8 +53,8 @@ to be captured by the form, and each field is defined by its element type.
 
 Form Elements *MAY* and typically do have Parameters, the possible parameters
 per Form Element are documented with each Form Elements individual documentation.
-Parameters are typically standard [Json Schema][JSON Schema-2020-12] properties on a type.
-As not all parameters required are defined by [Json][RFC8259] Schema, extended parameters may exist that
+Parameters are typically standard [JSON Schema][JSON Schema-2020-12] properties on a type.
+As not all parameters required are defined by [JSON Schema][JSON Schema-2020-12], extended parameters may exist that
 are prefixed by `x-`.
 
 Extended Parameters are intended to provide more information related to each Form element,
@@ -63,9 +63,9 @@ They are not currently associated with validation.
 
 #### `"$schema"`
 
-This defines that the template is a standard [Json Schema version 2020-12][JSON Schema-2020-12] document.
+This defines that the template is a standard [JSON Schema version 2020-12][JSON Schema-2020-12] document.
 Any document derived from the template is only valid if it validates
-according to [Json Schema][JSON Schema-2020-12] validation rules against the template.
+according to [JSON Schema][JSON Schema-2020-12] validation rules against the template.
 
 #### `"title"`
 
@@ -125,19 +125,18 @@ possible Form Element.
 
 | Name | Element |
 | --- | --- |
-| Drop Down Single Select | [dropDownSingleSelect](./form_template_elements/drop_down_single_select.md) |
-| Multi Line Text Entry | [multiLineTextEntry](./form_template_elements/multi_line_text_entry.md) |
-| Multi Line Text Entry List [Markdown][CommonMark] | [multiLineTextEntryListMarkdown](./form_template_elements/multi_line_text_entry_list_markdown.md) |
-| Multi Line Text Entry [Markdown][CommonMark] | [multiLineTextEntryMarkdown](./form_template_elements/multi_line_text_entry_markdown.md) |
-| Multi Select | [multiSelect](./form_template_elements/multi_select.md) |
-| Radio Button Select | [radioButtonSelect](./form_template_elements/radio_button_select.md) |
-| Schema Reference Non U I | [schemaReferenceNonUI](./form_template_elements/schema_reference_non_u_i.md) |
-| Section | [section](./form_template_elements/section.md) |
-| Single Grouped Tag Selector | [singleGroupedTagSelector](./form_template_elements/single_grouped_tag_selector.md) |
-| Single Line Https U R L Entry | [singleLineHttpsURLEntry](./form_template_elements/single_line_https_u_r_l_entry.md) |
-| Single Line Https U R L Entry List | [singleLineHttpsURLEntryList](./form_template_elements/single_line_https_u_r_l_entry_list.md) |
-| Single Line Text Entry | [singleLineTextEntry](./form_template_elements/single_line_text_entry.md) |
-| Single Line Text Entry List | [singleLineTextEntryList](./form_template_elements/single_line_text_entry_list.md) |
+| Drop Down Single Select | `[dropDownSingleSelect](./form_template_elements/drop_down_single_select.md)` |
+| Multi Line Text Entry | `[multiLineTextEntry](./form_template_elements/multi_line_text_entry.md)` |
+| Multi Line Text Entry List [Markdown][CommonMark] | `[multiLineTextEntryListMarkdown](./form_template_elements/multi_line_text_entry_list_markdown.md)` |
+| Multi Line Text Entry [Markdown][CommonMark] | `[multiLineTextEntryMarkdown](./form_template_elements/multi_line_text_entry_markdown.md)` |
+| Multi Select | `[multiSelect](./form_template_elements/multi_select.md)` |
+| Radio Button Select | `[radioButtonSelect](./form_template_elements/radio_button_select.md)` |
+| Section | `[section](./form_template_elements/section.md)` |
+| Single Grouped Tag Selector | `[singleGroupedTagSelector](./form_template_elements/single_grouped_tag_selector.md)` |
+| Single Line Https Url Entry | `[singleLineHttpsUrlEntry](./form_template_elements/single_line_https_url_entry.md)` |
+| Single Line Https Url Entry List | `[singleLineHttpsUrlEntryList](./form_template_elements/single_line_https_url_entry_list.md)` |
+| Single Line Text Entry | `[singleLineTextEntry](./form_template_elements/single_line_text_entry.md)` |
+| Single Line Text Entry List | `[singleLineTextEntryList](./form_template_elements/single_line_text_entry_list.md)` |
 
 ### TODO
 

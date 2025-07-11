@@ -6,7 +6,7 @@ import (
 
 )
 
-dictionary: singleLineHttpsURLEntry: {
+dictionary: singleLineHttpsUrlEntry: {
 	description: """
 		UI - Single Line text entry for HTTPS Urls.
 		"x-note": 
