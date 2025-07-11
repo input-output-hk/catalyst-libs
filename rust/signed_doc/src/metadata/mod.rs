@@ -184,12 +184,30 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
+    ///
+    /// # Errors
+    ///   - Json deserialization failure.
+    ///   - Duplicate fields.
+    ///   - Missing mandatory fields like `id`, `ver`, `type`.
+    pub fn from_json(fields: serde_json::Value) -> anyhow::Result<Self> {
         let fields = serde::Deserializer::deserialize_map(fields, MetadataDeserializeVisitor)?;
         let report = ProblemReport::new("Deserializing metadata from json");
         let metadata = Self::from_fields(fields.into_iter().map(anyhow::Result::<_>::Ok), &report)?;
         anyhow::ensure!(!report.is_problematic(), "{:?}", report);
         Ok(metadata)
+    }
+
+    /// Serializes the current `Metadata` object into the JSON object.
+    ///
+    /// # Errors
+    ///   - Json serialization failure.
+    pub fn to_json(&self) -> anyhow::Result<serde_json::Value> {
+        let map = self
+            .0
+            .iter()
+            .map(|(k, v)| Ok((k.to_string(), serde_json::to_value(v)?)))
+            .collect::<anyhow::Result<serde_json::Map<_, _>>>()?;
+        Ok(serde_json::Value::Object(map))
     }
 }
 
@@ -300,5 +318,69 @@ impl<'de> serde::de::Visitor<'de> for MetadataDeserializeVisitor {
             res.push(v);
         }
         Ok(res)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use test_case::test_case;
+
+    use super::*;
+
+    #[test_case(
+        serde_json::json!({
+            "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "type": [ "ab7c2428-c353-4331-856e-385b2eb20546" ],
+            "content-type": "application/json",
+        }) ;
+        "minimally valid JSON, new format document type"
+    )]
+    #[test_case(
+        serde_json::json!({
+            "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+            "type":  "ab7c2428-c353-4331-856e-385b2eb20546",
+            "content-type": "application/json",
+        }) ;
+        "minimally valid JSON, old format document type"
+    )]
+    #[test_case(
+        serde_json::json!(
+            {
+                "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "type":  [ "ab7c2428-c353-4331-856e-385b2eb20546" ],
+                "content-type": "application/json",
+                "ref":  [
+                    {
+                        "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                        "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                        "cid": "0x",
+                    },
+                ]
+            }
+        ) ;
+        "minimally valid JSON, old format document reference type new format"
+    )]
+    #[test_case(
+        serde_json::json!(
+            {
+                "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                "type":  [ "ab7c2428-c353-4331-856e-385b2eb20546" ],
+                "content-type": "application/json",
+                "ref": {
+                    "id": "0197f398-9f43-7c23-a576-f765131b81f2",
+                    "ver": "0197f398-9f43-7c23-a576-f765131b81f2",
+                },
+            }
+        ) ;
+        "minimally valid JSON, old format document reference type old format"
+    )]
+    fn test_json_valid_serde(json: serde_json::Value) {
+        let metadata = Metadata::from_json(json).unwrap();
+        let json_from_meta = metadata.to_json().unwrap();
+        assert_eq!(metadata, Metadata::from_json(json_from_meta).unwrap());
     }
 }

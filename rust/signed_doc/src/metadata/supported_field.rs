@@ -1,6 +1,6 @@
 //! Catalyst Signed Document unified metadata field.
 
-use std::fmt::{self, Display};
+use std::fmt;
 
 use catalyst_types::uuid::UuidV7;
 use serde::Deserialize;
@@ -53,7 +53,7 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
     }
 }
 
-impl Display for Label<'_> {
+impl fmt::Display for Label<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Label::U8(u) => write!(f, "{u}"),
@@ -148,9 +148,29 @@ impl SupportedLabel {
     }
 }
 
-impl Display for SupportedLabel {
+impl fmt::Display for SupportedLabel {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        Display::fmt(&self.to_cose(), f)
+        match self {
+            Self::ContentType => write!(f, "content-type"),
+            v => v.to_cose().fmt(f),
+        }
+    }
+}
+
+impl serde::ser::Serialize for SupportedField {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        match self {
+            Self::Id(v) | Self::Ver(v) => v.serialize(serializer),
+            Self::Type(v) => v.serialize(serializer),
+            Self::ContentType(v) => v.serialize(serializer),
+            Self::ContentEncoding(v) => v.serialize(serializer),
+            Self::Ref(v) | Self::Reply(v) | Self::Template(v) | Self::Parameters(v) => {
+                v.serialize(serializer)
+            },
+            Self::Collaborators(v) => v.serialize(serializer),
+            Self::Section(v) => v.serialize(serializer),
+        }
     }
 }
 

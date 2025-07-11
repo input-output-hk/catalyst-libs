@@ -455,27 +455,17 @@ mod tests {
         cbor_doc_type
     }
 
-    #[test]
-    fn test_deserialize_single_uuid_normal() {
-        let uuid = uuid::Uuid::new_v4().to_string();
-        let json = json!(uuid);
-        let dt: DocType = serde_json::from_value(json).unwrap();
-
-        assert_eq!(dt.0.len(), 1);
-        assert_eq!(dt.0.first().unwrap().to_string(), uuid);
-    }
-
-    #[test]
-    fn test_deserialize_multiple_uuids() {
-        let uuid1 = uuid::Uuid::new_v4().to_string();
-        let uuid2 = uuid::Uuid::new_v4().to_string();
-        let json = json!([uuid1.clone(), uuid2.clone()]);
-
-        let dt: DocType = serde_json::from_value(json).unwrap();
-        let actual =
-            dt.0.iter()
-                .map(std::string::ToString::to_string)
-                .collect::<Vec<_>>();
-        assert_eq!(actual, vec![uuid1, uuid2]);
+    #[test_case(
+        serde_json::json!(UuidV4::new()) ;
+        "Document type old format"
+    )]
+    #[test_case(
+        serde_json::json!([UuidV4::new(), UuidV4::new()]) ;
+        "Document type new format"
+    )]
+    fn test_json_valid_serde(json: serde_json::Value) {
+        let refs: DocType = serde_json::from_value(json).unwrap();
+        let json_from_refs = serde_json::to_value(&refs).unwrap();
+        assert_eq!(refs, serde_json::from_value(json_from_refs).unwrap());
     }
 }

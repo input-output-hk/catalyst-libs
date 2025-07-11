@@ -63,3 +63,11 @@ impl<'de> serde::Deserialize<'de> for Collaborators {
             .map_err(serde::de::Error::custom)
     }
 }
+
+impl serde::Serialize for Collaborators {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        let iter = self.0.iter().map(ToString::to_string);
+        serializer.collect_seq(iter)
+    }
+}

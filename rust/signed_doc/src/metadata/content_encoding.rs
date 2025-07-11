@@ -5,8 +5,6 @@ use std::{
     str::FromStr,
 };
 
-use serde::{de, Deserialize, Deserializer};
-
 /// IANA `CoAP` Content Encoding.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ContentEncoding {
@@ -64,11 +62,18 @@ impl FromStr for ContentEncoding {
     }
 }
 
-impl<'de> Deserialize<'de> for ContentEncoding {
+impl<'de> serde::Deserialize<'de> for ContentEncoding {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
-        FromStr::from_str(&s).map_err(de::Error::custom)
+        FromStr::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+impl serde::Serialize for ContentEncoding {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        self.to_string().serialize(serializer)
     }
 }
 
