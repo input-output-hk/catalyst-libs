@@ -14,7 +14,7 @@ class FormTemplatesMd(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialise form_templates.md generator."""
-        super().__init__(args, spec, "form_templates.md")
+        super().__init__(args, spec, template="form_templates.md.jinja")
 
     def all_form_elements(self) -> str:
         """List and cross reference all defined form elements."""
@@ -34,8 +34,6 @@ class FormTemplatesMd(DocGenerator):
         if not base_schema.save_or_validate():
             return False
 
-        self.generate_from_page_template(
-            "form_templates.md.jinja", example_schema=example_schema, base_schema=base_schema
-        )
+        self.generate_from_page_template(example_schema=example_schema, base_schema=base_schema)
 
         return super().generate()

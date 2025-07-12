@@ -21,7 +21,7 @@ class MetadataMd(DocGenerator):
         super().__init__(
             args,
             spec,
-            "metadata.md",
+            filename="metadata.md",
             flags=self.HAS_MARKDOWN_LINKS + self.IS_METADATA_PRIMARY_SOURCE,
         )
 

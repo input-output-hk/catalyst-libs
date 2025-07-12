@@ -15,7 +15,7 @@ class FormTemplateBasicSchemaJson(DocGenerator):
         """Initialise template_example.schema.json generator."""
         file_name = "schema/form_template.schema.json"
 
-        super().__init__(args, spec, file_name)
+        super().__init__(args, spec, filename=file_name)
 
     def markdown_reference(
         self,

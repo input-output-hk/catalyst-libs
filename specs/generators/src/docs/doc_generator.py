@@ -11,12 +11,13 @@ from pathlib import Path
 
 import rich
 import rich.markdown
-from jinja2 import DictLoader, Environment, select_autoescape
+from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from docs.markdown import MarkdownHelpers
 from spec.signed_doc import SignedDoc
 
 __jinja_env: Environment | None = None
+TEMPLATES: str = "./pages"
 
 
 def get_jinja_environment(spec: SignedDoc) -> Environment:
@@ -24,11 +25,17 @@ def get_jinja_environment(spec: SignedDoc) -> Environment:
     global __jinja_env  # noqa: PLW0603
     if __jinja_env is None:
         __jinja_env = Environment(
-            loader=DictLoader(spec.pages), autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True
+            loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True
         )
+        print(Path.cwd())
         __jinja_env.globals["spec"] = spec  # type: ignore reportUnknownMemberType
 
     return __jinja_env
+
+
+def get_template_with_path(template: str) -> str:
+    """Get a template and its path, just from template name."""
+    return next(iter(Path(TEMPLATES).rglob(template))).relative_to(TEMPLATES).as_posix()
 
 
 class DocGenerator:
@@ -38,25 +45,37 @@ class DocGenerator:
     HAS_MARKDOWN_LINKS = 1
     IS_METADATA_PRIMARY_SOURCE = 2
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         args: argparse.Namespace,
         spec: SignedDoc,
-        filename: str,
         depth: int = 0,
         flags: int = HAS_MARKDOWN_LINKS,
+        *,
+        filename: str | None = None,
+        template: str | None = None,
     ) -> None:
         """Must be called BEFORE subclasses add any customization."""
         self._args = args
         self._spec = spec
-        self._filename = filename
-        self._filepath = Path(args.output).joinpath(self._filename).resolve()
         self._generate = args.generate
         self._depth = depth
         self._filedata = ""
         self._has_markdown_links = flags & self.HAS_MARKDOWN_LINKS != 0
         self._is_metadata_primary_source = flags & self.IS_METADATA_PRIMARY_SOURCE != 0
         self._document_name = None
+
+        if template is not None:
+            template = get_template_with_path(template)
+        if filename is None and template is not None:
+            filename = Path(template).relative_to("signed_doc").with_suffix("").as_posix()
+        if filename is None:
+            msg = "`filename` or `template` (or both) parameters must be defined."
+            raise NotImplementedError(msg)
+
+        self._filename = filename
+        self._template = template
+        self._filepath = Path(args.output).joinpath(filename).resolve()
 
         # Make sure any destination directory exists.
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
@@ -258,11 +277,15 @@ class DocGenerator:
 
         return copyright_notice.strip()
 
-    def generate_from_page_template(self, page_name: str, **kwargs: typing.Any) -> None:  # noqa: ANN401
+    def generate_from_page_template(self, **kwargs: typing.Any) -> None:  # noqa: ANN401
         """Generate a Page from a Page Template inside the specifications."""
-        env = get_jinja_environment(self._spec)
-        template = env.get_template(page_name)
-        self._filedata = template.render(doc=self, **kwargs)
+        if self._template is not None:
+            env = get_jinja_environment(self._spec)
+            template = env.get_template(self._template)
+            self._filedata = template.render(doc=self, **kwargs)
+        else:
+            msg = f"No Template for {self._filename} document is defined."
+            raise NotImplementedError(msg)
 
     def generate(self) -> bool:
         """Generate the document.
@@ -415,3 +438,20 @@ class DocGenerator:
 {MarkdownHelpers.DISALLOW_HTML_IN_MD}
 {MarkdownHelpers.HTML_END}
 """.strip()
+
+    def link_to_file(self, name: str, link_file: str, *, template: str | None = None) -> str:
+        """Create a link to a file, relative to self."""
+        if template is None:
+            template = link_file + ".jinja"
+        if self._template is None:
+            msg = "Not a templated file."
+            raise NotImplementedError(msg)
+        link_template: Path = Path(TEMPLATES) / get_template_with_path(template)
+        this_template: Path = Path(TEMPLATES) / self._template
+        relative_template = link_template.resolve().relative_to(this_template.parent.resolve(), walk_up=True)
+        relative_file = relative_template.with_name(link_file)
+
+        link = f"[{name}]({relative_file})"
+        print(link)
+
+        return link

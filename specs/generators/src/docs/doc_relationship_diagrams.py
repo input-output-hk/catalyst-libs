@@ -21,13 +21,14 @@ class DocRelationshipFile(DocGenerator):
         file_name = doc_name.lower().replace(" ", "_").replace("-", "_") if doc_name is not None else "all"
         file_name = f"{self.DIAGRAM_PATH}{file_name}.dot"
 
-        super().__init__(args, spec, file_name, flags=self.NO_FLAGS, depth=depth)
+        super().__init__(args, spec, filename=file_name, flags=self.NO_FLAGS, depth=depth)
         self._document_name = doc_name
 
     def markdown_reference(
-        self, *, indent: int = 0, relative_doc: DocGenerator | None = None, extension: str = "png"
+        self, *, indent: int = 0, relative_doc: DocGenerator | None = None, title: str = "", filetype: str = "png"
     ) -> str:
         """Create a Markdown formatted reference for the DOT file."""
+        _title = title
         file_path = self.file_path(relative_doc)
         file_name = self.file_name().rsplit("/")[-1]
 
@@ -35,7 +36,7 @@ class DocRelationshipFile(DocGenerator):
             f"""
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot {file_name}.{extension}
+```graphviz dot {file_name}.{filetype}
 {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
 ```
 

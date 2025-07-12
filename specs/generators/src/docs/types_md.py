@@ -13,7 +13,7 @@ class TypesMd(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
-        super().__init__(args, spec, "types.md")
+        super().__init__(args, spec, filename="types.md")
 
     def doc_type_summary(self) -> str:
         """Generate a Document Base Type Summary from the Document Specifications Data."""

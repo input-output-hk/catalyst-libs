@@ -12,7 +12,7 @@ class SpecIndex(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
-        super().__init__(args, spec, ".pages", flags=self.NO_FLAGS)
+        super().__init__(args, spec, filename=".pages", flags=self.NO_FLAGS)
 
     def generate(self) -> bool:
         """Generate the Spec Index."""

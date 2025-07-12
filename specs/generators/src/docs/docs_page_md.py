@@ -22,7 +22,7 @@ This section will be included and updated in future iterations.
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, doc_name: str) -> None:
         """Generate the individual pages docs/<doc_name>.md file."""
         file_name = "docs/" + doc_name.lower().replace(" ", "_") + ".md"
-        super().__init__(args, spec, file_name, flags=self.HAS_MARKDOWN_LINKS)
+        super().__init__(args, spec, filename=file_name, flags=self.HAS_MARKDOWN_LINKS)
 
         self._document_name = doc_name
         self._doc = self._spec.docs.get(doc_name)
@@ -105,7 +105,7 @@ This section will be included and updated in future iterations.
 
 {self.description_or_todo(self._doc.description)}
 
-{graph.markdown_reference(relative_doc=self, extension="svg")}
+{graph.markdown_reference(relative_doc=self, filetype="svg")}
 
 ### Validation
 

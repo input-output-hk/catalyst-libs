@@ -109,7 +109,3 @@ formTemplate: {
 	elements: form_template.dictionary
 	schema:   form_template.formTemplate
 }
-
-// Template Pages
-pages: [string]: string
-pages: form_template.pages

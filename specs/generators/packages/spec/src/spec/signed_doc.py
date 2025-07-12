@@ -38,7 +38,6 @@ class SignedDoc(BaseModel):
     encoding_types: EncodingTypes = Field(alias="encodingTypes")
     metadata: Metadata
     form_template: FormTemplate = Field(alias="formTemplate")
-    pages: dict[str, str]
 
     _file: str = PrivateAttr(default="Uninitialized")
 
