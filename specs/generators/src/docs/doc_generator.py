@@ -439,7 +439,9 @@ class DocGenerator:
 {MarkdownHelpers.HTML_END}
 """.strip()
 
-    def link_to_file(self, name: str, link_file: str, *, template: str | None = None) -> str:
+    def link_to_file(
+        self, name: str, link_file: str, *, template: str | None = None, heading: str | None = None
+    ) -> str:
         """Create a link to a file, relative to self."""
         if template is None:
             template = link_file + ".jinja"
@@ -451,7 +453,9 @@ class DocGenerator:
         relative_template = link_template.resolve().relative_to(this_template.parent.resolve(), walk_up=True)
         relative_file = relative_template.with_name(link_file)
 
-        link = f"[{name}]({relative_file})"
+        heading = "#" + heading.lower().replace(" ", "-") if heading is not None else ""
+
+        link = f"[{name}]({relative_file}{heading})"
         print(link)
 
         return link
