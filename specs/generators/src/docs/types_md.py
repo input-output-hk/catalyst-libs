@@ -13,7 +13,7 @@ class TypesMd(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
-        super().__init__(args, spec, filename="types.md")
+        super().__init__(args, spec, template="types.md.jinja")
 
     def doc_type_summary(self) -> str:
         """Generate a Document Base Type Summary from the Document Specifications Data."""
@@ -54,25 +54,6 @@ class TypesMd(DocGenerator):
         if not graph.save_or_validate():
             return False
 
-        self._filedata = f"""
-# Document Types Table
+        self.generate_from_page_template(graph=graph)
 
-## Document Base Types
-
-All Document Types are defined by composing these base document types:
-
-{self.doc_type_summary()}
-
-## Document Types
-
-All Defined Document Types
-
-{self.doc_type_details()}
-
-## Document Relationship Hierarchy
-
-{graph.markdown_reference(relative_doc=self)}
-
-{self.insert_copyright(changelog=False)}
-"""
         return super().generate()
