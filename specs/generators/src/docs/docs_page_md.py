@@ -21,8 +21,10 @@ This section will be included and updated in future iterations.
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, doc_name: str) -> None:
         """Generate the individual pages docs/<doc_name>.md file."""
-        file_name = "docs/" + doc_name.lower().replace(" ", "_") + ".md"
-        super().__init__(args, spec, filename=file_name, flags=self.HAS_MARKDOWN_LINKS)
+        file_name = self.name_to_doc_page_link(doc_name)
+        super().__init__(
+            args, spec, filename=file_name, template="docs/document_page.md.jinja", flags=self.HAS_MARKDOWN_LINKS
+        )
 
         self._document_name = doc_name
         self._doc = self._spec.docs.get(doc_name)
@@ -98,45 +100,6 @@ This section will be included and updated in future iterations.
         if not graph.save_or_validate():
             return False
 
-        self._filedata = f"""
-# {self._document_name}
+        self.generate_from_page_template(graph=graph)
 
-## Description
-
-{self.description_or_todo(self._doc.description)}
-
-{graph.markdown_reference(relative_doc=self, filetype="svg")}
-
-### Validation
-
-{self.description_or_todo(self._doc.validation)}
-
-### Business Logic
-
-#### Front End
-
-{self.description_or_todo(self._doc.business_logic.front_end)}
-
-#### Back End
-
-{self.description_or_todo(self._doc.business_logic.back_end)}
-
-## COSE Header Parameters
-
-{self.header_parameter_summary()}
-
-## Metadata
-
-{self._spec.get_metadata_as_markdown(self._document_name)}
-
-## Payload
-
-{self.document_payload()}
-
-## Signers
-
-{self.document_signers()}
-
-{self.insert_copyright()}
-"""
         return super().generate()

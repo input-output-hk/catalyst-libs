@@ -1,1 +1,24 @@
 title: Defined Document Types
+nav:
+  - Brand Parameters: brand_parameters.md
+  - Brand Parameters Form Template: brand_parameters_form_template.md
+  - Campaign Parameters: campaign_parameters.md
+  - Campaign Parameters Form Template: campaign_parameters_form_template.md
+  - Category Parameters: category_parameters.md
+  - Category Parameters Form Template: category_parameters_form_template.md
+  - Comment Moderation Action: comment_moderation_action.md
+  - Contest Delegation: contest_delegation.md
+  - Contest Parameters: contest_parameters.md
+  - Contest Parameters Form Template: contest_parameters_form_template.md
+  - Proposal: proposal.md
+  - Proposal Comment: proposal_comment.md
+  - Proposal Comment Form Template: proposal_comment_form_template.md
+  - Proposal Comment Presentation Template: proposal_comment_presentation_template.md
+  - Proposal Form Template: proposal_form_template.md
+  - Proposal Moderation Action: proposal_moderation_action.md
+  - Proposal Presentation Template: proposal_presentation_template.md
+  - Proposal Submission Action: proposal_submission_action.md
+  - Rep Nomination: rep_nomination.md
+  - Rep Nomination Form Template: rep_nomination_form_template.md
+  - Rep Profile: rep_profile.md
+  - Rep Profile Form Template: rep_profile_form_template.md

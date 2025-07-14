@@ -81,9 +81,9 @@ class DocGenerator:
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
-    def name_to_spec_link(name: str, ref: str | None = None) -> str:
+    def name_to_doc_page_link(name: str, ref: str | None = None) -> str:
         """Create a link to a document type, and an optional ref inside the document."""
-        link = "./docs/" + name.lower().replace(" ", "_") + ".md"
+        link = "docs/" + name.lower().replace(" ", "_") + ".md"
         if ref is not None:
             link += f"#{ref}"
         return link

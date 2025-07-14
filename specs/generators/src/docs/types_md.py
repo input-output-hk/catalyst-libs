@@ -39,9 +39,9 @@ class TypesMd(DocGenerator):
         for k in self._spec.docs.names:
             doc_type = self._spec.docs.type(k)
             doc_type_details += (
-                f"| [{k}]({self.name_to_spec_link(k)}) |"
+                f"| [{k}]({self.name_to_doc_page_link(k)}) |"
                 f" {doc_type.formatted_names()} |"
-                f" {doc_type.formatted_ids(separator=',<br/>')} |\n"
+                f" {doc_type.formatted_ids(separator=',<br>')} |\n"
             )
 
         doc_type_details += "<!-- markdownlint-enable MD033 -->"

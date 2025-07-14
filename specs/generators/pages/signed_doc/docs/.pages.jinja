@@ -1,1 +1,5 @@
 title: Defined Document Types
+nav:
+{% for doc_name in spec.docs.names %}
+  - {{ doc_name }}: {{ doc.name_to_doc_page_link(doc_name).rsplit("/")[-1] }}
+{% endfor %}

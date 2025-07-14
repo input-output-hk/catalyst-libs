@@ -134,7 +134,9 @@ class Documents(RootModel[dict[str, Document]]):
     @cached_property
     def names(self) -> list[str]:
         """Get all documents."""
-        return list(self.root.keys())
+        names = list(self.root.keys())
+        names.sort()
+        return names
 
     def type(self, doc_name: str) -> DocType:
         """Get the types for a specific document."""

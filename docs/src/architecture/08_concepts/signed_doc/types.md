@@ -32,28 +32,28 @@ All Defined Document Types
 <!-- markdownlint-disable MD033 -->
 | Document Type | Base Types | [CBOR][RFC8949] |
 | :--- | :--- | :--- |
-| [Brand Parameters](./docs/brand_parameters.md) | Parameters/Brand | [37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
-| [Brand Parameters Form Template](./docs/brand_parameters_form_template.md) | FormTemplate/Parameters/Brand | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
-| [Campaign Parameters](./docs/campaign_parameters.md) | Parameters/Campaign | [37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
-| [Campaign Parameters Form Template](./docs/campaign_parameters_form_template.md) | FormTemplate/Parameters/Campaign | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
-| [Category Parameters](./docs/category_parameters.md) | Parameters/Category | [37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'818938c331394daaafe6974c78488e95')] |
-| [Category Parameters Form Template](./docs/category_parameters_form_template.md) | FormTemplate/Parameters/Category | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'818938c331394daaafe6974c78488e95')] |
-| [Comment Moderation Action](./docs/comment_moderation_action.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
-| [Contest Delegation](./docs/contest_delegation.md) | Delegation/Contest | [37(h'764f17fbcc504979b14ab213dbac5994'),<br/>37(h'788ff4c6d65a451fbb33575fe056b411')] |
-| [Contest Parameters](./docs/contest_parameters.md) | Parameters/Contest | [37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'788ff4c6d65a451fbb33575fe056b411')] |
-| [Contest Parameters Form Template](./docs/contest_parameters_form_template.md) | FormTemplate/Parameters/Contest | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'601858747e13407ca06c238ffe637ae6'),<br/>37(h'788ff4c6d65a451fbb33575fe056b411')] |
-| [Proposal](./docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Comment](./docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) | FormTemplate/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Comment Presentation Template](./docs/proposal_comment_presentation_template.md) | PresentationTemplate/Comment/Proposal | [37(h'cb99b9bd681a49d8983689107c02e8ef'),<br/>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Form Template](./docs/proposal_form_template.md) | FormTemplate/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Moderation Action](./docs/proposal_moderation_action.md) | Action/Proposal/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
-| [Proposal Presentation Template](./docs/proposal_presentation_template.md) | PresentationTemplate/Proposal | [37(h'cb99b9bd681a49d8983689107c02e8ef'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
-| [Proposal Submission Action](./docs/proposal_submission_action.md) | Action/Proposal/SubmissionAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br/>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br/>37(h'78927329cfd94ea19c710e019b126a65')] |
-| [Rep Nomination](./docs/rep_nomination.md) | Nomination/RegisteredRep | [37(h'bf9abd975d1f44298e80740fea371a9c'),<br/>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
-| [Rep Nomination Form Template](./docs/rep_nomination_form_template.md) | FormTemplate/Nomination/RegisteredRep | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'bf9abd975d1f44298e80740fea371a9c'),<br/>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
-| [Rep Profile](./docs/rep_profile.md) | Profile/RegisteredRep | [37(h'0f2c86a2ffda40b0ad3823709e1c10b3'),<br/>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
-| [Rep Profile Form Template](./docs/rep_profile_form_template.md) | FormTemplate/Profile/RegisteredRep | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br/>37(h'0f2c86a2ffda40b0ad3823709e1c10b3'),<br/>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
+| [Brand Parameters](docs/brand_parameters.md) | Parameters/Brand | [37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
+| [Brand Parameters Form Template](docs/brand_parameters_form_template.md) | FormTemplate/Parameters/Brand | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'ebcabeeb5bc54f9591e8cab8ca724172')] |
+| [Campaign Parameters](docs/campaign_parameters.md) | Parameters/Campaign | [37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
+| [Campaign Parameters Form Template](docs/campaign_parameters_form_template.md) | FormTemplate/Parameters/Campaign | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'5ef32d5df240462ca7a4ba4af221fa23')] |
+| [Category Parameters](docs/category_parameters.md) | Parameters/Category | [37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'818938c331394daaafe6974c78488e95')] |
+| [Category Parameters Form Template](docs/category_parameters_form_template.md) | FormTemplate/Parameters/Category | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'818938c331394daaafe6974c78488e95')] |
+| [Comment Moderation Action](docs/comment_moderation_action.md) | Action/Comment/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Contest Delegation](docs/contest_delegation.md) | Delegation/Contest | [37(h'764f17fbcc504979b14ab213dbac5994'),<br>37(h'788ff4c6d65a451fbb33575fe056b411')] |
+| [Contest Parameters](docs/contest_parameters.md) | Parameters/Contest | [37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'788ff4c6d65a451fbb33575fe056b411')] |
+| [Contest Parameters Form Template](docs/contest_parameters_form_template.md) | FormTemplate/Parameters/Contest | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'601858747e13407ca06c238ffe637ae6'),<br>37(h'788ff4c6d65a451fbb33575fe056b411')] |
+| [Proposal](docs/proposal.md) | Proposal | [37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment](docs/proposal_comment.md) | Comment/Proposal | [37(h'b679ded30e7c41ba89f8da62a17898ea'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment Form Template](docs/proposal_comment_form_template.md) | FormTemplate/Comment/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Comment Presentation Template](docs/proposal_comment_presentation_template.md) | PresentationTemplate/Comment/Proposal | [37(h'cb99b9bd681a49d8983689107c02e8ef'),<br>37(h'b679ded30e7c41ba89f8da62a17898ea'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Form Template](docs/proposal_form_template.md) | FormTemplate/Proposal | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Moderation Action](docs/proposal_moderation_action.md) | Action/Proposal/ModerationAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br>37(h'a5d232b85e0341179afdbe32b878fcdd')] |
+| [Proposal Presentation Template](docs/proposal_presentation_template.md) | PresentationTemplate/Proposal | [37(h'cb99b9bd681a49d8983689107c02e8ef'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc')] |
+| [Proposal Submission Action](docs/proposal_submission_action.md) | Action/Proposal/SubmissionAction | [37(h'5e60e623ad024a1ba1ac406db978ee48'),<br>37(h'7808d2bad51140af84e8c0d1625fdfdc'),<br>37(h'78927329cfd94ea19c710e019b126a65')] |
+| [Rep Nomination](docs/rep_nomination.md) | Nomination/RegisteredRep | [37(h'bf9abd975d1f44298e80740fea371a9c'),<br>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
+| [Rep Nomination Form Template](docs/rep_nomination_form_template.md) | FormTemplate/Nomination/RegisteredRep | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'bf9abd975d1f44298e80740fea371a9c'),<br>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
+| [Rep Profile](docs/rep_profile.md) | Profile/RegisteredRep | [37(h'0f2c86a2ffda40b0ad3823709e1c10b3'),<br>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
+| [Rep Profile Form Template](docs/rep_profile_form_template.md) | FormTemplate/Profile/RegisteredRep | [37(h'0ce8ab3892584fbca62e7faa6e58318f'),<br>37(h'0f2c86a2ffda40b0ad3823709e1c10b3'),<br>37(h'94579df1a6dc433ba8e8910c5dc2f0e3')] |
 <!-- markdownlint-enable MD033 -->
 
 ## Document Relationship Hierarchy

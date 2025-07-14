@@ -8,6 +8,7 @@ from pathlib import Path
 import rich
 from rich_argparse import RichHelpFormatter
 
+from docs.doc_index import DocIndex
 from spec.signed_doc import SignedDoc
 
 from .docs_page_md import IndividualDocMd
@@ -79,7 +80,10 @@ def main() -> None:
     good &= SpecMd(args, spec).save_or_validate()
     good &= TypesMd(args, spec).save_or_validate()
     good &= MetadataMd(args, spec).save_or_validate()
+
+    good &= DocIndex(args, spec).save_or_validate()
     good &= IndividualDocMd.save_or_validate_all(args, spec)
+
     good &= FormTemplatesMd(args, spec).save_or_validate()
 
     if not good:
