@@ -306,20 +306,6 @@ class DocGenerator:
 
         # Remove any leading or trailing newlines and add a single newline at the end/
         # Helps make clean markdown files.
-        # if self.file_name().endswith(".md"):
-        # because mdformat turns `*` list markers into `-` and it can't be configured
-        # tell mdlint that in these files it should be "consistent" which will allow
-        # the formatted markdown to pass lints.
-        # self._filedata = f"""
-        # <!-- markdownlint-configure-file {{
-        #    "MD004": {{"style": "consistent"}},  # noqa: ERA001
-        #    "MD007": {{"indent": 4}}
-        # }}-->
-        # {self._filedata}"""
-        #            self._filedata = mdformat.text(  # type: ignore  # noqa: PGH003
-        #                self._filedata, options={"number": True, "wrap": "keep"}, extensions=["mkdocs"]
-        #            )  # noqa: ERA001, RUF100
-        #        else:  # noqa: ERA001
         self.strip_end_whitespace()
 
         return True
