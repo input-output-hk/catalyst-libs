@@ -27,7 +27,6 @@ The Base Form Template has the following format.
     ``` json
     {{ include_file('./schema/form_template.schema.json', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 #### `"$defs"`
@@ -118,7 +117,6 @@ possible Form Element.
     ``` json
     {{ include_file('./schema/form_template_example.schema.json', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Dictionary of all defined Form Elements

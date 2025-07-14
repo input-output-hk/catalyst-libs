@@ -402,7 +402,6 @@ class DocGenerator:
     ``` {filetype}
     {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 """.strip(),
             " " * indent,

@@ -69,7 +69,6 @@ The "length-first core deterministic encoding requirements" variant of determini
     ``` cddl
     {{ include_file('./cddl/signed_document.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [COSE Header Parameters][RFC9052-HeaderParameters]
