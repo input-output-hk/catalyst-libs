@@ -80,7 +80,7 @@ const DEFAULT_PREVIEW_MITHRIL_AGGREGATOR: &str =
 /// Devnet Default Public Cardano Relay.
 const DEFAULT_DEVNET_RELAY: &str = "127.0.0.1:3001";
 /// Preprod network Mithril Signature genesis vkey.
-const DEFAULT_DEVNET_MITHRIL_GENESIS_KEY: &str = include_str!("data/preprod-genesis.vkey");
+const DEFAULT_DEVNET_MITHRIL_GENESIS_KEY: &str = include_str!("data/devnet-genesis.vkey");
 /// Default Mithril Aggregator to use.
 const DEFAULT_DEVNET_MITHRIL_AGGREGATOR: &str =
     "http://localhost:8080/aggregator";
@@ -115,7 +115,7 @@ impl Network {
             Network::Mainnet => DEFAULT_MAINNET_MITHRIL_GENESIS_KEY.to_string(),
             Network::Preprod => DEFAULT_PREPROD_MITHRIL_GENESIS_KEY.to_string(),
             Network::Preview => DEFAULT_PREVIEW_MITHRIL_GENESIS_KEY.to_string(),
-             Network::Devnet => DEFAULT_DEVNET_MITHRIL_AGGREGATOR.to_string(),
+            Network::Devnet => DEFAULT_DEVNET_MITHRIL_GENESIS_KEY.to_string(),
         }
     }
 
