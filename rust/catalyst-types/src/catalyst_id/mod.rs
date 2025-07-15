@@ -10,6 +10,7 @@ pub mod role_index;
 use std::{
     fmt::{Display, Formatter},
     str::FromStr,
+    sync::Arc,
 };
 
 use chrono::{DateTime, Duration, Utc};
@@ -33,6 +34,13 @@ use role_index::RoleId;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[allow(clippy::module_name_repetitions)]
 pub struct CatalystId {
+    /// An inner data.
+    inner: Arc<CatalystIdInner>,
+}
+
+/// A Catalyst ID data intended to be wrapper in `Arc`.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct CatalystIdInner {
     /// Username
     username: Option<String>,
     /// Nonce (like the password in http basic auth, but NOT a password, just a nonce)
@@ -73,49 +81,49 @@ impl CatalystId {
     /// Get the cosmetic username from the URI.
     #[must_use]
     pub fn username(&self) -> Option<String> {
-        self.username.clone()
+        self.inner.username.clone()
     }
 
     /// Get the nonce from the URI.
     #[must_use]
     pub fn nonce(&self) -> Option<DateTime<Utc>> {
-        self.nonce
+        self.inner.nonce
     }
 
     /// Get the network the `CatalystId` is referencing the registration to.
     #[must_use]
     pub fn network(&self) -> (String, Option<String>) {
-        (self.network.clone(), self.subnet.clone())
+        (self.inner.network.clone(), self.inner.subnet.clone())
     }
 
     /// Is the key a signature type key.
     #[must_use]
     pub fn is_signature_key(&self) -> bool {
-        !self.encryption
+        !self.inner.encryption
     }
 
     /// Is the key an encryption type key.
     #[must_use]
     pub fn is_encryption_key(&self) -> bool {
-        self.encryption
+        self.inner.encryption
     }
 
     /// Get the Initial Role 0 Key of the registration
     #[must_use]
     pub fn role0_pk(&self) -> VerifyingKey {
-        self.role0_pk
+        self.inner.role0_pk
     }
 
     /// Get the role index and its rotation count
     #[must_use]
     pub fn role_and_rotation(&self) -> (RoleId, KeyRotation) {
-        (self.role, self.rotation)
+        (self.inner.role, self.inner.rotation)
     }
 
     /// Create a new `CatalystId` for a Signing Key
     #[must_use]
     pub fn new(network: &str, subnet: Option<&str>, role0_pk: VerifyingKey) -> Self {
-        Self {
+        let inner = Arc::new(CatalystIdInner {
             username: None, // Default to Not set, use `with_username` if required.
             nonce: None,    // Default to Not set, use `with_nonce` if required.
             network: network.to_string(),
@@ -125,49 +133,59 @@ impl CatalystId {
             rotation: KeyRotation::default(), // Defaulted, use `with_rotation()` to change it.
             encryption: false,       // Defaulted, use `with_encryption()` to change it.
             id: false,               // Default to `URI` formatted.
-        }
+        });
+
+        Self { inner }
     }
 
     /// The `CatalystId` is formatted as a URI.
     #[must_use]
     pub fn as_uri(self) -> Self {
-        Self { id: false, ..self }
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner { id: false, ..inner });
+        Self { inner }
     }
 
     /// The `CatalystId` is formatted as a id.
     #[must_use]
     pub fn as_id(self) -> Self {
-        Self { id: true, ..self }
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner { id: true, ..inner });
+        Self { inner }
     }
 
     /// Was `CatalystId` formatted as an id when it was parsed.
     #[must_use]
     pub fn is_id(&self) -> bool {
-        self.id
+        self.inner.id
     }
 
     /// Was `CatalystId` formatted as an uri when it was parsed.
     #[must_use]
     pub fn is_uri(&self) -> bool {
-        !self.id
+        !self.inner.id
     }
 
     /// Add or change the username in a Catalyst ID URI.
     #[must_use]
     pub fn with_username(self, name: &str) -> Self {
-        Self {
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner {
             username: Some(name.to_string()),
-            ..self
-        }
+            ..inner
+        });
+        Self { inner }
     }
 
     /// Add or change the username in a Catalyst ID URI.
     #[must_use]
     pub fn without_username(self) -> Self {
-        Self {
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner {
             username: None,
-            ..self
-        }
+            ..inner
+        });
+        Self { inner }
     }
 
     /// Add or change the nonce (a unique identifier for a data update) to a specific
@@ -204,7 +222,9 @@ impl CatalystId {
             }
         };
 
-        Self { nonce, ..self }
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner { nonce, ..inner });
+        Self { inner }
     }
 
     /// Add or change the nonce in a Catalyst ID URI. The nonce will be set to the current
@@ -250,10 +270,12 @@ impl CatalystId {
     /// ```
     #[must_use]
     pub fn without_nonce(self) -> Self {
-        Self {
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner {
             nonce: None,
-            ..self
-        }
+            ..inner
+        });
+        Self { inner }
     }
 
     /// Set that the `CatalystId` is used to identify an encryption key.
@@ -279,10 +301,12 @@ impl CatalystId {
     /// ```
     #[must_use]
     pub fn with_encryption(self) -> Self {
-        Self {
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner {
             encryption: true,
-            ..self
-        }
+            ..inner
+        });
+        Self { inner }
     }
 
     /// Set that the `CatalystId` is not for encryption
@@ -308,10 +332,12 @@ impl CatalystId {
     /// ```
     #[must_use]
     pub fn without_encryption(self) -> Self {
-        Self {
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner {
             encryption: false,
-            ..self
-        }
+            ..inner
+        });
+        Self { inner }
     }
 
     /// Set the role explicitly.
@@ -341,7 +367,9 @@ impl CatalystId {
     /// ```
     #[must_use]
     pub fn with_role(self, role: RoleId) -> Self {
-        Self { role, ..self }
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner { role, ..inner });
+        Self { inner }
     }
 
     /// Set the rotation explicitly.
@@ -370,7 +398,9 @@ impl CatalystId {
     /// ```
     #[must_use]
     pub fn with_rotation(self, rotation: KeyRotation) -> Self {
-        Self { rotation, ..self }
+        let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
+        let inner = Arc::new(CatalystIdInner { rotation, ..inner });
+        Self { inner }
     }
 
     /// Check if the URI has a nonce that falls within the defined boundary around `now()`
@@ -420,7 +450,7 @@ impl CatalystId {
     /// ```
     #[must_use]
     pub fn is_nonce_in_range(&self, past: Duration, future: Duration) -> bool {
-        if let Some(nonce) = self.nonce {
+        if let Some(nonce) = self.nonce() {
             let now = Utc::now();
             let Some(start_time) = now.checked_sub_signed(past) else {
                 return false;
@@ -621,17 +651,17 @@ impl FromStr for CatalystId {
 
 impl Display for CatalystId {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        if !self.id {
+        if !self.inner.id {
             write!(f, "{}://", Self::SCHEME.as_str())?;
         }
 
         let mut needs_at = false;
-        if let Some(username) = &self.username {
+        if let Some(username) = &self.inner.username {
             write!(f, "{username}")?;
             needs_at = true;
         }
 
-        if let Some(nonce) = self.nonce {
+        if let Some(nonce) = self.nonce() {
             let timestamp = nonce.timestamp();
             write!(f, ":{timestamp}")?;
             needs_at = true;
@@ -642,25 +672,25 @@ impl Display for CatalystId {
             write!(f, "@")?;
         }
 
-        if let Some(subnet) = &self.subnet {
+        if let Some(subnet) = &self.inner.subnet {
             write!(f, "{subnet}.")?;
         }
         write!(
             f,
             "{}/{}",
-            self.network,
-            base64_url::encode(self.role0_pk.as_bytes()),
+            self.inner.network,
+            base64_url::encode(self.role0_pk().as_bytes()),
         )?;
 
         // Role and Rotation are only serialized if its NOT and ID or they are not the defaults.
-        if !self.role.is_default() || !self.rotation.is_default() || !self.id {
-            write!(f, "/{}", self.role)?;
-            if !self.rotation.is_default() || !self.id {
-                write!(f, "/{}", self.rotation)?;
+        if !self.inner.role.is_default() || !self.inner.rotation.is_default() || !self.inner.id {
+            write!(f, "/{}", self.inner.role)?;
+            if !self.inner.rotation.is_default() || !self.inner.id {
+                write!(f, "/{}", self.inner.rotation)?;
             }
         }
 
-        if self.encryption {
+        if self.inner.encryption {
             write!(f, "#{}", Self::ENCRYPTION_FRAGMENT)?;
         }
         Ok(())
