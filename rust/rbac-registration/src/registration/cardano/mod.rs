@@ -29,6 +29,8 @@ use crate::cardano::cip509::{
 };
 
 /// Registration chains.
+///
+/// This structure uses [`Arc`] internally, so it is cheap to clone.
 #[derive(Debug, Clone)]
 pub struct RegistrationChain {
     /// Inner part of the registration chain.
