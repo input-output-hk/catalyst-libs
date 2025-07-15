@@ -14,8 +14,9 @@ workspace = true
 anyhow = "1.0.95"
 derive_more = {version = "1.0.0", features = ["from","into","display"] }
 ipld-core = { version = "0.4.1", features = ["serde"]}
-rust-ipfs = "0.14.1"
-tokio = "1.42.0"
+# A fork of crates-io version with updated dependencies (`libp2p` and `ring` in particular).
+rust-ipfs = { version = "0.15.0", git = "https://github.com/dariusc93/rust-ipfs" }
+tokio = "1.46.0"
 
 [dev-dependencies]
 # Dependencies used by examples
