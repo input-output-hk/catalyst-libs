@@ -11,9 +11,12 @@ from .doc_generator import DocGenerator, LinkType
 class FormTemplatesElementIndex(DocGenerator):
     """Form Template Element Index Generator."""
 
+    TEMPLATE: str = "form_template_elements/.pages.jinja"
+    ELEMENT_TEMPLATE: str = FormTemplatesElementMd.TEMPLATE
+
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
-        super().__init__(args, spec, template="form_template_elements/.pages.jinja", flags=self.NO_FLAGS)
+        super().__init__(args, spec, template=self.TEMPLATE, flags=self.NO_FLAGS)
 
     def generate(self) -> bool:
         """Generate the Spec Index."""

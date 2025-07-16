@@ -4,6 +4,7 @@
 
 import argparse
 import difflib
+import json
 import re
 import textwrap
 import typing
@@ -483,3 +484,26 @@ class DocGenerator:
             link = f'<a href="{relative_file}{heading}">{name}</a>'
 
         return link
+
+    def json_example(
+        self,
+        data: dict[str, typing.Any],
+        *,
+        label: str = "Example",
+        title: str | None = None,
+        description: str | None = None,
+    ) -> str:
+        """Get the example properly formatted as markdown."""
+        example = json.dumps(data, indent=2, sort_keys=True)
+
+        description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
+
+        return f"""
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "{label}: {title}"
+{description}
+    ```json
+{textwrap.indent(example, "    ")}
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+""".strip()

@@ -5,6 +5,7 @@ import argparse
 from docs.form_template_basic_schema_json import FormTemplateBasicSchemaJson
 from docs.form_template_example_schema_json import FormTemplateExampleSchemaJson
 from docs.form_templates_element_index import FormTemplatesElementIndex
+from docs.form_templates_element_md import FormTemplatesElementMd
 from spec.signed_doc import SignedDoc
 
 from .doc_generator import DocGenerator
@@ -13,9 +14,12 @@ from .doc_generator import DocGenerator
 class FormTemplatesMd(DocGenerator):
     """Generate the form_templates.md file."""
 
+    TEMPLATE: str = "form_templates.md.jinja"
+    ELEMENT_TEMPLATE: str = FormTemplatesElementMd.TEMPLATE
+
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialise form_templates.md generator."""
-        super().__init__(args, spec, template="form_templates.md.jinja")
+        super().__init__(args, spec, template=self.TEMPLATE)
 
     def all_form_elements(self) -> str:
         """List and cross reference all defined form elements."""

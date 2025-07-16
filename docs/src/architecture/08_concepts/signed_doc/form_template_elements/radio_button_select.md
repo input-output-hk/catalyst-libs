@@ -5,26 +5,172 @@ UI - Radio Button Selection.
 Select one option from a list of text options.
 Selector is styled as a set of Radio Buttons.
 
-## Parents
+## Parent Elements
 
 The Radio Button Select form element, can appear as a child of:
 
-['section']
+* [Section](section.md)
 
 ## Definition
 
-{'contentMediaType': 'text/plain', 'pattern': '^[^\\n]*$', 'type': 'string'}
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Definition: Radio Button Select"
+
+    ```json
+    {
+      "$defs": {
+        "radioButtonSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        }
+      },
+      "$schema": "https://json-schema.org/draft/2020-12/schema"
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 ## Parameters
 
 The Radio Button Select form element takes the following parameters:
 
-root={'description': Parameter(property=None, description='The description of the field presented during data entry.', required=<OptionalField.optional: 'optional'>, type='string', items=None, choices=None, format=None, content_media_type=None, pattern=None, min_length=None, minimum=None, maximum=None, example=None), 'enum': Parameter(property=None, description='An array of string to select from.', required=<OptionalField.required: 'yes'>, type='array', items=Parameter(property=None, description='An element of the Enum.', required=<OptionalField.excluded: 'excluded'>, type='string', items=None, choices=None, format=None, content_media_type=None, pattern=None, min_length=None, minimum=None, maximum=None, example=None), choices=None, format=None, content_media_type=None, pattern=None, min_length=None, minimum=None, maximum=None, example=None), 'title': Parameter(property=None, description='The label attached to the field.', required=<OptionalField.required: 'yes'>, type='string', items=None, choices=None, format=None, content_media_type=None, pattern=None, min_length=None, minimum=None, maximum=None, example=None), 'x-guidance': Parameter(property=None, description='Long form [Markdown][CommonMark] formatted description to give guidance about how the field is to be completed.', required=<OptionalField.optional: 'optional'>, type='string', items=None, choices=None, format=None, content_media_type=None, pattern=None, min_length=None, minimum=None, maximum=None, example=None)}
+<!---HTML START-->
+<!-- markdownlint-disable -->
+<div id="element_Radio_Button_Select_parameters" style="padding-left:0px;padding-right:0px;padding-top:10px;padding-bottom:10px;overflow-x:auto;overflow-y:auto;width:100%;height:auto;">
+<style>
+#element_Radio_Button_Select_parameters table {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', 'Fira Sans', 'Droid Sans', Arial, sans-serif;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
+        }
+
+#element_Radio_Button_Select_parameters thead, tbody, tfoot, tr, td, th { border-style: none; }
+ tr { background-color: transparent; }
+#element_Radio_Button_Select_parameters p { margin: 0; padding: 0; }
+ #element_Radio_Button_Select_parameters .gt_table { display: table; border-collapse: collapse; line-height: normal; margin-left: auto; margin-right: auto; color: #333333; font-size: 16px; font-weight: normal; font-style: normal; background-color: #FFFFFF; width: 100%; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; }
+ #element_Radio_Button_Select_parameters .gt_caption { padding-top: 4px; padding-bottom: 4px; }
+ #element_Radio_Button_Select_parameters .gt_title { color: #333333; font-size: 125%; font-weight: initial; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; border-bottom-color: #FFFFFF; border-bottom-width: 0; }
+ #element_Radio_Button_Select_parameters .gt_subtitle { color: #333333; font-size: 85%; font-weight: initial; padding-top: 3px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; border-top-color: #FFFFFF; border-top-width: 0; }
+ #element_Radio_Button_Select_parameters .gt_heading { background-color: #FFFFFF; text-align: center; border-bottom-color: #FFFFFF; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #element_Radio_Button_Select_parameters .gt_bottom_border { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #element_Radio_Button_Select_parameters .gt_col_headings { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; }
+ #element_Radio_Button_Select_parameters .gt_col_heading { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; padding-left: 5px; padding-right: 5px; overflow-x: hidden; }
+ #element_Radio_Button_Select_parameters .gt_column_spanner_outer { color: #FFFFFF; background-color: #0076BA; font-size: 100%; font-weight: normal; text-transform: inherit; padding-top: 0; padding-bottom: 0; padding-left: 4px; padding-right: 4px; }
+ #element_Radio_Button_Select_parameters .gt_column_spanner_outer:first-child { padding-left: 0; }
+ #element_Radio_Button_Select_parameters .gt_column_spanner_outer:last-child { padding-right: 0; }
+ #element_Radio_Button_Select_parameters .gt_column_spanner { border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: bottom; padding-top: 5px; padding-bottom: 5px; overflow-x: hidden; display: inline-block; width: 100%; }
+ #element_Radio_Button_Select_parameters .gt_spanner_row { border-bottom-style: hidden; }
+ #element_Radio_Button_Select_parameters .gt_group_heading { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; border-left-style: none; border-left-width: 1px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 1px; border-right-color: #D3D3D3; vertical-align: middle; text-align: left; }
+ #element_Radio_Button_Select_parameters .gt_empty_group_heading { padding: 0.5px; color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; vertical-align: middle; }
+ #element_Radio_Button_Select_parameters .gt_from_md> :first-child { margin-top: 0; }
+ #element_Radio_Button_Select_parameters .gt_from_md> :last-child { margin-bottom: 0; }
+ #element_Radio_Button_Select_parameters .gt_row { padding-top: 8px; padding-bottom: 8px; padding-left: 5px; padding-right: 5px; margin: 10px; border-top-style: none; border-top-width: 1px; border-top-color: #D5D5D5; border-left-style: none; border-left-width: 1px; border-left-color: #D5D5D5; border-right-style: none; border-right-width: 1px; border-right-color: #D5D5D5; vertical-align: middle; overflow-x: hidden; }
+ #element_Radio_Button_Select_parameters .gt_stub { color: #333333; background-color: #89D3FE; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D5D5D5; padding-left: 5px; padding-right: 5px; }
+ #element_Radio_Button_Select_parameters .gt_stub_row_group { color: #333333; background-color: #FFFFFF; font-size: 100%; font-weight: initial; text-transform: inherit; border-right-style: solid; border-right-width: 2px; border-right-color: #D3D3D3; padding-left: 5px; padding-right: 5px; vertical-align: top; }
+ #element_Radio_Button_Select_parameters .gt_row_group_first td { border-top-width: 2px; }
+ #element_Radio_Button_Select_parameters .gt_row_group_first th { border-top-width: 2px; }
+ #element_Radio_Button_Select_parameters .gt_striped { background-color: #EDF7FC; }
+ #element_Radio_Button_Select_parameters .gt_table_body { border-top-style: solid; border-top-width: 2px; border-top-color: #5F5F5F; border-bottom-style: solid; border-bottom-width: 2px; border-bottom-color: #5F5F5F; }
+ #element_Radio_Button_Select_parameters .gt_sourcenotes { color: #333333; background-color: #FFFFFF; border-bottom-style: none; border-bottom-width: 2px; border-bottom-color: #D3D3D3; border-left-style: none; border-left-width: 2px; border-left-color: #D3D3D3; border-right-style: none; border-right-width: 2px; border-right-color: #D3D3D3; }
+ #element_Radio_Button_Select_parameters .gt_sourcenote { font-size: 90%; padding-top: 4px; padding-bottom: 4px; padding-left: 5px; padding-right: 5px; text-align: left; }
+ #element_Radio_Button_Select_parameters .gt_left { text-align: left; }
+ #element_Radio_Button_Select_parameters .gt_center { text-align: center; }
+ #element_Radio_Button_Select_parameters .gt_right { text-align: right; font-variant-numeric: tabular-nums; }
+ #element_Radio_Button_Select_parameters .gt_font_normal { font-weight: normal; }
+ #element_Radio_Button_Select_parameters .gt_font_bold { font-weight: bold; }
+ #element_Radio_Button_Select_parameters .gt_font_italic { font-style: italic; }
+ #element_Radio_Button_Select_parameters .gt_super { font-size: 65%; }
+ #element_Radio_Button_Select_parameters .gt_footnote_marks { font-size: 75%; vertical-align: 0.4em; position: initial; }
+ #element_Radio_Button_Select_parameters .gt_asterisk { font-size: 100%; vertical-align: 0; }
+
+</style>
+<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<thead>
+
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_title gt_font_normal">Radio Button Select</td>
+  </tr>
+  <tr class="gt_heading">
+    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+
+Parameters
+
+</td>
+  </tr>
+
+</thead>
+<tbody class="gt_table_body">
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">description</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left">Is the parameter required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped">string</td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">enum</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left">Is the parameter required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped">array</td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Items</th>
+    <td class="gt_row gt_left">Link to parameter Items</td>
+    <td class="gt_row gt_left">TODO</td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">title</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">yes</td>
+    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left">string</td>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="3">x-guidance</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left">string</td>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+  </tr>
+</tbody>
+
+
+</table>
+
+</div>
+
+
+<!-- markdownlint-enable -->
+<!---HTML END-->
+
 
 ## Example Usage
 
 This is an Example Form Template showing just the Radio Button Select form element, and its parents.
 
 TODO
-
-[CommonMark]: https://spec.commonmark.org/0.31.2/

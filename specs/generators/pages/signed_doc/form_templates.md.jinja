@@ -108,7 +108,7 @@ possible Form Element.
 | Name | Element |
 | --- | --- |
 {% for element, def in spec.form_template.elements.all() %}
-| {{ def.title_name() }} | `{{ doc.link_to_file(element,doc_name=def.snake_name(), template="form_templates_element.md.jinja") }}` |
+| {{ def.title_name }} | `{{ doc.link_to_file(element,doc_name=def.snake_name, template=doc.ELEMENT_TEMPLATE) }}` |
 {% endfor %}
 
 {{ doc.all_form_elements() | trim }}

@@ -2,21 +2,28 @@
 
 {{ element.description }}
 
-## Parents
+## Parent Elements
 
 The {{ doc.name() }} form element, can appear as a child of:
 
-{{ element.parent }}
+{% for parent in element.parent %}
+    {% if parent == "{}" %}
+* The Root Object of the JSON Schema
+    {% else %}
+    {% set parent_element = spec.form_template.elements.get(parent) %}
+* {{ doc.link_to_file(parent_element.title_name, doc_name=parent_element.snake_name, template=doc.TEMPLATE) }}
+    {% endif %}
+{% endfor %}
 
 ## Definition
 
-{{ element.definition }}
+{{ doc.json_example(doc.example_definition, label="Definition", title=doc.name()) }}
 
 ## Parameters
 
 The {{ doc.name() }} form element takes the following parameters:
 
-{{ element.parameters }}
+{{ doc.parameters_table }}
 
 ## Example Usage
 

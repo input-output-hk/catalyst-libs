@@ -20,14 +20,20 @@ class Element(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    @computed_field
+    @property
     def name(self) -> str:
         """Name Of the Element."""
         return self._name
 
+    @computed_field
+    @property
     def snake_name(self) -> str:
         """Name Of the Element in snake case."""
         return re.sub(r"(?<!^)(?=[A-Z])", "_", self._name).lower()
 
+    @computed_field
+    @property
     def title_name(self) -> str:
         """Name Of the Element in title case."""
         return re.sub(r"(?<!^)(?=[A-Z])", " ", self._name).title()
@@ -35,6 +41,7 @@ class Element(BaseModel):
     def set_name(self, val: str) -> None:
         """Set Name."""
         self._name = val
+        self.parameters.set_element_name(val)
 
     @computed_field
     @cached_property

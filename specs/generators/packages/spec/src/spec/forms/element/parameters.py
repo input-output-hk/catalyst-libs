@@ -15,7 +15,7 @@ class Parameter(BaseModel):
     Models `specs/definitions/form_template/parameters.cue:#parameter`
     """
 
-    property: str | None = Field(default=None)
+    optional_property_type: str | None = Field(default=None, alias="property")
     description: str
     required: OptionalField
     type: str
@@ -34,6 +34,8 @@ class Parameter(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    @computed_field
+    @property
     def element_name(self) -> str:
         """Name Of the Parameters Element Type."""
         return self._element_name
@@ -42,6 +44,15 @@ class Parameter(BaseModel):
         """Set Element Name."""
         self._element_name = val
 
+    @computed_field
+    @property
+    def property_type(self) -> str:
+        """Name Of the Property."""
+        print(f"Property Type: {self.optional_property_type}")
+        return self.optional_property_type if self.optional_property_type is not None else self.type
+
+    @computed_field
+    @property
     def name(self) -> str:
         """Name Of the Parameter."""
         return self._name
@@ -52,12 +63,11 @@ class Parameter(BaseModel):
 
     def example_kv(self, index: int = 0) -> tuple[str, Any]:
         """Generate an example value of the parameter."""
-        prop = self.property if self.property is not None else "Unknown"
         value: dict[Any, Any] | str = {}
         if self.type == "string":
             value = f"An Example String {index}"
 
-        return (prop, value)
+        return (self.property_type, value)
 
 
 class Parameters(RootModel[dict[str, Parameter]]):
@@ -66,6 +76,14 @@ class Parameters(RootModel[dict[str, Parameter]]):
     root: dict[str, Parameter]
     _element_name: str = PrivateAttr(default="Unknown")
 
+    @computed_field
+    @property
+    def all(self) -> list[Parameter]:
+        """Name Of the Parameters Element Type."""
+        return [self.root[prop] for prop in sorted(self.root.keys())]
+
+    @computed_field
+    @property
     def element_name(self) -> str | None:
         """Name Of the Parameters Element Type."""
         return self._element_name
