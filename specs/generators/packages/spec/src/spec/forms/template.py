@@ -33,6 +33,10 @@ class FormTemplateElements(RootModel[dict[str, Element]]):
         elements.sort(key=lambda element: element[0])
         return elements
 
+    def get(self, name: str) -> Element:
+        """Get the named element."""
+        return self.root[name]
+
     @computed_field
     @cached_property
     def json_definition(self) -> dict[str, Any]:

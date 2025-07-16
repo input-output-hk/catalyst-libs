@@ -96,6 +96,12 @@ class DocGenerator:
         # Make sure any destination directory exists.
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
 
+    def name(self) -> str:
+        """Return the document name."""
+        if self._document_name is None:
+            return "Unnamed"
+        return self._document_name
+
     @staticmethod
     def doc_name_to_filename(doc_name: str, template: str, *, extension: str = "md") -> str:
         """Convert a document name to a file name.

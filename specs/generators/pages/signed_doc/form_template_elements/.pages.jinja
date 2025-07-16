@@ -1,1 +1,5 @@
 title: Form Template Elements
+nav:
+{% for element_name, def in spec.form_template.elements.all() %}
+  - {{ def.title_name() }}: {{ doc.link_to_file(doc_name, doc_name=def.snake_name(), template="form_templates_element.md.jinja", link_type=LinkType.RAW) }}
+{% endfor %}

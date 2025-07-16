@@ -1,4 +1,4 @@
-"""Generate the templates.md file."""
+"""Generate the form_templates_element.md.jinja templated files."""
 
 import argparse
 
@@ -9,12 +9,15 @@ from spec.signed_doc import SignedDoc
 from .doc_generator import DocGenerator
 
 
-class FormTemplatesMd(DocGenerator):
-    """Generate the form_templates.md file."""
+class FormTemplatesElementMd(DocGenerator):
+    """Generate the Element documentation for a form template."""
+
+    TEMPLATE = "form_templates_element.md.jinja"
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, name: str) -> None:
-        """Initialise form_templates.md generator."""
-        super().__init__(args, spec, doc_name=name, template="form_templates_element.md.jinja")
+        """Initialise form templates Element documentation generator."""
+        self._element = spec.form_template.elements.get(name)
+        super().__init__(args, spec, doc_name=self._element.title_name(), template=self.TEMPLATE)
 
     @classmethod
     def save_or_validate_all(cls, args: argparse.Namespace, spec: SignedDoc) -> bool:
@@ -36,6 +39,6 @@ class FormTemplatesMd(DocGenerator):
         if not base_schema.save_or_validate():
             return False
 
-        self.generate_from_page_template(example_schema=example_schema, base_schema=base_schema)
+        self.generate_from_page_template(element=self._element)
 
         return super().generate()
