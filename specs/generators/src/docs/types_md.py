@@ -39,7 +39,7 @@ class TypesMd(DocGenerator):
         for k in self._spec.docs.names:
             doc_type = self._spec.docs.type(k)
             doc_type_details += (
-                f"| [{k}]({self.name_to_doc_page_link(k)}) |"
+                f"| {self.link_to_file(k, doc_name=k, template='document_page.md.jinja')} |"
                 f" {doc_type.formatted_names()} |"
                 f" {doc_type.formatted_ids(separator=',<br>')} |\n"
             )

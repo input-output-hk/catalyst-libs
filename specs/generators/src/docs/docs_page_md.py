@@ -21,9 +21,8 @@ This section will be included and updated in future iterations.
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, doc_name: str) -> None:
         """Generate the individual pages docs/<doc_name>.md file."""
-        file_name = self.name_to_doc_page_link(doc_name)
         super().__init__(
-            args, spec, filename=file_name, template="docs/document_page.md.jinja", flags=self.HAS_MARKDOWN_LINKS
+            args, spec, doc_name=doc_name, template="document_page.md.jinja", flags=self.HAS_MARKDOWN_LINKS
         )
 
         self._document_name = doc_name

@@ -7,6 +7,7 @@ import difflib
 import re
 import textwrap
 import typing
+from enum import Enum
 from pathlib import Path
 
 import rich
@@ -27,7 +28,6 @@ def get_jinja_environment(spec: SignedDoc) -> Environment:
         __jinja_env = Environment(
             loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True
         )
-        print(Path.cwd())
         __jinja_env.globals["spec"] = spec  # type: ignore reportUnknownMemberType
 
     return __jinja_env
@@ -35,7 +35,19 @@ def get_jinja_environment(spec: SignedDoc) -> Environment:
 
 def get_template_with_path(template: str) -> str:
     """Get a template and its path, just from template name."""
-    return next(iter(Path(TEMPLATES).rglob(template))).relative_to(TEMPLATES).as_posix()
+    try:
+        return next(iter(Path(TEMPLATES).rglob(template))).relative_to(TEMPLATES).as_posix()
+    except StopIteration as ex:
+        msg = f"Template {template} does not exist."
+        raise NotImplementedError(msg) from ex
+
+
+class LinkType(Enum):
+    """A type of document link."""
+
+    MARKDOWN = 1
+    HTML = 2
+    RAW = 3
 
 
 class DocGenerator:
@@ -52,6 +64,7 @@ class DocGenerator:
         depth: int = 0,
         flags: int = HAS_MARKDOWN_LINKS,
         *,
+        doc_name: str | None = None,
         filename: str | None = None,
         template: str | None = None,
     ) -> None:
@@ -63,12 +76,15 @@ class DocGenerator:
         self._filedata = ""
         self._has_markdown_links = flags & self.HAS_MARKDOWN_LINKS != 0
         self._is_metadata_primary_source = flags & self.IS_METADATA_PRIMARY_SOURCE != 0
-        self._document_name = None
+        self._document_name = doc_name
 
         if template is not None:
             template = get_template_with_path(template)
         if filename is None and template is not None:
-            filename = Path(template).relative_to("signed_doc").with_suffix("").as_posix()
+            if doc_name is None:
+                filename = Path(template).relative_to("signed_doc").with_suffix("").as_posix()
+            else:
+                filename = self.doc_name_to_filename(doc_name, template).split("/", maxsplit=1)[-1]
         if filename is None:
             msg = "`filename` or `template` (or both) parameters must be defined."
             raise NotImplementedError(msg)
@@ -81,12 +97,13 @@ class DocGenerator:
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
 
     @staticmethod
-    def name_to_doc_page_link(name: str, ref: str | None = None) -> str:
-        """Create a link to a document type, and an optional ref inside the document."""
-        link = "docs/" + name.lower().replace(" ", "_") + ".md"
-        if ref is not None:
-            link += f"#{ref}"
-        return link
+    def doc_name_to_filename(doc_name: str, template: str, *, extension: str = "md") -> str:
+        """Convert a document name to a file name.
+
+        Typically only used for documents that share a template and derive a filename from their document name.
+        """
+        filename = f"{doc_name.lower().replace(' ', '_')}.{extension}"
+        return f"{template.rsplit('/', maxsplit=1)[0]}/{filename}"
 
     def add_generic_markdown_links(
         self,
@@ -424,10 +441,22 @@ class DocGenerator:
 {MarkdownHelpers.HTML_END}
 """.strip()
 
-    def link_to_file(
-        self, name: str, link_file: str, *, template: str | None = None, heading: str | None = None
+    def link_to_file(  # noqa: PLR0913
+        self,
+        name: str,
+        *,
+        doc_name: str | None = None,
+        link_file: str | None = None,
+        template: str | None = None,
+        heading: str | None = None,
+        link_type: LinkType = LinkType.MARKDOWN,
     ) -> str:
         """Create a link to a file, relative to self."""
+        if link_file is None and doc_name is not None and template is not None:
+            link_file = self.doc_name_to_filename(doc_name, template).rsplit("/", maxsplit=1)[-1]
+        if link_file is None:
+            msg = "link_file or doc_name must be defined."
+            raise NotImplementedError(msg)
         if template is None:
             template = link_file + ".jinja"
         if self._template is None:
@@ -440,7 +469,11 @@ class DocGenerator:
 
         heading = "#" + heading.lower().replace(" ", "-") if heading is not None else ""
 
-        link = f"[{name}]({relative_file}{heading})"
-        print(link)
+        if link_type == LinkType.MARKDOWN:
+            link = f"[{name}]({relative_file}{heading})"
+        elif link_type == LinkType.RAW:
+            link = f"{relative_file}"
+        else:
+            link = f'<a href="{relative_file}{heading}">{name}</a>'
 
         return link

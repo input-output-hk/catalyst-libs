@@ -4,7 +4,7 @@ import argparse
 
 from spec.signed_doc import SignedDoc
 
-from .doc_generator import DocGenerator
+from .doc_generator import DocGenerator, LinkType
 
 
 class DocIndex(DocGenerator):
@@ -16,6 +16,6 @@ class DocIndex(DocGenerator):
 
     def generate(self) -> bool:
         """Generate the Spec Index."""
-        self.generate_from_page_template()
+        self.generate_from_page_template(LinkType=LinkType)
 
         return super().generate()

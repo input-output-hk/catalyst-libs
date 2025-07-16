@@ -23,6 +23,16 @@ class FormTemplateElements(RootModel[dict[str, Element]]):
         for def_name, value in self.root.items():
             value.set_name(def_name)
 
+    def names(self) -> list[str]:
+        """Return a list of all element names."""
+        return list(self.root.keys())
+
+    def all(self) -> list[tuple[str, Element]]:
+        """Return the name and value of all the elements, sorted by name."""
+        elements = list(self.root.items())
+        elements.sort(key=lambda element: element[0])
+        return elements
+
     @computed_field
     @cached_property
     def json_definition(self) -> dict[str, Any]:
