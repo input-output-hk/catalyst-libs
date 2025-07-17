@@ -208,7 +208,7 @@ impl Decode<'_, CompatibilityPolicy> for DocType {
 
 /// Map single UUID doc type to new list of doc types
 /// <https://github.com/input-output-hk/catalyst-libs/blob/main/docs/src/architecture/08_concepts/signed_doc/types.md#document-types>
-fn map_doc_type(uuid: UuidV4) -> DocType {
+pub fn map_doc_type(uuid: UuidV4) -> DocType {
     match uuid {
         id if Uuid::from(id) == deprecated::PROPOSAL_DOCUMENT_UUID_TYPE => PROPOSAL.clone(),
         id if Uuid::from(id) == deprecated::COMMENT_DOCUMENT_UUID_TYPE => PROPOSAL_COMMENT.clone(),
@@ -216,6 +216,20 @@ fn map_doc_type(uuid: UuidV4) -> DocType {
             PROPOSAL_SUBMISSION_ACTION.clone()
         },
         id => DocType(vec![id]),
+    }
+}
+
+/// Maps `DocType` to the deprecated corresponding doc type.
+#[allow(dead_code)]
+pub fn to_deprecated_doc_type(doc_type: &DocType) -> Option<UuidV4> {
+    if doc_type == &*PROPOSAL {
+        UuidV4::try_from(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).ok()
+    } else if doc_type == &*PROPOSAL_COMMENT {
+        UuidV4::try_from(deprecated::COMMENT_DOCUMENT_UUID_TYPE).ok()
+    } else if doc_type == &*PROPOSAL_SUBMISSION_ACTION {
+        UuidV4::try_from(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE).ok()
+    } else {
+        doc_type.0.first().cloned()
     }
 }
 
