@@ -26,15 +26,25 @@ dictionary: dropDownSingleSelect: {
 			Drop Down Single Selector.
 			Choose a value from the options presented.
 			"""
-		enum: example: [
-			"option 1",
-			"option 2",
-			"option 3",
-		]
+		enum: {
+			description: """
+				Sorted array of string values from which a single value can be selected.
+				Values must be presented in the order they appear in the array.
+				No value that is not in the array may be listed or presented.
+				Each item in the array **MUST** be  unique.
+				"""
+			contentMediaType: definition.contentMediaType
+			example: [
+				"option 1",
+				"option 2",
+				"option 3",
+			]
+		}
 		default: {
-			description: "The option from the enum which is chosen by default."
-			example:     "\(enum.example[0])"
-			required:    "yes"
+			description:      "The option from the **`enum`** which is chosen by default.<br>This **MUST** be a value defined in the **`enum`**."
+			example:          "\(enum.example[0])"
+			required:         "yes"
+			contentMediaType: definition.contentMediaType
 		}
 		"x-guidance": example: """
 			It is recommended that a good choice be made.

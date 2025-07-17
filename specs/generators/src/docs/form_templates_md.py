@@ -26,13 +26,6 @@ class FormTemplatesMd(DocGenerator):
         """Initialise form_templates.md generator."""
         super().__init__(args, spec, template=self.TEMPLATE)
 
-    def all_form_elements(self) -> str:
-        """List and cross reference all defined form elements."""
-        # self._spec.form_template.elements.root.i
-        return """
-### TODO
-"""
-
     @computed_field
     @cached_property
     def all_icons(self) -> str:

@@ -84,14 +84,19 @@ The Drop Down Single Select form element takes the following parameters:
  #element_Drop_Down_Single_Select_parameters .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
 </style>
-<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<table style="table-layout: fixed;; width: 100%" class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+  <col style="width:10%;"/>
+  <col style="width:50%;"/>
+</colgroup>
+
 <thead>
 
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_title gt_font_normal">Drop Down Single Select</td>
+    <td colspan="2" class="gt_heading gt_title gt_font_normal">Drop Down Single Select</td>
   </tr>
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+    <td colspan="2" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Parameters
 
@@ -101,126 +106,125 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">default</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>The option from the <strong><code>enum</code></strong> which is chosen by default.<br>This <strong>MUST</strong> be a value defined in the <strong><code>enum</code></strong>.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left">option 1</td>
-    <td class="gt_row gt_left">An Example of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>default: &quot;option 1&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">description</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
-    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left">string</td>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left gt_striped">Drop Down Single Selector.
-Choose a value from the options presented.</td>
-    <td class="gt_row gt_left gt_striped">An Example of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">enum</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">array</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left">Link to parameter Items</td>
-    <td class="gt_row gt_left">TODO</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left gt_striped">['option 1', 'option 2', 'option 3']</td>
-    <td class="gt_row gt_left gt_striped">An Example of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">title</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left">Selector</td>
-    <td class="gt_row gt_left">An Example of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-guidance</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
-    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left">string</td>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left gt_striped">It is recommended that a good choice be made.
-A bad choice could effect prospects of success.
-A good choice could improve them.
-So make a good choice.</td>
-    <td class="gt_row gt_left gt_striped">An Example of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-icon</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
-    <th class="gt_row gt_left gt_stub">Choices</th>
-    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
-    <td class="gt_row gt_left">All the choices.</td>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Example</th>
-    <td class="gt_row gt_left gt_striped">emoji-happy</td>
-    <td class="gt_row gt_left gt_striped">An Example of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>description: &quot;Drop Down Single Selector.\nChoose a value from the options presented.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>enum</code></strong><br>Sorted array of string values from which a single value can be selected.
+Values must be presented in the order they appear in the array.
+No value that is not in the array may be listed or presented.
+Each item in the array <strong>MUST</strong> be  unique.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped"><code>array</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Items</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>enum: [&quot;option 1&quot;, &quot;option 2&quot;, &quot;option 3&quot;]</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">yes</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Selector&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;emoji-happy&quot;</code></td>
   </tr>
 </tbody>
 
@@ -232,7 +236,6 @@ So make a good choice.</td>
 
 <!-- markdownlint-enable -->
 <!---HTML END-->
-
 
 ## Example Usage
 

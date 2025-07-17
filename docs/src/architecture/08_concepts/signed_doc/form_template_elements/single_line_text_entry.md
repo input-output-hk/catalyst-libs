@@ -82,14 +82,19 @@ The Single Line Text Entry form element takes the following parameters:
  #element_Single_Line_Text_Entry_parameters .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
 </style>
-<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<table style="table-layout: fixed;; width: 100%" class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+  <col style="width:10%;"/>
+  <col style="width:50%;"/>
+</colgroup>
+
 <thead>
 
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_title gt_font_normal">Single Line Text Entry</td>
+    <td colspan="2" class="gt_heading gt_title gt_font_normal">Single Line Text Entry</td>
   </tr>
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+    <td colspan="2" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Parameters
 
@@ -99,82 +104,82 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">description</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">maxLength</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>maxLength</code></strong><br>Maximum number of characters allowed in the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">integer</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left"><code>integer</code></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">minLength</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>minLength</code></strong><br>Minimum number of characters allowed in the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
+    <td class="gt_row gt_left gt_striped">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">integer</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left"><code>integer</code></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">title</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-guidance</th>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-placeholder</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
 </tbody>
 
@@ -186,7 +191,6 @@ Parameters
 
 <!-- markdownlint-enable -->
 <!---HTML END-->
-
 
 ## Example Usage
 

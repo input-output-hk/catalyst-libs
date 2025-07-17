@@ -3,6 +3,8 @@
 import re
 import typing
 
+import commonmark
+
 
 class MarkdownHelpers:
     """Markdown Helper and Formatting Functions."""
@@ -11,6 +13,12 @@ class MarkdownHelpers:
     HTML_END = "<!---HTML END-->"
     ALLOW_HTML_IN_MD = "<!-- markdownlint-disable -->"
     DISALLOW_HTML_IN_MD = "<!-- markdownlint-enable -->"
+
+    @staticmethod
+    def to_html(md: str) -> str:
+        """Markdown to HTML."""
+        html: str = commonmark.commonmark(md)  # type: ignore reportUnknownMemberType
+        return re.sub(r"^<p>|</p>\n$", "", html)  # type: ignore reportUnknownMemberType
 
     @staticmethod
     def format_link(name: str, depth: int = 0, *, file: str = "metadata.md", monospace: bool = False) -> str:

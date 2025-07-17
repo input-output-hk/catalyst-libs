@@ -3647,19 +3647,22 @@
         "description": "UI - Drop Down Selection of a single entry from the defined enum.\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.",
         "parameters": {
           "default": {
-            "description": "The option from the enum which is chosen by default.",
+            "contentMediaType": "text/plain",
+            "description": "The option from the **`enum`** which is chosen by default.<br>This **MUST** be a value defined in the **`enum`**.",
             "example": "option 1",
             "required": "yes",
             "type": "string"
           },
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "example": "Drop Down Single Selector.\nChoose a value from the options presented.",
             "required": "optional",
             "type": "string"
           },
           "enum": {
-            "description": "An array of string to select from.",
+            "contentMediaType": "text/plain",
+            "description": "Sorted array of string values from which a single value can be selected.\nValues must be presented in the order they appear in the array.\nNo value that is not in the array may be listed or presented.\nEach item in the array **MUST** be  unique.",
             "example": [
               "option 1",
               "option 2",
@@ -3667,19 +3670,21 @@
             ],
             "items": {
               "description": "An element of the Enum.",
-              "required": "excluded",
+              "required": "yes",
               "type": "string"
             },
             "required": "yes",
             "type": "array"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "example": "Selector",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "example": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
             "required": "optional",
@@ -3970,7 +3975,8 @@
         "description": "UI - One or more Lines of text entry.\nLine breaks, and special characters are allowed.\nSpecial formatted markup, such as Markdown are not allowed.\nEnter multiple lines of plain text. You can use line breaks but no special formatting.",
         "parameters": {
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -3985,11 +3991,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4033,7 +4041,8 @@
             "type": "string"
           },
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4048,11 +4057,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4076,7 +4087,8 @@
         "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
         "parameters": {
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4091,11 +4103,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4137,7 +4151,8 @@
             "type": "string"
           },
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4152,11 +4167,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4175,26 +4192,29 @@
         "description": "UI - Radio Button Selection.\n\nSelect one option from a list of text options.\nSelector is styled as a set of Radio Buttons.",
         "parameters": {
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
           "enum": {
-            "description": "An array of string to select from.",
+            "description": "An array of string values that may be selected.",
             "items": {
               "description": "An element of the Enum.",
-              "required": "excluded",
+              "required": "yes",
               "type": "string"
             },
             "required": "yes",
             "type": "array"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4212,6 +4232,7 @@
         "description": "UI - Logical Document Sub-Section Break.\nSubsections are logical breaks in the form structure.\nThe ONLY Element that can appear in the root of a Form is a section.\nsection can be nested arbitrarily deep.\nThe form presentation can decide how deep, and what formatting it used\nfor each section at each level, however, even if the form is flattened and the section not\ndisplayed, then data must still follow the section nesting.",
         "parameters": {
           "description": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "The displayable description attached to the section.  Markdown formatted contents.",
             "required": "optional",
             "type": "string"
@@ -4227,6 +4248,7 @@
             "type": "string"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The title of the section.",
             "required": "yes",
             "type": "string"
@@ -4529,14 +4551,15 @@
         "description": "UI - A selector where a top level group selection, allows a single choice from a list of tags.\nSelect one option from the dropdown menu. \nOnly one choice is allowed.\n\nThe contents of the `singleGroupedTagSelector` *MUST* have the following format:\n\n```json\n\"oneOf\": [\n\t{\n\t\t\"properties\": {\n\t\t\t\"group\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\t\"const\": \"Governance\"\n\t\t\t},\n\t\t\t\"tag\": {\n\t\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\t\"enum\": [\n\t\t\t\t\t\"Governance\",\n\t\t\t\t\t\"DAO\"\n\t\t\t\t]\n\t\t\t}\n\t\t}\n\t},\n```",
         "parameters": {
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
           "oneOf_groupedTags": {
             "description": "A set of tags with a group selector.",
             "items": {
-              "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"#/definitions/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"#/definitions/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
+              "description": "\tAn array of grouped tag objects, of which one can be selected.\n\tEach object *MUST* have the form:\n\t\n\t```json\n\t\"properties\": {\n\t\t\"group\": {\n\t\t\t\"$ref\": \"$def/tagGroup\",\n\t\t\t\"const\": <group name string>\n\t\t},\n\t\t\"tag\": {\n\t\t\t\"$ref\": \"$def/tagSelection\",\n\t\t\t\"enum\": [\n\t\t\t\t<tag 1 string>,\n\t\t\t\t<tag 2 string>,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t```",
               "required": "excluded",
               "type": "object"
             },
@@ -4545,11 +4568,13 @@
             "type": "array"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4568,7 +4593,8 @@
         "description": "UI - Single Line text entry for HTTPS Urls.\n\"x-note\": \n\tMust start with 'https://' and is followed by one or more \n\tnon-whitespace characters, ending at the end of the string.\n\t",
         "parameters": {
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4583,11 +4609,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4631,7 +4659,8 @@
             "type": "string"
           },
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4646,11 +4675,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4673,7 +4704,8 @@
         "description": "UI - Single Line text entry without any markup or rich text capability.\nA single line of text.\nNo formatting, markup, line breaks, or special characters are allowed.",
         "parameters": {
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4688,11 +4720,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"
@@ -4735,7 +4769,8 @@
             "type": "string"
           },
           "description": {
-            "description": "The description of the field presented during data entry.",
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
             "required": "optional",
             "type": "string"
           },
@@ -4750,11 +4785,13 @@
             "type": "integer"
           },
           "title": {
+            "contentMediaType": "text/plain",
             "description": "The label attached to the field.",
             "required": "yes",
             "type": "string"
           },
           "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
             "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
             "required": "optional",
             "type": "string"

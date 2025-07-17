@@ -32,9 +32,7 @@ import (
 	// The Field element is constrained by the parameters value.
 	// Their purpose is to assist creation of templates to set
 	// the appropriate form element parameters within the template properties.
-	type:     #fieldType
-	items?:   #parameter
-	choices?: list.UniqueItems
+	type: #fieldType
 
 	// All parameters when defined require an example of their use
 	// within the 
@@ -47,12 +45,20 @@ import (
 		contentMediaType?: #contentMediaTypeChoices
 		pattern?:          regexp.Valid
 		minLength?:        int // Only to enforce that the field can not be empty (such as when used in lists)
+		choices?:          list.UniqueItems
 		choices?: [...string]
+	}
+
+	// If the parameter is a `array` it can be constrained with the following
+	// options.
+	if type == "array" {
+		items?: #parameter
 	}
 
 	// If the parameter is a `integer` it can be constrained with the following
 	// options.
 	if type == "integer" {
+		choices?: list.UniqueItems
 		choices?: [...int]
 		minimum?: int
 		maximum?: int
@@ -63,12 +69,14 @@ import (
 // The parameters supported by a particular field definition
 _allParameters: {
 	title?: #parameter & {
-		description: _ | *"The label attached to the field."
-		required:    "yes"
+		description:      _ | *"The label attached to the field."
+		required:         "yes"
+		contentMediaType: _ | *"text/plain"
 	}
 	description?: #parameter & {
-		description: _ | *"The description of the field presented during data entry."
-		required:    "optional"
+		description:      _ | *"The description of the field presented to the user during data entry."
+		required:         "optional"
+		contentMediaType: "text/markdown; template=handlebars"
 	}
 	required?: #parameter & {
 		required: _ | *"optional"
@@ -100,8 +108,9 @@ _allParameters: {
 		items: {
 			description: "An element of the Enum."
 			type:        "string"
+			required:    "yes"
 		}
-		description: _ | *"An array of string to select from."
+		description: _ | *"An array of string values that may be selected."
 		required:    "yes"
 	}
 	minItems?: #parameter & {
@@ -134,11 +143,11 @@ _allParameters: {
 					```json
 					"properties": {
 						"group": {
-							"$ref": "#/definitions/tagGroup",
+							"$ref": "$def/tagGroup",
 							"const": <group name string>
 						},
 						"tag": {
-							"$ref": "#/definitions/tagSelection",
+							"$ref": "$def/tagSelection",
 							"enum": [
 								<tag 1 string>,
 								<tag 2 string>,
@@ -153,8 +162,9 @@ _allParameters: {
 		description: "A set of tags with a group selector."
 	}
 	"x-guidance"?: #parameter & {
-		description: _ | *"Long form Markdown formatted description to give guidance about how the field is to be completed."
-		required:    "optional"
+		description:      _ | *"Long form Markdown formatted description to give guidance about how the field is to be completed."
+		required:         "optional"
+		contentMediaType: "text/markdown; template=handlebars"
 	}
 	"x-placeholder"?: #parameter & {
 		description: _ | *"Placeholder text to display inside the field if it is empty."

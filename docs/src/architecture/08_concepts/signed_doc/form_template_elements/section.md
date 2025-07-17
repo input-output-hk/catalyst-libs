@@ -87,14 +87,19 @@ The Section form element takes the following parameters:
  #element_Section_parameters .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
 </style>
-<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<table style="table-layout: fixed;; width: 100%" class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+  <col style="width:10%;"/>
+  <col style="width:50%;"/>
+</colgroup>
+
 <thead>
 
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_title gt_font_normal">Section</td>
+    <td colspan="2" class="gt_heading gt_title gt_font_normal">Section</td>
   </tr>
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+    <td colspan="2" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Parameters
 
@@ -104,100 +109,96 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">description</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The displayable description attached to the section.  <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted contents.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">properties</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">required</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">title</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-flatten</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">boolean</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-icon</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Choices</th>
-    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
-    <td class="gt_row gt_left">All the choices.</td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-order</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>properties</code></strong><br>The sub fields of the section.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left gt_striped">yes</td>
-    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left">string</td>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>required</code></strong><br>Which fields MUST appear in the segment.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The title of the section.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">yes</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-flatten</code></strong><br>If present, and true, then form element is to be flattened into its parent.
+Typically this parameter is only present in sections.
+The UI is free to decide how it presents flattened sections.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped"><code>boolean</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-order</code></strong><br>The ordering of the properties to be enforced when displayed.
+Any field not listed here will get displayed in an alphabetical order following the listed fields.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">yes</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
 </tbody>
 
@@ -209,7 +210,6 @@ Parameters
 
 <!-- markdownlint-enable -->
 <!---HTML END-->
-
 
 ## Example Usage
 

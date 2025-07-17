@@ -107,14 +107,19 @@ The Single Grouped Tag Selector form element takes the following parameters:
  #element_Single_Grouped_Tag_Selector_parameters .gt_asterisk { font-size: 100%; vertical-align: 0; }
 
 </style>
-<table class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<table style="table-layout: fixed;; width: 100%" class="gt_table" data-quarto-disable-processing="false" data-quarto-bootstrap="false">
+<colgroup>
+  <col style="width:10%;"/>
+  <col style="width:50%;"/>
+</colgroup>
+
 <thead>
 
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_title gt_font_normal">Single Grouped Tag Selector</td>
+    <td colspan="2" class="gt_heading gt_title gt_font_normal">Single Grouped Tag Selector</td>
   </tr>
   <tr class="gt_heading">
-    <td colspan="3" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
+    <td colspan="2" class="gt_heading gt_subtitle gt_font_normal gt_bottom_border">
 
 Parameters
 
@@ -124,61 +129,64 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">description</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left">optional</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">string</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">oneOf_groupedTags</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>oneOf_groupedTags</code></strong><br>A set of tags with a group selector.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">excluded</td>
-    <td class="gt_row gt_left">Is the parameter required?</td>
+    <td class="gt_row gt_left gt_striped">excluded</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped">array</td>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left"><code>array</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left">Link to parameter Items</td>
-    <td class="gt_row gt_left">TODO</td>
+    <td class="gt_row gt_left gt_striped">optional_property_type=None description='\tAn array of grouped tag objects, of which one can be selected.\n\tEach object <em>MUST</em> have the form:\n\t\n\t<code>json\n\t&quot;properties&quot;: {\n\t\t&quot;group&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagGroup&quot;,\n\t\t\t&quot;const&quot;: &lt;group name string&gt;\n\t\t},\n\t\t&quot;tag&quot;: {\n\t\t\t&quot;$ref&quot;: &quot;$def/tagSelection&quot;,\n\t\t\t&quot;enum&quot;: [\n\t\t\t\t&lt;tag 1 string&gt;,\n\t\t\t\t&lt;tag 2 string&gt;,\n\t\t\t\t...\n\t\t\t]\n\t\t}\n\t}\n\t</code>' required=&lt;OptionalField.excluded: 'excluded'&gt; type='object' items=None choices=None format=None content_media_type=None pattern=None min_length=None minimum=None maximum=None example=None element_name='Unknown' property_type='object' name='Unknown'</td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">title</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">yes</td>
-    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
+    <td class="gt_row gt_left">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left">string</td>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="3">x-guidance</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
     <td class="gt_row gt_left gt_striped">optional</td>
-    <td class="gt_row gt_left gt_striped">Is the parameter required?</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left">string</td>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc8259.html">JSON</a> Type of the parameter.</td>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
 </tbody>
 
@@ -190,7 +198,6 @@ Parameters
 
 <!-- markdownlint-enable -->
 <!---HTML END-->
-
 
 ## Example Usage
 

@@ -136,8 +136,6 @@ possible Form Element.
 | Single Line Text Entry | [singleLineTextEntry](form_template_elements/single_line_text_entry.md) |
 | Single Line Text Entry List | [singleLineTextEntryList](form_template_elements/single_line_text_entry_list.md) |
 
-### TODO
-
 ## Assets
 
 Form Templates may make use of the following sets of known assets.
