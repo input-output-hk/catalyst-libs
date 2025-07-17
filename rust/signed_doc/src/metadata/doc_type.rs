@@ -3,6 +3,7 @@
 use std::{
     fmt::{Display, Formatter},
     hash::{Hash, Hasher},
+    ops::Deref,
 };
 
 use catalyst_types::uuid::{CborContext, Uuid, UuidV4};
@@ -34,11 +35,29 @@ pub enum DocTypeError {
     StringConversion(String),
 }
 
-impl DocType {
-    /// Get a list of `UUIDv4` document types.
-    #[must_use]
-    pub fn doc_types(&self) -> &Vec<UuidV4> {
+impl Deref for DocType {
+    type Target = Vec<UuidV4>;
+
+    fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl IntoIterator for DocType {
+    type IntoIter = <Vec<UuidV4> as IntoIterator>::IntoIter;
+    type Item = UuidV4;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.into_iter()
+    }
+}
+
+impl<'a> IntoIterator for &'a DocType {
+    type IntoIter = <&'a Vec<UuidV4> as IntoIterator>::IntoIter;
+    type Item = &'a UuidV4;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.0.iter()
     }
 }
 
