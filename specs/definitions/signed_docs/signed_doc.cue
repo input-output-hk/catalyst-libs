@@ -108,4 +108,5 @@ _allDocNames: or(_allDocNamesList)
 formTemplate: {
 	elements: form_template.dictionary
 	schema:   form_template.formTemplate
+	assets: icons: form_template.allIconsSvg
 }

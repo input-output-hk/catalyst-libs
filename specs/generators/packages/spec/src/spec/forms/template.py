@@ -6,7 +6,7 @@ from functools import cached_property
 from typing import Any
 
 import jsonschema
-from pydantic import BaseModel, Field, RootModel, computed_field
+from pydantic import BaseModel, ConfigDict, Field, RootModel, computed_field
 
 from spec.forms.element.element import Element
 
@@ -110,8 +110,25 @@ class TemplateGenericSchema(RootModel[dict[str, Any]]):
         return schema
 
 
+class FormTemplateAssetsIcons(RootModel[dict[str, str]]):
+    """Template Assets Schema Definitions."""
+
+    root: dict[str, str]
+
+
+class FormTemplateAssets(BaseModel):
+    """Template Assets Schema Definitions."""
+
+    icons: FormTemplateAssetsIcons
+
+    model_config = ConfigDict(extra="forbid")
+
+
 class FormTemplate(BaseModel):
     """Template Json Schema Definitions."""
 
     elements: FormTemplateElements
     generic_schema: TemplateGenericSchema = Field(alias="schema")
+    assets: FormTemplateAssets
+
+    model_config = ConfigDict(extra="forbid")
