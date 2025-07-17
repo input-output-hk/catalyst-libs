@@ -200,7 +200,7 @@ impl DlConfig {
         resolver.resolve(url, worker)
     }
 
-    /// Builds a `UReq` Agent.  
+    /// Builds a `UReq` Agent.
     ///
     /// Because we need multiple clients to prevent all traffic being forced onto a single
     /// connection when HTTP2 is used, the client can NOT be supplied by the user.
@@ -330,8 +330,8 @@ impl ParallelDownloadProcessorInner {
             .set(RANGE.as_str(), &range_header)
             .call()
             .context("GET ranged request failed")?;
-        // let addr = get_range_response.remote_addr();
-        // debug!("Chunk {chunk} from {addr:?}");
+         let addr = get_range_response.remote_addr();
+         debug!("Chunk {chunk} from {addr:?}");
         if get_range_response.status() != StatusCode::PARTIAL_CONTENT {
             bail!(
                 "Response to range request has an unexpected status code (expected {}, found {})",
