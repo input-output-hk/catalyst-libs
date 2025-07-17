@@ -7,7 +7,11 @@ package form_template
 import (
 	"list"
 	"strings"
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
 )
+
+#iconName: string
+#iconName: =~regex.def.iconName.pattern
 
 _iconsFromAssets: _ @embed(glob="icons/*.svg",type=text)
 
@@ -20,6 +24,7 @@ _iconsSvg: {
 }
 
 _allIcons: list.UniqueItems
+_allIcons: [...#iconName]
 _allIcons: list.Sort([
 	for icon_name, svg in _iconsSvg {icon_name},
 ], list.Ascending)

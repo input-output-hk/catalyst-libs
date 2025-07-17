@@ -9,8 +9,8 @@ dictionary: section: {
 	description: """
 		UI - Logical Document Sub-Section Break.
 		Subsections are logical breaks in the form structure.
-		The ONLY Element that can appear in the root of a Form is a `section`.
-		`section` can be nested arbitrarily deep.
+		The ONLY Element that can appear in the root of a Form is a section.
+		section can be nested arbitrarily deep.
 		The form presentation can decide how deep, and what formatting it used
 		for each section at each level, however, even if the form is flattened and the section not
 		displayed, then data must still follow the section nesting.

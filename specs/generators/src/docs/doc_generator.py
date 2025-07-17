@@ -465,7 +465,7 @@ class DocGenerator:
             msg = "link_file or doc_name must be defined."
             raise NotImplementedError(msg)
         if template is None:
-            template = link_file + ".jinja"
+            template = link_file + ".md.jinja"
         if self._template is None:
             msg = "Not a templated file."
             raise NotImplementedError(msg)
@@ -481,7 +481,7 @@ class DocGenerator:
         elif link_type == LinkType.RAW:
             link = f"{relative_file}"
         else:
-            link = f'<a href="{relative_file}{heading}">{name}</a>'
+            link = f'<a href="../{relative_file}/{heading}">{name}</a>'
 
         return link
 

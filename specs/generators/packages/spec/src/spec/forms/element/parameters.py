@@ -48,7 +48,6 @@ class Parameter(BaseModel):
     @property
     def property_type(self) -> str:
         """Name Of the Property."""
-        print(f"Property Type: {self.optional_property_type}")
         return self.optional_property_type if self.optional_property_type is not None else self.type
 
     @computed_field

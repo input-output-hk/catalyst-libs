@@ -108,7 +108,15 @@ possible Form Element.
 | Name | Element |
 | --- | --- |
 {% for element, def in spec.form_template.elements.all() %}
-| {{ def.title_name }} | `{{ doc.link_to_file(element,doc_name=def.snake_name, template=doc.ELEMENT_TEMPLATE) }}` |
+| {{ def.title_name }} | {{ doc.link_to_file(element,doc_name=def.snake_name, template=doc.ELEMENT_TEMPLATE) }} |
 {% endfor %}
 
 {{ doc.all_form_elements() | trim }}
+
+## Assets
+
+Form Templates may make use of the following sets of known assets.
+
+### Icons
+
+{{ doc.all_icons }}

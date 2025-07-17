@@ -426,7 +426,7 @@ Supported HTTP Encodings of the Payload
 ### Metadata
 
 Catalyst Signed Documents extend the Header Parameters with a series of
-[Metadata fields](metadata.md).
+[Metadata fields](metadata).
 
 ### Signing Catalyst Signed Documents
 

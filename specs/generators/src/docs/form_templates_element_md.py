@@ -1,7 +1,6 @@
 """Generate the form_templates_element.md.jinja templated files."""
 
 import argparse
-import json
 from functools import cached_property
 from typing import Any
 
@@ -13,13 +12,14 @@ from docs.form_template_basic_schema_json import FormTemplateBasicSchemaJson
 from docs.form_template_example_schema_json import FormTemplateExampleSchemaJson
 from spec.signed_doc import SignedDoc
 
-from .doc_generator import DocGenerator
+from .doc_generator import DocGenerator, LinkType
 
 
 class FormTemplatesElementMd(DocGenerator):
     """Generate the Element documentation for a form template."""
 
     TEMPLATE: str = "form_templates_element.md.jinja"
+    FORM_TEMPLATE: str = "form_templates.md.jinja"
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, name: str) -> None:
         """Initialise form templates Element documentation generator."""
@@ -56,7 +56,13 @@ class FormTemplatesElementMd(DocGenerator):
             if parameter.items is not None:
                 add_param_field(parameter.element_name, "Items", "Link to parameter Items", "TODO")
             if parameter.choices is not None:
-                add_param_field(parameter.element_name, "Choices", f"{parameter.choices}", "All the choices.")
+                if self._spec.form_template.assets.icons.check(parameter.choices):
+                    choices = self.link_to_file(
+                        "Icons", link_file="form_templates", heading="icons", link_type=LinkType.HTML
+                    )
+                else:
+                    choices = "[" + ",<br>".join(f"`{choice}`" for choice in parameter.choices) + "]"
+                add_param_field(parameter.element_name, "Choices", choices, "All the choices.")
             if parameter.format is not None:
                 add_param_field(parameter.element_name, "Format", parameter.format, "Format of the Parameter.")
             if parameter.content_media_type is not None:
@@ -85,7 +91,7 @@ class FormTemplatesElementMd(DocGenerator):
                     parameter.element_name,
                     "Minimum",
                     f"{parameter.minimum}",
-                    "The Minimum numeric value of the paramter.",
+                    "The Minimum numeric value of the parameter.",
                 )
             if parameter.maximum is not None:
                 add_param_field(
@@ -99,15 +105,13 @@ class FormTemplatesElementMd(DocGenerator):
                     parameter.element_name, "Example", f"{parameter.example}", "An Example of the parameter."
                 )
 
-        print(json.dumps(table_data, indent=2))
-
         params = pl.DataFrame(table_data)
 
         table = (
             GT(params)
             .with_id(id=f"element {self.name()} parameters".replace(" ", "_"))
             .tab_header(title=f"{self.name()}", subtitle="\n\nParameters\n\n")
-            .fmt_markdown("Docs")
+            .fmt_markdown(["Values", "Docs"])
             .tab_stub(rowname_col="Headings", groupname_col="Group")
             .tab_options(column_labels_hidden=True, container_width="100%", table_width="100%")
             .opt_stylize(style=6)

@@ -6,6 +6,7 @@ from functools import cached_property
 from typing import Any
 
 import jsonschema
+import rich
 from pydantic import BaseModel, ConfigDict, Field, RootModel, computed_field
 
 from spec.forms.element.element import Element
@@ -91,7 +92,7 @@ class TemplateGenericSchema(RootModel[dict[str, Any]]):
         try:
             jsonschema.Draft202012Validator.check_schema(schema)
         except Exception:
-            print(json.dumps(schema, indent=4))
+            rich.print(json.dumps(schema, indent=4))
             raise
 
         return schema
@@ -104,7 +105,7 @@ class TemplateGenericSchema(RootModel[dict[str, Any]]):
         try:
             jsonschema.Draft202012Validator.check_schema(schema)
         except Exception:
-            print(json.dumps(schema, indent=4))
+            rich.print(json.dumps(schema, indent=4))
             raise
 
         return schema
@@ -114,6 +115,28 @@ class FormTemplateAssetsIcons(RootModel[dict[str, str]]):
     """Template Assets Schema Definitions."""
 
     root: dict[str, str]
+
+    @computed_field
+    @property
+    def all(self) -> list[str]:
+        """Get all Icon names.
+
+        Names are sorted alphabetically, but clustered
+        based on the first component of the name,
+        and how many component there are in the name.
+
+        This keeps icon names with the same related purpose together
+        when listed.
+        """
+        return sorted(self.root.keys(), key=lambda s: (s.split("-", maxsplit=1)[0], len(s.split("-")), s))
+
+    def svg(self, name: str) -> str:
+        """Return SVG icon data for the named icon."""
+        return self.root[name]
+
+    def check(self, items: list[str] | list[int]) -> bool:
+        """Check if the items are a list of Icon names."""
+        return set(self.all) == set(items)
 
 
 class FormTemplateAssets(BaseModel):
