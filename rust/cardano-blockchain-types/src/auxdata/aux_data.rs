@@ -22,7 +22,8 @@ pub struct TransactionAuxData {
 
 impl Decode<'_, ()> for TransactionAuxData {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         // Check what kind of aux data we have to deal with
         match d.datatype() {
@@ -54,7 +55,10 @@ impl Decode<'_, ()> for TransactionAuxData {
 impl TransactionAuxData {
     /// Get metadata with the given label.
     #[must_use]
-    pub fn metadata(&self, label: MetadatumLabel) -> Option<&MetadatumValue> {
+    pub fn metadata(
+        &self,
+        label: MetadatumLabel,
+    ) -> Option<&MetadatumValue> {
         self.metadata.get(label)
     }
 

@@ -15,7 +15,10 @@ where T: for<'a> Cbor<'a>;
 impl<T> Decode<'_, ()> for EncodedCbor<T>
 where T: for<'a> Cbor<'a>
 {
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        (): &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         let tag = d.tag()?;
         if ENCODED_CBOR_TAG != tag.as_u64() {
             return Err(minicbor::decode::Error::message(format!(
@@ -33,7 +36,9 @@ impl<T> Encode<()> for EncodedCbor<T>
 where T: for<'a> Cbor<'a>
 {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.tag(Tag::new(ENCODED_CBOR_TAG))?;
         let cbor_bytes = self

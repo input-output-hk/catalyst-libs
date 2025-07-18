@@ -45,7 +45,9 @@ pub(crate) const URI: u8 = 134;
 
 /// Checks that hashing transactions inputs produces the value equal to the given one.
 pub fn validate_txn_inputs_hash(
-    hash: &TxInputHash, transaction: &conway::MintedTx, report: &ProblemReport,
+    hash: &TxInputHash,
+    transaction: &conway::MintedTx,
+    report: &ProblemReport,
 ) {
     let context = "Cip509 transaction input hash validation";
 
@@ -83,7 +85,9 @@ pub fn validate_txn_inputs_hash(
 
 /// Checks that the given transaction auxiliary data hash is correct.
 pub fn validate_aux(
-    raw_aux_data: &[u8], auxiliary_data_hash: Option<&Bytes>, report: &ProblemReport,
+    raw_aux_data: &[u8],
+    auxiliary_data_hash: Option<&Bytes>,
+    report: &ProblemReport,
 ) {
     let context = "Cip509 auxiliary data validation";
 
@@ -114,7 +118,9 @@ pub fn validate_aux(
 /// Checks that all public keys extracted from x509 and c509 certificates are present in
 /// the witness set of the transaction.
 pub fn validate_stake_public_key(
-    transaction: &conway::MintedTx, uris: Option<&Cip0134UriSet>, report: &ProblemReport,
+    transaction: &conway::MintedTx,
+    uris: Option<&Cip0134UriSet>,
+    report: &ProblemReport,
 ) {
     let context = "Cip509 stake public key validation";
 
@@ -167,7 +173,10 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
 
 /// Validate self-signed certificates.
 /// All certificates should be self-signed and support only ED25519 signature.
-pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemReport) {
+pub fn validate_self_sign_cert(
+    metadata: &Cip509RbacMetadata,
+    report: &ProblemReport,
+) {
     let context = "Cip509 self-signed certificate validation";
 
     for (index, cert) in metadata.c509_certs.iter().enumerate() {
@@ -184,7 +193,12 @@ pub fn validate_self_sign_cert(metadata: &Cip509RbacMetadata, report: &ProblemRe
 }
 
 /// Validate C509 certificate that it is a self-signed.
-fn validate_c509_self_signed_cert(c: &C509, index: usize, report: &ProblemReport, context: &str) {
+fn validate_c509_self_signed_cert(
+    c: &C509,
+    index: usize,
+    report: &ProblemReport,
+    context: &str,
+) {
     // Self-sign certificate must be type 2
     if c.tbs_cert().c509_certificate_type() != 2 {
         report.invalid_value(
@@ -243,7 +257,12 @@ fn validate_c509_self_signed_cert(c: &C509, index: usize, report: &ProblemReport
 }
 
 /// Validate X509 certificate that it is a self-signed.
-fn validate_x509_self_signed_cert(c: &X509, index: usize, report: &ProblemReport, context: &str) {
+fn validate_x509_self_signed_cert(
+    c: &X509,
+    index: usize,
+    report: &ProblemReport,
+    context: &str,
+) {
     let pk = match x509_key(c) {
         Ok(pk) => pk,
         Err(e) => {
@@ -296,7 +315,9 @@ fn validate_x509_self_signed_cert(c: &X509, index: usize, report: &ProblemReport
 /// Checks the role data.
 #[allow(clippy::similar_names)]
 pub fn validate_role_data(
-    metadata: &Cip509RbacMetadata, subnet: Network, report: &ProblemReport,
+    metadata: &Cip509RbacMetadata,
+    subnet: Network,
+    report: &ProblemReport,
 ) -> Option<CatalystId> {
     let context = "Role data validation";
 
@@ -401,7 +422,10 @@ pub fn validate_role_data(
 
 /// Checks that the role 0 data is correct.
 fn validate_role_0(
-    role: &RoleData, metadata: &Cip509RbacMetadata, subnet: Network, context: &str,
+    role: &RoleData,
+    metadata: &Cip509RbacMetadata,
+    subnet: Network,
+    context: &str,
     report: &ProblemReport,
 ) -> Option<CatalystId> {
     if let Some(key) = role.encryption_key() {
@@ -463,14 +487,22 @@ fn validate_role_0(
 }
 
 /// Extracts `VerifyingKey` from the given `X509` certificate.
-fn x509_cert_key(cert: &X509, context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
+fn x509_cert_key(
+    cert: &X509,
+    context: &str,
+    report: &ProblemReport,
+) -> Option<VerifyingKey> {
     x509_key(cert)
         .inspect_err(|err| err.report_problem(context, report))
         .ok()
 }
 
 /// Extracts `VerifyingKey` from the given `C509` certificate.
-fn c509_cert_key(cert: &C509, context: &str, report: &ProblemReport) -> Option<VerifyingKey> {
+fn c509_cert_key(
+    cert: &C509,
+    context: &str,
+    report: &ProblemReport,
+) -> Option<VerifyingKey> {
     c509_key(cert)
         .inspect_err(|err| err.report_problem(context, report))
         .ok()

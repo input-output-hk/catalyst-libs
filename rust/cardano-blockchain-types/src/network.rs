@@ -160,7 +160,10 @@ impl Network {
 
     /// Convert a given slot# to its Wall Time for a Blockchain network.
     #[must_use]
-    pub fn slot_to_time(self, slot: Slot) -> DateTime<Utc> {
+    pub fn slot_to_time(
+        self,
+        slot: Slot,
+    ) -> DateTime<Utc> {
         let genesis = self.genesis_values();
         let wall_clock = genesis.slot_to_wallclock(slot.into());
 
@@ -174,7 +177,10 @@ impl Network {
     ///
     /// The Slot does not have to be a valid slot present in the blockchain.
     #[must_use]
-    pub fn time_to_slot(self, time: DateTime<Utc>) -> Option<Slot> {
+    pub fn time_to_slot(
+        self,
+        time: DateTime<Utc>,
+    ) -> Option<Slot> {
         let genesis = self.genesis_values();
 
         let byron_start_time =
