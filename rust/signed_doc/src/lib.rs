@@ -24,7 +24,9 @@ use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::With
 pub use content::Content;
 use decode_context::{CompatibilityPolicy, DecodeContext};
 pub use metadata::{
-    ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, DocumentRefs, Metadata, Section,
+    doc_type::{map_doc_type, to_deprecated_doc_type},
+    ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, DocumentRefs, Metadata,
+    Section,
 };
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
