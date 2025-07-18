@@ -239,7 +239,6 @@ pub fn map_doc_type(uuid: UuidV4) -> DocType {
 }
 
 /// Maps `DocType` to the deprecated corresponding doc type.
-#[allow(dead_code)]
 pub fn to_deprecated_doc_type(doc_type: &DocType) -> Option<UuidV4> {
     if doc_type == &*PROPOSAL {
         UuidV4::try_from(deprecated::PROPOSAL_DOCUMENT_UUID_TYPE).ok()
