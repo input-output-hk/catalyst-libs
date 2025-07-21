@@ -3649,7 +3649,7 @@
           "pattern": "^[^\\n]*$",
           "type": "string"
         },
-        "description": "UI - Drop Down Selection of a single entry from the defined enum.\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.",
+        "description": "## Functional Behavior\n\nSelect one option from a selector styled as a dropdown menu.\nOnly one choice is allowed.\n\n## Visual Representation\n\nA Drop Down Selection of a single entry from the defined enum values.",
         "parameters": {
           "default": {
             "contentMediaType": "text/plain",
@@ -4017,7 +4017,53 @@
           "section"
         ]
       },
-      "multiLineTextEntryListMarkdown": {
+      "multiLineTextEntryMarkdown": {
+        "definition": {
+          "contentMediaType": "text/markdown",
+          "pattern": "^[\\S\\s]*$",
+          "type": "string"
+        },
+        "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
+        "parameters": {
+          "description": {
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "The description of the field presented to the user during data entry.",
+            "required": "optional",
+            "type": "string"
+          },
+          "maxLength": {
+            "description": "Maximum number of characters allowed in the field.",
+            "required": "yes",
+            "type": "integer"
+          },
+          "minLength": {
+            "description": "Minimum number of characters allowed in the field.",
+            "required": "optional",
+            "type": "integer"
+          },
+          "title": {
+            "contentMediaType": "text/plain",
+            "description": "The label attached to the field.",
+            "required": "yes",
+            "type": "string"
+          },
+          "x-guidance": {
+            "contentMediaType": "text/markdown; template=handlebars",
+            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
+            "required": "optional",
+            "type": "string"
+          },
+          "x-placeholder": {
+            "description": "Placeholder text to display inside the field if it is empty.",
+            "required": "optional",
+            "type": "string"
+          }
+        },
+        "parent": [
+          "section"
+        ]
+      },
+      "multiLineTextEntryMarkdownList": {
         "definition": {
           "items": {
             "contentMediaType": "text/markdown",
@@ -4058,52 +4104,6 @@
           },
           "minItems": {
             "description": "An array instance is valid against \"minItems\" if its size is greater than, or equal to, the value of this keyword.",
-            "required": "optional",
-            "type": "integer"
-          },
-          "title": {
-            "contentMediaType": "text/plain",
-            "description": "The label attached to the field.",
-            "required": "yes",
-            "type": "string"
-          },
-          "x-guidance": {
-            "contentMediaType": "text/markdown; template=handlebars",
-            "description": "Long form Markdown formatted description to give guidance about how the field is to be completed.",
-            "required": "optional",
-            "type": "string"
-          },
-          "x-placeholder": {
-            "description": "Placeholder text to display inside the field if it is empty.",
-            "required": "optional",
-            "type": "string"
-          }
-        },
-        "parent": [
-          "section"
-        ]
-      },
-      "multiLineTextEntryMarkdown": {
-        "definition": {
-          "contentMediaType": "text/markdown",
-          "pattern": "^[\\S\\s]*$",
-          "type": "string"
-        },
-        "description": "UI - Multiline text entry with Markdown content.\nUse Markdown formatting for rich text. \nMarkdown formatting is as defined by CommonMark.\n\nThe following Markdown Extensions are also supported:\n\n* None",
-        "parameters": {
-          "description": {
-            "contentMediaType": "text/markdown; template=handlebars",
-            "description": "The description of the field presented to the user during data entry.",
-            "required": "optional",
-            "type": "string"
-          },
-          "maxLength": {
-            "description": "Maximum number of characters allowed in the field.",
-            "required": "yes",
-            "type": "integer"
-          },
-          "minLength": {
-            "description": "Minimum number of characters allowed in the field.",
             "required": "optional",
             "type": "integer"
           },
@@ -4824,7 +4824,12 @@
           "pattern": "^[\\S\\s]*$",
           "type": "string"
         },
-        "multiLineTextEntryListMarkdown": {
+        "multiLineTextEntryMarkdown": {
+          "contentMediaType": "text/markdown",
+          "pattern": "^[\\S\\s]*$",
+          "type": "string"
+        },
+        "multiLineTextEntryMarkdownList": {
           "items": {
             "contentMediaType": "text/markdown",
             "minLength": 1,
@@ -4833,11 +4838,6 @@
           },
           "type": "array",
           "uniqueItems": true
-        },
-        "multiLineTextEntryMarkdown": {
-          "contentMediaType": "text/markdown",
-          "pattern": "^[\\S\\s]*$",
-          "type": "string"
         },
         "multiSelect": {
           "items": {

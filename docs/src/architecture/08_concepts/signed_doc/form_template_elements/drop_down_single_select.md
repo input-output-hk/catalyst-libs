@@ -1,9 +1,13 @@
 # Form Template Element - Drop Down Single Select
 
-UI - Drop Down Selection of a single entry from the defined enum.
+## Functional Behavior
 
 Select one option from a selector styled as a dropdown menu.
 Only one choice is allowed.
+
+## Visual Representation
+
+A Drop Down Selection of a single entry from the defined enum values.
 
 ## Parent Elements
 

@@ -2,7 +2,7 @@
 
 package form_template
 
-dictionary: multiLineTextEntryListMarkdown: {
+dictionary: multiLineTextEntryMarkdownList: {
 	description: """
 		UI - A Growable List of markdown formatted text fields.
 		Each entry is a multiline markdown formatted string.

@@ -13,7 +13,12 @@
             "pattern": "^[\\S\\s]*$",
             "type": "string"
         },
-        "multiLineTextEntryListMarkdown": {
+        "multiLineTextEntryMarkdown": {
+            "contentMediaType": "text/markdown",
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+        },
+        "multiLineTextEntryMarkdownList": {
             "items": {
                 "contentMediaType": "text/markdown",
                 "minLength": 1,
@@ -22,11 +27,6 @@
             },
             "type": "array",
             "uniqueItems": true
-        },
-        "multiLineTextEntryMarkdown": {
-            "contentMediaType": "text/markdown",
-            "pattern": "^[\\S\\s]*$",
-            "type": "string"
         },
         "multiSelect": {
             "items": {
@@ -103,11 +103,11 @@
                 "exampleMultiLineTextEntry": {
                     "$ref": "#/$defs/multiLineTextEntry"
                 },
-                "exampleMultiLineTextEntryListMarkdown": {
-                    "$ref": "#/$defs/multiLineTextEntryListMarkdown"
-                },
                 "exampleMultiLineTextEntryMarkdown": {
                     "$ref": "#/$defs/multiLineTextEntryMarkdown"
+                },
+                "exampleMultiLineTextEntryMarkdownList": {
+                    "$ref": "#/$defs/multiLineTextEntryMarkdownList"
                 },
                 "exampleMultiSelect": {
                     "$ref": "#/$defs/multiSelect"
@@ -134,11 +134,11 @@
                         "exampleMultiLineTextEntry": {
                             "$ref": "#/$defs/multiLineTextEntry"
                         },
-                        "exampleMultiLineTextEntryListMarkdown": {
-                            "$ref": "#/$defs/multiLineTextEntryListMarkdown"
-                        },
                         "exampleMultiLineTextEntryMarkdown": {
                             "$ref": "#/$defs/multiLineTextEntryMarkdown"
+                        },
+                        "exampleMultiLineTextEntryMarkdownList": {
+                            "$ref": "#/$defs/multiLineTextEntryMarkdownList"
                         },
                         "exampleMultiSelect": {
                             "$ref": "#/$defs/multiSelect"
