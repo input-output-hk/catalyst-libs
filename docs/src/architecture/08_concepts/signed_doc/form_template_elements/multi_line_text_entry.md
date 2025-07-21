@@ -1,9 +1,15 @@
 # Form Template Element - Multi Line Text Entry
 
-UI - One or more Lines of text entry.
+## Functional Behavior
+
+A multi line plain text entry field.
 Line breaks, and special characters are allowed.
 Special formatted markup, such as [Markdown][CommonMark] are not allowed.
-Enter multiple lines of plain text. You can use line breaks but no special formatting.
+
+## Visual Representation
+
+A Text entry box that allows multiple lines of plain text
+up to the maximum number of allowed characters.
 
 ## Parent Elements
 
@@ -106,7 +112,8 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>The default value to be used if the field is empty.
+Takes priority over <code>x-placeholder</code> if both are defined.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
@@ -117,8 +124,27 @@ Parameters
     <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>default: &quot;This explanation has not been given.\nIgnore it.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>description: &quot;Explain what it is you want to achieve.&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>maxLength</code></strong><br>Maximum number of characters allowed in the field.</th>
@@ -131,16 +157,24 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>maxLength: 5000</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>minLength</code></strong><br>Minimum number of characters allowed in the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>integer</code></td>
+    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>minLength: 20</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
@@ -157,23 +191,12 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Explanation&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
-  </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
@@ -182,6 +205,49 @@ Parameters
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;It's useful to explain things here.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;academic-cap&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
+Unlike <code>default</code> it does not provide a default value for the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-placeholder: &quot;What's your explanation?&quot;</code></td>
   </tr>
 </tbody>
 
@@ -223,13 +289,29 @@ This is an Example Form Template showing just the Multi Line Text Entry form ele
           "$ref": "#/$defs/section",
           "properties": {
             "exampleMultiLineTextEntry": {
-              "$ref": "#/$defs/multiLineTextEntry"
+              "$ref": "#/$defs/multiLineTextEntry",
+              "default": "This explanation has not been given.\nIgnore it.",
+              "description": "Explain what it is you want to achieve.",
+              "maxLength": 5000,
+              "minLength": 20,
+              "title": "Explanation",
+              "x-guidance": "It's useful to explain things here.",
+              "x-icon": "academic-cap",
+              "x-placeholder": "What's your explanation?"
             },
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleMultiLineTextEntry": {
-                  "$ref": "#/$defs/multiLineTextEntry"
+                  "$ref": "#/$defs/multiLineTextEntry",
+                  "default": "This explanation has not been given.\nIgnore it.",
+                  "description": "Explain what it is you want to achieve.",
+                  "maxLength": 5000,
+                  "minLength": 20,
+                  "title": "Explanation",
+                  "x-guidance": "It's useful to explain things here.",
+                  "x-icon": "academic-cap",
+                  "x-placeholder": "What's your explanation?"
                 }
               }
             }

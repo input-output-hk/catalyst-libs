@@ -167,7 +167,7 @@ _allParameters: {
 		contentMediaType: "text/markdown; template=handlebars"
 	}
 	"x-placeholder"?: #parameter & {
-		description: _ | *"Placeholder text to display inside the field if it is empty."
+		description: _ | *"Placeholder text to display inside the field if it is empty.\nUnlike `default` it does not provide a default value for the field."
 		required:    "optional"
 	}
 	"x-icon"?: #parameter & {

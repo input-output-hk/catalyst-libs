@@ -8,10 +8,16 @@ import (
 
 dictionary: multiLineTextEntry: {
 	description: """
-		UI - One or more Lines of text entry.
+		## Functional Behavior
+
+		A multi line plain text entry field.
 		Line breaks, and special characters are allowed.
 		Special formatted markup, such as Markdown are not allowed.
-		Enter multiple lines of plain text. You can use line breaks but no special formatting.
+
+		## Visual Representation
+
+		A Text entry box that allows multiple lines of plain text
+		up to the maximum number of allowed characters.
 		"""
 	parent: ["section"]
 
@@ -21,11 +27,20 @@ dictionary: multiLineTextEntry: {
 		pattern:          regex.def.multiLine.pattern
 	}
 	parameters: {
-		title: {}
-		description: {}
-		minLength: {}
-		maxLength: {}
-		"x-guidance": {}
-		"x-placeholder": {}
+		title: example:       "Explanation"
+		description: example: "Explain what it is you want to achieve."
+		minLength: example:   20
+		maxLength: example:   5000
+		default: {
+			description: """
+				The default value to be used if the field is empty.
+				Takes priority over `x-placeholder` if both are defined.
+				"""
+			required: "optional"
+			example:  "This explanation has not been given.\nIgnore it."
+		}
+		"x-guidance": example:    "It's useful to explain things here."
+		"x-placeholder": example: "What's your explanation?"
+		"x-icon": example:        "academic-cap"
 	}
 }

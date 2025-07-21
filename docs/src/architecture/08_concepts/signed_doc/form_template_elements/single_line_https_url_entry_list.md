@@ -205,7 +205,8 @@ Parameters
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
+Unlike <code>default</code> it does not provide a default value for the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>

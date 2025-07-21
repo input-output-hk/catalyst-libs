@@ -101,7 +101,15 @@
                     "x-icon": "emoji-happy"
                 },
                 "exampleMultiLineTextEntry": {
-                    "$ref": "#/$defs/multiLineTextEntry"
+                    "$ref": "#/$defs/multiLineTextEntry",
+                    "default": "This explanation has not been given.\nIgnore it.",
+                    "description": "Explain what it is you want to achieve.",
+                    "maxLength": 5000,
+                    "minLength": 20,
+                    "title": "Explanation",
+                    "x-guidance": "It's useful to explain things here.",
+                    "x-icon": "academic-cap",
+                    "x-placeholder": "What's your explanation?"
                 },
                 "exampleMultiLineTextEntryMarkdown": {
                     "$ref": "#/$defs/multiLineTextEntryMarkdown"
@@ -132,7 +140,15 @@
                             "x-icon": "emoji-happy"
                         },
                         "exampleMultiLineTextEntry": {
-                            "$ref": "#/$defs/multiLineTextEntry"
+                            "$ref": "#/$defs/multiLineTextEntry",
+                            "default": "This explanation has not been given.\nIgnore it.",
+                            "description": "Explain what it is you want to achieve.",
+                            "maxLength": 5000,
+                            "minLength": 20,
+                            "title": "Explanation",
+                            "x-guidance": "It's useful to explain things here.",
+                            "x-icon": "academic-cap",
+                            "x-placeholder": "What's your explanation?"
                         },
                         "exampleMultiLineTextEntryMarkdown": {
                             "$ref": "#/$defs/multiLineTextEntryMarkdown"
