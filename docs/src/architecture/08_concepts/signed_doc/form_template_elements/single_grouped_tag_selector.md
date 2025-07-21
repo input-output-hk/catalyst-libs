@@ -38,6 +38,7 @@ The Single Grouped Tag Selector form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "singleGroupedTagSelector": {
           "additionalProperties": false,
@@ -47,8 +48,7 @@ The Single Grouped Tag Selector form element, can appear as a child of:
           ],
           "type": "object"
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -203,4 +203,50 @@ Parameters
 
 This is an Example Form Template showing just the Single Grouped Tag Selector form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "singleGroupedTagSelector Example",
+      "description": "An example of the singleGroupedTagSelector Element, and it's parents.",
+      "$defs": {
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "singleGroupedTagSelector": {
+          "additionalProperties": false,
+          "required": [
+            "group",
+            "tag"
+          ],
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {
+                "exampleSingleGroupedTagSelector": {
+                  "$ref": "#/$defs/singleGroupedTagSelector",
+                  "properties": {}
+                }
+              }
+            },
+            "exampleSingleGroupedTagSelector": {
+              "$ref": "#/$defs/singleGroupedTagSelector",
+              "properties": {}
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->

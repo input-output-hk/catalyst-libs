@@ -22,13 +22,13 @@ The Section form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "section": {
           "additionalProperties": false,
           "type": "object"
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -215,6 +215,35 @@ Any field not listed here will get displayed in an alphabetical order following 
 
 This is an Example Form Template showing just the Section form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "section Example",
+      "description": "An example of the section Element, and it's parents.",
+      "$defs": {
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {}
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 [JSON Schema-2020-12]: https://json-schema.org/draft/2020-12

@@ -2,6 +2,7 @@
 
 import json
 import typing
+from copy import deepcopy
 from functools import cached_property
 from typing import Any
 
@@ -49,15 +50,60 @@ class FormTemplateElements(RootModel[dict[str, Element]]):
 
         return definitions
 
-    @computed_field
-    @cached_property
-    def example(self) -> dict[str, Any]:
-        """Generate an example of the definitions."""
+    def example(self, element: str | None = None) -> dict[str, Any]:  # noqa: C901
+        """Generate an json schema example of the definitions."""
         examples: dict[str, Any] = {}
 
-        for v in self.root.values():
-            for k_example, v_example in v.example.items():
-                examples[k_example] = v_example  # noqa: PERF403
+        # Add the basic values to the json schema example.
+        examples["$schema"] = "https://json-schema.org/draft/2020-12/schema"
+        examples["title"] = "Example" if element is None else f"{element} Example"
+        examples["description"] = (
+            "An example of all Elements"
+            if element is None
+            else f"An example of the {element} Element, and it's parents."
+        )
+        examples["$defs"] = {}
+        examples["type"] = "object"
+        properties: dict[str, Any] = {}
+        examples["properties"] = properties
+        examples["additionalProperties"] = False
+
+        # Get a list of all elements we will need.
+        all_elements: list[str] = []
+        if element is None:
+            all_elements = list(self.root.keys())
+        else:
+            all_elements = [element]
+            found = True
+            while found:
+                found = False
+                parents: list[str] = []
+                for this_element in all_elements:
+                    parents.extend(self.root[this_element].parent)
+                for parent in parents:
+                    if parent not in all_elements and parent != "{}":
+                        all_elements.append(parent)
+                        found = True
+
+        # Generate the $defs
+        for this_element in all_elements:
+            examples["$defs"][this_element] = self.root[this_element].definition
+
+        def add_element(properties: dict[str, Any], parent: str, *, stop: bool = False) -> None:
+            """Recursively add elements to their parents."""
+            for this_element in all_elements:
+                if parent in self.root[this_element].parent:
+                    example = deepcopy(self.root[this_element].example)
+                    if stop and this_element == parent:
+                        continue
+                    properties.update(example)
+                    for property_name in example:
+                        if "properties" in example[property_name]:
+                            add_element(
+                                properties[property_name]["properties"], this_element, stop=this_element == parent
+                            )
+
+        add_element(examples["properties"], "{}")
 
         return examples
 
@@ -79,23 +125,6 @@ class TemplateGenericSchema(RootModel[dict[str, Any]]):
         except Exception as e:
             msg = f"Generic Form Schema must be a valid Json Schema 2020-12. {e}"
             raise ValueError(msg) from e
-
-    def example(self, properties: dict[str, typing.Any] | None = None) -> dict[str, typing.Any]:
-        """Generate a `template_example.schema.json` file from the definitions."""
-        schema = self.root
-        if properties is not None:
-            schema["properties"] = properties
-        schema["title"] = "Example Template Schema."
-        schema["description"] = "Example Template Schema showing all defined field types."
-
-        # Just ensure the generated example is valid.
-        try:
-            jsonschema.Draft202012Validator.check_schema(schema)
-        except Exception:
-            rich.print(json.dumps(schema, indent=4))
-            raise
-
-        return schema
 
     def basic(self) -> dict[str, typing.Any]:
         """Generate a `form_template_basic.schema.json` file from the definitions."""

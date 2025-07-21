@@ -19,6 +19,7 @@ The Single Line Https Url Entry List form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "singleLineHttpsUrlEntryList": {
           "items": {
@@ -30,8 +31,7 @@ The Single Line Https Url Entry List form element, can appear as a child of:
           "type": "array",
           "uniqueItems": true
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -230,4 +230,50 @@ Parameters
 
 This is an Example Form Template showing just the Single Line Https Url Entry List form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "singleLineHttpsUrlEntryList Example",
+      "description": "An example of the singleLineHttpsUrlEntryList Element, and it's parents.",
+      "$defs": {
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "singleLineHttpsUrlEntryList": {
+          "items": {
+            "format": "uri",
+            "minLength": 1,
+            "pattern": "^https://[^\\s]+$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {
+                "exampleSingleLineHttpsUrlEntryList": {
+                  "$ref": "#/$defs/singleLineHttpsUrlEntryList"
+                }
+              }
+            },
+            "exampleSingleLineHttpsUrlEntryList": {
+              "$ref": "#/$defs/singleLineHttpsUrlEntryList"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->

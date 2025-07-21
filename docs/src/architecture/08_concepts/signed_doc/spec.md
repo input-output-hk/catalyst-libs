@@ -549,31 +549,34 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
 
-#### 0.01 (2025-04-04)
+#### 0.0.1 (2025-04-04)
 
 * First Published Version
 
-#### 0.02 (2025-04-09)
+#### 0.0.2 (2025-04-09)
 
 * Add version control changelogs to the specification.
 
-#### 0.03 (2025-05-05)
+#### 0.0.3 (2025-05-05)
 
 * Use generalized parameters.
 
-#### 0.04 (2025-05-30)
+#### 0.0.4 (2025-06-25)
 
 * Improve and make document serialization more repeatable, and stricter.
-* TODO: Define Systems parameters
-* TODO: Define DReps documents.
-* TODO: Define Proposer Profiles.
-* TODO: Define Role 0 Profile.
+* Defined Systems parameters documents
+* Defined DReps documents.
+
+#### 0.1.0 (2025-07-25)
+
+* Fixed typographical and layout issues.
+* Added specifications for Form Templates and Elements.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

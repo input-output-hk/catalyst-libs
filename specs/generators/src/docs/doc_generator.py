@@ -11,8 +11,10 @@ import typing
 from enum import Enum
 from pathlib import Path
 
+import jsonschema
 import rich
 import rich.markdown
+import rich.pretty
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from docs.markdown import MarkdownHelpers
@@ -485,22 +487,59 @@ class DocGenerator:
 
         return link
 
+    @staticmethod
+    def json_schema_validate(schema: dict[str, typing.Any]) -> None:
+        """Just ensure the json schema is valid."""
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except Exception:
+            try:
+                rich.print_json(data=schema, indent=4)
+            except Exception:
+                rich.pretty.pprint(schema)
+                raise
+            raise
+
+    def json_schema_sort(self, json_data: str | dict[str, typing.Any], indent: int = 4) -> str:
+        """Sort data for better JSON display."""
+        # Reload the json, but now with sorted keys.
+        if isinstance(json_data, str):
+            sorted_data: dict[str, typing.Any] = json.loads(json.dumps(json.loads(json_data), sort_keys=True))
+        else:
+            sorted_data: dict[str, typing.Any] = json.loads(json.dumps(json_data, sort_keys=True))
+        new_data: dict[str, typing.Any] = {}
+        ordered_keys = ["$schema", "$id", "maintainers", "title", "description", "$defs", "type", "properties"]
+        # may be redundant but thats ok, keys only added first time they are seen.
+        ordered_keys.extend(sorted_data.keys())
+        for key in ordered_keys:
+            if key in sorted_data:
+                new_data[key] = sorted_data.pop(key)
+        # Make sure it really is json_schema
+        self.json_schema_validate(new_data)
+        return json.dumps(new_data, indent=indent)
+
     def json_example(
         self,
         data: dict[str, typing.Any],
         *,
         label: str = "Example",
-        title: str | None = None,
+        title: str = "",
         description: str | None = None,
+        icon_type: str = "example",
     ) -> str:
         """Get the example properly formatted as markdown."""
         example = json.dumps(data, indent=2, sort_keys=True)
+
+        # Check if this is JSON Schema, and if so, nicely re-sort the top keys.
+        if "$schema" in data:
+            # Reload the json, but now with sorted keys.
+            example = self.json_schema_sort(example, indent=2)
 
         description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
 
         return f"""
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? example "{label}: {title}"
+??? {icon_type} "{label}: {title}"
 {description}
     ```json
 {textwrap.indent(example, "    ")}

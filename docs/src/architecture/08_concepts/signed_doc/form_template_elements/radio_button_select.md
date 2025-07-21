@@ -18,14 +18,14 @@ The Radio Button Select form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "radioButtonSelect": {
           "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
           "type": "string"
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -180,4 +180,45 @@ Parameters
 
 This is an Example Form Template showing just the Radio Button Select form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "radioButtonSelect Example",
+      "description": "An example of the radioButtonSelect Element, and it's parents.",
+      "$defs": {
+        "radioButtonSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleRadioButtonSelect": {
+              "$ref": "#/$defs/radioButtonSelect"
+            },
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {
+                "exampleRadioButtonSelect": {
+                  "$ref": "#/$defs/radioButtonSelect"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->

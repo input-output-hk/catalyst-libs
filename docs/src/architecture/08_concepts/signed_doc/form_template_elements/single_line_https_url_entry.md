@@ -19,14 +19,14 @@ The Single Line Https Url Entry form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "singleLineHttpsUrlEntry": {
           "format": "uri",
           "pattern": "^https://[^\\s]+$",
           "type": "string"
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -199,4 +199,45 @@ Parameters
 
 This is an Example Form Template showing just the Single Line Https Url Entry form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "singleLineHttpsUrlEntry Example",
+      "description": "An example of the singleLineHttpsUrlEntry Element, and it's parents.",
+      "$defs": {
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        },
+        "singleLineHttpsUrlEntry": {
+          "format": "uri",
+          "pattern": "^https://[^\\s]+$",
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {
+                "exampleSingleLineHttpsUrlEntry": {
+                  "$ref": "#/$defs/singleLineHttpsUrlEntry"
+                }
+              }
+            },
+            "exampleSingleLineHttpsUrlEntry": {
+              "$ref": "#/$defs/singleLineHttpsUrlEntry"
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->

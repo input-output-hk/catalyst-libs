@@ -296,22 +296,27 @@
       {
         "changes": "* First Published Version",
         "modified": "2025-04-04",
-        "version": "0.01"
+        "version": "0.0.1"
       },
       {
         "changes": "* Add version control changelogs to the specification.",
         "modified": "2025-04-09",
-        "version": "0.02"
+        "version": "0.0.2"
       },
       {
         "changes": "* Use generalized parameters.",
         "modified": "2025-05-05",
-        "version": "0.03"
+        "version": "0.0.3"
       },
       {
-        "changes": "* Improve and make document serialization more repeatable, and stricter.\n* TODO: Define Systems parameters\n* TODO: Define DReps documents.\n* TODO: Define Proposer Profiles.\n* TODO: Define Role 0 Profile.",
-        "modified": "2025-05-30",
-        "version": "0.04"
+        "changes": "* Improve and make document serialization more repeatable, and stricter.\n* Defined Systems parameters documents\n* Defined DReps documents.",
+        "modified": "2025-06-25",
+        "version": "0.0.4"
+      },
+      {
+        "changes": "* Fixed typographical and layout issues.\n* Added specifications for Form Templates and Elements.",
+        "modified": "2025-07-25",
+        "version": "0.1.0"
       }
     ]
   },
@@ -636,7 +641,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -895,7 +900,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -1154,7 +1159,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -1648,7 +1653,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -2065,7 +2070,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -2190,7 +2195,7 @@
         {
           "changes": "* First Version.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -2323,7 +2328,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -2563,7 +2568,7 @@
         {
           "changes": "* First Version.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -3028,7 +3033,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     },
@@ -3293,7 +3298,7 @@
         {
           "changes": "* Generalize the Form Template definitions.",
           "modified": "2025-05-05",
-          "version": "0.04"
+          "version": "0.0.4"
         }
       ]
     }

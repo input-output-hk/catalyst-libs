@@ -1,4 +1,7 @@
 {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Example",
+    "description": "An example of all Elements",
     "$defs": {
         "dropDownSingleSelect": {
             "contentMediaType": "text/plain",
@@ -79,63 +82,106 @@
             "uniqueItems": true
         }
     },
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "additionalProperties": false,
-    "description": "Example Template Schema showing all defined field types.",
-    "maintainers": [
-        {
-            "name": "Catalyst Team",
-            "url": "https://projectcatalyst.io/"
-        }
-    ],
+    "type": "object",
     "properties": {
-        "exampleDropDownSingleSelect": {
-            "default": "option 1",
-            "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
-            "enum": [
-                "option 1",
-                "option 2",
-                "option 3"
-            ],
-            "title": "Selector",
-            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
-            "x-icon": "emoji-happy",
-            "$ref": "#/$defs/dropDownSingleSelect"
-        },
-        "exampleMultiLineTextEntry": {
-            "$ref": "#/$defs/multiLineTextEntry"
-        },
-        "exampleMultiLineTextEntryListMarkdown": {
-            "$ref": "#/$defs/multiLineTextEntryListMarkdown"
-        },
-        "exampleMultiLineTextEntryMarkdown": {
-            "$ref": "#/$defs/multiLineTextEntryMarkdown"
-        },
-        "exampleMultiSelect": {
-            "$ref": "#/$defs/multiSelect"
-        },
-        "exampleRadioButtonSelect": {
-            "$ref": "#/$defs/radioButtonSelect"
-        },
         "exampleSection": {
-            "$ref": "#/$defs/section"
-        },
-        "exampleSingleGroupedTagSelector": {
-            "$ref": "#/$defs/singleGroupedTagSelector"
-        },
-        "exampleSingleLineHttpsUrlEntry": {
-            "$ref": "#/$defs/singleLineHttpsUrlEntry"
-        },
-        "exampleSingleLineHttpsUrlEntryList": {
-            "$ref": "#/$defs/singleLineHttpsUrlEntryList"
-        },
-        "exampleSingleLineTextEntry": {
-            "$ref": "#/$defs/singleLineTextEntry"
-        },
-        "exampleSingleLineTextEntryList": {
-            "$ref": "#/$defs/singleLineTextEntryList"
+            "$ref": "#/$defs/section",
+            "properties": {
+                "exampleDropDownSingleSelect": {
+                    "$ref": "#/$defs/dropDownSingleSelect",
+                    "default": "option 1",
+                    "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+                    "enum": [
+                        "option 1",
+                        "option 2",
+                        "option 3"
+                    ],
+                    "title": "Selector",
+                    "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                    "x-icon": "emoji-happy"
+                },
+                "exampleMultiLineTextEntry": {
+                    "$ref": "#/$defs/multiLineTextEntry"
+                },
+                "exampleMultiLineTextEntryListMarkdown": {
+                    "$ref": "#/$defs/multiLineTextEntryListMarkdown"
+                },
+                "exampleMultiLineTextEntryMarkdown": {
+                    "$ref": "#/$defs/multiLineTextEntryMarkdown"
+                },
+                "exampleMultiSelect": {
+                    "$ref": "#/$defs/multiSelect"
+                },
+                "exampleRadioButtonSelect": {
+                    "$ref": "#/$defs/radioButtonSelect"
+                },
+                "exampleSection": {
+                    "$ref": "#/$defs/section",
+                    "properties": {
+                        "exampleDropDownSingleSelect": {
+                            "$ref": "#/$defs/dropDownSingleSelect",
+                            "default": "option 1",
+                            "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+                            "enum": [
+                                "option 1",
+                                "option 2",
+                                "option 3"
+                            ],
+                            "title": "Selector",
+                            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                            "x-icon": "emoji-happy"
+                        },
+                        "exampleMultiLineTextEntry": {
+                            "$ref": "#/$defs/multiLineTextEntry"
+                        },
+                        "exampleMultiLineTextEntryListMarkdown": {
+                            "$ref": "#/$defs/multiLineTextEntryListMarkdown"
+                        },
+                        "exampleMultiLineTextEntryMarkdown": {
+                            "$ref": "#/$defs/multiLineTextEntryMarkdown"
+                        },
+                        "exampleMultiSelect": {
+                            "$ref": "#/$defs/multiSelect"
+                        },
+                        "exampleRadioButtonSelect": {
+                            "$ref": "#/$defs/radioButtonSelect"
+                        },
+                        "exampleSingleGroupedTagSelector": {
+                            "$ref": "#/$defs/singleGroupedTagSelector",
+                            "properties": {}
+                        },
+                        "exampleSingleLineHttpsUrlEntry": {
+                            "$ref": "#/$defs/singleLineHttpsUrlEntry"
+                        },
+                        "exampleSingleLineHttpsUrlEntryList": {
+                            "$ref": "#/$defs/singleLineHttpsUrlEntryList"
+                        },
+                        "exampleSingleLineTextEntry": {
+                            "$ref": "#/$defs/singleLineTextEntry"
+                        },
+                        "exampleSingleLineTextEntryList": {
+                            "$ref": "#/$defs/singleLineTextEntryList"
+                        }
+                    }
+                },
+                "exampleSingleGroupedTagSelector": {
+                    "$ref": "#/$defs/singleGroupedTagSelector",
+                    "properties": {}
+                },
+                "exampleSingleLineHttpsUrlEntry": {
+                    "$ref": "#/$defs/singleLineHttpsUrlEntry"
+                },
+                "exampleSingleLineHttpsUrlEntryList": {
+                    "$ref": "#/$defs/singleLineHttpsUrlEntryList"
+                },
+                "exampleSingleLineTextEntry": {
+                    "$ref": "#/$defs/singleLineTextEntry"
+                },
+                "exampleSingleLineTextEntryList": {
+                    "$ref": "#/$defs/singleLineTextEntryList"
+                }
+            }
         }
     },
-    "title": "Example Template Schema.",
-    "type": "object"
+    "additionalProperties": false
 }

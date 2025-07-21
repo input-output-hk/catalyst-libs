@@ -34,7 +34,7 @@ The Base Form Template has the following format.
 In [JSON Schema][JSON Schema-2020-12] the `$defs` defines reusable definitions.
 We extend the definition of `$defs`.
 Every possible Form Element is defined in `$defs`.
-A fields *MUST* use a pre-defined Form Element from the `$defs` and
+All fields *MUST* use a pre-defined Form Element from the `$defs` and
 it is impermissible for a Form Element to not use a reference to its
 definition, nor for a definition to be created which does not follow
 this specification.

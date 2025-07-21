@@ -37,28 +37,31 @@ class FormTemplatesElementMd(DocGenerator):
             "$defs": {self._element.name: self._element.definition},
         }
 
+    def example(self) -> dict[str, Any]:
+        """Generate an example of the element in a template."""
+        return self._spec.form_template.elements.example(self._element.name)
+
     @computed_field
     @cached_property
     def parameters_table(self) -> str:  # noqa: C901, PLR0912
         """Definitions Parameters as an HTML Table."""
         table_data: dict[str, list[Any]] = {"Group": [], "Headings": [], "Values": []}  # , "Docs": []}
 
-        def add_param_field(prop_name: str, heading: str, value: str = "", doc: str = "") -> None:
+        def add_param_field(prop_name: str, heading: str, value: str = "") -> None:
             """Add a parameter field."""
             table_data["Group"].append(MarkdownHelpers.to_html(prop_name))
             table_data["Headings"].append(heading)
             table_data["Values"].append(value)
-            # table_data["Docs"].append(doc)
 
         for parameter in self._element.parameters.all:
             group = f"**`{parameter.element_name}`**<br>{parameter.description}"
-            add_param_field(group, "Required", f"{parameter.required.value}", "Is the parameter required?")
-            add_param_field(group, "Type", f"`{parameter.type}`", "JSON Type of the parameter.")
+            add_param_field(group, "Required", f"{parameter.required.value}")
+            add_param_field(group, "Type", f"`{parameter.type}`")
             if parameter.items is not None:
                 if parameter.items.type != "object":
-                    add_param_field(group, "Items", f"`{parameter.items.type}`", "TODO")
+                    add_param_field(group, "Items", f"`{parameter.items.type}`")
                 else:
-                    add_param_field(group, "Items", f"{parameter.items}", "TODO")
+                    add_param_field(group, "Items", f"{parameter.items}")
             if parameter.choices is not None:
                 if self._spec.form_template.assets.icons.check(parameter.choices):
                     choices = self.link_to_file(
@@ -66,49 +69,22 @@ class FormTemplatesElementMd(DocGenerator):
                     )
                 else:
                     choices = "[" + ",<br>".join(f"`{choice}`" for choice in parameter.choices) + "]"
-                add_param_field(group, "Choices", choices, "All the choices.")
+                add_param_field(group, "Choices", choices)
             if parameter.format is not None:
-                add_param_field(group, "Format", parameter.format, "Format of the Parameter.")
+                add_param_field(group, "Format", parameter.format)
             if parameter.content_media_type is not None:
-                add_param_field(
-                    group,
-                    "Content Media Type",
-                    parameter.content_media_type,
-                    "The Content Media Type that is contained in the parameter.",
-                )
+                add_param_field(group, "Content Media Type", parameter.content_media_type)
             if parameter.pattern is not None:
-                add_param_field(
-                    group,
-                    "Pattern",
-                    parameter.pattern,
-                    "The REGEX format the property must match against.",
-                )
+                add_param_field(group, "Pattern", parameter.pattern)
             if parameter.min_length is not None:
-                add_param_field(
-                    group,
-                    "Minimum Length",
-                    f"{parameter.min_length}",
-                    "The Minimum length of the parameter.",
-                )
+                add_param_field(group, "Minimum Length", f"{parameter.min_length}")
             if parameter.minimum is not None:
-                add_param_field(
-                    group,
-                    "Minimum",
-                    f"{parameter.minimum}",
-                    "The Minimum numeric value of the parameter.",
-                )
+                add_param_field(group, "Minimum", f"{parameter.minimum}")
             if parameter.maximum is not None:
-                add_param_field(
-                    group,
-                    "Minimum",
-                    f"{parameter.min_length}",
-                    "The Maximum numeric value of the parameter.",
-                )
+                add_param_field(group, "Minimum", f"{parameter.min_length}")
             if parameter.example is not None:
                 example = json.dumps(parameter.example)
-                add_param_field(
-                    group, "Example", f"`{parameter.element_name}: {example}`", "An Example of the parameter."
-                )
+                add_param_field(group, "Example", f"`{parameter.element_name}: {example}`")
 
         params = pl.DataFrame(table_data)
 

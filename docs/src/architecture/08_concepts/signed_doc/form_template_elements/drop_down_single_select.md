@@ -18,14 +18,14 @@ The Drop Down Single Select form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "dropDownSingleSelect": {
           "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
           "type": "string"
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -241,4 +241,65 @@ Each item in the array <strong>MUST</strong> be  unique.</th>
 
 This is an Example Form Template showing just the Drop Down Single Select form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "dropDownSingleSelect Example",
+      "description": "An example of the dropDownSingleSelect Element, and it's parents.",
+      "$defs": {
+        "dropDownSingleSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleDropDownSingleSelect": {
+              "$ref": "#/$defs/dropDownSingleSelect",
+              "default": "option 1",
+              "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+              "enum": [
+                "option 1",
+                "option 2",
+                "option 3"
+              ],
+              "title": "Selector",
+              "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+              "x-icon": "emoji-happy"
+            },
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {
+                "exampleDropDownSingleSelect": {
+                  "$ref": "#/$defs/dropDownSingleSelect",
+                  "default": "option 1",
+                  "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+                  "enum": [
+                    "option 1",
+                    "option 2",
+                    "option 3"
+                  ],
+                  "title": "Selector",
+                  "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                  "x-icon": "emoji-happy"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->

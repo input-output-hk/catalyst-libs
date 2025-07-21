@@ -277,7 +277,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-19 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |

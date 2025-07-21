@@ -19,6 +19,7 @@ The Multi Select form element, can appear as a child of:
 
     ```json
     {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "multiSelect": {
           "items": {
@@ -28,8 +29,7 @@ The Multi Select form element, can appear as a child of:
           "type": "array",
           "uniqueItems": true
         }
-      },
-      "$schema": "https://json-schema.org/draft/2020-12/schema"
+      }
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
@@ -217,4 +217,48 @@ Parameters
 
 This is an Example Form Template showing just the Multi Select form element, and its parents.
 
-TODO
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? example "Example: "
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "title": "multiSelect Example",
+      "description": "An example of the multiSelect Element, and it's parents.",
+      "$defs": {
+        "multiSelect": {
+          "items": {
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "section": {
+          "additionalProperties": false,
+          "type": "object"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "exampleSection": {
+          "$ref": "#/$defs/section",
+          "properties": {
+            "exampleMultiSelect": {
+              "$ref": "#/$defs/multiSelect"
+            },
+            "exampleSection": {
+              "$ref": "#/$defs/section",
+              "properties": {
+                "exampleMultiSelect": {
+                  "$ref": "#/$defs/multiSelect"
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->

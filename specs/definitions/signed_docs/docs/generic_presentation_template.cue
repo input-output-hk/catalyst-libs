@@ -57,7 +57,7 @@ _presentation_template_payload_description: """
 
 _generic_presentation_template_versions: [#changelogEntry, ...#changelogEntry] & [
 	{
-		version:  "0.04"
+		version:  "0.0.4"
 		modified: "2025-05-05"
 		changes: """
 			* First Version.
