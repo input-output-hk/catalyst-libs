@@ -18,8 +18,8 @@ _allDocTypes: {
 	"Proposal Comment Presentation Template": "eff42c84-f862-4573-bca1-5bc9584a241b" // new and speculative
 	"Proposal Comment":                       "b679ded3-0e7c-41ba-89f8-da62a17898ea" // rs
 	"Proposal Submission Action":             "5e60e623-ad02-4a1b-a1ac-406db978ee48" // rs
-	"Proposal Moderation Action":             "a552451a-8e5b-409d-83a0-21eac26bbf8c" // new
-
+	"Proposal Moderation Action":             "a552451a-8e5b-409d-83a0-21eac26bbf8c" // new and speculative
+	
 	"Comment Moderation Action": "84a4b502-3b7e-47fd-84e4-6fee08794bd7" // new and speculative
 
 	"Brand Parameters":                  "3e4808cc-c86e-467b-9702-d60baa9d1fca" // rs
