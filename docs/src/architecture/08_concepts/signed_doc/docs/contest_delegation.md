@@ -18,6 +18,11 @@ This is because different Contests may have different rules.
 And not all Representatives will choose to nominate
 for every Contest.
 
+A Representative ***MAY NOT*** delegate to a different Representative
+for any contest they have nominated for.
+They ***MAY*** however nominate a Representative in any contest they
+have not nominated for.
+
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot contest_delegation.dot.svg
@@ -43,6 +48,16 @@ when choosing to delegate, changing that information could have a
 real and detrimental result in the Delegation choice.
 Therefore, for a Delegation to be valid, it *MUST* point to the
 latest Nomination for a Representative.
+
+Publishing a newer version of the Nomination Document to a specific contest will
+invalidate all pre-existing delegations, and all voters will need
+to re-delegate to affirm the delegates latest nomination.
+
+A Voter may withdraw their Delegation by revoking all delegation documents.
+[`revocations`](../metadata.md#revocations) must be set to `true` to withdraw a delegation, OR
+a later contest delegation may change the delegated representative without
+first revoking the prior delegation, as only the latest delegation is
+considered.
 
 ### Business Logic
 
@@ -152,6 +167,34 @@ The following must be true for a valid reference:
 * Every value in the `document_locator` must consistently reference the exact same document.
 * The `document_id` and `document_ver` **MUST** match the values in the referenced document.
 
+### [`revocations`](../metadata.md#revocations)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | optional |
+| Format | [Version Revocations](../metadata.md#version-revocations) |
+<!-- markdownlint-enable MD033 -->
+A document may include a list of any prior versions which are considered to be revoked.
+Only the revocation list in the latest version of the document applies.
+Revoked documents are flagged as no longer valid, and should not be displayed.
+As a special case, if the revocations are set to `true` then all versions of the document
+are revoked, including the latest document.
+
+In this case, when the latest document is revoked, the payload may be empty.
+Any older document that has [`revocations`](../metadata.md#revocations) set to `true` is always to be filtered
+and its payload is to be assumed to be invalid.
+
+This allows for an entire document and any/all published versions to be revoked.
+A new version of the document that is published after this, may reinstate prior
+document versions, by not listing them as revoked.
+However, any document where revocations was set `true` can never be reinstated.
+
+#### [`revocations`](../metadata.md#revocations) Validation
+
+If the field is `true` the payload may be absent or invalid.
+Such documents may never be submitted.
+
 ### [`parameters`](../metadata.md#parameters)
 
 <!-- markdownlint-disable MD033 -->
@@ -187,9 +230,7 @@ hierarchy they are all valid.
 
 ## Payload
 
-A minimal payload indicating the intended status of the delegation.
-  'active' creates or affirms the delegation.
-  'revoked' withdraws the delegation.
+There is no payload.
 
 This document has no payload.
 It must be encoded as a [CBOR][RFC8949] `null (0xf6)`.
