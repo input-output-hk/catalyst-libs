@@ -1,7 +1,7 @@
 //! An implementation of different defined document types
 //! <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/signed_doc/types/>
 
-use std::sync::LazyLock;
+use std::sync::{LazyLock, OnceLock};
 
 use catalyst_types::uuid::Uuid;
 
@@ -37,9 +37,8 @@ pub static CATEGORY_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
 
 /// Proposal document type.
 #[allow(clippy::expect_used)]
-pub static PROPOSAL: LazyLock<DocType> = LazyLock::new(|| {
-    let ids = &[PROPOSAL_BASE_TYPE];
-    ids.to_vec()
+pub static PROPOSAL: OnceLock<DocType> = LazyLock::new(|| {
+    Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC)
         .try_into()
         .expect("Failed to convert proposal document Uuid to DocType")
 });
