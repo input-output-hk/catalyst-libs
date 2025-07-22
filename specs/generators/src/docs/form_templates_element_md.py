@@ -12,6 +12,7 @@ from pydantic import computed_field
 from docs.form_template_basic_schema_json import FormTemplateBasicSchemaJson
 from docs.form_template_example_schema_json import FormTemplateExampleSchemaJson
 from docs.markdown import MarkdownHelpers
+from spec.forms.element.parameters import Parameter
 from spec.signed_doc import SignedDoc
 
 from .doc_generator import DocGenerator, LinkType
@@ -25,6 +26,7 @@ class FormTemplatesElementMd(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc, name: str) -> None:
         """Initialise form templates Element documentation generator."""
+        self._spec = spec
         self._element = spec.form_template.elements.get(name)
         super().__init__(args, spec, doc_name=self._element.title_name, template=self.TEMPLATE)
 
@@ -32,10 +34,12 @@ class FormTemplatesElementMd(DocGenerator):
     @cached_property
     def example_definition(self) -> dict[str, Any]:
         """Example Json Definition."""
-        return {
-            "$schema": "https://json-schema.org/draft/2020-12/schema",
-            "$defs": {self._element.name: self._element.definition},
-        }
+        return self._spec.form_template.elements.add_referenced_json_schema_defs(
+            {
+                "$schema": "https://json-schema.org/draft/2020-12/schema",
+                "$defs": {self._element.name: self._element.definition},
+            }
+        )
 
     def example(self) -> dict[str, Any]:
         """Generate an example of the element in a template."""
@@ -54,37 +58,38 @@ class FormTemplatesElementMd(DocGenerator):
             table_data["Values"].append(value)
 
         for parameter in self._element.parameters.all:
-            group = f"**`{parameter.element_name}`**<br>{parameter.description}"
-            add_param_field(group, "Required", f"{parameter.required.value}")
-            add_param_field(group, "Type", f"`{parameter.type}`")
-            if parameter.items is not None:
-                if parameter.items.type != "object":
-                    add_param_field(group, "Items", f"`{parameter.items.type}`")
-                else:
-                    add_param_field(group, "Items", f"{parameter.items}")
-            if parameter.choices is not None:
-                if self._spec.form_template.assets.icons.check(parameter.choices):
-                    choices = self.link_to_file(
-                        "Icons", link_file="form_templates", heading="icons", link_type=LinkType.HTML
-                    )
-                else:
-                    choices = "[" + ",<br>".join(f"`{choice}`" for choice in parameter.choices) + "]"
-                add_param_field(group, "Choices", choices)
-            if parameter.format is not None:
-                add_param_field(group, "Format", parameter.format)
-            if parameter.content_media_type is not None:
-                add_param_field(group, "Content Media Type", parameter.content_media_type)
-            if parameter.pattern is not None:
-                add_param_field(group, "Pattern", parameter.pattern)
-            if parameter.min_length is not None:
-                add_param_field(group, "Minimum Length", f"{parameter.min_length}")
-            if parameter.minimum is not None:
-                add_param_field(group, "Minimum", f"{parameter.minimum}")
-            if parameter.maximum is not None:
-                add_param_field(group, "Minimum", f"{parameter.min_length}")
-            if parameter.example is not None:
-                example = json.dumps(parameter.example)
-                add_param_field(group, "Example", f"`{parameter.element_name}: {example}`")
+            if isinstance(parameter, Parameter):
+                group = f"**`{parameter.element_name}`**<br>{parameter.description}"
+                add_param_field(group, "Required", f"{parameter.required.value}")
+                add_param_field(group, "Type", f"`{parameter.type}`")
+                if parameter.items is not None:
+                    if parameter.items.type != "object":
+                        add_param_field(group, "Items", f"`{parameter.items.type}`")
+                    else:
+                        add_param_field(group, "Items", f"{parameter.items}")
+                if parameter.choices is not None:
+                    if self._spec.form_template.assets.icons.check(parameter.choices):
+                        choices = self.link_to_file(
+                            "Icons", link_file="form_templates", heading="icons", link_type=LinkType.HTML
+                        )
+                    else:
+                        choices = "[" + ",<br>".join(f"`{choice}`" for choice in parameter.choices) + "]"
+                    add_param_field(group, "Choices", choices)
+                if parameter.format is not None:
+                    add_param_field(group, "Format", parameter.format)
+                if parameter.content_media_type is not None:
+                    add_param_field(group, "Content Media Type", parameter.content_media_type)
+                if parameter.pattern is not None:
+                    add_param_field(group, "Pattern", parameter.pattern)
+                if parameter.min_length is not None:
+                    add_param_field(group, "Minimum Length", f"{parameter.min_length}")
+                if parameter.minimum is not None:
+                    add_param_field(group, "Minimum", f"{parameter.minimum}")
+                if parameter.maximum is not None:
+                    add_param_field(group, "Minimum", f"{parameter.min_length}")
+                if parameter.example is not None:
+                    example = json.dumps(parameter.example)
+                    add_param_field(group, "Example", f"`{parameter.element_name}: {example}`")
 
         params = pl.DataFrame(table_data)
 

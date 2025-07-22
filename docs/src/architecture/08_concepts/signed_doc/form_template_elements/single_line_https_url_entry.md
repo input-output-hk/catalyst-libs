@@ -1,10 +1,20 @@
 # Form Template Element - Single Line Https Url Entry
 
-UI - Single Line text entry for HTTPS Urls.
-"x-note":
-    Must start with 'https://' and is followed by one or more
-    non-whitespace characters, ending at the end of the string.
+## Functional Behavior
 
+A single line plain text entry field.
+Can only accept text which starts with `https://` and
+is followed by one or more non-whitespace characters,
+ending at the end of the string.
+
+Must be a validly formatted https URL.
+
+## Visual Representation
+
+A Text entry box that allows a single line of plain text
+up to the maximum number of allowed characters.
+Can automatically provide `https://` to help end user
+enter the data.
 
 ## Parent Elements
 
@@ -22,6 +32,7 @@ The Single Line Https Url Entry form element, can appear as a child of:
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "singleLineHttpsUrlEntry": {
+          "contentMediaType": "text/plain",
           "format": "uri",
           "pattern": "^https://[^\\s]+$",
           "type": "string"
@@ -107,6 +118,17 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>The value given if nothing is entered.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
   </tr>
   <tr>
@@ -121,16 +143,24 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>description: &quot;Whats your companies primary URL.&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>maxLength</code></strong><br>Maximum number of characters allowed in the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">yes</td>
+    <td class="gt_row gt_left">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>integer</code></td>
+    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>maxLength: 1024</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>minLength</code></strong><br>Minimum number of characters allowed in the field.</th>
@@ -143,20 +173,28 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>minLength: 12</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">yes</td>
+    <td class="gt_row gt_left">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>title: &quot;Website&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
@@ -173,17 +211,44 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-guidance: &quot;Its where people find your company online.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-icon: &quot;globe-alt&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
 Unlike <code>default</code> it does not provide a default value for the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-placeholder: &quot;https://&lt;your website&gt;&quot;</code></td>
   </tr>
 </tbody>
 
@@ -214,6 +279,7 @@ This is an Example Form Template showing just the Single Line Https Url Entry fo
           "type": "object"
         },
         "singleLineHttpsUrlEntry": {
+          "contentMediaType": "text/plain",
           "format": "uri",
           "pattern": "^https://[^\\s]+$",
           "type": "string"
@@ -228,14 +294,32 @@ This is an Example Form Template showing just the Single Line Https Url Entry fo
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleSingleLineHttpsUrlEntry": {
-                  "$ref": "#/$defs/singleLineHttpsUrlEntry"
+                  "$ref": "#/$defs/singleLineHttpsUrlEntry",
+                  "description": "Whats your companies primary URL.",
+                  "maxLength": 1024,
+                  "minLength": 12,
+                  "title": "Website",
+                  "x-guidance": "Its where people find your company online.",
+                  "x-icon": "globe-alt",
+                  "x-placeholder": "https://<your website>"
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             },
             "exampleSingleLineHttpsUrlEntry": {
-              "$ref": "#/$defs/singleLineHttpsUrlEntry"
+              "$ref": "#/$defs/singleLineHttpsUrlEntry",
+              "description": "Whats your companies primary URL.",
+              "maxLength": 1024,
+              "minLength": 12,
+              "title": "Website",
+              "x-guidance": "Its where people find your company online.",
+              "x-icon": "globe-alt",
+              "x-placeholder": "https://<your website>"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

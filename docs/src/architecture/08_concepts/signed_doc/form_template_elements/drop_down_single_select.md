@@ -298,9 +298,13 @@ This is an Example Form Template showing just the Drop Down Single Select form e
                   "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
                   "x-icon": "emoji-happy"
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

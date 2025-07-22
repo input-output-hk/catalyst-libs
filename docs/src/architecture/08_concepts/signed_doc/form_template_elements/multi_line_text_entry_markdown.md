@@ -1,12 +1,20 @@
 # Form Template Element - Multi Line Text Entry [Markdown][CommonMark]
 
-UI - Multiline text entry with [Markdown][CommonMark] content.
-Use [Markdown][CommonMark] formatting for rich text.
-[Markdown][CommonMark] formatting is as defined by [CommonMark].
+## Functional Behavior
 
-The following [Markdown][CommonMark] Extensions are also supported:
+A multi line text entry field, with [Markdown][CommonMark] format.
+Line breaks, and special characters are allowed.
+Special formatted markup is supported.
 
-* None
+## Visual Representation
+
+A Richtext entry box that allows multiple lines of
+formatted text up to the maximum number of
+allowed characters.
+The character limit is defined by the total number of
+characters including markup, not the raw text itself.
+
+eg: `## A subtitle` is counted as 13 characters, not 10.
 
 ## Parent Elements
 
@@ -109,7 +117,9 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>The default value to be used if the field is empty.
+Takes priority over <code>x-placeholder</code> if both are defined.
+Allows for <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted text, like the field itself.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
@@ -120,8 +130,27 @@ Parameters
     <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>default: &quot;# My Story\n\nOnce **upon** a *time*...&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>description: &quot;Tell a story to the reader.&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>maxLength</code></strong><br>Maximum number of characters allowed in the field.</th>
@@ -134,16 +163,24 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>maxLength: 5000</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>minLength</code></strong><br>Minimum number of characters allowed in the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>integer</code></td>
+    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>minLength: 20</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
@@ -160,20 +197,47 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Story&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left gt_striped">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;Engaging stories are better than boring ones.\nTry to be engaging.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;book-open&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
@@ -186,6 +250,10 @@ Unlike <code>default</code> it does not provide a default value for the field.</
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-placeholder: &quot;# ...&quot;</code></td>
   </tr>
 </tbody>
 
@@ -227,17 +295,37 @@ This is an Example Form Template showing just the Multi Line Text Entry [Markdow
           "$ref": "#/$defs/section",
           "properties": {
             "exampleMultiLineTextEntryMarkdown": {
-              "$ref": "#/$defs/multiLineTextEntryMarkdown"
+              "$ref": "#/$defs/multiLineTextEntryMarkdown",
+              "default": "# My Story\n\nOnce **upon** a *time*...",
+              "description": "Tell a story to the reader.",
+              "maxLength": 5000,
+              "minLength": 20,
+              "title": "Story",
+              "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+              "x-icon": "book-open",
+              "x-placeholder": "# ..."
             },
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleMultiLineTextEntryMarkdown": {
-                  "$ref": "#/$defs/multiLineTextEntryMarkdown"
+                  "$ref": "#/$defs/multiLineTextEntryMarkdown",
+                  "default": "# My Story\n\nOnce **upon** a *time*...",
+                  "description": "Tell a story to the reader.",
+                  "maxLength": 5000,
+                  "minLength": 20,
+                  "title": "Story",
+                  "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                  "x-icon": "book-open",
+                  "x-placeholder": "# ..."
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

@@ -3,8 +3,14 @@ package form_template
 
 import (
 	"github.com/input-output-hk/catalyst-libs/specs/regex"
-
 )
+
+#jsonSchemaDefRegex: string
+#jsonSchemaDefRegex: =~regex.def.jsonSchemaDef.pattern
+
+#formElementRef: $ref: #jsonSchemaDefRegex
+
+#itemElement: string
 
 // Schema Definition for the Form Element.
 // This appears in the `definitions` section of the Form Template
@@ -36,10 +42,16 @@ import (
 
 	// Form Elements which are a list of other Form Elements
 	if type == "array" {
+		// Just the name of the array element
+		_itemElement: #itemElement
 		// The type of Form Elements in the list.
-		items: #formElementDefinition
+		items: #formElementRef
 		// Are the Elements Unique?
 		uniqueItems: false | *true
+		// Whats the minimum Length of the Array
+		minItems?: int
+		// Whats the minimum Length of the Array
+		maxItems?: int
 	}
 
 	if type == "string" {
@@ -48,7 +60,6 @@ import (
 		pattern?:          regex.#regex
 		minLength?:        int // Only to enforce that the field can not be empty (such as when used in lists)
 	}
-
 }
 
 // An example of a particular form element.

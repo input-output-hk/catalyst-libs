@@ -1,10 +1,27 @@
 # Form Template Element - Multi Select
 
-UI - Multiselect from the given items.
+## Functional Behavior
 
-Select multiple options from the dropdown menu.
-Multiple choices are allowed.
-All choices MUST be unique.
+A List of items, where multiple values can be selected.
+
+Each entry in the list is a `singleSelect` type Form element.
+However, the contents are not entered free-form, they are chosen from the
+provided options.
+
+## Visual Representation
+
+A List of items to be selected.
+The selector is not valid if less than `minItems` are selected.
+And no more than `maxItems` can be selected.
+
+The value encoded in the document is the text value for each item
+selected, in the order presented.
+
+The Items should appear and be parameterizable in the same way the
+base `singleSelect` type Form element can be.
+
+It should appear similar to `singleSelect` except that
+multiple items can be selected, instead of just one.
 
 ## Parent Elements
 
@@ -23,11 +40,15 @@ The Multi Select form element, can appear as a child of:
       "$defs": {
         "multiSelect": {
           "items": {
-            "pattern": "^[^\\n]*$",
-            "type": "string"
+            "$ref": "#/$defs/singleSelect"
           },
           "type": "array",
           "uniqueItems": true
+        },
+        "singleSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
         }
       }
     }
@@ -110,30 +131,19 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>contains</code></strong><br>The choices the multi select can contain.</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>array</code></td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left"><code>string</code></td>
-  </tr>
-  <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>Default selections can be supplied.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>default: [&quot;option1&quot;, &quot;option3&quot;]</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
@@ -150,19 +160,30 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>description: &quot;Select a few items you prefer.&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>maxItems</code></strong><br>An array instance is valid against &quot;maxItems&quot; if its size is less than, or equal to, the value of this keyword.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>maxItems</code></strong><br>The maximum number of items that may be selected.
+Default to the size of the selectable items if not specified.
+If it is less than <code>minItems</code> it is taken to == <code>minItems</code>.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+    <td class="gt_row gt_left"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>maxItems: 2</code></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>minItems</code></strong><br>An array instance is valid against &quot;minItems&quot; if its size is greater than, or equal to, the value of this keyword.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>minItems</code></strong><br>The minimum number of items that may be selected.
+Default to 0 if not specified.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
@@ -172,20 +193,28 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left gt_striped"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>minItems: 2</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Select Items&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
@@ -201,6 +230,29 @@ Parameters
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;Select two items only, no more, no less.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;cursor-click&quot;</code></td>
   </tr>
 </tbody>
 
@@ -228,8 +280,7 @@ This is an Example Form Template showing just the Multi Select form element, and
       "$defs": {
         "multiSelect": {
           "items": {
-            "pattern": "^[^\\n]*$",
-            "type": "string"
+            "$ref": "#/$defs/singleSelect"
           },
           "type": "array",
           "uniqueItems": true
@@ -237,6 +288,11 @@ This is an Example Form Template showing just the Multi Select form element, and
         "section": {
           "additionalProperties": false,
           "type": "object"
+        },
+        "singleSelect": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
         }
       },
       "type": "object",
@@ -245,17 +301,65 @@ This is an Example Form Template showing just the Multi Select form element, and
           "$ref": "#/$defs/section",
           "properties": {
             "exampleMultiSelect": {
-              "$ref": "#/$defs/multiSelect"
+              "$ref": "#/$defs/multiSelect",
+              "default": [
+                "option1",
+                "option3"
+              ],
+              "description": "Select a few items you prefer.",
+              "items": {
+                "default": "option 1",
+                "description": "Single Selector.\nChoose a value from the options presented.",
+                "enum": [
+                  "option 1",
+                  "option 2",
+                  "option 3"
+                ],
+                "title": "Single Selector",
+                "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                "x-icon": "emoji-happy"
+              },
+              "maxItems": 2,
+              "minItems": 2,
+              "title": "Select Items",
+              "x-guidance": "Select two items only, no more, no less.",
+              "x-icon": "cursor-click"
             },
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleMultiSelect": {
-                  "$ref": "#/$defs/multiSelect"
+                  "$ref": "#/$defs/multiSelect",
+                  "default": [
+                    "option1",
+                    "option3"
+                  ],
+                  "description": "Select a few items you prefer.",
+                  "items": {
+                    "default": "option 1",
+                    "description": "Single Selector.\nChoose a value from the options presented.",
+                    "enum": [
+                      "option 1",
+                      "option 2",
+                      "option 3"
+                    ],
+                    "title": "Single Selector",
+                    "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                    "x-icon": "emoji-happy"
+                  },
+                  "maxItems": 2,
+                  "minItems": 2,
+                  "title": "Select Items",
+                  "x-guidance": "Select two items only, no more, no less.",
+                  "x-icon": "cursor-click"
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

@@ -313,9 +313,13 @@ This is an Example Form Template showing just the Multi Line Text Entry form ele
                   "x-icon": "academic-cap",
                   "x-placeholder": "What's your explanation?"
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

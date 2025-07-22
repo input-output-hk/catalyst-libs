@@ -1,12 +1,28 @@
 # Form Template Element - Section
 
-UI - Logical Document Sub-Section Break.
-Subsections are logical breaks in the form structure.
+## Functional Behavior
+
+Sections have no functional behavior beyond providing
+structure to the underlying data collected by the form.
+
 The ONLY Element that can appear in the root of a Form is a section.
-section can be nested arbitrarily deep.
-The form presentation can decide how deep, and what formatting it used
-for each section at each level, however, even if the form is flattened and the section not
-displayed, then data must still follow the section nesting.
+
+## Visual Representation
+
+Sections represent logical breaks in the form structure.
+
+A Section may have whatever visual representation that is required.
+Nominally however, a section that is in the root of the document
+is known as a ***Document Segment**.
+Whereas a section that is embedded within another section is a
+**Document Section** or **Sub-Section**.
+
+There is no limit to how many levels sub-sections are nested,
+however the application is not required to show them any differently
+from one another.
+
+The visual display of sections has no impact on how it is represented
+in the data captured.
 
 ## Parent Elements
 
@@ -173,20 +189,28 @@ The UI is free to decide how it presents flattened sections.</th>
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left gt_striped"><code>boolean</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-flatten: false</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left gt_striped">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Choices</th>
-    <td class="gt_row gt_left"><a href="../../form_templates/#icons">Icons</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;bookmark&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-order</code></strong><br>The ordering of the properties to be enforced when displayed.
@@ -236,9 +260,13 @@ This is an Example Form Template showing just the Section form element, and its 
           "properties": {
             "exampleSection": {
               "$ref": "#/$defs/section",
-              "properties": {}
+              "properties": {},
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

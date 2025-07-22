@@ -237,13 +237,17 @@ This is an Example Form Template showing just the Single Grouped Tag Selector fo
                   "$ref": "#/$defs/singleGroupedTagSelector",
                   "properties": {}
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             },
             "exampleSingleGroupedTagSelector": {
               "$ref": "#/$defs/singleGroupedTagSelector",
               "properties": {}
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

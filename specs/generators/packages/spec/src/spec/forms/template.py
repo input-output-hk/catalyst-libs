@@ -39,6 +39,20 @@ class FormTemplateElements(RootModel[dict[str, Element]]):
         """Get the named element."""
         return self.root[name]
 
+    def add_referenced_json_schema_defs(self, schema: dict[str, Any]) -> dict[str, Any]:
+        """Defs can reference other defs, make sure they are included properly."""
+        looking = True
+        while looking:
+            looking = False
+            for this_def in list(schema["$defs"].values()):
+                if "items" in this_def:
+                    ref: str = this_def["items"]["$ref"]
+                    ref_element = ref.removeprefix("#/$defs/")
+                    if ref_element not in schema["$defs"]:
+                        schema["$defs"][ref_element] = self.root[ref_element].json_definition
+                        looking = True
+        return schema
+
     @computed_field
     @cached_property
     def json_definition(self) -> dict[str, Any]:
@@ -47,8 +61,7 @@ class FormTemplateElements(RootModel[dict[str, Element]]):
 
         for k, v in self.root.items():
             definitions[k] = v.json_definition
-
-        return definitions
+        return self.add_referenced_json_schema_defs(definitions)
 
     def example(self, element: str | None = None) -> dict[str, Any]:  # noqa: C901
         """Generate an json schema example of the definitions."""
@@ -87,7 +100,8 @@ class FormTemplateElements(RootModel[dict[str, Element]]):
 
         # Generate the $defs
         for this_element in all_elements:
-            examples["$defs"][this_element] = self.root[this_element].definition
+            examples["$defs"][this_element] = self.root[this_element].json_definition
+        examples = self.add_referenced_json_schema_defs(examples)
 
         def add_element(properties: dict[str, Any], parent: str, *, stop: bool = False) -> None:
             """Recursively add elements to their parents."""

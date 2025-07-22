@@ -1,10 +1,28 @@
 # Form Template Element - Multi Line Text Entry [Markdown][CommonMark] List
 
-UI - A Growable List of [markdown][CommonMark] formatted text fields.
-Each entry is a multiline [markdown][CommonMark] formatted string.
-[Markdown][CommonMark] Formatting, line breaks, or special characters are allowed.
-Add multiple text entries.
-Each entry should be unique.
+## Functional Behavior
+
+A growable list of multi line text entry field, with [Markdown][CommonMark] format.
+Each entry:
+
+* is a multiline [markdown][CommonMark] formatted string.
+* supports [Markdown][CommonMark] Formatting, line breaks, or special characters.
+* *MUST* be unique.
+* *MUST* be a `multiLineTextEntryMarkdown` type Form element
+and can be parameterized in the same way as that Element type.
+
+## Visual Representation
+
+Preferably, A minimum of one (and maximum of `maxItems`) rich text entry
+boxes are presented.
+
+The user can complete the entry as they would a single multi line text entry field.
+They may choose to add another multiline text entry to the list, or remove an existing one.
+The values they enter are encoded in the order they appear on screen,
+in the order they appear in the array.
+
+The Items should appear and be parameterizable in the same way the
+base `multiLineTextEntryMarkdown` type Form element can be.
 
 ## Parent Elements
 
@@ -21,12 +39,14 @@ The Multi Line Text Entry [Markdown][CommonMark] List form element, can appear a
     {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
+        "multiLineTextEntryMarkdown": {
+          "contentMediaType": "text/markdown",
+          "pattern": "^[\\S\\s]*$",
+          "type": "string"
+        },
         "multiLineTextEntryMarkdownList": {
           "items": {
-            "contentMediaType": "text/markdown",
-            "minLength": 1,
-            "pattern": "^[\\S\\s]*$",
-            "type": "string"
+            "$ref": "#/$defs/multiLineTextEntryMarkdown"
           },
           "type": "array",
           "uniqueItems": true
@@ -112,30 +132,19 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>contains</code></strong><br>The choices the multi select can contain.</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>array</code></td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left"><code>string</code></td>
-  </tr>
-  <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>Default Array of text can be supplied.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>default: [&quot;# Chapter 1\n\n## The beginning.\n\nOnce upon a time.&quot;, &quot;...&quot;, &quot;# Chapter 93\n\n## The exciting finale.\n\nMaybe the real treasure was the friends we made along the way.\n\n***The End***\n\n(or is it...)&quot;]</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
@@ -152,16 +161,24 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>description: &quot;A set of chapters used to tell your story.&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>maxItems</code></strong><br>An array instance is valid against &quot;maxItems&quot; if its size is less than, or equal to, the value of this keyword.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+    <td class="gt_row gt_left"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>maxItems: 100</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>minItems</code></strong><br>An array instance is valid against &quot;minItems&quot; if its size is greater than, or equal to, the value of this keyword.</th>
@@ -174,20 +191,28 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left gt_striped"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>minItems: 1</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Chapters&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
@@ -204,17 +229,44 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;Tell us your never-ending story.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;collection&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
 Unlike <code>default</code> it does not provide a default value for the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left gt_striped">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-placeholder: &quot;There is a default, so this placeholder won't show.&quot;</code></td>
   </tr>
 </tbody>
 
@@ -240,12 +292,14 @@ This is an Example Form Template showing just the Multi Line Text Entry [Markdow
       "title": "multiLineTextEntryMarkdownList Example",
       "description": "An example of the multiLineTextEntryMarkdownList Element, and it's parents.",
       "$defs": {
+        "multiLineTextEntryMarkdown": {
+          "contentMediaType": "text/markdown",
+          "pattern": "^[\\S\\s]*$",
+          "type": "string"
+        },
         "multiLineTextEntryMarkdownList": {
           "items": {
-            "contentMediaType": "text/markdown",
-            "minLength": 1,
-            "pattern": "^[\\S\\s]*$",
-            "type": "string"
+            "$ref": "#/$defs/multiLineTextEntryMarkdown"
           },
           "type": "array",
           "uniqueItems": true
@@ -261,17 +315,65 @@ This is an Example Form Template showing just the Multi Line Text Entry [Markdow
           "$ref": "#/$defs/section",
           "properties": {
             "exampleMultiLineTextEntryMarkdownList": {
-              "$ref": "#/$defs/multiLineTextEntryMarkdownList"
+              "$ref": "#/$defs/multiLineTextEntryMarkdownList",
+              "default": [
+                "# Chapter 1\n\n## The beginning.\n\nOnce upon a time.",
+                "...",
+                "# Chapter 93\n\n## The exciting finale.\n\nMaybe the real treasure was the friends we made along the way.\n\n***The End***\n\n(or is it...)"
+              ],
+              "description": "A set of chapters used to tell your story.",
+              "items": {
+                "default": "# My Story\n\nOnce **upon** a *time*...",
+                "description": "Tell a story to the reader.",
+                "maxLength": 5000,
+                "minLength": 20,
+                "title": "Story",
+                "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                "x-icon": "book-open",
+                "x-placeholder": "# ..."
+              },
+              "maxItems": 100,
+              "minItems": 1,
+              "title": "Chapters",
+              "x-guidance": "Tell us your never-ending story.",
+              "x-icon": "collection",
+              "x-placeholder": "There is a default, so this placeholder won't show."
             },
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleMultiLineTextEntryMarkdownList": {
-                  "$ref": "#/$defs/multiLineTextEntryMarkdownList"
+                  "$ref": "#/$defs/multiLineTextEntryMarkdownList",
+                  "default": [
+                    "# Chapter 1\n\n## The beginning.\n\nOnce upon a time.",
+                    "...",
+                    "# Chapter 93\n\n## The exciting finale.\n\nMaybe the real treasure was the friends we made along the way.\n\n***The End***\n\n(or is it...)"
+                  ],
+                  "description": "A set of chapters used to tell your story.",
+                  "items": {
+                    "default": "# My Story\n\nOnce **upon** a *time*...",
+                    "description": "Tell a story to the reader.",
+                    "maxLength": 5000,
+                    "minLength": 20,
+                    "title": "Story",
+                    "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                    "x-icon": "book-open",
+                    "x-placeholder": "# ..."
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "title": "Chapters",
+                  "x-guidance": "Tell us your never-ending story.",
+                  "x-icon": "collection",
+                  "x-placeholder": "There is a default, so this placeholder won't show."
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

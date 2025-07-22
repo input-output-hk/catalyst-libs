@@ -135,6 +135,7 @@ possible Form Element.
 | Single Line Https Url Entry List | [singleLineHttpsUrlEntryList](form_template_elements/single_line_https_url_entry_list.md) |
 | Single Line Text Entry | [singleLineTextEntry](form_template_elements/single_line_text_entry.md) |
 | Single Line Text Entry List | [singleLineTextEntryList](form_template_elements/single_line_text_entry_list.md) |
+| Single Select | [singleSelect](form_template_elements/single_select.md) |
 
 ## Assets
 

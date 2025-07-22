@@ -69,16 +69,16 @@ class Parameter(BaseModel):
         return (self.property_type, value)
 
 
-class Parameters(RootModel[dict[str, Parameter]]):
+class Parameters(RootModel[dict[str, "Parameter | Parameters"]]):
     """All Parameters defined for an Element."""
 
-    root: dict[str, Parameter]
+    root: dict[str, "Parameter | Parameters"]
     _element_name: str = PrivateAttr(default="Unknown")
 
     @computed_field
     @property
-    def all(self) -> list[Parameter]:
-        """Name Of the Parameters Element Type."""
+    def all(self) -> list["Parameter | Parameters"]:
+        """All the Parameters of an Element Type."""
         return [self.root[prop] for prop in sorted(self.root.keys())]
 
     @computed_field
@@ -93,12 +93,19 @@ class Parameters(RootModel[dict[str, Parameter]]):
         for name, value in self.root.items():
             value.set_element_name(name)
 
+    def set_name(self) -> None:
+        """Set Element Name."""
+        for name, value in self.root.items():
+            if isinstance(value, Parameter):
+                value.set_name(name)
+            else:
+                value.set_name()
+
     def model_post_init(self, context: typing.Any) -> None:  # noqa: ANN401
         """Extra setup after we deserialize."""
         super().model_post_init(context)
 
-        for name, value in self.root.items():
-            value.set_name(name)
+        self.set_name()
 
     @computed_field
     @cached_property

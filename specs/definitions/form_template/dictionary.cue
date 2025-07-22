@@ -6,9 +6,13 @@
 // can be generated.
 package form_template
 
-//import "list"
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/regex")
 
-#formElementDictionary: [string]: #formElement
+#elementName: string
+#elementName: =~regex.def.camelCaseName.pattern
+
+#formElementDictionary: [#elementName]: #formElement
 
 // Definitions for all defined template schema field types.
 dictionary: #formElementDictionary & {}

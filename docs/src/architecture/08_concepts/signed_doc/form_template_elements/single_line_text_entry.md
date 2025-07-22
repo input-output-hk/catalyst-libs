@@ -1,8 +1,15 @@
 # Form Template Element - Single Line Text Entry
 
-UI - Single Line text entry without any markup or rich text capability.
-A single line of text.
-No formatting, markup, line breaks, or special characters are allowed.
+## Functional Behavior
+
+A single line plain text entry field.
+Special characters are allowed.
+Line breaks, and Special formatted markup, such as [Markdown][CommonMark] are not allowed.
+
+## Visual Representation
+
+A Text entry box that allows a single line of plain text
+up to the maximum number of allowed characters.
 
 ## Parent Elements
 
@@ -20,6 +27,7 @@ The Single Line Text Entry form element, can appear as a child of:
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
         "singleLineTextEntry": {
+          "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
           "type": "string"
         }
@@ -104,7 +112,7 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>The value given if nothing is entered.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
@@ -115,8 +123,27 @@ Parameters
     <td class="gt_row gt_left gt_striped"><code>string</code></td>
   </tr>
   <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>default: &quot;Rocket&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>description: &quot;Whats your first name.&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>maxLength</code></strong><br>Maximum number of characters allowed in the field.</th>
@@ -129,16 +156,24 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>maxLength: 300</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>minLength</code></strong><br>Minimum number of characters allowed in the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>integer</code></td>
+    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>minLength: 2</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
@@ -155,20 +190,47 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;First Name&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left gt_striped">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;Its the thing your parents called you.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;user&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
@@ -181,6 +243,10 @@ Unlike <code>default</code> it does not provide a default value for the field.</
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-placeholder: &quot;???&quot;</code></td>
   </tr>
 </tbody>
 
@@ -211,6 +277,7 @@ This is an Example Form Template showing just the Single Line Text Entry form el
           "type": "object"
         },
         "singleLineTextEntry": {
+          "contentMediaType": "text/plain",
           "pattern": "^[^\\n]*$",
           "type": "string"
         }
@@ -224,17 +291,39 @@ This is an Example Form Template showing just the Single Line Text Entry form el
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleSingleLineTextEntry": {
-                  "$ref": "#/$defs/singleLineTextEntry"
+                  "$ref": "#/$defs/singleLineTextEntry",
+                  "default": "Rocket",
+                  "description": "Whats your first name.",
+                  "maxLength": 300,
+                  "minLength": 2,
+                  "title": "First Name",
+                  "x-guidance": "Its the thing your parents called you.",
+                  "x-icon": "user",
+                  "x-placeholder": "???"
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             },
             "exampleSingleLineTextEntry": {
-              "$ref": "#/$defs/singleLineTextEntry"
+              "$ref": "#/$defs/singleLineTextEntry",
+              "default": "Rocket",
+              "description": "Whats your first name.",
+              "maxLength": 300,
+              "minLength": 2,
+              "title": "First Name",
+              "x-guidance": "Its the thing your parents called you.",
+              "x-icon": "user",
+              "x-placeholder": "???"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false
     }
     ```
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+
+[CommonMark]: https://spec.commonmark.org/0.31.2/

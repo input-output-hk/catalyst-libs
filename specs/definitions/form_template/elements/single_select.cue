@@ -7,7 +7,7 @@ import (
 
 )
 
-dictionary: radioButtonSelect: {
+dictionary: singleSelect: {
 	description: """
 		## Functional Behavior
 
@@ -17,19 +17,18 @@ dictionary: radioButtonSelect: {
 		## Visual Representation
 
 		A list of items from which one item can be selected.
-		The selector is styled as a set of Radio Buttons.
 		"""
 	parent: ["section"]
-
 	definition: {
 		type:             "string"
 		contentMediaType: "text/plain"
 		pattern:          regex.def.singleLine.pattern
 	}
 	parameters: {
-		title: example: "Radio Selector"
+		title: example: "Single Selector"
 		description: example: """
-			Choose your favorite radio station.
+			Single Selector.
+			Choose a value from the options presented.
 			"""
 		enum: {
 			description: """
@@ -40,20 +39,23 @@ dictionary: radioButtonSelect: {
 				"""
 			contentMediaType: definition.contentMediaType
 			example: [
-				"Hot FM",
-				"AM Stereo (but not really)",
-				"Silence",
+				"option 1",
+				"option 2",
+				"option 3",
 			]
 		}
 		default: {
 			description:      "The option from the **`enum`** which is chosen by default.<br>This **MUST** be a value defined in the **`enum`**."
-			example:          "\(enum.example[2])"
+			example:          "\(enum.example[0])"
 			required:         "yes"
 			contentMediaType: definition.contentMediaType
 		}
 		"x-guidance": example: """
-			Video killed the radio star.
+			It is recommended that a good choice be made.
+			A bad choice could effect prospects of success.
+			A good choice could improve them.
+			So make a good choice.
 			"""
-		"x-icon": example: "bottom-rail-toggle"
+		"x-icon": example: "emoji-happy"
 	}
 }

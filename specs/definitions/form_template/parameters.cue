@@ -52,7 +52,7 @@ import (
 	// If the parameter is a `array` it can be constrained with the following
 	// options.
 	if type == "array" {
-		items?: #parameter
+		items?: #parameter | #formElementRef
 	}
 
 	// If the parameter is a `integer` it can be constrained with the following
@@ -113,6 +113,7 @@ _allParameters: {
 		description: _ | *"An array of string values that may be selected."
 		required:    "yes"
 	}
+	items?: _allParameters
 	minItems?: #parameter & {
 		type:        "integer"
 		description: _ | *#"An array instance is valid against "minItems" if its size is greater than, or equal to, the value of this keyword."#
@@ -174,6 +175,7 @@ _allParameters: {
 		description: _ | *"The name of the Icon to display with the field."
 		required:    "optional"
 		choices:     _allIcons
+		example?:    #iconChoices
 	}
 	"x-order"?: #parameter & {
 		required: "yes"

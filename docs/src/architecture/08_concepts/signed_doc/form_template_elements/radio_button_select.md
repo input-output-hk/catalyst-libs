@@ -1,9 +1,14 @@
 # Form Template Element - Radio Button Select
 
-UI - Radio Button Selection.
+## Functional Behavior
 
-Select one option from a list of text options.
-Selector is styled as a set of Radio Buttons.
+Select one option from a list of items.
+Only one choice is allowed.
+
+## Visual Representation
+
+A list of items from which one item can be selected.
+The selector is styled as a set of Radio Buttons.
 
 ## Parent Elements
 
@@ -106,6 +111,25 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>The option from the <strong><code>enum</code></strong> which is chosen by default.<br>This <strong>MUST</strong> be a value defined in the <strong><code>enum</code></strong>.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left">yes</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>default: &quot;Silence&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
   </tr>
   <tr>
@@ -120,23 +144,15 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
-  <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>enum</code></strong><br>An array of string values that may be selected.</th>
-  </tr>
   <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">yes</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>array</code></td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>description: &quot;Choose your favorite radio station.&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
+    <th class="gt_group_heading" colspan="2"><strong><code>enum</code></strong><br>Sorted array of string values from which a single value can be selected.
+Values must be presented in the order they appear in the array.
+No value that is not in the array may be listed or presented.
+Each item in the array <strong>MUST</strong> be  unique.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
@@ -144,11 +160,38 @@ Parameters
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>array</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Items</th>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>enum: [&quot;Hot FM&quot;, &quot;AM Stereo (but not really)&quot;, &quot;Silence&quot;]</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">yes</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Content Media Type</th>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Radio Selector&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
@@ -164,6 +207,29 @@ Parameters
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;Video killed the radio star.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;bottom-rail-toggle&quot;</code></td>
   </tr>
 </tbody>
 
@@ -205,17 +271,41 @@ This is an Example Form Template showing just the Radio Button Select form eleme
           "$ref": "#/$defs/section",
           "properties": {
             "exampleRadioButtonSelect": {
-              "$ref": "#/$defs/radioButtonSelect"
+              "$ref": "#/$defs/radioButtonSelect",
+              "default": "Silence",
+              "description": "Choose your favorite radio station.",
+              "enum": [
+                "Hot FM",
+                "AM Stereo (but not really)",
+                "Silence"
+              ],
+              "title": "Radio Selector",
+              "x-guidance": "Video killed the radio star.",
+              "x-icon": "bottom-rail-toggle"
             },
             "exampleSection": {
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleRadioButtonSelect": {
-                  "$ref": "#/$defs/radioButtonSelect"
+                  "$ref": "#/$defs/radioButtonSelect",
+                  "default": "Silence",
+                  "description": "Choose your favorite radio station.",
+                  "enum": [
+                    "Hot FM",
+                    "AM Stereo (but not really)",
+                    "Silence"
+                  ],
+                  "title": "Radio Selector",
+                  "x-guidance": "Video killed the radio star.",
+                  "x-icon": "bottom-rail-toggle"
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

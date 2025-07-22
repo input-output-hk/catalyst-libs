@@ -1,10 +1,33 @@
 # Form Template Element - Single Line Text Entry List
 
-UI - A Growable List of single line text
-A single line of text.
-No formatting, markup, line breaks, or special characters are allowed.
-Add multiple single-line text entries.
-Each entry should be unique.
+## Functional Behavior
+
+A growable list of single line plain text entry fields.
+Each entry:
+
+* only supports plain text. (No markup or line breaks).
+* *MUST* be a `singleLineTextEntry` type Form element
+and can be parameterized in the same way as that Element type.
+
+## Visual Representation
+
+Preferably, A minimum of one (and maximum of `maxItems`)
+plain text entry boxes are presented.
+
+The user can complete the entry as they would a single line plain text entry field.
+They may choose to add another single line text entry to the list,
+or remove an existing one.
+
+The user should be able to insert a line in any position, and delete
+any line already entered.
+
+The values they enter are encoded in the order they appear on screen,
+in the order they appear in the array.
+
+The Items should appear and be parameterizable in the same way the
+base `singleLineTextEntry` type Form element can be.
+
+Each entry ***MUST*** be unique.
 
 ## Parent Elements
 
@@ -21,11 +44,14 @@ The Single Line Text Entry List form element, can appear as a child of:
     {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "$defs": {
+        "singleLineTextEntry": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
         "singleLineTextEntryList": {
           "items": {
-            "minLength": 1,
-            "pattern": "^[^\\n]*$",
-            "type": "string"
+            "$ref": "#/$defs/singleLineTextEntry"
           },
           "type": "array",
           "uniqueItems": true
@@ -111,30 +137,19 @@ Parameters
 </thead>
 <tbody class="gt_table_body">
   <tr class="gt_group_heading_row">
-    <th class="gt_group_heading" colspan="2"><strong><code>contains</code></strong><br>The choices the multi select can contain.</th>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>array</code></td>
-  </tr>
-  <tr>
-    <th class="gt_row gt_left gt_stub">Items</th>
-    <td class="gt_row gt_left"><code>string</code></td>
-  </tr>
-  <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>default</code></strong><br>Default Array of text can be supplied.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left gt_striped">optional</td>
+    <td class="gt_row gt_left">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left"><code>string</code></td>
+    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>default: [&quot;Me&quot;, &quot;You&quot;, &quot;Hey&quot;]</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>description</code></strong><br>The description of the field presented to the user during data entry.</th>
@@ -151,16 +166,24 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>description: &quot;All your nicknames.&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>maxItems</code></strong><br>An array instance is valid against &quot;maxItems&quot; if its size is less than, or equal to, the value of this keyword.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>integer</code></td>
+    <td class="gt_row gt_left"><code>integer</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>maxItems: 17</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>minItems</code></strong><br>An array instance is valid against &quot;minItems&quot; if its size is greater than, or equal to, the value of this keyword.</th>
@@ -173,20 +196,28 @@ Parameters
     <th class="gt_row gt_left gt_stub">Type</th>
     <td class="gt_row gt_left gt_striped"><code>integer</code></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>minItems: 2</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>title</code></strong><br>The label attached to the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">yes</td>
+    <td class="gt_row gt_left gt_striped">yes</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
-    <td class="gt_row gt_left"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+    <td class="gt_row gt_left gt_striped"><a href="https://www.rfc-editor.org/rfc/rfc2046.html">text/plain</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>title: &quot;Nicknames&quot;</code></td>
   </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-guidance</code></strong><br>Long form <a href="https://spec.commonmark.org/0.31.2/">Markdown</a> formatted description to give guidance about how the field is to be completed.</th>
@@ -203,17 +234,44 @@ Parameters
     <th class="gt_row gt_left gt_stub">Content Media Type</th>
     <td class="gt_row gt_left gt_striped"><a href="https://spec.commonmark.org/0.31.2/">text/markdown;</a> <a href="https://handlebarsjs.com/">template=handlebars</a></td>
   </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-guidance: &quot;All the nicknames people have used to refer to you.\nMake some up if you have less than 2.&quot;</code></td>
+  </tr>
+  <tr class="gt_group_heading_row">
+    <th class="gt_group_heading" colspan="2"><strong><code>x-icon</code></strong><br>The name of the Icon to display with the field.</th>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Required</th>
+    <td class="gt_row gt_left gt_striped">optional</td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Type</th>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Choices</th>
+    <td class="gt_row gt_left gt_striped"><a href="../../form_templates/#icons">Icons</a></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left"><code>x-icon: &quot;clipboard-list&quot;</code></td>
+  </tr>
   <tr class="gt_group_heading_row">
     <th class="gt_group_heading" colspan="2"><strong><code>x-placeholder</code></strong><br>Placeholder text to display inside the field if it is empty.
 Unlike <code>default</code> it does not provide a default value for the field.</th>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Required</th>
-    <td class="gt_row gt_left">optional</td>
+    <td class="gt_row gt_left gt_striped">optional</td>
   </tr>
   <tr>
     <th class="gt_row gt_left gt_stub">Type</th>
-    <td class="gt_row gt_left gt_striped"><code>string</code></td>
+    <td class="gt_row gt_left"><code>string</code></td>
+  </tr>
+  <tr>
+    <th class="gt_row gt_left gt_stub">Example</th>
+    <td class="gt_row gt_left gt_striped"><code>x-placeholder: [&quot;nickname1&quot;, &quot;nickname2&quot;]</code></td>
   </tr>
 </tbody>
 
@@ -243,11 +301,14 @@ This is an Example Form Template showing just the Single Line Text Entry List fo
           "additionalProperties": false,
           "type": "object"
         },
+        "singleLineTextEntry": {
+          "contentMediaType": "text/plain",
+          "pattern": "^[^\\n]*$",
+          "type": "string"
+        },
         "singleLineTextEntryList": {
           "items": {
-            "minLength": 1,
-            "pattern": "^[^\\n]*$",
-            "type": "string"
+            "$ref": "#/$defs/singleLineTextEntry"
           },
           "type": "array",
           "uniqueItems": true
@@ -262,14 +323,48 @@ This is an Example Form Template showing just the Single Line Text Entry List fo
               "$ref": "#/$defs/section",
               "properties": {
                 "exampleSingleLineTextEntryList": {
-                  "$ref": "#/$defs/singleLineTextEntryList"
+                  "$ref": "#/$defs/singleLineTextEntryList",
+                  "default": [
+                    "Me",
+                    "You",
+                    "Hey"
+                  ],
+                  "description": "All your nicknames.",
+                  "maxItems": 17,
+                  "minItems": 2,
+                  "title": "Nicknames",
+                  "x-guidance": "All the nicknames people have used to refer to you.\nMake some up if you have less than 2.",
+                  "x-icon": "clipboard-list",
+                  "x-placeholder": [
+                    "nickname1",
+                    "nickname2"
+                  ]
                 }
-              }
+              },
+              "x-flatten": false,
+              "x-icon": "bookmark"
             },
             "exampleSingleLineTextEntryList": {
-              "$ref": "#/$defs/singleLineTextEntryList"
+              "$ref": "#/$defs/singleLineTextEntryList",
+              "default": [
+                "Me",
+                "You",
+                "Hey"
+              ],
+              "description": "All your nicknames.",
+              "maxItems": 17,
+              "minItems": 2,
+              "title": "Nicknames",
+              "x-guidance": "All the nicknames people have used to refer to you.\nMake some up if you have less than 2.",
+              "x-icon": "clipboard-list",
+              "x-placeholder": [
+                "nickname1",
+                "nickname2"
+              ]
             }
-          }
+          },
+          "x-flatten": false,
+          "x-icon": "bookmark"
         }
       },
       "additionalProperties": false

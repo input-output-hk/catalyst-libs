@@ -26,18 +26,14 @@
         },
         "multiLineTextEntryMarkdownList": {
             "items": {
-                "contentMediaType": "text/markdown",
-                "minLength": 1,
-                "pattern": "^[\\S\\s]*$",
-                "type": "string"
+                "$ref": "#/$defs/multiLineTextEntryMarkdown"
             },
             "type": "array",
             "uniqueItems": true
         },
         "multiSelect": {
             "items": {
-                "pattern": "^[^\\n]*$",
-                "type": "string"
+                "$ref": "#/$defs/singleSelect"
             },
             "type": "array",
             "uniqueItems": true
@@ -60,32 +56,34 @@
             "type": "object"
         },
         "singleLineHttpsUrlEntry": {
+            "contentMediaType": "text/plain",
             "format": "uri",
             "pattern": "^https://[^\\s]+$",
             "type": "string"
         },
         "singleLineHttpsUrlEntryList": {
             "items": {
-                "format": "uri",
-                "minLength": 1,
-                "pattern": "^https://[^\\s]+$",
-                "type": "string"
+                "$ref": "#/$defs/singleLineHttpsUrlEntry"
             },
             "type": "array",
             "uniqueItems": true
         },
         "singleLineTextEntry": {
+            "contentMediaType": "text/plain",
             "pattern": "^[^\\n]*$",
             "type": "string"
         },
         "singleLineTextEntryList": {
             "items": {
-                "minLength": 1,
-                "pattern": "^[^\\n]*$",
-                "type": "string"
+                "$ref": "#/$defs/singleLineTextEntry"
             },
             "type": "array",
             "uniqueItems": true
+        },
+        "singleSelect": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[^\\n]*$",
+            "type": "string"
         }
     },
     "type": "object",
