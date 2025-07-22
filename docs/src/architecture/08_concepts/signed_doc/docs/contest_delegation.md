@@ -69,7 +69,7 @@ No Headers are defined for this document.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `764f17fb-cc50-4979-b14a-b213dbac5994`,<br/>`788ff4c6-d65a-451f-bb33-575fe056b411` |
+| Type | 764f17fb-cc50-4979-b14a-b213dbac5994 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

@@ -72,7 +72,7 @@ Before accepting a new proposal to be published, the backend will ensure:
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | 7808d2ba-d511-40af-84e8-c0d1625fdfdc |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

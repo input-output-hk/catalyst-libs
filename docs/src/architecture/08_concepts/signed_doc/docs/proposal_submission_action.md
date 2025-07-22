@@ -80,7 +80,7 @@ is not considered `final` and will not be considered in the category it was bein
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `5e60e623-ad02-4a1b-a1ac-406db978ee48`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc`,<br/>`78927329-cfd9-4ea1-9c71-0e019b126a65` |
+| Type | 5e60e623-ad02-4a1b-a1ac-406db978ee48 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

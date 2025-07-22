@@ -6,10 +6,9 @@ from functools import cached_property
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, computed_field
 
 from spec.authors import Authors
-from spec.base_types import BaseTypes
+from spec.base_types import DocTypeId
 from spec.cddl.cose import CoseHeaders
 from spec.change_log_entry import ChangeLogEntry
-from spec.doc_types import DocType
 from spec.metadata import MetadataHeaders
 from spec.payload import Payload
 from spec.signers import Signers
@@ -32,7 +31,7 @@ def empty_string_list() -> list[str]:
 class Document(BaseModel):
     """Document Data Definition."""
 
-    type: DocType
+    type: DocTypeId
     description: str | None = Field(default=None)
     validation: str | None = Field(default=None)
     business_logic: DocumentBusinessLogic = Field(
@@ -65,10 +64,6 @@ class Document(BaseModel):
             if meta.format == "Document Reference":
                 all_refs.extend(meta.type)
         self._all_refs = list(set(all_refs))
-
-    def set_base_types(self, types: BaseTypes) -> None:
-        """Save a local copy of the Base Types."""
-        self.type.set_base_types(types)
 
     def set_name(self, doc_name: str) -> None:
         """Set the name properties."""
@@ -121,11 +116,6 @@ class Documents(RootModel[dict[str, Document]]):
             for ref_doc in doc.all_references:
                 self.root[ref_doc].add_referer(name)
 
-    def set_base_types(self, types: BaseTypes) -> None:
-        """Save a local copy of the Base Types."""
-        for doc in self.root.values():
-            doc.set_base_types(types)
-
     def get(self, name: str) -> Document:
         """Get a document by its name."""
         return self.root[name]
@@ -138,6 +128,6 @@ class Documents(RootModel[dict[str, Document]]):
         names.sort()
         return names
 
-    def type(self, doc_name: str) -> DocType:
+    def type(self, doc_name: str) -> DocTypeId:
         """Get the types for a specific document."""
         return self.root[doc_name].type

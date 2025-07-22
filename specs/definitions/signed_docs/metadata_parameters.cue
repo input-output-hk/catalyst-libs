@@ -3,10 +3,6 @@
 // Metadata Types and Constraints
 package signed_docs
 
-import (
-	"strings"
-)
-
 _metadata: _parameters: {
 	_description: """
 		A reference to the Parameters Document this document lies under.
@@ -39,14 +35,6 @@ _metadata: _parameters: {
 			\(_metadata._parameters._validation)
 			"""
 }
-
-// List of all Parameters Docs (not templates or actions)
-#parameterDocNamesList: [...string] & [
-	for k, _ in _allDocs
-	if strings.Contains(k, "Parameter") &&
-		!strings.Contains(k, "Template") &&
-		!strings.Contains(k, "Action") {k},
-]
 
 // Top Level general documentation for Parameters Metadata.
 metadata: headers: parameters: {

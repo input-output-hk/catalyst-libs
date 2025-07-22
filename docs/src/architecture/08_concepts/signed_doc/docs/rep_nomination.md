@@ -94,7 +94,7 @@ latest Nomination for a Representative.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `bf9abd97-5d1f-4429-8e80-740fea371a9c`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
+| Type | bf9abd97-5d1f-4429-8e80-740fea371a9c |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

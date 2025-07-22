@@ -66,7 +66,7 @@ class DocRelationshipFile(DocGenerator):
                 cluster=cluster,
             )
             doc_data = self._spec.docs.get(doc)
-            doc_type = doc_data.type.formatted_ids(prefix="", separator="<BR />", suffix="", cbor=False)
+            doc_type = doc_data.type.as_uuid_str
 
             if doc_data.headers is not None:
                 # Add content type explicitely to table.

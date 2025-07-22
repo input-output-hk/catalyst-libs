@@ -15,24 +15,11 @@ class TypesMd(DocGenerator):
         """Initialize."""
         super().__init__(args, spec, template="types.md.jinja")
 
-    def doc_type_summary(self) -> str:
-        """Generate a Document Base Type Summary from the Document Specifications Data."""
-        doc_type_summary = """
-| Base Type | UUID | CBOR |
-| :--- | :--- | :--- |
-"""
-
-        for type_name in self._spec.base_types.all:
-            uuid = self._spec.base_types.uuid(type_name)
-            doc_type_summary += f"| {type_name} | `{uuid.as_uuid_str}` | `{uuid.as_cbor}` |\n"
-
-        return doc_type_summary.strip()
-
     def doc_type_details(self) -> str:
         """Generate a Document Type Detailed Summary from the Document Specifications Data."""
         doc_type_details = """
 <!-- markdownlint-disable MD033 -->
-| Document Type | Base Types | CBOR |
+| Document Type | UUIDv4 | CBOR |
 | :--- | :--- | :--- |
 """
 
@@ -40,8 +27,8 @@ class TypesMd(DocGenerator):
             doc_type = self._spec.docs.type(k)
             doc_type_details += (
                 f"| {self.link_to_file(k, doc_name=k, template='document_page.md.jinja')} |"
-                f" {doc_type.formatted_names()} |"
-                f" {doc_type.formatted_ids(separator=',<br>')} |\n"
+                f" {doc_type.as_uuid_str} |"
+                f" `{doc_type.as_cbor}` |\n"
             )
 
         doc_type_details += "<!-- markdownlint-enable MD033 -->"

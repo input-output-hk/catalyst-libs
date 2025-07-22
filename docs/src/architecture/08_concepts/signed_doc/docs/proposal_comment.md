@@ -56,7 +56,7 @@ and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.m
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | b679ded3-0e7c-41ba-89f8-da62a17898ea |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

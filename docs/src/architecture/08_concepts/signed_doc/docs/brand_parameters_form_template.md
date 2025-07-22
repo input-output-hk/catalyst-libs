@@ -68,7 +68,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`ebcabeeb-5bc5-4f95-91e8-cab8ca724172` |
+| Type | fd3c1735-80b1-4eea-8d63-5f436d97ea31 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

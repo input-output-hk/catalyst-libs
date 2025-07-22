@@ -49,7 +49,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `5e60e623-ad02-4a1b-a1ac-406db978ee48`,<br/>`b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`a5d232b8-5e03-4117-9afd-be32b878fcdd` |
+| Type | 84a4b502-3b7e-47fd-84e4-6fee08794bd7 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 

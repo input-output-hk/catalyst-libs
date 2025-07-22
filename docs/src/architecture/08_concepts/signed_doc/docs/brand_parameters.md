@@ -63,7 +63,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`ebcabeeb-5bc5-4f95-91e8-cab8ca724172` |
+| Type | 3e4808cc-c86e-467b-9702-d60baa9d1fca |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
