@@ -3,6 +3,8 @@
 
 use crate::DocType;
 
+/// helper macro by evaluating `DocType::try_from_uuid(catalyst_types::uuid::uuid!())`
+/// expression
 macro_rules! doc_type_init {
     ($s:literal) => {
         match DocType::try_from_uuid(catalyst_types::uuid::uuid!($s)) {

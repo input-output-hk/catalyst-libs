@@ -36,6 +36,9 @@ impl UuidV7 {
     }
 
     /// A const alternative impl of `TryFrom<Uuid>`
+    ///
+    /// # Errors
+    ///   - `InvalidUuidV7`
     pub const fn try_from_uuid(uuid: Uuid) -> Result<Self, InvalidUuidV7> {
         if is_valid(&uuid) {
             Ok(Self(uuid))

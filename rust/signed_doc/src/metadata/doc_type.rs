@@ -15,6 +15,9 @@ pub struct DocType(UuidV4);
 
 impl DocType {
     /// A const alternative impl of `TryFrom<Uuid>`
+    ///
+    /// # Errors
+    ///  - `catalyst_types::uuid::InvalidUuidV4`
     pub const fn try_from_uuid(uuid: Uuid) -> Result<Self, catalyst_types::uuid::InvalidUuidV4> {
         match UuidV4::try_from_uuid(uuid) {
             Ok(v) => Ok(Self(v)),
