@@ -336,17 +336,33 @@ class DocGenerator:
 
         return True
 
-    def validate_generation(self) -> bool:
+    @staticmethod
+    def failed_message(status: str, error: str, exc: str | None = None) -> bool:
+        """Display a failed status message."""
+        exc = "" if None else f": [red]{exc}[/red]"
+        rich.print(f":cross_mark: [yellow]{status}[/yellow]: [red]{error}[/red]{exc}")
+        if exc != "":
+            rich.console.Console().print_exception()
+        return False
+
+    @staticmethod
+    def success_message(status: str, success: str = "Ok") -> bool:
+        """Display a failed status message."""
+        rich.print(f":white_check_mark: [green]{status}[/green]: [cyan]{success}[/cyan]")
+        return True
+
+    def validate_generation(self, status: str) -> bool:
         """Check and Output the status when a file does not validate."""
         if not self._filepath.exists():
-            rich.print(f"Documentation file missing: {self._filename}.")
-            return False
+            return self.failed_message(status, "File Not Generated.")
 
-        current_file = self._filepath.read_text()
+        try:
+            current_file = self._filepath.read_text()
+        except Exception as e:  # noqa: BLE001
+            return self.failed_message(status, "Reading Previous Generated Content", f"{e}")
         if current_file == self._filedata:
-            return True
+            return self.success_message(status)
 
-        rich.print(f"Documentation not generated correctly: {self._filename}.")
         diff = difflib.unified_diff(
             current_file.splitlines(),
             self._filedata.splitlines(),
@@ -357,6 +373,8 @@ class DocGenerator:
             n=3,
             lineterm="\n",
         )
+
+        ok = self.failed_message(status, "Generated Document does not match specification! DIFF Follows:")
         rich.print(
             rich.markdown.Markdown(
                 f"""
@@ -367,33 +385,39 @@ class DocGenerator:
                 code_theme="vim",
             ),
         )
-        return False
+        return ok
 
     def save_or_validate(
         self,
     ) -> bool:
         """Save a file or Validate it, depending on whats required."""
-        rich.print(f"{'Generating' if self._generate else 'Validating'} {self._filename}")
+        status = f"{'Generating' if self._generate else 'Validating'} [white bold]{self._filename}[/white bold]"
 
+        exc = ""
         try:
-            if not self.generate():
-                return False
+            ok = self.generate()
         except Exception as e:  # noqa: BLE001
-            rich.print(f"Failed to generate documentation for {self._filename}: {e}")
-            rich.console.Console().print_exception()
-            return False
+            ok = False
+            exc = f"{e}"
+        if not ok:
+            return self.failed_message(status, "GENERATION FAILED", exc)
 
         if self._generate:
             if self._filepath.exists():
-                old_contents = self._filepath.read_text()
+                try:
+                    old_contents = self._filepath.read_text()
+                except Exception as e:  # noqa: BLE001
+                    return self.failed_message(status, "Reading Previous Generated Content", f"{e}")
                 if old_contents == self._filedata:
-                    rich.print(f"{self._filename} is already up-to-date.")
-                    return True
+                    return self.success_message(status, ":blue_book: :scales: :green_book: - No Changes")
 
-            self._filepath.write_text(self._filedata)
-            return True
+            try:
+                self._filepath.write_text(self._filedata)
+            except Exception as e:  # noqa: BLE001
+                return self.failed_message(status, "Writing Generated Content", f"{e}")
+            return self.success_message(status)
 
-        return self.validate_generation()
+        return self.validate_generation(status)
 
     def file_name(self) -> str:
         """Return the files name."""

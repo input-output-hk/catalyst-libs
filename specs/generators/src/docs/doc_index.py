@@ -2,6 +2,7 @@
 
 import argparse
 
+from docs.docs_page_md import IndividualDocMd
 from spec.signed_doc import SignedDoc
 
 from .doc_generator import DocGenerator, LinkType
@@ -16,6 +17,9 @@ class DocIndex(DocGenerator):
 
     def generate(self) -> bool:
         """Generate the Spec Index."""
+        # Generate all the pages for each document type.
+        good = IndividualDocMd.save_or_validate_all(self._args, self._spec)
+
         self.generate_from_page_template(LinkType=LinkType)
 
-        return super().generate()
+        return good and super().generate()
