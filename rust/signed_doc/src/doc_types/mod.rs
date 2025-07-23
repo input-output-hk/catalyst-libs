@@ -3,71 +3,38 @@
 
 use std::sync::LazyLock;
 
-use catalyst_types::uuid::Uuid;
+use catalyst_types::uuid::uuid;
 
 use crate::DocType;
 
 /// -------------- Document Types --------------
 /// Brand document type.
-#[allow(clippy::expect_used)]
-pub static BRAND_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x3E48_08CC_C86E_467B_9702_D60B_AA9D_1FCA)
-        .try_into()
-        .expect("Failed to convert brand base types Uuid to DocType")
-});
+pub const BRAND_PARAMETERS: DocType =
+    DocType::try_from_uuid(uuid!("3e4808cc-c86e-467b-9702-d60baa9d1fca"));
 
 /// Campaign Parameters document type.
-#[allow(clippy::expect_used)]
-pub static CAMPAIGN_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x0110_EA96_A555_47CE_8408_36EF_E6ED_6F7C)
-        .try_into()
-        .expect("Failed to convert campaign base types Uuid to DocType")
-});
+pub const CAMPAIGN_PARAMETERS: DocType =
+    DocType::try_from_uuid(uuid!("0110ea96-a555-47ce-8408-36efe6ed6f7c"));
 
 /// Category Parameters document type.
-#[allow(clippy::expect_used)]
-pub static CATEGORY_PARAMETERS: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x48C2_0109_362A_4D32_9BBA_E0A9_CF8B_45BE)
-        .try_into()
-        .expect("Failed to convert category base types Uuid to DocType")
-});
+pub const CATEGORY_PARAMETERS: DocType =
+    DocType::try_from_uuid(uuid!("48c20109-362a-4d32-9bba-e0a9cf8b45be"));
 
 /// Proposal document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x7808_D2BA_D511_40AF_84E8_C0D1_625F_DFDC)
-        .try_into()
-        .expect("Failed to convert proposal document Uuid to DocType")
-});
+pub const PROPOSAL: DocType = DocType::try_from_uuid(uuid!("7808d2ba-d511-40af-84e8-c0d1625fdfdc"));
 
 /// Proposal comment document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL_COMMENT: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0xB679_DED3_0E7C_41BA_89F8_DA62_A178_98EA)
-        .try_into()
-        .expect("Failed to convert proposal comment document Uuid to DocType")
-});
+pub const PROPOSAL_COMMENT: DocType =
+    DocType::try_from_uuid(uuid!("b679ded3-0e7c-41ba-89f8-da62a17898ea"));
 
 /// Proposal action document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL_SUBMISSION_ACTION: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x5E60_E623_AD02_4A1B_A1AC_406D_B978_EE48)
-        .try_into()
-        .expect("Failed to convert proposal action document Uuid to DocType")
-});
+pub const PROPOSAL_SUBMISSION_ACTION: DocType =
+    DocType::try_from_uuid(uuid!("5e60e623-ad02-4a1b-a1ac-406db978ee48"));
 
 /// Proposal Comment Template document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL_COMMENT_FORM_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x0B84_24D4_EBFD_46E3_9577_1775_A69D_290C)
-        .try_into()
-        .expect("Failed to convert proposal comment template document Uuid to DocType")
-});
+pub const PROPOSAL_COMMENT_FORM_TEMPLATE: DocType =
+    DocType::try_from_uuid(uuid!("0b8424d4-ebfd-46e3-9577-1775a69d290c"));
 
 /// Proposal Template document type.
-#[allow(clippy::expect_used)]
-pub static PROPOSAL_FORM_TEMPLATE: LazyLock<DocType> = LazyLock::new(|| {
-    Uuid::from_u128(0x0CE8_AB38_9258_4FBC_A62E_7FAA_6E58_318F)
-        .try_into()
-        .expect("Failed to convert proposal template document Uuid to DocType")
-});
+pub const PROPOSAL_FORM_TEMPLATE: DocType =
+    DocType::try_from_uuid(uuid!("0ce8ab38-9258-4fbc-a62e-7faa6e58318f"));

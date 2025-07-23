@@ -1,10 +1,10 @@
 //! `UUID` types.
 
-pub use uuid::Uuid;
+pub use uuid::{uuid, Uuid};
 #[allow(clippy::module_name_repetitions)]
-pub use uuid_v4::UuidV4;
+pub use uuid_v4::{InvalidUuidV4, ParsingError as UuidV4ParsingError, UuidV4};
 #[allow(clippy::module_name_repetitions)]
-pub use uuid_v7::UuidV7;
+pub use uuid_v7::{InvalidUuidV7, ParsingError as UuidV7ParsingError, UuidV7};
 
 mod uuid_v4;
 mod uuid_v7;
@@ -16,22 +16,6 @@ pub const INVALID_UUID: uuid::Uuid = uuid::Uuid::from_bytes([0x00; 16]);
 
 /// UUID CBOR tag <https://www.iana.org/assignments/cbor-tags/cbor-tags.xhtml/>.
 pub const UUID_CBOR_TAG: u64 = 37;
-
-/// Uuid validation errors, which could occur during decoding or converting to
-/// `UuidV4` or `UuidV7` types.
-#[derive(Debug, Clone, thiserror::Error)]
-#[allow(clippy::module_name_repetitions)]
-pub enum UuidError {
-    /// `UUIDv4` invalid error
-    #[error("'{0}' is not a valid UUIDv4")]
-    InvalidUuidV4(uuid::Uuid),
-    /// `UUIDv7` invalid error
-    #[error("'{0}' is not a valid UUIDv7")]
-    InvalidUuidV7(uuid::Uuid),
-    /// Invalid string conversion
-    #[error("Invalid string conversion: {0}")]
-    StringConversion(String),
-}
 
 /// Context for `CBOR` encoding and decoding
 pub enum CborContext {

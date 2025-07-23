@@ -3,6 +3,7 @@
 use std::{
     fmt::{Display, Formatter},
     hash::Hash,
+    str::FromStr,
 };
 
 use catalyst_types::uuid::{CborContext, Uuid, UuidV4};
@@ -12,15 +13,14 @@ use minicbor::{Decode, Decoder, Encode};
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct DocType(UuidV4);
 
-/// `DocType` Errors.
-#[derive(Debug, Clone, thiserror::Error)]
-pub enum DocTypeError {
-    /// Invalid UUID.
-    #[error("Invalid UUID: {0}")]
-    InvalidUuid(Uuid),
-    /// Invalid string conversion
-    #[error("Invalid string conversion: {0}")]
-    StringConversion(String),
+impl DocType {
+    /// A const alternative impl of `TryFrom<Uuid>`
+    pub const fn try_from_uuid(uuid: Uuid) -> Result<Self, catalyst_types::uuid::InvalidUuidV4> {
+        match UuidV4::try_from_uuid(uuid) {
+            Ok(v) => Ok(Self(v)),
+            Err(err) => Err(err),
+        }
+    }
 }
 
 impl From<UuidV4> for DocType {
@@ -30,22 +30,26 @@ impl From<UuidV4> for DocType {
 }
 
 impl TryFrom<Uuid> for DocType {
-    type Error = DocTypeError;
+    type Error = catalyst_types::uuid::InvalidUuidV4;
 
     fn try_from(value: Uuid) -> Result<Self, Self::Error> {
-        UuidV4::try_from(value)
-            .map_err(|_| DocTypeError::InvalidUuid(value))
-            .map(Into::into)
+        UuidV4::try_from(value).map(Into::into)
+    }
+}
+
+impl FromStr for DocType {
+    type Err = catalyst_types::uuid::UuidV4ParsingError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.parse::<UuidV4>().map(Self)
     }
 }
 
 impl TryFrom<String> for DocType {
-    type Error = DocTypeError;
+    type Error = catalyst_types::uuid::UuidV4ParsingError;
 
     fn try_from(s: String) -> Result<Self, Self::Error> {
-        s.parse::<UuidV4>()
-            .map_err(|_| DocTypeError::StringConversion(s))
-            .map(Self)
+        s.parse()
     }
 }
 
@@ -124,34 +128,6 @@ mod tests {
         let doc_type =
             DocType::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut ()).unwrap();
         assert_eq!(doc_type.0, uuid);
-    }
-
-    #[test_case(
-        |uuid: Uuid| { uuid.to_string() } ;
-        "strings"
-    )]
-    #[test_case(
-        |uuid: Uuid| { uuid } ;
-        "Uuid"
-    )]
-    fn test_valid_try_from<T>(input_gen: impl FnOnce(Uuid) -> T)
-    where DocType: TryFrom<T, Error = DocTypeError> {
-        let uuid = Uuid::new_v4();
-        let doc_type = DocType::try_from(input_gen(uuid)).unwrap();
-        assert_eq!(doc_type.0.uuid(), uuid);
-    }
-
-    #[test_case(
-        "not-a-uuid".to_string() => matches
-        Err(DocTypeError::StringConversion(_)) ;         "Not a valid Uuid string"
-    )]
-    #[test_case(
-        Uuid::now_v7() => matches Err(DocTypeError::InvalidUuid(_)) ;
-        "Not a valid uuid v4"
-    )]
-    fn test_invalid_try_from<T>(input: T) -> Result<DocType, DocTypeError>
-    where DocType: TryFrom<T, Error = DocTypeError> {
-        DocType::try_from(input)
     }
 
     #[test_case(
