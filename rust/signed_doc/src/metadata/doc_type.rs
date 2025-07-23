@@ -100,7 +100,7 @@ mod tests {
     #[test_case(
         {
             let mut e = Encoder::new(Vec::new());
-            e.encode_with(UuidV7::new(), &mut CborContext::Untagged).unwrap();
+            e.encode_with(UuidV7::new(), &mut CborContext::Tagged).unwrap();
             e
         } ;
         "Invalid tagged uuid v7"
