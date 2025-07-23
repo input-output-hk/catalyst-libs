@@ -8,7 +8,7 @@ use std::{
 use catalyst_types::uuid::{CborContext, Uuid, UuidV4};
 use minicbor::{Decode, Decoder, Encode};
 
-/// List of `UUIDv4` document type.
+/// Document type - `UUIDv4`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct DocType(UuidV4);
 
