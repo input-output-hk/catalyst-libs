@@ -5,7 +5,6 @@
 use std::sync::LazyLock;
 
 use catalyst_signed_doc::{
-    doc_types::deprecated,
     providers::tests::{TestCatalystSignedDocumentProvider, TestVerifyingKeyProvider},
     *,
 };
@@ -144,41 +143,6 @@ async fn test_invalid_submission_action_wrong_role() {
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid);
-}
-
-#[tokio::test]
-async fn test_valid_submission_action_old_type() {
-    let doc = Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE,
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "ref": {
-                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
-            },
-            "parameters": {
-                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-            }
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({
-            "action": "final"
-        }))
-        .unwrap()
-        .build()
-        .unwrap();
-
-    let mut provider = TestCatalystSignedDocumentProvider::default();
-
-    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
-    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
-
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert!(is_valid, "{:?}", doc.problem_report());
 }
 
 #[tokio::test]

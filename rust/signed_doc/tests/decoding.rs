@@ -24,14 +24,13 @@ struct TestCase {
 
 fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
         UuidV7::new(),
         UuidV7::new(),
         DocLocator::default(),
     )]);
     let doc_ref_cloned = doc_ref.clone();
-
     TestCase {
         name: format!("Provided '{alias}' field should be processed as parameters."),
         bytes_gen: Box::new({
@@ -45,9 +44,7 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -86,9 +83,8 @@ fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
 
 fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
-
     TestCase {
         name: format!("Catalyst Signed Doc with missing '{field}' header."),
         bytes_gen: Box::new({
@@ -105,9 +101,7 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
                         p_headers.u8(3)?.encode(ContentType::Json)?;
                     }
                     if field != "type" {
-                        p_headers
-                            .str("type")?
-                            .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                        p_headers.str("type")?.encode(&doc_type)?;
                     }
                     if field != "id" {
                         p_headers
@@ -163,8 +157,7 @@ fn signed_doc_with_missing_header_field_case(field: &'static str) -> TestCase {
 
 fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: format!("Catalyst Signed Doc with random bytes in '{field}' header field."),
         bytes_gen: Box::new({
@@ -193,9 +186,7 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
                     if field == "type" {
                         p_headers.str("type")?.encode_with(rand_buf, &mut ())?;
                     } else {
-                        p_headers
-                            .str("type")?
-                            .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                        p_headers.str("type")?.encode(&doc_type)?;
                     }
                     if field == "id" {
                         p_headers.str("id")?.encode_with(rand_buf, &mut ())?;
@@ -264,9 +255,8 @@ fn signed_doc_with_random_header_field_case(field: &'static str) -> TestCase {
 // `parameters` value along with its aliases are not allowed to be presented
 fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str]) -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
-
     TestCase {
         name: format!("Multiple definitions of '{}' at once.", aliases.join(", ")),
         bytes_gen: Box::new({
@@ -280,9 +270,7 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(4u64.overflowing_add(u64::try_from(aliases.len())?).0)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -318,14 +306,12 @@ fn signed_doc_with_parameters_and_aliases_case(aliases: &'static [&'static str])
 
 fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     let name = if upper {
         "Content-Encoding"
     } else {
         "content-encoding"
     };
-
     TestCase {
         name: format!("content_encoding field, allow upper and lower case key value: '{name}'"),
         bytes_gen: Box::new({
@@ -339,9 +325,7 @@ fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -380,8 +364,7 @@ fn signed_doc_with_content_encoding_case(upper: bool) -> TestCase {
 
 fn signed_doc_with_random_kid_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Invalid signature kid field format (random bytes)".to_string(),
         bytes_gen: Box::new({
@@ -395,9 +378,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -442,8 +423,7 @@ fn signed_doc_with_random_kid_case() -> TestCase {
 
 fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with wrong COSE sign tag value (not `98`)".to_string(),
         bytes_gen: Box::new({
@@ -457,9 +437,7 @@ fn signed_doc_with_wrong_cose_tag_case() -> TestCase {
                     let mut p_headers = Encoder::new(Vec::new());
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -501,11 +479,11 @@ fn decoding_empty_bytes_case() -> TestCase {
 
 fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, signed (one signature), CBOR tagged.".to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
 
@@ -520,7 +498,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                     p_headers.u8(3)?.encode(ContentType::Json)?;
                     p_headers
                         .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                        .encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -551,7 +529,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
@@ -567,17 +545,17 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
 
 fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     let doc_ref = DocumentRefs::from(vec![DocumentRef::new(
         UuidV7::new(),
         UuidV7::new(),
         DocLocator::default(),
     )]);
     let doc_ref_cloned = doc_ref.clone();
-
     TestCase {
         name: "Catalyst Signed Doc with all metadata fields defined, signed (one signature), CBOR tagged.".to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
 
@@ -589,7 +567,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
 
                 p_headers.map(9)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers.str("type")?.encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers.str("id")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
                 p_headers.str("ver")?.encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
                 p_headers
@@ -635,7 +613,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
         post_checks: Some(Box::new({
             move |doc| {
                 let refs = doc_ref_cloned.clone();
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_meta().doc_ref() == Some(&refs));
@@ -652,11 +630,12 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
 
 fn minimally_valid_tagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged."
             .to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -666,9 +645,7 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
 
                 p_headers.map(4)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers
-                    .str("type")?
-                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers
                     .str("id")?
                     .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -691,7 +668,7 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
@@ -710,11 +687,12 @@ fn minimally_valid_tagged_signed_doc() -> TestCase {
 
 fn minimally_valid_untagged_signed_doc() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, unsigned, CBOR tagged."
             .to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let mut e = Encoder::new(Vec::new());
                 e.array(4)?;
@@ -723,9 +701,7 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
 
                 p_headers.map(4)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers
-                    .str("type")?
-                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers
                     .str("id")?
                     .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -748,7 +724,7 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
@@ -767,7 +743,7 @@ fn minimally_valid_untagged_signed_doc() -> TestCase {
 
 fn signed_doc_valid_null_as_no_content() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with 'content' defined as Null.".to_string(),
         bytes_gen: Box::new({
@@ -780,10 +756,7 @@ fn signed_doc_valid_null_as_no_content() -> TestCase {
 
                 p_headers.map(4)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers
-                    .str("type")?
-                    .array(1)?
-                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers
                     .str("id")?
                     .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -817,7 +790,7 @@ fn signed_doc_valid_null_as_no_content() -> TestCase {
 
 fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with 'content' defined as empty bstr.".to_string(),
         bytes_gen: Box::new({
@@ -830,10 +803,7 @@ fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
 
                 p_headers.map(4)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers
-                    .str("type")?
-                    .array(1)?
-                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers
                     .str("id")?
                     .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -865,7 +835,7 @@ fn signed_doc_valid_empty_bstr_as_no_content() -> TestCase {
 
 fn signed_doc_with_non_empty_unprotected_headers() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with non empty unprotected headers".to_string(),
         bytes_gen: Box::new({
@@ -878,10 +848,7 @@ fn signed_doc_with_non_empty_unprotected_headers() -> TestCase {
 
                 p_headers.map(4)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers
-                    .str("type")?
-                    .array(1)?
-                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers
                     .str("id")?
                     .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -910,7 +877,7 @@ fn signed_doc_with_non_empty_unprotected_headers() -> TestCase {
 
 fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with signatures non empty unprotected headers".to_string(),
         bytes_gen: Box::new({
@@ -925,10 +892,7 @@ fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
 
                 p_headers.map(4)?;
                 p_headers.u8(3)?.encode(ContentType::Json)?;
-                p_headers
-                    .str("type")?
-                    .array(1)?
-                    .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                p_headers.str("type")?.encode(&doc_type)?;
                 p_headers
                     .str("id")?
                     .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -966,8 +930,7 @@ fn signed_doc_with_signatures_non_empty_unprotected_headers() -> TestCase {
 
 fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled strictly decoded rules, metadata field in the wrong order".to_string(),
         bytes_gen: Box::new({
@@ -984,8 +947,8 @@ fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
                     p_headers.map(4)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
                     p_headers
-                        .str("type")?.array(1)?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                        .str("type")?
+                        .encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -1020,11 +983,11 @@ fn signed_doc_with_strict_deterministic_decoding_wrong_order() -> TestCase {
 
 fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with minimally defined metadata fields, with enabled non strictly (warn) decoded rules, metadata field in the wrong order".to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
 
@@ -1038,8 +1001,8 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
                     p_headers.map(4)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
                     p_headers
-                        .str("type")?.array(1)?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                        .str("type")?
+                        .encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -1070,7 +1033,7 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
         valid_doc: true,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
@@ -1086,12 +1049,12 @@ fn signed_doc_with_non_strict_deterministic_decoding_wrong_order() -> TestCase {
 
 fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with non-supported defined metadata fields is invalid."
             .to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let mut e = Encoder::new(Vec::new());
                 e.tag(Tag::new(98))?;
@@ -1102,9 +1065,7 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
 
                     p_headers.map(5)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -1131,7 +1092,7 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
         valid_doc: false,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
@@ -1147,12 +1108,12 @@ fn signed_doc_with_non_supported_metadata_invalid() -> TestCase {
 
 fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with Signature KID in Id form, instead of URI form is invalid."
             .to_string(),
         bytes_gen: Box::new({
+            let doc_type = doc_type.clone();
             move || {
                 let (_, _, kid) = create_dummy_key_pair(RoleId::Role0)?;
 
@@ -1165,9 +1126,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
 
                     p_headers.map(4)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
@@ -1201,7 +1160,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
         valid_doc: false,
         post_checks: Some(Box::new({
             move |doc| {
-                anyhow::ensure!(doc.doc_type()? == &DocType::from(uuid_v4));
+                anyhow::ensure!(doc.doc_type()? == &doc_type);
                 anyhow::ensure!(doc.doc_id()? == uuid_v7);
                 anyhow::ensure!(doc.doc_ver()? == uuid_v7);
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
@@ -1217,8 +1176,7 @@ fn signed_doc_with_kid_in_id_form_invalid() -> TestCase {
 
 fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCase {
     let uuid_v7 = UuidV7::new();
-    let uuid_v4 = UuidV4::new();
-
+    let doc_type = DocType::from(UuidV4::new());
     TestCase {
         name: "Catalyst Signed Doc with unsupported protected Signature header is invalid."
             .to_string(),
@@ -1235,9 +1193,7 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
 
                     p_headers.map(4)?;
                     p_headers.u8(3)?.encode(ContentType::Json)?;
-                    p_headers
-                        .str("type")?
-                        .encode_with(uuid_v4, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
