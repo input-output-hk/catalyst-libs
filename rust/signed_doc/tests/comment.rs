@@ -5,7 +5,6 @@
 use std::sync::LazyLock;
 
 use catalyst_signed_doc::{
-    doc_types::deprecated,
     providers::tests::{TestCatalystSignedDocumentProvider, TestVerifyingKeyProvider},
     *,
 };
@@ -54,7 +53,7 @@ static COMMENT_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(||
         .with_json_metadata(serde_json::json!({
             "content-type": ContentType::Json.to_string(),
             "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": doc_types::PROPOSAL_COMMENT_TEMPLATE.clone(),
+            "type": doc_types::PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
             "id": UuidV7::new(),
             "ver": UuidV7::new(),
             "parameters": {
@@ -216,49 +215,6 @@ async fn test_invalid_comment_doc_wrong_role() {
 
     let is_valid = validator::validate(&doc, &provider).await.unwrap();
     assert!(!is_valid, "{:?}", doc.problem_report());
-}
-
-// The same as above but test with the old type
-#[tokio::test]
-async fn test_valid_comment_doc_old_type() {
-    let doc = Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "content-encoding": ContentEncoding::Brotli.to_string(),
-            "type": deprecated::COMMENT_DOCUMENT_UUID_TYPE,
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "ref": {
-                "id": DUMMY_PROPOSAL_DOC.doc_id().unwrap(),
-                "ver": DUMMY_PROPOSAL_DOC.doc_ver().unwrap(),
-            },
-            "template": {
-                "id": COMMENT_TEMPLATE_DOC.doc_id().unwrap(),
-                "ver": COMMENT_TEMPLATE_DOC.doc_ver().unwrap(),
-            },
-            "reply": {
-                "id": COMMENT_REF_DOC.doc_id().unwrap(),
-                "ver": COMMENT_REF_DOC.doc_ver().unwrap()
-            },
-            "parameters": {
-                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-            }
-        }))
-        .unwrap()
-        .with_json_content(&serde_json::json!({}))
-        .unwrap()
-        .build()
-        .unwrap();
-
-    let mut provider = TestCatalystSignedDocumentProvider::default();
-    provider.add_document(None, &DUMMY_BRAND_DOC).unwrap();
-    provider.add_document(None, &DUMMY_PROPOSAL_DOC).unwrap();
-    provider.add_document(None, &COMMENT_REF_DOC).unwrap();
-    provider.add_document(None, &COMMENT_TEMPLATE_DOC).unwrap();
-
-    let is_valid = validator::validate(&doc, &provider).await.unwrap();
-    assert!(is_valid, "{:?}", doc.problem_report());
 }
 
 #[tokio::test]

@@ -18,9 +18,8 @@ use rules::{
 
 use crate::{
     doc_types::{
-        deprecated::{self},
         BRAND_PARAMETERS, CAMPAIGN_PARAMETERS, CATEGORY_PARAMETERS, PROPOSAL, PROPOSAL_COMMENT,
-        PROPOSAL_COMMENT_TEMPLATE, PROPOSAL_SUBMISSION_ACTION, PROPOSAL_TEMPLATE,
+        PROPOSAL_COMMENT_FORM_TEMPLATE, PROPOSAL_FORM_TEMPLATE, PROPOSAL_SUBMISSION_ACTION,
     },
     metadata::DocType,
     providers::{CatalystSignedDocumentProvider, VerifyingKeyProvider},
@@ -30,18 +29,6 @@ use crate::{
 
 /// A table representing a full set or validation rules per document id.
 static DOCUMENT_RULES: LazyLock<HashMap<DocType, Arc<Rules>>> = LazyLock::new(document_rules_init);
-
-/// Returns an `DocType` from the provided argument.
-/// Reduce redundant conversion.
-/// This function should be used for hardcoded values, panic if conversion fail.
-#[allow(clippy::expect_used)]
-pub(crate) fn expect_doc_type<T>(t: T) -> DocType
-where
-    T: TryInto<DocType>,
-    T::Error: std::fmt::Debug,
-{
-    t.try_into().expect("Failed to convert to DocType")
-}
 
 /// Proposal
 /// Require field: type, id, ver, template, parameters
@@ -62,7 +49,7 @@ fn proposal_rule() -> Rules {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: PROPOSAL_TEMPLATE.clone(),
+            exp_template_type: PROPOSAL_FORM_TEMPLATE.clone(),
         },
         parameters: ParametersRule::Specified {
             exp_parameters_type: parameters.clone(),
@@ -99,7 +86,7 @@ fn proposal_comment_rule() -> Rules {
             optional: false,
         },
         content: ContentRule::Templated {
-            exp_template_type: PROPOSAL_COMMENT_TEMPLATE.clone(),
+            exp_template_type: PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
         },
         doc_ref: RefRule::Specified {
             exp_ref_type: PROPOSAL.clone(),
@@ -185,16 +172,6 @@ fn document_rules_init() -> HashMap<DocType, Arc<Rules>> {
     document_rules_map.insert(PROPOSAL_COMMENT.clone(), Arc::clone(&comment_rules));
     document_rules_map.insert(
         PROPOSAL_SUBMISSION_ACTION.clone(),
-        Arc::clone(&action_rules),
-    );
-
-    // Insert old rules (for backward compatibility)
-    document_rules_map.insert(
-        expect_doc_type(deprecated::COMMENT_DOCUMENT_UUID_TYPE),
-        Arc::clone(&comment_rules),
-    );
-    document_rules_map.insert(
-        expect_doc_type(deprecated::PROPOSAL_ACTION_DOCUMENT_UUID_TYPE),
         Arc::clone(&action_rules),
     );
 
