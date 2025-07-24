@@ -32,8 +32,8 @@ uuid = "1.11.0"
 oid-registry = "0.7.1"
 thiserror = "2.0.11"
 
-c509-certificate = { version = "0.0.3", path = "../c509-certificate" }
+c509-certificate = { version = "0.0.3", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
 pallas = { version = "0.33.0" }
-cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
-cardano-blockchain-types = { version = "0.0.4", path = "../cardano-blockchain-types" }
-catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
+cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
+cardano-blockchain-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
+catalyst-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }

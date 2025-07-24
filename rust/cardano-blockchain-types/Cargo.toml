@@ -20,8 +20,8 @@ workspace = true
 [dependencies]
 pallas = { version = "0.33.0" }
 # pallas-hardano = { version = "0.33.0" }
-cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
-catalyst-types = { version = "0.0.3", path = "../catalyst-types" }
+cbork-utils = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
+catalyst-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
 
 ouroboros = "0.18.4"
 tracing = "0.1.41"
