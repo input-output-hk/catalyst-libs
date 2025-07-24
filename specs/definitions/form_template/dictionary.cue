@@ -7,7 +7,8 @@
 package form_template
 
 import (
-	"github.com/input-output-hk/catalyst-libs/specs/regex")
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
+)
 
 #elementName: string
 #elementName: =~regex.def.camelCaseName.pattern
