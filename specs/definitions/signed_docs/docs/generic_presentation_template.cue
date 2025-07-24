@@ -1,5 +1,9 @@
 package signed_docs
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+)
+
 // Template Standardized Descriptions
 
 _presentation_template_description: """
@@ -38,7 +42,7 @@ _presentation_template_payload_description: """
 
 	metadata: parameters: {
 		required: "yes"
-		type:     doc_clusters."System Parameters".docs
+		type:     signed_doc_types.doc_clusters."System Parameters".docs
 	}
 
 	payload: description: _

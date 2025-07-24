@@ -6,6 +6,7 @@ package signed_docs
 import (
 	"github.com/input-output-hk/catalyst-libs/specs/generic:uuid"
 	"github.com/input-output-hk/catalyst-libs/specs/form_template/elements:form_template"
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
 )
 
 // Document Type must be a valid UUIDv4
@@ -56,16 +57,18 @@ import (
 
 // We can only define known documents in the document definitions object
 #DocumentDefinitions: {
-	[_allDocNames]: #signedDocument
+	[signed_doc_types.#allDocNames]: #signedDocument
 }
 
 // Default Definitions for all documents.
 // Customize each document type in its own `<document_name>.cue` file.
 docs: #DocumentDefinitions & {
-	for k, v in _allDocTypes {
+	for k, v in signed_doc_types.allDocTypes {
 		(k): type: v
 	}
 }
+
+doc_clusters: signed_doc_types.doc_clusters
 
 // base Document Types to help with automated processing of the document schema information.
 //base_types: _allDocTypes

@@ -3,6 +3,10 @@
 // Metadata Types and Constraints
 package signed_docs
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+)
+
 _metadata: _parameters: {
 	_description: """
 		A reference to the Parameters Document this document lies under.
@@ -39,5 +43,5 @@ _metadata: _parameters: {
 // Top Level general documentation for Parameters Metadata.
 metadata: headers: parameters: {
 	required: "optional"
-	type:     #parameterDocNamesList
+	type:     signed_doc_types.parameterDocNamesList
 }
