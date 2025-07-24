@@ -1,6 +1,6 @@
 [package]
 name = "cardano-chain-follower"
-version = "0.0.8"
+version = "0.0.9"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
