@@ -22,7 +22,8 @@ nav:
   - Specification: spec.md
   - Metadata Fields: metadata.md
   - Document Types: types.md
-  - Document Templates: templates.md
   - docs
+  - Document Form Templates: form_templates.md
+  - form_template_elements
 """
         return super().generate()

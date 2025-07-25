@@ -6,15 +6,16 @@
 // can be generated.
 package form_template
 
-// Types of a Metadata Fields
-#formTemplateElementNames: or([
-	for k, _ in dictionary {k},
-])
+#formElementDictionary: [string]: #formElement
 
 // Definitions for all defined template schema field types.
-formTemplate: #formTemplate & {}
+dictionary: #formElementDictionary & {}
 
 // Types of a Metadata Fields
 #formTemplateElementNames: or([
 	for k, _ in dictionary {k},
 ])
+
+_defs: {
+	for k, v in dictionary {"\(k)": v.definition}
+}

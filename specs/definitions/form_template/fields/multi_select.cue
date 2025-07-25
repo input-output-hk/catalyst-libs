@@ -2,33 +2,31 @@
 
 package form_template
 
-dictionary: #formTemplate & {
-	multiSelect: {
-		description: """
-			UI - Multiselect from the given items.
+dictionary: multiSelect: {
+	description: """
+		UI - Multiselect from the given items.
 
-			Select multiple options from the dropdown menu.
-			Multiple choices are allowed.
-			All choices MUST be unique.
-			"""
-		parent: "section"
+		Select multiple options from the dropdown menu.
+		Multiple choices are allowed.
+		All choices MUST be unique.
+		"""
+	parent: "section"
 
-		definition: {
-			type:        "array"
-			uniqueItems: true
-			items:       dictionary.singleLineTextEntry.definition
+	definition: {
+		type:        "array"
+		uniqueItems: true
+		items:       dictionary.singleLineTextEntry.definition
+	}
+	parameters: {
+		title: {}
+		description: {}
+		default: {
+			description: "Default selections can be supplied."
+			required:    "optional"
 		}
-		parameters: {
-			title: {}
-			description: {}
-			default: {
-				description: "Default selections can be supplied."
-				required:    "optional"
-			}
-			minItems: {}
-			maxItems: {}
-			contains: {}
-			"x-guidance": {}
-		}
+		minItems: {}
+		maxItems: {}
+		contains: {}
+		"x-guidance": {}
 	}
 }

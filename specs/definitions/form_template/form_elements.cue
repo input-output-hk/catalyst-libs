@@ -60,7 +60,7 @@ import (
 	// Documentation
 	description: string
 
-	// MAPS 1:1 to the `definitions` section within JSON Schema draft 7.
+	// MAPS 1:1 to the `$defs` section within JSON Schema 2020-12.
 	definition: #formElementDefinition
 
 	// If this field type must appear only as a child of another field type.
@@ -72,5 +72,3 @@ import (
 	// The parameters supported by a particular field definition
 	parameters: _allParameters
 }
-
-#formTemplate: [string]: #formElement

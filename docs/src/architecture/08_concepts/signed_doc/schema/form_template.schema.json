@@ -1,0 +1,155 @@
+{
+    "$defs": {
+        "dropDownSingleSelect": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+        },
+        "multiLineTextEntry": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+        },
+        "multiLineTextEntryListMarkdown": {
+            "items": {
+                "contentMediaType": "text/markdown",
+                "minLength": 1,
+                "pattern": "^[\\S\\s]*$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
+        "multiLineTextEntryMarkdown": {
+            "contentMediaType": "text/markdown",
+            "pattern": "^[\\S\\s]*$",
+            "type": "string"
+        },
+        "multiSelect": {
+            "items": {
+                "pattern": "^[^\\n]*$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
+        "radioButtonSelect": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+        },
+        "schemaReferenceNonUI": {
+            "readOnly": true,
+            "type": "string"
+        },
+        "section": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "segment": {
+            "additionalProperties": false,
+            "type": "object"
+        },
+        "singleGroupedTagSelector": {
+            "additionalProperties": false,
+            "required": [
+                "group",
+                "tag"
+            ],
+            "type": "object"
+        },
+        "singleLineHttpsURLEntry": {
+            "format": "uri",
+            "pattern": "^https://[^\\s]+$",
+            "type": "string"
+        },
+        "singleLineHttpsURLEntryList": {
+            "items": {
+                "format": "uri",
+                "minLength": 1,
+                "pattern": "^https://[^\\s]+$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
+        "singleLineTextEntry": {
+            "pattern": "^[^\\n]*$",
+            "type": "string"
+        },
+        "singleLineTextEntryList": {
+            "items": {
+                "minLength": 1,
+                "pattern": "^[^\\n]*$",
+                "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true
+        }
+    },
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "additionalProperties": false,
+    "description": "Example Template Schema showing all defined field types.",
+    "maintainers": [
+        {
+            "name": "Catalyst Team",
+            "url": "https://projectcatalyst.io/"
+        }
+    ],
+    "properties": {
+        "exampleDropDownSingleSelect": {
+            "default": "option 1",
+            "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+            "enum": [
+                "option 1",
+                "option 2",
+                "option 3"
+            ],
+            "title": "Selector",
+            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+            "x-icon": "emoji-happy",
+            "$ref": "#/$defs/dropDownSingleSelect"
+        },
+        "exampleMultiLineTextEntry": {
+            "$ref": "#/$defs/multiLineTextEntry"
+        },
+        "exampleMultiLineTextEntryListMarkdown": {
+            "$ref": "#/$defs/multiLineTextEntryListMarkdown"
+        },
+        "exampleMultiLineTextEntryMarkdown": {
+            "$ref": "#/$defs/multiLineTextEntryMarkdown"
+        },
+        "exampleMultiSelect": {
+            "$ref": "#/$defs/multiSelect"
+        },
+        "exampleRadioButtonSelect": {
+            "$ref": "#/$defs/radioButtonSelect"
+        },
+        "exampleSchemaReferenceNonUI": {
+            "$ref": "#/$defs/schemaReferenceNonUI"
+        },
+        "exampleSection": {
+            "$ref": "#/$defs/section"
+        },
+        "exampleSegment": {
+            "$ref": "#/$defs/segment"
+        },
+        "exampleSingleGroupedTagSelector": {
+            "$ref": "#/$defs/singleGroupedTagSelector"
+        },
+        "exampleSingleLineHttpsURLEntry": {
+            "$ref": "#/$defs/singleLineHttpsURLEntry"
+        },
+        "exampleSingleLineHttpsURLEntryList": {
+            "$ref": "#/$defs/singleLineHttpsURLEntryList"
+        },
+        "exampleSingleLineTextEntry": {
+            "$ref": "#/$defs/singleLineTextEntry"
+        },
+        "exampleSingleLineTextEntryList": {
+            "$ref": "#/$defs/singleLineTextEntryList"
+        }
+    },
+    "title": "Example Template Schema.",
+    "type": "object"
+}

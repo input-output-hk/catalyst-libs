@@ -2,7 +2,7 @@ INHERIT: std-theme.yml
 
 # Project Information
 site_name: Project Catalyst - Catalyst Library
-site_url: https://input-output-hk.github.io/catalyst-docs
+site_url: https://input-output-hk.github.io/catalyst-libs
 
 # Repository
 repo_name: input-output-hk/catalyst-libs
