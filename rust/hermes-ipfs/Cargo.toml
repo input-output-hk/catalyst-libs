@@ -1,3 +1,5 @@
+# cspell: words yamux
+
 [package]
 name = "hermes-ipfs"
 version = "0.0.3"
