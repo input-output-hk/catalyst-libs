@@ -29,7 +29,7 @@ pub use metadata::{
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
-use crate::builder::SignaturesBuilder;
+use crate::{builder::SignaturesBuilder, metadata::SupportedLabel};
 
 /// `COSE_Sign` object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
 const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
@@ -178,6 +178,44 @@ impl CatalystSignedDocument {
             .iter()
             .map(|s| s.kid().as_short_id())
             .collect()
+    }
+
+    /// Checks if the CBOR body of the signed doc is in the older version format before
+    /// v0.0.4.
+    pub fn is_deprecated(&self) -> anyhow::Result<bool> {
+        let mut e = minicbor::Encoder::new(Vec::new());
+
+        let e = e.encode(self.inner.metadata.clone())?;
+        let e = e.to_owned().into_writer();
+
+        for entry in cbork_utils::map::Map::decode(
+            &mut minicbor::Decoder::new(e.as_slice()),
+            &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+        )? {
+            let key = minicbor::Decoder::new(&entry.key_bytes).str().ok();
+            if key == Some(SupportedLabel::Ref.to_string().as_str()) {
+                let mut value_bytes = minicbor::Decoder::new(&entry.value);
+
+                let outer_arr = Array::decode(&mut value_bytes, &mut DecodeCtx::Deterministic)?;
+
+                let deprecated = match outer_arr.as_slice() {
+                    [first, ..] => {
+                        match minicbor::Decoder::new(first).datatype()? {
+                            // New structure inner part [id, ver, locator]
+                            minicbor::data::Type::Array => false,
+                            // Old structure (id, ver)
+                            minicbor::data::Type::Tag => true,
+                            _ => false,
+                        }
+                    },
+                    _ => false,
+                };
+
+                return Ok(deprecated);
+            }
+        }
+
+        Ok(false)
     }
 
     /// Returns a collected problem report for the document.
