@@ -86,7 +86,10 @@ impl Cip0134Uri {
 }
 
 impl Display for Cip0134Uri {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> std::fmt::Result {
         write!(f, "{}", self.uri())
     }
 }

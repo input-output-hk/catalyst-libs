@@ -14,7 +14,10 @@ pub struct VotingPubKey {
 impl VotingPubKey {
     /// Create a new voting public key.
     #[must_use]
-    pub fn new(voting_pk: Option<VerifyingKey>, weight: u32) -> Self {
+    pub fn new(
+        voting_pk: Option<VerifyingKey>,
+        weight: u32,
+    ) -> Self {
         Self { voting_pk, weight }
     }
 

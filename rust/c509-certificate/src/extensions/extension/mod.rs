@@ -33,7 +33,11 @@ pub struct Extension {
 impl Extension {
     /// Create a new instance of `Extension` using `OID` and value.
     #[must_use]
-    pub fn new(oid: Oid<'static>, value: ExtensionValue, critical: bool) -> Self {
+    pub fn new(
+        oid: Oid<'static>,
+        value: ExtensionValue,
+        critical: bool,
+    ) -> Self {
         Self {
             registered_oid: C509oidRegistered::new(oid, EXTENSIONS_LOOKUP.get_int_to_oid_table()),
             critical,
@@ -83,8 +87,13 @@ impl<'de> Deserialize<'de> for Extension {
 }
 
 impl Serialize for Extension {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         let helper = Helper {
             oid: self.registered_oid.c509_oid().oid().to_string(),
             value: self.value.clone(),
@@ -99,7 +108,9 @@ impl Encode<()> for Extension {
     // - (extensionID: int, extensionValue: any)
     // - (extensionID: ~oid, ? critical: true, extensionValue: bytes)
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // Handle CBOR int based on OID mapping
         if let Some(&mapped_oid) = self
@@ -133,7 +144,10 @@ impl Encode<()> for Extension {
 }
 
 impl Decode<'_, ()> for Extension {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Extension")? {
             // Check whether OID is an int
             // Even the encoding is i16, the minicbor decoder doesn't know what type we encoded,
@@ -214,7 +228,9 @@ impl ExtensionValueTypeTrait for ExtensionValueType {
 
 impl Encode<()> for ExtensionValue {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             ExtensionValue::Int(value) => {
@@ -239,7 +255,10 @@ impl Encode<()> for ExtensionValue {
 impl<C> Decode<'_, C> for ExtensionValue
 where C: ExtensionValueTypeTrait + Debug
 {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut C,
+    ) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
             ExtensionValueType::Int => {
                 let value = decode_helper(d, "Extension value", ctx)?;

@@ -16,7 +16,10 @@ pub struct PointData<T> {
 impl<T> PointData<T> {
     /// Creates an instance of point and transaction index with data.
     #[must_use]
-    pub fn new(point_txn_index: PointTxnIdx, data: T) -> Self {
+    pub fn new(
+        point_txn_index: PointTxnIdx,
+        data: T,
+    ) -> Self {
         Self {
             point_txn_index,
             data,

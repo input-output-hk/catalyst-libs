@@ -38,8 +38,13 @@ struct InnerThreadStat {
 }
 
 impl Serialize for InnerThreadStat {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
         let mut state = serializer.serialize_struct("ThreadStat", 6)?;
 
         state.serialize_field("counter", &self.counter.load(Ordering::SeqCst))?;
@@ -56,7 +61,10 @@ impl Serialize for InnerThreadStat {
 }
 
 impl fmt::Debug for InnerThreadStat {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         let latest_cpu_time = self.latest_cpu_time.lock().map_err(|_| fmt::Error)?;
         let total_cpu_time = self.total_cpu_time.lock().map_err(|_| fmt::Error)?;
 

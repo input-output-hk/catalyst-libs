@@ -4,11 +4,10 @@
 
 // cspell: words Evt
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::LazyLock};
 
 use anyhow::Error;
 use asn1_rs::{oid, Oid};
-use once_cell::sync::Lazy;
 
 use super::ExtensionValueType;
 use crate::tables::IntegerToOidTable;
@@ -96,7 +95,7 @@ impl ExtensionData {
 }
 
 /// Define static lookup for extensions table
-static EXTENSIONS_TABLES: Lazy<ExtensionData> = Lazy::new(|| {
+static EXTENSIONS_TABLES: LazyLock<ExtensionData> = LazyLock::new(|| {
     let mut int_to_oid_table = IntegerToOidTable::new();
     let mut int_to_type_table = HashMap::<i16, ExtensionValueType>::new();
 
@@ -112,7 +111,7 @@ static EXTENSIONS_TABLES: Lazy<ExtensionData> = Lazy::new(|| {
 });
 
 /// Static reference to the `ExtensionData` lookup table.
-pub(crate) static EXTENSIONS_LOOKUP: &Lazy<ExtensionData> = &EXTENSIONS_TABLES;
+pub(crate) static EXTENSIONS_LOOKUP: &LazyLock<ExtensionData> = &EXTENSIONS_TABLES;
 
 /// Get the OID from the int value.
 pub(crate) fn get_oid_from_int(i: i16) -> Result<Oid<'static>, Error> {

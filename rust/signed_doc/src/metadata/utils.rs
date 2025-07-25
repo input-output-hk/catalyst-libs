@@ -8,7 +8,8 @@ use coset::{CborSerializable, Label, ProtectedHeader};
 
 /// Find a value for a predicate in the protected header.
 pub(crate) fn cose_protected_header_find(
-    protected: &coset::ProtectedHeader, mut predicate: impl FnMut(&coset::Label) -> bool,
+    protected: &coset::ProtectedHeader,
+    mut predicate: impl FnMut(&coset::Label) -> bool,
 ) -> Option<&coset::cbor::Value> {
     protected
         .header
@@ -20,9 +21,14 @@ pub(crate) fn cose_protected_header_find(
 
 /// Tries to decode field by the `field_name` from the COSE protected header
 pub(crate) fn decode_document_field_from_protected_header<T>(
-    protected: &ProtectedHeader, field_name: &str, report_content: &str, report: &ProblemReport,
+    protected: &ProtectedHeader,
+    field_name: &str,
+    report_content: &str,
+    report: &ProblemReport,
 ) -> Option<T>
-where T: for<'a> TryFrom<&'a coset::cbor::Value> {
+where
+    T: for<'a> TryFrom<&'a coset::cbor::Value>,
+{
     if let Some(cbor_doc_field) =
         cose_protected_header_find(protected, |key| key == &Label::Text(field_name.to_string()))
     {
@@ -79,7 +85,7 @@ impl TryFrom<CborUuidV7> for coset::cbor::Value {
 ///
 /// This is used to encode `UuidV4` and `UuidV7` types.
 fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
-    value: T,
+    value: T
 ) -> anyhow::Result<coset::cbor::Value> {
     let mut cbor_bytes = Vec::new();
     minicbor::encode_with(value, &mut cbor_bytes, &mut CborContext::Tagged)
@@ -92,7 +98,7 @@ fn encode_cbor_uuid<T: minicbor::encode::Encode<CborContext>>(
 ///
 /// This is used to decode `UuidV4` and `UuidV7` types.
 fn decode_cbor_uuid<T: for<'a> minicbor::decode::Decode<'a, CborContext>>(
-    value: &coset::cbor::Value,
+    value: &coset::cbor::Value
 ) -> anyhow::Result<T> {
     let mut cbor_bytes = Vec::new();
     coset::cbor::ser::into_writer(value, &mut cbor_bytes)

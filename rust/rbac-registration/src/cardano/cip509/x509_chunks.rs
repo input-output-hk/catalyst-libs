@@ -40,7 +40,10 @@ impl From<X509Chunks> for Option<Cip509RbacMetadata> {
 }
 
 impl Decode<'_, DecodeContext<'_, '_>> for X509Chunks {
-    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        decode_context: &mut DecodeContext,
+    ) -> Result<Self, decode::Error> {
         // Determine the algorithm
         let algorithm: u8 = decode_helper(d, "algorithm in X509Chunks", &mut ())?;
         let Some(algorithm) = CompressionAlgorithm::from_repr(algorithm) else {
@@ -84,7 +87,10 @@ impl Decode<'_, DecodeContext<'_, '_>> for X509Chunks {
 }
 
 /// Decompress the data using the given algorithm.
-fn decompress(d: &mut Decoder, algorithm: &CompressionAlgorithm) -> anyhow::Result<Vec<u8>> {
+fn decompress(
+    d: &mut Decoder,
+    algorithm: &CompressionAlgorithm,
+) -> anyhow::Result<Vec<u8>> {
     let chunk_len = decode_array_len(d, "decompression in X509Chunks")?;
     // Vector containing the concatenated chunks
     let mut concat_chunk = vec![];

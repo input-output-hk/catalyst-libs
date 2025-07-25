@@ -13,7 +13,10 @@ pub(crate) struct ContentEncodingRule {
 impl ContentEncodingRule {
     /// Field validation rule
     #[allow(clippy::unused_async)]
-    pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
+    pub(crate) async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+    ) -> anyhow::Result<bool> {
         if let Some(content_encoding) = doc.doc_content_encoding() {
             if content_encoding != self.exp {
                 doc.report().invalid_value(

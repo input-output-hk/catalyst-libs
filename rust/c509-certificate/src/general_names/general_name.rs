@@ -42,7 +42,10 @@ pub struct GeneralName {
 impl GeneralName {
     /// Create a new instance of `GeneralName`.
     #[must_use]
-    pub fn new(gn_type: GeneralNameTypeRegistry, value: GeneralNameValue) -> Self {
+    pub fn new(
+        gn_type: GeneralNameTypeRegistry,
+        value: GeneralNameValue,
+    ) -> Self {
         Self { gn_type, value }
     }
 
@@ -61,7 +64,9 @@ impl GeneralName {
 
 impl Encode<()> for GeneralName {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // Encode GeneralNameType as int
         let i = get_int_from_gn(self.gn_type).map_err(minicbor::encode::Error::message)?;
@@ -73,7 +78,10 @@ impl Encode<()> for GeneralName {
 }
 
 impl Decode<'_, ()> for GeneralName {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         if decode_datatype(d, "General Name as OID int")? == minicbor::data::Type::U8
             || decode_datatype(d, "General Name as OID int")? == minicbor::data::Type::I8
         {
@@ -158,7 +166,9 @@ impl GeneralNameValueTrait for GeneralNameValueType {
 
 impl Encode<()> for GeneralNameValue {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             GeneralNameValue::Text(value) => {
@@ -181,14 +191,17 @@ impl Encode<()> for GeneralNameValue {
                     "Cannot encode unsupported GeneralName value",
                 ))
             },
-        };
+        }
         Ok(())
     }
 }
 impl<C> Decode<'_, C> for GeneralNameValue
 where C: GeneralNameValueTrait + Debug
 {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut C,
+    ) -> Result<Self, minicbor::decode::Error> {
         match ctx.get_type() {
             GeneralNameValueType::Text => {
                 let value = decode_helper(d, "General Name value", ctx)?;

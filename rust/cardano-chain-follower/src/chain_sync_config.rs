@@ -75,7 +75,10 @@ impl ChainSyncConfig {
     ///
     /// * `relay`: Address to use for the blockchain relay node.
     #[must_use]
-    pub fn relay(mut self, address: String) -> Self {
+    pub fn relay(
+        mut self,
+        address: String,
+    ) -> Self {
         self.relay_address = address;
         self
     }
@@ -86,7 +89,10 @@ impl ChainSyncConfig {
     ///
     /// * `chain_update_buffer_size`: Size of the chain updates buffer.
     #[must_use]
-    pub fn chain_update_buffer_size(mut self, block_buffer_size: usize) -> Self {
+    pub fn chain_update_buffer_size(
+        mut self,
+        block_buffer_size: usize,
+    ) -> Self {
         self.chain_update_buffer_size = block_buffer_size;
         self
     }
@@ -97,7 +103,10 @@ impl ChainSyncConfig {
     ///
     /// * `window`: Size of the Immutable window.
     #[must_use]
-    pub fn immutable_slot_window(mut self, window: u64) -> Self {
+    pub fn immutable_slot_window(
+        mut self,
+        window: u64,
+    ) -> Self {
         self.immutable_slot_window = window;
         self
     }
@@ -108,7 +117,10 @@ impl ChainSyncConfig {
     ///
     /// * `cfg`: Mithril snapshot configuration.
     #[must_use]
-    pub fn mithril_cfg(mut self, cfg: MithrilSnapshotConfig) -> Self {
+    pub fn mithril_cfg(
+        mut self,
+        cfg: MithrilSnapshotConfig,
+    ) -> Self {
         self.mithril_cfg = cfg;
         self
     }

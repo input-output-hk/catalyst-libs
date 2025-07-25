@@ -38,7 +38,10 @@ where
     PropIdT: for<'a> Cbor<'a>,
     VoterDataT: for<'a> Cbor<'a>,
 {
-    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        (): &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         let Some(TX_BODY_LEN) = d.array()? else {
             return Err(minicbor::decode::Error::message(format!(
                 "must be a defined sized array with {TX_BODY_LEN} entries"
@@ -72,7 +75,9 @@ where
     VoterDataT: for<'a> Cbor<'a>,
 {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut Encoder<W>, (): &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(TX_BODY_LEN)?;
         self.vote_type.encode(e, &mut ())?;

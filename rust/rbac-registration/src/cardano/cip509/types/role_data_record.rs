@@ -37,25 +37,39 @@ impl RoleDataRecord {
 
     /// Add a signing key data to the signing key list. The vector index is used to
     /// indicate the key rotation.
-    pub(crate) fn add_signing_key(&mut self, data: CertOrPk, point_tx_idx: &PointTxnIdx) {
+    pub(crate) fn add_signing_key(
+        &mut self,
+        data: CertOrPk,
+        point_tx_idx: &PointTxnIdx,
+    ) {
         self.signing_keys
             .push(PointData::new(point_tx_idx.clone(), data));
     }
 
     /// Add an encryption key data to the encryption key list. The vector index is used to
     /// indicate the key rotation.
-    pub(crate) fn add_encryption_key(&mut self, data: CertOrPk, point_tx_idx: &PointTxnIdx) {
+    pub(crate) fn add_encryption_key(
+        &mut self,
+        data: CertOrPk,
+        point_tx_idx: &PointTxnIdx,
+    ) {
         self.encryption_keys
             .push(PointData::new(point_tx_idx.clone(), data));
     }
 
     /// Add a payment key to the payment key list.
-    pub(crate) fn add_payment_key(&mut self, data: PointData<ShelleyAddress>) {
+    pub(crate) fn add_payment_key(
+        &mut self,
+        data: PointData<ShelleyAddress>,
+    ) {
         self.payment_keys.push(data);
     }
 
     /// Add extended data to the extended data list.
-    pub(crate) fn add_extended_data(&mut self, data: PointData<HashMap<u8, Vec<u8>>>) {
+    pub(crate) fn add_extended_data(
+        &mut self,
+        data: PointData<HashMap<u8, Vec<u8>>>,
+    ) {
         self.extended_data.push(data);
     }
 
@@ -87,7 +101,10 @@ impl RoleDataRecord {
     /// The first signing key is at rotation 0, the second at rotation 1, and so on.
     /// Returns `None` if the given key rotation does not exist.
     #[must_use]
-    pub fn signing_key_from_rotation(&self, rotation: &KeyRotation) -> Option<&CertOrPk> {
+    pub fn signing_key_from_rotation(
+        &self,
+        rotation: &KeyRotation,
+    ) -> Option<&CertOrPk> {
         rotation.get_key(&self.signing_keys).map(PointData::data)
     }
 
@@ -95,7 +112,10 @@ impl RoleDataRecord {
     /// The first encryption key is at rotation 0, the second at rotation 1, and so on.
     /// Returns `None` if the given key rotation does not exist.
     #[must_use]
-    pub fn encryption_key_from_rotation(&self, rotation: &KeyRotation) -> Option<&CertOrPk> {
+    pub fn encryption_key_from_rotation(
+        &self,
+        rotation: &KeyRotation,
+    ) -> Option<&CertOrPk> {
         rotation.get_key(&self.encryption_keys).map(PointData::data)
     }
 }

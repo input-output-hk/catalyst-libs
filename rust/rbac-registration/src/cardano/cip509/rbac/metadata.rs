@@ -77,7 +77,10 @@ pub enum Cip509RbacMetadataInt {
 }
 
 impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
-    fn decode(d: &mut Decoder, decode_context: &mut DecodeContext) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        decode_context: &mut DecodeContext,
+    ) -> Result<Self, decode::Error> {
         let context = "Decoding Cip509RbacMetadata";
 
         let map_len = decode_map_len(d, context)?;
@@ -186,9 +189,13 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509RbacMetadata {
 
 /// Decodes an array of type T.
 fn decode_array<'b, T>(
-    d: &mut Decoder<'b>, context: &str, report: &mut ProblemReport,
+    d: &mut Decoder<'b>,
+    context: &str,
+    report: &mut ProblemReport,
 ) -> Option<Vec<T>>
-where T: Decode<'b, ProblemReport> {
+where
+    T: Decode<'b, ProblemReport>,
+{
     let len = match decode_array_len(d, context) {
         Ok(v) => v,
         Err(e) => {
@@ -218,7 +225,10 @@ where T: Decode<'b, ProblemReport> {
 }
 
 /// Decode an array of revocation list.
-fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Option<Vec<CertKeyHash>> {
+fn decode_revocation_list(
+    d: &mut Decoder,
+    report: &ProblemReport,
+) -> Option<Vec<CertKeyHash>> {
     let context = "Cip509RbacMetadata revocation list";
     let len = match decode_array_len(d, context) {
         Ok(v) => v,
@@ -261,7 +271,11 @@ fn decode_revocation_list(d: &mut Decoder, report: &ProblemReport) -> Option<Vec
 }
 
 /// Adds report entries if duplicated roles are found.
-fn report_duplicated_roles(data: &[CborRoleData], context: &str, report: &ProblemReport) {
+fn report_duplicated_roles(
+    data: &[CborRoleData],
+    context: &str,
+    report: &ProblemReport,
+) {
     let mut roles = HashSet::new();
     for role in data {
         let Some(number) = role.number else {
@@ -275,7 +289,9 @@ fn report_duplicated_roles(data: &[CborRoleData], context: &str, report: &Proble
 
 /// Decodes and converts a role data.
 fn decode_role_data(
-    d: &mut Decoder, context: &str, decode_context: &mut DecodeContext,
+    d: &mut Decoder,
+    context: &str,
+    decode_context: &mut DecodeContext,
 ) -> Option<HashMap<RoleId, RoleData>> {
     let roles = decode_array(d, "Cip509RbacMetadata role set", decode_context.report)?;
     report_duplicated_roles(&roles, context, decode_context.report);

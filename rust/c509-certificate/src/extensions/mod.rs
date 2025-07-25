@@ -49,7 +49,10 @@ impl Extensions {
     }
 
     /// Add an `Extension` to the `Extensions`.
-    pub fn add_extension(&mut self, extension: Extension) {
+    pub fn add_extension(
+        &mut self,
+        extension: Extension,
+    ) {
         self.0.push(extension);
     }
 }
@@ -62,7 +65,9 @@ impl Default for Extensions {
 
 impl Encode<()> for Extensions {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // If there is only one extension and it is KeyUsage, encode as int
         // encoding as absolute value of the second int and the sign of the first int
@@ -98,7 +103,10 @@ impl Encode<()> for Extensions {
 }
 
 impl Decode<'_, ()> for Extensions {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         // If only KeyUsage is in the extension -> will only contain an int
         if decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::U8
             || decode_datatype(d, "Extensions KeyUsage")? == minicbor::data::Type::I8

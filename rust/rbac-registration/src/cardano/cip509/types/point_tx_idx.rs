@@ -14,13 +14,19 @@ pub struct PointTxnIdx {
 impl PointTxnIdx {
     /// Creates an instance of point and transaction index.
     #[must_use]
-    pub fn new(point: Point, txn_index: TxnIndex) -> Self {
+    pub fn new(
+        point: Point,
+        txn_index: TxnIndex,
+    ) -> Self {
         Self { point, txn_index }
     }
 
     /// Creates an instance of `PointTxnIdx` from the given block and index.
     #[must_use]
-    pub fn from_block(block: &MultiEraBlock, txn_index: TxnIndex) -> Self {
+    pub fn from_block(
+        block: &MultiEraBlock,
+        txn_index: TxnIndex,
+    ) -> Self {
         Self::new(block.point(), txn_index)
     }
 

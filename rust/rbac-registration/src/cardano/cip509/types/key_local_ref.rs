@@ -29,7 +29,10 @@ pub enum LocalRefInt {
 }
 
 impl Decode<'_, ProblemReport> for KeyLocalRef {
-    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        report: &mut ProblemReport,
+    ) -> Result<Self, decode::Error> {
         let local_ref =
             LocalRefInt::from_repr(decode_helper(d, "LocalRef in KeyLocalRef", &mut ())?)
                 .ok_or(decode::Error::message("Invalid local reference"))?;

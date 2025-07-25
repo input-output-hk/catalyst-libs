@@ -35,7 +35,10 @@ impl Builder {
     ///
     /// # Errors
     /// - Fails if it is invalid metadata fields JSON object.
-    pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<Self> {
+    pub fn with_json_metadata(
+        mut self,
+        json: serde_json::Value,
+    ) -> anyhow::Result<Self> {
         let metadata = serde_json::from_value(json)?;
         self.0.metadata = Metadata::from_metadata_fields(metadata, &self.0.report);
         Ok(self)
@@ -43,7 +46,10 @@ impl Builder {
 
     /// Set decoded (original) document content bytes
     #[must_use]
-    pub fn with_decoded_content(mut self, content: Vec<u8>) -> Self {
+    pub fn with_decoded_content(
+        mut self,
+        content: Vec<u8>,
+    ) -> Self {
         self.0.content = Content::from_decoded(content);
         self
     }
@@ -56,7 +62,9 @@ impl Builder {
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
-        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: &CatalystId,
+        mut self,
+        sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>,
+        kid: &CatalystId,
     ) -> anyhow::Result<Self> {
         let cose_sign = self
             .0

@@ -39,7 +39,10 @@ impl MithrilSnapshot {
     ///
     /// Returns true if the point exists within the Mithril snapshot for the specified
     /// network, false otherwise.
-    pub(crate) fn contains_point(&self, point: &Point) -> bool {
+    pub(crate) fn contains_point(
+        &self,
+        point: &Point,
+    ) -> bool {
         let latest_id = latest_mithril_snapshot_id(self.chain);
 
         point.slot_or_default() <= latest_id.tip().slot_or_default()
@@ -59,7 +62,8 @@ impl MithrilSnapshot {
     #[allow(clippy::indexing_slicing)]
     #[logcall("debug")]
     pub(crate) async fn try_read_blocks_from_point(
-        &self, point: &Point,
+        &self,
+        point: &Point,
     ) -> Option<MithrilSnapshotIterator> {
         let snapshot_id = latest_mithril_snapshot_id(self.chain);
         let snapshot_path = snapshot_id.immutable_path();
@@ -78,7 +82,10 @@ impl MithrilSnapshot {
     /// Read a single block from a known point.
     #[allow(clippy::indexing_slicing)]
     //#[logcall("debug")]
-    pub(crate) async fn read_block_at(&self, point: &Point) -> Option<MultiEraBlock> {
+    pub(crate) async fn read_block_at(
+        &self,
+        point: &Point,
+    ) -> Option<MultiEraBlock> {
         if let Some(iterator) = self.try_read_blocks_from_point(point).await {
             let block = iterator.next().await;
             return block;

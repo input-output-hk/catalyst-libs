@@ -16,7 +16,9 @@ pub(crate) type ImmutableBlockIterator = Box<dyn Iterator<Item = FallibleBlock> 
 
 /// Get a mithril snapshot iterator.
 pub(crate) async fn make_mithril_iterator(
-    path: &Path, start: &Point, chain: Network,
+    path: &Path,
+    start: &Point,
+    chain: Network,
 ) -> Result<ImmutableBlockIterator> {
     let path = path.to_path_buf();
     let start = start.clone();

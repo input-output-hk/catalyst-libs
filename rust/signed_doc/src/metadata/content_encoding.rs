@@ -19,7 +19,10 @@ impl ContentEncoding {
     ///
     /// # Errors
     /// Returns compression failure
-    pub fn encode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
+    pub fn encode(
+        self,
+        mut payload: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
                 let brotli_params = brotli::enc::BrotliEncoderParams::default();
@@ -34,7 +37,10 @@ impl ContentEncoding {
     ///
     /// # Errors
     ///  Returns decompression failure
-    pub fn decode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
+    pub fn decode(
+        self,
+        mut payload: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
                 let mut buf = Vec::new();
@@ -46,7 +52,10 @@ impl ContentEncoding {
 }
 
 impl Display for ContentEncoding {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         match self {
             Self::Brotli => write!(f, "br"),
         }

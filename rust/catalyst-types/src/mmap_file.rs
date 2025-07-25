@@ -2,11 +2,10 @@
 
 use std::{
     path::Path,
-    sync::{Arc, RwLock},
+    sync::{Arc, LazyLock, RwLock},
 };
 
 use fmmap::{MmapFile, MmapFileExt};
-use once_cell::sync::Lazy;
 use serde::Serialize;
 use tracing::error;
 
@@ -19,8 +18,8 @@ pub struct MemoryMapFile {
 }
 
 /// Global statistic for memory-mapped files.
-static MEMMAP_FILE_STATS: Lazy<Arc<RwLock<MemMapFileStat>>> =
-    Lazy::new(|| Arc::new(RwLock::new(MemMapFileStat::default())));
+static MEMMAP_FILE_STATS: LazyLock<Arc<RwLock<MemMapFileStat>>> =
+    LazyLock::new(|| Arc::new(RwLock::new(MemMapFileStat::default())));
 
 /// Memory-mapped file statistic.
 #[derive(Debug, Default, Clone, Serialize)]

@@ -33,7 +33,10 @@ impl BlockTestData {
     /// Asserts that the problem report doesn't contain errors and all fields have
     /// expected values.
     #[track_caller]
-    pub fn assert_valid(&self, cip509: &Cip509) {
+    pub fn assert_valid(
+        &self,
+        cip509: &Cip509,
+    ) {
         assert!(!cip509.report().is_problematic(), "{:?}", cip509.report());
 
         let origin = cip509.origin();

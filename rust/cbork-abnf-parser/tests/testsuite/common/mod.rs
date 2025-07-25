@@ -4,7 +4,11 @@ use cbork_abnf_parser::{
 };
 
 /// # Panics
-pub(crate) fn check_tests_rule(rule_type: Rule, passes: &[&str], fails: &[&str]) {
+pub(crate) fn check_tests_rule(
+    rule_type: Rule,
+    passes: &[&str],
+    fails: &[&str],
+) {
     for test in passes {
         let parse = ABNFTestParser::parse(rule_type, test);
         assert!(parse.is_ok());

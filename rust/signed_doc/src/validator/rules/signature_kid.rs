@@ -13,7 +13,10 @@ pub(crate) struct SignatureKidRule {
 impl SignatureKidRule {
     /// Field validation rule
     #[allow(clippy::unused_async)]
-    pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
+    pub(crate) async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+    ) -> anyhow::Result<bool> {
         let contains_exp_role = doc.kids().iter().enumerate().all(|(i, kid)| {
             let (role_index, _) = kid.role_and_rotation();
             let res = self.exp.contains(&role_index);

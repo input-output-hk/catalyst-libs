@@ -38,7 +38,10 @@ impl GeneralNames {
     }
 
     /// Add a new `GeneralName` to the `GeneralNames`.
-    pub fn add_general_name(&mut self, gn: GeneralName) {
+    pub fn add_general_name(
+        &mut self,
+        gn: GeneralName,
+    ) {
         self.0.push(gn);
     }
 }
@@ -51,7 +54,9 @@ impl Default for GeneralNames {
 
 impl Encode<()> for GeneralNames {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0.is_empty() {
             return Err(minicbor::encode::Error::message(
@@ -71,7 +76,10 @@ impl Encode<()> for GeneralNames {
 }
 
 impl Decode<'_, ()> for GeneralNames {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         let len = decode_array_len(d, "General Names")?;
         let mut gn = GeneralNames::new();
         for _ in 0..len / 2 {

@@ -32,7 +32,10 @@ impl KeyRotation {
     }
 
     /// Get the key by the rotation value from the provided keys slice, if present.
-    pub fn get_key<'a, T>(&self, keys: &'a [T]) -> Option<&'a T> {
+    pub fn get_key<'a, T>(
+        &self,
+        keys: &'a [T],
+    ) -> Option<&'a T> {
         keys.get(self.0 as usize)
     }
 
@@ -71,7 +74,10 @@ impl FromStr for KeyRotation {
 }
 
 impl Display for KeyRotation {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.0)
     }
 }

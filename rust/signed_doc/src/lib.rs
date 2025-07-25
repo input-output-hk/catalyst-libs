@@ -59,7 +59,10 @@ pub struct CatalystSignedDocument {
 }
 
 impl Display for CatalystSignedDocument {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         writeln!(f, "{}", self.inner.metadata)?;
         writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
@@ -220,7 +223,10 @@ impl InnerCatalystSignedDocument {
 }
 
 impl Decode<'_, ()> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        _ctx: &mut (),
+    ) -> Result<Self, decode::Error> {
         let start = d.position();
         d.skip()?;
         let end = d.position();
@@ -259,7 +265,9 @@ impl Decode<'_, ()> for CatalystSignedDocument {
 
 impl Encode<()> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut encode::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), encode::Error<W::Error>> {
         let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
         let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {

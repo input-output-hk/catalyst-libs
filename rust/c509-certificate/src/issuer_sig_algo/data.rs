@@ -4,9 +4,10 @@
 
 // cspell: words RSASSA XMSS
 
+use std::sync::LazyLock;
+
 use anyhow::Error;
 use asn1_rs::{oid, Oid};
-use once_cell::sync::Lazy;
 
 use crate::tables::IntegerToOidTable;
 
@@ -56,7 +57,7 @@ impl IssuerSigAlgoData {
 }
 
 /// Define static lookup for issuer signature algorithm table
-static ISSUER_SIG_ALGO_TABLE: Lazy<IssuerSigAlgoData> = Lazy::new(|| {
+static ISSUER_SIG_ALGO_TABLE: LazyLock<IssuerSigAlgoData> = LazyLock::new(|| {
     let mut int_to_oid_table = IntegerToOidTable::new();
 
     for data in SIG_ALGO_DATA {
@@ -67,7 +68,7 @@ static ISSUER_SIG_ALGO_TABLE: Lazy<IssuerSigAlgoData> = Lazy::new(|| {
 });
 
 /// Static reference to the `IssuerSigAlgoData` lookup table.
-pub(crate) static ISSUER_SIG_ALGO_LOOKUP: &Lazy<IssuerSigAlgoData> = &ISSUER_SIG_ALGO_TABLE;
+pub(crate) static ISSUER_SIG_ALGO_LOOKUP: &LazyLock<IssuerSigAlgoData> = &ISSUER_SIG_ALGO_TABLE;
 
 /// Get the OID from the int value.
 pub(crate) fn get_oid_from_int(i: i16) -> Result<Oid<'static>, Error> {

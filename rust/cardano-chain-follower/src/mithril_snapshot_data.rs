@@ -54,7 +54,10 @@ pub(crate) fn latest_mithril_snapshot_id(chain: Network) -> SnapshotId {
 }
 
 /// Update the latest snapshot data.
-pub(crate) fn update_latest_mithril_snapshot(chain: Network, snapshot_id: SnapshotId) {
+pub(crate) fn update_latest_mithril_snapshot(
+    chain: Network,
+    snapshot_id: SnapshotId,
+) {
     let snapshot_data = SnapshotData::new(snapshot_id);
 
     // Save the current snapshot

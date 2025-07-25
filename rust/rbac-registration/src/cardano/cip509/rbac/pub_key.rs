@@ -20,7 +20,10 @@ pub enum SimplePublicKeyType {
 }
 
 impl Decode<'_, ProblemReport> for SimplePublicKeyType {
-    fn decode(d: &mut Decoder, _report: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        _report: &mut ProblemReport,
+    ) -> Result<Self, decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::Tag => {
                 let tag = decode_tag(d, "SimplePublicKeyType")?;

@@ -63,7 +63,10 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    pub fn update(&self, cip509: Cip509) -> anyhow::Result<Self> {
+    pub fn update(
+        &self,
+        cip509: Cip509,
+    ) -> anyhow::Result<Self> {
         let latest_signing_pk = self.get_latest_signing_pk_for_role(&RoleId::Role0);
         let new_inner = if let Some((signing_pk, _)) = latest_signing_pk {
             self.inner.update(cip509, signing_pk)?
@@ -161,7 +164,8 @@ impl RegistrationChain {
     /// Returns the public key and the rotation,`None` if not found.
     #[must_use]
     pub fn get_latest_signing_pk_for_role(
-        &self, role: &RoleId,
+        &self,
+        role: &RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_keys().last().and_then(|key| {
@@ -176,7 +180,8 @@ impl RegistrationChain {
     /// Returns the public key and the rotation, `None` if not found.
     #[must_use]
     pub fn get_latest_encryption_pk_for_role(
-        &self, role: &RoleId,
+        &self,
+        role: &RoleId,
     ) -> Option<(VerifyingKey, KeyRotation)> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_keys().last().and_then(|key| {
@@ -191,7 +196,9 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_signing_pk_for_role_at_rotation(
-        &self, role: &RoleId, rotation: &KeyRotation,
+        &self,
+        role: &RoleId,
+        rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.signing_key_from_rotation(rotation)
@@ -203,7 +210,9 @@ impl RegistrationChain {
     /// Returns the public key, `None` if not found.
     #[must_use]
     pub fn get_encryption_pk_for_role_at_rotation(
-        &self, role: &RoleId, rotation: &KeyRotation,
+        &self,
+        role: &RoleId,
+        rotation: &KeyRotation,
     ) -> Option<VerifyingKey> {
         self.inner.role_data_record.get(role).and_then(|rdr| {
             rdr.encryption_key_from_rotation(rotation)
@@ -215,7 +224,9 @@ impl RegistrationChain {
     /// given rotation.
     #[must_use]
     pub fn get_singing_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleId, rotation: &KeyRotation,
+        &self,
+        role: &RoleId,
+        rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -227,7 +238,9 @@ impl RegistrationChain {
     /// with given rotation.
     #[must_use]
     pub fn get_encryption_key_cert_or_key_for_role_at_rotation(
-        &self, role: &RoleId, rotation: &KeyRotation,
+        &self,
+        role: &RoleId,
+        rotation: &KeyRotation,
     ) -> Option<&CertOrPk> {
         self.inner
             .role_data_record
@@ -399,7 +412,11 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
-    fn update(&self, cip509: Cip509, signing_pk: VerifyingKey) -> anyhow::Result<Self> {
+    fn update(
+        &self,
+        cip509: Cip509,
+        signing_pk: VerifyingKey,
+    ) -> anyhow::Result<Self> {
         let context = "Registration Chain update";
         let mut new_inner = self.clone();
 
@@ -486,8 +503,11 @@ impl RegistrationChainInner {
 /// Perform a check on the validation signature.
 /// The auxiliary data should be sign with the latest signing public key.
 fn check_validation_signature(
-    validation_signature: Option<ValidationSignature>, raw_aux_data: &[u8],
-    signing_pk: VerifyingKey, report: &ProblemReport, context: &str,
+    validation_signature: Option<ValidationSignature>,
+    raw_aux_data: &[u8],
+    signing_pk: VerifyingKey,
+    report: &ProblemReport,
+    context: &str,
 ) -> anyhow::Result<()> {
     let context = &format!("Check Validation Signature in {context}");
     // Note that the validation signature can be in the range of 1 - 64 bytes

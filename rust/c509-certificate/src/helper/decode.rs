@@ -4,9 +4,13 @@ use minicbor::{decode, Decoder};
 
 /// Generic helper function for decoding different types.
 pub(crate) fn decode_helper<'a, T, C>(
-    d: &mut Decoder<'a>, from: &str, context: &mut C,
+    d: &mut Decoder<'a>,
+    from: &str,
+    context: &mut C,
 ) -> Result<T, decode::Error>
-where T: minicbor::Decode<'a, C> {
+where
+    T: minicbor::Decode<'a, C>,
+{
     T::decode(d, context).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode {:?} in {from}: {e}",
@@ -16,7 +20,10 @@ where T: minicbor::Decode<'a, C> {
 }
 
 /// Helper function for decoding bytes.
-pub(crate) fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decode::Error> {
+pub(crate) fn decode_bytes(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<Vec<u8>, decode::Error> {
     d.bytes().map(<[u8]>::to_vec).map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode bytes in {from}:
@@ -26,7 +33,10 @@ pub(crate) fn decode_bytes(d: &mut Decoder, from: &str) -> Result<Vec<u8>, decod
 }
 
 /// Helper function for decoding array.
-pub(crate) fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decode::Error> {
+pub(crate) fn decode_array_len(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<u64, decode::Error> {
     d.array()
         .map_err(|e| {
             decode::Error::message(format!(
@@ -40,7 +50,10 @@ pub(crate) fn decode_array_len(d: &mut Decoder, from: &str) -> Result<u64, decod
 }
 
 /// Helper function for decoding null.
-pub(crate) fn decode_null(d: &mut Decoder, from: &str) -> Result<(), decode::Error> {
+pub(crate) fn decode_null(
+    d: &mut Decoder,
+    from: &str,
+) -> Result<(), decode::Error> {
     d.null().map_err(|e| {
         decode::Error::message(format!(
             "Failed to decode null in {from}:
@@ -51,7 +64,8 @@ pub(crate) fn decode_null(d: &mut Decoder, from: &str) -> Result<(), decode::Err
 
 /// Helper function for decoding datatype.
 pub(crate) fn decode_datatype(
-    d: &mut Decoder, from: &str,
+    d: &mut Decoder,
+    from: &str,
 ) -> Result<minicbor::data::Type, decode::Error> {
     d.datatype().map_err(|e| {
         decode::Error::message(format!(

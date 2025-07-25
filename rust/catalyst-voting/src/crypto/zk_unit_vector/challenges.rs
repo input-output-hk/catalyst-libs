@@ -9,7 +9,9 @@ use crate::crypto::{
 
 /// Calculates the first challenge hash.
 pub(crate) fn calculate_first_challenge_hash(
-    commitment_key: &GroupElement, public_key: &GroupElement, ciphertexts: &[Ciphertext],
+    commitment_key: &GroupElement,
+    public_key: &GroupElement,
+    ciphertexts: &[Ciphertext],
     announcements: &[Announcement],
 ) -> Blake2b512Hasher {
     let mut hash = Blake2b512Hasher::new()
@@ -29,7 +31,8 @@ pub(crate) fn calculate_first_challenge_hash(
 
 /// Calculates the second challenge hash.
 pub(crate) fn calculate_second_challenge_hash(
-    mut com_1_hash: Blake2b512Hasher, ciphertexts: &[Ciphertext],
+    mut com_1_hash: Blake2b512Hasher,
+    ciphertexts: &[Ciphertext],
 ) -> Blake2b512Hasher {
     for c in ciphertexts {
         com_1_hash.update(c.first().to_bytes());

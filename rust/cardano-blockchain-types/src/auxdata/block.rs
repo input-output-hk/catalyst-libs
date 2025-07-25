@@ -17,7 +17,10 @@ pub struct BlockAuxData(Arc<dashmap::ReadOnlyView<TxnIndex, TransactionAuxData>>
 impl BlockAuxData {
     /// Get `TransactionAuxData` for the given `TxnIndex` if any.
     #[must_use]
-    pub fn get(&self, txn_idx: TxnIndex) -> Option<&TransactionAuxData> {
+    pub fn get(
+        &self,
+        txn_idx: TxnIndex,
+    ) -> Option<&TransactionAuxData> {
         self.0.get(&txn_idx)
     }
 }

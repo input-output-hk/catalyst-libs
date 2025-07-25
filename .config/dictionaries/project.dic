@@ -171,6 +171,7 @@ mdns
 MEMMAP
 memx
 Metadatum
+metno
 mgrybyk
 mimalloc
 minicbor

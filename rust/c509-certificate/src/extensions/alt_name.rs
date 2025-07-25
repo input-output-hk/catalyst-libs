@@ -36,14 +36,19 @@ impl AlternativeName {
 
 impl Encode<()> for AlternativeName {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.0.encode(e, ctx)
     }
 }
 
 impl Decode<'_, ()> for AlternativeName {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         GeneralNamesOrText::decode(d, ctx).map(AlternativeName::new)
     }
 }
@@ -64,7 +69,9 @@ pub enum GeneralNamesOrText {
 
 impl Encode<()> for GeneralNamesOrText {
     fn encode<W: Write>(
-        &self, e: &mut Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             GeneralNamesOrText::GeneralNames(gns) => {
@@ -88,7 +95,10 @@ impl Encode<()> for GeneralNamesOrText {
 }
 
 impl Decode<'_, ()> for GeneralNamesOrText {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Alternative Name - General Names")? {
             // If it is a string it is a GeneralNames with only 1 DNSName
             minicbor::data::Type::String => {

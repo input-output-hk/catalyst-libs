@@ -108,7 +108,10 @@ impl Metadata {
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
-    pub(crate) fn from_metadata_fields(metadata: InnerMetadata, report: &ProblemReport) -> Self {
+    pub(crate) fn from_metadata_fields(
+        metadata: InnerMetadata,
+        report: &ProblemReport,
+    ) -> Self {
         if metadata.doc_type.is_none() {
             report.missing_field("type", "Missing type field in COSE protected header");
         }
@@ -131,7 +134,8 @@ impl Metadata {
 
     /// Converting COSE Protected Header to Metadata.
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, report: &ProblemReport,
+        protected: &coset::ProtectedHeader,
+        report: &ProblemReport,
     ) -> Self {
         let metadata = InnerMetadata::from_protected_header(protected, report);
         Self::from_metadata_fields(metadata, report)
@@ -142,7 +146,8 @@ impl InnerMetadata {
     /// Converting COSE Protected Header to Metadata fields, collecting decoding report
     /// issues.
     pub(crate) fn from_protected_header(
-        protected: &coset::ProtectedHeader, report: &ProblemReport,
+        protected: &coset::ProtectedHeader,
+        report: &ProblemReport,
     ) -> Self {
         /// Context for problem report messages during decoding from COSE protected
         /// header.
@@ -214,7 +219,10 @@ impl InnerMetadata {
 }
 
 impl Display for Metadata {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         writeln!(f, "Metadata {{")?;
         writeln!(f, "  type: {:?},", self.0.doc_type)?;
         writeln!(f, "  id: {:?},", self.0.id)?;
