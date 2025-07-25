@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-voting = { version = "0.0.1", path = "../catalyst-voting" }
+catalyst-voting = { version = "0.0.1", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
 anyhow = "1.0.89"
 
 [dev-dependencies]
