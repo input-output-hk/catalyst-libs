@@ -5,8 +5,6 @@ use std::{
     str::FromStr,
 };
 
-use serde::{de, Deserialize, Deserializer};
-
 /// IANA `CoAP` Content Encoding.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ContentEncoding {
@@ -64,23 +62,34 @@ impl FromStr for ContentEncoding {
     }
 }
 
-impl<'de> Deserialize<'de> for ContentEncoding {
+impl<'de> serde::Deserialize<'de> for ContentEncoding {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where D: Deserializer<'de> {
+    where D: serde::Deserializer<'de> {
         let s = String::deserialize(deserializer)?;
-        FromStr::from_str(&s).map_err(de::Error::custom)
+        FromStr::from_str(&s).map_err(serde::de::Error::custom)
     }
 }
 
-impl TryFrom<&coset::cbor::Value> for ContentEncoding {
-    type Error = anyhow::Error;
+impl serde::Serialize for ContentEncoding {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
+        self.to_string().serialize(serializer)
+    }
+}
 
-    fn try_from(val: &coset::cbor::Value) -> anyhow::Result<ContentEncoding> {
-        match val.as_text() {
-            Some(encoding) => encoding.parse(),
-            None => {
-                anyhow::bail!("Expected Content Encoding to be a string");
-            },
-        }
+impl minicbor::Encode<()> for ContentEncoding {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.str(self.to_string().as_str())?;
+        Ok(())
+    }
+}
+
+impl minicbor::Decode<'_, ()> for ContentEncoding {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        d.str()?.parse().map_err(minicbor::decode::Error::message)
     }
 }

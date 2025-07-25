@@ -1,14 +1,22 @@
 //! `UUIDv7` Type.
-use std::fmt::{Display, Formatter};
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
 
 use minicbor::{Decode, Decoder, Encode};
 use uuid::Uuid;
 
-use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext, UuidError, INVALID_UUID};
+use super::{decode_cbor_uuid, encode_cbor_uuid, CborContext};
 
 /// Type representing a `UUIDv7`.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, serde::Serialize)]
+#[derive(Copy, Clone, Debug, PartialEq, PartialOrd, Eq, Hash, serde::Serialize)]
 pub struct UuidV7(Uuid);
+
+/// `UUIDv7` invalid error
+#[derive(Debug, Clone, thiserror::Error)]
+#[error("'{0}' is not a valid UUIDv7")]
+pub struct InvalidUuidV7(uuid::Uuid);
 
 impl UuidV7 {
     /// Version for `UUIDv7`.
@@ -21,28 +29,28 @@ impl UuidV7 {
         Self(Uuid::now_v7())
     }
 
-    /// Generates a zeroed out `UUIDv7` that can never be valid.
-    #[must_use]
-    pub fn invalid() -> Self {
-        Self(INVALID_UUID)
-    }
-
-    /// Check if this is a valid `UUIDv7`.
-    #[must_use]
-    pub fn is_valid(&self) -> bool {
-        is_valid(&self.0)
-    }
-
     /// Returns the `uuid::Uuid` type.
     #[must_use]
     pub fn uuid(&self) -> Uuid {
         self.0
     }
+
+    /// A const alternative impl of `TryFrom<Uuid>`
+    ///
+    /// # Errors
+    ///   - `InvalidUuidV7`
+    pub const fn try_from_uuid(uuid: Uuid) -> Result<Self, InvalidUuidV7> {
+        if is_valid(&uuid) {
+            Ok(Self(uuid))
+        } else {
+            Err(InvalidUuidV7(uuid))
+        }
+    }
 }
 
 /// Check if this is a valid `UUIDv7`.
-fn is_valid(uuid: &Uuid) -> bool {
-    uuid != &INVALID_UUID && uuid.get_version_num() == UuidV7::UUID_VERSION_NUMBER
+const fn is_valid(uuid: &Uuid) -> bool {
+    uuid.get_version_num() == UuidV7::UUID_VERSION_NUMBER
 }
 
 impl Display for UuidV7 {
@@ -54,13 +62,7 @@ impl Display for UuidV7 {
 impl Decode<'_, CborContext> for UuidV7 {
     fn decode(d: &mut Decoder<'_>, ctx: &mut CborContext) -> Result<Self, minicbor::decode::Error> {
         let uuid = decode_cbor_uuid(d, ctx)?;
-        if is_valid(&uuid) {
-            Ok(Self(uuid))
-        } else {
-            Err(minicbor::decode::Error::message(UuidError::InvalidUuidV7(
-                uuid,
-            )))
-        }
+        Self::try_from_uuid(uuid).map_err(minicbor::decode::Error::message)
     }
 }
 
@@ -74,14 +76,10 @@ impl Encode<CborContext> for UuidV7 {
 
 /// Returns a `UUIDv7` from `uuid::Uuid`.
 impl TryFrom<Uuid> for UuidV7 {
-    type Error = UuidError;
+    type Error = InvalidUuidV7;
 
     fn try_from(uuid: Uuid) -> Result<Self, Self::Error> {
-        if is_valid(&uuid) {
-            Ok(Self(uuid))
-        } else {
-            Err(UuidError::InvalidUuidV7(uuid))
-        }
+        Self::try_from_uuid(uuid)
     }
 }
 
@@ -98,11 +96,27 @@ impl<'de> serde::Deserialize<'de> for UuidV7 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where D: serde::Deserializer<'de> {
         let uuid = Uuid::deserialize(deserializer)?;
-        if is_valid(&uuid) {
-            Ok(Self(uuid))
-        } else {
-            Err(serde::de::Error::custom(UuidError::InvalidUuidV7(uuid)))
-        }
+        Self::try_from_uuid(uuid).map_err(serde::de::Error::custom)
+    }
+}
+
+/// `FromStr` invalid error
+#[derive(Debug, Clone, thiserror::Error)]
+pub enum ParsingError {
+    /// `UUIDv7` invalid error
+    #[error(transparent)]
+    InvalidUuidV7(#[from] InvalidUuidV7),
+    /// Invalid string conversion
+    #[error("Invalid string conversion: {0}")]
+    StringConversion(String),
+}
+
+impl FromStr for UuidV7 {
+    type Err = ParsingError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let uuid = Uuid::parse_str(s).map_err(|_| ParsingError::StringConversion(s.to_string()))?;
+        Ok(Self::try_from_uuid(uuid)?)
     }
 }
 
@@ -111,32 +125,20 @@ mod tests {
     use uuid::Uuid;
 
     use super::*;
+    use crate::uuid::INVALID_UUID;
 
     #[test]
     fn test_invalid_uuid() {
-        let invalid_uuid = UuidV7::invalid();
-        assert!(!invalid_uuid.is_valid(), "Invalid UUID should not be valid");
-        assert_eq!(
-            invalid_uuid.uuid(),
-            INVALID_UUID,
-            "Invalid UUID should match INVALID_UUID"
+        assert!(UuidV7::try_from(Uuid::new_v4()).is_err());
+
+        assert!(
+            UuidV7::try_from(INVALID_UUID).is_err(),
+            "Zero UUID should not be valid"
         );
     }
 
     #[test]
     fn test_valid_uuid() {
-        let valid_uuid = UuidV7::try_from(Uuid::now_v7()).unwrap();
-        assert!(valid_uuid.is_valid(), "Valid UUID should be valid");
-
-        let valid_uuid = UuidV7::new();
-        assert!(valid_uuid.is_valid(), "Valid UUID should be valid");
-    }
-
-    #[test]
-    fn test_invalid_version_uuid() {
-        assert!(
-            UuidV7::try_from(INVALID_UUID).is_err(),
-            "Zero UUID should not be valid"
-        );
+        assert!(UuidV7::try_from(Uuid::now_v7()).is_ok());
     }
 }

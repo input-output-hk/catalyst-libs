@@ -19,8 +19,8 @@ mithril-client = { version = "0.12.2", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
-cardano-blockchain-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
-catalyst-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
+cardano-blockchain-types = { version = "0.0.4", path =  "../cardano-blockchain-types" }
+catalyst-types = { version = "0.0.4", path = "../catalyst-types" }
 
 
 thiserror = "1.0.69"
@@ -64,7 +64,7 @@ test-log = { version = "0.2.16", default-features = false, features = [
     "trace",
 ] }
 clap = "4.5.23"
-rbac-registration = { version = "0.0.5", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
+rbac-registration = { version = "0.0.5", path = "../rbac-registration" }
 
 # Note, these features are for support of features exposed by dependencies.
 [features]
