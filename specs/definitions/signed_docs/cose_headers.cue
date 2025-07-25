@@ -32,7 +32,7 @@ cose: headerFormats: #metadataFormats & {
 		cddl:        "media_type"
 	}
 	"HTTP Content Encoding": {
-		description: "Encoding if any on the payload."
+		description: "Encoding, if any, of the payload."
 		cddl:        "http_content_encoding"
 	}
 	"Catalyst ID": {

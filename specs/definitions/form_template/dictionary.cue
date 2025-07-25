@@ -6,15 +6,30 @@
 // can be generated.
 package form_template
 
-#formElementDictionary: [string]: #formElement
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/regex"
+)
+
+#elementName: string
+#elementName: =~regex.def.camelCaseName.pattern
+
+#formElementDictionary: [#elementName]: #formElement
 
 // Definitions for all defined template schema field types.
 dictionary: #formElementDictionary & {}
 
 // Types of a Metadata Fields
-#formTemplateElementNames: or([
+_formTemplateElementNames: [
 	for k, _ in dictionary {k},
-])
+]
+
+#formTemplateElementName: or(_formTemplateElementNames)
+
+// A single form elements parent element, or the template root `{}`
+#formTemplateElementParent: or([for x in _formTemplateElementNames {x}, "{}"]) | *"{}"
+
+// One or more parents that a form element may have.
+#formTemplateElementParents: [...#formTemplateElementParent] | *["{}"]
 
 _defs: {
 	for k, v in dictionary {"\(k)": v.definition}

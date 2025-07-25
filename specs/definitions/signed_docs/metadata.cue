@@ -7,6 +7,7 @@ package signed_docs
 import (
 	"list"
 	"github.com/input-output-hk/catalyst-libs/specs/generic:optional"
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
 )
 
 // Metadata Formats.
@@ -100,7 +101,7 @@ _allMetadataNames: or([
 	format: #metadataTypesConstraint | *#metadataTypes[0]
 
 	if format == "Document Reference" && required != "excluded" {
-		type: #DocumentName | [...#DocumentName]
+		type: signed_doc_types.#allDocNames | [...signed_doc_types.#allDocNames]
 		multiple: bool | *false
 		linked_refs: [..._allMetadataNames] | *null
 	}
@@ -255,11 +256,11 @@ _allMetadataNames: or([
 metadata: headers: #metadata
 metadata: headers: {
 	ref: required:           "optional"
-	ref: type:               _allDocNamesList
+	ref: type:               signed_doc_types.allDocNames
 	template: required:      "optional"
-	template: type:          #templateDocNamesList
+	template: type:          signed_doc_types.templateDocNamesList
 	reply: required:         "optional"
-	reply: type:             #commentDocNamesList
+	reply: type:             signed_doc_types.commentDocNamesList
 	section: required:       "optional"
 	collaborators: required: "optional"
 }

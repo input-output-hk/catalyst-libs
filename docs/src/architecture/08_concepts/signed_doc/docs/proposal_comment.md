@@ -56,7 +56,7 @@ and the integrity of the [`ref`](../metadata.md#ref) and [`reply`](../metadata.m
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | b679ded3-0e7c-41ba-89f8-da62a17898ea |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -275,7 +275,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

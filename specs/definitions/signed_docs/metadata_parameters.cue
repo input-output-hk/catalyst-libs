@@ -4,7 +4,7 @@
 package signed_docs
 
 import (
-	"strings"
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
 )
 
 _metadata: _parameters: {
@@ -40,16 +40,8 @@ _metadata: _parameters: {
 			"""
 }
 
-// List of all Parameters Docs (not templates or actions)
-#parameterDocNamesList: [...string] & [
-	for k, _ in _allDocs
-	if strings.Contains(k, "Parameter") &&
-		!strings.Contains(k, "Template") &&
-		!strings.Contains(k, "Action") {k},
-]
-
 // Top Level general documentation for Parameters Metadata.
 metadata: headers: parameters: {
 	required: "optional"
-	type:     #parameterDocNamesList
+	type:     signed_doc_types.parameterDocNamesList
 }

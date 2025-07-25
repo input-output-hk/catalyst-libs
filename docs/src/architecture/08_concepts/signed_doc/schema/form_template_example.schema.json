@@ -1,4 +1,7 @@
 {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "Example",
+    "description": "An example of all Elements",
     "$defs": {
         "dropDownSingleSelect": {
             "contentMediaType": "text/plain",
@@ -10,25 +13,21 @@
             "pattern": "^[\\S\\s]*$",
             "type": "string"
         },
-        "multiLineTextEntryListMarkdown": {
-            "items": {
-                "contentMediaType": "text/markdown",
-                "minLength": 1,
-                "pattern": "^[\\S\\s]*$",
-                "type": "string"
-            },
-            "type": "array",
-            "uniqueItems": true
-        },
         "multiLineTextEntryMarkdown": {
             "contentMediaType": "text/markdown",
             "pattern": "^[\\S\\s]*$",
             "type": "string"
         },
+        "multiLineTextEntryMarkdownList": {
+            "items": {
+                "$ref": "#/$defs/multiLineTextEntryMarkdown"
+            },
+            "type": "array",
+            "uniqueItems": true
+        },
         "multiSelect": {
             "items": {
-                "pattern": "^[^\\n]*$",
-                "type": "string"
+                "$ref": "#/$defs/singleSelect"
             },
             "type": "array",
             "uniqueItems": true
@@ -38,15 +37,7 @@
             "pattern": "^[^\\n]*$",
             "type": "string"
         },
-        "schemaReferenceNonUI": {
-            "readOnly": true,
-            "type": "string"
-        },
         "section": {
-            "additionalProperties": false,
-            "type": "object"
-        },
-        "segment": {
             "additionalProperties": false,
             "type": "object"
         },
@@ -58,98 +49,389 @@
             ],
             "type": "object"
         },
-        "singleLineHttpsURLEntry": {
+        "singleLineHttpsUrlEntry": {
+            "contentMediaType": "text/plain",
             "format": "uri",
             "pattern": "^https://[^\\s]+$",
             "type": "string"
         },
-        "singleLineHttpsURLEntryList": {
+        "singleLineHttpsUrlEntryList": {
             "items": {
-                "format": "uri",
-                "minLength": 1,
-                "pattern": "^https://[^\\s]+$",
-                "type": "string"
+                "$ref": "#/$defs/singleLineHttpsUrlEntry"
             },
             "type": "array",
             "uniqueItems": true
         },
         "singleLineTextEntry": {
+            "contentMediaType": "text/plain",
             "pattern": "^[^\\n]*$",
             "type": "string"
         },
         "singleLineTextEntryList": {
             "items": {
-                "minLength": 1,
-                "pattern": "^[^\\n]*$",
-                "type": "string"
+                "$ref": "#/$defs/singleLineTextEntry"
             },
             "type": "array",
             "uniqueItems": true
+        },
+        "singleSelect": {
+            "contentMediaType": "text/plain",
+            "pattern": "^[^\\n]*$",
+            "type": "string"
         }
     },
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "additionalProperties": false,
-    "description": "Example Template Schema showing all defined field types.",
-    "maintainers": [
-        {
-            "name": "Catalyst Team",
-            "url": "https://projectcatalyst.io/"
-        }
-    ],
+    "type": "object",
     "properties": {
-        "exampleDropDownSingleSelect": {
-            "default": "option 1",
-            "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
-            "enum": [
-                "option 1",
-                "option 2",
-                "option 3"
-            ],
-            "title": "Selector",
-            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
-            "x-icon": "emoji-happy",
-            "$ref": "#/$defs/dropDownSingleSelect"
-        },
-        "exampleMultiLineTextEntry": {
-            "$ref": "#/$defs/multiLineTextEntry"
-        },
-        "exampleMultiLineTextEntryListMarkdown": {
-            "$ref": "#/$defs/multiLineTextEntryListMarkdown"
-        },
-        "exampleMultiLineTextEntryMarkdown": {
-            "$ref": "#/$defs/multiLineTextEntryMarkdown"
-        },
-        "exampleMultiSelect": {
-            "$ref": "#/$defs/multiSelect"
-        },
-        "exampleRadioButtonSelect": {
-            "$ref": "#/$defs/radioButtonSelect"
-        },
-        "exampleSchemaReferenceNonUI": {
-            "$ref": "#/$defs/schemaReferenceNonUI"
-        },
         "exampleSection": {
-            "$ref": "#/$defs/section"
-        },
-        "exampleSegment": {
-            "$ref": "#/$defs/segment"
-        },
-        "exampleSingleGroupedTagSelector": {
-            "$ref": "#/$defs/singleGroupedTagSelector"
-        },
-        "exampleSingleLineHttpsURLEntry": {
-            "$ref": "#/$defs/singleLineHttpsURLEntry"
-        },
-        "exampleSingleLineHttpsURLEntryList": {
-            "$ref": "#/$defs/singleLineHttpsURLEntryList"
-        },
-        "exampleSingleLineTextEntry": {
-            "$ref": "#/$defs/singleLineTextEntry"
-        },
-        "exampleSingleLineTextEntryList": {
-            "$ref": "#/$defs/singleLineTextEntryList"
+            "$ref": "#/$defs/section",
+            "properties": {
+                "exampleDropDownSingleSelect": {
+                    "$ref": "#/$defs/dropDownSingleSelect",
+                    "default": "option 1",
+                    "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+                    "enum": [
+                        "option 1",
+                        "option 2",
+                        "option 3"
+                    ],
+                    "title": "Selector",
+                    "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                    "x-icon": "emoji-happy"
+                },
+                "exampleMultiLineTextEntry": {
+                    "$ref": "#/$defs/multiLineTextEntry",
+                    "default": "This explanation has not been given.\nIgnore it.",
+                    "description": "Explain what it is you want to achieve.",
+                    "maxLength": 5000,
+                    "minLength": 20,
+                    "title": "Explanation",
+                    "x-guidance": "It's useful to explain things here.",
+                    "x-icon": "academic-cap",
+                    "x-placeholder": "What's your explanation?"
+                },
+                "exampleMultiLineTextEntryMarkdown": {
+                    "$ref": "#/$defs/multiLineTextEntryMarkdown",
+                    "default": "# My Story\n\nOnce **upon** a *time*...",
+                    "description": "Tell a story to the reader.",
+                    "maxLength": 5000,
+                    "minLength": 20,
+                    "title": "Story",
+                    "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                    "x-icon": "book-open",
+                    "x-placeholder": "# ..."
+                },
+                "exampleMultiLineTextEntryMarkdownList": {
+                    "$ref": "#/$defs/multiLineTextEntryMarkdownList",
+                    "default": [
+                        "# Chapter 1\n\n## The beginning.\n\nOnce upon a time.",
+                        "...",
+                        "# Chapter 93\n\n## The exciting finale.\n\nMaybe the real treasure was the friends we made along the way.\n\n***The End***\n\n(or is it...)"
+                    ],
+                    "description": "A set of chapters used to tell your story.",
+                    "items": {
+                        "default": "# My Story\n\nOnce **upon** a *time*...",
+                        "description": "Tell a story to the reader.",
+                        "maxLength": 5000,
+                        "minLength": 20,
+                        "title": "Story",
+                        "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                        "x-icon": "book-open",
+                        "x-placeholder": "# ..."
+                    },
+                    "maxItems": 100,
+                    "minItems": 1,
+                    "title": "Chapters",
+                    "x-guidance": "Tell us your never-ending story.",
+                    "x-icon": "collection",
+                    "x-placeholder": "There is a default, so this placeholder won't show."
+                },
+                "exampleMultiSelect": {
+                    "$ref": "#/$defs/multiSelect",
+                    "default": [
+                        "option1",
+                        "option3"
+                    ],
+                    "description": "Select a few items you prefer.",
+                    "items": {
+                        "default": "option 1",
+                        "description": "Single Selector.\nChoose a value from the options presented.",
+                        "enum": [
+                            "option 1",
+                            "option 2",
+                            "option 3"
+                        ],
+                        "title": "Single Selector",
+                        "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                        "x-icon": "emoji-happy"
+                    },
+                    "maxItems": 2,
+                    "minItems": 2,
+                    "title": "Select Items",
+                    "x-guidance": "Select two items only, no more, no less.",
+                    "x-icon": "cursor-click"
+                },
+                "exampleRadioButtonSelect": {
+                    "$ref": "#/$defs/radioButtonSelect",
+                    "default": "Silence",
+                    "description": "Choose your favorite radio station.",
+                    "enum": [
+                        "Hot FM",
+                        "AM Stereo (but not really)",
+                        "Silence"
+                    ],
+                    "title": "Radio Selector",
+                    "x-guidance": "Video killed the radio star.",
+                    "x-icon": "bottom-rail-toggle"
+                },
+                "exampleSection": {
+                    "$ref": "#/$defs/section",
+                    "properties": {
+                        "exampleDropDownSingleSelect": {
+                            "$ref": "#/$defs/dropDownSingleSelect",
+                            "default": "option 1",
+                            "description": "Drop Down Single Selector.\nChoose a value from the options presented.",
+                            "enum": [
+                                "option 1",
+                                "option 2",
+                                "option 3"
+                            ],
+                            "title": "Selector",
+                            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                            "x-icon": "emoji-happy"
+                        },
+                        "exampleMultiLineTextEntry": {
+                            "$ref": "#/$defs/multiLineTextEntry",
+                            "default": "This explanation has not been given.\nIgnore it.",
+                            "description": "Explain what it is you want to achieve.",
+                            "maxLength": 5000,
+                            "minLength": 20,
+                            "title": "Explanation",
+                            "x-guidance": "It's useful to explain things here.",
+                            "x-icon": "academic-cap",
+                            "x-placeholder": "What's your explanation?"
+                        },
+                        "exampleMultiLineTextEntryMarkdown": {
+                            "$ref": "#/$defs/multiLineTextEntryMarkdown",
+                            "default": "# My Story\n\nOnce **upon** a *time*...",
+                            "description": "Tell a story to the reader.",
+                            "maxLength": 5000,
+                            "minLength": 20,
+                            "title": "Story",
+                            "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                            "x-icon": "book-open",
+                            "x-placeholder": "# ..."
+                        },
+                        "exampleMultiLineTextEntryMarkdownList": {
+                            "$ref": "#/$defs/multiLineTextEntryMarkdownList",
+                            "default": [
+                                "# Chapter 1\n\n## The beginning.\n\nOnce upon a time.",
+                                "...",
+                                "# Chapter 93\n\n## The exciting finale.\n\nMaybe the real treasure was the friends we made along the way.\n\n***The End***\n\n(or is it...)"
+                            ],
+                            "description": "A set of chapters used to tell your story.",
+                            "items": {
+                                "default": "# My Story\n\nOnce **upon** a *time*...",
+                                "description": "Tell a story to the reader.",
+                                "maxLength": 5000,
+                                "minLength": 20,
+                                "title": "Story",
+                                "x-guidance": "Engaging stories are better than boring ones.\nTry to be engaging.",
+                                "x-icon": "book-open",
+                                "x-placeholder": "# ..."
+                            },
+                            "maxItems": 100,
+                            "minItems": 1,
+                            "title": "Chapters",
+                            "x-guidance": "Tell us your never-ending story.",
+                            "x-icon": "collection",
+                            "x-placeholder": "There is a default, so this placeholder won't show."
+                        },
+                        "exampleMultiSelect": {
+                            "$ref": "#/$defs/multiSelect",
+                            "default": [
+                                "option1",
+                                "option3"
+                            ],
+                            "description": "Select a few items you prefer.",
+                            "items": {
+                                "default": "option 1",
+                                "description": "Single Selector.\nChoose a value from the options presented.",
+                                "enum": [
+                                    "option 1",
+                                    "option 2",
+                                    "option 3"
+                                ],
+                                "title": "Single Selector",
+                                "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                                "x-icon": "emoji-happy"
+                            },
+                            "maxItems": 2,
+                            "minItems": 2,
+                            "title": "Select Items",
+                            "x-guidance": "Select two items only, no more, no less.",
+                            "x-icon": "cursor-click"
+                        },
+                        "exampleRadioButtonSelect": {
+                            "$ref": "#/$defs/radioButtonSelect",
+                            "default": "Silence",
+                            "description": "Choose your favorite radio station.",
+                            "enum": [
+                                "Hot FM",
+                                "AM Stereo (but not really)",
+                                "Silence"
+                            ],
+                            "title": "Radio Selector",
+                            "x-guidance": "Video killed the radio star.",
+                            "x-icon": "bottom-rail-toggle"
+                        },
+                        "exampleSingleGroupedTagSelector": {
+                            "$ref": "#/$defs/singleGroupedTagSelector",
+                            "properties": {}
+                        },
+                        "exampleSingleLineHttpsUrlEntry": {
+                            "$ref": "#/$defs/singleLineHttpsUrlEntry",
+                            "description": "Whats your companies primary URL.",
+                            "maxLength": 1024,
+                            "minLength": 12,
+                            "title": "Website",
+                            "x-guidance": "Its where people find your company online.",
+                            "x-icon": "globe-alt",
+                            "x-placeholder": "https://<your website>"
+                        },
+                        "exampleSingleLineHttpsUrlEntryList": {
+                            "$ref": "#/$defs/singleLineHttpsUrlEntryList",
+                            "description": "All the development domains used by your project.",
+                            "maxItems": 10,
+                            "minItems": 0,
+                            "title": "Development Domains",
+                            "x-guidance": "Don't list production domains.",
+                            "x-icon": "dots-vertical",
+                            "x-placeholder": [
+                                "Url 1",
+                                "Url 2",
+                                "Url 3"
+                            ]
+                        },
+                        "exampleSingleLineTextEntry": {
+                            "$ref": "#/$defs/singleLineTextEntry",
+                            "default": "Rocket",
+                            "description": "Whats your first name.",
+                            "maxLength": 300,
+                            "minLength": 2,
+                            "title": "First Name",
+                            "x-guidance": "Its the thing your parents called you.",
+                            "x-icon": "user",
+                            "x-placeholder": "???"
+                        },
+                        "exampleSingleLineTextEntryList": {
+                            "$ref": "#/$defs/singleLineTextEntryList",
+                            "default": [
+                                "Me",
+                                "You",
+                                "Hey"
+                            ],
+                            "description": "All your nicknames.",
+                            "maxItems": 17,
+                            "minItems": 2,
+                            "title": "Nicknames",
+                            "x-guidance": "All the nicknames people have used to refer to you.\nMake some up if you have less than 2.",
+                            "x-icon": "clipboard-list",
+                            "x-placeholder": [
+                                "nickname1",
+                                "nickname2"
+                            ]
+                        },
+                        "exampleSingleSelect": {
+                            "$ref": "#/$defs/singleSelect",
+                            "default": "option 1",
+                            "description": "Single Selector.\nChoose a value from the options presented.",
+                            "enum": [
+                                "option 1",
+                                "option 2",
+                                "option 3"
+                            ],
+                            "title": "Single Selector",
+                            "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                            "x-icon": "emoji-happy"
+                        }
+                    },
+                    "x-flatten": false,
+                    "x-icon": "bookmark"
+                },
+                "exampleSingleGroupedTagSelector": {
+                    "$ref": "#/$defs/singleGroupedTagSelector",
+                    "properties": {}
+                },
+                "exampleSingleLineHttpsUrlEntry": {
+                    "$ref": "#/$defs/singleLineHttpsUrlEntry",
+                    "description": "Whats your companies primary URL.",
+                    "maxLength": 1024,
+                    "minLength": 12,
+                    "title": "Website",
+                    "x-guidance": "Its where people find your company online.",
+                    "x-icon": "globe-alt",
+                    "x-placeholder": "https://<your website>"
+                },
+                "exampleSingleLineHttpsUrlEntryList": {
+                    "$ref": "#/$defs/singleLineHttpsUrlEntryList",
+                    "description": "All the development domains used by your project.",
+                    "maxItems": 10,
+                    "minItems": 0,
+                    "title": "Development Domains",
+                    "x-guidance": "Don't list production domains.",
+                    "x-icon": "dots-vertical",
+                    "x-placeholder": [
+                        "Url 1",
+                        "Url 2",
+                        "Url 3"
+                    ]
+                },
+                "exampleSingleLineTextEntry": {
+                    "$ref": "#/$defs/singleLineTextEntry",
+                    "default": "Rocket",
+                    "description": "Whats your first name.",
+                    "maxLength": 300,
+                    "minLength": 2,
+                    "title": "First Name",
+                    "x-guidance": "Its the thing your parents called you.",
+                    "x-icon": "user",
+                    "x-placeholder": "???"
+                },
+                "exampleSingleLineTextEntryList": {
+                    "$ref": "#/$defs/singleLineTextEntryList",
+                    "default": [
+                        "Me",
+                        "You",
+                        "Hey"
+                    ],
+                    "description": "All your nicknames.",
+                    "maxItems": 17,
+                    "minItems": 2,
+                    "title": "Nicknames",
+                    "x-guidance": "All the nicknames people have used to refer to you.\nMake some up if you have less than 2.",
+                    "x-icon": "clipboard-list",
+                    "x-placeholder": [
+                        "nickname1",
+                        "nickname2"
+                    ]
+                },
+                "exampleSingleSelect": {
+                    "$ref": "#/$defs/singleSelect",
+                    "default": "option 1",
+                    "description": "Single Selector.\nChoose a value from the options presented.",
+                    "enum": [
+                        "option 1",
+                        "option 2",
+                        "option 3"
+                    ],
+                    "title": "Single Selector",
+                    "x-guidance": "It is recommended that a good choice be made.\nA bad choice could effect prospects of success.\nA good choice could improve them.\nSo make a good choice.",
+                    "x-icon": "emoji-happy"
+                }
+            },
+            "x-flatten": false,
+            "x-icon": "bookmark"
         }
     },
-    "title": "Example Template Schema.",
-    "type": "object"
+    "additionalProperties": false
 }

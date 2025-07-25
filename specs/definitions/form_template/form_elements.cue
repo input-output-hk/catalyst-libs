@@ -3,8 +3,14 @@ package form_template
 
 import (
 	"github.com/input-output-hk/catalyst-libs/specs/regex"
-
 )
+
+#jsonSchemaDefRegex: string
+#jsonSchemaDefRegex: =~regex.def.jsonSchemaDef.pattern
+
+#formElementRef: $ref: #jsonSchemaDefRegex
+
+#itemElement: string
 
 // Schema Definition for the Form Element.
 // This appears in the `definitions` section of the Form Template
@@ -36,10 +42,16 @@ import (
 
 	// Form Elements which are a list of other Form Elements
 	if type == "array" {
+		// Just the name of the array element
+		_itemElement: #itemElement
 		// The type of Form Elements in the list.
-		items: #formElementDefinition
+		items: #formElementRef
 		// Are the Elements Unique?
 		uniqueItems: false | *true
+		// Whats the minimum Length of the Array
+		minItems?: int
+		// Whats the minimum Length of the Array
+		maxItems?: int
 	}
 
 	if type == "string" {
@@ -48,7 +60,19 @@ import (
 		pattern?:          regex.#regex
 		minLength?:        int // Only to enforce that the field can not be empty (such as when used in lists)
 	}
+}
 
+// An example of a particular form element.
+#formElementExample: {
+	// What is this example showing?
+	description: string
+
+	// What is the parent of this example?
+	parent: #formTemplateElementParent
+
+	// What Parameters to set for this example?
+	// Must only use parameters defined by the Form Element itself.
+	parameters: _
 }
 
 // An Element which can be present in a Templated Form.
@@ -64,10 +88,9 @@ import (
 	definition: #formElementDefinition
 
 	// If this field type must appear only as a child of another field type.
-	// If `parent` is NOT defined, then the `parent` is the root of the template.
 	// The root object of the template is defined with the special string `{}`
 	// 
-	parent: #formTemplateElementNames | *"{}"
+	parent: #formTemplateElementParents
 
 	// The parameters supported by a particular field definition
 	parameters: _allParameters

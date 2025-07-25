@@ -2,6 +2,10 @@
 
 package signed_docs
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+)
+
 // Proposal Submission Action
 docs: #DocumentDefinitions & {
 	"Proposal Submission Action": {
@@ -74,7 +78,7 @@ docs: #DocumentDefinitions & {
 
 			parameters: {
 				required: "yes"
-				type:     doc_clusters."System Parameters".docs
+				type:     signed_doc_types.doc_clusters."System Parameters".docs
 				linked_refs: [
 					"ref",
 				]

@@ -11,6 +11,10 @@ docs: "Rep Nomination": {
 		real and detrimental result in the Delegation choice.
 		Therefore, for a Delegation to be valid, it *MUST* point to the
 		latest Nomination for a Representative.
+
+		Publishing a newer version of the Nomination Document to a specific contest will
+		invalidate all pre-existing delegations, and all voters will need
+		to re-delegate to affirm the delegates latest nomination.
 		"""
 
 	description: """

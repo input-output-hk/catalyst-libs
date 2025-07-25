@@ -8,7 +8,10 @@ import (
 #regex: string
 #regex: regexp.Valid
 
-#def: [string]: {
+#regexName: string
+#regexName: =~_camelCaseName
+
+#def: [#regexName]: {
 	pattern:     #regex
 	description: string
 }

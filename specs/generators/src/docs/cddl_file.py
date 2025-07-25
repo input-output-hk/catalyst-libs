@@ -14,7 +14,7 @@ class CDDLFile(DocGenerator):
         """CDDL File Generator."""
         file_name = "cddl/" + cddl_root.lower().replace(" ", "_").replace("-", "_") + ".cddl"
 
-        super().__init__(args, spec, file_name, flags=self.NO_FLAGS)
+        super().__init__(args, spec, filename=file_name, flags=self.NO_FLAGS)
         self._cddl_root = cddl_root
 
     def markdown_reference(

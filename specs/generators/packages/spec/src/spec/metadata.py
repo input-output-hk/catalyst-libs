@@ -6,9 +6,9 @@ from functools import cached_property
 
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, RootModel, computed_field
 
+from spec.base_types import DocTypeId
 from spec.cddl.cose import GenericHeader
 from spec.cddl.definition import CDDLDefinition
-from spec.document import DocType
 from spec.metadata_formats import MetadataFormats
 from spec.optional import OptionalField
 
@@ -71,7 +71,7 @@ class MetadataHeader(GenericHeader):
         """Is this metadata excluded from the specs definition. (must not be present)."""
         return self.required == "excluded"
 
-    def metadata_as_markdown(self, *, doc_types: DocType | None = None) -> str:
+    def metadata_as_markdown(self, *, doc_type: DocTypeId | None = None) -> str:
         """Generate Markdown of Metadata fields for the default set, or a specific document."""
         field_title_level = "###"
 
@@ -86,12 +86,9 @@ class MetadataHeader(GenericHeader):
         if not self.is_excluded():
             field_display += f"| Format | `{self.format}` |\n"
 
-            if self._name == "type" and doc_types is not None:
+            if self._name == "type" and doc_type is not None:
                 # Display the actual documents type values
-                formatted_id = doc_types.formatted_ids(
-                    prefix="", start_quote="`", end_quote="`", separator=",<br/>", suffix="", cbor=False
-                )
-                field_display += f"| Type | {formatted_id} |\n"
+                field_display += f"| Type | {doc_type.as_uuid_str} |\n"
 
             if self.multiple:
                 field_display += f"| Multiple References | {self.multiple} |\n"

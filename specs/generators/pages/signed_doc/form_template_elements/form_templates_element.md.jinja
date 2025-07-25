@@ -1,0 +1,32 @@
+# Form Template Element - {{ doc.name() }}
+
+{{ element.description }}
+
+## Parent Elements
+
+The {{ doc.name() }} form element, can appear as a child of:
+
+{% for parent in element.parent %}
+    {% if parent == "{}" %}
+* The Root Object of the JSON Schema
+    {% else %}
+    {% set parent_element = spec.form_template.elements.get(parent) %}
+* {{ doc.link_to_file(parent_element.title_name, doc_name=parent_element.snake_name, template=doc.TEMPLATE) }}
+    {% endif %}
+{% endfor %}
+
+## Definition
+
+{{ doc.json_example(doc.example_definition, label="Definition", title=doc.name()) }}
+
+## Parameters
+
+The {{ doc.name() }} form element takes the following parameters:
+
+{{ doc.parameters_table }}
+
+## Example Usage
+
+This is an Example Form Template showing just the {{ doc.name() }} form element, and its parents.
+
+{{ doc.json_example(doc.example()) }}
