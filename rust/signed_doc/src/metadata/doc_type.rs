@@ -3,6 +3,7 @@
 use std::{
     fmt::{Display, Formatter},
     hash::Hash,
+    ops::Deref,
     str::FromStr,
 };
 
@@ -12,6 +13,14 @@ use minicbor::{Decode, Decoder, Encode};
 /// Document type - `UUIDv4`.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct DocType(UuidV4);
+
+impl Deref for DocType {
+    type Target = UuidV4;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
 
 impl DocType {
     /// A const alternative impl of `TryFrom<Uuid>`
