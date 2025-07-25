@@ -27,7 +27,7 @@ fn signed_doc_deprecated_case() -> TestCase {
     let doc_type = DocType::from(UuidV4::new());
     let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
     TestCase {
-        name: format!("Catalyst Signed Doc with deprecated version before v0.0.4 validating."),
+        name: format!("Catalyst Signed Doc with deprecated version before v0.04 validating."),
         bytes_gen: Box::new({
             move || {
                 let mut e = Encoder::new(Vec::new());
