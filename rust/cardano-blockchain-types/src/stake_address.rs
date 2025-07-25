@@ -58,7 +58,7 @@ impl StakeAddress {
         cred: &conway::StakeCredential,
     ) -> Self {
         match cred {
-            conway::StakeCredential::Scripthash(h) => Self::new(network, true, (*h).into()),
+            conway::StakeCredential::ScriptHash(h) => Self::new(network, true, (*h).into()),
             conway::StakeCredential::AddrKeyhash(h) => Self::new(network, false, (*h).into()),
         }
     }
