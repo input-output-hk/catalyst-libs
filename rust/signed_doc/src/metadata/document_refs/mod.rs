@@ -17,6 +17,28 @@ use crate::CompatibilityPolicy;
 #[derive(Clone, Debug, PartialEq, Hash, Eq)]
 pub struct DocumentRefs(Vec<DocumentRef>);
 
+impl DocumentRefs {
+    /// Returns true if provided `cbor` bytes is a valid old format.
+    /// ```cddl
+    /// old_format = [id, ver]
+    /// ```
+    /// Returns false if provided `cbor` bytes is a valid new format.
+    /// ```cddl
+    /// new_format = [ +[id, ver, cid] ]
+    /// ```
+    pub(crate) fn is_deprecated_cbor(cbor: &[u8]) -> Result<bool, minicbor::decode::Error> {
+        let mut d = minicbor::Decoder::new(cbor);
+        d.array()?;
+        match d.datatype()? {
+            // new_format = [ +[id, ver, cid] ]
+            minicbor::data::Type::Array => Ok(false),
+            // old_format = [id, ver]
+            minicbor::data::Type::Tag => Ok(true),
+            ty => Err(minicbor::decode::Error::type_mismatch(ty)),
+        }
+    }
+}
+
 /// Document reference error.
 #[derive(Debug, Clone, thiserror::Error)]
 pub enum DocRefError {
