@@ -188,34 +188,27 @@ impl CatalystSignedDocument {
         let e = e.encode(self.inner.metadata.clone())?;
         let e = e.to_owned().into_writer();
 
+        let mut deprecated = false;
         for entry in cbork_utils::map::Map::decode(
             &mut minicbor::Decoder::new(e.as_slice()),
-            &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+            &mut cbork_utils::decode_context::DecodeCtx::non_deterministic(),
         )? {
             let key = minicbor::Decoder::new(&entry.key_bytes).str().ok();
+            if key == Some(SupportedLabel::Template.to_string().as_str()) {
+                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+            }
             if key == Some(SupportedLabel::Ref.to_string().as_str()) {
-                let mut value_bytes = minicbor::Decoder::new(&entry.value);
-
-                let outer_arr = Array::decode(&mut value_bytes, &mut DecodeCtx::Deterministic)?;
-
-                let deprecated = match outer_arr.as_slice() {
-                    [first, ..] => {
-                        match minicbor::Decoder::new(first).datatype()? {
-                            // New structure inner part [id, ver, locator]
-                            minicbor::data::Type::Array => false,
-                            // Old structure (id, ver)
-                            minicbor::data::Type::Tag => true,
-                            _ => false,
-                        }
-                    },
-                    _ => false,
-                };
-
-                return Ok(deprecated);
+                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+            }
+            if key == Some(SupportedLabel::Reply.to_string().as_str()) {
+                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+            }
+            if key == Some(SupportedLabel::Parameters.to_string().as_str()) {
+                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
             }
         }
 
-        Ok(false)
+        Ok(deprecated)
     }
 
     /// Returns a collected problem report for the document.
