@@ -188,27 +188,34 @@ impl CatalystSignedDocument {
         let e = e.encode(self.inner.metadata.clone())?;
         let e = e.to_owned().into_writer();
 
-        let mut deprecated = false;
         for entry in cbork_utils::map::Map::decode(
             &mut minicbor::Decoder::new(e.as_slice()),
             &mut cbork_utils::decode_context::DecodeCtx::non_deterministic(),
         )? {
             let key = minicbor::Decoder::new(&entry.key_bytes).str().ok();
             if key == Some(SupportedLabel::Template.to_string().as_str()) {
-                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                    return Ok(true);
+                }
             }
             if key == Some(SupportedLabel::Ref.to_string().as_str()) {
-                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                    return Ok(true);
+                }
             }
             if key == Some(SupportedLabel::Reply.to_string().as_str()) {
-                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                    return Ok(true);
+                }
             }
             if key == Some(SupportedLabel::Parameters.to_string().as_str()) {
-                deprecated = DocumentRefs::is_deprecated_cbor(&entry.value)?;
+                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                    return Ok(true);
+                }
             }
         }
 
-        Ok(deprecated)
+        Ok(false)
     }
 
     /// Returns a collected problem report for the document.
