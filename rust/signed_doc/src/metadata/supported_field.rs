@@ -208,19 +208,10 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<Suppo
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
 
-        let label = Label::decode(d, &mut ())?;
-        let Some(key) = SupportedLabel::from_cose(label) else {
-            let value_start = d.position();
-            d.skip()?;
-            let value_end = d.position();
-            // Since the high level type isn't know, the value CBOR is tokenized and reported as
-            // such.
-            let value = minicbor::decode::Tokenizer::new(
-                d.input().get(value_start..value_end).unwrap_or_default(),
-            )
-            .to_string();
-            ctx.report()
-                .unknown_field(&label.to_string(), &value, REPORT_CONTEXT);
+        let Ok(key) = d
+            .decode::<SupportedLabel>()
+            .inspect_err(|e| ctx.report().other(e.to_string().as_str(), REPORT_CONTEXT))
+        else {
             return Ok(None);
         };
 
@@ -269,6 +260,17 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<Suppo
         .ok();
 
         Ok(field)
+    }
+}
+
+impl<C> minicbor::Decode<'_, C> for SupportedLabel {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut C,
+    ) -> Result<Self, minicbor::decode::Error> {
+        let label = d.decode()?;
+        Self::from_cose(label).ok_or(minicbor::decode::Error::message(format!(
+            "Unsupported key {label}"
+        )))
     }
 }
 

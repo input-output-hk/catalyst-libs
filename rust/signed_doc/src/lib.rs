@@ -192,26 +192,16 @@ impl CatalystSignedDocument {
             &mut minicbor::Decoder::new(e.as_slice()),
             &mut cbork_utils::decode_context::DecodeCtx::non_deterministic(),
         )? {
-            let key = minicbor::Decoder::new(&entry.key_bytes).str().ok();
-            if key == Some(SupportedLabel::Template.to_string().as_str()) {
-                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
-                    return Ok(true);
-                }
-            }
-            if key == Some(SupportedLabel::Ref.to_string().as_str()) {
-                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
-                    return Ok(true);
-                }
-            }
-            if key == Some(SupportedLabel::Reply.to_string().as_str()) {
-                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
-                    return Ok(true);
-                }
-            }
-            if key == Some(SupportedLabel::Parameters.to_string().as_str()) {
-                if DocumentRefs::is_deprecated_cbor(&entry.value)? {
-                    return Ok(true);
-                }
+            match minicbor::Decoder::new(&entry.key_bytes).decode::<SupportedLabel>()? {
+                SupportedLabel::Template
+                | SupportedLabel::Ref
+                | SupportedLabel::Reply
+                | SupportedLabel::Parameters => {
+                    if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                        return Ok(true);
+                    }
+                },
+                _ => {},
             }
         }
 
