@@ -22,6 +22,68 @@ struct TestCase {
     post_checks: Option<Box<PostCheck>>,
 }
 
+fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
+    let uuid_v7 = UuidV7::new();
+    let doc_type = DocType::from(UuidV4::new());
+    let doc_ref = DocumentRef::new(UuidV7::new(), UuidV7::new(), DocLocator::default());
+    TestCase {
+        name: format!(
+            "Catalyst Signed Doc with deprecated {field_name} version before v0.04 validating."
+        ),
+        bytes_gen: Box::new({
+            move || {
+                let mut e = Encoder::new(Vec::new());
+                e.tag(Tag::new(98))?;
+                e.array(4)?;
+
+                // protected headers (metadata fields)
+                e.bytes({
+                    let mut p_headers = Encoder::new(Vec::new());
+                    p_headers.map(5)?;
+                    p_headers.u8(3)?.encode(ContentType::Json)?;
+                    p_headers
+                        .str("id")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
+                    p_headers.str(field_name)?;
+                    p_headers.array(2)?;
+                    p_headers.encode_with(
+                        doc_ref.id(),
+                        &mut catalyst_types::uuid::CborContext::Tagged,
+                    )?;
+                    p_headers.encode_with(
+                        doc_ref.ver(),
+                        &mut catalyst_types::uuid::CborContext::Tagged,
+                    )?;
+
+                    p_headers.into_writer().as_slice()
+                })?;
+
+                // empty unprotected headers
+                e.map(0)?;
+                // content
+                e.bytes(serde_json::to_vec(&serde_json::Value::Null)?.as_slice())?;
+                // zero signatures
+                e.array(0)?;
+
+                Ok(e)
+            }
+        }),
+        policy: CompatibilityPolicy::Accept,
+        can_decode: true,
+        valid_doc: true,
+        post_checks: Some(Box::new({
+            move |doc| {
+                anyhow::ensure!(doc.is_deprecated()?);
+                Ok(())
+            }
+        })),
+    }
+}
+
 fn signed_doc_with_valid_alias_case(alias: &'static str) -> TestCase {
     let uuid_v7 = UuidV7::new();
     let doc_type = DocType::from(UuidV4::new());
@@ -537,6 +599,7 @@ fn signed_doc_with_minimal_metadata_fields_case() -> TestCase {
                     doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?
                 );
                 anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
         })),
@@ -622,6 +685,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
                 anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
                 anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
         })),
@@ -1240,6 +1304,13 @@ fn signed_doc_with_non_supported_protected_signature_header_invalid() -> TestCas
 fn catalyst_signed_doc_decoding_test() {
     let test_cases = [
         decoding_empty_bytes_case(),
+        signed_doc_deprecated_doc_ref_case("template"),
+        signed_doc_deprecated_doc_ref_case("ref"),
+        signed_doc_deprecated_doc_ref_case("reply"),
+        signed_doc_deprecated_doc_ref_case("parameters"),
+        signed_doc_deprecated_doc_ref_case("category_id"),
+        signed_doc_deprecated_doc_ref_case("brand_id"),
+        signed_doc_deprecated_doc_ref_case("campaign_id"),
         signed_doc_with_minimal_metadata_fields_case(),
         signed_doc_with_complete_metadata_fields_case(),
         signed_doc_valid_null_as_no_content(),

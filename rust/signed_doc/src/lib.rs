@@ -29,7 +29,7 @@ pub use metadata::{
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
-use crate::builder::SignaturesBuilder;
+use crate::{builder::SignaturesBuilder, metadata::SupportedLabel};
 
 /// `COSE_Sign` object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
 const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
@@ -178,6 +178,38 @@ impl CatalystSignedDocument {
             .iter()
             .map(|s| s.kid().as_short_id())
             .collect()
+    }
+
+    /// Checks if the CBOR body of the signed doc is in the older version format before
+    /// v0.04.
+    ///
+    /// # Errors
+    ///
+    /// Errors from CBOR decoding.
+    pub fn is_deprecated(&self) -> anyhow::Result<bool> {
+        let mut e = minicbor::Encoder::new(Vec::new());
+
+        let e = e.encode(self.inner.metadata.clone())?;
+        let e = e.to_owned().into_writer();
+
+        for entry in cbork_utils::map::Map::decode(
+            &mut minicbor::Decoder::new(e.as_slice()),
+            &mut cbork_utils::decode_context::DecodeCtx::non_deterministic(),
+        )? {
+            match minicbor::Decoder::new(&entry.key_bytes).decode::<SupportedLabel>()? {
+                SupportedLabel::Template
+                | SupportedLabel::Ref
+                | SupportedLabel::Reply
+                | SupportedLabel::Parameters => {
+                    if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                        return Ok(true);
+                    }
+                },
+                _ => {},
+            }
+        }
+
+        Ok(false)
     }
 
     /// Returns a collected problem report for the document.
