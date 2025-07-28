@@ -182,9 +182,9 @@ impl CatalystSignedDocument {
 
     /// Checks if the CBOR body of the signed doc is in the older version format before
     /// v0.04.
-    /// 
+    ///
     /// # Errors
-    /// 
+    ///
     /// Errors from CBOR decoding.
     pub fn is_deprecated(&self) -> anyhow::Result<bool> {
         let mut e = minicbor::Encoder::new(Vec::new());
