@@ -44,6 +44,10 @@ fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
                     p_headers
                         .str("id")?
                         .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers
+                        .str("ver")?
+                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
+                    p_headers.str("type")?.encode(&doc_type)?;
                     p_headers.str(field_name)?;
                     p_headers.array(2)?;
                     p_headers.encode_with(
@@ -54,10 +58,6 @@ fn signed_doc_deprecated_doc_ref_case(field_name: &'static str) -> TestCase {
                         doc_ref.ver(),
                         &mut catalyst_types::uuid::CborContext::Tagged,
                     )?;
-                    p_headers
-                        .str("ver")?
-                        .encode_with(uuid_v7, &mut catalyst_types::uuid::CborContext::Tagged)?;
-                    p_headers.str("type")?.encode(&doc_type)?;
 
                     p_headers.into_writer().as_slice()
                 })?;
