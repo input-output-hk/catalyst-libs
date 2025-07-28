@@ -685,6 +685,7 @@ fn signed_doc_with_complete_metadata_fields_case() -> TestCase {
                 anyhow::ensure!(doc.doc_content_type()? == ContentType::Json);
                 anyhow::ensure!(doc.encoded_content() == serde_json::to_vec(&serde_json::Value::Null)?);
                 anyhow::ensure!(doc.kids().len() == 1);
+                anyhow::ensure!(!doc.is_deprecated()?);
                 Ok(())
             }
         })),
