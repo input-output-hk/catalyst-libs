@@ -41,7 +41,7 @@ async fn main() -> anyhow::Result<()> {
         } else {
             println!("AN ERROR OCCURRED: {e}");
         }
-    };
+    }
     println!("* Removing pin.");
     hermes_ipfs.remove_pin(cid).await?;
     print_cid_pinned(&hermes_ipfs, cid).await?;
@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
         } else {
             println!("AN ERROR OCCURRED: {e}");
         }
-    };
+    }
     print_cid_pinned(&hermes_ipfs, cid).await?;
     println!("***************************************");
     println!("");

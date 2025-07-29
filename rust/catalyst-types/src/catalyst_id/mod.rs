@@ -520,7 +520,7 @@ impl CatalystId {
 impl FromStr for CatalystId {
     type Err = errors::CatalystIdError;
 
-    /// This will parse a URI or a RAW ID.  
+    /// This will parse a URI or a RAW ID.\
     /// The only difference between them is a URI has the scheme, a raw ID does not.
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // Did we serialize an ID?
@@ -588,7 +588,7 @@ impl FromStr for CatalystId {
         // Less than 3 handled by errors below (4 because of leading `/` in path).
         if path.len() > 4 {
             return Err(errors::CatalystIdError::InvalidPath);
-        };
+        }
 
         // Decode and validate the Role0 Public key from the path
         let encoded_role0_key = path
@@ -770,7 +770,7 @@ mod tests {
         assert_eq!(uri_id.as_short_id(), short_id);
     }
 
-    #[ignore]
+    #[ignore = "Test to be fixed and re-enabled"]
     #[test]
     fn gen_pk() {
         let mut csprng = OsRng;

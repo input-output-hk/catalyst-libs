@@ -200,7 +200,7 @@ fn generate(
     // If the output path is provided, write to the file
     if let Some(output) = output {
         write_to_output_file(output, &cert)?;
-    };
+    }
 
     println!("Hex: {:?}", hex::encode(&cert));
     println!("Bytes: {:?}", &cert);
@@ -290,7 +290,7 @@ fn verify(file: &PathBuf, public_key: PathBuf) -> anyhow::Result<()> {
     match c509_certificate::verify(&cert, &pk) {
         Ok(()) => println!("Signature verified!"),
         Err(e) => println!("Signature verification failed: {e}"),
-    };
+    }
     Ok(())
 }
 
@@ -328,7 +328,7 @@ fn decode(file: &PathBuf, output: Option<PathBuf>) -> anyhow::Result<()> {
     // If the output path is provided, write to the file
     if let Some(output) = output {
         write_to_output_file(output, data.as_bytes())?;
-    };
+    }
 
     println!("{data}");
     Ok(())
