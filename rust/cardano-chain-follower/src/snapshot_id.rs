@@ -43,10 +43,7 @@ impl SnapshotId {
 
     /// Try and create a new `SnapshotID` from a given path.
     /// Immutable TIP must be provided.
-    pub(crate) fn new(
-        path: &Path,
-        tip: Point,
-    ) -> Option<Self> {
+    pub(crate) fn new(path: &Path, tip: Point) -> Option<Self> {
         debug!("Trying to Get SnapshotID of: {}", path.to_string_lossy());
         let immutable_file = SnapshotId::parse_path(path)?;
         debug!("Immutable File#: {}", immutable_file);
@@ -60,10 +57,7 @@ impl SnapshotId {
 
     /// Try and create a new `SnapshotID` from a given path.
     /// Includes properly getting the Immutable TIP.
-    pub(crate) async fn try_new(
-        chain: Network,
-        path: &Path,
-    ) -> Option<Self> {
+    pub(crate) async fn try_new(chain: Network, path: &Path) -> Option<Self> {
         let Ok(tip) = get_mithril_tip(chain, path).await else {
             return None;
         };
@@ -117,10 +111,7 @@ impl std::convert::AsRef<std::path::Path> for SnapshotId {
 
 impl Display for SnapshotId {
     /// Convert this `SnapshotID` to a `String`.
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> Result<(), std::fmt::Error> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(
             f,
             "{} @ Tip [{} / {:?}]",
@@ -135,10 +126,7 @@ impl Display for SnapshotId {
 impl PartialEq for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
-    fn eq(
-        &self,
-        other: &Self,
-    ) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.file == other.file
     }
 }
@@ -146,10 +134,7 @@ impl PartialEq for SnapshotId {
 impl PartialOrd for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
-    fn partial_cmp(
-        &self,
-        other: &Self,
-    ) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         self.file.partial_cmp(&other.file)
     }
 }
@@ -158,10 +143,7 @@ impl PartialOrd for SnapshotId {
 impl PartialEq<Option<SnapshotId>> for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
-    fn eq(
-        &self,
-        other: &Option<Self>,
-    ) -> bool {
+    fn eq(&self, other: &Option<Self>) -> bool {
         match other {
             None => false,
             Some(other) => self == other,
@@ -172,10 +154,7 @@ impl PartialEq<Option<SnapshotId>> for SnapshotId {
 impl PartialOrd<Option<SnapshotId>> for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
-    fn partial_cmp(
-        &self,
-        other: &Option<Self>,
-    ) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Option<Self>) -> Option<Ordering> {
         match other {
             None => Some(Ordering::Greater), // Anything is always greater than None.
             Some(other) => self.partial_cmp(other),
@@ -187,10 +166,7 @@ impl PartialOrd<Option<SnapshotId>> for SnapshotId {
 impl PartialEq<u64> for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
-    fn eq(
-        &self,
-        other: &u64,
-    ) -> bool {
+    fn eq(&self, other: &u64) -> bool {
         self.file == *other
     }
 }
@@ -198,10 +174,7 @@ impl PartialEq<u64> for SnapshotId {
 impl PartialOrd<u64> for SnapshotId {
     // Equality ONLY checks the Immutable File Number, not the path.
     // This is because the Filename is already the ImmutableFileNumber
-    fn partial_cmp(
-        &self,
-        other: &u64,
-    ) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &u64) -> Option<Ordering> {
         self.file.partial_cmp(other)
     }
 }

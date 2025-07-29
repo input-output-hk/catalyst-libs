@@ -51,10 +51,7 @@ pub enum RoleDataInt {
 }
 
 impl Decode<'_, ProblemReport> for CborRoleData {
-    fn decode(
-        d: &mut Decoder,
-        report: &mut ProblemReport,
-    ) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, report: &mut ProblemReport) -> Result<Self, decode::Error> {
         let context = "Decoding role data";
         let map_len = decode_map_len(d, "RoleData")?;
 
@@ -141,9 +138,7 @@ impl Decode<'_, ProblemReport> for CborRoleData {
 
 /// Decodes a signing key.
 fn decode_signing_key(
-    d: &mut Decoder,
-    context: &str,
-    report: &mut ProblemReport,
+    d: &mut Decoder, context: &str, report: &mut ProblemReport,
 ) -> Result<Option<KeyLocalRef>, ()> {
     if let Err(e) = decode_array_len(d, "RoleSigningKey") {
         report.other(&format!("{e:?}"), context);
@@ -164,9 +159,7 @@ fn decode_signing_key(
 
 /// Decodes an encryption key.
 fn decode_encryption_key(
-    d: &mut Decoder,
-    context: &str,
-    report: &mut ProblemReport,
+    d: &mut Decoder, context: &str, report: &mut ProblemReport,
 ) -> Result<Option<KeyLocalRef>, ()> {
     if let Err(e) = decode_array_len(d, "RoleEncryptionKey") {
         report.other(&format!("{e:?}"), context);

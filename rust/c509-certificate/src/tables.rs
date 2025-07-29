@@ -15,11 +15,7 @@ pub(crate) trait TableTrait<K, V> {
     /// Create new instance of the map table.
     fn new() -> Self;
     /// Add the key-value pair to the map table.
-    fn add(
-        &mut self,
-        k: K,
-        v: V,
-    );
+    fn add(&mut self, k: K, v: V);
     /// Get the bimap of the map table.
     fn get_map(&self) -> &BiMap<K, V>;
 }
@@ -42,11 +38,7 @@ impl<T: Eq + Hash> TableTrait<i16, T> for IntTable<T> {
     }
 
     /// Add the key-value pair to the map table.
-    fn add(
-        &mut self,
-        k: i16,
-        v: T,
-    ) {
+    fn add(&mut self, k: i16, v: T) {
         self.map.insert(k, v);
     }
 
@@ -75,11 +67,7 @@ impl IntegerToOidTable {
     }
 
     /// Add the key-value pair to the map table.
-    pub(crate) fn add(
-        &mut self,
-        k: i16,
-        v: Oid<'static>,
-    ) {
+    pub(crate) fn add(&mut self, k: i16, v: Oid<'static>) {
         self.table.add(k, v);
     }
 

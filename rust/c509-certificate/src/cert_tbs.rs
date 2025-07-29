@@ -48,15 +48,10 @@ impl TbsCert {
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        c509_certificate_type: u8,
-        certificate_serial_number: UnwrappedBigUint,
-        issuer_signature_algorithm: IssuerSignatureAlgorithm,
-        issuer: Option<Name>,
-        validity_not_before: Time,
-        validity_not_after: Time,
-        subject: Name,
-        subject_public_key_algorithm: SubjectPubKeyAlgorithm,
-        subject_public_key: Vec<u8>,
+        c509_certificate_type: u8, certificate_serial_number: UnwrappedBigUint,
+        issuer_signature_algorithm: IssuerSignatureAlgorithm, issuer: Option<Name>,
+        validity_not_before: Time, validity_not_after: Time, subject: Name,
+        subject_public_key_algorithm: SubjectPubKeyAlgorithm, subject_public_key: Vec<u8>,
         extensions: Extensions,
     ) -> Self {
         Self {
@@ -154,9 +149,7 @@ impl TbsCert {
 
 impl Encode<()> for TbsCert {
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         encode_helper(e, "Certificate type", ctx, &self.c509_certificate_type)?;
         self.certificate_serial_number.encode(e, ctx)?;
@@ -173,10 +166,7 @@ impl Encode<()> for TbsCert {
 }
 
 impl Decode<'_, ()> for TbsCert {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let cert_type = decode_helper(d, "Certificate type", ctx)?;
         let serial_number = UnwrappedBigUint::decode(d, ctx)?;
         let issuer_signature_algorithm = IssuerSignatureAlgorithm::decode(d, ctx)?;

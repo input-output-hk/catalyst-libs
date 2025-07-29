@@ -40,9 +40,7 @@ pub struct Announcement {
 
 impl Announcement {
     pub(crate) fn new(
-        i_bit: bool,
-        rand: &BlindingRandomness,
-        commitment_key: &GroupElement,
+        i_bit: bool, rand: &BlindingRandomness, commitment_key: &GroupElement,
     ) -> Self {
         let i = if i_bit {
             &GroupElement::GENERATOR + &commitment_key.mul(&rand.alpha)
@@ -69,11 +67,7 @@ pub struct ResponseRandomness {
 }
 
 impl ResponseRandomness {
-    pub(crate) fn new(
-        i_bit: bool,
-        rand: &BlindingRandomness,
-        com_2: &Scalar,
-    ) -> Self {
+    pub(crate) fn new(i_bit: bool, rand: &BlindingRandomness, com_2: &Scalar) -> Self {
         let z = if i_bit {
             com_2 + &rand.betta
         } else {

@@ -92,9 +92,7 @@ impl Block {
     /// New block
     #[must_use]
     pub fn new(
-        block_header: BlockHeader,
-        block_data: BlockData,
-        validator_sigs: Signatures,
+        block_header: BlockHeader, block_data: BlockData, validator_sigs: Signatures,
     ) -> Self {
         Self {
             block_header,
@@ -139,7 +137,7 @@ impl Block {
     ///
     /// Returns an error if decoding fails.
     pub fn from_bytes(
-        encoded_block: &[u8]
+        encoded_block: &[u8],
     ) -> anyhow::Result<(BlockHeader, BlockData, Signatures)> {
         // Decoded block hdr
         let (block_hdr, block_hdr_size, _) = BlockHeader::from_bytes(encoded_block)?;
@@ -175,10 +173,7 @@ impl Block {
     /// ## Errors
     ///
     /// Returns an error if validation fails.
-    pub fn validate(
-        &self,
-        previous_block: Option<Block>,
-    ) -> anyhow::Result<()> {
+    pub fn validate(&self, previous_block: Option<Block>) -> anyhow::Result<()> {
         if let Some(previous_block) = previous_block {
             // Standard block
             let hashed_previous_block = match self.block_header.previous_block_hash.0 {
@@ -325,14 +320,9 @@ impl BlockHeader {
     #[must_use]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        chain_id: Uuid,
-        height: i64,
-        block_time_stamp: i64,
-        previous_block_hash: (HashFunction, Vec<u8>),
-        ledger_type: Uuid,
-        purpose_id: Uuid,
-        validator: Vec<Kid>,
-        metadata: Vec<u8>,
+        chain_id: Uuid, height: i64, block_time_stamp: i64,
+        previous_block_hash: (HashFunction, Vec<u8>), ledger_type: Uuid, purpose_id: Uuid,
+        validator: Vec<Kid>, metadata: Vec<u8>,
     ) -> Self {
         Self {
             chain_id,
@@ -406,7 +396,7 @@ impl BlockHeader {
     ///
     /// Returns an error decoding fails
     pub fn from_bytes(
-        block: &[u8]
+        block: &[u8],
     ) -> anyhow::Result<(
         BlockHeader,
         BlockHeaderSize,
@@ -520,10 +510,7 @@ impl GenesisPreviousHash {
     /// Create previous block id
     #[must_use]
     pub fn new(
-        chain_id: Uuid,
-        block_time_stamp: i64,
-        ledger_type: Uuid,
-        purpose_id: Uuid,
+        chain_id: Uuid, block_time_stamp: i64, ledger_type: Uuid, purpose_id: Uuid,
         validator: Vec<Kid>,
     ) -> Self {
         Self {
@@ -539,10 +526,7 @@ impl GenesisPreviousHash {
     /// ## Errors
     ///
     /// Returns an error encoding fails
-    pub fn to_bytes(
-        &self,
-        hasher: &HashFunction,
-    ) -> anyhow::Result<Vec<u8>> {
+    pub fn to_bytes(&self, hasher: &HashFunction) -> anyhow::Result<Vec<u8>> {
         /// # of elements in genesis to prev hash
         const GENESIS_TO_PREV_HASH_SIZE: u64 = 5;
 
@@ -585,10 +569,7 @@ impl GenesisPreviousHash {
     /// ## Errors
     ///
     /// Returns an error if hashing fails
-    pub fn hash(
-        &self,
-        hasher: &HashFunction,
-    ) -> anyhow::Result<Vec<u8>> {
+    pub fn hash(&self, hasher: &HashFunction) -> anyhow::Result<Vec<u8>> {
         let encoding = self.to_bytes(hasher)?;
 
         // get hash of genesis_to_prev_hash
@@ -617,10 +598,7 @@ mod tests {
 
     #[proptest]
     fn block_header_encoding(
-        prev_block_hash: Vec<u8>,
-        metadata: Vec<u8>,
-        block_height: i64,
-        block_timestamp: i64,
+        prev_block_hash: Vec<u8>, metadata: Vec<u8>, block_height: i64, block_timestamp: i64,
     ) {
         let kid_a: [u8; 16] = hex::decode("00112233445566778899aabbccddeeff")
             .unwrap()
@@ -664,10 +642,7 @@ mod tests {
 
     #[proptest]
     fn block_encoding(
-        prev_block_hash: Vec<u8>,
-        metadata: Vec<u8>,
-        block_height: i64,
-        block_timestamp: i64,
+        prev_block_hash: Vec<u8>, metadata: Vec<u8>, block_height: i64, block_timestamp: i64,
         block_data_bytes: Vec<u8>,
     ) {
         // validators
@@ -758,11 +733,7 @@ mod tests {
 
     #[proptest]
     #[allow(clippy::zero_prefixed_literal)]
-    fn validate_block_test(
-        prev_block_hash: Vec<u8>,
-        metadata: Vec<u8>,
-        block_data_bytes: Vec<u8>,
-    ) {
+    fn validate_block_test(prev_block_hash: Vec<u8>, metadata: Vec<u8>, block_data_bytes: Vec<u8>) {
         // PREVIOUS BLOCK
         //
         //
@@ -847,9 +818,7 @@ mod tests {
 
     #[proptest]
     fn genesis_encoding_and_validation(
-        invalid_prev_block_hash: Vec<u8>,
-        metadata: Vec<u8>,
-        block_data_bytes: Vec<u8>,
+        invalid_prev_block_hash: Vec<u8>, metadata: Vec<u8>, block_data_bytes: Vec<u8>,
     ) {
         // validators
         let validator_secret_key_bytes: [u8; SECRET_KEY_LENGTH] = [

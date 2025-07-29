@@ -38,11 +38,7 @@ pub fn generate_public_key(secret_key: &Scalar) -> GroupElement {
 /// Given a `message` represented as a `Scalar`, return a ciphertext using the
 /// lifted `ElGamal` mechanism.
 /// Returns a ciphertext of type `Ciphertext`.
-pub fn encrypt(
-    message: &Scalar,
-    public_key: &GroupElement,
-    randomness: &Scalar,
-) -> Ciphertext {
+pub fn encrypt(message: &Scalar, public_key: &GroupElement, randomness: &Scalar) -> Ciphertext {
     let e1 = GroupElement::GENERATOR.mul(randomness);
     let e2 = &GroupElement::GENERATOR.mul(message) + &public_key.mul(randomness);
     Ciphertext(e1, e2)
@@ -50,20 +46,14 @@ pub fn encrypt(
 
 /// Decrypt `ElGamal` `Ciphertext`, returns the original message represented as a
 /// `GroupElement`.
-pub fn decrypt(
-    cipher: &Ciphertext,
-    secret_key: &Scalar,
-) -> GroupElement {
+pub fn decrypt(cipher: &Ciphertext, secret_key: &Scalar) -> GroupElement {
     &(&cipher.0 * &secret_key.negate()) + &cipher.1
 }
 
 impl Mul<&Scalar> for &Ciphertext {
     type Output = Ciphertext;
 
-    fn mul(
-        self,
-        rhs: &Scalar,
-    ) -> Self::Output {
+    fn mul(self, rhs: &Scalar) -> Self::Output {
         Ciphertext(&self.0 * rhs, &self.1 * rhs)
     }
 }
@@ -71,10 +61,7 @@ impl Mul<&Scalar> for &Ciphertext {
 impl Add<&Ciphertext> for &Ciphertext {
     type Output = Ciphertext;
 
-    fn add(
-        self,
-        rhs: &Ciphertext,
-    ) -> Self::Output {
+    fn add(self, rhs: &Ciphertext) -> Self::Output {
         Ciphertext(&self.0 + &rhs.0, &self.1 + &rhs.1)
     }
 }
@@ -107,12 +94,7 @@ mod tests {
     use super::*;
 
     #[proptest]
-    fn ciphertext_add_test(
-        e1: Scalar,
-        e2: Scalar,
-        e3: Scalar,
-        e4: Scalar,
-    ) {
+    fn ciphertext_add_test(e1: Scalar, e2: Scalar, e3: Scalar, e4: Scalar) {
         let g1 = GroupElement::GENERATOR.mul(&e1);
         let g2 = GroupElement::GENERATOR.mul(&e2);
         let c1 = Ciphertext(g1.clone(), g2.clone());
@@ -125,11 +107,7 @@ mod tests {
     }
 
     #[proptest]
-    fn ciphertext_mul_test(
-        e1: Scalar,
-        e2: Scalar,
-        e3: Scalar,
-    ) {
+    fn ciphertext_mul_test(e1: Scalar, e2: Scalar, e3: Scalar) {
         let g1 = GroupElement::GENERATOR.mul(&e1);
         let g2 = GroupElement::GENERATOR.mul(&e2);
         let c1 = Ciphertext(g1.clone(), g2.clone());
@@ -138,11 +116,7 @@ mod tests {
     }
 
     #[proptest]
-    fn elgamal_encryption_decryption_test(
-        secret_key: Scalar,
-        message: Scalar,
-        randomness: Scalar,
-    ) {
+    fn elgamal_encryption_decryption_test(secret_key: Scalar, message: Scalar, randomness: Scalar) {
         let public_key = generate_public_key(&secret_key);
 
         let cipher = encrypt(&message, &public_key, &randomness);

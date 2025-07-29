@@ -36,9 +36,7 @@ impl From<UnwrappedBigUint> for u64 {
 
 impl Encode<()> for UnwrappedBigUint {
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut (),
+        &self, e: &mut Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let bytes = self.0.to_be_bytes();
         // Trim leading zeros
@@ -54,10 +52,7 @@ impl Encode<()> for UnwrappedBigUint {
 }
 
 impl Decode<'_, ()> for UnwrappedBigUint {
-    fn decode(
-        d: &mut Decoder<'_>,
-        _ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // Turn bytes into u64
         let b = decode_bytes(d, "Unwrapped big uint")?
             .iter()

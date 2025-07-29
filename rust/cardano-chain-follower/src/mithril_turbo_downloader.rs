@@ -90,11 +90,7 @@ impl Inner {
     /// The new file is extracted to an in-memory buffer.
     /// If they compare the same, the original file is `HardLinked` to the new file name.
     /// Otherwise the new file buffer is saved to disk with the new file name.
-    fn dl_and_dedup(
-        &self,
-        _location: &str,
-        _target_dir: &Path,
-    ) -> MithrilResult<()> {
+    fn dl_and_dedup(&self, _location: &str, _target_dir: &Path) -> MithrilResult<()> {
         let mut archive = self.create_archive_extractor()?;
 
         // Iterate the files in the archive.
@@ -207,7 +203,7 @@ impl Inner {
 
     /// Create a TAR archive extractor from the downloading file and a zstd decompressor.
     fn create_archive_extractor(
-        &self
+        &self,
     ) -> MithrilResult<Archive<Decoder<'static, BufReader<BufReader<ParallelDownloadProcessor>>>>>
     {
         let Some(dl_handler) = self.dl_handler.get() else {
@@ -222,11 +218,7 @@ impl Inner {
     }
 
     /// Check if we are supposed to extract this file from the archive or not.
-    fn check_for_extract(
-        &self,
-        path: &Path,
-        extract_type: EntryType,
-    ) -> bool {
+    fn check_for_extract(&self, path: &Path, extract_type: EntryType) -> bool {
         if path.is_absolute() {
             error!(chain = %self.cfg.chain, "DeDup : Cannot extract an absolute path:  {:?}", path);
             return false;
@@ -247,9 +239,7 @@ impl Inner {
 
     /// Check if a given path from the archive is able to be deduplicated.
     fn can_deduplicate(
-        rel_file: &Path,
-        file_size: u64,
-        prev_file: Option<&PathBuf>,
+        rel_file: &Path, file_size: u64, prev_file: Option<&PathBuf>,
     ) -> MithrilResult<MemoryMapFile> {
         // Can't dedup if the current file is not de-dupable (must be immutable)
         if rel_file.starts_with("immutable") {
@@ -317,10 +307,7 @@ impl MithrilTurboDownloader {
     }
 
     /// Create directories required to exist for download to succeed.
-    async fn create_directories(
-        &self,
-        target_dir: &Path,
-    ) -> MithrilResult<()> {
+    async fn create_directories(&self, target_dir: &Path) -> MithrilResult<()> {
         if let Err(error) = create_dir_all(target_dir).await {
             let msg = format!(
                 "Target directory {} could not be created: {}",
@@ -334,11 +321,7 @@ impl MithrilTurboDownloader {
     }
 
     /// Parallel Download, Extract and Dedup the Mithril Archive.
-    async fn dl_and_dedup(
-        &self,
-        location: &str,
-        target_dir: &Path,
-    ) -> MithrilResult<()> {
+    async fn dl_and_dedup(&self, location: &str, target_dir: &Path) -> MithrilResult<()> {
         // Get a copy of the inner data to use in the sync download task.
         let inner = self.inner.clone();
         let location = location.to_owned();
@@ -379,12 +362,8 @@ fn get_file_size_sync(file: &Path) -> Option<u64> {
 #[async_trait]
 impl FileDownloader for MithrilTurboDownloader {
     async fn download_unpack(
-        &self,
-        location: &FileDownloaderUri,
-        file_size: u64,
-        target_dir: &Path,
-        compression_algorithm: Option<CompressionAlgorithm>,
-        download_event_type: DownloadEvent,
+        &self, location: &FileDownloaderUri, file_size: u64, target_dir: &Path,
+        compression_algorithm: Option<CompressionAlgorithm>, download_event_type: DownloadEvent,
     ) -> MithrilResult<()> {
         debug!(
             ?location,
@@ -434,10 +413,7 @@ impl FileDownloader for MithrilTurboDownloader {
 impl MithrilTurboDownloader {
     /// Set up the download.  
     /// Called `probe` as this used to exist in an earlier trait which was removed.
-    async fn probe(
-        &self,
-        location: &str,
-    ) -> MithrilResult<()> {
+    async fn probe(&self, location: &str) -> MithrilResult<()> {
         debug!("Probe Snapshot location='{location}'.");
         let dl_config = self.inner.cfg.dl_config.clone().unwrap_or_default();
         let dl_processor =

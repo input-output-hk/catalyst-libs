@@ -25,11 +25,7 @@ impl Deref for Polynomial {
 impl Polynomial {
     /// Multiplication of a current polynomial on a degree-1 polynomial `a * x + b`.
     #[allow(clippy::indexing_slicing)]
-    fn pol_mul(
-        &mut self,
-        a: &Scalar,
-        b: &Scalar,
-    ) {
+    fn pol_mul(&mut self, a: &Scalar, b: &Scalar) {
         self.0.push(&self.0[self.0.len() - 1] * a);
         for i in (1..self.0.len() - 1).rev() {
             self.0[i] = &(&self.0[i] * b) + &(&self.0[i - 1] * a);
@@ -38,19 +34,14 @@ impl Polynomial {
     }
 
     /// Multiplication of a current polynomial on scalar.
-    fn scalar_mul(
-        &mut self,
-        a: &Scalar,
-    ) {
+    fn scalar_mul(&mut self, a: &Scalar) {
         self.0.iter_mut().for_each(|v| *v = v.mul(a));
     }
 }
 
 /// Generate the polynomial according to the step 7 of this [spec](https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/catalyst_voting/crypto/#prover)
 pub(crate) fn generate_polynomial(
-    i: usize,
-    j: usize,
-    randomness: &[BlindingRandomness],
+    i: usize, j: usize, randomness: &[BlindingRandomness],
 ) -> Polynomial {
     let mut pol = randomness.iter().map(|r| &r.betta).enumerate().fold(
         // `0 * x + 1`
@@ -78,9 +69,7 @@ pub(crate) fn generate_polynomial(
 
 /// Calculate the polynomial value
 pub(crate) fn calculate_polynomial_val(
-    j: usize,
-    x: &Scalar,
-    randomness: &[ResponseRandomness],
+    j: usize, x: &Scalar, randomness: &[ResponseRandomness],
 ) -> Scalar {
     let val = randomness
         .iter()

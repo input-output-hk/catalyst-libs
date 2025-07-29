@@ -26,13 +26,9 @@ pub(crate) enum RefRule {
 impl RefRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
-        &self,
-        doc: &CatalystSignedDocument,
-        provider: &Provider,
+        &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Specified {
             exp_ref_type,
             optional,
@@ -67,10 +63,7 @@ impl RefRule {
 
 /// A generic implementation of the referenced document validation.
 pub(crate) fn referenced_doc_check(
-    ref_doc: &CatalystSignedDocument,
-    exp_ref_type: Uuid,
-    field_name: &str,
-    report: &ProblemReport,
+    ref_doc: &CatalystSignedDocument, exp_ref_type: Uuid, field_name: &str, report: &ProblemReport,
 ) -> bool {
     let Ok(ref_doc_type) = ref_doc.doc_type() else {
         report.missing_field("type", "Referenced document must have type field");

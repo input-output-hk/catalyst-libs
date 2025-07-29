@@ -41,10 +41,7 @@ where
     PropIdT: for<'a> Cbor<'a>,
     VoterDataT: for<'a> Cbor<'a>,
 {
-    fn decode(
-        d: &mut Decoder<'_>,
-        (): &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(GENERALIZED_TX_LEN) = d.array()? else {
             return Err(minicbor::decode::Error::message(format!(
                 "must be a defined sized array with {GENERALIZED_TX_LEN} entries"
@@ -84,9 +81,7 @@ where
     VoterDataT: for<'a> Cbor<'a>,
 {
     fn encode<W: minicbor::encode::Write>(
-        &self,
-        e: &mut Encoder<W>,
-        (): &mut (),
+        &self, e: &mut Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(GENERALIZED_TX_LEN)?;
         self.tx_body.encode(e, &mut ())?;
@@ -209,9 +204,7 @@ mod tests {
 
     #[proptest]
     fn generalized_tx_with_empty_votes_from_bytes_to_bytes_test(
-        vote_type: Vec<u8>,
-        event: Vec<(PropEventKey, u64)>,
-        voter_data: Vec<u8>,
+        vote_type: Vec<u8>, event: Vec<(PropEventKey, u64)>, voter_data: Vec<u8>,
     ) {
         let event: Vec<_> = event
             .into_iter()
@@ -240,9 +233,7 @@ mod tests {
 
     #[proptest]
     fn generalized_tx_with_empty_choices_from_bytes_to_bytes_test(
-        vote_type: Vec<u8>,
-        votes: Vec<PropVote>,
-        event: Vec<(PropEventKey, u64)>,
+        vote_type: Vec<u8>, votes: Vec<PropVote>, event: Vec<(PropEventKey, u64)>,
         voter_data: Vec<u8>,
     ) {
         let event: Vec<_> = event
@@ -281,9 +272,7 @@ mod tests {
 
     #[proptest]
     fn generalized_tx_with_wrong_signature_from_bytes_to_bytes_test(
-        vote_type: Vec<u8>,
-        votes: Vec<PropVote>,
-        event: Vec<(PropEventKey, u64)>,
+        vote_type: Vec<u8>, votes: Vec<PropVote>, event: Vec<(PropEventKey, u64)>,
         voter_data: Vec<u8>,
     ) {
         let event: Vec<_> = event

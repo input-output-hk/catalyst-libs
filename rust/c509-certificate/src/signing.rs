@@ -33,18 +33,12 @@ struct FileError {
 #[allow(dead_code)]
 impl FileError {
     /// Create a new `FileError` instance from a string location.
-    fn from_string(
-        location: String,
-        msg: Option<anyhow::Error>,
-    ) -> Self {
+    fn from_string(location: String, msg: Option<anyhow::Error>) -> Self {
         Self { location, msg }
     }
 
     /// Create a new `FileError` instance from a path location.
-    fn from_path<P: AsRef<Path>>(
-        path: P,
-        msg: Option<anyhow::Error>,
-    ) -> Self {
+    fn from_path<P: AsRef<Path>>(path: P, msg: Option<anyhow::Error>) -> Self {
         Self {
             location: path.as_ref().display().to_string(),
             msg,
@@ -53,10 +47,7 @@ impl FileError {
 }
 
 impl Display for FileError {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let msg = format!("Cannot open or read file at {0}", self.location);
         let err = self
             .msg
@@ -87,10 +78,7 @@ impl PrivateKey {
     /// Sign the message with the current private key.
     /// Returns the signature bytes.
     #[must_use]
-    pub fn sign(
-        &self,
-        msg: &[u8],
-    ) -> Vec<u8> {
+    pub fn sign(&self, msg: &[u8]) -> Vec<u8> {
         self.0.sign(msg).to_vec()
     }
 }
@@ -140,11 +128,7 @@ impl PublicKey {
     ///
     /// # Errors
     /// Returns an error if the signature is invalid.
-    pub fn verify(
-        &self,
-        msg: &[u8],
-        signature_bytes: &[u8],
-    ) -> anyhow::Result<()> {
+    pub fn verify(&self, msg: &[u8], signature_bytes: &[u8]) -> anyhow::Result<()> {
         let signature_bytes = signature_bytes.try_into().map_err(|_| {
             anyhow::anyhow!(
                 "Invalid signature bytes size: expected {}, provided {}.",

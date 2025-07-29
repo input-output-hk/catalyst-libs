@@ -19,9 +19,7 @@ pub struct CDDLTestParser;
 
 /// # Panics
 pub(crate) fn check_tests_rule(
-    rule_type: Rule,
-    passes: &[impl AsRef<str>],
-    fails: &[impl AsRef<str>],
+    rule_type: Rule, passes: &[impl AsRef<str>], fails: &[impl AsRef<str>],
 ) {
     for test in passes {
         let parse = CDDLTestParser::parse(rule_type, test.as_ref());

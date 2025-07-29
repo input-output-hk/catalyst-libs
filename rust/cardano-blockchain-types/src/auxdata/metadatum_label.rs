@@ -24,8 +24,7 @@ impl MetadatumLabel {
 
 impl Decode<'_, ()> for MetadatumLabel {
     fn decode(
-        d: &mut minicbor::Decoder<'_>,
-        _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let label = match d.u64() {
             Ok(key) => key,

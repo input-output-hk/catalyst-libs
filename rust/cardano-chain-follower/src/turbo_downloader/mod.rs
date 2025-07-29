@@ -77,11 +77,7 @@ impl BalancingResolver {
     }
 
     /// Resolve the given URL with the configured resolver.
-    fn resolve(
-        &self,
-        url: &str,
-        worker: usize,
-    ) -> std::io::Result<Vec<SocketAddr>> {
+    fn resolve(&self, url: &str, worker: usize) -> std::io::Result<Vec<SocketAddr>> {
         // debug!("Resolving: {url} for {worker}");
         let addresses = if let Some(addresses) = self.cache.get(url) {
             addresses
@@ -159,59 +155,41 @@ impl DlConfig {
 
     /// Change the number of workers
     #[must_use]
-    pub fn with_workers(
-        mut self,
-        workers: usize,
-    ) -> Self {
+    pub fn with_workers(mut self, workers: usize) -> Self {
         self.workers = workers;
         self
     }
 
     /// Change the chunk size
     #[must_use]
-    pub fn with_chunk_size(
-        mut self,
-        chunk_size: usize,
-    ) -> Self {
+    pub fn with_chunk_size(mut self, chunk_size: usize) -> Self {
         self.chunk_size = chunk_size;
         self
     }
 
     /// Change the number of chunks queued ahead to workers
     #[must_use]
-    pub fn with_queue_ahead(
-        mut self,
-        queue_ahead: usize,
-    ) -> Self {
+    pub fn with_queue_ahead(mut self, queue_ahead: usize) -> Self {
         self.queue_ahead = queue_ahead;
         self
     }
 
     /// Change the connection timeout
     #[must_use]
-    pub fn with_connection_timeout(
-        mut self,
-        connection_timeout: Duration,
-    ) -> Self {
+    pub fn with_connection_timeout(mut self, connection_timeout: Duration) -> Self {
         self.connection_timeout = Some(connection_timeout);
         self
     }
 
     /// Change the data read timeout
     #[must_use]
-    pub fn with_data_read_timeout(
-        mut self,
-        data_read_timeout: Duration,
-    ) -> Self {
+    pub fn with_data_read_timeout(mut self, data_read_timeout: Duration) -> Self {
         self.data_read_timeout = Some(data_read_timeout);
         self
     }
 
     /// Resolve DNS addresses using Hickory Resolver
-    fn resolve(
-        url: &str,
-        worker: usize,
-    ) -> std::io::Result<Vec<SocketAddr>> {
+    fn resolve(url: &str, worker: usize) -> std::io::Result<Vec<SocketAddr>> {
         let Some(resolver) = RESOLVER.get() else {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::Other,
@@ -227,10 +205,7 @@ impl DlConfig {
     /// Because we need multiple clients to prevent all traffic being forced onto a single
     /// connection when HTTP2 is used, the client can NOT be supplied by the user.
     /// Instead we create a new one here based on their configuration.
-    pub(crate) fn make_http_agent(
-        &self,
-        worker: usize,
-    ) -> ureq::Agent {
+    pub(crate) fn make_http_agent(&self, worker: usize) -> ureq::Agent {
         let mut agent = ureq::AgentBuilder::new();
 
         if let Some(timeout) = self.connection_timeout {
@@ -331,18 +306,12 @@ impl ParallelDownloadProcessorInner {
     }
 
     /// Get start offset of a chunk.
-    fn chunk_start(
-        &self,
-        chunk: usize,
-    ) -> usize {
+    fn chunk_start(&self, chunk: usize) -> usize {
         self.cfg.chunk_size.saturating_mul(chunk)
     }
 
     /// Get inclusive end offset of a chunk.
-    fn chunk_end(
-        &self,
-        chunk: usize,
-    ) -> usize {
+    fn chunk_end(&self, chunk: usize) -> usize {
         let start = self.chunk_start(chunk);
         if start.saturating_add(self.cfg.chunk_size) >= self.file_size {
             self.file_size.saturating_sub(1)
@@ -352,11 +321,7 @@ impl ParallelDownloadProcessorInner {
     }
 
     /// Sends a GET request to download a chunk of the file at the specified range
-    fn get_range(
-        &self,
-        agent: &ureq::Agent,
-        chunk: usize,
-    ) -> Result<Arc<Vec<u8>>> {
+    fn get_range(&self, agent: &ureq::Agent, chunk: usize) -> Result<Arc<Vec<u8>>> {
         let range_start = self.chunk_start(chunk);
         let range_end_inclusive = self.chunk_end(chunk);
         let range_header = format!("bytes={range_start}-{range_end_inclusive}");
@@ -395,10 +360,7 @@ impl ParallelDownloadProcessorInner {
     /// Queue Chunk to processor.
     ///
     /// Reorders chunks and sends to the consumer.
-    fn reorder_queue(
-        &self,
-        chunk: DlChunk,
-    ) -> Result<()> {
+    fn reorder_queue(&self, chunk: DlChunk) -> Result<()> {
         self.reorder_queue.insert(chunk.chunk_num, chunk);
         self.new_chunk_queue_tx.send(Some(()))?;
         Ok(())
@@ -417,11 +379,7 @@ impl ParallelDownloadProcessor {
     ///
     /// Can Fail IF there is no HTTP client provided or the URL does not support getting
     /// the content length.
-    pub(crate) async fn new(
-        url: &str,
-        mut cfg: DlConfig,
-        chain: Network,
-    ) -> Result<Self> {
+    pub(crate) async fn new(url: &str, mut cfg: DlConfig, chain: Network) -> Result<Self> {
         if cfg.chunk_size < MIN_CHUNK_SIZE {
             bail!(
                 "Download chunk size must be at least {} bytes",
@@ -470,10 +428,7 @@ impl ParallelDownloadProcessor {
 
     /// Starts the worker tasks, they will not start doing any work until `download` is
     /// called, which happens immediately after they are started.
-    fn start_workers(
-        &self,
-        chain: Network,
-    ) -> Result<()> {
+    fn start_workers(&self, chain: Network) -> Result<()> {
         for worker in 0..self.0.cfg.workers {
             // The channel is unbounded, because work distribution is controlled to be at most
             // `work_queue` deep per worker. And we don't want anything unexpected to
@@ -497,9 +452,7 @@ impl ParallelDownloadProcessor {
     /// Call the work queue receiver.
     /// This is a helper function to pause and resume the stats thread.
     fn call_work_queue_receiver(
-        chain: Network,
-        worker_name: &str,
-        work_queue: &Receiver<usize>,
+        chain: Network, worker_name: &str, work_queue: &Receiver<usize>,
     ) -> Result<usize, RecvError> {
         stats::pause_thread(chain, worker_name);
         let recv = work_queue.recv();
@@ -510,11 +463,8 @@ impl ParallelDownloadProcessor {
     /// The worker task - It is running in parallel and downloads chunks of the file as
     /// requested.
     fn worker(
-        params: &Arc<ParallelDownloadProcessorInner>,
-        worker_id: usize,
-        worker_name: &str,
-        work_queue: &crossbeam_channel::Receiver<DlWorkOrder>,
-        chain: Network,
+        params: &Arc<ParallelDownloadProcessorInner>, worker_id: usize, worker_name: &str,
+        work_queue: &crossbeam_channel::Receiver<DlWorkOrder>, chain: Network,
     ) {
         debug!("Worker {worker_id} started");
 
@@ -586,11 +536,7 @@ impl ParallelDownloadProcessor {
     }
 
     /// Send a work order to a worker.
-    fn send_work_order(
-        &self,
-        this_worker: usize,
-        order: DlWorkOrder,
-    ) -> Result<usize> {
+    fn send_work_order(&self, this_worker: usize, order: DlWorkOrder) -> Result<usize> {
         let next_worker = this_worker
             .checked_add(1)
             .and_then(|w| w.checked_rem(self.0.cfg.workers))
@@ -643,10 +589,7 @@ impl ParallelDownloadProcessor {
 
     /// Actual Read function, done like this so we can have a single cleanup on error or
     /// EOF.
-    fn inner_read(
-        &mut self,
-        buf: &mut [u8],
-    ) -> std::io::Result<usize> {
+    fn inner_read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         // There should only ever be one reader, the purpose of this mutex is to give us
         // mutability it should never actually block.
         let mut left_over_buffer = self
@@ -767,10 +710,7 @@ impl Drop for ParallelDownloadProcessor {
 }
 
 impl Read for ParallelDownloadProcessor {
-    fn read(
-        &mut self,
-        buf: &mut [u8],
-    ) -> std::io::Result<usize> {
+    fn read(&mut self, buf: &mut [u8]) -> std::io::Result<usize> {
         let result = self.inner_read(buf);
         match result {
             Ok(0) | Err(_) => {

@@ -37,13 +37,9 @@ pub(crate) enum ContentRule {
 impl ContentRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
-        &self,
-        doc: &CatalystSignedDocument,
-        provider: &Provider,
+        &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Templated { exp_template_type } = self {
             let Some(template_ref) = doc.doc_meta().template() else {
                 doc.report()
@@ -114,8 +110,7 @@ impl ContentRule {
 /// Validate a provided `doc` against the `template` content's Json schema, assuming that
 /// the `doc` content is JSON.
 fn templated_json_schema_check(
-    doc: &CatalystSignedDocument,
-    template_doc: &CatalystSignedDocument,
+    doc: &CatalystSignedDocument, template_doc: &CatalystSignedDocument,
 ) -> bool {
     let Ok(template_content) = template_doc.doc_content().decoded_bytes() else {
         doc.report().missing_field(
@@ -146,10 +141,7 @@ fn templated_json_schema_check(
 }
 
 /// Validating the document's content against the provided schema
-fn content_schema_check(
-    doc: &CatalystSignedDocument,
-    schema: &ContentSchema,
-) -> bool {
+fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) -> bool {
     let Ok(doc_content) = doc.doc_content().decoded_bytes() else {
         doc.report()
             .missing_field("payload", "Document must have a content");

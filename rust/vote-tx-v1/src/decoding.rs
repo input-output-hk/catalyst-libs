@@ -32,10 +32,7 @@ impl Tx {
     /// Write the bytes of the `Tx` body to provided `buf`.
     #[allow(clippy::cast_possible_truncation)]
     pub(super) fn tx_body_decode(
-        vote_plan_id: &[u8; 32],
-        proposal_index: u8,
-        vote: &VotePayload,
-        public_key: &PublicKey,
+        vote_plan_id: &[u8; 32], proposal_index: u8, vote: &VotePayload, public_key: &PublicKey,
         buf: &mut Vec<u8>,
     ) {
         buf.extend_from_slice(vote_plan_id);
@@ -230,9 +227,7 @@ mod tests {
 
     #[proptest]
     fn tx_public_to_bytes_from_bytes_test(
-        vote_plan_id: [u8; 32],
-        proposal_index: u8,
-        #[strategy(1u8..5)] voting_options: u8,
+        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
         #[strategy(0..#voting_options)] choice: u8,
     ) {
         let mut rng = OsRng;
@@ -305,9 +300,7 @@ mod tests {
 
     #[proptest]
     fn tx_private_to_bytes_from_bytes_test(
-        vote_plan_id: [u8; 32],
-        proposal_index: u8,
-        #[strategy(1u8..5)] voting_options: u8,
+        vote_plan_id: [u8; 32], proposal_index: u8, #[strategy(1u8..5)] voting_options: u8,
         #[strategy(0..#voting_options)] choice: u8,
     ) {
         let mut rng = OsRng;

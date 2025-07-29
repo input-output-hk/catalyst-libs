@@ -52,12 +52,8 @@ impl VoterProofCommitment {
 ///     `randomness` must be equal with each other.
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_voter_proof<R: CryptoRngCore>(
-    vote: &Vote,
-    encrypted_vote: EncryptedVote,
-    randomness: EncryptionRandomness,
-    public_key: &ElectionPublicKey,
-    commitment: &VoterProofCommitment,
-    rng: &mut R,
+    vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
+    public_key: &ElectionPublicKey, commitment: &VoterProofCommitment, rng: &mut R,
 ) -> anyhow::Result<VoterProof> {
     ensure!(
         vote.voting_options == encrypted_vote.0.len() && vote.voting_options == randomness.0.len(),
@@ -87,11 +83,8 @@ pub fn generate_voter_proof<R: CryptoRngCore>(
 ///     `randomness` must be equal with each other.
 #[allow(clippy::module_name_repetitions)]
 pub fn generate_voter_proof_with_default_rng(
-    vote: &Vote,
-    encrypted_vote: EncryptedVote,
-    randomness: EncryptionRandomness,
-    public_key: &ElectionPublicKey,
-    commitment: &VoterProofCommitment,
+    vote: &Vote, encrypted_vote: EncryptedVote, randomness: EncryptionRandomness,
+    public_key: &ElectionPublicKey, commitment: &VoterProofCommitment,
 ) -> anyhow::Result<VoterProof> {
     generate_voter_proof(
         vote,
@@ -108,10 +101,8 @@ pub fn generate_voter_proof_with_default_rng(
 #[must_use]
 #[allow(clippy::module_name_repetitions)]
 pub fn verify_voter_proof(
-    encrypted_vote: EncryptedVote,
-    public_key: &ElectionPublicKey,
-    commitment: &VoterProofCommitment,
-    proof: &VoterProof,
+    encrypted_vote: EncryptedVote, public_key: &ElectionPublicKey,
+    commitment: &VoterProofCommitment, proof: &VoterProof,
 ) -> bool {
     verify_unit_vector_proof(&proof.0, encrypted_vote.0, &public_key.0, &commitment.0)
 }

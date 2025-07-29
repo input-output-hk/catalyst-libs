@@ -67,11 +67,7 @@ impl ChainFollower {
     ///
     /// To ONLY follow from TIP, set BOTH start and end to TIP.
     #[must_use]
-    pub async fn new(
-        chain: Network,
-        start: Point,
-        end: Point,
-    ) -> Self {
+    pub async fn new(chain: Network, start: Point, end: Point) -> Self {
         let rx = get_chain_update_rx_queue(chain).await;
 
         ChainFollower {
@@ -241,10 +237,7 @@ impl ChainFollower {
     }
 
     /// Update the current Point, and return `false` if this fails.
-    fn update_current(
-        &mut self,
-        update: &ChainUpdate,
-    ) {
+    fn update_current(&mut self, update: &ChainUpdate) {
         if update.kind == Kind::ImmutableBlockRollForward {
             // The ImmutableBlockRollForward includes the Mithril TIP Block.
             // Update the mithril_tip state to the point of it.
@@ -336,10 +329,7 @@ impl ChainFollower {
     ///
     /// This is a convenience function which just used `ChainFollower` to fetch a single
     /// block.
-    pub async fn get_block(
-        chain: Network,
-        point: Point,
-    ) -> Option<ChainUpdate> {
+    pub async fn get_block(chain: Network, point: Point) -> Option<ChainUpdate> {
         // Get the block from the chain.
         // This function suppose to run only once, so the end point
         // can be set to `TIP_POINT`
@@ -373,10 +363,7 @@ impl ChainFollower {
     ///
     /// `TxId` - The ID of the transaction that was queued.
     #[allow(clippy::unused_async)]
-    pub async fn post_txn(
-        chain: Network,
-        txn: TxBody,
-    ) -> TxId {
+    pub async fn post_txn(chain: Network, txn: TxBody) -> TxId {
         #[allow(clippy::no_effect_underscore_binding)]
         let _unused = chain;
         #[allow(clippy::no_effect_underscore_binding)]
@@ -391,10 +378,7 @@ impl ChainFollower {
     /// After which, it should be on the blockchain, and its the applications job to track
     /// if a transaction made it on-chain or not.
     #[allow(clippy::unused_async)]
-    pub async fn txn_sent(
-        chain: Network,
-        id: TxId,
-    ) -> bool {
+    pub async fn txn_sent(chain: Network, id: TxId) -> bool {
         #[allow(clippy::no_effect_underscore_binding)]
         let _unused = chain;
         #[allow(clippy::no_effect_underscore_binding)]

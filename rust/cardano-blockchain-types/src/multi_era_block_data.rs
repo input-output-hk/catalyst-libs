@@ -94,10 +94,7 @@ impl MultiEraBlock {
     ///
     /// If the given bytes cannot be decoded as a multi-era block, an error is returned.
     pub fn new(
-        network: Network,
-        raw_data: Vec<u8>,
-        previous: &Point,
-        fork: Fork,
+        network: Network, raw_data: Vec<u8>, previous: &Point, fork: Fork,
     ) -> anyhow::Result<Self> {
         let builder = SelfReferencedMultiEraBlockTryBuilder {
             raw_data,
@@ -155,10 +152,7 @@ impl MultiEraBlock {
     }
 
     /// Remake the block on a new fork.
-    pub fn set_fork(
-        &mut self,
-        fork: Fork,
-    ) {
+    pub fn set_fork(&mut self, fork: Fork) {
         self.fork = fork;
     }
 
@@ -256,9 +250,7 @@ impl MultiEraBlock {
     /// - Or None if the label requested isn't present.
     #[must_use]
     pub fn txn_metadata(
-        &self,
-        txn_idx: TxnIndex,
-        label: MetadatumLabel,
+        &self, txn_idx: TxnIndex, label: MetadatumLabel,
     ) -> Option<&MetadatumValue> {
         let txn = self.inner.aux_data.get(txn_idx)?;
         txn.metadata(label)
@@ -271,11 +263,7 @@ impl MultiEraBlock {
 
     /// If the witness exists for a given transaction then return its public key.
     #[must_use]
-    pub fn witness_for_tx(
-        &self,
-        vkey_hash: &VKeyHash,
-        tx_num: TxnIndex,
-    ) -> Option<VerifyingKey> {
+    pub fn witness_for_tx(&self, vkey_hash: &VKeyHash, tx_num: TxnIndex) -> Option<VerifyingKey> {
         if let Some(witnesses) = self.witness_map() {
             if witnesses.check_witness_in_tx(vkey_hash, tx_num) {
                 return witnesses.get_witness_vkey(vkey_hash);
@@ -313,10 +301,7 @@ impl MultiEraBlock {
 }
 
 impl Display for MultiEraBlock {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let fork = self.fork;
         let block_data = &self.inner.data;
         let block = block_data.borrow_block();
@@ -353,10 +338,7 @@ impl Display for MultiEraBlock {
 impl PartialEq for MultiEraBlock {
     /// Compare two `MultiEraBlock` by their current points.
     /// Ignores the Hash, we only check for equality of the Slot#.
-    fn eq(
-        &self,
-        other: &Self,
-    ) -> bool {
+    fn eq(&self, other: &Self) -> bool {
         self.partial_cmp(other) == Some(Ordering::Equal)
     }
 }
@@ -366,10 +348,7 @@ impl Eq for MultiEraBlock {}
 impl PartialOrd for MultiEraBlock {
     /// Compare two `MultiEraBlock` by their points.
     /// Only checks the Slot#.
-    fn partial_cmp(
-        &self,
-        other: &Self,
-    ) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -377,10 +356,7 @@ impl PartialOrd for MultiEraBlock {
 impl Ord for MultiEraBlock {
     /// Compare two `LiveBlocks` by their points.
     /// Only checks the Slot#.
-    fn cmp(
-        &self,
-        other: &Self,
-    ) -> Ordering {
+    fn cmp(&self, other: &Self) -> Ordering {
         self.inner.point.cmp(&other.inner.point)
     }
 }
@@ -388,10 +364,7 @@ impl Ord for MultiEraBlock {
 // Allows us to compare a MultiEraBlock against a Point directly (Just the slot#).
 impl PartialEq<Point> for MultiEraBlock {
     // Equality ONLY checks the Slot#
-    fn eq(
-        &self,
-        other: &Point,
-    ) -> bool {
+    fn eq(&self, other: &Point) -> bool {
         Some(Ordering::Equal) == self.partial_cmp(other)
     }
 }
@@ -399,10 +372,7 @@ impl PartialEq<Point> for MultiEraBlock {
 impl PartialOrd<Point> for MultiEraBlock {
     /// Compare a `MultiEraBlock` to a `Point` by their points.
     /// Only checks the Slot#.
-    fn partial_cmp(
-        &self,
-        other: &Point,
-    ) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Point) -> Option<Ordering> {
         Some(self.inner.point.cmp(other))
     }
 }

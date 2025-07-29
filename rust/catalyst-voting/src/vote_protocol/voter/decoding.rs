@@ -21,10 +21,7 @@ impl EncryptedVote {
     ///
     /// # Errors
     ///   - Cannot decode ciphertext.
-    pub fn from_bytes<R: Read>(
-        reader: &mut R,
-        size: usize,
-    ) -> anyhow::Result<Self> {
+    pub fn from_bytes<R: Read>(reader: &mut R, size: usize) -> anyhow::Result<Self> {
         let ciphertexts = (0..size)
             .map(|i| {
                 let bytes = read_array(reader)?;
@@ -69,10 +66,7 @@ impl VoterProof {
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes<R: Read>(
-        reader: &mut R,
-        len: usize,
-    ) -> anyhow::Result<Self> {
+    pub fn from_bytes<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
         UnitVectorProof::from_bytes(reader, len).map(Self)
     }
 
@@ -93,8 +87,7 @@ mod tests {
 
     #[proptest]
     fn encrypted_vote_to_bytes_from_bytes_test(
-        #[strategy(0..5usize)] _size: usize,
-        #[any(#_size)] vote1: EncryptedVote,
+        #[strategy(0..5usize)] _size: usize, #[any(#_size)] vote1: EncryptedVote,
     ) {
         let bytes = vote1.to_bytes();
         assert_eq!(bytes.len(), vote1.bytes_size());

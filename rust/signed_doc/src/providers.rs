@@ -11,8 +11,7 @@ use crate::{CatalystSignedDocument, DocumentRef};
 pub trait VerifyingKeyProvider {
     /// Try to get `VerifyingKey`
     fn try_get_key(
-        &self,
-        kid: &CatalystId,
+        &self, kid: &CatalystId,
     ) -> impl Future<Output = anyhow::Result<Option<VerifyingKey>>>;
 }
 
@@ -20,8 +19,7 @@ pub trait VerifyingKeyProvider {
 pub trait CatalystSignedDocumentProvider: Send + Sync {
     /// Try to get `CatalystSignedDocument`
     fn try_get_doc(
-        &self,
-        doc_ref: &DocumentRef,
+        &self, doc_ref: &DocumentRef,
     ) -> impl Future<Output = anyhow::Result<Option<CatalystSignedDocument>>> + Send;
 
     /// Returns a future threshold value, which is used in the validation of the `ver`
@@ -56,10 +54,7 @@ pub mod tests {
         ///
         /// # Errors
         ///  - Missing document id
-        pub fn add_document(
-            &mut self,
-            doc: CatalystSignedDocument,
-        ) -> anyhow::Result<()> {
+        pub fn add_document(&mut self, doc: CatalystSignedDocument) -> anyhow::Result<()> {
             self.0.insert(doc.doc_id()?.uuid(), doc);
             Ok(())
         }
@@ -67,8 +62,7 @@ pub mod tests {
 
     impl CatalystSignedDocumentProvider for TestCatalystSignedDocumentProvider {
         async fn try_get_doc(
-            &self,
-            doc_ref: &DocumentRef,
+            &self, doc_ref: &DocumentRef,
         ) -> anyhow::Result<Option<CatalystSignedDocument>> {
             Ok(self.0.get(&doc_ref.id.uuid()).cloned())
         }
@@ -88,20 +82,13 @@ pub mod tests {
 
     impl TestVerifyingKeyProvider {
         /// Inserts public key into the `TestVerifyingKeyProvider`
-        pub fn add_pk(
-            &mut self,
-            kid: CatalystId,
-            pk: VerifyingKey,
-        ) {
+        pub fn add_pk(&mut self, kid: CatalystId, pk: VerifyingKey) {
             self.0.insert(kid, pk);
         }
     }
 
     impl VerifyingKeyProvider for TestVerifyingKeyProvider {
-        async fn try_get_key(
-            &self,
-            kid: &CatalystId,
-        ) -> anyhow::Result<Option<VerifyingKey>> {
+        async fn try_get_key(&self, kid: &CatalystId) -> anyhow::Result<Option<VerifyingKey>> {
             Ok(self.0.get(kid).copied())
         }
     }

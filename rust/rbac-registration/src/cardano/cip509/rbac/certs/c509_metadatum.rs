@@ -15,10 +15,7 @@ pub struct C509CertInMetadatumReference {
 }
 
 impl Decode<'_, ()> for C509CertInMetadatumReference {
-    fn decode(
-        d: &mut Decoder,
-        ctx: &mut (),
-    ) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, ctx: &mut ()) -> Result<Self, decode::Error> {
         let txn_output_field: u8 =
             decode_helper(d, "txn output field in C509CertInMetadatumReference", ctx)?;
         let txn_output_index: u64 =

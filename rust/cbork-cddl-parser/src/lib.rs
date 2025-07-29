@@ -20,10 +20,7 @@ pub enum Extension {
 /// This function may return an error in the following cases:
 ///
 /// - If there is an issue with parsing the CDDL input.
-pub fn validate_cddl(
-    input: &mut String,
-    extension: &Extension,
-) -> anyhow::Result<()> {
+pub fn validate_cddl(input: &mut String, extension: &Extension) -> anyhow::Result<()> {
     let ast = parser::parse_cddl(input, extension)?;
     let _ast = preprocessor::process_ast(ast)?;
     Ok(())

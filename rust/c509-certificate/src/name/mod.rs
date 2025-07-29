@@ -57,19 +57,14 @@ impl Name {
 
 impl Encode<()> for Name {
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.0.encode(e, ctx)
     }
 }
 
 impl Decode<'_, ()> for Name {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         NameValue::decode(d, ctx).map(Name::new)
     }
 }
@@ -91,9 +86,7 @@ pub enum NameValue {
 
 impl Encode<()> for NameValue {
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             NameValue::Attribute(attrs) => {
@@ -144,10 +137,7 @@ impl Encode<()> for NameValue {
 }
 
 impl Decode<'_, ()> for NameValue {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         match decode_datatype(d, "Name")? {
             minicbor::data::Type::Array => {
                 let len = decode_array_len(d, "Attributes")?;
@@ -176,8 +166,7 @@ impl Decode<'_, ()> for NameValue {
 
 /// Encode common name value.
 fn encode_cn_value<W: Write>(
-    e: &mut Encoder<W>,
-    cn_value: &AttributeValue,
+    e: &mut Encoder<W>, cn_value: &AttributeValue,
 ) -> Result<(), minicbor::encode::Error<W::Error>> {
     let hex_regex = Regex::new(r"^[0-9a-f]+$").map_err(minicbor::encode::Error::message)?;
     let eui64_regex =

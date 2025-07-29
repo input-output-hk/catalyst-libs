@@ -28,10 +28,7 @@ pub struct Payment {
 impl Payment {
     /// Create an instance of payment history.
     pub(crate) fn new(
-        point_tx_idx: PointTxnIdx,
-        tx_hash: Hash<32>,
-        output_index: u16,
-        value: Value,
+        point_tx_idx: PointTxnIdx, tx_hash: Hash<32>, output_index: u16, value: Value,
     ) -> Self {
         Payment {
             point_tx_idx,

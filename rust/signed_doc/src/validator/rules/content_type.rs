@@ -12,10 +12,7 @@ pub(crate) struct ContentTypeRule {
 impl ContentTypeRule {
     /// Field validation rule
     #[allow(clippy::unused_async)]
-    pub(crate) async fn check(
-        &self,
-        doc: &CatalystSignedDocument,
-    ) -> anyhow::Result<bool> {
+    pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
         let Ok(content_type) = doc.doc_content_type() else {
             doc.report().missing_field(
                 "content-type",

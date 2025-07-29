@@ -16,7 +16,7 @@ impl Slot {
     pub fn from_saturating<
         T: Copy + TryInto<u64> + Sub<Output = T> + PartialOrd<T> + num_traits::identities::Zero,
     >(
-        value: T
+        value: T,
     ) -> Self {
         let value: u64 = from_saturating(value);
         Self(value)
@@ -36,10 +36,7 @@ impl From<Slot> for u64 {
 }
 
 impl MulAssign<u64> for Slot {
-    fn mul_assign(
-        &mut self,
-        rhs: u64,
-    ) {
+    fn mul_assign(&mut self, rhs: u64) {
         self.0 = self.0.saturating_mul(rhs);
     }
 }
@@ -47,10 +44,7 @@ impl MulAssign<u64> for Slot {
 impl Sub for Slot {
     type Output = Slot;
 
-    fn sub(
-        self,
-        rhs: Slot,
-    ) -> Self::Output {
+    fn sub(self, rhs: Slot) -> Self::Output {
         Slot(self.0.saturating_sub(rhs.0))
     }
 }

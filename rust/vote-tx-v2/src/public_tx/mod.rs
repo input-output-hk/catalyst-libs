@@ -36,10 +36,7 @@ where VoteDataT: for<'a> Cbor<'a>
 impl<VoteDataT> Decode<'_, ()> for PublicTx<VoteDataT>
 where VoteDataT: for<'a> Cbor<'a>
 {
-    fn decode(
-        d: &mut minicbor::Decoder<'_>,
-        (): &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let gen_tx = GeneralizedTx::decode(d, &mut ())?;
         Ok(Self(gen_tx))
     }
@@ -49,9 +46,7 @@ impl<VoteDataT> Encode<()> for PublicTx<VoteDataT>
 where VoteDataT: for<'a> Cbor<'a>
 {
     fn encode<W: minicbor::encode::Write>(
-        &self,
-        e: &mut minicbor::Encoder<W>,
-        ctx: &mut (),
+        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.0.encode(e, ctx)
     }
@@ -67,10 +62,8 @@ mod tests {
 
     #[proptest]
     fn public_tx_from_bytes_to_bytes_test(
-        vote_type: Vec<u8>,
-        voter_data: Vec<u8>,
-        #[any(size_range(1..10_usize).lift())] choices: Vec<u64>,
-        prop_id: Vec<u8>,
+        vote_type: Vec<u8>, voter_data: Vec<u8>,
+        #[any(size_range(1..10_usize).lift())] choices: Vec<u64>, prop_id: Vec<u8>,
     ) {
         let gen_tx_builder = GeneralizedTxBuilder::<Choice, Proof, PropId, _>::new(
             Uuid(vote_type),

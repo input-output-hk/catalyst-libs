@@ -18,10 +18,7 @@ pub enum EventKey {
 }
 
 impl Decode<'_, ()> for EventMap {
-    fn decode(
-        d: &mut Decoder<'_>,
-        (): &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(len) = d.map()? else {
             return Err(minicbor::decode::Error::message(
                 "must be a defined sized map",
@@ -45,9 +42,7 @@ impl Decode<'_, ()> for EventMap {
 
 impl Encode<()> for EventMap {
     fn encode<W: minicbor::encode::Write>(
-        &self,
-        e: &mut Encoder<W>,
-        (): &mut (),
+        &self, e: &mut Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(self.0.len() as u64)?;
 
@@ -64,10 +59,7 @@ impl Encode<()> for EventMap {
 }
 
 impl Decode<'_, ()> for EventKey {
-    fn decode(
-        d: &mut Decoder<'_>,
-        (): &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let pos = d.position();
         // try to decode as int
         if let Ok(i) = d.int() {
@@ -83,9 +75,7 @@ impl Decode<'_, ()> for EventKey {
 
 impl Encode<()> for EventKey {
     fn encode<W: minicbor::encode::Write>(
-        &self,
-        e: &mut Encoder<W>,
-        (): &mut (),
+        &self, e: &mut Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             EventKey::Int(i) => e.int(*i)?,

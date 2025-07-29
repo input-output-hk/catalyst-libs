@@ -28,7 +28,7 @@ pub fn test_metadata() -> (UuidV7, UuidV4, serde_json::Value) {
 }
 
 pub fn create_dummy_key_pair(
-    role_index: RoleId
+    role_index: RoleId,
 ) -> anyhow::Result<(
     ed25519_dalek::SigningKey,
     ed25519_dalek::VerifyingKey,
@@ -45,7 +45,7 @@ pub fn create_dummy_key_pair(
 }
 
 pub fn create_dummy_doc(
-    doc_type_id: Uuid
+    doc_type_id: Uuid,
 ) -> anyhow::Result<(CatalystSignedDocument, UuidV7, UuidV7)> {
     let empty_json = serde_json::to_vec(&serde_json::json!({}))?;
 
@@ -72,9 +72,7 @@ pub fn create_signing_key() -> ed25519_dalek::SigningKey {
 }
 
 pub fn create_dummy_signed_doc(
-    metadata: serde_json::Value,
-    content: Vec<u8>,
-    with_role_index: RoleId,
+    metadata: serde_json::Value, content: Vec<u8>, with_role_index: RoleId,
 ) -> anyhow::Result<(
     CatalystSignedDocument,
     ed25519_dalek::VerifyingKey,

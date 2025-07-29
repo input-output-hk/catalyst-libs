@@ -30,11 +30,7 @@ pub struct ChainUpdate {
 impl ChainUpdate {
     /// Creates a new chain update.
     #[must_use]
-    pub fn new(
-        kind: Kind,
-        tip: bool,
-        data: MultiEraBlock,
-    ) -> Self {
+    pub fn new(kind: Kind, tip: bool, data: MultiEraBlock) -> Self {
         Self { kind, tip, data }
     }
 
@@ -52,10 +48,7 @@ impl ChainUpdate {
 }
 
 impl Display for ChainUpdate {
-    fn fmt(
-        &self,
-        f: &mut std::fmt::Formatter<'_>,
-    ) -> std::fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let block_type = self.kind.to_string();
         let mut tip: String = String::new();
         if self.tip {

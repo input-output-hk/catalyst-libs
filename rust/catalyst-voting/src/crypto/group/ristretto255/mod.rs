@@ -38,10 +38,7 @@ impl From<u64> for Scalar {
 }
 
 impl Hash for GroupElement {
-    fn hash<H: std::hash::Hasher>(
-        &self,
-        state: &mut H,
-    ) {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.compress().as_bytes().hash(state);
     }
 }
@@ -105,10 +102,7 @@ impl GroupElement {
 impl Mul<&GroupElement> for &Scalar {
     type Output = GroupElement;
 
-    fn mul(
-        self,
-        other: &GroupElement,
-    ) -> GroupElement {
+    fn mul(self, other: &GroupElement) -> GroupElement {
         other * self
     }
 }
@@ -116,10 +110,7 @@ impl Mul<&GroupElement> for &Scalar {
 impl Mul<&Scalar> for &GroupElement {
     type Output = GroupElement;
 
-    fn mul(
-        self,
-        other: &Scalar,
-    ) -> GroupElement {
+    fn mul(self, other: &Scalar) -> GroupElement {
         if self.0 == RISTRETTO_BASEPOINT_POINT {
             GroupElement(RISTRETTO_BASEPOINT_TABLE * &other.0)
         } else {
@@ -131,10 +122,7 @@ impl Mul<&Scalar> for &GroupElement {
 impl Mul<&Scalar> for &Scalar {
     type Output = Scalar;
 
-    fn mul(
-        self,
-        other: &Scalar,
-    ) -> Scalar {
+    fn mul(self, other: &Scalar) -> Scalar {
         Scalar(self.0 * other.0)
     }
 }
@@ -142,10 +130,7 @@ impl Mul<&Scalar> for &Scalar {
 impl Add<&GroupElement> for &GroupElement {
     type Output = GroupElement;
 
-    fn add(
-        self,
-        other: &GroupElement,
-    ) -> GroupElement {
+    fn add(self, other: &GroupElement) -> GroupElement {
         GroupElement(self.0 + other.0)
     }
 }
@@ -153,10 +138,7 @@ impl Add<&GroupElement> for &GroupElement {
 impl Add<&Scalar> for &Scalar {
     type Output = Scalar;
 
-    fn add(
-        self,
-        other: &Scalar,
-    ) -> Scalar {
+    fn add(self, other: &Scalar) -> Scalar {
         Scalar(self.0 + other.0)
     }
 }
@@ -164,10 +146,7 @@ impl Add<&Scalar> for &Scalar {
 impl Sub<&Scalar> for &Scalar {
     type Output = Scalar;
 
-    fn sub(
-        self,
-        other: &Scalar,
-    ) -> Scalar {
+    fn sub(self, other: &Scalar) -> Scalar {
         Scalar(self.0 - other.0)
     }
 }
@@ -175,10 +154,7 @@ impl Sub<&Scalar> for &Scalar {
 impl Sub<&GroupElement> for &GroupElement {
     type Output = GroupElement;
 
-    fn sub(
-        self,
-        other: &GroupElement,
-    ) -> GroupElement {
+    fn sub(self, other: &GroupElement) -> GroupElement {
         GroupElement(self.0 + (-other.0))
     }
 }
@@ -220,11 +196,7 @@ mod tests {
     use super::*;
 
     #[proptest]
-    fn scalar_arithmetic_tests(
-        e1: Scalar,
-        e2: Scalar,
-        e3: Scalar,
-    ) {
+    fn scalar_arithmetic_tests(e1: Scalar, e2: Scalar, e3: Scalar) {
         assert_eq!(&(&e1 + &e2) + &e3, &e1 + &(&e2 + &e3));
         assert_eq!(&e1 + &e2, &e2 + &e1);
         assert_eq!(&e1 + &Scalar::zero(), e1.clone());
@@ -236,10 +208,7 @@ mod tests {
     }
 
     #[proptest]
-    fn group_element_arithmetic_tests(
-        e1: Scalar,
-        e2: Scalar,
-    ) {
+    fn group_element_arithmetic_tests(e1: Scalar, e2: Scalar) {
         let ge = GroupElement::GENERATOR.mul(&e1);
         assert_eq!(&GroupElement::zero() + &ge, ge);
 

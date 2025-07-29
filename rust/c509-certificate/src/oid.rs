@@ -28,10 +28,7 @@ pub struct C509oidRegistered {
 
 impl C509oidRegistered {
     /// Create a new instance of `C509oidRegistered`.
-    pub(crate) fn new(
-        oid: Oid<'static>,
-        table: &'static IntegerToOidTable,
-    ) -> Self {
+    pub(crate) fn new(oid: Oid<'static>, table: &'static IntegerToOidTable) -> Self {
         Self {
             c509_oid: C509oid::new(oid),
             registration_table: table,
@@ -88,13 +85,8 @@ impl<'de> Deserialize<'de> for C509oid {
 }
 
 impl Serialize for C509oid {
-    fn serialize<S>(
-        &self,
-        serializer: S,
-    ) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where S: serde::Serializer {
         let helper = Helper {
             oid: self.0.to_string(),
         };
@@ -111,9 +103,7 @@ impl Encode<()> for C509oid {
     /// A vector of bytes containing the CBOR encoded OID.
     /// If the encoding fails, it will return an error.
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        _ctx: &mut (),
+        &self, e: &mut Encoder<W>, _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let oid_bytes = self.0.as_bytes();
         encode_bytes(e, "C509 OID", oid_bytes)
@@ -128,10 +118,7 @@ impl Decode<'_, ()> for C509oid {
     ///
     /// A C509oid instance.
     /// If the decoding fails, it will return an error.
-    fn decode(
-        d: &mut Decoder,
-        _ctx: &mut (),
-    ) -> Result<Self, decode::Error> {
+    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, decode::Error> {
         let oid_bytes = decode_bytes(d, "C509 OID")?;
         let oid = Oid::new(oid_bytes.into());
         Ok(C509oid::new(oid))

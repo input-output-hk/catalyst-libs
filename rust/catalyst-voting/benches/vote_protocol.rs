@@ -54,7 +54,7 @@ struct Choices(Vec<usize>);
 struct VotingPowers(Vec<u64>);
 
 fn rand_generate_vote_data(
-    voters_number: usize
+    voters_number: usize,
 ) -> (
     Choices,
     VotingPowers,

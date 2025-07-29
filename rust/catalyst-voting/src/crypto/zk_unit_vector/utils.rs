@@ -3,10 +3,7 @@
 /// Calculates the `bit_index`-th bit of the `val`.
 /// `val` is represented in little-endian format.
 #[inline]
-pub(crate) fn get_bit(
-    val: usize,
-    bit_index: usize,
-) -> bool {
+pub(crate) fn get_bit(val: usize, bit_index: usize) -> bool {
     ((val.to_le() >> bit_index) & 1) == 1
 }
 

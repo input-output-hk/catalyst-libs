@@ -36,10 +36,7 @@ where
 {
     /// Creates a new `GeneralizedTxBuilder` struct
     #[must_use]
-    pub fn new(
-        vote_type: Uuid,
-        voter_data: VoterData<VoterDataT>,
-    ) -> Self {
+    pub fn new(vote_type: Uuid, voter_data: VoterData<VoterDataT>) -> Self {
         let event = EventMap::default();
         let votes = Vec::default();
         let sign_builder = coset::CoseSignBuilder::new().protected(cose_protected_header());
@@ -55,14 +52,8 @@ where
     /// Adds an `EventMap` entry to the `event` field.
     ///
     /// # Errors
-    pub fn with_event<ValueT>(
-        mut self,
-        key: EventKey,
-        value: ValueT,
-    ) -> anyhow::Result<Self>
-    where
-        ValueT: for<'a> Cbor<'a> + Clone,
-    {
+    pub fn with_event<ValueT>(mut self, key: EventKey, value: ValueT) -> anyhow::Result<Self>
+    where ValueT: for<'a> Cbor<'a> + Clone {
         let value = value.to_bytes()?;
         self.event.0.push((key, value));
         Ok(self)
@@ -73,10 +64,7 @@ where
     /// # Errors
     ///   - `choices` array must has at least one entry-
     pub fn with_vote(
-        mut self,
-        choices: Vec<ChoiceT>,
-        proof: ProofT,
-        prop_id: PropIdT,
+        mut self, choices: Vec<ChoiceT>, proof: ProofT, prop_id: PropIdT,
     ) -> anyhow::Result<Self> {
         ensure!(
             !choices.is_empty(),

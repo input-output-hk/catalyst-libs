@@ -148,11 +148,7 @@ impl ProblemReport {
     }
 
     /// Add an entry to the report
-    fn add_entry(
-        &self,
-        kind: Kind,
-        context: &str,
-    ) {
+    fn add_entry(&self, kind: Kind, context: &str) {
         self.0.report.0.push(Entry {
             kind,
             context: context.to_owned(),
@@ -178,11 +174,7 @@ impl ProblemReport {
     /// let report = ProblemReport::new("RBAC Registration Decoding");
     /// report.missing_field("name", "In the JSON payload for user creation");
     /// ```
-    pub fn missing_field(
-        &self,
-        field_name: &str,
-        context: &str,
-    ) {
+    pub fn missing_field(&self, field_name: &str, context: &str) {
         self.add_entry(
             Kind::MissingField {
                 field: field_name.to_owned(),
@@ -217,12 +209,7 @@ impl ProblemReport {
     ///     "In the JSON configuration file",
     /// );
     /// ```
-    pub fn unknown_field(
-        &self,
-        field_name: &str,
-        value: &str,
-        context: &str,
-    ) {
+    pub fn unknown_field(&self, field_name: &str, value: &str, context: &str) {
         self.add_entry(
             Kind::UnknownField {
                 field: field_name.to_owned(),
@@ -262,13 +249,7 @@ impl ProblemReport {
     ///     "During user registration",
     /// );
     /// ```
-    pub fn invalid_value(
-        &self,
-        field_name: &str,
-        found: &str,
-        constraint: &str,
-        context: &str,
-    ) {
+    pub fn invalid_value(&self, field_name: &str, found: &str, constraint: &str, context: &str) {
         self.add_entry(
             Kind::InvalidValue {
                 field: field_name.to_owned(),
@@ -305,11 +286,7 @@ impl ProblemReport {
     /// report.invalid_encoding("data", "UTF-8", "ASCII", "During data import");
     /// ```
     pub fn invalid_encoding(
-        &self,
-        field_name: &str,
-        detected_encoding: &str,
-        expected_encoding: &str,
-        context: &str,
+        &self, field_name: &str, detected_encoding: &str, expected_encoding: &str, context: &str,
     ) {
         self.add_entry(
             Kind::InvalidEncoding {
@@ -347,11 +324,7 @@ impl ProblemReport {
     ///     "During contract creation",
     /// );
     /// ```
-    pub fn functional_validation(
-        &self,
-        explanation: &str,
-        context: &str,
-    ) {
+    pub fn functional_validation(&self, explanation: &str, context: &str) {
         self.add_entry(
             Kind::FunctionalValidation {
                 explanation: explanation.to_owned(),
@@ -384,12 +357,7 @@ impl ProblemReport {
     ///     "RBAC purpose",
     /// );
     /// ```
-    pub fn duplicate_field(
-        &self,
-        field: &str,
-        description: &str,
-        context: &str,
-    ) {
+    pub fn duplicate_field(&self, field: &str, description: &str, context: &str) {
         self.add_entry(
             Kind::DuplicateField {
                 field: field.to_owned(),
@@ -424,13 +392,7 @@ impl ProblemReport {
     ///     "RBAC stake address",
     /// );
     /// ```
-    pub fn conversion_error(
-        &self,
-        field: &str,
-        value: &str,
-        expected_type: &str,
-        context: &str,
-    ) {
+    pub fn conversion_error(&self, field: &str, value: &str, expected_type: &str, context: &str) {
         self.add_entry(
             Kind::ConversionError {
                 field: field.to_owned(),
@@ -468,11 +430,7 @@ impl ProblemReport {
     ///     "During contract creation",
     /// );
     /// ```
-    pub fn other(
-        &self,
-        description: &str,
-        context: &str,
-    ) {
+    pub fn other(&self, description: &str, context: &str) {
         self.add_entry(
             Kind::Other {
                 description: description.to_owned(),

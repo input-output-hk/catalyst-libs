@@ -8,11 +8,7 @@ use crate::problem_report::ProblemReport;
 /// Adds a "duplicated field" entry to the report and returns true if the field is already
 /// present in the given found keys list.
 pub fn report_duplicated_key<T: Debug + PartialEq>(
-    found_keys: &[T],
-    key: &T,
-    index: u64,
-    context: &str,
-    report: &ProblemReport,
+    found_keys: &[T], key: &T, index: u64, context: &str, report: &ProblemReport,
 ) -> bool {
     if found_keys.contains(key) {
         report.duplicate_field(
@@ -28,10 +24,7 @@ pub fn report_duplicated_key<T: Debug + PartialEq>(
 /// Adds a "missing field" entry to the report for every required key that isn't present
 /// in the found keys list.
 pub fn report_missing_keys<T: Debug + PartialEq>(
-    found_keys: &[T],
-    required_keys: &[T],
-    context: &str,
-    report: &ProblemReport,
+    found_keys: &[T], required_keys: &[T], context: &str, report: &ProblemReport,
 ) {
     for key in required_keys {
         if !found_keys.contains(key) {

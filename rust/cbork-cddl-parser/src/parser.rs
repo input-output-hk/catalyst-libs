@@ -66,8 +66,7 @@ pub(crate) enum Ast<'a> {
 ///
 /// - If there is an issue with parsing the CDDL input.
 pub(crate) fn parse_cddl<'a>(
-    input: &'a mut String,
-    extension: &Extension,
+    input: &'a mut String, extension: &Extension,
 ) -> anyhow::Result<Ast<'a>> {
     input.push_str("\n\n");
     input.push_str(POSTLUDE);

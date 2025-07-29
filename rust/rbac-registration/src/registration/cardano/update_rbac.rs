@@ -16,8 +16,7 @@ use crate::cardano::cip509::{
 /// Update x509 certificates in the registration chain.
 pub(crate) fn update_x509_certs(
     x509_cert_map: &mut HashMap<usize, Vec<PointData<Option<X509Certificate>>>>,
-    x509_certs: Vec<X509DerCert>,
-    point_tx_idx: &PointTxnIdx,
+    x509_certs: Vec<X509DerCert>, point_tx_idx: &PointTxnIdx,
 ) {
     for (idx, cert) in x509_certs.into_iter().enumerate() {
         match cert {
@@ -53,8 +52,7 @@ pub(crate) fn update_x509_certs(
 
 /// Update c509 certificates in the registration chain.
 pub(crate) fn update_c509_certs(
-    c509_cert_map: &mut HashMap<usize, Vec<PointData<Option<C509>>>>,
-    c509_certs: Vec<C509Cert>,
+    c509_cert_map: &mut HashMap<usize, Vec<PointData<Option<C509>>>>, c509_certs: Vec<C509Cert>,
     point_tx_idx: &PointTxnIdx,
 ) {
     for (idx, cert) in c509_certs.into_iter().enumerate() {
@@ -96,8 +94,7 @@ pub(crate) fn update_c509_certs(
 /// Update public keys in the registration chain.
 pub(crate) fn update_public_keys(
     pub_key_map: &mut HashMap<usize, Vec<PointData<Option<VerifyingKey>>>>,
-    pub_keys: Vec<SimplePublicKeyType>,
-    point_tx_idx: &PointTxnIdx,
+    pub_keys: Vec<SimplePublicKeyType>, point_tx_idx: &PointTxnIdx,
 ) {
     for (idx, cert) in pub_keys.into_iter().enumerate() {
         match cert {
@@ -130,8 +127,7 @@ pub(crate) fn update_public_keys(
 
 /// Process the revocation list.
 pub(crate) fn revocations_list(
-    revocation_list: Vec<CertKeyHash>,
-    point_tx_idx: &PointTxnIdx,
+    revocation_list: Vec<CertKeyHash>, point_tx_idx: &PointTxnIdx,
 ) -> Vec<PointData<CertKeyHash>> {
     let mut revocations = Vec::new();
     for item in revocation_list {
@@ -145,8 +141,7 @@ pub(crate) fn revocations_list(
 pub(crate) fn update_role_data(
     registration: &Cip509RbacMetadata,
     role_data_history: &mut HashMap<RoleId, Vec<PointData<RoleData>>>,
-    role_data_record: &mut HashMap<RoleId, RoleDataRecord>,
-    point_tx_idx: &PointTxnIdx,
+    role_data_record: &mut HashMap<RoleId, RoleDataRecord>, point_tx_idx: &PointTxnIdx,
 ) {
     for (number, data) in registration.clone().role_data {
         // Update role data history, put the whole role data
@@ -185,9 +180,7 @@ pub(crate) fn update_role_data(
 
 /// Update signing key.
 pub(crate) fn update_signing_key(
-    signing_key: &KeyLocalRef,
-    record: &mut RoleDataRecord,
-    point_tx_idx: &PointTxnIdx,
+    signing_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
     registration: &Cip509RbacMetadata,
 ) {
     let index = signing_key.key_offset;
@@ -239,9 +232,7 @@ pub(crate) fn update_signing_key(
 
 /// Update encryption key.
 pub(crate) fn update_encryption_key(
-    encryption_key: &KeyLocalRef,
-    record: &mut RoleDataRecord,
-    point_tx_idx: &PointTxnIdx,
+    encryption_key: &KeyLocalRef, record: &mut RoleDataRecord, point_tx_idx: &PointTxnIdx,
     registration: &Cip509RbacMetadata,
 ) {
     let index = encryption_key.key_offset;

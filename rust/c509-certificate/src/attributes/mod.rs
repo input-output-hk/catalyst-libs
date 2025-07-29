@@ -41,10 +41,7 @@ impl Attributes {
 
     /// Add an `Attribute` to the `Attributes`.
     /// and set `Attribute` value to support multiple value.
-    pub fn add_attribute(
-        &mut self,
-        attribute: Attribute,
-    ) {
+    pub fn add_attribute(&mut self, attribute: Attribute) {
         self.0.push(attribute.set_multi_value());
     }
 }
@@ -57,9 +54,7 @@ impl Default for Attributes {
 
 impl Encode<()> for Attributes {
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0.is_empty() {
             return Err(minicbor::encode::Error::message(
@@ -79,10 +74,7 @@ impl Encode<()> for Attributes {
 }
 
 impl Decode<'_, ()> for Attributes {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         let len = decode_array_len(d, "Attributes")?;
         if len == 0 {
             return Err(minicbor::decode::Error::message("Attributes is empty"));

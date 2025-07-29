@@ -23,10 +23,7 @@ impl UnitVectorProof {
     ///   - Cannot decode ciphertext value.
     ///   - Cannot decode response randomness value.
     ///   - Cannot decode scalar value.
-    pub fn from_bytes<R: Read>(
-        reader: &mut R,
-        len: usize,
-    ) -> anyhow::Result<Self> {
+    pub fn from_bytes<R: Read>(reader: &mut R, len: usize) -> anyhow::Result<Self> {
         let ann = (0..len)
             .map(|i| {
                 let bytes = read_array(reader)?;
@@ -162,8 +159,7 @@ mod tests {
 
     #[proptest]
     fn proof_to_bytes_from_bytes_test(
-        #[strategy(0..5usize)] _size: usize,
-        #[any(#_size)] p1: UnitVectorProof,
+        #[strategy(0..5usize)] _size: usize, #[any(#_size)] p1: UnitVectorProof,
     ) {
         let bytes = p1.to_bytes();
         assert_eq!(bytes.len(), p1.bytes_size());

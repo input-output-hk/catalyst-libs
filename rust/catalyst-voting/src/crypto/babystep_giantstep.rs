@@ -40,10 +40,7 @@ impl BabyStepGiantStep {
     ///
     /// # Errors
     ///   - Maximum value and balance must be greater than zero.
-    pub fn new(
-        max_log_value: u64,
-        balance: Option<u64>,
-    ) -> anyhow::Result<Self> {
+    pub fn new(max_log_value: u64, balance: Option<u64>) -> anyhow::Result<Self> {
         let balance = balance.unwrap_or(DEFAULT_BALANCE);
 
         ensure!(
@@ -80,10 +77,7 @@ impl BabyStepGiantStep {
     ///
     /// # Errors
     ///   - Max log value exceeded.
-    pub fn discrete_log(
-        &self,
-        mut point: GroupElement,
-    ) -> anyhow::Result<u64> {
+    pub fn discrete_log(&self, mut point: GroupElement) -> anyhow::Result<u64> {
         for baby_step in 0..=self.baby_step_size {
             if let Some(x) = self.table.get(&point) {
                 let r = baby_step * self.baby_step_size + x;
@@ -112,8 +106,7 @@ mod tests {
     // range 1..1` for `log` strategy
     #[proptest]
     fn baby_step_giant_step_test(
-        #[strategy(2..10000u64)] max_log_value: u64,
-        #[strategy(1..#max_log_value)] log: u64,
+        #[strategy(2..10000u64)] max_log_value: u64, #[strategy(1..#max_log_value)] log: u64,
     ) {
         let ge = GroupElement::GENERATOR.mul(&Scalar::from(log));
 

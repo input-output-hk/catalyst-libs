@@ -11,8 +11,7 @@ pub struct MetadatumValue(Arc<Vec<u8>>);
 
 impl Decode<'_, ()> for MetadatumValue {
     fn decode(
-        d: &mut minicbor::Decoder<'_>,
-        _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         // Get the start of the raw CBOR value we are going to extract.
         let value_start = d.position();

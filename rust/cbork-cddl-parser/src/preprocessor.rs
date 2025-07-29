@@ -29,9 +29,7 @@ pub(crate) fn process_ast(ast: Ast) -> anyhow::Result<Ast> {
 
 /// Process the root rule of the AST and filter out all non `expected_rule` rules.
 fn process_root_and_filter<R: RuleType>(
-    ast: Vec<Pair<'_, R>>,
-    root_rule: R,
-    expected_rule: R,
+    ast: Vec<Pair<'_, R>>, root_rule: R, expected_rule: R,
 ) -> anyhow::Result<Vec<Pair<'_, R>>> {
     let mut ast_iter = ast.into_iter();
     let ast_root = ast_iter.next().ok_or(anyhow!("Empty AST."))?;

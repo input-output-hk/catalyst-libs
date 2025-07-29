@@ -15,10 +15,7 @@ pub struct Signature {
 
 impl Signature {
     /// Convert COSE Signature to `Signature`.
-    pub(crate) fn from_cose_sig(
-        signature: CoseSignature,
-        report: &ProblemReport,
-    ) -> Option<Self> {
+    pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
         match CatalystId::try_from(signature.protected.header.key_id.as_ref()) {
             Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
             Ok(kid) => {
@@ -64,7 +61,7 @@ impl Signatures {
 
     /// Iterator of COSE signatures object with kids.
     pub(crate) fn cose_signatures_with_kids(
-        &self
+        &self,
     ) -> impl Iterator<Item = (&CoseSignature, &CatalystId)> + use<'_> {
         self.0.iter().map(|sig| (&sig.signature, &sig.kid))
     }
@@ -75,10 +72,7 @@ impl Signatures {
     }
 
     /// Add a `Signature` object into the list
-    pub(crate) fn push(
-        &mut self,
-        sign: Signature,
-    ) {
+    pub(crate) fn push(&mut self, sign: Signature) {
         self.0.push(sign);
     }
 
@@ -95,10 +89,7 @@ impl Signatures {
     }
 
     /// Convert list of COSE Signature to `Signatures`.
-    pub(crate) fn from_cose_sig_list(
-        cose_sigs: &[CoseSignature],
-        report: &ProblemReport,
-    ) -> Self {
+    pub(crate) fn from_cose_sig_list(cose_sigs: &[CoseSignature], report: &ProblemReport) -> Self {
         let res = cose_sigs
             .iter()
             .cloned()

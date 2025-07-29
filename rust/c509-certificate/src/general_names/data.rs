@@ -69,11 +69,7 @@ impl IntegerToGNTable {
     }
 
     /// Add a new integer to `GeneralNameTypeRegistry` map table.
-    pub(crate) fn add(
-        &mut self,
-        k: i16,
-        v: GeneralNameTypeRegistry,
-    ) {
+    pub(crate) fn add(&mut self, k: i16, v: GeneralNameTypeRegistry) {
         self.0.add(k, v);
     }
 

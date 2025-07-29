@@ -32,10 +32,7 @@ impl Default for Blake2b512Hasher {
 }
 
 impl Update for Blake2b512Hasher {
-    fn update(
-        &mut self,
-        data: &[u8],
-    ) {
+    fn update(&mut self, data: &[u8]) {
         self.0.update(data);
     }
 }
@@ -49,10 +46,7 @@ impl OutputSizeUser for Blake2b512Hasher {
 }
 
 impl FixedOutput for Blake2b512Hasher {
-    fn finalize_into(
-        self,
-        out: &mut Output<Self>,
-    ) {
+    fn finalize_into(self, out: &mut Output<Self>) {
         let hash = self.0.finalize();
         out.copy_from_slice(hash.as_bytes());
     }
@@ -85,10 +79,7 @@ impl Default for Blake2b256Hasher {
 }
 
 impl Update for Blake2b256Hasher {
-    fn update(
-        &mut self,
-        data: &[u8],
-    ) {
+    fn update(&mut self, data: &[u8]) {
         self.0.update(data);
     }
 }
@@ -102,10 +93,7 @@ impl OutputSizeUser for Blake2b256Hasher {
 }
 
 impl FixedOutput for Blake2b256Hasher {
-    fn finalize_into(
-        self,
-        out: &mut Output<Self>,
-    ) {
+    fn finalize_into(self, out: &mut Output<Self>) {
         let hash = self.0.finalize();
         out.copy_from_slice(hash.as_bytes());
     }

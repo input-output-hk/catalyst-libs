@@ -120,10 +120,7 @@ fn inspect_signed_doc(cose_bytes: &[u8]) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn save_signed_doc(
-    signed_doc: CatalystSignedDocument,
-    path: &PathBuf,
-) -> anyhow::Result<()> {
+fn save_signed_doc(signed_doc: CatalystSignedDocument, path: &PathBuf) -> anyhow::Result<()> {
     let mut bytes: Vec<u8> = Vec::new();
     minicbor::encode(signed_doc, &mut bytes).context("Failed to encode document")?;
 
@@ -141,10 +138,7 @@ where T: for<'de> serde::Deserialize<'de> {
     Ok(json)
 }
 
-fn write_bytes_to_file(
-    bytes: &[u8],
-    output: &PathBuf,
-) -> anyhow::Result<()> {
+fn write_bytes_to_file(bytes: &[u8], output: &PathBuf) -> anyhow::Result<()> {
     File::create(output)?
         .write_all(bytes)
         .context(format!("Failed to write to file {output:?}"))

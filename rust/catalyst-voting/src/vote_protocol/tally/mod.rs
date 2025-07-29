@@ -54,9 +54,7 @@ impl DecryptionTallySetup {
 ///   - Invalid encrypted vote at index `i`. Does not have a ciphertext for the voting
 ///     option `voting_option`.
 pub fn tally(
-    voting_option: usize,
-    votes: &[EncryptedVote],
-    voting_powers: &[u64],
+    voting_option: usize, votes: &[EncryptedVote], voting_powers: &[u64],
 ) -> anyhow::Result<EncryptedTally> {
     ensure!(
         votes.len() == voting_powers.len(),
@@ -99,9 +97,7 @@ pub fn tally(
 ///     tally result.
 #[allow(clippy::module_name_repetitions)]
 pub fn decrypt_tally(
-    tally_result: &EncryptedTally,
-    secret_key: &ElectionSecretKey,
-    setup: &DecryptionTallySetup,
+    tally_result: &EncryptedTally, secret_key: &ElectionSecretKey, setup: &DecryptionTallySetup,
 ) -> anyhow::Result<u64> {
     let ge = decrypt(&tally_result.0, &secret_key.0);
 

@@ -39,8 +39,7 @@ impl SyncReady {
 
 /// Sand a chain update to any subscribers that are listening.
 pub(crate) fn notify_follower(
-    chain: Network,
-    update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
+    chain: Network, update_sender: Option<&broadcast::Sender<chain_update::Kind>>,
     kind: &chain_update::Kind,
 ) {
     if let Some(update_sender) = update_sender {
@@ -140,7 +139,7 @@ pub(crate) async fn block_until_sync_ready(chain: Network) {
 
 /// Get the Broadcast Receive queue for the given chain updates.
 pub(crate) async fn get_chain_update_rx_queue(
-    chain: Network
+    chain: Network,
 ) -> broadcast::Receiver<chain_update::Kind> {
     // We are safe to use `expect` here because the SYNC_READY list is exhaustively
     // initialized. Its a Serious BUG if that not True, so panic is OK.
@@ -156,7 +155,7 @@ pub(crate) async fn get_chain_update_rx_queue(
 
 /// Get the Broadcast Transmit queue for the given chain updates.
 pub(crate) async fn get_chain_update_tx_queue(
-    chain: Network
+    chain: Network,
 ) -> Option<broadcast::Sender<chain_update::Kind>> {
     // We are safe to use `expect` here because the SYNC_READY list is exhaustively
     // initialized. Its a Serious BUG if that not True, so panic is OK.

@@ -35,19 +35,13 @@ impl Default for MetadataInner {
 impl Metadata {
     /// Does the metadata contain the label?
     #[must_use]
-    pub fn contains(
-        &self,
-        label: MetadatumLabel,
-    ) -> bool {
+    pub fn contains(&self, label: MetadatumLabel) -> bool {
         self.0.map.contains_key(&label)
     }
 
     /// Get the requested labels value
     #[must_use]
-    pub fn get(
-        &self,
-        label: MetadatumLabel,
-    ) -> Option<&MetadatumValue> {
+    pub fn get(&self, label: MetadatumLabel) -> Option<&MetadatumValue> {
         self.0.map.get(&label)
     }
 
@@ -66,8 +60,7 @@ impl Default for Metadata {
 
 impl Decode<'_, ()> for Metadata {
     fn decode(
-        d: &mut minicbor::Decoder<'_>,
-        ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>, ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let (entries, mut sequence, metadata) = match d.map() {
             Ok(Some(entries)) => {

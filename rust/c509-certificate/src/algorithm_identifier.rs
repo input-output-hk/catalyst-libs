@@ -36,10 +36,7 @@ pub struct AlgorithmIdentifier {
 impl AlgorithmIdentifier {
     /// Create new instance of `AlgorithmIdentifier`.
     #[must_use]
-    pub fn new(
-        oid: Oid<'static>,
-        param: Option<String>,
-    ) -> Self {
+    pub fn new(oid: Oid<'static>, param: Option<String>) -> Self {
         Self {
             c509_oid: C509oid::new(oid),
             param,
@@ -61,9 +58,7 @@ impl AlgorithmIdentifier {
 
 impl Encode<()> for AlgorithmIdentifier {
     fn encode<W: Write>(
-        &self,
-        e: &mut Encoder<W>,
-        ctx: &mut (),
+        &self, e: &mut Encoder<W>, ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match &self.param {
             // [ algorithm: ~oid, parameters: bytes ]
@@ -82,10 +77,7 @@ impl Encode<()> for AlgorithmIdentifier {
 }
 
 impl Decode<'_, ()> for AlgorithmIdentifier {
-    fn decode(
-        d: &mut Decoder<'_>,
-        ctx: &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
         // [ algorithm: ~oid, parameters: bytes ]
         if decode_datatype(d, "Algorithm Identifier")? == minicbor::data::Type::Array {
             let len = decode_array_len(d, "Algorithm Identifier")?;

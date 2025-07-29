@@ -25,13 +25,9 @@ pub(crate) enum ParametersRule {
 impl ParametersRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
-        &self,
-        doc: &CatalystSignedDocument,
-        provider: &Provider,
+        &self, doc: &CatalystSignedDocument, provider: &Provider,
     ) -> anyhow::Result<bool>
-    where
-        Provider: CatalystSignedDocumentProvider,
-    {
+    where Provider: CatalystSignedDocumentProvider {
         if let Self::Specified {
             exp_parameters_type,
             optional,

@@ -36,10 +36,7 @@ where
     ProofT: for<'a> Cbor<'a>,
     PropIdT: for<'a> Cbor<'a>,
 {
-    fn decode(
-        d: &mut Decoder<'_>,
-        (): &mut (),
-    ) -> Result<Self, minicbor::decode::Error> {
+    fn decode(d: &mut Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
         let Some(VOTE_LEN) = d.array()? else {
             return Err(minicbor::decode::Error::message(format!(
                 "must be a defined sized array with {VOTE_LEN} entries"
@@ -69,9 +66,7 @@ where
     PropIdT: for<'a> Cbor<'a>,
 {
     fn encode<W: minicbor::encode::Write>(
-        &self,
-        e: &mut minicbor::Encoder<W>,
-        (): &mut (),
+        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(VOTE_LEN)?;
         self.choices.encode(e, &mut ())?;

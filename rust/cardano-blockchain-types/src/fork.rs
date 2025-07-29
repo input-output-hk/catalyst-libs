@@ -48,7 +48,7 @@ impl Fork {
             + std::cmp::PartialOrd<T>
             + num_traits::identities::Zero,
     >(
-        value: T
+        value: T,
     ) -> Self {
         let value: u64 = from_saturating(value);
         Self(value)
@@ -66,10 +66,7 @@ impl Fork {
 }
 
 impl fmt::Display for Fork {
-    fn fmt(
-        &self,
-        f: &mut fmt::Formatter<'_>,
-    ) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.0 {
             0 => write!(f, "IMMUTABLE"),
             1 => write!(f, "BACKFILL"),

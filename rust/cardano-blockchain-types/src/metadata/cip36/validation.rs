@@ -24,10 +24,7 @@ pub const SIGNDATA_PREAMBLE: [u8; 4] = [0xA1, 0x19, 0xEF, 0x64];
 
 impl Cip36 {
     /// Validate the signature against the public key.
-    pub(crate) fn validate_signature(
-        &mut self,
-        metadata: &MetadatumValue,
-    ) {
+    pub(crate) fn validate_signature(&mut self, metadata: &MetadatumValue) {
         let hash = blake2b_simd::Params::new()
             .hash_length(32)
             .to_state()

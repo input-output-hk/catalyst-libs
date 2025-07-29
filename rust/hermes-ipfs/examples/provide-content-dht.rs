@@ -5,7 +5,7 @@ use hermes_ipfs::{HermesIpfs, IpfsPath};
 
 /// Connect Node A, upload file and provide CID by adding to DHT
 async fn connect_node_a_upload_and_provide(
-    file_content: Vec<u8>
+    file_content: Vec<u8>,
 ) -> anyhow::Result<(HermesIpfs, IpfsPath)> {
     let hermes_ipfs = HermesIpfs::start().await?;
     println!("***************************************");
