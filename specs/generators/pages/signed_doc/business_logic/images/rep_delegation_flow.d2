@@ -1,0 +1,72 @@
+shape: sequence_diagram
+style.animated: true
+
+voter: {
+  shape: person
+  # style: {
+  #  stroke: green
+  #  fill: cyan
+  # }
+}
+
+representative: {
+  shape: person
+  #  style: {
+  #    stroke: orange
+  #    fill: deepskyblue
+  #  }
+}
+
+cardano: {
+  shape: hexagon
+  style: {
+    #  stroke: orange
+    #  fill: honeydew
+    3d: true
+  }
+}
+
+ipfs: {
+  shape: cloud
+  #  style: {
+  #    stroke: orange
+  #    fill: deepskyblue
+  #  }
+}
+
+Voter ONLY Catalyst ID Registration: {
+  voter -> cardano: Role 0 Registration
+}
+
+Representative Catalyst ID Registration: {
+  representative -> cardano: Role 0 Registration
+  representative -> cardano: Drep Registration
+}
+
+Representative - Registers to a Brand: {
+  ipfs -> representative: GET "Brand Parameters"
+  ipfs -> representative.a: GET "Rep Profile Form Template"
+  representative."Completes Profile Form."
+  representative.a -> ipfs: POST "Rep Profile"
+  representative."Updates Profile Form."
+  representative.a -> ipfs: POST "Rep Profile"
+}
+
+Representative - Nominates to Contest: {
+  ipfs -> representative: GET "Campaign Parameters" * (n) - for Brand
+  ipfs -> representative: GET "Category Parameters" * (n) - for Chosen Campaign
+  ipfs -> representative: GET "Contest Parameters" * (n) - for Chosen Category
+  ipfs -> representative.b: GET "Rep Nomination Form Template" for Chosen Contest
+  representative."Completes Nomination Form"
+  representative.b -> ipfs: POST "Rep Nomination" - for Chosen Contest
+}
+
+Voter Selects Representative: {
+  ipfs -> voter: GET "Brand Parameters" * (n)
+  ipfs -> voter: GET "Campaign Parameters" * (n) - for Brand
+  ipfs -> voter: GET "Category Parameters" * (n) - for Chosen Campaign
+  ipfs -> voter: GET "Contest Parameters" * (n) - for Chosen Category
+  ipfs -> voter.c: GET "Rep Nomination" * (n) for Chosen Contest
+  voter."Selects Representative for the Contest"
+  voter.c -> ipfs: POST "Contest Delegation" - for Chosen Representative on Contest
+}
