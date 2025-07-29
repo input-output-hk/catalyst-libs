@@ -35,8 +35,10 @@ impl ParametersRule {
             if let Some(parameters_ref) = doc.doc_meta().parameters() {
                 let parameters_validator = |ref_doc: CatalystSignedDocument| {
                     let Ok(ref_doc_type) = ref_doc.doc_type() else {
-                        doc.report()
-                            .missing_field("type", "Referenced document must have type field");
+                        doc.report().missing_field(
+                            "type",
+                            &format!("{context}, Referenced document must have type field"),
+                        );
                         return false;
                     };
 
@@ -51,7 +53,7 @@ impl ParametersRule {
                             &exp_parameters_type
                                 .iter()
                                 .fold(String::new(), |s, v| format!("{s}, {v}")),
-                            "Invalid referenced document type",
+                            &format!("{context}, Invalid referenced document type"),
                         );
 
                         return false;
