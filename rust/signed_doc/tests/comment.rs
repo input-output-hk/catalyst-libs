@@ -167,6 +167,7 @@ async fn test_valid_comment_doc() {
         .await
         .unwrap();
     assert!(is_valid);
+    assert!(!doc.problem_report().is_problematic());
 }
 
 #[tokio::test]

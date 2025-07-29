@@ -43,9 +43,9 @@ impl ParametersRule {
                     };
 
                     // Check that the type matches one of the expected ones
-                    if !exp_parameters_type
+                    if exp_parameters_type
                         .iter()
-                        .any(|exp_type| ref_doc_type != exp_type)
+                        .all(|exp_type| ref_doc_type != exp_type)
                     {
                         doc.report().invalid_value(
                             "parameters",
@@ -55,7 +55,6 @@ impl ParametersRule {
                                 .fold(String::new(), |s, v| format!("{s}, {v}")),
                             &format!("{context}, Invalid referenced document type"),
                         );
-
                         return false;
                     }
                     true

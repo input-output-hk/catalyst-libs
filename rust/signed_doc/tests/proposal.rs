@@ -109,6 +109,7 @@ async fn test_valid_proposal_doc() {
         .await
         .unwrap();
     assert!(is_valid);
+    assert!(!doc.problem_report().is_problematic());
 }
 
 #[tokio::test]
