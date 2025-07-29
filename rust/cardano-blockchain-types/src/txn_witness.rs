@@ -47,7 +47,7 @@ impl TxnWitness {
                         map.insert(vkey_hash, (vkey, new_set));
                     }
                 }
-            };
+            }
             Ok(())
         }
 
@@ -71,7 +71,7 @@ impl TxnWitness {
                 _ => {
                     return Err(anyhow::anyhow!("Unsupported transaction Era"));
                 },
-            };
+            }
         }
         Ok(Self(map))
     }

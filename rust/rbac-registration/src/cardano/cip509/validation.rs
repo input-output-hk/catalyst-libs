@@ -59,7 +59,7 @@ pub fn validate_txn_inputs_hash(
             context,
         );
         return;
-    };
+    }
     for input in inputs {
         if let Err(e) = input.encode(&mut e, &mut ()) {
             report.other(

@@ -60,7 +60,7 @@ impl TryFrom<&MultiEraBlock<'_>> for BlockAuxData {
                 }
             } else {
                 bail!("Undecodable metadata, unknown Era");
-            };
+            }
         }
 
         Ok(Self(Arc::new(aux_data.into_read_only())))
