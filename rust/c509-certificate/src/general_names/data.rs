@@ -4,11 +4,10 @@
 
 // cspell: words Gntr Gnvt
 
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::LazyLock};
 
 use anyhow::Error;
 use bimap::BiMap;
-use once_cell::sync::Lazy;
 
 use super::general_name::{GeneralNameTypeRegistry, GeneralNameValueType};
 use crate::tables::{IntTable, TableTrait};
@@ -81,7 +80,7 @@ impl IntegerToGNTable {
 }
 
 /// Define static lookup for general names table
-static GENERAL_NAME_TABLES: Lazy<GeneralNameData> = Lazy::new(|| {
+static GENERAL_NAME_TABLES: LazyLock<GeneralNameData> = LazyLock::new(|| {
     let mut int_to_name_table = IntegerToGNTable::new();
     let mut int_to_type_table = HashMap::new();
 

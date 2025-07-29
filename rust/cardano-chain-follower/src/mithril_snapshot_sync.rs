@@ -473,6 +473,7 @@ async fn recover_existing_snapshot(
 }
 
 /// Status of checking if we have a new snapshot to get or not.
+#[allow(clippy::large_enum_variant)]
 enum SnapshotStatus {
     /// No update, sleep for this long before checking again
     Sleep(Duration),

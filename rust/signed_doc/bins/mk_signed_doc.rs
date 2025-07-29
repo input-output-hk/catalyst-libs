@@ -141,7 +141,7 @@ where T: for<'de> serde::Deserialize<'de> {
 fn write_bytes_to_file(bytes: &[u8], output: &PathBuf) -> anyhow::Result<()> {
     File::create(output)?
         .write_all(bytes)
-        .context(format!("Failed to write to file {output:?}"))
+        .context(format!("Failed to write to file {}", output.display()))
 }
 
 fn load_secret_key(sk_hex: &str) -> anyhow::Result<ed25519_bip32::XPrv> {

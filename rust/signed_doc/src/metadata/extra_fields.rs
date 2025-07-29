@@ -218,7 +218,7 @@ impl ExtraFields {
                     "Expected a CBOR Array",
                     &format!("{COSE_DECODING_CONTEXT}, converting collaborators to Array",),
                 );
-            };
+            }
         }
 
         extra

@@ -376,7 +376,7 @@ impl ProtectedLiveChainBlockList {
             };
             if entry.value().point() == previous_point {
                 break;
-            };
+            }
             previous_point = entry.value().point();
             intersect_points.push(previous_point.clone().into());
             slot_age *= 2;
