@@ -1,4 +1,3 @@
-version: "1.0"
 global: {
 	ci: {
 		local: [
@@ -23,11 +22,23 @@ global: {
 			}
 
 			earthly: {
-				satellite: "ci"
-				version:   "0.8.16"
+				satellite: credentials: {
+					provider: "aws"
+					path:     "global/ci/ci-tls"
+				}
+				version: "0.8.15"
 			}
 
 			github: registry: "ghcr.io"
+
+			tailscale: {
+				credentials: {
+					provider: "aws"
+					path:     "global/ci/tailscale"
+				}
+				tags:    "tag:cat-github"
+				version: "latest"
+			}
 		}
 		secrets: [
 			{

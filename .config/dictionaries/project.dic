@@ -291,6 +291,7 @@ symlinkat
 syscall
 tacho
 taillabel
+tailscale
 testcase
 testcov
 testdocs
