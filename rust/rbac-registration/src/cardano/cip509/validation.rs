@@ -439,7 +439,7 @@ fn validate_role_0(
             match metadata.x509_certs.first() {
                 Some(X509DerCert::X509Cert(cert)) => {
                     // All good: role 0 references a valid X509 certificate.
-                    catalyst_id = x509_cert_key(cert, context, report).map(|k| CatalystId::new(network, subnet.as_ref().map(|s| s.as_str()), k));
+                    catalyst_id = x509_cert_key(cert, context, report).map(|k| CatalystId::new(network, subnet.as_deref(), k));
                 }
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
@@ -449,7 +449,7 @@ fn validate_role_0(
             match metadata.c509_certs.first() {
                 Some(C509Cert::C509Certificate(cert)) => {
                     // All good: role 0 references a valid C509 certificate.
-                    catalyst_id = c509_cert_key(cert, context, report).map(|k| CatalystId::new(network, subnet.as_ref().map(|s| s.as_str()), k));
+                    catalyst_id = c509_cert_key(cert, context, report).map(|k| CatalystId::new(network, subnet.as_deref(), k));
                 }
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),
