@@ -21,7 +21,8 @@ The purpose is derived solely by the cards id.
 
 ## [JSON Schema][JSON Schema-2020-12]
 
-Presentation Template payloads all follow the same structure, which is defined by [JSON Schema version 2020-12][JSON Schema-2020-12].
+Presentation Template payloads all follow the same structure,
+which is defined by [JSON Schema version 2020-12][JSON Schema-2020-12].
 
 ### Schema
 
@@ -90,8 +91,7 @@ that are not present in this schema.
 
 ## Example Presentation Template
 
-TODO.
-
+ *This Specification is draft, and there are currently no examples.*
 
 ## Presentation Template Cards
 
