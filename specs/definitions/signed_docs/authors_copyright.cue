@@ -89,6 +89,7 @@ copyright: #copyrightNotice & {
 				* Generalized Presentation Templates, and defined sample (subject to change) cards.
 				* Removed specialized presentation templates, as a universal presentation template is all thats required.
 				* Converted draft-7 Json Schemas to 2020-12
+				* Add standard ICON definitions for Forms.
 				"""
 		},
 	]
