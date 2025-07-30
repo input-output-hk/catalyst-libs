@@ -62,6 +62,10 @@ real and detrimental result in the Delegation choice.
 Therefore, for a Delegation to be valid, it *MUST* point to the
 latest Nomination for a Representative.
 
+Publishing a newer version of the Nomination Document to a specific contest will
+invalidate all pre-existing delegations, and all voters will need
+to re-delegate to affirm the delegates latest nomination.
+
 ### Business Logic
 
 #### Front End
@@ -94,7 +98,7 @@ latest Nomination for a Representative.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `bf9abd97-5d1f-4429-8e80-740fea371a9c`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
+| Type | bf9abd97-5d1f-4429-8e80-740fea371a9c |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -277,7 +281,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-19 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |

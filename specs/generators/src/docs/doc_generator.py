@@ -4,29 +4,54 @@
 
 import argparse
 import difflib
+import json
 import re
 import textwrap
 import typing
+from enum import Enum
 from pathlib import Path
 
+import jsonschema
 import rich
 import rich.markdown
-from jinja2 import DictLoader, Environment, select_autoescape
+import rich.pretty
+from jinja2 import Environment, FileSystemLoader, select_autoescape
+from rich.traceback import Traceback
 
 from docs.markdown import MarkdownHelpers
 from spec.signed_doc import SignedDoc
 
 __jinja_env: Environment | None = None
+TEMPLATES: str = "./pages"
 
 
 def get_jinja_environment(spec: SignedDoc) -> Environment:
     """Get the current jinja environment for rendering templates."""
     global __jinja_env  # noqa: PLW0603
     if __jinja_env is None:
-        __jinja_env = Environment(loader=DictLoader(spec.pages), autoescape=select_autoescape())
+        __jinja_env = Environment(
+            loader=FileSystemLoader(TEMPLATES), autoescape=select_autoescape(), trim_blocks=True, lstrip_blocks=True
+        )
         __jinja_env.globals["spec"] = spec  # type: ignore reportUnknownMemberType
 
     return __jinja_env
+
+
+def get_template_with_path(template: str) -> str:
+    """Get a template and its path, just from template name."""
+    try:
+        return next(iter(Path(TEMPLATES).rglob(template))).relative_to(TEMPLATES).as_posix()
+    except StopIteration as ex:
+        msg = f"Template {template} does not exist."
+        raise NotImplementedError(msg) from ex
+
+
+class LinkType(Enum):
+    """A type of document link."""
+
+    MARKDOWN = 1
+    HTML = 2
+    RAW = 3
 
 
 class DocGenerator:
@@ -36,36 +61,59 @@ class DocGenerator:
     HAS_MARKDOWN_LINKS = 1
     IS_METADATA_PRIMARY_SOURCE = 2
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         args: argparse.Namespace,
         spec: SignedDoc,
-        filename: str,
         depth: int = 0,
         flags: int = HAS_MARKDOWN_LINKS,
+        *,
+        doc_name: str | None = None,
+        filename: str | None = None,
+        template: str | None = None,
     ) -> None:
         """Must be called BEFORE subclasses add any customization."""
         self._args = args
         self._spec = spec
-        self._filename = filename
-        self._filepath = Path(args.output).joinpath(self._filename).resolve()
         self._generate = args.generate
         self._depth = depth
         self._filedata = ""
         self._has_markdown_links = flags & self.HAS_MARKDOWN_LINKS != 0
         self._is_metadata_primary_source = flags & self.IS_METADATA_PRIMARY_SOURCE != 0
-        self._document_name = None
+        self._document_name = doc_name
+
+        if template is not None:
+            template = get_template_with_path(template)
+        if filename is None and template is not None:
+            if doc_name is None:
+                filename = Path(template).relative_to("signed_doc").with_suffix("").as_posix()
+            else:
+                filename = self.doc_name_to_filename(doc_name, template).split("/", maxsplit=1)[-1]
+        if filename is None:
+            msg = "`filename` or `template` (or both) parameters must be defined."
+            raise NotImplementedError(msg)
+
+        self._filename = filename
+        self._template = template
+        self._filepath = Path(args.output).joinpath(filename).resolve()
 
         # Make sure any destination directory exists.
         self._filepath.parent.mkdir(parents=True, exist_ok=True)
 
+    def name(self) -> str:
+        """Return the document name."""
+        if self._document_name is None:
+            return "Unnamed"
+        return self._document_name
+
     @staticmethod
-    def name_to_spec_link(name: str, ref: str | None = None) -> str:
-        """Create a link to a document type, and an optional ref inside the document."""
-        link = "./docs/" + name.lower().replace(" ", "_") + ".md"
-        if ref is not None:
-            link += f"#{ref}"
-        return link
+    def doc_name_to_filename(doc_name: str, template: str, *, extension: str = "md") -> str:
+        """Convert a document name to a file name.
+
+        Typically only used for documents that share a template and derive a filename from their document name.
+        """
+        filename = f"{doc_name.lower().replace(' ', '_')}.{extension}"
+        return f"{template.rsplit('/', maxsplit=1)[0]}/{filename}"
 
     def add_generic_markdown_links(
         self,
@@ -135,66 +183,53 @@ class DocGenerator:
         stripped_lines = [line.rstrip() for line in lines]
         self._filedata = "\n".join(stripped_lines).strip() + "\n"
 
-    def code_block_aware_re_subn(
-        self,
-        link_name_regex: str | re.Pattern[str],
-        replacement: str | typing.Callable[[re.Match[str]], str],
-    ) -> bool:
-        """Do a multiline regex replacement, but ignore anything inside a code block."""
-        lines = self._filedata.splitlines()
-        new_file_data = ""
-        cnt = 0
-        in_code_block = False
-        for line in lines:
-            if line.strip().startswith("```"):
-                in_code_block = not in_code_block
-
-            if in_code_block:
-                this_cnt = 0
-            else:
-                (line, this_cnt) = re.subn(  # noqa: PLW2901
-                    link_name_regex,
-                    replacement,
-                    line,
-                    flags=re.IGNORECASE,
-                )
-            cnt += this_cnt
-            new_file_data += line + "\n"
-
-        self._filedata = new_file_data
-
-        return cnt != 0
-
-    def add_reference_links(self) -> None:
+    def add_reference_links(self, *, html: str | None = None) -> str | None:
         """Add Markdown reference links to the document.
 
         Only Reference links found to be used by the document will be added.
         """
         # Don't do this if the document does not have markdown style links
-        if not self._has_markdown_links:
-            return
+        if html is None and not self._has_markdown_links:
+            return None
+
+        doc_data = html if html is not None else self._filedata
 
         self.strip_end_whitespace()
 
         actual_links_used: dict[str, str] = {}
         for link_name in self._spec.documentation.links.all:
             esc_link_name = re.escape(link_name)
-            link_name_regex = f"(^|\\s)({esc_link_name})(\\.|\\s|$)"
+            html_start = "" if html is None else "|>"
+            html_end = "" if html is None else "|<"
+            link_name_regex = f"(^|\\s{html_start})({esc_link_name})(;|:|,|\\.|\\s{html_end}|$)"
             aka = self._spec.documentation.links.aka(link_name)
-            if aka is not None:
-                replacement = f"\\1[\\2][{aka}]\\3"
-                link_name = aka  # noqa: PLW2901
+            if html:
+                link_ref = link_name if aka is None else aka
+                replacement = f'\\1<a href="{self._spec.documentation.links.link(link_ref)}">\\2</a>\\3'
             else:
-                replacement = r"\1[\2]\3"
+                aka = self._spec.documentation.links.aka(link_name)
+                if aka is not None:
+                    replacement = f"\\1[\\2][{aka}]\\3"
+                    link_name = aka  # noqa: PLW2901
+                else:
+                    replacement = r"\1[\2]\3"
 
-            if self.code_block_aware_re_subn(
+            (doc_data, cnt) = MarkdownHelpers.block_aware_re_subn(
+                doc_data,
                 link_name_regex,
                 replacement,
-            ):
+            )
+
+            if html is None and cnt != 0:
                 actual_links_used[link_name] = self._spec.documentation.links.link(link_name)
 
-        for link, actual in actual_links_used.items():
-            self._filedata += f"\n[{link}]: {actual}"
+        if html is None:
+            for link, actual in actual_links_used.items():
+                doc_data += f"\n[{link}]: {actual}"
+            self._filedata = doc_data
+            return None
+
+        return doc_data
 
     def remove_tabs(self, tabstop: int = 4) -> None:
         """Replace tabs in the input text with spaces so that the text aligns on tab stops.
@@ -269,11 +304,15 @@ class DocGenerator:
 
         return copyright_notice.strip()
 
-    def generate_from_page_template(self, page_name: str, **kwargs: typing.Any) -> None:  # noqa: ANN401
+    def generate_from_page_template(self, **kwargs: typing.Any) -> None:  # noqa: ANN401
         """Generate a Page from a Page Template inside the specifications."""
-        env = get_jinja_environment(self._spec)
-        template = env.get_template(page_name)
-        self._filedata = template.render(doc=self, **kwargs)
+        if self._template is not None:
+            env = get_jinja_environment(self._spec)
+            template = env.get_template(self._template)
+            self._filedata = template.render(doc=self, **kwargs)
+        else:
+            msg = f"No Template for {self._filename} document is defined."
+            raise NotImplementedError(msg)
 
     def generate(self) -> bool:
         """Generate the document.
@@ -294,35 +333,37 @@ class DocGenerator:
 
         # Remove any leading or trailing newlines and add a single newline at the end/
         # Helps make clean markdown files.
-        # if self.file_name().endswith(".md"):
-        # because mdformat turns `*` list markers into `-` and it can't be configured
-        # tell mdlint that in these files it should be "consistent" which will allow
-        # the formatted markdown to pass lints.
-        # self._filedata = f"""
-        # <!-- markdownlint-configure-file {{
-        #    "MD004": {{"style": "consistent"}},  # noqa: ERA001
-        #    "MD007": {{"indent": 4}}
-        # }}-->
-        # {self._filedata}"""
-        #            self._filedata = mdformat.text(  # type: ignore  # noqa: PGH003
-        #                self._filedata, options={"number": True, "wrap": "keep"}, extensions=["mkdocs"]
-        #            )  # noqa: ERA001, RUF100
-        #        else:  # noqa: ERA001
         self.strip_end_whitespace()
 
         return True
 
-    def validate_generation(self) -> bool:
+    @staticmethod
+    def failed_message(status: str, error: str, exc: str | None = None, traceback: Traceback | None = None) -> bool:
+        """Display a failed status message."""
+        exc = "" if None else f": [red]{exc}[/red]"
+        rich.print(f":cross_mark: [yellow]{status}[/yellow]: [red]{error}[/red]{exc}")
+        if traceback is not None:
+            rich.print(traceback)
+        return False
+
+    @staticmethod
+    def success_message(status: str, success: str = "Ok") -> bool:
+        """Display a failed status message."""
+        rich.print(f":white_check_mark: [green]{status}[/green]: [cyan]{success}[/cyan]")
+        return True
+
+    def validate_generation(self, status: str) -> bool:
         """Check and Output the status when a file does not validate."""
         if not self._filepath.exists():
-            rich.print(f"Documentation file missing: {self._filename}.")
-            return False
+            return self.failed_message(status, "File Not Generated.")
 
-        current_file = self._filepath.read_text()
+        try:
+            current_file = self._filepath.read_text()
+        except Exception as e:  # noqa: BLE001
+            return self.failed_message(status, "Reading Previous Generated Content", f"{e}", traceback=Traceback())
         if current_file == self._filedata:
-            return True
+            return self.success_message(status)
 
-        rich.print(f"Documentation not generated correctly: {self._filename}.")
         diff = difflib.unified_diff(
             current_file.splitlines(),
             self._filedata.splitlines(),
@@ -333,6 +374,8 @@ class DocGenerator:
             n=3,
             lineterm="\n",
         )
+
+        ok = self.failed_message(status, "Generated Document does not match specification! DIFF Follows:")
         rich.print(
             rich.markdown.Markdown(
                 f"""
@@ -343,33 +386,43 @@ class DocGenerator:
                 code_theme="vim",
             ),
         )
-        return False
+        return ok
 
     def save_or_validate(
         self,
     ) -> bool:
         """Save a file or Validate it, depending on whats required."""
-        rich.print(f"{'Generating' if self._generate else 'Validating'} {self._filename}")
+        status = f"{'Generating' if self._generate else 'Validating'} [white bold]{self._filename}[/white bold]"
 
+        exc = ""
+        traceback = None
         try:
-            if not self.generate():
-                return False
+            ok = self.generate()
         except Exception as e:  # noqa: BLE001
-            rich.print(f"Failed to generate documentation for {self._filename}: {e}")
-            rich.console.Console().print_exception()
-            return False
+            ok = False
+            exc = f"{e}"
+            traceback = Traceback()
+        if not ok:
+            return self.failed_message(status, "GENERATION FAILED", exc, traceback)
 
         if self._generate:
             if self._filepath.exists():
-                old_contents = self._filepath.read_text()
+                try:
+                    old_contents = self._filepath.read_text()
+                except Exception as e:  # noqa: BLE001
+                    return self.failed_message(
+                        status, "Reading Previous Generated Content", f"{e}", traceback=Traceback()
+                    )
                 if old_contents == self._filedata:
-                    rich.print(f"{self._filename} is already up-to-date.")
-                    return True
+                    return self.success_message(status, ":blue_book: :scales: :green_book: - No Changes")
 
-            self._filepath.write_text(self._filedata)
-            return True
+            try:
+                self._filepath.write_text(self._filedata)
+            except Exception as e:  # noqa: BLE001
+                return self.failed_message(status, "Writing Generated Content", f"{e}", traceback=Traceback())
+            return self.success_message(status)
 
-        return self.validate_generation()
+        return self.validate_generation(status)
 
     def file_name(self) -> str:
         """Return the files name."""
@@ -404,8 +457,134 @@ class DocGenerator:
     ``` {filetype}
     {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 """.strip(),
             " " * indent,
         )
+
+    def wrap_html(self, html: str) -> str:
+        """Wrap HTML so it is OK inside the markdown.
+
+        Also, automatically link any words with known links.
+        """
+        # This is always returning a string when html is a string.
+        # but the type checker can't check that deeply.
+        html = self.add_reference_links(html=html)  # type: ignore reportAssignmentType
+
+        return f"""
+{MarkdownHelpers.HTML_START}
+{MarkdownHelpers.ALLOW_HTML_IN_MD}
+{html}
+{MarkdownHelpers.DISALLOW_HTML_IN_MD}
+{MarkdownHelpers.HTML_END}
+""".strip()
+
+    def link_to_file(  # noqa: PLR0913
+        self,
+        name: str,
+        *,
+        doc_name: str | None = None,
+        link_file: str | None = None,
+        template: str | None = None,
+        heading: str | None = None,
+        link_type: LinkType = LinkType.MARKDOWN,
+    ) -> str:
+        """Create a link to a file, relative to self."""
+        if link_file is None and doc_name is not None and template is not None:
+            link_file = self.doc_name_to_filename(doc_name, template).rsplit("/", maxsplit=1)[-1]
+        if link_file is None:
+            msg = "link_file or doc_name must be defined."
+            raise NotImplementedError(msg)
+        if template is None:
+            template = link_file + ".md.jinja"
+        if self._template is None:
+            msg = "Not a templated file."
+            raise NotImplementedError(msg)
+        link_template: Path = Path(TEMPLATES) / get_template_with_path(template)
+        this_template: Path = Path(TEMPLATES) / self._template
+        relative_template = link_template.resolve().relative_to(this_template.parent.resolve(), walk_up=True)
+        relative_file = relative_template.with_name(link_file)
+
+        heading = "#" + heading.lower().replace(" ", "-") if heading is not None else ""
+
+        if link_type == LinkType.MARKDOWN:
+            link = f"[{name}]({relative_file}{heading})"
+        elif link_type == LinkType.RAW:
+            link = f"{relative_file}"
+        else:
+            link = f'<a href="../{relative_file}/{heading}">{name}</a>'
+
+        return link
+
+    @staticmethod
+    def json_schema_validate(schema: dict[str, typing.Any]) -> None:
+        """Just ensure the json schema is valid."""
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except Exception:
+            try:
+                rich.print_json(data=schema, indent=4)
+            except Exception:
+                rich.pretty.pprint(schema)
+                raise
+            raise
+
+    def json_schema_sort(self, json_data: str | dict[str, typing.Any], indent: int = 4) -> str:
+        """Sort data for better JSON display."""
+        # Reload the json, but now with sorted keys.
+        if isinstance(json_data, str):
+            sorted_data: dict[str, typing.Any] = json.loads(json.dumps(json.loads(json_data), sort_keys=True))
+        else:
+            sorted_data: dict[str, typing.Any] = json.loads(json.dumps(json_data, sort_keys=True))
+        new_data: dict[str, typing.Any] = {}
+        ordered_keys = ["$schema", "$id", "maintainers", "title", "description", "$defs", "type", "properties"]
+        # may be redundant but thats ok, keys only added first time they are seen.
+        ordered_keys.extend(sorted_data.keys())
+        for key in ordered_keys:
+            if key in sorted_data:
+                new_data[key] = sorted_data.pop(key)
+        # Make sure it really is json_schema
+        self.json_schema_validate(new_data)
+        return json.dumps(new_data, indent=indent)
+
+    def json_example(
+        self,
+        data: dict[str, typing.Any],
+        *,
+        label: str = "Example",
+        title: str = "",
+        description: str | None = None,
+        icon_type: typing.Literal[
+            "note",
+            "abstract",
+            "info",
+            "tip",
+            "success",
+            "question",
+            "warning",
+            "failure",
+            "danger",
+            "bug",
+            "example",
+            "quote",
+        ] = "example",
+    ) -> str:
+        """Get the example properly formatted as markdown."""
+        example = json.dumps(data, indent=2, sort_keys=True)
+
+        # Check if this is JSON Schema, and if so, nicely re-sort the top keys.
+        if "$schema" in data:
+            # Reload the json, but now with sorted keys.
+            example = self.json_schema_sort(example, indent=2)
+
+        description = f"\n{textwrap.indent(description, '    ')}\n\n" if description is not None else ""
+
+        return f"""
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? {icon_type} "{label}: {title}"
+{description}
+    ```json
+{textwrap.indent(example, "    ")}
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
+""".strip()

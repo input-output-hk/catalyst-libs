@@ -64,7 +64,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`788ff4c6-d65a-451f-bb33-575fe056b411` |
+| Type | 788ff4c6-d65a-451f-bb33-575fe056b411 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -227,7 +227,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-20 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |

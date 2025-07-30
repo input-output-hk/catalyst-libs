@@ -12,18 +12,10 @@ class SpecIndex(DocGenerator):
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
         """Initialize."""
-        super().__init__(args, spec, ".pages", flags=self.NO_FLAGS)
+        super().__init__(args, spec, flags=self.NO_FLAGS, template=".pages.jinja")
 
     def generate(self) -> bool:
         """Generate the Spec Index."""
-        self._filedata = """
-title: Catalyst Signed Document
-nav:
-  - Specification: spec.md
-  - Metadata Fields: metadata.md
-  - Document Types: types.md
-  - docs
-  - Document Form Templates: form_templates.md
-  - form_template_elements
-"""
+        self.generate_from_page_template()
+
         return super().generate()

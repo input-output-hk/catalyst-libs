@@ -17,7 +17,6 @@ A link to a previous document in a chained sequence.
     ``` cddl
     {{ include_file('./cddl/chain.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Collaborators Reference List
@@ -32,7 +31,6 @@ A list of collaborators who can participate in drafting and submitting a documen
     ``` cddl
     {{ include_file('./cddl/collaborators.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Id
@@ -47,7 +45,6 @@ A unique document identifier
     ``` cddl
     {{ include_file('./cddl/document_id.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Reference
@@ -62,7 +59,6 @@ A document reference identifier
     ``` cddl
     {{ include_file('./cddl/document_refs.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Type
@@ -77,7 +73,6 @@ A document type identifier
     ``` cddl
     {{ include_file('./cddl/document_type.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Ver
@@ -92,7 +87,6 @@ A unique chronological document version
     ``` cddl
     {{ include_file('./cddl/document_ver.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Section Reference
@@ -107,7 +101,6 @@ A document section reference identifier
     ``` cddl
     {{ include_file('./cddl/section_ref.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv4][RFC9562-V4]
@@ -122,7 +115,6 @@ Version 4 formatted [UUID][RFC9562]
     ``` cddl
     {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv7][RFC9562-V7]
@@ -137,7 +129,6 @@ Version 7 formatted [UUID][RFC9562]
     ``` cddl
     {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Version Revocations
@@ -152,7 +143,6 @@ A list of all versions of this document which are 'revoked'.
     ``` cddl
     {{ include_file('./cddl/revocations.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Individual Metadata field definitions
@@ -222,10 +212,9 @@ The document version must always be >= the document ID.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Proposal Form Template](./docs/proposal_form_template.md) |
-|  | [Proposal Presentation Template](./docs/proposal_presentation_template.md) |
+|  | [Presentation Template](./docs/presentation_template.md) |
 |  | [Proposal](./docs/proposal.md) |
 |  | [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) |
-|  | [Proposal Comment Presentation Template](./docs/proposal_comment_presentation_template.md) |
 |  | [Proposal Comment](./docs/proposal_comment.md) |
 |  | [Proposal Submission Action](./docs/proposal_submission_action.md) |
 |  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |
@@ -629,7 +618,7 @@ classDiagram
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

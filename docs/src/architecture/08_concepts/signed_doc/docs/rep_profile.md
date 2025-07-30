@@ -53,7 +53,7 @@ The payload of a profile is controlled by its template.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0f2c86a2-ffda-40b0-ad38-23709e1c10b3`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
+| Type | 0f2c86a2-ffda-40b0-ad38-23709e1c10b3 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -196,7 +196,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-19 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |

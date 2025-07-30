@@ -80,7 +80,7 @@ is not considered `final` and will not be considered in the category it was bein
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `5e60e623-ad02-4a1b-a1ac-406db978ee48`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc`,<br/>`78927329-cfd9-4ea1-9c71-0e019b126a65` |
+| Type | 5e60e623-ad02-4a1b-a1ac-406db978ee48 |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -215,7 +215,7 @@ States:
 ### Schema
 
 <!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? abstract
+??? abstract "Schema: Payload [JSON][RFC8259] Schema"
 
     The kind of action is controlled by this payload.
     The Payload is a [JSON][RFC8259] Document, and must conform to this schema.
@@ -228,10 +228,24 @@ States:
              `hide` is only actioned if sent by the author,
              for a collaborator it identified that they do not wish to be listed as a `collaborator`.
 
+
     ```json
     {
-      "$id": "https://raw.githubusercontent.com/input-output-hk/catalyst-libs/refs/heads/main/specs/signed_docs/docs/payload_schemas/proposal_submission_action.schema.json",
-      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "maintainers": [
+        {
+          "name": "Catalyst Team",
+          "url": "https://projectcatalyst.io/"
+        }
+      ],
+      "title": "Proposal Submission Action Payload Schema",
+      "description": "Structure of the payload of a Proposal Submission Action.",
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/action"
+        }
+      },
       "additionalProperties": false,
       "definitions": {
         "action": {
@@ -244,23 +258,9 @@ States:
           "type": "string"
         }
       },
-      "description": "Structure of the payload of a Proposal Submission Action.",
-      "maintainers": [
-        {
-          "name": "Catalyst Team",
-          "url": "https://projectcatalyst.io/"
-        }
-      ],
-      "properties": {
-        "action": {
-          "$ref": "#/definitions/action"
-        }
-      },
       "required": [
         "action"
       ],
-      "title": "Proposal Submission Action Payload Schema",
-      "type": "object",
       "x-changelog": {
         "2025-03-01": [
           "First Version Created."
@@ -268,7 +268,6 @@ States:
       }
     }
     ```
-
 <!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 ### Examples
@@ -330,7 +329,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 

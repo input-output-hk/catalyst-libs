@@ -40,35 +40,41 @@ copyright: #copyrightNotice & {
 	created: "2024-12-27"
 	versions: [
 		{
-			version:  "0.01"
+			version:  "0.0.1"
 			modified: "2025-04-04"
 			changes: """
 				* First Published Version
 				"""
 		},
 		{
-			version:  "0.02"
+			version:  "0.0.2"
 			modified: "2025-04-09"
 			changes: """
 				* Add version control changelogs to the specification.
 				"""
 		},
 		{
-			version:  "0.03"
+			version:  "0.0.3"
 			modified: "2025-05-05"
 			changes: """
 				* Use generalized parameters.
 				"""
 		},
 		{
-			version:  "0.04"
-			modified: "2025-05-30"
+			version:  "0.0.4"
+			modified: "2025-06-25"
 			changes: """
 				* Improve and make document serialization more repeatable, and stricter.
-				* TODO: Define Systems parameters
-				* TODO: Define DReps documents.
-				* TODO: Define Proposer Profiles.
-				* TODO: Define Role 0 Profile.
+				* Defined Systems parameters documents
+				* Defined DReps documents.
+				"""
+		},
+		{
+			version:  "0.1.0"
+			modified: "2025-07-25"
+			changes: """
+				* Fixed typographical and layout issues.
+				* Added specifications for Form Templates and Elements.
 				"""
 		},
 	]

@@ -1,7 +1,10 @@
 """Generate the template_example.schema.json file."""
 
 import argparse
-import json
+
+import jsonschema
+import rich
+import rich.pretty
 
 from spec.signed_doc import SignedDoc
 
@@ -15,7 +18,7 @@ class FormTemplateExampleSchemaJson(DocGenerator):
         """Initialise template_example.schema.json generator."""
         file_name = "schema/form_template_example.schema.json"
 
-        super().__init__(args, spec, file_name)
+        super().__init__(args, spec, filename=file_name, flags=self.NO_FLAGS)
 
     def markdown_reference(
         self,
@@ -30,8 +33,20 @@ class FormTemplateExampleSchemaJson(DocGenerator):
 
     def generate(self) -> bool:
         """Generate a `template_example.schema.json` file from the definitions."""
-        schema = self._spec.form_template.generic_schema.example(properties=self._spec.form_template.elements.example)
-        template_schema = json.dumps(schema, indent=4)
+        schema = self._spec.form_template.elements.example()
+
+        # Just ensure the generated example is valid.
+        try:
+            jsonschema.Draft202012Validator.check_schema(schema)
+        except Exception:
+            try:
+                rich.print_json(data=schema, indent=4)
+            except Exception:
+                rich.pretty.pprint(schema)
+                raise
+            raise
+
+        template_schema = self.json_schema_sort(schema)
 
         self._filedata = template_schema
 

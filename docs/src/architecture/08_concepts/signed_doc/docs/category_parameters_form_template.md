@@ -68,7 +68,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`818938c3-3139-4daa-afe6-974c78488e95` |
+| Type | 65b1e8b0-51f1-46a5-9970-72cdf26884be |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -132,7 +132,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-25 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -146,7 +146,7 @@ New versions of this document may be published by:
 
 * Use generalized parameters.
 
-#### 0.04 (2025-05-05)
+#### 0.0.4 (2025-05-05)
 
 * Generalize the Form Template definitions.
 

@@ -1,16 +1,26 @@
 """Generate the metadata.md file."""
 
 import argparse
+from typing import NamedTuple
 
 import rich
 from rich.console import Console
 
+from spec.metadata_formats import MetadataFormat
 from spec.signed_doc import SignedDoc
 
 from .cddl_file import CDDLFile
 from .doc_generator import DocGenerator
 
 console = Console()
+
+
+class MetadataType(NamedTuple):
+    """Metadata Data Extract."""
+
+    name: str
+    format_def: MetadataFormat
+    cddl_def: CDDLFile
 
 
 class MetadataMd(DocGenerator):
@@ -21,13 +31,13 @@ class MetadataMd(DocGenerator):
         super().__init__(
             args,
             spec,
-            "metadata.md",
+            template="metadata.md.jinja",
             flags=self.HAS_MARKDOWN_LINKS + self.IS_METADATA_PRIMARY_SOURCE,
         )
 
-    def metadata_types(self) -> str:
+    def metadata_types(self) -> list[MetadataType]:
         """Generate the metadata types documentation."""
-        metadata_types = ""
+        metadata_types: list[MetadataType] = []
 
         for format_name in self._spec.metadata.formats.all:
             format_def = self._spec.metadata.formats.get(format_name)
@@ -35,36 +45,14 @@ class MetadataMd(DocGenerator):
             cddl_def = CDDLFile(self._args, self._spec, format_def.cddl)
             if not cddl_def.save_or_validate():
                 raise ValueError
-            cddl_markdown_ref = cddl_def.markdown_reference(relative_doc=self)
-            metadata_types += f"""
-### {format_name}
+            metadata_types.append(MetadataType(format_name, format_def, cddl_def))
 
-{format_def.description}
-
-{cddl_markdown_ref}
-"""
-
-        return metadata_types.strip()
+        return metadata_types
 
     def generate(self) -> bool:
-        """Generate the `types.md` File."""
+        """Generate the `metadata.md` File."""
         try:
-            self._filedata = f"""
-# Metadata Fields
-
-## Metadata Types
-
-The following types of metadata have been defined.
-All Metadata fields use one of these types.
-
-{self.metadata_types()}
-
-## Individual Metadata field definitions
-
-{self._spec.get_metadata_as_markdown()}
-
-{self.insert_copyright(changelog=False)}
-"""
+            self.generate_from_page_template()
         except Exception as e:  # noqa: BLE001
             rich.print(f"Failed to generate metadata: {e}")
             console.print_exception()

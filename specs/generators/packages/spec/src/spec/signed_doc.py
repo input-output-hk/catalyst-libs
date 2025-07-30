@@ -9,7 +9,6 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field, PrivateAttr
 
 from spec.authors import Authors
-from spec.base_types import BaseTypes
 from spec.cddl.cose import CoseDefinitions
 from spec.cddl.definition import CDDLDefinitions
 from spec.change_log_entry import ChangeLogEntry
@@ -21,13 +20,13 @@ from spec.documentation_links import Documentation
 from spec.forms.template import FormTemplate
 from spec.metadata import Metadata, MetadataHeader
 from spec.optional import OptionalField
+from spec.presentation_templates.template import PresentationTemplate
 
 
 class SignedDoc(BaseModel):
     """Signed Doc Deserialized Specification."""
 
     authors: Authors
-    base_types: BaseTypes
     cddl_definitions: CDDLDefinitions = Field(alias="cddlDefinitions")
     content_types: ContentTypes = Field(alias="contentTypes")
     copyright: Copyright
@@ -38,7 +37,7 @@ class SignedDoc(BaseModel):
     encoding_types: EncodingTypes = Field(alias="encodingTypes")
     metadata: Metadata
     form_template: FormTemplate = Field(alias="formTemplate")
-    pages: dict[str, str]
+    presentation_template: PresentationTemplate = Field(alias="presentationTemplate")
 
     _file: str = PrivateAttr(default="Uninitialized")
 
@@ -57,8 +56,6 @@ class SignedDoc(BaseModel):
         """Extra setup after we deserialize."""
         super().model_post_init(context)
 
-        # Put Base Document Types inside the individual doc types for easy reference.
-        self.docs.set_base_types(self.base_types)
         self.metadata.set_name(None)
 
         # Build dynamic CDDL Definitions from the defined headers.
@@ -132,12 +129,12 @@ class SignedDoc(BaseModel):
         fields = self.metadata.headers.names
         field_display = ""
         for field in fields:
-            doc_types = None
+            doc_type = None
             if doc_name is not None:
-                doc_types = self.docs.type(doc_name)
+                doc_type = self.docs.type(doc_name)
             metadata_def = self.get_metadata(field, doc_name)
             if doc_name is None or metadata_def.required != OptionalField.excluded:
                 field_display += metadata_def.metadata_as_markdown(
-                    doc_types=doc_types,
+                    doc_type=doc_type,
                 )
         return field_display.strip()
