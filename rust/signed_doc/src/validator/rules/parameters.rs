@@ -1,6 +1,5 @@
 //! `parameters` rule type impl.
 
-use super::doc_ref::referenced_doc_check;
 use crate::{
     providers::CatalystSignedDocumentProvider, validator::utils::validate_doc_refs,
     CatalystSignedDocument, DocType,
@@ -35,10 +34,30 @@ impl ParametersRule {
         {
             if let Some(parameters_ref) = doc.doc_meta().parameters() {
                 let parameters_validator = |ref_doc: CatalystSignedDocument| {
+                    let Ok(ref_doc_type) = ref_doc.doc_type() else {
+                        doc.report().missing_field(
+                            "type",
+                            &format!("{context}, Referenced document must have type field"),
+                        );
+                        return false;
+                    };
+
                     // Check that the type matches one of the expected ones
-                    exp_parameters_type.iter().any(|exp_type| {
-                        referenced_doc_check(&ref_doc, exp_type, "parameters", doc.report())
-                    })
+                    if exp_parameters_type
+                        .iter()
+                        .all(|exp_type| ref_doc_type != exp_type)
+                    {
+                        doc.report().invalid_value(
+                            "parameters",
+                            &ref_doc_type.to_string(),
+                            &exp_parameters_type
+                                .iter()
+                                .fold(String::new(), |s, v| format!("{s}, {v}")),
+                            &format!("{context}, Invalid referenced document type"),
+                        );
+                        return false;
+                    }
+                    true
                 };
                 return validate_doc_refs(
                     parameters_ref,

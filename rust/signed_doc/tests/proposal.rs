@@ -41,9 +41,9 @@ static PROPOSAL_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|
             "id": UuidV7::new(),
             "ver": UuidV7::new(),
             "parameters": {
-                "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
-                "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-            }
+                    "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
+                    "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
+                },
         }))
         .unwrap()
         .with_json_content(&serde_json::json!({
@@ -109,6 +109,7 @@ async fn test_valid_proposal_doc() {
         .await
         .unwrap();
     assert!(is_valid);
+    assert!(!doc.problem_report().is_problematic());
 }
 
 #[tokio::test]

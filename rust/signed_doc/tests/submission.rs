@@ -103,6 +103,7 @@ async fn test_valid_submission_action() {
         .await
         .unwrap();
     assert!(is_valid);
+    assert!(!doc.problem_report().is_problematic());
 }
 
 #[tokio::test]
