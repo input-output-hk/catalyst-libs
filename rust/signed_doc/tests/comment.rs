@@ -16,22 +16,6 @@ use crate::common::create_dummy_key_pair;
 mod common;
 
 #[allow(clippy::unwrap_used)]
-static DUMMY_CAMPAIGN_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
-    Builder::new()
-        .with_json_metadata(serde_json::json!({
-            "content-type": ContentType::Json.to_string(),
-            "id": UuidV7::new(),
-            "ver": UuidV7::new(),
-            "type": doc_types::CAMPAIGN_PARAMETERS.clone(),
-        }))
-        .unwrap()
-        .empty_content()
-        .unwrap()
-        .build()
-        .unwrap()
-});
-
-#[allow(clippy::unwrap_used)]
 static DUMMY_PROPOSAL_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(|| {
     Builder::new()
         .with_json_metadata(serde_json::json!({
@@ -72,16 +56,10 @@ static COMMENT_TEMPLATE_DOC: LazyLock<CatalystSignedDocument> = LazyLock::new(||
             "type": doc_types::PROPOSAL_COMMENT_FORM_TEMPLATE.clone(),
             "id": UuidV7::new(),
             "ver": UuidV7::new(),
-            "parameters": [
-                {
+            "parameters": {
                     "id": DUMMY_BRAND_DOC.doc_id().unwrap(),
                     "ver": DUMMY_BRAND_DOC.doc_ver().unwrap(),
-                },
-                {
-                    "id": DUMMY_CAMPAIGN_DOC.doc_id().unwrap(),
-                    "ver": DUMMY_CAMPAIGN_DOC.doc_ver().unwrap(),
-                },
-            ]
+                }
         }))
         .unwrap()
         .with_json_content(&serde_json::json!({
