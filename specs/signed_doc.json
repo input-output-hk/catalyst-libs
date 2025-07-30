@@ -1710,7 +1710,8 @@
             "cardName": {
               "description": "A Card has to have one of the well known defined names.\nThese are the primary identifier which is used by the UI to determine\nwhere the UI will place the card.",
               "enum": [
-                "draft-proposal-summary"
+                "draft-proposal-summary",
+                "proposal-contest-summary"
               ],
               "type": "string"
             },
@@ -8425,6 +8426,18 @@
         ],
         "description": "A Summary of a draft proposal.",
         "name": "Draft Proposal Summary"
+      },
+      "proposal-contest-summary": {
+        "available_docs": [
+          "Brand Parameters",
+          "Campaign Parameters",
+          "Category Parameters",
+          "Proposal",
+          "Proposal Form Template",
+          "Proposal Submission Action"
+        ],
+        "description": "A Summary shown when selecting proposals to vote on.",
+        "name": "Proposal Contest Summary"
       }
     },
     "schema": {
@@ -8436,7 +8449,8 @@
         "cardName": {
           "description": "A Card has to have one of the well known defined names.\nThese are the primary identifier which is used by the UI to determine\nwhere the UI will place the card.",
           "enum": [
-            "draft-proposal-summary"
+            "draft-proposal-summary",
+            "proposal-contest-summary"
           ],
           "type": "string"
         },

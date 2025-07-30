@@ -171,7 +171,8 @@ See `[presentation_templates.md](TODO)`
         "cardName": {
           "description": "A Card has to have one of the well known defined names.\nThese are the primary identifier which is used by the UI to determine\nwhere the UI will place the card.",
           "enum": [
-            "draft-proposal-summary"
+            "draft-proposal-summary",
+            "proposal-contest-summary"
           ],
           "type": "string"
         },

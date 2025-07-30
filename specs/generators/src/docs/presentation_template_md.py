@@ -7,6 +7,7 @@ import polars as pl
 from great_tables import GT
 from pydantic import computed_field
 
+from docs.markdown import MarkdownHelpers
 from docs.presentation_template_schema_json import PresentationTemplateSchemaJson
 from spec.signed_doc import SignedDoc
 
@@ -26,25 +27,39 @@ class PresentationTemplatesMd(DocGenerator):
     @cached_property
     def all_cards(self) -> str:
         """Generate a Reference table for all defined Presentation Cards."""
-        table_data: dict[str, list[str]] = {"Id": [], "Name": [], "Description": [], "Available Documents": []}
+        table_data: dict[str, list[str]] = {"Name": [], "Field": [], "Value": []}
+
+        def add_table_data(name: str, field: str, value: str) -> None:
+            """Add another entry to the table."""
+            table_data["Name"].append(MarkdownHelpers.to_html(name))
+            table_data["Field"].append(field)
+            table_data["Value"].append(value)
 
         for card_id, card in self._spec.presentation_template.cards.all():
-            table_data["Id"].append(card_id)
-            table_data["Name"].append(card.name)
-            table_data["Description"].append(card.description)
-            table_data["Available Documents"].append(f"{card.available_docs}")
+            name = f"""
+### {card.name}
+
+{card.description}
+""".strip()
+            add_table_data(name, "Card ID", f"`{card_id}`")
+            doc_links = [
+                f'<a href=".{MarkdownHelpers.doc_ref_link(doc, html=True)}">{doc}</a>' for doc in card.available_docs
+            ]
+            add_table_data(name, "Available Documents", ("* " + "\n* ".join(doc_links)).strip())
 
         params = pl.DataFrame(table_data)
 
         table = (
             GT(params)
-            .with_id(id=f"icon {self.name()}".replace(" ", "_"))
+            .with_id(id=f"cards {self.name()}".replace(" ", "_"))
             .tab_header(
                 title="Defined Presentation Cards",
                 subtitle="\n\nAll Presentation Card Names that may be defined by Presentation Templates.\n\n",
             )
-            .tab_stub(groupname_col="Name")
-            .opt_stylize(style=5)
+            .fmt_markdown(["Name", "Value"])
+            .tab_stub(rowname_col="Field", groupname_col="Name")
+            .cols_label({"Value": ""})
+            .opt_stylize(style=6)
         )
 
         return f"{self.wrap_html(table.as_raw_html())}".strip() + "\n"
