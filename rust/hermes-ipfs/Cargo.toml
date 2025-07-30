@@ -1,3 +1,5 @@
+# cspell: words yamux
+
 [package]
 name = "hermes-ipfs"
 version = "0.0.3"
@@ -16,6 +18,9 @@ derive_more = {version = "1.0.0", features = ["from","into","display"] }
 ipld-core = { version = "0.4.1", features = ["serde"]}
 rust-ipfs = "0.14.1"
 tokio = "1.42.0"
+# Its a transitive dependency of the "rust-ipfs" crate,
+# could be removed after bumped to the rustc compiler 1.87
+yamux = "=0.13.5"
 
 [dev-dependencies]
 # Dependencies used by examples
@@ -25,3 +30,7 @@ lipsum = "0.9.1"
 rand = "0.8.5"
 rustyline-async = "0.4.5"
 tracing-subscriber = { version = "0.3.19", features = ["env-filter"] }
+
+[package.metadata.cargo-machete]
+# remove that after fixing issues with latest crates
+ignored = ["yamux"]
