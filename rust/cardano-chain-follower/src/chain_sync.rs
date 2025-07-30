@@ -75,10 +75,7 @@ async fn retry_connect(
                 retries = retries.saturating_sub(1);
                 if retries == 0 {
                     return Err(pallas::network::facades::Error::ConnectFailure(
-                        tokio::io::Error::new(
-                            tokio::io::ErrorKind::Other,
-                            format!("failed to connect to {addr} : {error}"),
-                        ),
+                        tokio::io::Error::other(format!("failed to connect to {addr} : {error}")),
                     ));
                 }
                 debug!("retrying {retries} connect to {addr} : {error:?}");

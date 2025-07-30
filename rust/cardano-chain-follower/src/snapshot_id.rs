@@ -25,20 +25,15 @@ pub(crate) struct SnapshotId {
 impl SnapshotId {
     /// See if we can Parse the path into an immutable file number.
     pub(crate) fn parse_path(path: &Path) -> Option<u64> {
-        // Path must actually exist, and be a directory.
         if !path.is_dir() {
-            None
-        } else if let Ok(numeric_name) = path
-            .file_name()
+            return None;
+        }
+
+        path.file_name()
             .unwrap_or_default()
             .to_string_lossy()
             .parse::<u64>()
-        {
-            Some(numeric_name)
-        } else {
-            // If we couldn't parse the file name as a number, then it's not an immutable file.
-            None
-        }
+            .ok()
     }
 
     /// Try and create a new `SnapshotID` from a given path.

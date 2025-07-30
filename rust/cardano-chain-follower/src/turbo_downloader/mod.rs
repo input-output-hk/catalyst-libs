@@ -106,14 +106,11 @@ impl BalancingResolver {
             addresses
         };
         let worker_addresses = worker.checked_rem(addresses.len()).ok_or_else(|| {
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "Unexpected index: worker = {}, addresses len = {}",
-                    worker,
-                    addresses.len()
-                ),
-            )
+            std::io::Error::other(format!(
+                "Unexpected index: worker = {}, addresses len = {}",
+                worker,
+                addresses.len()
+            ))
         })?;
         // Safe because we bound the index with the length of `addresses`.
         #[allow(clippy::indexing_slicing)]
@@ -191,10 +188,7 @@ impl DlConfig {
     /// Resolve DNS addresses using Hickory Resolver
     fn resolve(url: &str, worker: usize) -> std::io::Result<Vec<SocketAddr>> {
         let Some(resolver) = RESOLVER.get() else {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "Resolver not initialized.",
-            ));
+            return Err(std::io::Error::other("Resolver not initialized."));
         };
 
         resolver.resolve(url, worker)
@@ -529,7 +523,7 @@ impl ParallelDownloadProcessor {
             }) {
                 error!("Error sending chunk: {:?}, error: {:?}", next_chunk, error);
                 break;
-            };
+            }
             // debug!("Worker {worker_id} DL chunk queued {next_chunk}");
         }
         debug!("Worker {worker_id} ended");
@@ -596,7 +590,7 @@ impl ParallelDownloadProcessor {
             .0
             .left_over_bytes
             .lock()
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, format!("{e:?}")))?;
+            .map_err(|e| std::io::Error::other(format!("{e:?}")))?;
 
         let (left_over_bytes, offset) =
             if let Some((left_over_bytes, offset)) = left_over_buffer.take() {
@@ -608,25 +602,23 @@ impl ParallelDownloadProcessor {
                 // Wait here until we actually have the next chunk in the reorder queue.
                 while !self.0.reorder_queue.contains_key(&next_chunk) {
                     if let Err(error) = self.0.new_chunk_queue_rx.recv() {
-                        return Err(std::io::Error::new(
-                            std::io::ErrorKind::Other,
-                            format!("Next Chunk Queue Error: {error:?}"),
-                        ));
+                        return Err(std::io::Error::other(format!(
+                            "Next Chunk Queue Error: {error:?}"
+                        )));
                     }
                 }
 
                 let Some((_, chunk)) = self.0.reorder_queue.remove(&next_chunk) else {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        format!("Expected Chunk {next_chunk} Didn't get any"),
-                    ));
+                    return Err(std::io::Error::other(format!(
+                        "Expected Chunk {next_chunk} Didn't get any"
+                    )));
                 };
 
                 if chunk.chunk_num != next_chunk {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        format!("Expected Chunk {next_chunk} Got {}", chunk.chunk_num),
-                    ));
+                    return Err(std::io::Error::other(format!(
+                        "Expected Chunk {next_chunk} Got {}",
+                        chunk.chunk_num
+                    )));
                 }
                 let Some(ref block) = chunk.chunk else {
                     return Ok(0); // EOF
@@ -640,10 +632,10 @@ impl ParallelDownloadProcessor {
                 // Send more work to the worker that just finished a work order.
                 // Or Stop the worker if there is no more work they can do.
                 if let Err(error) = self.send_work_order(chunk.worker, next_work_order) {
-                    return Err(std::io::Error::new(
-                        std::io::ErrorKind::Other,
-                        format!("Failed to send work order to {} : {error:?}", chunk.worker),
-                    ));
+                    return Err(std::io::Error::other(format!(
+                        "Failed to send work order to {} : {error:?}",
+                        chunk.worker
+                    )));
                 }
 
                 // If this was the last chunk, we can stop all the workers and cleanup.
@@ -657,28 +649,20 @@ impl ParallelDownloadProcessor {
 
         // Send whats leftover or new.
         let bytes_left = left_over_bytes.len().checked_sub(offset).ok_or_else(|| {
-            std::io::Error::new(
-                std::io::ErrorKind::Other,
-                format!(
-                    "Invalid left over bytes value: {}, offset = {}",
-                    left_over_bytes.len(),
-                    offset
-                ),
-            )
+            std::io::Error::other(format!(
+                "Invalid left over bytes value: {}, offset = {}",
+                left_over_bytes.len(),
+                offset
+            ))
         })?;
         let bytes_to_copy = bytes_left.min(buf.len());
         let sub_buf = offset
             .checked_add(bytes_to_copy)
             .and_then(|upper_bound| left_over_bytes.get(offset..upper_bound))
-            .ok_or_else(|| {
-                std::io::Error::new(std::io::ErrorKind::Other, "Slicing Sub Buffer failed")
-            })?;
+            .ok_or_else(|| std::io::Error::other("Slicing Sub Buffer failed"))?;
         if let Err(error) = memx::memcpy(buf, sub_buf) {
             error!(error=?error, "memx::memcpy failed");
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::Other,
-                "memx::memcpy failed",
-            ));
+            return Err(std::io::Error::other("memx::memcpy failed"));
         }
 
         // Save whats leftover back inside the mutex, if there is anything.
@@ -761,7 +745,7 @@ fn get_content_length(url: &str) -> Result<usize> {
         }
     } else {
         bail!("Server doesn't support HTTP range requests (missing ACCEPT_RANGES header)");
-    };
+    }
 
     let content_length = if let Some(content_length) = response.header(CONTENT_LENGTH.as_str()) {
         let content_length: usize = content_length

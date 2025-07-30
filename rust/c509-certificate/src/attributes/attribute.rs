@@ -198,7 +198,7 @@ impl Encode<()> for AttributeValue {
         match self {
             AttributeValue::Text(text) => encode_helper(e, "Attribute value", ctx, text)?,
             AttributeValue::Bytes(bytes) => encode_helper(e, "Attribute value", ctx, bytes)?,
-        };
+        }
         Ok(())
     }
 }

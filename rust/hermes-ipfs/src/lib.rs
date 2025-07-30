@@ -17,6 +17,8 @@ pub use rust_ipfs::libp2p::futures::{pin_mut, stream::BoxStream, FutureExt, Stre
 pub use rust_ipfs::p2p::PeerInfo;
 /// Enum for specifying paths in IPFS.
 pub use rust_ipfs::path::IpfsPath;
+/// Storage type for IPFS node.
+pub use rust_ipfs::repo::StorageTypes;
 /// Server, Client, or Auto mode
 pub use rust_ipfs::DhtMode;
 /// Server, Client, or Auto mode
@@ -25,8 +27,6 @@ pub use rust_ipfs::Ipfs;
 pub use rust_ipfs::Multiaddr;
 /// Peer ID type.
 pub use rust_ipfs::PeerId;
-/// Storage type for IPFS node.
-pub use rust_ipfs::StorageType;
 /// Stream for `PubSub` Topic Subscriptions.
 pub use rust_ipfs::SubscriptionStream;
 /// Builder type for IPFS Node configuration.
@@ -71,7 +71,7 @@ impl IpfsBuilder {
     pub fn set_disk_storage<T: Into<std::path::PathBuf>>(self, storage_path: T) -> Self {
         Self(
             self.0
-                .set_storage_type(rust_ipfs::StorageType::Disk(storage_path.into())),
+                .set_repo(&rust_ipfs::repo::Repo::new_fs(storage_path.into())),
         )
     }
 
