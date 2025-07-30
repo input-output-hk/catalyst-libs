@@ -26,6 +26,7 @@ The payload of a Proposal Comment is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot proposal_comment_form_template.dot.svg
+
 {{ include_file('./../diagrams/proposal_comment_form_template.dot', indent=4) }}
 ```
 

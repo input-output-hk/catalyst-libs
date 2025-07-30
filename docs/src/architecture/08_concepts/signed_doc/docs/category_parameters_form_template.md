@@ -26,6 +26,7 @@ The payload of a Category Parameters is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot category_parameters_form_template.dot.svg
+
 {{ include_file('./../diagrams/category_parameters_form_template.dot', indent=4) }}
 ```
 

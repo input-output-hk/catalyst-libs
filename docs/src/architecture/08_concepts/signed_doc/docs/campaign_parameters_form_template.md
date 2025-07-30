@@ -26,6 +26,7 @@ The payload of a Campaign Parameters is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot campaign_parameters_form_template.dot.svg
+
 {{ include_file('./../diagrams/campaign_parameters_form_template.dot', indent=4) }}
 ```
 

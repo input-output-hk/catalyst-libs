@@ -7,6 +7,7 @@ A Moderation Action performed on any Comment.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot comment_moderation_action.dot.svg
+
 {{ include_file('./../diagrams/comment_moderation_action.dot', indent=4) }}
 ```
 

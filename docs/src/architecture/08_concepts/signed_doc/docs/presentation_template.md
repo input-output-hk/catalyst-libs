@@ -24,6 +24,7 @@ Form via its Form Template is controlled by one or more Presentation Template do
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot presentation_template.dot.svg
+
 {{ include_file('./../diagrams/presentation_template.dot', indent=4) }}
 ```
 

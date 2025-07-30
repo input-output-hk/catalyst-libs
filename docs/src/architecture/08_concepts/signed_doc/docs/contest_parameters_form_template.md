@@ -26,6 +26,7 @@ The payload of a Contest Parameters is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot contest_parameters_form_template.dot.svg
+
 {{ include_file('./../diagrams/contest_parameters_form_template.dot', indent=4) }}
 ```
 

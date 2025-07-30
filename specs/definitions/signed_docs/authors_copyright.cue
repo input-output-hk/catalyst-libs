@@ -78,7 +78,7 @@ copyright: #copyrightNotice & {
 				* Fixed typographical and layout issues.
 				* Added specifications for Form Templates and Elements.
 				* Reverted Document Types to a Single UUID from an Array of UUIDs
-				* Changed versions to be semantic. 0.04 became 0.0.4
+				* Changed versions to be semantic (0.04 became 0.0.4)
 				* Corrected Parameter References for Brand/Campaign/Category/Contest Templates
 				* Replaced poorly formatting markdown tables with HTML equivalents.
 				* Added draft placeholders for Moderation Documents (subject to change)

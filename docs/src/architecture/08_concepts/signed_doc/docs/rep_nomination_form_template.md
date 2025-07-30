@@ -26,6 +26,7 @@ The payload of a Rep Nomination is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot rep_nomination_form_template.dot.svg
+
 {{ include_file('./../diagrams/rep_nomination_form_template.dot', indent=4) }}
 ```
 

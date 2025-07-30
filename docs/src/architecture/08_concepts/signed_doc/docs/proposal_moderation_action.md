@@ -7,6 +7,7 @@ A Moderation action performed on a Proposal.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot proposal_moderation_action.dot.svg
+
 {{ include_file('./../diagrams/proposal_moderation_action.dot', indent=4) }}
 ```
 

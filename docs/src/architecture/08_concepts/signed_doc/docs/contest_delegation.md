@@ -26,6 +26,7 @@ have not nominated for.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot contest_delegation.dot.svg
+
 {{ include_file('./../diagrams/contest_delegation.dot', indent=4) }}
 ```
 

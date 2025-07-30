@@ -26,6 +26,7 @@ The payload of a Proposal is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot proposal_form_template.dot.svg
+
 {{ include_file('./../diagrams/proposal_form_template.dot', indent=4) }}
 ```
 

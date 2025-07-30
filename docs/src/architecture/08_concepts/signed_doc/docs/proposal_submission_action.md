@@ -22,6 +22,7 @@ The payload is a fixed format.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot proposal_submission_action.dot.svg
+
 {{ include_file('./../diagrams/proposal_submission_action.dot', indent=4) }}
 ```
 

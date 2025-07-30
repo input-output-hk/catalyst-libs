@@ -24,6 +24,7 @@ The payload of a Campaign is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot campaign_parameters.dot.svg
+
 {{ include_file('./../diagrams/campaign_parameters.dot', indent=4) }}
 ```
 

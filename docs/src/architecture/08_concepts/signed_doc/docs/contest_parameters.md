@@ -24,6 +24,7 @@ The payload of a Contest is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot contest_parameters.dot.svg
+
 {{ include_file('./../diagrams/contest_parameters.dot', indent=4) }}
 ```
 

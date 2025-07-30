@@ -34,7 +34,8 @@ All Defined Document Types
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot all.dot.png
+```graphviz dot all.dot.svg
+
 {{ include_file('./diagrams/all.dot', indent=4) }}
 ```
 

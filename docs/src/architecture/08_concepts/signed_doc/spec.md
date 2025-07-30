@@ -580,7 +580,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Fixed typographical and layout issues.
 * Added specifications for Form Templates and Elements.
 * Reverted Document Types to a Single [UUID][RFC9562] from an Array of UUIDs
-* Changed versions to be semantic. 0.04 became 0.0.4
+* Changed versions to be semantic (0.04 became 0.0.4)
 * Corrected Parameter References for Brand/Campaign/Category/Contest Templates
 * Replaced poorly formatting [markdown][CommonMark] tables with [HTML][HTML5] equivalents.
 * Added draft placeholders for Moderation Documents (subject to change)
@@ -591,6 +591,7 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Generalized Presentation Templates, and defined sample (subject to change) cards.
 * Removed specialized presentation templates, as a universal presentation template is all thats required.
 * Converted draft-7 [Json][RFC8259] Schemas to 2020-12
+* Add standard ICON definitions for Forms.
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1

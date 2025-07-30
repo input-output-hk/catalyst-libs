@@ -37,6 +37,7 @@ class DocRelationshipFile(DocGenerator):
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot {file_name}.{filetype}
+
 {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
 ```
 

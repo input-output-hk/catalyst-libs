@@ -24,6 +24,7 @@ The payload of a Brand is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot brand_parameters.dot.svg
+
 {{ include_file('./../diagrams/brand_parameters.dot', indent=4) }}
 ```
 

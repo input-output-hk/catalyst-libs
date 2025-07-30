@@ -16,6 +16,7 @@ The payload of a profile is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot rep_profile.dot.svg
+
 {{ include_file('./../diagrams/rep_profile.dot', indent=4) }}
 ```
 
