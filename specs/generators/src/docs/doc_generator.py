@@ -16,6 +16,7 @@ import rich
 import rich.markdown
 import rich.pretty
 from jinja2 import Environment, FileSystemLoader, select_autoescape
+from rich.traceback import Traceback
 
 from docs.markdown import MarkdownHelpers
 from spec.signed_doc import SignedDoc
@@ -337,12 +338,12 @@ class DocGenerator:
         return True
 
     @staticmethod
-    def failed_message(status: str, error: str, exc: str | None = None) -> bool:
+    def failed_message(status: str, error: str, exc: str | None = None, traceback: Traceback | None = None) -> bool:
         """Display a failed status message."""
         exc = "" if None else f": [red]{exc}[/red]"
         rich.print(f":cross_mark: [yellow]{status}[/yellow]: [red]{error}[/red]{exc}")
-        if exc != "":
-            rich.console.Console().print_exception()
+        if traceback is not None:
+            rich.print(traceback)
         return False
 
     @staticmethod
@@ -359,7 +360,7 @@ class DocGenerator:
         try:
             current_file = self._filepath.read_text()
         except Exception as e:  # noqa: BLE001
-            return self.failed_message(status, "Reading Previous Generated Content", f"{e}")
+            return self.failed_message(status, "Reading Previous Generated Content", f"{e}", traceback=Traceback())
         if current_file == self._filedata:
             return self.success_message(status)
 
@@ -394,27 +395,31 @@ class DocGenerator:
         status = f"{'Generating' if self._generate else 'Validating'} [white bold]{self._filename}[/white bold]"
 
         exc = ""
+        traceback = None
         try:
             ok = self.generate()
         except Exception as e:  # noqa: BLE001
             ok = False
             exc = f"{e}"
+            traceback = Traceback()
         if not ok:
-            return self.failed_message(status, "GENERATION FAILED", exc)
+            return self.failed_message(status, "GENERATION FAILED", exc, traceback)
 
         if self._generate:
             if self._filepath.exists():
                 try:
                     old_contents = self._filepath.read_text()
                 except Exception as e:  # noqa: BLE001
-                    return self.failed_message(status, "Reading Previous Generated Content", f"{e}")
+                    return self.failed_message(
+                        status, "Reading Previous Generated Content", f"{e}", traceback=Traceback()
+                    )
                 if old_contents == self._filedata:
                     return self.success_message(status, ":blue_book: :scales: :green_book: - No Changes")
 
             try:
                 self._filepath.write_text(self._filedata)
             except Exception as e:  # noqa: BLE001
-                return self.failed_message(status, "Writing Generated Content", f"{e}")
+                return self.failed_message(status, "Writing Generated Content", f"{e}", traceback=Traceback())
             return self.success_message(status)
 
         return self.validate_generation(status)
@@ -549,7 +554,20 @@ class DocGenerator:
         label: str = "Example",
         title: str = "",
         description: str | None = None,
-        icon_type: str = "example",
+        icon_type: typing.Literal[
+            "note",
+            "abstract",
+            "info",
+            "tip",
+            "success",
+            "question",
+            "warning",
+            "failure",
+            "danger",
+            "bug",
+            "example",
+            "quote",
+        ] = "example",
     ) -> str:
         """Get the example properly formatted as markdown."""
         example = json.dumps(data, indent=2, sort_keys=True)

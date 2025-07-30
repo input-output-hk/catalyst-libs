@@ -20,6 +20,7 @@ from spec.documentation_links import Documentation
 from spec.forms.template import FormTemplate
 from spec.metadata import Metadata, MetadataHeader
 from spec.optional import OptionalField
+from spec.presentation_templates.template import PresentationTemplate
 
 
 class SignedDoc(BaseModel):
@@ -36,6 +37,7 @@ class SignedDoc(BaseModel):
     encoding_types: EncodingTypes = Field(alias="encodingTypes")
     metadata: Metadata
     form_template: FormTemplate = Field(alias="formTemplate")
+    presentation_template: PresentationTemplate = Field(alias="presentationTemplate")
 
     _file: str = PrivateAttr(default="Uninitialized")
 

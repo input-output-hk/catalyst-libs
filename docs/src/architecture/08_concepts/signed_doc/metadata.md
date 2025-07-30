@@ -212,10 +212,9 @@ The document version must always be >= the document ID.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Proposal Form Template](./docs/proposal_form_template.md) |
-|  | [Proposal Presentation Template](./docs/proposal_presentation_template.md) |
+|  | [Presentation Template](./docs/presentation_template.md) |
 |  | [Proposal](./docs/proposal.md) |
 |  | [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) |
-|  | [Proposal Comment Presentation Template](./docs/proposal_comment_presentation_template.md) |
 |  | [Proposal Comment](./docs/proposal_comment.md) |
 |  | [Proposal Submission Action](./docs/proposal_submission_action.md) |
 |  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |

@@ -677,6 +677,71 @@ digraph "All" {
     ];
 
 
+    "Presentation Template" [
+        id="Presentation Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/presentation_template/">
+                    <FONT COLOR="#ffffff"><B> Presentation Template </B></FONT>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/schema+json</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>cb99b9bd-681a-49d8-9836-89107c02e8ef</I></B></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">id</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Id</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ver</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Ver</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
     "Proposal Form Template" [
         id="Proposal Form Template";
         label=<
@@ -902,71 +967,6 @@ digraph "All" {
     ];
 
 
-    "Proposal Comment Presentation Template" [
-        id="Proposal Comment Presentation Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/proposal_comment_presentation_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Comment Presentation Template </B></FONT>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/schema+json</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>eff42c84-f862-4573-bca1-5bc9584a241b</I></B></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Id</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ver</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Ver</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
     "Proposal Moderation Action" [
         id="Proposal Moderation Action";
         label=<
@@ -1022,71 +1022,6 @@ digraph "All" {
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ref</FONT></TD>
                             <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Proposal</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-
-            </TABLE>
-        >
-    ];
-
-
-    "Proposal Presentation Template" [
-        id="Proposal Presentation Template";
-        label=<
-            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-            <TR>
-                <TD PORT="title" BGCOLOR="#1d71b8" HREF="./docs/proposal_presentation_template/">
-                    <FONT COLOR="#ffffff"><B> Proposal Presentation Template </B></FONT>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="content type" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">content type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>application/schema+json</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="type" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>cb99b9bd-681a-49d8-9836-89107c02e8ef</I></B></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="id" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">id</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Id</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="ver" BGCOLOR="#b8b5b0">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">ver</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Document Ver</I></FONT></TD>
-                        </TR>
-                    </TABLE>
-                </TD>
-            </TR>
-            <TR>
-                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
-                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
-                        <TR>
-                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Brand Parameters<BR />Campaign Parameters<BR />Category Parameters</I></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -1678,6 +1613,7 @@ digraph "All" {
     "Contest Delegation":"parameters":e -> "Contest Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Parameters":"template":e -> "Contest Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Contest Parameters":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Presentation Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"template":e -> "Proposal Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
@@ -1685,10 +1621,8 @@ digraph "All" {
     "Proposal Comment":"reply":e -> "Proposal Comment":"title":n [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Comment":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment Form Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
-    "Proposal Comment Presentation Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Form Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Moderation Action":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
-    "Proposal Presentation Template":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Submission Action":"ref":e -> "Proposal":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Proposal Submission Action":"parameters":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Rep Nomination":"ref":e -> "Rep Profile":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]

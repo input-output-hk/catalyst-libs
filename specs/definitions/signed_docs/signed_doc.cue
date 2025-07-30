@@ -6,6 +6,7 @@ package signed_docs
 import (
 	"github.com/input-output-hk/catalyst-libs/specs/generic:uuid"
 	"github.com/input-output-hk/catalyst-libs/specs/form_template/elements:form_template"
+	"github.com/input-output-hk/catalyst-libs/specs/presentation_template/definedCards:presentation_template"
 	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
 )
 
@@ -77,4 +78,9 @@ formTemplate: {
 	elements: form_template.dictionary
 	schema:   form_template.formTemplate
 	assets: icons: form_template.allIconsSvg
+}
+
+presentationTemplate: {
+	cards:  presentation_template.allCards
+	schema: presentation_template.presentationTemplate
 }

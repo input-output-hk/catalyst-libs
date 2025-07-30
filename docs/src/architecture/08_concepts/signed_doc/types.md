@@ -17,13 +17,12 @@ All Defined Document Types
 | [Contest Delegation](docs/contest_delegation.md) | 764f17fb-cc50-4979-b14a-b213dbac5994 | `#6.37(h'764f17fbcc504979b14ab213dbac5994')` |
 | [Contest Parameters](docs/contest_parameters.md) | 788ff4c6-d65a-451f-bb33-575fe056b411 | `#6.37(h'788ff4c6d65a451fbb33575fe056b411')` |
 | [Contest Parameters Form Template](docs/contest_parameters_form_template.md) | 08a1e16d-354d-4f64-8812-4692924b113b | `#6.37(h'08a1e16d354d4f6488124692924b113b')` |
+| [Presentation Template](docs/presentation_template.md) | cb99b9bd-681a-49d8-9836-89107c02e8ef | `#6.37(h'cb99b9bd681a49d8983689107c02e8ef')` |
 | [Proposal](docs/proposal.md) | 7808d2ba-d511-40af-84e8-c0d1625fdfdc | `#6.37(h'7808d2bad51140af84e8c0d1625fdfdc')` |
 | [Proposal Comment](docs/proposal_comment.md) | b679ded3-0e7c-41ba-89f8-da62a17898ea | `#6.37(h'b679ded30e7c41ba89f8da62a17898ea')` |
 | [Proposal Comment Form Template](docs/proposal_comment_form_template.md) | 0b8424d4-ebfd-46e3-9577-1775a69d290c | `#6.37(h'0b8424d4ebfd46e395771775a69d290c')` |
-| [Proposal Comment Presentation Template](docs/proposal_comment_presentation_template.md) | eff42c84-f862-4573-bca1-5bc9584a241b | `#6.37(h'eff42c84f8624573bca15bc9584a241b')` |
 | [Proposal Form Template](docs/proposal_form_template.md) | 0ce8ab38-9258-4fbc-a62e-7faa6e58318f | `#6.37(h'0ce8ab3892584fbca62e7faa6e58318f')` |
 | [Proposal Moderation Action](docs/proposal_moderation_action.md) | a552451a-8e5b-409d-83a0-21eac26bbf8c | `#6.37(h'a552451a8e5b409d83a021eac26bbf8c')` |
-| [Proposal Presentation Template](docs/proposal_presentation_template.md) | cb99b9bd-681a-49d8-9836-89107c02e8ef | `#6.37(h'cb99b9bd681a49d8983689107c02e8ef')` |
 | [Proposal Submission Action](docs/proposal_submission_action.md) | 5e60e623-ad02-4a1b-a1ac-406db978ee48 | `#6.37(h'5e60e623ad024a1ba1ac406db978ee48')` |
 | [Rep Nomination](docs/rep_nomination.md) | bf9abd97-5d1f-4429-8e80-740fea371a9c | `#6.37(h'bf9abd975d1f44298e80740fea371a9c')` |
 | [Rep Nomination Form Template](docs/rep_nomination_form_template.md) | 431561a5-9c2b-4de1-8e0d-78eb4887e35d | `#6.37(h'431561a59c2b4de18e0d78eb4887e35d')` |

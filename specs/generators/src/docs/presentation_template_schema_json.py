@@ -1,4 +1,4 @@
-"""Generate the template_example.schema.json file."""
+"""Generate the presentation_template.schema.json file."""
 
 import argparse
 
@@ -11,12 +11,12 @@ from spec.signed_doc import SignedDoc
 from .doc_generator import DocGenerator
 
 
-class FormTemplateExampleSchemaJson(DocGenerator):
-    """Generate the template_example.schema.json file."""
+class PresentationTemplateSchemaJson(DocGenerator):
+    """Generate the presentation_template.schema.json file."""
 
     def __init__(self, args: argparse.Namespace, spec: SignedDoc) -> None:
-        """Initialise template_example.schema.json generator."""
-        file_name = "schema/form_template_example.schema.json"
+        """Initialise presentation_template.schema.json generator."""
+        file_name = "schema/presentation_template.schema.json"
 
         super().__init__(args, spec, filename=file_name, flags=self.NO_FLAGS)
 
@@ -25,7 +25,7 @@ class FormTemplateExampleSchemaJson(DocGenerator):
         *,
         indent: int = 0,
         relative_doc: DocGenerator | None = None,
-        title: str = "Form Template Example Schema",
+        title: str = "Presentation Template Schema",
         filetype: str = "json",
     ) -> str:
         """Create a Markdown formatted reference for the file."""
@@ -33,7 +33,7 @@ class FormTemplateExampleSchemaJson(DocGenerator):
 
     def generate(self) -> bool:
         """Generate a `template_example.schema.json` file from the definitions."""
-        schema = self._spec.form_template.elements.example()
+        schema = self._spec.presentation_template.template_schema.template_schema()
 
         # Just ensure the generated example is valid.
         try:

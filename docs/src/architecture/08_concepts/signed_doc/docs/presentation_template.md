@@ -1,29 +1,30 @@
-# Proposal Presentation Template
+# Presentation Template
 
 ## Description
 
-A Proposal Presentation Template defines how the data
-captured by the Proposal Form Template is to be displayed.
+A Presentation Template defines how the data
+captured by the *ANY* Set of Form Template or system dynamic data is to be displayed.
 
-Multiple Proposal Presentation Templates can exist for the
-same Proposal Form Template.
-Each can be used to display the form data under different
-circumstances.
+Multiple Presentation Templates will exist, and will be associated with multiple document types.
+There is no strict 1:1 relationship between any document, its template and a presentation template.
 
-Proposal Presentation Templates can reference any data contained
-in the Proposal Document, as well as any documents linked by:
+The presentation templates are context sensitive, and each template defines the sources
+of published document information they require.
+
+Presentation Templates can reference any data contained
+in the referenced Documents, as well as any documents linked by:
 
 * [`ref`](../metadata.md#ref)
 * [`reply`](../metadata.md#reply)
 * [`parameters`](../metadata.md#parameters)
 
-The presentation of the payload of a Proposal is controlled by
-its Proposal Presentation Template/s.
+The presentation of the payload of all data when not capturing or displaying a
+Form via its Form Template is controlled by one or more Presentation Template documents.
 
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot proposal_presentation_template.dot.svg
-{{ include_file('./../diagrams/proposal_presentation_template.dot', indent=4) }}
+```graphviz dot presentation_template.dot.svg
+{{ include_file('./../diagrams/presentation_template.dot', indent=4) }}
 ```
 
 <!-- markdownlint-enable max-one-sentence-per-line -->
@@ -139,12 +140,103 @@ hierarchy they are all valid.
 
 ## Payload
 
-TBD.
-But roughly, will be:
+The Presentation Template is defined by its schema.
+See `[presentation_templates.md](TODO)`
 
-1. A way to identify where the presentation template is intended to be used.
-2. Optional [CSS] to control the presentation.
-3. A [Handlebars] templated [HTML][HTML5] or [Markdown][CommonMark] file data which defines the presentation.
+### Schema
+
+<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
+??? abstract "Schema: Payload [JSON][RFC8259] Schema"
+
+    The Presentation Template is defined by its schema.
+    See `[presentation_templates.md](TODO)`
+
+
+    ```json
+    {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "maintainers": [
+        {
+          "name": "Catalyst Team",
+          "url": "https://projectcatalyst.io/"
+        }
+      ],
+      "title": "Presentation Template",
+      "description": "Presentation Templates define how data extracted from Form Data is to be presented.\nThey provide a way to parameterize the contents of a UI in response to the changing\nneeds of the Forms themselves.",
+      "$defs": {
+        "cardDescription": {
+          "description": "A long form description of the purpose of the card. Not used by the UI.",
+          "type": "string"
+        },
+        "cardName": {
+          "description": "A Card has to have one of the well known defined names.\nThese are the primary identifier which is used by the UI to determine\nwhere the UI will place the card.",
+          "enum": [
+            "draft-proposal-summary"
+          ],
+          "type": "string"
+        },
+        "cardTitle": {
+          "description": "A title shown to the editor of the card.  Not used by the UI.",
+          "type": "string"
+        },
+        "css": {
+          "contentType": "text/css; charset=utf-8; template=handlebars",
+          "description": "Optional styling that can be used by the HTML generated from the template for presentation.",
+          "type": "string"
+        },
+        "layoutParameters": {
+          "description": "Parameters which help the front end layout the provided template. To be defined.",
+          "type": "object"
+        },
+        "requiredDocumentTypes": {
+          "description": "A list of the document types (UUIDs) the presentation template needs.",
+          "items": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "type": "array",
+          "uniqueItems": true
+        },
+        "template": {
+          "contentType": "text/html; charset=utf-8; template=handlebars",
+          "description": "HTML5 defined presentation layout for the card.\nThe data is templated with handlebars, and the data that can be inserted is\nderived from the `requiredDocumentTypes` and available system wide dynamic data.",
+          "type": "string"
+        }
+      },
+      "type": "object",
+      "properties": {
+        "css": {
+          "$ref": "#/$defs/cardTemplateCss"
+        },
+        "description": {
+          "$ref": "#/$defs/cardDescription"
+        },
+        "layout": {
+          "$ref": "#/$defs/layoutParameters"
+        },
+        "name": {
+          "$ref": "#/$defs/cardName"
+        },
+        "requiredDocs": {
+          "$ref": "#/$defs/requiredDocumentTypes"
+        },
+        "template": {
+          "$ref": "#/$defs/cardTemplate"
+        },
+        "title": {
+          "$ref": "#/$defs/cardTitle"
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "cardName",
+        "requiredDocuments",
+        "layoutParameters",
+        "template"
+      ]
+    }
+    ```
+<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
 
 ## Signers
 
@@ -163,7 +255,7 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-07-25 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
@@ -173,10 +265,11 @@ New versions of this document may be published by:
 
 * First Version.
 
+#### 0.1.0 (2025-07-30)
+
+* Updated to match Presentation Schema Definitions.
+
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
-[Handlebars]: https://handlebarsjs.com/
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
-[CommonMark]: https://spec.commonmark.org/0.31.2/
 [RFC9562-V7]: https://www.rfc-editor.org/rfc/rfc9562.html#name-uuid-version-7
-[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
-[CSS]: https://www.w3.org/Style/CSS/
+[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html

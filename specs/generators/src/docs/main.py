@@ -9,6 +9,7 @@ import rich
 from rich_argparse import RichHelpFormatter
 
 from docs.doc_index import DocIndex
+from docs.presentation_template_md import PresentationTemplatesMd
 from spec.signed_doc import SignedDoc
 
 from .form_templates_md import FormTemplatesMd
@@ -83,6 +84,7 @@ def main() -> None:
     good &= MetadataMd(args, spec).save_or_validate()
     good &= DocIndex(args, spec).save_or_validate()
     good &= FormTemplatesMd(args, spec).save_or_validate()
+    good &= PresentationTemplatesMd(args, spec).save_or_validate()
 
     if not good:
         rich.print("File Comparisons Failed, Documentation is not current.")

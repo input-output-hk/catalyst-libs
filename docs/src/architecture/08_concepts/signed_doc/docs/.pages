@@ -10,13 +10,12 @@ nav:
   - Contest Delegation: contest_delegation.md
   - Contest Parameters: contest_parameters.md
   - Contest Parameters Form Template: contest_parameters_form_template.md
+  - Presentation Template: presentation_template.md
   - Proposal: proposal.md
   - Proposal Comment: proposal_comment.md
   - Proposal Comment Form Template: proposal_comment_form_template.md
-  - Proposal Comment Presentation Template: proposal_comment_presentation_template.md
   - Proposal Form Template: proposal_form_template.md
   - Proposal Moderation Action: proposal_moderation_action.md
-  - Proposal Presentation Template: proposal_presentation_template.md
   - Proposal Submission Action: proposal_submission_action.md
   - Rep Nomination: rep_nomination.md
   - Rep Nomination Form Template: rep_nomination_form_template.md

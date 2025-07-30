@@ -1,0 +1,91 @@
+# Presentation Template Specification
+
+Data in Project Catalyst is divided into:
+
+* Form captured data, which is controlled and validated by FormTemplates; and
+* Dynamic System Data, which is derived by the system based on activity or on-chain information.
+
+There needs to be a way to present this data in a meaningful, cross platform, structured approach.
+
+This is achieved with this Presentation Template.
+
+Each Presentation Template defines a presentation for a particular Card of information.
+The UI composes its display based on these cards, which allow for both static content
+and dynamic content defined within the system to be merged and presented.
+
+This helps divide the system by intent, data capture/generation and presentation.
+
+Presentation Templates *DO NOT* capture user flows.
+They *ONLY* define how data could be displayed by combining source for a particular purpose.
+The purpose is derived solely by the cards id.
+
+## JSON Schema
+
+Presentation Template payloads all follow the same structure, which is defined by JSON Schema version 2020-12.
+
+### Schema
+
+The Presentation template schema has the following format.
+
+{{ schema.markdown_reference(relative_doc=doc) }}
+
+#### `"$schema"`
+
+This defines that the template is a standard JSON Schema version 2020-12 document.
+Any document derived from the template is only valid if it validates
+according to JSON Schema validation rules against the template.
+
+#### `"maintainers"`
+
+Is a list of the entities who have made or updated the template.
+It is optional, but if it is included, it *MUST* be an array of objects.
+Each object must have two fields:
+
+* `"name"` : The name of the individual maintainer or group responsible for the template.
+* `"url"` : A link where more information about the maintainer or group can be found.
+    If there is no link, the field is still present, but an empty string (`""`).
+
+#### `"title"`
+
+This is a name for the template.
+It is not used by consumers of the template, but could be used by 
+template builders to help identify the template.
+
+#### `"description"`
+
+This is a long multi line description about the template itself.
+It is not used by consumers of the template, but could be used by
+template builders to help identify and define the purpose of the template.
+
+There is expected to be a number of templates used in the system, and both
+`"title"` and `"description"` help template builders organize templates.
+
+#### `"$defs"`
+
+Defines the fields within the properties that define the presentation template.
+
+#### `"type": "object"`
+
+The Presentation Template is an `object` type.
+
+#### `"properties"`
+
+The `"properties"` section defines each field that is used to define the Presentation Template.
+
+#### `"additionalProperties": false`
+
+This Templates is exhaustively defined.
+It is not permissible to add fields to a document,
+that are not present in this schema.
+
+`"additionalProperties": false`
+
+## Example Presentation Template
+
+TODO.
+
+{#{ example_schema.markdown_reference(relative_doc=doc) }#}
+
+## Presentation Template Cards
+
+{{doc.all_cards}}
