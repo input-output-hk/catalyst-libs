@@ -240,14 +240,7 @@ States:
       ],
       "title": "Proposal Submission Action Payload Schema",
       "description": "Structure of the payload of a Proposal Submission Action.",
-      "type": "object",
-      "properties": {
-        "action": {
-          "$ref": "#/definitions/action"
-        }
-      },
-      "additionalProperties": false,
-      "definitions": {
+      "$defs": {
         "action": {
           "description": "The action being performed on the Proposal.",
           "enum": [
@@ -258,6 +251,13 @@ States:
           "type": "string"
         }
       },
+      "type": "object",
+      "properties": {
+        "action": {
+          "$ref": "#/$defs/action"
+        }
+      },
+      "additionalProperties": false,
       "required": [
         "action"
       ],
@@ -329,8 +329,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-07-25 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog

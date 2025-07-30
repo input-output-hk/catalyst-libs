@@ -2634,7 +2634,7 @@
           ],
           "properties": {
             "action": {
-              "$ref": "#/definitions/action"
+              "$ref": "#/$defs/action"
             }
           },
           "required": [

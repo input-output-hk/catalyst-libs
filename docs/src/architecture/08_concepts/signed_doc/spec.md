@@ -549,8 +549,10 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-07-25 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
@@ -573,17 +575,32 @@ Catalyst ID <a href="https://datatracker.ietf.org/doc/html/rfc3986">URI</a> iden
 * Defined Systems parameters documents
 * Defined DReps documents.
 
-#### 0.1.0 (2025-07-25)
+#### 0.1.0 (2025-07-30)
 
 * Fixed typographical and layout issues.
 * Added specifications for Form Templates and Elements.
-*
+* Reverted Document Types to a Single [UUID][RFC9562] from an Array of UUIDs
+* Changed versions to be semantic. 0.04 became 0.0.4
+* Corrected Parameter References for Brand/Campaign/Category/Contest Templates
+* Replaced poorly formatting [markdown][CommonMark] tables with [HTML][HTML5] equivalents.
+* Added draft placeholders for Moderation Documents (subject to change)
+* Clarified How Representatives may delegate.
+* Clarified what happens when a new version of a Nomination Document is published.
+* Clarified how delegations can be revoked.
+* Clarified the payload for delegations.
+* Generalized Presentation Templates, and defined sample (subject to change) cards.
+* Removed specialized presentation templates, as a universal presentation template is all thats required.
+* Converted draft-7 [Json][RFC8259] Schemas to 2020-12
 
 [CBOR-LFD-ENCODING]: https://www.rfc-editor.org/rfc/rfc8949.html#section-4.2.3
 [RFC9052-HeaderParameters]: https://www.rfc-editor.org/rfc/rfc8152#section-3.1
 [RFC9052-CoseSign]: https://datatracker.ietf.org/doc/html/rfc9052#name-signing-with-one-or-more-si
 [CC-BY-4.0]: https://creativecommons.org/licenses/by/4.0/legalcode
+[CommonMark]: https://spec.commonmark.org/0.31.2/
 [RFC3629]: https://datatracker.ietf.org/doc/html/rfc3629
 [RFC8610]: https://www.rfc-editor.org/rfc/rfc8610
 [RFC9052]: https://datatracker.ietf.org/doc/html/rfc9052
+[HTML5]: https://html.spec.whatwg.org/multipage/syntax.html#syntax
+[RFC8259]: https://www.rfc-editor.org/rfc/rfc8259.html
+[RFC9562]: https://www.rfc-editor.org/rfc/rfc9562.html
 [RFC3986]: https://datatracker.ietf.org/doc/html/rfc3986

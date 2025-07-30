@@ -5,6 +5,7 @@ import typing
 
 from pydantic import HttpUrl
 
+from spec.payload import DRAFT7_SCHEMA, DRAFT202012_SCHEMA
 from spec.signed_doc import SignedDoc
 
 from .doc_generator import DocGenerator
@@ -84,9 +85,9 @@ In this case, it *MUST* be encoded as a CBOR `null (0xf6)`.
         schema = self._doc.payload.doc_schema
         if schema is not None:
             if isinstance(schema, HttpUrl):
-                if schema == "https://json-schema.org/draft-07/schema":
+                if schema == DRAFT7_SCHEMA:
                     docs += "\n**Must be a valid JSON Schema Draft 7 document.**"
-                if schema == "https://json-schema.org/draft/2020-12/schema":
+                if schema == DRAFT202012_SCHEMA:
                     docs += "\n**Must be a valid JSON Schema Draft 2020-12 document.**"
                 else:
                     docs += f"\nMust be a valid according to <{schema}>."

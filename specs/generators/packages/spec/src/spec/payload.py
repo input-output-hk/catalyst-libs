@@ -10,6 +10,9 @@ import jsonschema
 import rich
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
+DRAFT7_SCHEMA = "https://json-schema.org/draft-07/schema"
+DRAFT202012_SCHEMA = "https://json-schema.org/draft/2020-12/schema"
+
 
 class PayloadExample(BaseModel):
     """An Example of the payload."""
@@ -64,9 +67,9 @@ class Payload(BaseModel):
         schema = None
         validator = None
         if isinstance(self.doc_schema, HttpUrl):
-            if f"{self.doc_schema}" == "https://json-schema.org/draft-07/schema":
+            if f"{self.doc_schema}" == DRAFT7_SCHEMA:
                 schema = jsonschema.Draft7Validator.META_SCHEMA
-            elif f"{self.doc_schema}" == "https://json-schema.org/draft/2020-12/schema":
+            elif f"{self.doc_schema}" == DRAFT202012_SCHEMA:
                 schema = jsonschema.Draft202012Validator.META_SCHEMA
             else:
                 rich.print(f"Downloading Schema from: {self.doc_schema}")
