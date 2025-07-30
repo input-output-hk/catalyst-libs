@@ -19,6 +19,8 @@ import (
 authors: #authorList & {
 	"Steven Johnson":   "steven.johnson@iohk.io"
 	"Alex Pozhylenkov": "alex.pozhylenkov@iohk.io"
+	"Nathan Bogale":    "nathan.bogale@iohk.io"
+	"Neil McAuliffe":   "neil.mcauliffe@iohk.io"
 }
 
 // Individual Changelog Entry
@@ -71,10 +73,22 @@ copyright: #copyrightNotice & {
 		},
 		{
 			version:  "0.1.0"
-			modified: "2025-07-25"
+			modified: "2025-07-30"
 			changes: """
 				* Fixed typographical and layout issues.
 				* Added specifications for Form Templates and Elements.
+				* Reverted Document Types to a Single UUID from an Array of UUIDs
+				* Changed versions to be semantic. 0.04 became 0.0.4
+				* Corrected Parameter References for Brand/Campaign/Category/Contest Templates
+				* Replaced poorly formatting markdown tables with HTML equivalents.
+				* Added draft placeholders for Moderation Documents (subject to change)
+				* Clarified How Representatives may delegate.
+				* Clarified what happens when a new version of a Nomination Document is published.
+				* Clarified how delegations can be revoked.
+				* Clarified the payload for delegations.
+				* Generalized Presentation Templates, and defined sample (subject to change) cards.
+				* Removed specialized presentation templates, as a universal presentation template is all thats required.
+				* Converted draft-7 Json Schemas to 2020-12
 				"""
 		},
 	]

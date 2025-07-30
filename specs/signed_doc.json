@@ -1,6 +1,8 @@
 {
   "authors": {
     "Alex Pozhylenkov": "alex.pozhylenkov@iohk.io",
+    "Nathan Bogale": "nathan.bogale@iohk.io",
+    "Neil McAuliffe": "neil.mcauliffe@iohk.io",
     "Steven Johnson": "steven.johnson@iohk.io"
   },
   "cddlDefinitions": {
@@ -294,8 +296,8 @@
         "version": "0.0.4"
       },
       {
-        "changes": "* Fixed typographical and layout issues.\n* Added specifications for Form Templates and Elements.",
-        "modified": "2025-07-25",
+        "changes": "* Fixed typographical and layout issues.\n* Added specifications for Form Templates and Elements.\n* Reverted Document Types to a Single UUID from an Array of UUIDs\n* Changed versions to be semantic. 0.04 became 0.0.4\n* Corrected Parameter References for Brand/Campaign/Category/Contest Templates\n* Replaced poorly formatting markdown tables with HTML equivalents.\n* Added draft placeholders for Moderation Documents (subject to change)\n* Clarified How Representatives may delegate.\n* Clarified what happens when a new version of a Nomination Document is published.\n* Clarified how delegations can be revoked.\n* Clarified the payload for delegations.\n* Generalized Presentation Templates, and defined sample (subject to change) cards.\n* Removed specialized presentation templates, as a universal presentation template is all thats required.\n* Converted draft-7 Json Schemas to 2020-12",
+        "modified": "2025-07-30",
         "version": "0.1.0"
       }
     ]
@@ -790,7 +792,12 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "required": "excluded",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters"
+          ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
         "ref": {
@@ -1042,7 +1049,12 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "required": "excluded",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Campaign Parameters"
+          ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
         "ref": {
@@ -1522,7 +1534,14 @@
         "parameters": {
           "description": "A reference to the Parameters Document this document lies under.",
           "format": "Document Reference",
-          "required": "excluded",
+          "linked_refs": null,
+          "multiple": false,
+          "required": "yes",
+          "type": [
+            "Brand Parameters",
+            "Campaign Parameters",
+            "Category Parameters"
+          ],
           "validation": "In addition to the validation performed for `Document Reference` type fields: \n\n* Any linked referenced document that includes a `parameters` metadata must match the \n`parameters` of the referencing document,\nor a parent of those `parameters`.\n\nFor example, a linked reference to `Contest Parameters` is transitively a reference to\nthe Parameters document it references, and each parameters document they reference \nuntil the `Brand` parameters document is reached.\n\nThe use case here is for Templates.\nThe profile template, or proposal templates could be defined at any of these\nlevels, and as long as they all refer to the same chain of parameters in the\nhierarchy they are all valid."
         },
         "ref": {
@@ -2593,9 +2612,7 @@
           }
         ],
         "schema": {
-          "$schema": "https://json-schema.org/draft/2020-12/schema",
-          "additionalProperties": false,
-          "definitions": {
+          "$defs": {
             "action": {
               "description": "The action being performed on the Proposal.",
               "enum": [
@@ -2606,6 +2623,8 @@
               "type": "string"
             }
           },
+          "$schema": "https://json-schema.org/draft/2020-12/schema",
+          "additionalProperties": false,
           "description": "Structure of the payload of a Proposal Submission Action.",
           "maintainers": [
             {

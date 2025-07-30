@@ -15,7 +15,7 @@
     },
     "type": "object",
     "additionalProperties": false,
-    "definitions": {
+    "$defs": {
         "action": {
             "type": "string",
             "description": "The action being performed on the Proposal.",

@@ -28,6 +28,21 @@ Relationships"
     ];
 
 
+    "Campaign Parameters Form Template" [
+        id="Campaign Parameters Form Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters_form_template/">
+                    <FONT COLOR="#ffffff"><B> Campaign Parameters Form Template </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
     "Contest Parameters" [
         id="Contest Parameters";
         label=<
@@ -35,6 +50,21 @@ Relationships"
             <TR>
                 <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters/">
                     <FONT COLOR="#ffffff"><B> Contest Parameters </B></FONT>
+                </TD>
+            </TR>
+
+            </TABLE>
+        >
+    ];
+
+
+    "Contest Parameters Form Template" [
+        id="Contest Parameters Form Template";
+        label=<
+            <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+            <TR>
+                <TD PORT="title" BGCOLOR="#1d71b8" HREF="../contest_parameters_form_template/">
+                    <FONT COLOR="#ffffff"><B> Contest Parameters Form Template </B></FONT>
                 </TD>
             </TR>
 
@@ -271,7 +301,9 @@ Relationships"
 
     "Brand Parameters":"template":e -> "Brand Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
     "Campaign Parameters":"title":e -> "Brand Parameters":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
+    "Campaign Parameters Form Template":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Contest Parameters":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
+    "Contest Parameters Form Template":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Presentation Template":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Proposal Comment":"title":e -> "Brand Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]

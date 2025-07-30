@@ -110,6 +110,34 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
+### [`parameters`](../metadata.md#parameters)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Parameters Document this document lies under.
+
+#### [`parameters`](../metadata.md#parameters) Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document,
+or a parent of those [`parameters`](../metadata.md#parameters).
+
+For example, a linked reference to [Contest Parameters](contest_parameters.md) is transitively a reference to
+the Parameters document it references, and each parameters document they reference
+until the `Brand` parameters document is reached.
+
+The use case here is for Templates.
+The profile template, or proposal templates could be defined at any of these
+levels, and as long as they all refer to the same chain of parameters in the
+hierarchy they are all valid.
+
 ## Payload
 
 [JSON Schema][JSON Schema-2020-12] document which defines the valid contents and

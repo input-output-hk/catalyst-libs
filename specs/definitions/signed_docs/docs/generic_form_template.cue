@@ -48,6 +48,27 @@ _metadataFieldBrandParameters: #metadataField & {
 	type: ["Brand Parameters"]
 }
 
+// Used for documents that can only link to campaign parameters.
+_metadataFieldCampaignParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Campaign Parameters"]
+}
+
+// Used for documents that can only link to category parameters.
+_metadataFieldCategoryParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Category Parameters"]
+}
+
+// Used for documents that can only link to brand parameters.
+_metadataFieldBrandParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Brand Parameters"]
+}
+
 // Used for documents that can only link to contest parameters.
 _metadataFieldContestParameters: #metadataField & {
 	// Is the field required to be present.
