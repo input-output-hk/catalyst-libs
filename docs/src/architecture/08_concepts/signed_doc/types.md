@@ -32,14 +32,7 @@ All Defined Document Types
 
 ## Document Relationship Hierarchy
 
-<!-- markdownlint-disable max-one-sentence-per-line -->
-
-```graphviz dot all.dot.svg
-
-{{ include_file('./diagrams/all.dot', indent=4) }}
-```
-
-<!-- markdownlint-enable max-one-sentence-per-line -->
+![Document Hierarchy](diagrams/all.dot.svg "Document Hierarchy")
 
 ## Copyright
 

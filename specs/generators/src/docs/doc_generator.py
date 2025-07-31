@@ -75,7 +75,7 @@ class DocGenerator:
         """Must be called BEFORE subclasses add any customization."""
         self._args = args
         self._spec = spec
-        self._generate = args.generate
+        self._generate: bool = args.generate
         self._depth = depth
         self._filedata = ""
         self._has_markdown_links = flags & self.HAS_MARKDOWN_LINKS != 0

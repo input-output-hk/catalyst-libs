@@ -1,6 +1,7 @@
 """Generate the document relationship diagram files."""
 
 import argparse
+import subprocess
 import textwrap
 
 from docs.markdown import MarkdownHelpers
@@ -25,12 +26,31 @@ class DocRelationshipFile(DocGenerator):
         self._document_name = doc_name
 
     def markdown_reference(
-        self, *, indent: int = 0, relative_doc: DocGenerator | None = None, title: str = "", filetype: str = "png"
+        self,
+        *,
+        indent: int = 0,
+        relative_doc: DocGenerator | None = None,
+        title: str = "",
+        filetype: str = "png",
+        pre_render: bool = False,
     ) -> str:
         """Create a Markdown formatted reference for the DOT file."""
-        _title = title
         file_path = self.file_path(relative_doc)
         file_name = self.file_name().rsplit("/")[-1]
+        alt_text = title if title != "" else file_name
+        if title != "":
+            title = f'"{title}"'
+
+        if pre_render:
+            # Render the file directly to a png, beside the original source
+            # and then just image link to it.
+            if self._generate:
+                _result = subprocess.run(  # noqa: S603
+                    ["dot", "-v", f"-T{filetype}", "-O", self.file_path()],  # noqa: S607
+                    capture_output=True,
+                    check=True,
+                )
+            return f"![{alt_text}]({file_path}.{filetype} {title})"
 
         return textwrap.indent(
             f"""
