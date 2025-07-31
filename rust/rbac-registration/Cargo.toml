@@ -36,4 +36,4 @@ c509-certificate = { version = "0.0.3", path = "../c509-certificate" }
 pallas = { version = "0.33.0" }
 cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
 cardano-blockchain-types = { version = "0.0.5", path = "../cardano-blockchain-types" }
-catalyst-types = { version = "0.0.4", path = "../catalyst-types" }
+catalyst-types = { version = "0.0.5", path = "../catalyst-types" }
