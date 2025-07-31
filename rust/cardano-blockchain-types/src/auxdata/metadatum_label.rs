@@ -38,3 +38,9 @@ impl Decode<'_, ()> for MetadatumLabel {
         Ok(Self(label))
     }
 }
+
+impl From<u64> for MetadatumLabel {
+    fn from(label: u64) -> Self {
+        MetadatumLabel(label)
+    }
+}
