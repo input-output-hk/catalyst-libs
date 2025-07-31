@@ -143,7 +143,7 @@ fn content_schema_check(doc: &CatalystSignedDocument, schema: &ContentSchema) ->
         doc.report()
             .missing_field("payload", "Document must have a content");
         return false;
-    };
+    }
     let Ok(doc_json) = serde_json::from_slice(&doc_content) else {
         doc.report().functional_validation(
             "Document content must be json encoded",
