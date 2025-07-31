@@ -12,7 +12,7 @@ workspace = true
 
 [dependencies]
 catalyst-types = { version = "0.0.5", path = "../catalyst-types" }
-cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
+cbork-utils = { version = "0.0.2", path = "../cbork-utils" }
 
 anyhow = "1.0.95"
 serde = { version = "1.0.217", features = ["derive"] }
