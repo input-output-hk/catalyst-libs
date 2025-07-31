@@ -2,7 +2,6 @@
 
 use std::{fmt::Display, str::FromStr};
 
-use coset::cbor::Value;
 use serde::{Deserialize, Serialize};
 
 /// 'section' field type definition, which is a JSON path string
@@ -40,19 +39,19 @@ impl FromStr for Section {
     }
 }
 
-impl From<Section> for Value {
-    fn from(value: Section) -> Self {
-        Value::Text(value.to_string())
+impl minicbor::Encode<()> for Section {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.str(self.to_string().as_str())?;
+        Ok(())
     }
 }
 
-impl TryFrom<&Value> for Section {
-    type Error = anyhow::Error;
-
-    fn try_from(val: &Value) -> anyhow::Result<Self> {
-        let str = val
-            .as_text()
-            .ok_or(anyhow::anyhow!("Not a cbor string type"))?;
-        Self::from_str(str)
+impl minicbor::Decode<'_, ()> for Section {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
+        d.str()?.parse().map_err(minicbor::decode::Error::message)
     }
 }

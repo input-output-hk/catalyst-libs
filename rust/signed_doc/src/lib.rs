@@ -2,6 +2,7 @@
 
 mod builder;
 mod content;
+pub mod decode_context;
 pub mod doc_types;
 mod metadata;
 pub mod providers;
@@ -14,38 +15,37 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::Context;
 pub use builder::Builder;
 pub use catalyst_types::{
     problem_report::ProblemReport,
     uuid::{Uuid, UuidV4, UuidV7},
 };
+use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
 pub use content::Content;
-use coset::{CborSerializable, Header, TaggedCborSerializable};
-pub use metadata::{ContentEncoding, ContentType, DocumentRef, ExtraFields, Metadata, Section};
+use decode_context::{CompatibilityPolicy, DecodeContext};
+pub use metadata::{
+    ContentEncoding, ContentType, DocLocator, DocType, DocumentRef, DocumentRefs, Metadata, Section,
+};
 use minicbor::{decode, encode, Decode, Decoder, Encode};
 pub use signature::{CatalystId, Signatures};
 
-/// A problem report content string
-const PROBLEM_REPORT_CTX: &str = "Catalyst Signed Document";
+use crate::{builder::SignaturesBuilder, metadata::SupportedLabel};
+
+/// `COSE_Sign` object CBOR tag <https://datatracker.ietf.org/doc/html/rfc8152#page-8>
+const COSE_SIGN_CBOR_TAG: minicbor::data::Tag = minicbor::data::Tag::new(98);
 
 /// Inner type that holds the Catalyst Signed Document with parsing errors.
 #[derive(Debug)]
 struct InnerCatalystSignedDocument {
     /// Document Metadata
-    metadata: Metadata,
+    metadata: WithCborBytes<Metadata>,
     /// Document Content
-    content: Content,
+    content: WithCborBytes<Content>,
     /// Signatures
     signatures: Signatures,
     /// A comprehensive problem report, which could include a decoding errors along with
     /// the other validation errors
     report: ProblemReport,
-
-    /// raw CBOR bytes of the `CatalystSignedDocument` object.
-    /// It is important to keep them to have a consistency what comes from the decoding
-    /// process, so we would return the same data again
-    raw_bytes: Option<Vec<u8>>,
 }
 
 /// Keep all the contents private.
@@ -60,13 +60,13 @@ pub struct CatalystSignedDocument {
 
 impl Display for CatalystSignedDocument {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
-        writeln!(f, "{}", self.inner.metadata)?;
+        self.inner.metadata.fmt(f)?;
         writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
         if self.inner.signatures.is_empty() {
             writeln!(f, "  This document is unsigned.")?;
         } else {
-            for kid in &self.inner.signatures.kids() {
+            for kid in &self.kids() {
                 writeln!(f, "  Signature Key ID: {kid}")?;
             }
         }
@@ -85,11 +85,11 @@ impl From<InnerCatalystSignedDocument> for CatalystSignedDocument {
 impl CatalystSignedDocument {
     // A bunch of getters to access the contents, or reason through the document, such as.
 
-    /// Return Document Type `UUIDv4`.
+    /// Return Document Type `DocType` - List of `UUIDv4`.
     ///
     /// # Errors
     /// - Missing 'type' field.
-    pub fn doc_type(&self) -> anyhow::Result<UuidV4> {
+    pub fn doc_type(&self) -> anyhow::Result<&DocType> {
         self.inner.metadata.doc_type()
     }
 
@@ -109,10 +109,28 @@ impl CatalystSignedDocument {
         self.inner.metadata.doc_ver()
     }
 
-    /// Return document `Content`.
+    /// Return document content object.
     #[must_use]
-    pub fn doc_content(&self) -> &Content {
+    pub(crate) fn content(&self) -> &WithCborBytes<Content> {
         &self.inner.content
+    }
+
+    /// Return document decoded (original/non compressed) content bytes.
+    ///
+    /// # Errors
+    ///  - Decompression failure
+    pub fn decoded_content(&self) -> anyhow::Result<Vec<u8>> {
+        if let Some(encoding) = self.doc_content_encoding() {
+            encoding.decode(self.encoded_content())
+        } else {
+            Ok(self.encoded_content().to_vec())
+        }
+    }
+
+    /// Return document encoded (compressed) content bytes.
+    #[must_use]
+    pub fn encoded_content(&self) -> &[u8] {
+        self.content().bytes()
     }
 
     /// Return document `ContentType`.
@@ -130,9 +148,10 @@ impl CatalystSignedDocument {
     }
 
     /// Return document metadata content.
+    // TODO: remove this and provide getters from metadata like the rest of its fields have.
     #[must_use]
-    pub fn doc_meta(&self) -> &ExtraFields {
-        self.inner.metadata.extra()
+    pub fn doc_meta(&self) -> &WithCborBytes<Metadata> {
+        &self.inner.metadata
     }
 
     /// Return a Document's signatures
@@ -144,13 +163,53 @@ impl CatalystSignedDocument {
     /// Return a list of Document's Catalyst IDs.
     #[must_use]
     pub fn kids(&self) -> Vec<CatalystId> {
-        self.inner.signatures.kids()
+        self.inner
+            .signatures
+            .iter()
+            .map(|s| s.kid().clone())
+            .collect()
     }
 
     /// Return a list of Document's author IDs (short form of Catalyst IDs).
     #[must_use]
     pub fn authors(&self) -> Vec<CatalystId> {
-        self.inner.signatures.authors()
+        self.inner
+            .signatures
+            .iter()
+            .map(|s| s.kid().as_short_id())
+            .collect()
+    }
+
+    /// Checks if the CBOR body of the signed doc is in the older version format before
+    /// v0.04.
+    ///
+    /// # Errors
+    ///
+    /// Errors from CBOR decoding.
+    pub fn is_deprecated(&self) -> anyhow::Result<bool> {
+        let mut e = minicbor::Encoder::new(Vec::new());
+
+        let e = e.encode(self.inner.metadata.clone())?;
+        let e = e.to_owned().into_writer();
+
+        for entry in cbork_utils::map::Map::decode(
+            &mut minicbor::Decoder::new(e.as_slice()),
+            &mut cbork_utils::decode_context::DecodeCtx::non_deterministic(),
+        )? {
+            match minicbor::Decoder::new(&entry.key_bytes).decode::<SupportedLabel>()? {
+                SupportedLabel::Template
+                | SupportedLabel::Ref
+                | SupportedLabel::Reply
+                | SupportedLabel::Parameters => {
+                    if DocumentRefs::is_deprecated_cbor(&entry.value)? {
+                        return Ok(true);
+                    }
+                },
+                _ => {},
+            }
+        }
+
+        Ok(false)
     }
 
     /// Returns a collected problem report for the document.
@@ -170,105 +229,108 @@ impl CatalystSignedDocument {
         &self.inner.report
     }
 
-    /// Convert Catalyst Signed Document into `coset::CoseSign`
-    ///
-    /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
-    pub(crate) fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        self.inner.as_cose_sign()
-    }
-
     /// Returns a signed document `Builder` pre-loaded with the current signed document's
     /// data.
-    #[must_use]
-    pub fn into_builder(&self) -> Builder {
-        self.into()
-    }
-}
-
-impl InnerCatalystSignedDocument {
-    /// Convert Catalyst Signed Document into `coset::CoseSign`
     ///
     /// # Errors
-    /// Could fails if the `CatalystSignedDocument` object is not valid.
-    fn as_cose_sign(&self) -> anyhow::Result<coset::CoseSign> {
-        if let Some(raw_bytes) = self.raw_bytes.clone() {
-            let cose_sign = coset::CoseSign::from_tagged_slice(raw_bytes.as_slice())
-                .or_else(|_| coset::CoseSign::from_slice(raw_bytes.as_slice()))
-                .map_err(|e| {
-                    minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
-                })?;
-            Ok(cose_sign)
-        } else {
-            let protected_header =
-                Header::try_from(&self.metadata).context("Failed to encode Document Metadata")?;
-
-            let content = self
-                .content
-                .encoded_bytes(self.metadata.content_encoding())?;
-
-            let mut builder = coset::CoseSignBuilder::new()
-                .protected(protected_header)
-                .payload(content);
-
-            for signature in self.signatures.cose_signatures() {
-                builder = builder.add_signature(signature);
-            }
-            Ok(builder.build())
-        }
+    ///  - If error returned its probably a bug. `CatalystSignedDocument` must be a valid
+    ///    COSE structure.
+    pub fn into_builder(&self) -> anyhow::Result<SignaturesBuilder> {
+        self.try_into()
     }
 }
 
-impl Decode<'_, ()> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, _ctx: &mut ()) -> Result<Self, decode::Error> {
-        let start = d.position();
-        d.skip()?;
-        let end = d.position();
-        let cose_bytes = d
-            .input()
-            .get(start..end)
-            .ok_or(minicbor::decode::Error::end_of_input())?;
+impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
+    fn decode(d: &mut Decoder<'_>, ctx: &mut CompatibilityPolicy) -> Result<Self, decode::Error> {
+        let mut ctx = DecodeContext::new(
+            *ctx,
+            ProblemReport::new("Catalyst Signed Document Decoding"),
+        );
 
-        let cose_sign = coset::CoseSign::from_tagged_slice(cose_bytes)
-            .or_else(|_| coset::CoseSign::from_slice(cose_bytes))
-            .map_err(|e| {
-                minicbor::decode::Error::message(format!("Invalid COSE Sign document: {e}"))
-            })?;
-
-        let report = ProblemReport::new(PROBLEM_REPORT_CTX);
-        let metadata = Metadata::from_protected_header(&cose_sign.protected, &report);
-        let signatures = Signatures::from_cose_sig_list(&cose_sign.signatures, &report);
-
-        let content = if let Some(payload) = cose_sign.payload {
-            Content::from_encoded(payload, metadata.content_encoding(), &report)
+        let p = d.position();
+        if let Ok(tag) = d.tag() {
+            if tag != COSE_SIGN_CBOR_TAG {
+                return Err(minicbor::decode::Error::message(format!(
+                    "Must be equal to the COSE_Sign tag value: {COSE_SIGN_CBOR_TAG}"
+                )));
+            }
         } else {
-            report.missing_field("COSE Sign Payload", "Missing document content (payload)");
-            Content::default()
+            d.set_position(p);
+        }
+
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
+
+        let signed_doc = match arr.as_slice() {
+            [metadata_bytes, headers_bytes, content_bytes, signatures_bytes] => {
+                let metadata_bytes = minicbor::Decoder::new(metadata_bytes).bytes()?;
+                let metadata = WithCborBytes::<Metadata>::decode(
+                    &mut minicbor::Decoder::new(metadata_bytes),
+                    &mut ctx,
+                )?;
+
+                // empty unprotected headers
+                let mut map = cbork_utils::map::Map::decode(
+                    &mut minicbor::Decoder::new(headers_bytes.as_slice()),
+                    &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+                )?
+                .into_iter();
+                if map.next().is_some() {
+                    ctx.report().unknown_field(
+                        "unprotected headers",
+                        "non empty unprotected headers",
+                        "COSE unprotected headers must be empty",
+                    );
+                }
+
+                let content = WithCborBytes::<Content>::decode(
+                    &mut minicbor::Decoder::new(content_bytes.as_slice()),
+                    &mut (),
+                )?;
+
+                let signatures = Signatures::decode(
+                    &mut minicbor::Decoder::new(signatures_bytes.as_slice()),
+                    &mut ctx,
+                )?;
+
+                InnerCatalystSignedDocument {
+                    metadata,
+                    content,
+                    signatures,
+                    report: ctx.into_report(),
+                }
+            },
+            _ => {
+                return Err(minicbor::decode::Error::message(
+                    "Must be a definite size array of 4 elements",
+                ));
+            },
         };
 
-        Ok(InnerCatalystSignedDocument {
-            metadata,
-            content,
-            signatures,
-            report,
-            raw_bytes: Some(cose_bytes.to_vec()),
-        }
-        .into())
+        Ok(signed_doc.into())
     }
 }
 
-impl Encode<()> for CatalystSignedDocument {
+impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut encode::Encoder<W>, _ctx: &mut (),
+        &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
-        let cose_sign = self.as_cose_sign().map_err(encode::Error::message)?;
-        let cose_bytes = cose_sign.to_tagged_vec().map_err(|e| {
-            minicbor::encode::Error::message(format!("Failed to encode COSE Sign document: {e}"))
-        })?;
-
-        e.writer_mut()
-            .write_all(&cose_bytes)
-            .map_err(|_| minicbor::encode::Error::message("Failed to encode to CBOR"))
+        // COSE_Sign tag
+        // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>
+        e.tag(COSE_SIGN_CBOR_TAG)?;
+        e.array(4)?;
+        // protected headers (metadata fields)
+        e.bytes(
+            minicbor::to_vec(&self.inner.metadata)
+                .map_err(minicbor::encode::Error::message)?
+                .as_slice(),
+        )?;
+        // empty unprotected headers
+        e.map(0)?;
+        // content
+        e.encode(&self.inner.content)?;
+        // signatures
+        e.encode(&self.inner.signatures)?;
+        Ok(())
     }
 }
 
@@ -276,7 +338,10 @@ impl TryFrom<&[u8]> for CatalystSignedDocument {
     type Error = anyhow::Error;
 
     fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
-        Ok(minicbor::decode(value)?)
+        Ok(minicbor::decode_with(
+            value,
+            &mut CompatibilityPolicy::Accept,
+        )?)
     }
 }
 
