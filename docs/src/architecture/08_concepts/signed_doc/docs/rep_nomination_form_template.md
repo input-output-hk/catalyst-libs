@@ -26,6 +26,7 @@ The payload of a Rep Nomination is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot rep_nomination_form_template.dot.svg
+
 {{ include_file('./../diagrams/rep_nomination_form_template.dot', indent=4) }}
 ```
 
@@ -68,7 +69,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`bf9abd97-5d1f-4429-8e80-740fea371a9c`,<br/>`94579df1-a6dc-433b-a8e8-910c5dc2f0e3` |
+| Type | 431561a5-9c2b-4de1-8e0d-78eb4887e35d |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -160,8 +161,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
@@ -174,7 +177,7 @@ New versions of this document may be published by:
 
 * Use generalized parameters.
 
-#### 0.04 (2025-05-05)
+#### 0.0.4 (2025-05-05)
 
 * Generalize the Form Template definitions.
 

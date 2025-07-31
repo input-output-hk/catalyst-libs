@@ -8,13 +8,14 @@ from pathlib import Path
 import rich
 from rich_argparse import RichHelpFormatter
 
+from docs.doc_index import DocIndex
+from docs.presentation_template_md import PresentationTemplatesMd
 from spec.signed_doc import SignedDoc
 
-from .docs_page_md import IndividualDocMd
+from .form_templates_md import FormTemplatesMd
 from .metadata_md import MetadataMd
 from .spec_index import SpecIndex
 from .spec_md import SpecMd
-from .templates_md import TemplatesMd
 from .types_md import TypesMd
 
 
@@ -74,13 +75,16 @@ def main() -> None:
     # We start out hoping everything is OK.
     good = True
 
-    # Generate each of the files.
+    # Generate each of the TOP Level files.
+    # Each top level file is responsible for generating lower level
+    # files they require or provide the primary reference for, and so on.
     good &= SpecIndex(args, spec).save_or_validate()
     good &= SpecMd(args, spec).save_or_validate()
     good &= TypesMd(args, spec).save_or_validate()
     good &= MetadataMd(args, spec).save_or_validate()
-    good &= IndividualDocMd.save_or_validate_all(args, spec)
-    good &= TemplatesMd(args, spec).save_or_validate()
+    good &= DocIndex(args, spec).save_or_validate()
+    good &= FormTemplatesMd(args, spec).save_or_validate()
+    good &= PresentationTemplatesMd(args, spec).save_or_validate()
 
     if not good:
         rich.print("File Comparisons Failed, Documentation is not current.")

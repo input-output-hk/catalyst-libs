@@ -14,6 +14,42 @@ Relationships"
 
 
 
+    subgraph cluster_system_parameters {
+        label = "System Parameters";
+        color=blue
+        penwidth=20
+
+        "Campaign Parameters" [
+            id="Campaign Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../campaign_parameters/">
+                        <FONT COLOR="#ffffff"><B> Campaign Parameters </B></FONT>
+                    </TD>
+                </TR>
+
+                </TABLE>
+            >
+        ];
+
+
+        "Category Parameters" [
+            id="Category Parameters";
+            label=<
+                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
+                <TR>
+                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
+                        <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
+                    </TD>
+                </TR>
+
+                </TABLE>
+            >
+        ];
+
+    }
+
     "Category Parameters Form Template" [
         id="Category Parameters Form Template";
         label=<
@@ -38,7 +74,7 @@ Relationships"
                     <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
                         <TR>
                             <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">type</FONT></TD>
-                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>0ce8ab38-9258-4fbc-a62e-7faa6e58318f<BR />60185874-7e13-407c-a06c-238ffe637ae6<BR />818938c3-3139-4daa-afe6-974c78488e95</I></B></FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT FACE="Courier" COLOR="#7706E5"><B><I>65b1e8b0-51f1-46a5-9970-72cdf26884be</I></B></FONT></TD>
                         </TR>
                     </TABLE>
                 </TD>
@@ -63,32 +99,22 @@ Relationships"
                     </TABLE>
                 </TD>
             </TR>
+            <TR>
+                <TD ALIGN="LEFT" PORT="parameters" BGCOLOR="#e7e2dd">
+                    <TABLE CELLPADDING="0" CELLSPACING="0" BORDER="0">
+                        <TR>
+                            <TD ALIGN="LEFT" VALIGN="TOP" WIDTH="200"><FONT COLOR="#7706E5">parameters</FONT></TD>
+                            <TD ALIGN="RIGHT"><FONT COLOR="#7706E5"><I>Campaign Parameters</I></FONT></TD>
+                        </TR>
+                    </TABLE>
+                </TD>
+            </TR>
 
             </TABLE>
         >
     ];
 
 
-    subgraph cluster_system_parameters {
-        label = "System Parameters";
-        color=blue
-        penwidth=20
-
-        "Category Parameters" [
-            id="Category Parameters";
-            label=<
-                <TABLE BORDER="2" COLOR="#29235c" CELLBORDER="1" CELLSPACING="0" CELLPADDING="10">
-                <TR>
-                    <TD PORT="title" BGCOLOR="#1d71b8" HREF="../category_parameters/">
-                        <FONT COLOR="#ffffff"><B> Category Parameters </B></FONT>
-                    </TD>
-                </TR>
-
-                </TABLE>
-            >
-        ];
-
-    }
-
+    "Category Parameters Form Template":"parameters":e -> "Campaign Parameters" [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*", lhead="cluster_system_parameters"]
     "Category Parameters":"title":e -> "Category Parameters Form Template":"title":w [dir=forward, penwidth=6, color="#29235c", headlabel="1", taillabel="*"]
 }

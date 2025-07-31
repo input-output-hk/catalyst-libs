@@ -1,6 +1,7 @@
 """Generate the document relationship diagram files."""
 
 import argparse
+import subprocess
 import textwrap
 
 from docs.markdown import MarkdownHelpers
@@ -21,21 +22,42 @@ class DocRelationshipFile(DocGenerator):
         file_name = doc_name.lower().replace(" ", "_").replace("-", "_") if doc_name is not None else "all"
         file_name = f"{self.DIAGRAM_PATH}{file_name}.dot"
 
-        super().__init__(args, spec, file_name, flags=self.NO_FLAGS, depth=depth)
+        super().__init__(args, spec, filename=file_name, flags=self.NO_FLAGS, depth=depth)
         self._document_name = doc_name
 
     def markdown_reference(
-        self, *, indent: int = 0, relative_doc: DocGenerator | None = None, extension: str = "png"
+        self,
+        *,
+        indent: int = 0,
+        relative_doc: DocGenerator | None = None,
+        title: str = "",
+        filetype: str = "png",
+        pre_render: bool = False,
     ) -> str:
         """Create a Markdown formatted reference for the DOT file."""
         file_path = self.file_path(relative_doc)
         file_name = self.file_name().rsplit("/")[-1]
+        alt_text = title if title != "" else file_name
+        if title != "":
+            title = f'"{title}"'
+
+        if pre_render:
+            # Render the file directly to a png, beside the original source
+            # and then just image link to it.
+            if self._generate:
+                _result = subprocess.run(  # noqa: S603
+                    ["dot", "-v", f"-T{filetype}", "-O", self.file_path()],  # noqa: S607
+                    capture_output=True,
+                    check=True,
+                )
+            return f"![{alt_text}]({file_path}.{filetype} {title})"
 
         return textwrap.indent(
             f"""
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
-```graphviz dot {file_name}.{extension}
+```graphviz dot {file_name}.{filetype}
+
 {{{{ include_file('./{file_path}', indent={indent + 4}) }}}}
 ```
 
@@ -65,7 +87,7 @@ class DocRelationshipFile(DocGenerator):
                 cluster=cluster,
             )
             doc_data = self._spec.docs.get(doc)
-            doc_type = doc_data.type.formatted_ids(prefix="", separator="<BR />", suffix="", cbor=False)
+            doc_type = doc_data.type.as_uuid_str
 
             if doc_data.headers is not None:
                 # Add content type explicitely to table.
