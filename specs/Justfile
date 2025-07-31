@@ -11,7 +11,7 @@ default:
 # So it should only be run when required.
 fix:
     cue fix ./definitions/signed_docs/docs:signed_docs
-    cue fix ./definitions/form_template/fields:form_template
+    cue fix ./definitions/form_template/elements:form_template
 
 # Fix the format of cue files
 format:
@@ -20,7 +20,7 @@ format:
 # Check the signed document cue files are valid.
 check: format
     cd definitions; cue vet ./signed_docs/docs:signed_docs -c
-    cd definitions; cue vet ./form_template/fields:form_template -c
+    cd definitions; cue vet ./form_template/elements:form_template -c
 
 # Regenerate the full signed document specification json file.
 regenerate-signed-doc-json:

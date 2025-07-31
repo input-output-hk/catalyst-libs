@@ -78,7 +78,7 @@ impl TransactionAuxData {
                     "Error decoding Transaction Aux Data: {error}."
                 )));
             },
-        };
+        }
 
         let metadata = Metadata::decode(d, &mut ())?;
         let script_array = ScriptArray::decode(d, &mut ScriptType::Native)?;

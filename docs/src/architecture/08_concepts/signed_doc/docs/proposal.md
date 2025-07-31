@@ -16,6 +16,7 @@ The payload of a proposal is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot proposal.dot.svg
+
 {{ include_file('./../diagrams/proposal.dot', indent=4) }}
 ```
 
@@ -72,7 +73,7 @@ Before accepting a new proposal to be published, the backend will ensure:
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | 7808d2ba-d511-40af-84e8-c0d1625fdfdc |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -239,8 +240,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog

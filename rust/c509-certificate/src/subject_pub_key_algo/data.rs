@@ -4,9 +4,10 @@
 
 // cspell: words Weierstraß secp XMSS brainpool
 
+use std::sync::LazyLock;
+
 use anyhow::Error;
 use asn1_rs::{oid, Oid};
-use once_cell::sync::Lazy;
 
 use crate::tables::IntegerToOidTable;
 
@@ -48,7 +49,7 @@ impl SubjectPubKeyAlgoData {
 }
 
 /// Define static lookup for subject publickey table
-static SUBJECT_PUB_KEY_ALGO_TABLE: Lazy<SubjectPubKeyAlgoData> = Lazy::new(|| {
+static SUBJECT_PUB_KEY_ALGO_TABLE: LazyLock<SubjectPubKeyAlgoData> = LazyLock::new(|| {
     let mut int_to_oid_table = IntegerToOidTable::new();
 
     for data in PUB_KEY_ALGO_DATA {
@@ -59,7 +60,7 @@ static SUBJECT_PUB_KEY_ALGO_TABLE: Lazy<SubjectPubKeyAlgoData> = Lazy::new(|| {
 });
 
 /// Static reference to the `SubjectPubKeyAlgoData` lookup table.
-pub(crate) static SUBJECT_PUB_KEY_ALGO_LOOKUP: &Lazy<SubjectPubKeyAlgoData> =
+pub(crate) static SUBJECT_PUB_KEY_ALGO_LOOKUP: &LazyLock<SubjectPubKeyAlgoData> =
     &SUBJECT_PUB_KEY_ALGO_TABLE;
 
 /// Get the OID from the int value.

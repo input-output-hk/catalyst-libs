@@ -2,24 +2,13 @@
 
 from pydantic import RootModel
 
-from spec.base_types import BaseTypes, DocTypeId
+from spec.base_types import DocTypeId
 
 
 class DocType(RootModel[list[DocTypeId]]):
     """A Document Type."""
 
     root: list[DocTypeId]
-
-    _base_types: BaseTypes
-
-    def set_base_types(self, types: BaseTypes) -> None:
-        """Save a local copy of the Base Types."""
-        self._base_types = types
-
-    def formatted_names(self, *, prefix: str = "", separator: str = "/", suffix: str = "") -> str:
-        """Return a formatted doc types entry."""
-        type_names: list[str] = [self._base_types.name(sub_type) for sub_type in self.root]
-        return f"{prefix}{separator.join(type_names)}{suffix}"
 
     def formatted_ids(  # noqa: PLR0913
         self,

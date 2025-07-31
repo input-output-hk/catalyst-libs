@@ -59,7 +59,7 @@ impl Cip36 {
                 "Validate CIP36 Signature",
             );
             self.is_valid_signature = false;
-        };
+        }
     }
 
     /// Validate the payment address network against the given network.

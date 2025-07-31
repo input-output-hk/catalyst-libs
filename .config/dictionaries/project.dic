@@ -163,13 +163,16 @@ ltail
 maindbname
 mapref
 markdownlint
+maxsplit
 mdformat
 mdit
 mdlint
+MDLINTS
 mdns
 MEMMAP
 memx
 Metadatum
+metno
 mgrybyk
 mimalloc
 minicbor
@@ -196,6 +199,7 @@ nolfs
 notadb
 nsec
 nsecs
+nums
 OCSP
 Oleksandr
 oneshot
@@ -251,6 +255,7 @@ retriggering
 ristretto
 rlib
 rngs
+rowname
 rsplit
 rulelist
 RULENAME
@@ -275,6 +280,8 @@ sitedocs
 skiplist
 slotno
 smac
+sourcenote
+sourcenotes
 stevenj
 stringzilla
 subnetwork

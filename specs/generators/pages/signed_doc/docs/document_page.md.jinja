@@ -1,0 +1,39 @@
+# {{ doc.name() }}
+
+## Description
+
+{{ doc.description_or_todo(doc._doc.description) }}
+
+{{ graph.markdown_reference(relative_doc=doc, filetype="svg") }}
+
+### Validation
+
+{{ doc.description_or_todo(doc._doc.validation) }}
+
+### Business Logic
+
+#### Front End
+
+{{ doc.description_or_todo(doc._doc.business_logic.front_end) }}
+
+#### Back End
+
+{{ doc.description_or_todo(doc._doc.business_logic.back_end) }}
+
+## COSE Header Parameters
+
+{{ doc.header_parameter_summary() }}
+
+## Metadata
+
+{{ spec.get_metadata_as_markdown(doc._document_name) }}
+
+## Payload
+
+{{ doc.document_payload() }}
+
+## Signers
+
+{{ doc.document_signers() }}
+
+{{ doc.insert_copyright() }}

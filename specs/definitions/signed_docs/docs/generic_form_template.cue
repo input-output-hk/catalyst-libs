@@ -1,6 +1,10 @@
 // Template Standardized Descriptions
 package signed_docs
 
+import (
+	"github.com/input-output-hk/catalyst-libs/specs/signed_doc_types"
+)
+
 _form_template_description: """
 	A {{ .doc }} Form Template defines both:
 	
@@ -34,7 +38,28 @@ _form_template_payload_description: """
 _metadataFieldSystemParameters: #metadataField & {
 	// Is the field required to be present.
 	required: "yes"
-	type:     doc_clusters."System Parameters".docs
+	type:     signed_doc_types.doc_clusters."System Parameters".docs
+}
+
+// Used for documents that can only link to brand parameters.
+_metadataFieldBrandParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Brand Parameters"]
+}
+
+// Used for documents that can only link to campaign parameters.
+_metadataFieldCampaignParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Campaign Parameters"]
+}
+
+// Used for documents that can only link to category parameters.
+_metadataFieldCategoryParameters: #metadataField & {
+	// Is the field required to be present.
+	required: "yes"
+	type: ["Category Parameters"]
 }
 
 // Used for documents that can only link to brand parameters.
@@ -88,7 +113,7 @@ _generic_form_template_versions: [#changelogEntry, ...#changelogEntry] & [
 			"""
 	},
 	{
-		version:  "0.04"
+		version:  "0.0.4"
 		modified: "2025-05-05"
 		changes: """
 			* Generalize the Form Template definitions.

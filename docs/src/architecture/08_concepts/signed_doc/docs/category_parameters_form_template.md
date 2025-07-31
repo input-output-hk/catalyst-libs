@@ -26,6 +26,7 @@ The payload of a Category Parameters is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot category_parameters_form_template.dot.svg
+
 {{ include_file('./../diagrams/category_parameters_form_template.dot', indent=4) }}
 ```
 
@@ -68,7 +69,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`818938c3-3139-4daa-afe6-974c78488e95` |
+| Type | 65b1e8b0-51f1-46a5-9970-72cdf26884be |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -110,6 +111,34 @@ The first version of the document must set [`ver`](../metadata.md#ver) == [`id`]
 
 The document version must always be >= the document ID.
 
+### [`parameters`](../metadata.md#parameters)
+
+<!-- markdownlint-disable MD033 -->
+| Parameter | Value |
+| --- | --- |
+| Required | yes |
+| Format | [Document Reference](../metadata.md#document-reference) |
+| Valid References | [Campaign Parameters](campaign_parameters.md) |
+<!-- markdownlint-enable MD033 -->
+A reference to the Parameters Document this document lies under.
+
+#### [`parameters`](../metadata.md#parameters) Validation
+
+In addition to the validation performed for [Document Reference](../metadata.md#document-reference) type fields:
+
+* Any linked referenced document that includes a [`parameters`](../metadata.md#parameters) metadata must match the
+[`parameters`](../metadata.md#parameters) of the referencing document,
+or a parent of those [`parameters`](../metadata.md#parameters).
+
+For example, a linked reference to [Contest Parameters](contest_parameters.md) is transitively a reference to
+the Parameters document it references, and each parameters document they reference
+until the `Brand` parameters document is reached.
+
+The use case here is for Templates.
+The profile template, or proposal templates could be defined at any of these
+levels, and as long as they all refer to the same chain of parameters in the
+hierarchy they are all valid.
+
 ## Payload
 
 [JSON Schema][JSON Schema-2020-12] document which defines the valid contents and
@@ -132,8 +161,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
@@ -146,7 +177,7 @@ New versions of this document may be published by:
 
 * Use generalized parameters.
 
-#### 0.04 (2025-05-05)
+#### 0.0.4 (2025-05-05)
 
 * Generalize the Form Template definitions.
 

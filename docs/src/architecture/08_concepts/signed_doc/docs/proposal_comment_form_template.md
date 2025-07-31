@@ -26,6 +26,7 @@ The payload of a Proposal Comment is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot proposal_comment_form_template.dot.svg
+
 {{ include_file('./../diagrams/proposal_comment_form_template.dot', indent=4) }}
 ```
 
@@ -68,7 +69,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `0ce8ab38-9258-4fbc-a62e-7faa6e58318f`,<br/>`b679ded3-0e7c-41ba-89f8-da62a17898ea`,<br/>`7808d2ba-d511-40af-84e8-c0d1625fdfdc` |
+| Type | 0b8424d4-ebfd-46e3-9577-1775a69d290c |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -162,8 +163,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog
@@ -176,7 +179,7 @@ New versions of this document may be published by:
 
 * Use generalized parameters.
 
-#### 0.04 (2025-05-05)
+#### 0.0.4 (2025-05-05)
 
 * Generalize the Form Template definitions.
 

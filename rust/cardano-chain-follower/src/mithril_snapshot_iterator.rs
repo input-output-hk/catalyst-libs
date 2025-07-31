@@ -116,7 +116,7 @@ impl MithrilSnapshotIterator {
                     return None;
                 },
                 None => break,
-            };
+            }
         }
 
         debug!("Best Found for {from}. {this:?} > {previous:?}");

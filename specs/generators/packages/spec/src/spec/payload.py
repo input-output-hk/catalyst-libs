@@ -10,6 +10,9 @@ import jsonschema
 import rich
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
+DRAFT7_SCHEMA = "https://json-schema.org/draft-07/schema"
+DRAFT202012_SCHEMA = "https://json-schema.org/draft/2020-12/schema"
+
 
 class PayloadExample(BaseModel):
     """An Example of the payload."""
@@ -64,9 +67,9 @@ class Payload(BaseModel):
         schema = None
         validator = None
         if isinstance(self.doc_schema, HttpUrl):
-            if f"{self.doc_schema}" == "https://json-schema.org/draft-07/schema":
+            if f"{self.doc_schema}" == DRAFT7_SCHEMA:
                 schema = jsonschema.Draft7Validator.META_SCHEMA
-            elif f"{self.doc_schema}" == "https://json-schema.org/draft/2020-12/schema":
+            elif f"{self.doc_schema}" == DRAFT202012_SCHEMA:
                 schema = jsonschema.Draft202012Validator.META_SCHEMA
             else:
                 rich.print(f"Downloading Schema from: {self.doc_schema}")
@@ -93,46 +96,3 @@ class Payload(BaseModel):
             validator.validate(instance=example.example)  # type: ignore  # noqa: PGH003
 
         return super().model_post_init(context)
-
-    def __str__(self) -> str:
-        """Get the examples properly formatted as markdown."""
-        docs = self.description + "\n"
-
-        if self.nil:
-            docs += """
-This document has no payload.
-It must be encoded as a CBOR `null (0xf6)`.
-"""
-            return docs.strip()
-
-        schema = self.doc_schema
-        if schema is not None:
-            if isinstance(schema, HttpUrl):
-                if schema == "https://json-schema.org/draft-07/schema":
-                    docs += "\n**Must be a valid JSON Schema Draft 7 document.**"
-                else:
-                    docs += f"\nMust be a valid according to <{schema}>."
-            else:
-                docs += f"""\n### Schema
-
-<!-- markdownlint-disable MD013 MD046 max-one-sentence-per-line -->
-??? abstract
-
-{textwrap.indent(self.description, "    ")}
-
-    ```json
-{textwrap.indent(json.dumps(schema, indent=2, sort_keys=True), "    ")}
-    ```
-
-<!-- markdownlint-enable MD013 MD046 max-one-sentence-per-line -->
-"""
-
-        if len(self.examples) > 0:
-            docs += "\n### Example"
-            if len(self.examples) >= 2:  # noqa: PLR2004
-                docs += "s"
-            docs += "\n"
-            for example in self.examples:
-                docs += f"{example}\n"
-
-        return docs.strip()

@@ -12,12 +12,11 @@ A link to a previous document in a chained sequence.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/chain.cddl](cddl/chain.cddl)
+    * [chain.cddl](cddl/chain.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/chain.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Collaborators Reference List
@@ -27,12 +26,11 @@ A list of collaborators who can participate in drafting and submitting a documen
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/collaborators.cddl](cddl/collaborators.cddl)
+    * [collaborators.cddl](cddl/collaborators.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/collaborators.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Id
@@ -42,12 +40,11 @@ A unique document identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_id.cddl](cddl/document_id.cddl)
+    * [document_id.cddl](cddl/document_id.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_id.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Reference
@@ -57,12 +54,11 @@ A document reference identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_refs.cddl](cddl/document_refs.cddl)
+    * [document_refs.cddl](cddl/document_refs.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_refs.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Type
@@ -72,12 +68,11 @@ A document type identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_type.cddl](cddl/document_type.cddl)
+    * [document_type.cddl](cddl/document_type.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_type.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Document Ver
@@ -87,12 +82,11 @@ A unique chronological document version
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/document_ver.cddl](cddl/document_ver.cddl)
+    * [document_ver.cddl](cddl/document_ver.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/document_ver.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Section Reference
@@ -102,12 +96,11 @@ A document section reference identifier
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/section_ref.cddl](cddl/section_ref.cddl)
+    * [section_ref.cddl](cddl/section_ref.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/section_ref.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv4][RFC9562-V4]
@@ -117,12 +110,11 @@ Version 4 formatted [UUID][RFC9562]
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/uuid_v4.cddl](cddl/uuid_v4.cddl)
+    * [uuid_v4.cddl](cddl/uuid_v4.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/uuid_v4.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### [UUIDv7][RFC9562-V7]
@@ -132,12 +124,11 @@ Version 7 formatted [UUID][RFC9562]
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/uuid_v7.cddl](cddl/uuid_v7.cddl)
+    * [uuid_v7.cddl](cddl/uuid_v7.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/uuid_v7.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ### Version Revocations
@@ -147,12 +138,11 @@ A list of all versions of this document which are 'revoked'.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 ??? note "CDDL Specification"
 
-    * [cddl/revocations.cddl](cddl/revocations.cddl)
+    * [revocations.cddl](cddl/revocations.cddl)
 
-    ```cddl
+    ``` cddl
     {{ include_file('./cddl/revocations.cddl', indent=4) }}
     ```
-
 <!-- markdownlint-enable max-one-sentence-per-line -->
 
 ## Individual Metadata field definitions
@@ -222,10 +212,9 @@ The document version must always be >= the document ID.
 | Required | optional |
 | Format | [Document Reference](metadata.md#document-reference) |
 | Valid References | [Proposal Form Template](./docs/proposal_form_template.md) |
-|  | [Proposal Presentation Template](./docs/proposal_presentation_template.md) |
+|  | [Presentation Template](./docs/presentation_template.md) |
 |  | [Proposal](./docs/proposal.md) |
 |  | [Proposal Comment Form Template](./docs/proposal_comment_form_template.md) |
-|  | [Proposal Comment Presentation Template](./docs/proposal_comment_presentation_template.md) |
 |  | [Proposal Comment](./docs/proposal_comment.md) |
 |  | [Proposal Submission Action](./docs/proposal_submission_action.md) |
 |  | [Proposal Moderation Action](./docs/proposal_moderation_action.md) |
@@ -629,8 +618,10 @@ classDiagram
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-05-30 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
+| | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 [CBOR-TAG-42]: https://github.com/ipld/cid-cbor/
