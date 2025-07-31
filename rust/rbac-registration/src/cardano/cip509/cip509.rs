@@ -169,7 +169,7 @@ impl Cip509 {
 
         if let Some(txn_inputs_hash) = &cip509.txn_inputs_hash {
             validate_txn_inputs_hash(txn_inputs_hash, txn, &cip509.report);
-        };
+        }
         validate_aux(
             raw_aux_data,
             txn.transaction_body.auxiliary_data_hash.as_ref(),
@@ -412,7 +412,7 @@ impl Decode<'_, DecodeContext<'_, '_>> for Cip509 {
                         );
                         break;
                     },
-                };
+                }
             }
         }
 

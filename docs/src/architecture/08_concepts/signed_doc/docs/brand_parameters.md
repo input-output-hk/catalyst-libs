@@ -24,6 +24,7 @@ The payload of a Brand is controlled by its template.
 <!-- markdownlint-disable max-one-sentence-per-line -->
 
 ```graphviz dot brand_parameters.dot.svg
+
 {{ include_file('./../diagrams/brand_parameters.dot', indent=4) }}
 ```
 
@@ -63,7 +64,7 @@ This section will be included and updated in future iterations.
 | --- | --- |
 | Required | yes |
 | Format | [Document Type](../metadata.md#document-type) |
-| Type | `60185874-7e13-407c-a06c-238ffe637ae6`,<br/>`ebcabeeb-5bc5-4f95-91e8-cab8ca724172` |
+| Type | 3e4808cc-c86e-467b-9702-d60baa9d1fca |
 <!-- markdownlint-enable MD033 -->
 The document TYPE.
 
@@ -196,9 +197,10 @@ New versions of this document may be published by:
 | --- | --- |
 | License | This document is licensed under [CC-BY-4.0] |
 | Created | 2024-12-27 |
-| Modified | 2025-06-20 |
+| Modified | 2025-07-30 |
 | Authors | Alex Pozhylenkov <alex.pozhylenkov@iohk.io> |
 | | Nathan Bogale <nathan.bogale@iohk.io> |
+| | Neil McAuliffe <neil.mcauliffe@iohk.io> |
 | | Steven Johnson <steven.johnson@iohk.io> |
 
 ### Changelog

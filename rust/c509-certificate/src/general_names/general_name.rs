@@ -181,7 +181,7 @@ impl Encode<()> for GeneralNameValue {
                     "Cannot encode unsupported GeneralName value",
                 ))
             },
-        };
+        }
         Ok(())
     }
 }

@@ -199,9 +199,8 @@ fn extract_x509_uris(certificates: &[X509DerCert], report: &ProblemReport) -> Ur
                     // X.509 doesn't restrict the "alternative name" extension to be utf8 only, so
                     // we cannot treat this as error.
                     debug!("Ignoring invalid CIP-0134 address: {e:?}");
-                    continue;
                 },
-            };
+            }
         }
 
         if !uris.is_empty() {
@@ -264,9 +263,8 @@ fn extract_c509_uris(certificates: &[C509Cert], report: &ProblemReport) -> UrisM
                     Ok(u) => uris.push(u),
                     Err(e) => {
                         debug!("Ignoring invalid CIP-0134 address: {e:?}");
-                        continue;
                     },
-                };
+                }
             }
 
             if !uris.is_empty() {

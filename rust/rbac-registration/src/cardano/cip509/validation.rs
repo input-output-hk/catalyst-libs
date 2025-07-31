@@ -59,7 +59,7 @@ pub fn validate_txn_inputs_hash(
             context,
         );
         return;
-    };
+    }
     for input in inputs {
         if let Err(e) = input.encode(&mut e, &mut ()) {
             report.other(
@@ -428,13 +428,18 @@ fn validate_role_0(
 
     let mut catalyst_id = None;
     let network = "cardano";
+    // <https://input-output-hk.github.io/catalyst-libs/architecture/08_concepts/rbac_id_uri/catalyst-id-uri/#authority>
+    let subnet = match subnet {
+        Network::Mainnet => None,
+        subnet => Some(subnet.to_string()),
+    };
 
     match signing_key.local_ref {
         LocalRefInt::X509Certs => {
             match metadata.x509_certs.first() {
                 Some(X509DerCert::X509Cert(cert)) => {
                     // All good: role 0 references a valid X509 certificate.
-                    catalyst_id = x509_cert_key(cert, context, report).map(|k| CatalystId::new(network, Some(&subnet.to_string()), k));
+                    catalyst_id = x509_cert_key(cert, context, report).map(|k| CatalystId::new(network, subnet.as_deref(), k));
                 }
                 Some(c) => report.other(&format!("Invalid X509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference X509 certificate at index 0, but there is no such certificate", context),
@@ -444,7 +449,7 @@ fn validate_role_0(
             match metadata.c509_certs.first() {
                 Some(C509Cert::C509Certificate(cert)) => {
                     // All good: role 0 references a valid C509 certificate.
-                    catalyst_id = c509_cert_key(cert, context, report).map(|k| CatalystId::new(network, Some(&subnet.to_string()), k));
+                    catalyst_id = c509_cert_key(cert, context, report).map(|k| CatalystId::new(network, subnet.as_deref(), k));
                 }
                 Some(c) => report.other(&format!("Invalid C509 certificate value ({c:?}) for role 0 ({role:?})"), context),
                 None => report.other("Role 0 reference C509 certificate at index 0, but there is no such certificate", context),

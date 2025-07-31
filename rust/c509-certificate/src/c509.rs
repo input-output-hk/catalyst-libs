@@ -51,7 +51,7 @@ impl Encode<()> for C509 {
         match self.issuer_signature_value {
             Some(ref value) => encode_bytes(e, "C509 Issuer Signature value", value)?,
             None => encode_null(e, "C509 Issuer Signature value")?,
-        };
+        }
         Ok(())
     }
 }

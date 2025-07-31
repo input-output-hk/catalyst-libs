@@ -19,6 +19,11 @@ docs: "Contest Delegation": {
 		This is because different Contests may have different rules.
 		And not all Representatives will choose to nominate
 		for every Contest.
+
+		A Representative ***MAY NOT*** delegate to a different Representative
+		for any contest they have nominated for.
+		They ***MAY*** however nominate a Representative in any contest they
+		have not nominated for.
 		"""
 	validation: """
 			* The `parameters` metadata *MUST* point to the same Contest as the 
@@ -30,6 +35,12 @@ docs: "Contest Delegation": {
 			otherwise their Nomination is invalid.
 
 			\(docs."Rep Nomination"._latest_nomination_note)
+
+			A Voter may withdraw their Delegation by revoking all delegation documents.
+			`revocations` must be set to `true` to withdraw a delegation, OR
+			a later contest delegation may change the delegated representative without
+			first revoking the prior delegation, as only the latest delegation is
+			considered.
 			"""
 	business_logic: {
 		front_end: """
@@ -55,12 +66,11 @@ docs: "Contest Delegation": {
 				"ref",
 			]
 		}
+		revocations: required: "optional"
 	}
 	payload: {
 		description: """
-			  A minimal payload indicating the intended status of the delegation.
-			  'active' creates or affirms the delegation.
-			  'revoked' withdraws the delegation.
+			  There is no payload.
 			"""
 
 		nil: true

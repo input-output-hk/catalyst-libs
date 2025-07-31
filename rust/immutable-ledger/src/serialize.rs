@@ -198,7 +198,7 @@ impl Block {
                 self.block_header,
                 previous_block.block_header
             ));
-            };
+            }
 
             // height MUST be incremented by 1 from the previous block height value (except for
             // genesis and final block). Genesis block MUST have 0 value. Final block MUST hash be

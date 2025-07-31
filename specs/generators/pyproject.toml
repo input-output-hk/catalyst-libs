@@ -3,12 +3,16 @@ name = "generators"
 version = "0.1.0"
 requires-python = ">=3.13"
 dependencies = [
-    "jsonschema[format]>=4.24.0",
+    "css-inline>=0.17.0",
+    "great-tables>=0.18.0",
+    "jinja2>=3.1.6",
+    "jsonschema[format]>=4.25.0",
     "mdformat>=0.7.22",
     "mdformat-mkdocs>=4.3.0",
+    "polars>=1.31.0",
     "pydantic>=2.11.7",
     "pydot>=4.0.1",
-    "rich>=14.0.0",
+    "rich>=14.1.0",
     "rich-argparse>=1.7.1",
     "spec",
 ]

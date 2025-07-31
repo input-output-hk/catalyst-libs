@@ -210,7 +210,7 @@ impl MithrilSnapshotConfig {
                             );
                             cleanup_tasks.push(fs::remove_dir_all(entry.path()));
                         }
-                    };
+                    }
                 }
             },
         }

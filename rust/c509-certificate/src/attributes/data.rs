@@ -2,9 +2,10 @@
 //! Attribute. See [C509 Certificate](https://datatracker.ietf.org/doc/draft-ietf-cose-cbor-encoded-cert/11/)
 //! Section 9.3 C509 Attributes Registry for more information.
 
+use std::sync::LazyLock;
+
 use anyhow::Error;
 use asn1_rs::{oid, Oid};
-use once_cell::sync::Lazy;
 
 use crate::tables::IntegerToOidTable;
 
@@ -62,7 +63,7 @@ impl AttributeData {
 }
 
 /// Define static lookup for attributes table
-static ATTRIBUTES_TABLES: Lazy<AttributeData> = Lazy::new(|| {
+static ATTRIBUTES_TABLES: LazyLock<AttributeData> = LazyLock::new(|| {
     let mut int_to_oid_table = IntegerToOidTable::new();
 
     for data in ATTRIBUTE_DATA {
@@ -73,7 +74,7 @@ static ATTRIBUTES_TABLES: Lazy<AttributeData> = Lazy::new(|| {
 });
 
 /// Static reference to the `AttributeData` lookup table.
-pub(crate) static ATTRIBUTES_LOOKUP: &Lazy<AttributeData> = &ATTRIBUTES_TABLES;
+pub(crate) static ATTRIBUTES_LOOKUP: &LazyLock<AttributeData> = &ATTRIBUTES_TABLES;
 
 /// Get the OID from the int value.
 pub(crate) fn get_oid_from_int(i: i16) -> Result<Oid<'static>, Error> {

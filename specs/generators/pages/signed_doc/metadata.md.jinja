@@ -1,0 +1,20 @@
+# Metadata Fields
+
+## Metadata Types
+
+The following types of metadata have been defined.
+All Metadata fields use one of these types.
+
+{% for metadata in doc.metadata_types() %}
+### {{ metadata.name }}
+
+{{ metadata.format_def.description }}
+
+{{ metadata.cddl_def.markdown_reference(relative_doc=doc) }}
+
+{% endfor %}
+## Individual Metadata field definitions
+
+{{ spec.get_metadata_as_markdown() }}
+
+{{ doc.insert_copyright(changelog=False) }}
