@@ -21,7 +21,7 @@ workspace = true
 pallas = { version = "0.33.0" }
 # pallas-hardano = { version = "0.33.0" }
 cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
-catalyst-types = { version = "0.0.4", path = "../catalyst-types" }
+catalyst-types = { version = "0.0.5", path = "../catalyst-types" }
 
 ouroboros = "0.18.4"
 tracing = "0.1.41"

@@ -11,7 +11,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
-catalyst-types = { version = "0.0.4", path = "../catalyst-types" }
+catalyst-types = { version = "0.0.5", path = "../catalyst-types" }
 cbork-utils = { version = "0.0.1", path = "../cbork-utils" }
 
 anyhow = "1.0.95"
