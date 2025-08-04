@@ -454,7 +454,7 @@ fn payment_history(
     report: &ProblemReport,
 ) -> HashMap<ShelleyAddress, Vec<Payment>> {
     let hash = MultiEraTx::Conway(Box::new(Cow::Borrowed(txn))).hash();
-    let context = format!("Populating payment history for Cip509, transaction hash = {hash:?}");
+    let context = format!("Populating payment history for Cip509, transaction hash = {hash}");
 
     let mut result: HashMap<_, _> = track_payment_addresses
         .iter()

@@ -105,7 +105,7 @@ pub fn validate_aux(
     let hash = Blake2b256Hash::new(raw_aux_data);
     if hash != auxiliary_data_hash {
         report.other(
-            &format!("Incorrect transaction auxiliary data hash = '{hash:?}', expected = '{auxiliary_data_hash:?}'"),
+            &format!("Incorrect transaction auxiliary data hash = '{hash}', expected = '{auxiliary_data_hash}'"),
             context,
         );
     }

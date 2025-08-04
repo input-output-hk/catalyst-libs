@@ -155,7 +155,7 @@ fn validate_payment_output(
     if let Err(e) = compare_key_hash(&[key], witness, 0.into()) {
         report.other(
             &format!(
-                "Unable to find payment output key ({key:?}) in the transaction witness set: {e:?}"
+                "Unable to find payment output key ({key}) in the transaction witness set: {e:?}"
             ),
             context,
         );
