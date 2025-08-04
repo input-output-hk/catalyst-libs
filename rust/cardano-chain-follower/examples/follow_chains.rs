@@ -18,7 +18,7 @@ use rbac_registration::cardano::cip509::Cip509;
 #[global_allocator]
 static GLOBAL: MiMalloc = MiMalloc;
 
-use std::{error::Error, time::Duration};
+use std::{env, error::Error, time::Duration};
 
 use cardano_chain_follower::{ChainFollower, ChainSyncConfig, ChainUpdate, Kind, Statistics};
 use clap::{arg, ArgAction, ArgMatches, Command};
@@ -70,7 +70,7 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
             arg!(--"start-at-slot" <SLOT> "The Slot Number to start at.")
                 .value_parser(clap::value_parser!(u64).range(0..))
                 .action(ArgAction::Set),
-            arg!(--"dump-transaction" <HASH> "The Transaction hash to dump. Will stop after it dumps the transaction (Short hashes match on prefix).")
+            arg!(-t --"dump-transaction" <HASH> "The Transaction hash to dump. Will stop after it dumps the transaction (Short hashes match on prefix).")
                 .value_parser(clap::value_parser!(String))
                 .action(ArgAction::Append),
             arg!(--"inhibit-stats" "Do not dump chain follower stats.")
@@ -633,9 +633,11 @@ fn log_transaction(
                 "Failed to get Transaction Hash".to_string()
             }
         };
+        let slot_time = format!("{}", network.slot_to_time(decoded_block.slot().into()));
         info!(
             chain = network.to_string(),
             slot = decoded_block.slot(),
+            slot_time = slot_time,
             transaction_id = this_hash,
             transaction_type = txn_data.0,
             transaction_body = format!("{:02x?}", txn_data.1),
@@ -659,18 +661,25 @@ fn log_transaction(
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
-    tracing_subscriber::fmt()
+    let logger = tracing_subscriber::fmt()
         .with_file(true)
         .with_line_number(true)
         .with_thread_names(true)
         .with_thread_ids(true)
-        .pretty()
         .with_env_filter(
             EnvFilter::builder()
                 .with_default_directive(LevelFilter::INFO.into())
                 .from_env_lossy(),
-        )
-        .init();
+        );
+
+    match env::var("JSON_LOG") {
+        Ok(_) => {
+            logger.json().init();
+        },
+        Err(_) => {
+            logger.pretty().init();
+        },
+    }
 
     let (networks, matches) = process_argument();
     let parallelism = std::thread::available_parallelism()?;
@@ -700,6 +709,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     // Keep running for 5 seconds after last follower reaches its tip.
     tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+
+    info!("Finished");
 
     Ok(())
 }
