@@ -6,10 +6,11 @@
 //#![allow(clippy::unwrap_used)]
 
 use cardano_blockchain_types::{
-    Cip36, Fork, MetadatumLabel, MultiEraBlock, Network, Point, TxnIndex,
+    Cip36, Fork, MetadatumLabel, MultiEraBlock, Network, Point, Slot, TransactionId, TxnIndex,
 };
 #[cfg(feature = "mimalloc")]
 use mimalloc::MiMalloc;
+use pallas::ledger::traverse::MultiEraTx;
 use rbac_registration::cardano::cip509::Cip509;
 
 /// Use Mimalloc for the global allocator.
@@ -66,6 +67,15 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
                 .action(ArgAction::SetTrue),
             arg!(--"log-bad-cip509" "Dump Bad CIP509 detected.")
                 .action(ArgAction::SetTrue),
+            arg!(--"start-at-slot" <SLOT> "The Slot Number to start at.")
+                .value_parser(clap::value_parser!(u64).range(0..))
+                .action(ArgAction::Set),
+            arg!(--"dump-transaction" <HASH> "The Transaction hash to dump. Will stop after it dumps the transaction (Short hashes match on prefix).")
+                .value_parser(clap::value_parser!(String))
+                .action(ArgAction::Append),
+            arg!(--"inhibit-stats" "Do not dump chain follower stats.")
+                .action(ArgAction::SetTrue),
+
         ])
         .get_matches();
 
@@ -144,6 +154,81 @@ async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Bo
     Ok(())
 }
 
+/// Get the raw data for a transaction.
+#[allow(clippy::type_complexity)]
+fn get_raw_transaction_data(
+    block: &MultiEraBlock, txn_idx: TxnIndex, tx: &MultiEraTx,
+) -> Option<(String, Vec<u8>, Vec<u8>, Vec<u8>)> {
+    let block_type;
+    let mut transaction_body: Vec<u8> = vec![];
+    let mut witness_set: Vec<u8> = vec![];
+    let mut aux_data: Vec<u8> = vec![];
+
+    if let Some(raw_block) = block.decode().as_conway() {
+        block_type = "Conway".to_string();
+        if let Some(raw_txn) = tx.as_conway() {
+            transaction_body = raw_txn.transaction_body.raw_cbor().to_vec();
+            witness_set = raw_txn.transaction_witness_set.raw_cbor().to_vec();
+        }
+        raw_block
+            .auxiliary_data_set
+            .iter()
+            .for_each(|(aux_txn_idx, data)| {
+                if txn_idx == (*aux_txn_idx).into() {
+                    aux_data = data.raw_cbor().to_vec();
+                }
+            });
+    } else if let Some(raw_block) = block.decode().as_babbage() {
+        block_type = "Babbage".to_string();
+        if let Some(raw_txn) = tx.as_babbage() {
+            transaction_body = raw_txn.transaction_body.raw_cbor().to_vec();
+            witness_set = raw_txn.transaction_witness_set.raw_cbor().to_vec();
+        }
+        raw_block
+            .auxiliary_data_set
+            .iter()
+            .for_each(|(aux_txn_idx, data)| {
+                if txn_idx == (*aux_txn_idx).into() {
+                    aux_data = data.raw_cbor().to_vec();
+                }
+            });
+    } else if let Some(raw_block) = block.decode().as_alonzo() {
+        block_type = "Alonzo".to_string();
+        if let Some(raw_txn) = tx.as_alonzo() {
+            transaction_body = raw_txn.transaction_body.raw_cbor().to_vec();
+            witness_set = raw_txn.transaction_witness_set.raw_cbor().to_vec();
+        }
+        raw_block
+            .auxiliary_data_set
+            .iter()
+            .for_each(|(aux_txn_idx, data)| {
+                if txn_idx == (*aux_txn_idx).into() {
+                    aux_data = data.raw_cbor().to_vec();
+                }
+            });
+    } else if let Some(_raw_block) = block.decode().as_byron() {
+        block_type = "Byron".to_string();
+        if let Some(raw_txn) = tx.as_byron() {
+            transaction_body = raw_txn.transaction.raw_cbor().to_vec();
+            witness_set = raw_txn.witness.raw_cbor().to_vec();
+        }
+    } else {
+        return None;
+    }
+
+    Some((block_type, transaction_body, witness_set, aux_data))
+}
+
+/// Does this hash match any in the list.
+fn check_txn_hashes(txn_id: &str, hashes: &Vec<&String>) -> bool {
+    for hash in hashes {
+        if txn_id.starts_with(*hash) {
+            return true;
+        }
+    }
+    false
+}
+
 /// The interval between showing a block, even if nothing else changed.
 const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 
@@ -151,19 +236,33 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 #[allow(clippy::too_many_lines)]
 async fn follow_for(network: Network, matches: ArgMatches) {
     info!(chain = network.to_string(), "Following");
-    let mut follower = ChainFollower::new(network, Point::ORIGIN, Point::TIP).await;
+    let origin = if let Some(slot) = matches.get_one::<u64>("start-at-slot") {
+        Point::fuzzy(Slot::from_saturating(*slot))
+    } else {
+        Point::ORIGIN
+    };
 
+    let inhibit_stats = matches.get_flag("inhibit-stats");
     let all_tip_blocks = matches.get_flag("all-tip-blocks");
     let all_live_blocks = matches.get_flag("all-live-blocks");
-    let stop_at_tip = matches.get_flag("stop-at-tip");
     let halt_on_error = matches.get_flag("halt-on-error");
     let log_raw_aux = matches.get_flag("log-raw-aux");
     let largest_metadata = matches.get_flag("largest-metadata");
     let largest_aux = matches.get_flag("largest-aux");
-
-    // Metadata
+    let txn_dump = if let Some(txn_ids) = matches.get_many::<String>("dump-transaction") {
+        let x: Vec<&String> = txn_ids.into_iter().collect();
+        Some(x)
+    } else {
+        None
+    };
+    let iterate_txn = txn_dump.is_some() || largest_metadata;
+    let stop_at_tip = txn_dump.is_some() || matches.get_flag("stop-at-tip");
     let log_bad_cip36 = matches.get_flag("log-bad-cip36");
     let log_bad_cip509 = matches.get_flag("log-bad-cip509");
+
+    if let Some(ref dump) = txn_dump {
+        info!("Looking for Transaction Hashes {dump:?} starting from {origin}");
+    }
 
     let mut current_era = String::new();
     let mut last_update: Option<ChainUpdate> = None;
@@ -174,11 +273,12 @@ async fn follow_for(network: Network, matches: ArgMatches) {
     let mut updates: u64 = 0;
     let mut last_fork: Fork = 0.into();
     let mut follow_all = false;
-
     let mut last_metrics_time = Instant::now();
-
     let mut largest_metadata_size: usize = 0;
     let mut largest_aux_size: usize = 0;
+    let mut found_transactions: usize = 0;
+
+    let mut follower = ChainFollower::new(network, origin, Point::TIP).await;
 
     while let Some(chain_update) = follower.next().await {
         updates = updates.saturating_add(1);
@@ -265,9 +365,23 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         }
 
         // Update and log the largest metadata
-        if largest_metadata {
-            for (txn_idx, _tx) in decoded_block.txs().iter().enumerate() {
-                update_largest_metadata(block, network, txn_idx.into(), &mut largest_metadata_size);
+        if iterate_txn {
+            for (txn_idx, tx) in decoded_block.txs().iter().enumerate() {
+                if largest_metadata {
+                    update_largest_metadata(
+                        block,
+                        network,
+                        txn_idx.into(),
+                        &mut largest_metadata_size,
+                    );
+                }
+                if let Some(ref dump_txn_hash) = txn_dump {
+                    let this_hash = format!("{}", tx.hash());
+                    if check_txn_hashes(&this_hash, dump_txn_hash) {
+                        found_transactions = found_transactions.saturating_add(1);
+                        log_transaction(network, block, txn_idx.into(), tx, &this_hash);
+                    }
+                }
             }
         }
         // Update and log the largest transaction auxiliary data.
@@ -293,7 +407,13 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         prev_hash = Some(decoded_block.hash());
         last_update = Some(chain_update);
 
-        if reached_tip && stop_at_tip {
+        let all_txn_found = if let Some(ref all_transactions) = txn_dump {
+            all_transactions.len() == found_transactions
+        } else {
+            false
+        };
+
+        if all_txn_found || (reached_tip && stop_at_tip) {
             break;
         }
 
@@ -303,7 +423,9 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 
             let stats = Statistics::new(network);
 
-            info!("Json Metrics:  {}", stats.as_json(true));
+            if !inhibit_stats {
+                info!("Json Metrics:  {}", stats.as_json(true));
+            }
 
             if halt_on_error
                 && (stats.mithril.download_or_validation_failed > 0
@@ -312,6 +434,9 @@ async fn follow_for(network: Network, matches: ArgMatches) {
                     || stats.mithril.tip_failed_to_send_to_updater > 0
                     || stats.mithril.failed_to_activate_new_snapshot > 0)
             {
+                if inhibit_stats {
+                    info!("Json Metrics:  {}", stats.as_json(true));
+                }
                 break;
             }
         }
@@ -323,8 +448,10 @@ async fn follow_for(network: Network, matches: ArgMatches) {
         }
     }
 
-    let stats = Statistics::new(network);
-    info!("Json Metrics:  {}", stats.as_json(true));
+    if !inhibit_stats {
+        let stats = Statistics::new(network);
+        info!("Json Metrics:  {}", stats.as_json(true));
+    }
 
     info!(chain = network.to_string(), "Following Completed.");
 }
@@ -481,6 +608,55 @@ fn log_bad_cip509_info(block: &MultiEraBlock, network: Network) {
     }
 }
 
+/// Get cip509 data for the transaction from a block.
+fn get_cip509(block: &MultiEraBlock, txn_id: TransactionId) -> Option<Cip509> {
+    Cip509::from_block(block, &[])
+        .into_iter()
+        .find(|cip509| cip509.txn_hash() == txn_id)
+}
+
+/// Log a transactions details in full.
+fn log_transaction(
+    network: Network, block: &MultiEraBlock, txn_idx: TxnIndex, tx: &MultiEraTx, this_hash: &str,
+) {
+    let decoded_block = block.decode();
+
+    if let Some(txn_data) = get_raw_transaction_data(block, txn_idx, tx) {
+        let cip509 = {
+            if let Ok(txn_id) = this_hash.parse::<TransactionId>() {
+                if let Some(cip509) = get_cip509(block, txn_id) {
+                    format!("{cip509:?}")
+                } else {
+                    "No CIP509 Data Found".to_string()
+                }
+            } else {
+                "Failed to get Transaction Hash".to_string()
+            }
+        };
+        info!(
+            chain = network.to_string(),
+            slot = decoded_block.slot(),
+            transaction_id = this_hash,
+            transaction_type = txn_data.0,
+            transaction_body = format!("{:02x?}", txn_data.1),
+            transaction_body_diag = format!("{}", minicbor::display(&txn_data.1)),
+            transaction_witness_set = format!("{:02x?}", txn_data.2),
+            transaction_witness_set_diag = format!("{}", minicbor::display(&txn_data.2)),
+            transaction_aux_data = format!("{:02x?}", txn_data.3),
+            transaction_aux_data_diag = format!("{}", minicbor::display(&txn_data.3)),
+            cip509,
+            "Transaction Dump"
+        );
+    } else {
+        error!(
+            transaction_id = this_hash,
+            slot = decoded_block.slot(),
+            chain = network.to_string(),
+            "Unable to get transaction data to dump."
+        );
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt()
@@ -522,8 +698,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
         task.await?;
     }
 
-    // Keep running for 1 minute after last follower reaches its tip.
-    tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
+    // Keep running for 5 seconds after last follower reaches its tip.
+    tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
 
     Ok(())
 }
