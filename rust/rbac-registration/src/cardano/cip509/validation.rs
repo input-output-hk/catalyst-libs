@@ -136,12 +136,11 @@ pub fn validate_stake_public_key(
         return;
     }
 
-    for address in pk_addrs {
-        if witness.check_witness_in_tx(&address, 0.into()) {
-            // TODO: FIXME: Fix payment key format.
+    for (hash, address) in pk_addrs {
+        if witness.check_witness_in_tx(&hash, 0.into()) {
             report.other(
                 &format!(
-                    "Payment Key FIXME (0x{address}) is not present in the transaction witness set, and can not be verified as owned and spendable."
+                    "Payment Key '{address}' (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable."
                 ),
                 context,
             );
@@ -150,8 +149,9 @@ pub fn validate_stake_public_key(
 }
 
 /// Extracts all stake addresses from both X509 and C509 certificates containing in the
-/// given `Cip509` and converts their hashes to bytes.
-fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
+/// given `Cip509`. Returns a list of pairs containing verifying public key hash and
+/// `bech32` string representation of address.
+fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<(VKeyHash, String)> {
     let Some(uris) = uris else {
         return Vec::new();
     };
@@ -162,7 +162,13 @@ fn extract_stake_addresses(uris: Option<&Cip0134UriSet>) -> Vec<VKeyHash> {
         .flat_map(|(_index, uris)| uris.iter())
         .filter_map(|uri| {
             if let Address::Stake(a) = uri.address() {
-                a.payload().as_hash().as_slice().try_into().ok()
+                let bech32 = uri.address().to_string();
+                a.payload()
+                    .as_hash()
+                    .as_slice()
+                    .try_into()
+                    .ok()
+                    .map(|hash| (hash, bech32))
             } else {
                 None
             }
@@ -590,7 +596,7 @@ mod tests {
 
         let addresses = extract_stake_addresses(cip509.certificate_uris());
         assert_eq!(1, addresses.len());
-        assert_eq!(addresses.first().unwrap(), &hash);
+        assert_eq!(addresses.first().unwrap().0, hash);
     }
 
     // Verify that we are able to parse `Cip509` with legacy transaction output type.
