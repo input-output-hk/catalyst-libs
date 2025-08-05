@@ -9,14 +9,22 @@ use serde::{Deserialize, Serialize};
 pub struct Section(jsonpath_rust::JsonPath<serde_json::Value>);
 
 impl Display for Section {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         self.0.fmt(f)
     }
 }
 
 impl Serialize for Section {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         self.to_string().serialize(serializer)
     }
 }
@@ -41,7 +49,9 @@ impl FromStr for Section {
 
 impl minicbor::Encode<()> for Section {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.str(self.to_string().as_str())?;
         Ok(())
@@ -50,7 +60,8 @@ impl minicbor::Encode<()> for Section {
 
 impl minicbor::Decode<'_, ()> for Section {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         d.str()?.parse().map_err(minicbor::decode::Error::message)
     }

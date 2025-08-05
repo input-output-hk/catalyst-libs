@@ -26,7 +26,9 @@ impl From<Vec<u8>> for Content {
 
 impl minicbor::Encode<()> for Content {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if self.0.is_empty() {
             e.null()?;
@@ -39,7 +41,8 @@ impl minicbor::Encode<()> for Content {
 
 impl minicbor::Decode<'_, ()> for Content {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let p = d.position();
         d.null()

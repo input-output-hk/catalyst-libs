@@ -42,13 +42,20 @@ pub struct PublicKey(VerifyingKey);
 pub struct Signature(Ed25519Signature);
 
 /// Sign a message using the `Ed25519` private key.
-pub fn sign(sk: &PrivateKey, msg: &[u8]) -> Signature {
+pub fn sign(
+    sk: &PrivateKey,
+    msg: &[u8],
+) -> Signature {
     Signature(sk.0.sign(msg))
 }
 
 /// Verify a `Ed25519` signature using the `Ed25519` public key.
 #[must_use]
-pub fn verify_signature(pk: &PublicKey, msg: &[u8], sig: &Signature) -> bool {
+pub fn verify_signature(
+    pk: &PublicKey,
+    msg: &[u8],
+    sig: &Signature,
+) -> bool {
     pk.0.verify_strict(msg, &sig.0).is_ok()
 }
 
@@ -77,7 +84,10 @@ mod tests {
     use super::*;
 
     #[proptest]
-    fn sign_test(private_key: PrivateKey, msg: Vec<u8>) {
+    fn sign_test(
+        private_key: PrivateKey,
+        msg: Vec<u8>,
+    ) {
         let public_key = private_key.public_key();
         let signature = sign(&private_key, &msg);
         assert!(verify_signature(&public_key, &msg, &signature));

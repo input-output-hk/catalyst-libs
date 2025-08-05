@@ -41,14 +41,20 @@ impl From<Vec<u8>> for DocLocator {
 }
 
 impl Display for DocLocator {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         write!(f, "0x{}", hex::encode(self.0.as_slice()))
     }
 }
 
 // document_locator = { "cid" => cid }
 impl Decode<'_, ()> for DocLocator {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocLocator decoding";
 
         let entries = Map::decode(d, &mut DecodeCtx::Deterministic)?;
@@ -96,7 +102,9 @@ impl Decode<'_, ()> for DocLocator {
 
 impl Encode<()> for DocLocator {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(DOC_LOC_MAP_ITEM)?;
         e.str(CID_MAP_KEY)?;

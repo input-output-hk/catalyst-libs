@@ -25,7 +25,11 @@ pub struct DocumentRef {
 impl DocumentRef {
     /// Create a new instance of document reference.
     #[must_use]
-    pub fn new(id: UuidV7, ver: UuidV7, doc_locator: DocLocator) -> Self {
+    pub fn new(
+        id: UuidV7,
+        ver: UuidV7,
+        doc_locator: DocLocator,
+    ) -> Self {
         Self {
             id,
             ver,
@@ -53,7 +57,10 @@ impl DocumentRef {
 }
 
 impl Display for DocumentRef {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         write!(
             f,
             "id: {}, ver: {}, document_locator: {}",
@@ -64,7 +71,8 @@ impl Display for DocumentRef {
 
 impl Decode<'_, ()> for DocumentRef {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRef decoding";
 
@@ -109,7 +117,9 @@ impl Decode<'_, ()> for DocumentRef {
 
 impl Encode<()> for DocumentRef {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(DOC_REF_ARR_ITEM)?;
         self.id.encode(e, &mut CborContext::Tagged)?;

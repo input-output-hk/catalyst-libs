@@ -39,7 +39,8 @@ fn validate_uuid_tag(tag: u64) -> Result<(), minicbor::decode::Error> {
 
 /// Decode from `CBOR` into `UUID`
 fn decode_cbor_uuid(
-    d: &mut minicbor::Decoder<'_>, ctx: &mut CborContext,
+    d: &mut minicbor::Decoder<'_>,
+    ctx: &mut CborContext,
 ) -> Result<uuid::Uuid, minicbor::decode::Error> {
     let bytes = match ctx {
         CborContext::Untagged => d.bytes()?,
@@ -68,7 +69,9 @@ fn decode_cbor_uuid(
 
 /// Encode `UUID` into `CBOR`
 fn encode_cbor_uuid<W: minicbor::encode::Write>(
-    uuid: uuid::Uuid, e: &mut minicbor::Encoder<W>, ctx: &mut CborContext,
+    uuid: uuid::Uuid,
+    e: &mut minicbor::Encoder<W>,
+    ctx: &mut CborContext,
 ) -> Result<(), minicbor::encode::Error<W::Error>> {
     if let CborContext::Tagged = ctx {
         e.tag(Tag::new(UUID_CBOR_TAG))?;

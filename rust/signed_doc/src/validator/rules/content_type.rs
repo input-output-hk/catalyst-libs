@@ -12,7 +12,10 @@ pub(crate) struct ContentTypeRule {
 impl ContentTypeRule {
     /// Field validation rule
     #[allow(clippy::unused_async)]
-    pub(crate) async fn check(&self, doc: &CatalystSignedDocument) -> anyhow::Result<bool> {
+    pub(crate) async fn check(
+        &self,
+        doc: &CatalystSignedDocument,
+    ) -> anyhow::Result<bool> {
         let Ok(content_type) = doc.doc_content_type() else {
             doc.report().missing_field(
                 "content-type",
@@ -50,7 +53,10 @@ impl ContentTypeRule {
     }
 
     /// Validates the provided `content` bytes to be a defined `ContentType`.
-    fn validate(&self, content: &[u8]) -> anyhow::Result<()> {
+    fn validate(
+        &self,
+        content: &[u8],
+    ) -> anyhow::Result<()> {
         match self.exp {
             ContentType::Json => {
                 if let Err(e) = serde_json::from_slice::<&serde_json::value::RawValue>(content) {

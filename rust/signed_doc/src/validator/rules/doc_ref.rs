@@ -23,9 +23,13 @@ pub(crate) enum RefRule {
 impl RefRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
-        &self, doc: &CatalystSignedDocument, provider: &Provider,
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: CatalystSignedDocumentProvider {
+    where
+        Provider: CatalystSignedDocumentProvider,
+    {
         let context: &str = "Ref rule check";
         if let Self::Specified {
             exp_ref_type,
@@ -60,7 +64,9 @@ impl RefRule {
 
 /// A generic implementation of the referenced document validation.
 pub(crate) fn referenced_doc_check(
-    ref_doc: &CatalystSignedDocument, exp_ref_type: &DocType, field_name: &str,
+    ref_doc: &CatalystSignedDocument,
+    exp_ref_type: &DocType,
+    field_name: &str,
     report: &ProblemReport,
 ) -> bool {
     let Ok(ref_doc_type) = ref_doc.doc_type() else {

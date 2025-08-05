@@ -26,8 +26,13 @@ impl<T> WithCborBytes<T> {
     ///
     /// # Errors
     ///  - Infallible
-    pub fn new<C>(obj: T, ctx: &mut C) -> Result<Self, minicbor::encode::Error<Infallible>>
-    where T: minicbor::Encode<C> {
+    pub fn new<C>(
+        obj: T,
+        ctx: &mut C,
+    ) -> Result<Self, minicbor::encode::Error<Infallible>>
+    where
+        T: minicbor::Encode<C>,
+    {
         let cbor_bytes = minicbor::to_vec_with(&obj, ctx)?;
         Ok(Self { cbor_bytes, obj })
     }
@@ -40,7 +45,9 @@ impl<T> WithCborBytes<T> {
 
 impl<T> minicbor::Encode<()> for WithCborBytes<T> {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.writer_mut()
             .write_all(&self.cbor_bytes)
@@ -50,7 +57,10 @@ impl<T> minicbor::Encode<()> for WithCborBytes<T> {
 }
 
 impl<'a, C, T: minicbor::Decode<'a, C>> minicbor::Decode<'a, C> for WithCborBytes<T> {
-    fn decode(d: &mut minicbor::Decoder<'a>, ctx: &mut C) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut minicbor::Decoder<'a>,
+        ctx: &mut C,
+    ) -> Result<Self, minicbor::decode::Error> {
         let start = d.position();
         let obj = d.decode_with(ctx)?;
         let end = d.position();

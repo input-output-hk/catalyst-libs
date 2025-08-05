@@ -28,7 +28,9 @@ enum Label<'a> {
 
 impl minicbor::Encode<()> for Label<'_> {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         match self {
             &Label::U8(u) => e.u8(u),
@@ -39,7 +41,10 @@ impl minicbor::Encode<()> for Label<'_> {
 }
 
 impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
-    fn decode(d: &mut minicbor::Decoder<'a>, _: &mut C) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut minicbor::Decoder<'a>,
+        _: &mut C,
+    ) -> Result<Self, minicbor::decode::Error> {
         match d.datatype()? {
             minicbor::data::Type::U8 => d.u8().map(Self::U8),
             minicbor::data::Type::String => d.str().map(Self::Str),
@@ -54,7 +59,10 @@ impl<'a, C> minicbor::Decode<'a, C> for Label<'a> {
 }
 
 impl fmt::Display for Label<'_> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         match self {
             Label::U8(u) => write!(f, "{u}"),
             Label::Str(s) => f.write_str(s),
@@ -149,7 +157,10 @@ impl SupportedLabel {
 }
 
 impl fmt::Display for SupportedLabel {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         match self {
             Self::ContentType => write!(f, "content-type"),
             v => v.to_cose().fmt(f),
@@ -158,8 +169,13 @@ impl fmt::Display for SupportedLabel {
 }
 
 impl serde::ser::Serialize for SupportedField {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         match self {
             Self::Id(v) | Self::Ver(v) => v.serialize(serializer),
             Self::Type(v) => v.serialize(serializer),
@@ -177,7 +193,10 @@ impl serde::ser::Serialize for SupportedField {
 impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
     type Value = SupportedField;
 
-    fn deserialize<D: serde::Deserializer<'de>>(self, d: D) -> Result<Self::Value, D::Error> {
+    fn deserialize<D: serde::Deserializer<'de>>(
+        self,
+        d: D,
+    ) -> Result<Self::Value, D::Error> {
         match self {
             SupportedLabel::ContentType => {
                 Deserialize::deserialize(d).map(SupportedField::ContentType)
@@ -204,7 +223,8 @@ impl<'de> serde::de::DeserializeSeed<'de> for SupportedLabel {
 
 impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<SupportedField> {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut crate::decode_context::DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         const REPORT_CONTEXT: &str = "Metadata field decoding";
 
@@ -265,7 +285,8 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Option<Suppo
 
 impl<C> minicbor::Decode<'_, C> for SupportedLabel {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut C,
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut C,
     ) -> Result<Self, minicbor::decode::Error> {
         let label = d.decode()?;
         Self::from_cose(label).ok_or(minicbor::decode::Error::message(format!(
@@ -276,7 +297,9 @@ impl<C> minicbor::Decode<'_, C> for SupportedLabel {
 
 impl minicbor::Encode<()> for SupportedField {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         let key = self.discriminant().to_cose();
         e.encode(key)?;

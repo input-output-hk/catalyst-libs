@@ -30,7 +30,11 @@ pub struct RoleData {
 impl RoleData {
     /// Create an instance of role data.
     #[must_use]
-    pub fn new(data: CborRoleData, txn: &conway::MintedTx, report: &ProblemReport) -> Self {
+    pub fn new(
+        data: CborRoleData,
+        txn: &conway::MintedTx,
+        report: &ProblemReport,
+    ) -> Self {
         let payment_key = if data.number == Some(RoleId::Role0) && data.payment_key.is_none() {
             report.other(
                 "Missing payment key in role0",
@@ -78,19 +82,28 @@ impl RoleData {
     }
 
     /// Sets a new value for the signing key.
-    pub fn set_signing_key(&mut self, key: Option<KeyLocalRef>) {
+    pub fn set_signing_key(
+        &mut self,
+        key: Option<KeyLocalRef>,
+    ) {
         self.signing_key = key;
     }
 
     /// Sets a new value for the encryption key.
-    pub fn set_encryption_key(&mut self, key: Option<KeyLocalRef>) {
+    pub fn set_encryption_key(
+        &mut self,
+        key: Option<KeyLocalRef>,
+    ) {
         self.encryption_key = key;
     }
 }
 
 /// Converts the payment key from the form encoded in CBOR role data to `ShelleyAddress`.
 fn convert_payment_key(
-    index: Option<u16>, txn: &conway::MintedTx, context: &str, report: &ProblemReport,
+    index: Option<u16>,
+    txn: &conway::MintedTx,
+    context: &str,
+    report: &ProblemReport,
 ) -> Option<ShelleyAddress> {
     let index: usize = index?.into();
 
@@ -140,7 +153,10 @@ fn convert_payment_key(
 
 /// Helper function for validating payment output key.
 fn validate_payment_output(
-    output_address: &[u8], witness: &TxnWitness, context: &str, report: &ProblemReport,
+    output_address: &[u8],
+    witness: &TxnWitness,
+    context: &str,
+    report: &ProblemReport,
 ) {
     let Some(key) = extract_key_hash(output_address) else {
         report.other("Failed to extract payment key hash from address", context);
