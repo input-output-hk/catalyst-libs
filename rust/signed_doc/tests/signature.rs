@@ -152,7 +152,9 @@ async fn multiple_signatures_validation_test() {
 }
 
 fn content(
-    content_bytes: &[u8], sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+    content_bytes: &[u8],
+    sk: &ed25519_dalek::SigningKey,
+    kid: &CatalystId,
 ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
     let mut e = minicbor::Encoder::new(Vec::new());
     e.array(4)?;
@@ -193,7 +195,9 @@ fn content(
 }
 
 fn parameters_alias_field(
-    alias: &str, sk: &ed25519_dalek::SigningKey, kid: &CatalystId,
+    alias: &str,
+    sk: &ed25519_dalek::SigningKey,
+    kid: &CatalystId,
 ) -> anyhow::Result<minicbor::Encoder<Vec<u8>>> {
     let mut e = minicbor::Encoder::new(Vec::new());
     e.array(4)?;

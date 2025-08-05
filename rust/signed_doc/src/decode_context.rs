@@ -25,7 +25,10 @@ pub(crate) struct DecodeContext {
 
 impl DecodeContext {
     /// Creates a new instance of the `DecodeContext`
-    pub(crate) fn new(compatibility_policy: CompatibilityPolicy, report: ProblemReport) -> Self {
+    pub(crate) fn new(
+        compatibility_policy: CompatibilityPolicy,
+        report: ProblemReport,
+    ) -> Self {
         Self {
             compatibility_policy,
             report,

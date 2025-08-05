@@ -6,7 +6,7 @@ use catalyst_signed_doc::*;
 use catalyst_types::catalyst_id::role_index::RoleId;
 
 pub fn create_dummy_key_pair(
-    role_index: RoleId,
+    role_index: RoleId
 ) -> anyhow::Result<(
     ed25519_dalek::SigningKey,
     ed25519_dalek::VerifyingKey,

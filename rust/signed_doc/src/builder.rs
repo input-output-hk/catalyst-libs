@@ -54,7 +54,10 @@ impl MetadataBuilder {
     ///
     /// # Errors
     /// - Fails if it is invalid metadata fields JSON object.
-    pub fn with_json_metadata(mut self, json: serde_json::Value) -> anyhow::Result<ContentBuilder> {
+    pub fn with_json_metadata(
+        mut self,
+        json: serde_json::Value,
+    ) -> anyhow::Result<ContentBuilder> {
         self.metadata = Metadata::from_json(json)?;
         Ok(ContentBuilder {
             metadata: self.metadata,
@@ -85,7 +88,8 @@ impl ContentBuilder {
     ///  - Cannot serialize provided JSON
     ///  - Compression failure
     pub fn with_json_content(
-        mut self, json: &serde_json::Value,
+        mut self,
+        json: &serde_json::Value,
     ) -> anyhow::Result<SignaturesBuilder> {
         anyhow::ensure!(
             self.metadata.content_type()? == ContentType::Json,
@@ -112,7 +116,9 @@ impl SignaturesBuilder {
     /// content, due to malformed data, or when the signed document cannot be
     /// converted into `coset::CoseSign`.
     pub fn add_signature(
-        mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId,
+        mut self,
+        sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>,
+        kid: CatalystId,
     ) -> anyhow::Result<Self> {
         if kid.is_id() {
             anyhow::bail!("Provided kid should be in a uri format, kid: {kid}");
@@ -144,7 +150,9 @@ impl SignaturesBuilder {
 /// Build document from the provided **CBOR encoded** `metadata`, `content` and
 /// `signatures`.
 fn build_document(
-    metadata_bytes: &[u8], content_bytes: &[u8], signatures_bytes: &[u8],
+    metadata_bytes: &[u8],
+    content_bytes: &[u8],
+    signatures_bytes: &[u8],
 ) -> anyhow::Result<CatalystSignedDocument> {
     let mut e = minicbor::Encoder::new(Vec::new());
     // COSE_Sign tag
@@ -165,7 +173,9 @@ fn build_document(
 /// Builds a `Signature` object by signing provided `metadata_bytes`, `content_bytes` and
 /// `kid` params.
 fn build_signature(
-    sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: CatalystId, metadata: &WithCborBytes<Metadata>,
+    sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>,
+    kid: CatalystId,
+    metadata: &WithCborBytes<Metadata>,
     content: &WithCborBytes<Content>,
 ) -> anyhow::Result<Signature> {
     let data_to_sign = tbs_data(&kid, metadata, content)?;
@@ -210,7 +220,8 @@ pub(crate) mod tests {
 
         /// Add provided `SupportedField` into the `Metadata`.
         pub(crate) fn with_metadata_field(
-            mut self, field: crate::metadata::SupportedField,
+            mut self,
+            field: crate::metadata::SupportedField,
         ) -> Self {
             self.metadata.add_field(field);
             self
@@ -220,14 +231,19 @@ pub(crate) mod tests {
         /// It will set the content as its provided, make sure by yourself that
         /// `content-type` and `content-encoding` fields are aligned with the
         /// provided content bytes.
-        pub(crate) fn with_content(mut self, content: Vec<u8>) -> Self {
+        pub(crate) fn with_content(
+            mut self,
+            content: Vec<u8>,
+        ) -> Self {
             self.content = content.into();
             self
         }
 
         /// Add a signature to the document
         pub(crate) fn add_signature(
-            mut self, sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>, kid: super::CatalystId,
+            mut self,
+            sign_fn: impl FnOnce(Vec<u8>) -> Vec<u8>,
+            kid: super::CatalystId,
         ) -> anyhow::Result<Self> {
             let metadata = WithCborBytes::new(self.metadata, &mut ())?;
             let content = WithCborBytes::new(self.content, &mut ())?;

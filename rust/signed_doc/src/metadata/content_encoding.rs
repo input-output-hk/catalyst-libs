@@ -17,7 +17,10 @@ impl ContentEncoding {
     ///
     /// # Errors
     /// Returns compression failure
-    pub fn encode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
+    pub fn encode(
+        self,
+        mut payload: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
                 let brotli_params = brotli::enc::BrotliEncoderParams::default();
@@ -32,7 +35,10 @@ impl ContentEncoding {
     ///
     /// # Errors
     ///  Returns decompression failure
-    pub fn decode(self, mut payload: &[u8]) -> anyhow::Result<Vec<u8>> {
+    pub fn decode(
+        self,
+        mut payload: &[u8],
+    ) -> anyhow::Result<Vec<u8>> {
         match self {
             Self::Brotli => {
                 let mut buf = Vec::new();
@@ -44,7 +50,10 @@ impl ContentEncoding {
 }
 
 impl Display for ContentEncoding {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         match self {
             Self::Brotli => write!(f, "br"),
         }
@@ -71,15 +80,22 @@ impl<'de> serde::Deserialize<'de> for ContentEncoding {
 }
 
 impl serde::Serialize for ContentEncoding {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         self.to_string().serialize(serializer)
     }
 }
 
 impl minicbor::Encode<()> for ContentEncoding {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.str(self.to_string().as_str())?;
         Ok(())
@@ -88,7 +104,8 @@ impl minicbor::Encode<()> for ContentEncoding {
 
 impl minicbor::Decode<'_, ()> for ContentEncoding {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         d.str()?.parse().map_err(minicbor::decode::Error::message)
     }

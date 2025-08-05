@@ -12,7 +12,8 @@ pub struct Script(Arc<Vec<u8>>);
 
 impl minicbor::Decode<'_, ScriptType> for Script {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut ScriptType,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut ScriptType,
     ) -> Result<Self, minicbor::decode::Error> {
         let script_type = *ctx;
 
@@ -56,7 +57,8 @@ pub struct ScriptArray(Arc<Vec<Script>>);
 
 impl minicbor::Decode<'_, ScriptType> for ScriptArray {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut ScriptType,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut ScriptType,
     ) -> Result<Self, minicbor::decode::Error> {
         let mut scripts: Vec<Script> = Vec::new();
 

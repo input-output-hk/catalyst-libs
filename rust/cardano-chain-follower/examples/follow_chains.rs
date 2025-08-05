@@ -94,7 +94,10 @@ fn process_argument() -> (Vec<Network>, ArgMatches) {
 }
 
 /// Start syncing a particular network
-async fn start_sync_for(network: &Network, matches: ArgMatches) -> Result<(), Box<dyn Error>> {
+async fn start_sync_for(
+    network: &Network,
+    matches: ArgMatches,
+) -> Result<(), Box<dyn Error>> {
     let mut cfg = ChainSyncConfig::default_for(*network);
     let mut mithril_dl_connect_timeout = "Not Set".to_string();
     let mut mithril_dl_data_timeout = "Not Set".to_string();
@@ -234,7 +237,10 @@ const RUNNING_UPDATE_INTERVAL: u64 = 100_000;
 
 /// Try and follow a chain continuously, from Genesis until Tip.
 #[allow(clippy::too_many_lines)]
-async fn follow_for(network: Network, matches: ArgMatches) {
+async fn follow_for(
+    network: Network,
+    matches: ArgMatches,
+) {
     info!(chain = network.to_string(), "Following");
     let origin = if let Some(slot) = matches.get_one::<u64>("start-at-slot") {
         Point::fuzzy(Slot::from_saturating(*slot))
@@ -459,7 +465,10 @@ async fn follow_for(network: Network, matches: ArgMatches) {
 /// Helper function for updating the biggest metadata from a list of
 /// interested metadata label.
 fn update_largest_metadata(
-    block: &MultiEraBlock, network: Network, txn_idx: TxnIndex, largest_metadata_size: &mut usize,
+    block: &MultiEraBlock,
+    network: Network,
+    txn_idx: TxnIndex,
+    largest_metadata_size: &mut usize,
 ) {
     let labels = [
         MetadatumLabel::CIP509_RBAC,
@@ -487,7 +496,10 @@ fn update_largest_metadata(
 }
 
 /// Helper function for logging the raw box auxiliary data.
-fn raw_aux_info(block: &pallas::ledger::traverse::MultiEraBlock, network: Network) {
+fn raw_aux_info(
+    block: &pallas::ledger::traverse::MultiEraBlock,
+    network: Network,
+) {
     match block {
         pallas::ledger::traverse::MultiEraBlock::AlonzoCompatible(b, _) => {
             info!(
@@ -513,7 +525,8 @@ fn raw_aux_info(block: &pallas::ledger::traverse::MultiEraBlock, network: Networ
 
 /// Helper function for updating the largest auxiliary data.
 fn update_largest_aux(
-    block: &pallas::ledger::traverse::MultiEraBlock, network: Network,
+    block: &pallas::ledger::traverse::MultiEraBlock,
+    network: Network,
     largest_metadata_size: &mut usize,
 ) {
     match block {
@@ -556,7 +569,10 @@ fn update_largest_aux(
 
 /// Helper function for comparing and logging the largest auxiliary data.
 fn compare_and_log_aux(
-    aux_len: usize, block_no: u64, txn_idx: u32, network: Network,
+    aux_len: usize,
+    block_no: u64,
+    txn_idx: u32,
+    network: Network,
     largest_metadata_size: &mut usize,
 ) {
     if aux_len > *largest_metadata_size {
@@ -575,7 +591,10 @@ fn compare_and_log_aux(
 /// Bad CIP36 includes:
 /// - CIP36 that is valid decoded, but have problem.
 /// - CIP36 that is invalid decoded.
-fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
+fn log_bad_cip36_info(
+    block: &MultiEraBlock,
+    network: Network,
+) {
     if let Some(map) = Cip36::cip36_from_block(block, true) {
         for (key, value) in &map {
             match value {
@@ -597,7 +616,10 @@ fn log_bad_cip36_info(block: &MultiEraBlock, network: Network) {
 }
 
 /// Function for logging bad CIP509.
-fn log_bad_cip509_info(block: &MultiEraBlock, network: Network) {
+fn log_bad_cip509_info(
+    block: &MultiEraBlock,
+    network: Network,
+) {
     for cip509 in Cip509::from_block(block, &[]) {
         if cip509.report().is_problematic() {
             info!(

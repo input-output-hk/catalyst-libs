@@ -49,7 +49,8 @@ const MAX_NODE_CONNECT_RETRIES: u64 = 5;
 /// If it takes longer then 5 seconds, retry the connection.
 /// Retry 5 times before giving up.
 async fn retry_connect(
-    addr: &str, magic: u64,
+    addr: &str,
+    magic: u64,
 ) -> std::result::Result<PeerClient, pallas::network::facades::Error> {
     let mut retries = MAX_NODE_CONNECT_RETRIES;
     loop {
@@ -85,7 +86,10 @@ async fn retry_connect(
 }
 
 /// Purge the live chain, and intersect with TIP.
-async fn purge_and_intersect_tip(client: &mut PeerClient, chain: Network) -> Result<Point> {
+async fn purge_and_intersect_tip(
+    client: &mut PeerClient,
+    chain: Network,
+) -> Result<Point> {
     if let Err(error) = purge_live_chain(chain, &Point::TIP) {
         // Shouldn't happen.
         error!("failed to purge live chain: {error}");
@@ -100,7 +104,10 @@ async fn purge_and_intersect_tip(client: &mut PeerClient, chain: Network) -> Res
 }
 
 /// Resynchronize to the live tip in memory.
-async fn resync_live_tip(client: &mut PeerClient, chain: Network) -> Result<Point> {
+async fn resync_live_tip(
+    client: &mut PeerClient,
+    chain: Network,
+) -> Result<Point> {
     let sync_points = get_intersect_points(chain);
     if sync_points.is_empty() {
         return purge_and_intersect_tip(client, chain).await;
@@ -120,7 +127,11 @@ async fn resync_live_tip(client: &mut PeerClient, chain: Network) -> Result<Poin
 
 /// Fetch a single block from the Peer, and decode it.
 async fn fetch_block_from_peer(
-    peer: &mut PeerClient, chain: Network, point: Point, previous_point: Point, fork_count: Fork,
+    peer: &mut PeerClient,
+    chain: Network,
+    point: Point,
+    previous_point: Point,
+    fork_count: Fork,
 ) -> anyhow::Result<MultiEraBlock> {
     let block_data = peer
         .blockfetch()
@@ -139,7 +150,11 @@ async fn fetch_block_from_peer(
 /// Fetch the rollback block, and try and insert it into the live-chain.
 /// If its a real rollback, it will purge the chain ahead of the block automatically.
 async fn process_rollback_actual(
-    peer: &mut PeerClient, chain: Network, point: Point, tip: &Tip, fork_count: &mut Fork,
+    peer: &mut PeerClient,
+    chain: Network,
+    point: Point,
+    tip: &Tip,
+    fork_count: &mut Fork,
 ) -> anyhow::Result<Point> {
     debug!("RollBackward: {:?} {:?}", point, tip);
 
@@ -183,7 +198,11 @@ async fn process_rollback_actual(
 
 /// Process a rollback detected from the peer.
 async fn process_rollback(
-    peer: &mut PeerClient, chain: Network, point: Point, tip: &Tip, previous_point: &Point,
+    peer: &mut PeerClient,
+    chain: Network,
+    point: Point,
+    tip: &Tip,
+    previous_point: &Point,
     fork_count: &mut Fork,
 ) -> anyhow::Result<Point> {
     let rollback_slot = point.slot_or_default();
@@ -211,8 +230,12 @@ async fn process_rollback(
 
 /// Process a rollback detected from the peer.
 async fn process_next_block(
-    peer: &mut PeerClient, chain: Network, header: HeaderContent, tip: &Tip,
-    previous_point: &Point, fork_count: &mut Fork,
+    peer: &mut PeerClient,
+    chain: Network,
+    header: HeaderContent,
+    tip: &Tip,
+    previous_point: &Point,
+    fork_count: &mut Fork,
 ) -> anyhow::Result<Point> {
     // Decode the Header of the block so we know what to fetch.
     let decoded_header = MultiEraHeader::decode(
@@ -255,7 +278,9 @@ async fn process_next_block(
 ///
 /// We take ownership of the client because of that.
 async fn follow_chain(
-    peer: &mut PeerClient, chain: Network, fork_count: &mut Fork,
+    peer: &mut PeerClient,
+    chain: Network,
+    fork_count: &mut Fork,
 ) -> anyhow::Result<()> {
     let mut update_sender = get_chain_update_tx_queue(chain).await;
     let mut previous_point = Point::UNKNOWN;
@@ -313,7 +338,10 @@ async fn follow_chain(
 const PEER_FAILURE_RECONNECT_DELAY: Duration = Duration::from_secs(10);
 
 /// Do not return until we have a connection to the peer.
-async fn persistent_reconnect(addr: &str, chain: Network) -> PeerClient {
+async fn persistent_reconnect(
+    addr: &str,
+    chain: Network,
+) -> PeerClient {
     // Not yet connected to the peer.
     stats::peer_connected(chain, false, addr);
 
@@ -345,7 +373,8 @@ async fn persistent_reconnect(addr: &str, chain: Network) -> PeerClient {
 ///
 /// This only needs to be done once per chain connection.
 async fn live_sync_backfill(
-    cfg: &ChainSyncConfig, update: &MithrilUpdateMessage,
+    cfg: &ChainSyncConfig,
+    update: &MithrilUpdateMessage,
 ) -> anyhow::Result<()> {
     stats::backfill_started(cfg.chain);
 
@@ -412,7 +441,8 @@ async fn live_sync_backfill(
 
 /// Backfill and Purge the live chain, based on the Mithril Sync updates.
 async fn live_sync_backfill_and_purge(
-    cfg: ChainSyncConfig, mut rx: mpsc::Receiver<MithrilUpdateMessage>,
+    cfg: ChainSyncConfig,
+    mut rx: mpsc::Receiver<MithrilUpdateMessage>,
     mut sync_ready: SyncReadyWaiter,
 ) {
     // Wait for first Mithril Update advice, which triggers a BACKFILL of the Live Data.
@@ -515,7 +545,10 @@ async fn live_sync_backfill_and_purge(
 /// # Returns
 ///
 /// This does not return, it is a background task.
-pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilUpdateMessage>) {
+pub(crate) async fn chain_sync(
+    cfg: ChainSyncConfig,
+    rx: mpsc::Receiver<MithrilUpdateMessage>,
+) {
     debug!(
         "Chain Sync for: {} from {} : Starting",
         cfg.chain, cfg.relay_address,
@@ -571,7 +604,10 @@ pub(crate) async fn chain_sync(cfg: ChainSyncConfig, rx: mpsc::Receiver<MithrilU
 }
 
 /// Is the current point aligned with what we know as tip.
-pub(crate) async fn point_at_tip(chain: Network, point: &Point) -> bool {
+pub(crate) async fn point_at_tip(
+    chain: Network,
+    point: &Point,
+) -> bool {
     let tip = get_peer_tip(chain);
 
     // We are said to be AT TIP, if the block point is greater than or equal to the tip.

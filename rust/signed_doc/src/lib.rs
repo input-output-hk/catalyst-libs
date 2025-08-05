@@ -59,7 +59,10 @@ pub struct CatalystSignedDocument {
 }
 
 impl Display for CatalystSignedDocument {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         self.inner.metadata.fmt(f)?;
         writeln!(f, "Payload Size: {} bytes", self.inner.content.size())?;
         writeln!(f, "Signature Information")?;
@@ -241,7 +244,10 @@ impl CatalystSignedDocument {
 }
 
 impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut CompatibilityPolicy) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut CompatibilityPolicy,
+    ) -> Result<Self, decode::Error> {
         let mut ctx = DecodeContext::new(
             *ctx,
             ProblemReport::new("Catalyst Signed Document Decoding"),
@@ -312,7 +318,9 @@ impl Decode<'_, CompatibilityPolicy> for CatalystSignedDocument {
 
 impl<C> Encode<C> for CatalystSignedDocument {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut encode::Encoder<W>, _ctx: &mut C,
+        &self,
+        e: &mut encode::Encoder<W>,
+        _ctx: &mut C,
     ) -> Result<(), encode::Error<W::Error>> {
         // COSE_Sign tag
         // <!https://datatracker.ietf.org/doc/html/rfc8152#page-9>

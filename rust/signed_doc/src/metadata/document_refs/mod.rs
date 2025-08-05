@@ -65,7 +65,10 @@ impl From<Vec<DocumentRef>> for DocumentRefs {
 }
 
 impl Display for DocumentRefs {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut std::fmt::Formatter<'_>,
+    ) -> std::fmt::Result {
         let items = self
             .0
             .iter()
@@ -78,7 +81,8 @@ impl Display for DocumentRefs {
 
 impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, policy: &mut CompatibilityPolicy,
+        d: &mut minicbor::Decoder<'_>,
+        policy: &mut CompatibilityPolicy,
     ) -> Result<Self, minicbor::decode::Error> {
         const CONTEXT: &str = "DocumentRefs decoding";
 
@@ -159,7 +163,9 @@ impl Decode<'_, CompatibilityPolicy> for DocumentRefs {
 
 impl Encode<()> for DocumentRefs {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         const CONTEXT: &str = "DocumentRefs encoding";
         if self.0.is_empty() {
@@ -218,8 +224,13 @@ mod serde_impl {
     }
 
     impl serde::Serialize for DocumentRefs {
-        fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where S: serde::Serializer {
+        fn serialize<S>(
+            &self,
+            serializer: S,
+        ) -> Result<S::Ok, S::Error>
+        where
+            S: serde::Serializer,
+        {
             let iter = self.0.iter().map(|v| {
                 NewRef {
                     id: v.id().to_string(),
@@ -342,7 +353,10 @@ mod tests {
         } ;
         "Invalid untagged uuid uuids v7 (new format)"
     )]
-    fn test_invalid_cbor_decode(mut policy: CompatibilityPolicy, e: Encoder<Vec<u8>>) {
+    fn test_invalid_cbor_decode(
+        mut policy: CompatibilityPolicy,
+        e: Encoder<Vec<u8>>,
+    ) {
         assert!(
             DocumentRefs::decode(&mut Decoder::new(e.into_writer().as_slice()), &mut policy)
                 .is_err()
@@ -414,7 +428,8 @@ mod tests {
         "Array of new doc ref (new format), fail policy"
     )]
     fn test_valid_cbor_decode(
-        mut policy: CompatibilityPolicy, e_gen: impl FnOnce(UuidV7, DocLocator) -> Encoder<Vec<u8>>,
+        mut policy: CompatibilityPolicy,
+        e_gen: impl FnOnce(UuidV7, DocLocator) -> Encoder<Vec<u8>>,
     ) {
         let uuid = UuidV7::new();
         let doc_loc = DocLocator::default();

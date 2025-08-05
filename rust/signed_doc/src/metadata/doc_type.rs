@@ -66,13 +66,19 @@ impl TryFrom<String> for DocType {
 }
 
 impl Display for DocType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.0)
     }
 }
 
 impl Decode<'_, ()> for DocType {
-    fn decode(d: &mut Decoder, _ctx: &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        _ctx: &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         UuidV4::decode(d, &mut CborContext::Tagged)
             .map_err(|e| {
                 minicbor::decode::Error::message(format!(
@@ -85,7 +91,9 @@ impl Decode<'_, ()> for DocType {
 
 impl<C> Encode<C> for DocType {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.0.encode(e, &mut CborContext::Tagged)
     }
