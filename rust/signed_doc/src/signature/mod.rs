@@ -1,44 +1,34 @@
 //! Catalyst Signed Document COSE Signature information.
 
 pub use catalyst_types::catalyst_id::CatalystId;
-use catalyst_types::problem_report::ProblemReport;
-use coset::CoseSignature;
+use cbork_utils::{array::Array, decode_context::DecodeCtx, with_cbor_bytes::WithCborBytes};
+use minicbor::Decode;
+
+use crate::{decode_context::DecodeContext, Content, Metadata};
 
 /// Catalyst Signed Document COSE Signature.
 #[derive(Debug, Clone)]
 pub struct Signature {
     /// Key ID
     kid: CatalystId,
-    /// COSE Signature
-    signature: CoseSignature,
+    /// Raw signature data
+    signature: Vec<u8>,
 }
 
 impl Signature {
-    /// Convert COSE Signature to `Signature`.
-    pub(crate) fn from_cose_sig(signature: CoseSignature, report: &ProblemReport) -> Option<Self> {
-        match CatalystId::try_from(signature.protected.header.key_id.as_ref()) {
-            Ok(kid) if kid.is_uri() => Some(Self { kid, signature }),
-            Ok(kid) => {
-                report.invalid_value(
-                    "COSE signature protected header key ID",
-                    &kid.to_string(),
-                    &format!(
-                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}", CatalystId::SCHEME
-                    ),
-                    "Converting COSE signature header key ID to CatalystId",
-                );
-                None
-            },
-            Err(e) => {
-                report.conversion_error(
-                    "COSE signature protected header key ID",
-                    &format!("{:?}", &signature.protected.header.key_id),
-                    &format!("{e:?}"),
-                    "Converting COSE signature header key ID to CatalystId",
-                );
-                None
-            },
-        }
+    /// Creates a `Signature` object from `kid` and raw `signature` bytes
+    pub(crate) fn new(kid: CatalystId, signature: Vec<u8>) -> Self {
+        Self { kid, signature }
+    }
+
+    /// Return `kid` field (`CatalystId`), identifier who made a signature
+    pub fn kid(&self) -> &CatalystId {
+        &self.kid
+    }
+
+    /// Return raw signature bytes itself
+    pub fn signature(&self) -> &[u8] {
+        &self.signature
     }
 }
 
@@ -47,28 +37,9 @@ impl Signature {
 pub struct Signatures(Vec<Signature>);
 
 impl Signatures {
-    /// Return a list of author IDs (short form of Catalyst IDs).
-    #[must_use]
-    pub(crate) fn authors(&self) -> Vec<CatalystId> {
-        self.kids().into_iter().map(|k| k.as_short_id()).collect()
-    }
-
-    /// Return a list of Document's Catalyst IDs.
-    #[must_use]
-    pub(crate) fn kids(&self) -> Vec<CatalystId> {
-        self.0.iter().map(|sig| sig.kid.clone()).collect()
-    }
-
-    /// Iterator of COSE signatures object with kids.
-    pub(crate) fn cose_signatures_with_kids(
-        &self,
-    ) -> impl Iterator<Item = (&CoseSignature, &CatalystId)> + use<'_> {
-        self.0.iter().map(|sig| (&sig.signature, &sig.kid))
-    }
-
-    /// List of COSE signatures object.
-    pub(crate) fn cose_signatures(&self) -> impl Iterator<Item = CoseSignature> + use<'_> {
-        self.0.iter().map(|sig| sig.signature.clone())
+    /// Return an iterator over the signatures
+    pub fn iter(&self) -> impl Iterator<Item = &Signature> + use<'_> {
+        self.0.iter()
     }
 
     /// Add a `Signature` object into the list
@@ -87,21 +58,198 @@ impl Signatures {
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
+}
 
-    /// Convert list of COSE Signature to `Signatures`.
-    pub(crate) fn from_cose_sig_list(cose_sigs: &[CoseSignature], report: &ProblemReport) -> Self {
-        let res = cose_sigs
-            .iter()
-            .cloned()
-            .enumerate()
-            .filter_map(|(idx, signature)| {
-                let sign = Signature::from_cose_sig(signature, report);
-                if sign.is_none() {
-                    report.other(&format!("COSE signature protected header key ID at id {idx}"), "Converting COSE signatures list to Catalyst Signed Documents signatures list",);
-                }
-                sign
-            }).collect();
+/// Create a binary blob that will be signed. No support for unprotected headers.
+///
+/// Described in [section 4.4 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
+pub(crate) fn tbs_data(
+    kid: &CatalystId, metadata: &WithCborBytes<Metadata>, content: &WithCborBytes<Content>,
+) -> anyhow::Result<Vec<u8>> {
+    let mut e = minicbor::Encoder::new(Vec::new());
 
-        Self(res)
+    e.array(5)?;
+    e.str("Signature")?;
+    e.bytes(minicbor::to_vec(metadata)?.as_slice())?; // `body_protected`
+    e.bytes(protected_header_encode(kid)?.as_slice())?; // `sign_protected`
+    e.bytes(&[])?; // empty `external_aad`
+    e.encode(content)?; // `payload`
+
+    Ok(e.into_writer())
+}
+
+impl minicbor::Encode<()> for Signature {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(3)?;
+        e.bytes(
+            protected_header_encode(&self.kid)
+                .map_err(minicbor::encode::Error::message)?
+                .as_slice(),
+        )?;
+        // empty unprotected headers
+        e.map(0)?;
+        e.bytes(&self.signature)?;
+        Ok(())
     }
+}
+
+impl minicbor::Decode<'_, DecodeContext> for Option<Signature> {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
+    ) -> Result<Self, minicbor::decode::Error> {
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
+
+        match arr.as_slice() {
+            [kid_bytes, headers_bytes, signature_bytes] => {
+                let kid_bytes = minicbor::Decoder::new(kid_bytes).bytes()?;
+                let kid = protected_header_decode(kid_bytes, ctx)
+                    .map_err(minicbor::decode::Error::message)?;
+
+                // empty unprotected headers
+                let mut map = cbork_utils::map::Map::decode(
+                    &mut minicbor::Decoder::new(headers_bytes.as_slice()),
+                    &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+                )?
+                .into_iter();
+                if map.next().is_some() {
+                    ctx.report().unknown_field(
+                        "unprotected headers",
+                        "non empty unprotected headers",
+                        "COSE signature unprotected headers must be empty",
+                    );
+                }
+
+                let signature_bytes = minicbor::Decoder::new(signature_bytes).bytes()?;
+                let signature = signature_bytes.to_vec();
+
+                Ok(kid.map(|kid| Signature { kid, signature }))
+            },
+            _ => {
+                Err(minicbor::decode::Error::message(
+                    "COSE signature object must be a definite size array with 3 elements",
+                ))
+            },
+        }
+    }
+}
+
+impl minicbor::Encode<()> for Signatures {
+    fn encode<W: minicbor::encode::Write>(
+        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+    ) -> Result<(), minicbor::encode::Error<W::Error>> {
+        e.array(
+            self.0
+                .len()
+                .try_into()
+                .map_err(minicbor::encode::Error::message)?,
+        )?;
+        for sign in self.iter() {
+            e.encode(sign)?;
+        }
+        Ok(())
+    }
+}
+
+impl minicbor::Decode<'_, DecodeContext> for Signatures {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
+    ) -> Result<Self, minicbor::decode::Error> {
+        let arr = Array::decode(d, &mut DecodeCtx::Deterministic).map_err(|e| {
+            minicbor::decode::Error::message(format!(
+                "COSE signatures array must be a definite size array: {e}"
+            ))
+        })?;
+
+        let mut signatures = Vec::with_capacity(arr.len());
+        for (idx, bytes) in arr.iter().enumerate() {
+            match minicbor::Decoder::new(bytes).decode_with(ctx)? {
+                Some(signature) => signatures.push(signature),
+                None => {
+                    ctx.report().other(
+                        &format!("COSE signature at id {idx}"),
+                        "Cannot decode a single COSE signature from the array of signatures",
+                    );
+                },
+            }
+        }
+
+        Ok(Signatures(signatures))
+    }
+}
+
+/// Signatures protected header bytes
+///
+/// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
+fn protected_header_encode(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
+    let mut p_header = minicbor::Encoder::new(Vec::new());
+    // protected headers (kid field)
+    p_header
+        .map(1)?
+        .u8(4)?
+        .bytes(Vec::<u8>::from(kid).as_slice())?;
+    Ok(p_header.into_writer())
+}
+
+/// Signatures protected header decode from bytes.
+/// Return error if its an invalid CBOR sequence.
+/// Return None if cannot decode `CatalystId` bytes.
+///
+/// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
+fn protected_header_decode(
+    bytes: &[u8], ctx: &mut DecodeContext,
+) -> anyhow::Result<Option<CatalystId>> {
+    let mut map = cbork_utils::map::Map::decode(
+        &mut minicbor::Decoder::new(bytes),
+        &mut cbork_utils::decode_context::DecodeCtx::Deterministic,
+    )?
+    .into_iter();
+
+    if map.len() > 1 {
+        ctx.report().functional_validation(
+            "COSE signature protected header must only include the `kid` field",
+            "COSE signature protected header decoding",
+        );
+    }
+
+    let Some(entry) = map.next() else {
+        anyhow::bail!("COSE signature protected header must include at least one entry");
+    };
+
+    // protected headers (kid field)
+    anyhow::ensure!(
+        matches!(
+            minicbor::Decoder::new(entry.key_bytes.as_slice()).u8(),
+            Ok(4)
+        ),
+        "Missing COSE signature protected header `kid` field"
+    );
+
+    let kid = minicbor::Decoder::new(entry.value.as_slice())
+        .bytes()?
+        .try_into()
+        .inspect_err(|e| {
+            ctx.report().conversion_error(
+                "COSE signature protected header `kid`",
+                &hex::encode(entry.value.as_slice()),
+                &format!("{e:?}"),
+                "Converting COSE signature header `kid` to CatalystId",
+            );
+        })
+        .ok()
+        .inspect(|kid: &CatalystId| {
+            if kid.is_id() {
+                ctx.report().invalid_value(
+                    "COSE signature protected header key ID",
+                    &kid.to_string(),
+                    &format!(
+                        "COSE signature protected header key ID must be a Catalyst ID, missing URI schema {}",
+                        CatalystId::SCHEME
+                    ),
+                    "Converting COSE signature header key ID to CatalystId",
+                );
+            }
+        });
+    Ok(kid)
 }

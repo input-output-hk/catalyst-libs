@@ -1,6 +1,6 @@
 [package]
 name = "cardano-chain-follower"
-version = "0.0.10"
+version = "0.0.11"
 edition.workspace = true
 authors.workspace = true
 homepage.workspace = true
@@ -19,8 +19,9 @@ mithril-client = { version = "0.12.2", default-features = false, features = [
     "full",
     "num-integer-backend",
 ] }
-cardano-blockchain-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
-catalyst-types = { version = "0.0.4", git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "r20250724-01" }
+
+cardano-blockchain-types = { version = "0.0.5",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "cardano-blockchain-types-v0.0.5" }
+catalyst-types = { version = "0.0.5",  git = "https://github.com/input-output-hk/catalyst-libs.git", tag = "catalyst-types-v0.0.5" }
 
 
 thiserror = "1.0.69"
