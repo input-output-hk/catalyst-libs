@@ -143,7 +143,7 @@ pub fn validate_stake_public_key(
     }
 
     for (hash, address) in pk_addrs {
-        if witness.check_witness_in_tx(&hash, 0.into()) {
+        if !witness.check_witness_in_tx(&hash, 0.into()) {
             report.other(
                 &format!(
                     "Payment Key '{address}' (0x{hash}) is not present in the transaction witness set, and can not be verified as owned and spendable."
@@ -558,7 +558,7 @@ mod tests {
         let report = registration.consume().unwrap_err();
         assert!(report.is_problematic());
         let report = format!("{report:?}");
-        assert!(report.contains("Public key hash not found in transaction witness set"));
+        assert!(report.contains("is not present in the transaction witness set, and can not be verified as owned and spendable"));
     }
 
     #[test]
