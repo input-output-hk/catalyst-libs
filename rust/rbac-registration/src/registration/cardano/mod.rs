@@ -17,7 +17,6 @@ use catalyst_types::{
     uuid::UuidV4,
 };
 use ed25519_dalek::{Signature, VerifyingKey};
-use tracing::error;
 use update_rbac::{
     revocations_list, update_c509_certs, update_public_keys, update_role_data, update_x509_certs,
 };
@@ -345,14 +344,9 @@ impl RegistrationChainInner {
             context,
         )?;
 
-        let (purpose, registration, payment_history) = match cip509.consume() {
-            Ok(v) => v,
-            Err(e) => {
-                let error = format!("Invalid Cip509: {e:?}");
-                error!(error);
-                bail!(error);
-            },
-        };
+        let (purpose, registration, payment_history) = cip509
+            .consume()
+            .map_err(|e| anyhow::anyhow!("Invalid Cip509: {e:?}"))?;
 
         let purpose = vec![purpose];
         let certificate_uris = registration.certificate_uris.clone();
@@ -436,14 +430,9 @@ impl RegistrationChainInner {
         }
 
         let point_tx_idx = cip509.origin().clone();
-        let (purpose, registration, payment_history) = match cip509.consume() {
-            Ok(v) => v,
-            Err(e) => {
-                let error = format!("Invalid Cip509: {e:?}");
-                error!(error);
-                bail!(error);
-            },
-        };
+        let (purpose, registration, payment_history) = cip509
+            .consume()
+            .map_err(|e| anyhow::anyhow!("Invalid Cip509: {e:?}"))?;
 
         // Add purpose to the chain, if not already exist
         if !self.purpose.contains(&purpose) {
