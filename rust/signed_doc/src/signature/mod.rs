@@ -17,7 +17,10 @@ pub struct Signature {
 
 impl Signature {
     /// Creates a `Signature` object from `kid` and raw `signature` bytes
-    pub(crate) fn new(kid: CatalystId, signature: Vec<u8>) -> Self {
+    pub(crate) fn new(
+        kid: CatalystId,
+        signature: Vec<u8>,
+    ) -> Self {
         Self { kid, signature }
     }
 
@@ -43,7 +46,10 @@ impl Signatures {
     }
 
     /// Add a `Signature` object into the list
-    pub(crate) fn push(&mut self, sign: Signature) {
+    pub(crate) fn push(
+        &mut self,
+        sign: Signature,
+    ) {
         self.0.push(sign);
     }
 
@@ -64,7 +70,9 @@ impl Signatures {
 ///
 /// Described in [section 4.4 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-4.4).
 pub(crate) fn tbs_data(
-    kid: &CatalystId, metadata: &WithCborBytes<Metadata>, content: &WithCborBytes<Content>,
+    kid: &CatalystId,
+    metadata: &WithCborBytes<Metadata>,
+    content: &WithCborBytes<Content>,
 ) -> anyhow::Result<Vec<u8>> {
     let mut e = minicbor::Encoder::new(Vec::new());
 
@@ -80,7 +88,9 @@ pub(crate) fn tbs_data(
 
 impl minicbor::Encode<()> for Signature {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(3)?;
         e.bytes(
@@ -97,7 +107,8 @@ impl minicbor::Encode<()> for Signature {
 
 impl minicbor::Decode<'_, DecodeContext> for Option<Signature> {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let arr = Array::decode(d, &mut DecodeCtx::Deterministic)?;
 
@@ -137,7 +148,9 @@ impl minicbor::Decode<'_, DecodeContext> for Option<Signature> {
 
 impl minicbor::Encode<()> for Signatures {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.array(
             self.0
@@ -154,7 +167,8 @@ impl minicbor::Encode<()> for Signatures {
 
 impl minicbor::Decode<'_, DecodeContext> for Signatures {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeContext,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let arr = Array::decode(d, &mut DecodeCtx::Deterministic).map_err(|e| {
             minicbor::decode::Error::message(format!(
@@ -198,7 +212,8 @@ fn protected_header_encode(kid: &CatalystId) -> anyhow::Result<Vec<u8>> {
 ///
 /// Described in [section 3.1 of RFC 8152](https://datatracker.ietf.org/doc/html/rfc8152#section-3.1).
 fn protected_header_decode(
-    bytes: &[u8], ctx: &mut DecodeContext,
+    bytes: &[u8],
+    ctx: &mut DecodeContext,
 ) -> anyhow::Result<Option<CatalystId>> {
     let mut map = cbork_utils::map::Map::decode(
         &mut minicbor::Decoder::new(bytes),

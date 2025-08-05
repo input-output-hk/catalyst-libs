@@ -21,7 +21,10 @@ pub enum ContentType {
 }
 
 impl Display for ContentType {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         match self {
             Self::Cbor => write!(f, "application/cbor"),
             Self::Cddl => write!(f, "application/cddl"),
@@ -62,15 +65,22 @@ impl<'de> serde::Deserialize<'de> for ContentType {
 }
 
 impl serde::Serialize for ContentType {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         self.to_string().serialize(serializer)
     }
 }
 
 impl minicbor::Encode<()> for ContentType {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         // encode as media types, not in CoAP Content-Formats
         e.str(self.to_string().as_str())?;
@@ -80,7 +90,8 @@ impl minicbor::Encode<()> for ContentType {
 
 impl minicbor::Decode<'_, ()> for ContentType {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         let p = d.position();
         match d.int() {

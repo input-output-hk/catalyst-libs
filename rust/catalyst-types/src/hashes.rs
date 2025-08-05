@@ -133,13 +133,19 @@ impl<const BYTES: usize> TryFrom<Vec<u8>> for Blake2bHash<BYTES> {
 }
 
 impl<const BYTES: usize> fmt::Debug for Blake2bHash<BYTES> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         f.write_str(&format!("{:?}", self.0))
     }
 }
 
 impl<const BYTES: usize> fmt::Display for Blake2bHash<BYTES> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+    ) -> fmt::Result {
         f.write_str(&format!("{}", self.0))
     }
 }
@@ -155,7 +161,9 @@ impl<const BYTES: usize> FromStr for Blake2bHash<BYTES> {
 
 impl<C, const BYTES: usize> minicbor::Encode<C> for Blake2bHash<BYTES> {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut C,
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut C,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.bytes(self.0.as_ref())?.ok()
     }
@@ -163,7 +171,8 @@ impl<C, const BYTES: usize> minicbor::Encode<C> for Blake2bHash<BYTES> {
 
 impl<'a, C, const BYTES: usize> minicbor::Decode<'a, C> for Blake2bHash<BYTES> {
     fn decode(
-        d: &mut minicbor::Decoder<'a>, _ctx: &mut C,
+        d: &mut minicbor::Decoder<'a>,
+        _ctx: &mut C,
     ) -> Result<Self, minicbor::decode::Error> {
         let bytes = d.bytes()?;
         bytes.try_into().map_err(|_| {

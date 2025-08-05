@@ -28,9 +28,13 @@ pub(crate) enum ParameterLinkRefRule {
 impl ParameterLinkRefRule {
     /// Validation rule
     pub(crate) async fn check<Provider>(
-        &self, doc: &CatalystSignedDocument, provider: &Provider,
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: CatalystSignedDocumentProvider {
+    where
+        Provider: CatalystSignedDocumentProvider,
+    {
         let context: &str = "Parameter link ref rule check";
         if let Self::Specified { field } = self {
             let param_link_ref_validator = |ref_doc: CatalystSignedDocument| {

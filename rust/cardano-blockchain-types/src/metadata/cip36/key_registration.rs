@@ -84,7 +84,10 @@ enum Cip36KeyRegistrationKeys {
 }
 
 impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
-    fn decode(d: &mut Decoder, err_report: &mut ProblemReport) -> Result<Self, decode::Error> {
+    fn decode(
+        d: &mut Decoder,
+        err_report: &mut ProblemReport,
+    ) -> Result<Self, decode::Error> {
         let map_len = decode_map_len(d, "CIP36 Key Registration")?;
 
         let mut cip36_key_registration = Cip36KeyRegistration::default();
@@ -164,7 +167,8 @@ impl Decode<'_, ProblemReport> for Cip36KeyRegistration {
 ///       verifying key, assign `voting_pk` to None.
 /// - Error if decoding failed.
 fn decode_voting_key(
-    d: &mut Decoder, err_report: &ProblemReport,
+    d: &mut Decoder,
+    err_report: &ProblemReport,
 ) -> Result<(Option<bool>, Vec<VotingPubKey>), decode::Error> {
     let mut voting_keys = Vec::new();
     #[allow(unused_assignments)]
@@ -241,7 +245,9 @@ fn decode_voting_key(
 
 /// Helper function for converting `&[u8]` to `VerifyingKey`.
 fn voting_pk_vec_to_verifying_key(
-    pub_key: &[u8], err_report: &ProblemReport, context: &str,
+    pub_key: &[u8],
+    err_report: &ProblemReport,
+    context: &str,
 ) -> Option<VerifyingKey> {
     let bytes = pub_key
         .try_into()
@@ -280,7 +286,8 @@ fn voting_pk_vec_to_verifying_key(
 /// - None if cannot converted `Vec<u8>` to `VerifyingKey`.
 /// - Error if decoding failed.
 fn decode_stake_pk(
-    d: &mut Decoder, err_report: &ProblemReport,
+    d: &mut Decoder,
+    err_report: &ProblemReport,
 ) -> Result<Option<VerifyingKey>, decode::Error> {
     let pub_key = decode_bytes(d, "CIP36 Key Registration stake public key")?;
     Ok(voting_pk_vec_to_verifying_key(
@@ -303,7 +310,8 @@ fn decode_stake_pk(
 /// - None if cannot converted `Vec<u8>` to `Address` or the address is a Byron address.
 /// - Error if decoding failed.
 fn decode_payment_addr(
-    d: &mut Decoder, err_report: &ProblemReport,
+    d: &mut Decoder,
+    err_report: &ProblemReport,
 ) -> Result<Option<Address>, decode::Error> {
     let raw_addr = decode_bytes(d, "CIP36 Key Registration payment address")?;
     // Cannot convert raw address to Address type

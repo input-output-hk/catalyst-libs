@@ -16,7 +16,10 @@ pub struct Proof;
 pub type PropId = Uuid;
 
 impl Decode<'_, ()> for Choice {
-    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>,
+        (): &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         let choice = d.u64()?;
         Ok(Self(choice))
     }
@@ -24,14 +27,19 @@ impl Decode<'_, ()> for Choice {
 
 impl Encode<()> for Choice {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         self.0.encode(e, &mut ())
     }
 }
 
 impl Decode<'_, ()> for Proof {
-    fn decode(d: &mut minicbor::Decoder<'_>, (): &mut ()) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut minicbor::Decoder<'_>,
+        (): &mut (),
+    ) -> Result<Self, minicbor::decode::Error> {
         d.undefined()?;
         Ok(Self)
     }
@@ -39,7 +47,9 @@ impl Decode<'_, ()> for Proof {
 
 impl Encode<()> for Proof {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, (): &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        (): &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.undefined()?;
         Ok(())

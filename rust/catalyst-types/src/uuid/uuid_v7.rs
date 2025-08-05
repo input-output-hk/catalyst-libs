@@ -54,13 +54,19 @@ const fn is_valid(uuid: &Uuid) -> bool {
 }
 
 impl Display for UuidV7 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.0)
     }
 }
 
 impl Decode<'_, CborContext> for UuidV7 {
-    fn decode(d: &mut Decoder<'_>, ctx: &mut CborContext) -> Result<Self, minicbor::decode::Error> {
+    fn decode(
+        d: &mut Decoder<'_>,
+        ctx: &mut CborContext,
+    ) -> Result<Self, minicbor::decode::Error> {
         let uuid = decode_cbor_uuid(d, ctx)?;
         Self::try_from_uuid(uuid).map_err(minicbor::decode::Error::message)
     }
@@ -68,7 +74,9 @@ impl Decode<'_, CborContext> for UuidV7 {
 
 impl Encode<CborContext> for UuidV7 {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, ctx: &mut CborContext,
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        ctx: &mut CborContext,
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         encode_cbor_uuid(self.uuid(), e, ctx)
     }

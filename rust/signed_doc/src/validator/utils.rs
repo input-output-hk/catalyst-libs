@@ -9,7 +9,10 @@ use crate::{
 /// A helper validation document function, which validates a document from the
 /// `ValidationDataProvider`.
 pub(crate) async fn validate_provided_doc<Provider, Validator>(
-    doc_ref: &DocumentRef, provider: &Provider, report: &ProblemReport, validator: Validator,
+    doc_ref: &DocumentRef,
+    provider: &Provider,
+    report: &ProblemReport,
+    validator: Validator,
 ) -> anyhow::Result<bool>
 where
     Provider: CatalystSignedDocumentProvider,
@@ -52,7 +55,10 @@ where
 /// Validate the document references
 /// Document all possible error in doc report (no fail fast)
 pub(crate) async fn validate_doc_refs<Provider, Validator>(
-    doc_refs: &DocumentRefs, provider: &Provider, report: &ProblemReport, validator: Validator,
+    doc_refs: &DocumentRefs,
+    provider: &Provider,
+    report: &ProblemReport,
+    validator: Validator,
 ) -> anyhow::Result<bool>
 where
     Provider: CatalystSignedDocumentProvider,

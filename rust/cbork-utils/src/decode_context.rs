@@ -35,7 +35,7 @@ impl DecodeCtx {
     /// the provided `handler`
     #[must_use]
     pub fn non_deterministic_with_handler(
-        handler: impl FnMut(minicbor::decode::Error) -> Result<(), minicbor::decode::Error> + 'static,
+        handler: impl FnMut(minicbor::decode::Error) -> Result<(), minicbor::decode::Error> + 'static
     ) -> Self {
         Self::NonDeterministic(Some(Box::new(handler)))
     }
@@ -43,7 +43,8 @@ impl DecodeCtx {
     /// Depends on the set `DecodeCtx` variant applies the provided deterministic
     /// validation
     pub(crate) fn try_check(
-        &mut self, f: impl FnOnce() -> Result<(), minicbor::decode::Error>,
+        &mut self,
+        f: impl FnOnce() -> Result<(), minicbor::decode::Error>,
     ) -> Result<(), minicbor::decode::Error> {
         match self {
             Self::Deterministic => f(),

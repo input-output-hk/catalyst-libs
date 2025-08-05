@@ -125,7 +125,11 @@ impl CatalystId {
 
     /// Create a new `CatalystId` for a Signing Key
     #[must_use]
-    pub fn new(network: &str, subnet: Option<&str>, role0_pk: VerifyingKey) -> Self {
+    pub fn new(
+        network: &str,
+        subnet: Option<&str>,
+        role0_pk: VerifyingKey,
+    ) -> Self {
         let inner = Arc::new(CatalystIdInner {
             username: None, // Default to Not set, use `with_username` if required.
             nonce: None,    // Default to Not set, use `with_nonce` if required.
@@ -171,7 +175,10 @@ impl CatalystId {
 
     /// Add or change the username in a Catalyst ID URI.
     #[must_use]
-    pub fn with_username(self, name: &str) -> Self {
+    pub fn with_username(
+        self,
+        name: &str,
+    ) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner {
             username: Some(name.to_string()),
@@ -213,7 +220,10 @@ impl CatalystId {
     ///   data, ensure that the nonce has been pre-validated and take appropriate action
     ///   before calling this function.
     #[must_use]
-    pub fn with_specific_nonce(self, nonce: DateTime<Utc>) -> Self {
+    pub fn with_specific_nonce(
+        self,
+        nonce: DateTime<Utc>,
+    ) -> Self {
         let secs = nonce.timestamp();
         let clamped_secs = secs.clamp(Self::MIN_NONCE, Self::MAX_NONCE);
 
@@ -369,7 +379,10 @@ impl CatalystId {
     /// assert_eq!(role, new_role);
     /// ```
     #[must_use]
-    pub fn with_role(self, role: RoleId) -> Self {
+    pub fn with_role(
+        self,
+        role: RoleId,
+    ) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner { role, ..inner });
         Self { inner }
@@ -400,7 +413,10 @@ impl CatalystId {
     /// assert_eq!(rotation, new_rotation);
     /// ```
     #[must_use]
-    pub fn with_rotation(self, rotation: KeyRotation) -> Self {
+    pub fn with_rotation(
+        self,
+        rotation: KeyRotation,
+    ) -> Self {
         let inner = Arc::try_unwrap(self.inner).unwrap_or_else(|v| (*v).clone());
         let inner = Arc::new(CatalystIdInner { rotation, ..inner });
         Self { inner }
@@ -452,7 +468,11 @@ impl CatalystId {
     /// assert!(!uri.is_nonce_in_range(chrono::Duration::hours(1), chrono::Duration::minutes(5)));
     /// ```
     #[must_use]
-    pub fn is_nonce_in_range(&self, past: Duration, future: Duration) -> bool {
+    pub fn is_nonce_in_range(
+        &self,
+        past: Duration,
+        future: Duration,
+    ) -> bool {
         if let Some(nonce) = self.nonce() {
             let now = Utc::now();
             let Some(start_time) = now.checked_sub_signed(past) else {
@@ -653,7 +673,10 @@ impl FromStr for CatalystId {
 }
 
 impl Display for CatalystId {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         if !self.inner.id {
             write!(f, "{}://", Self::SCHEME.as_str())?;
         }
