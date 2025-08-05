@@ -23,13 +23,11 @@ use pallas::{
 };
 use x509_cert::{der::Encode as X509Encode, Certificate as X509};
 
-use super::{
-    extract_key::{c509_key, x509_key},
-    utils::cip19::compare_key_hash,
-};
 use crate::cardano::cip509::{
-    rbac::Cip509RbacMetadata, types::TxInputHash, C509Cert, Cip0134UriSet, LocalRefInt, RoleData,
-    SimplePublicKeyType, X509DerCert,
+    rbac::Cip509RbacMetadata,
+    types::TxInputHash,
+    utils::extract_key::{c509_key, x509_key},
+    C509Cert, Cip0134UriSet, LocalRefInt, RoleData, SimplePublicKeyType, X509DerCert,
 };
 
 /// Context-specific primitive type with tag number 6 (`raw_tag` 134) for
@@ -136,11 +134,16 @@ pub fn validate_stake_public_key(
         return;
     }
 
-    if let Err(e) = compare_key_hash(&pk_addrs, &witness, 0.into()) {
-        report.other(
-            &format!("Failed to compare public keys with witnesses: {e:?}"),
-            context,
-        );
+    for address in pk_addrs {
+        if witness.check_witness_in_tx(&address, 0.into()) {
+            // TODO: FIXME: Fix payment key format.
+            report.other(
+                &format!(
+                    "Payment Key FIXME (0x{address}) is not present in the transaction witness set, and can not be verified as owned and spendable."
+                ),
+                context,
+            );
+        }
     }
 }
 

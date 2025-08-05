@@ -11,9 +11,7 @@ use pallas::ledger::{
 };
 
 use crate::cardano::cip509::{
-    rbac::role_data::CborRoleData,
-    utils::cip19::{compare_key_hash, extract_key_hash},
-    KeyLocalRef,
+    rbac::role_data::CborRoleData, utils::cip19::extract_key_hash, KeyLocalRef,
 };
 
 /// A role data.
@@ -152,10 +150,11 @@ fn validate_payment_output(
     // Set transaction index to 0 because the list of transaction is manually constructed
     // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
     // the witness within this transaction.
-    if let Err(e) = compare_key_hash(&[key], witness, 0.into()) {
+    if !witness.check_witness_in_tx(&key, 0.into()) {
+        // TODO: FIXME: Fix payment key format.
         report.other(
             &format!(
-                "Unable to find payment output key ({key}) in the transaction witness set: {e:?}"
+                "Payment Key FIXME (0x{key}) is not present in the transaction witness set, and can not be verified as owned and spendable."
             ),
             context,
         );
