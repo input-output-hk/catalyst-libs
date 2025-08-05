@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
 };
 
-use anyhow::{bail, Context};
+use anyhow::{anyhow, bail, Context};
 use c509_certificate::c509::C509;
 use cardano_blockchain_types::{Point, StakeAddress, TransactionId, TxnIndex};
 use catalyst_types::{
@@ -344,9 +344,9 @@ impl RegistrationChainInner {
             context,
         )?;
 
-        let Ok((purpose, registration, payment_history)) = cip509.consume() else {
-            bail!("Unable to start a chain: invalid Cip509");
-        };
+        let (purpose, registration, payment_history) = cip509
+            .consume()
+            .map_err(|_| anyhow!("Unable to start a chain: invalid Cip509"))?;
 
         let purpose = vec![purpose];
         let certificate_uris = registration.certificate_uris.clone();
@@ -430,9 +430,9 @@ impl RegistrationChainInner {
         }
 
         let point_tx_idx = cip509.origin().clone();
-        let Ok((purpose, registration, payment_history)) = cip509.consume() else {
-            bail!("Unable to update a chain: invalid Cip509");
-        };
+        let (purpose, registration, payment_history) = cip509
+            .consume()
+            .map_err(|_| anyhow!("Unable to update a chain: invalid Cip509"))?;
 
         // Add purpose to the chain, if not already exist
         if !self.purpose.contains(&purpose) {
