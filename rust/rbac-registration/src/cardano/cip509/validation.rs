@@ -103,7 +103,9 @@ pub fn validate_aux(
     let hash = Blake2b256Hash::new(raw_aux_data);
     if hash != auxiliary_data_hash {
         report.other(
-            &format!("Incorrect transaction auxiliary data hash = '{hash}', expected = '{auxiliary_data_hash}'"),
+            &format!("Incorrect transaction auxiliary data hash = '0x{hash}', expected = '0x{auxiliary_data_hash}'. \
+            This metadata does not belong with this transaction. \
+            Catalyst metadata may not be transcribed to any other transaction body, and is therefore invalid."),
             context,
         );
     }
