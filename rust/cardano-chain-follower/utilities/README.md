@@ -9,5 +9,5 @@
 To learn what arguments should be provided
 
 ```shell
-uv run main.py --help
+./diagnose-errors.py --help
 ```

@@ -1,3 +1,12 @@
+#!/usr/bin/env -S uv run --script
+#
+# /// script
+# requires-python = ">=3.12"
+# dependencies = [
+#     "rich",
+#     "rich-argparse",
+# ]
+# ///
 """Diagnose errors from a transaction error report."""
 
 import argparse
