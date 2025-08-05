@@ -67,7 +67,8 @@ const CBOR_ARRAY_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_ARRAY | 24; // For uint8 len
 /// - Array elements are not deterministically encoded
 impl minicbor::Decode<'_, DecodeCtx> for Array {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeCtx,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut DecodeCtx,
     ) -> Result<Self, minicbor::decode::Error> {
         // Capture position before reading the array header
         let header_start_pos = d.position();
@@ -100,7 +101,9 @@ impl minicbor::Decode<'_, DecodeCtx> for Array {
 /// "The length of arrays, maps, and strings MUST be encoded using the smallest possible
 /// CBOR additional information value."
 fn check_array_minimal_length(
-    decoder: &minicbor::Decoder, header_start_pos: usize, value: u64,
+    decoder: &minicbor::Decoder,
+    header_start_pos: usize,
+    value: u64,
 ) -> Result<(), minicbor::decode::Error> {
     // For zero length, 0x80 is always the minimal encoding
     if value == 0 {
@@ -128,7 +131,9 @@ fn check_array_minimal_length(
 
 /// Decodes all elements in the array
 fn decode_array_elements(
-    d: &mut minicbor::Decoder, length: u64, _ctx: &mut DecodeCtx,
+    d: &mut minicbor::Decoder,
+    length: u64,
+    _ctx: &mut DecodeCtx,
 ) -> Result<Vec<Vec<u8>>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Array length too large for current platform")

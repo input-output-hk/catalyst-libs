@@ -144,13 +144,17 @@ impl Metadata {
     /// required fields. Use [`Self::from_fields`] or [`Self::from_json`] if it's
     /// important for metadata to be valid.
     #[cfg(test)]
-    pub(crate) fn add_field(&mut self, field: SupportedField) {
+    pub(crate) fn add_field(
+        &mut self,
+        field: SupportedField,
+    ) {
         self.0.insert(field.discriminant(), field);
     }
 
     /// Build `Metadata` object from the metadata fields, doing all necessary validation.
     pub(crate) fn from_fields<E>(
-        fields: impl Iterator<Item = Result<SupportedField, E>>, report: &ProblemReport,
+        fields: impl Iterator<Item = Result<SupportedField, E>>,
+        report: &ProblemReport,
     ) -> Result<Self, E> {
         const REPORT_CONTEXT: &str = "Metadata building";
 
@@ -212,7 +216,10 @@ impl Metadata {
 }
 
 impl Display for Metadata {
-    fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
+    fn fmt(
+        &self,
+        f: &mut Formatter<'_>,
+    ) -> Result<(), std::fmt::Error> {
         writeln!(f, "Metadata {{")?;
         writeln!(f, "  type: {:?},", self.doc_type().ok())?;
         writeln!(f, "  id: {:?},", self.doc_id().ok())?;
@@ -242,7 +249,9 @@ impl minicbor::Encode<()> for Metadata {
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         e.map(
             self.0
@@ -268,7 +277,8 @@ impl minicbor::Decode<'_, crate::decode_context::DecodeContext> for Metadata {
     ///
     /// [RFC 8152]: https://datatracker.ietf.org/doc/html/rfc8152#autoid-8
     fn decode(
-        d: &mut Decoder<'_>, ctx: &mut crate::decode_context::DecodeContext,
+        d: &mut Decoder<'_>,
+        ctx: &mut crate::decode_context::DecodeContext,
     ) -> Result<Self, minicbor::decode::Error> {
         let mut map_ctx = match ctx.policy() {
             CompatibilityPolicy::Accept => {
@@ -307,11 +317,17 @@ struct MetadataDeserializeVisitor;
 impl<'de> serde::de::Visitor<'de> for MetadataDeserializeVisitor {
     type Value = Vec<SupportedField>;
 
-    fn expecting(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    fn expecting(
+        &self,
+        f: &mut std::fmt::Formatter,
+    ) -> std::fmt::Result {
         f.write_str("Catalyst Signed Document metadata key-value pairs")
     }
 
-    fn visit_map<A: serde::de::MapAccess<'de>>(self, mut d: A) -> Result<Self::Value, A::Error> {
+    fn visit_map<A: serde::de::MapAccess<'de>>(
+        self,
+        mut d: A,
+    ) -> Result<Self::Value, A::Error> {
         let mut res = Vec::with_capacity(d.size_hint().unwrap_or(0));
         while let Some(k) = d.next_key::<SupportedLabel>()? {
             let v = d.next_value_seed(k)?;

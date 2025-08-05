@@ -32,7 +32,7 @@ pub fn from_saturating<
         + std::cmp::PartialOrd<T>
         + num_traits::identities::Zero,
 >(
-    value: T,
+    value: T
 ) -> R {
     match value.try_into() {
         Ok(value) => value,
@@ -71,7 +71,10 @@ pub fn vkey_from_bytes(bytes: &[u8]) -> Result<ed25519_dalek::VerifyingKey, VKey
 
 /// Zero out the last n bytes
 #[must_use]
-pub fn zero_out_last_n_bytes(data: &[u8], n: usize) -> Vec<u8> {
+pub fn zero_out_last_n_bytes(
+    data: &[u8],
+    n: usize,
+) -> Vec<u8> {
     let mut vec = data.to_vec();
     if let Some(slice) = vec.get_mut(data.len().saturating_sub(n)..) {
         slice.fill(0);

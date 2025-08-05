@@ -19,7 +19,9 @@ impl Deref for Collaborators {
 
 impl minicbor::Encode<()> for Collaborators {
     fn encode<W: minicbor::encode::Write>(
-        &self, e: &mut minicbor::Encoder<W>, _ctx: &mut (),
+        &self,
+        e: &mut minicbor::Encoder<W>,
+        _ctx: &mut (),
     ) -> Result<(), minicbor::encode::Error<W::Error>> {
         if !self.0.is_empty() {
             e.array(
@@ -38,7 +40,8 @@ impl minicbor::Encode<()> for Collaborators {
 
 impl minicbor::Decode<'_, ()> for Collaborators {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, _ctx: &mut (),
+        d: &mut minicbor::Decoder<'_>,
+        _ctx: &mut (),
     ) -> Result<Self, minicbor::decode::Error> {
         Array::decode(d, &mut DecodeCtx::Deterministic)?
             .iter()
@@ -65,8 +68,13 @@ impl<'de> serde::Deserialize<'de> for Collaborators {
 }
 
 impl serde::Serialize for Collaborators {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where S: serde::Serializer {
+    fn serialize<S>(
+        &self,
+        serializer: S,
+    ) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
         let iter = self.0.iter().map(ToString::to_string);
         serializer.collect_seq(iter)
     }

@@ -23,9 +23,13 @@ pub(crate) enum ReplyRule {
 impl ReplyRule {
     /// Field validation rule
     pub(crate) async fn check<Provider>(
-        &self, doc: &CatalystSignedDocument, provider: &Provider,
+        &self,
+        doc: &CatalystSignedDocument,
+        provider: &Provider,
     ) -> anyhow::Result<bool>
-    where Provider: CatalystSignedDocumentProvider {
+    where
+        Provider: CatalystSignedDocumentProvider,
+    {
         let context: &str = "Reply rule check";
         if let Self::Specified {
             exp_reply_type,

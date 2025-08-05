@@ -79,7 +79,10 @@ pub mod time;
 /// # Errors
 ///
 /// Returns an error if the generated data is invalid.
-pub fn generate(tbs_cert: &TbsCert, private_key: Option<&PrivateKey>) -> anyhow::Result<Vec<u8>> {
+pub fn generate(
+    tbs_cert: &TbsCert,
+    private_key: Option<&PrivateKey>,
+) -> anyhow::Result<Vec<u8>> {
     // Encode the TbsCert
     let encoded_tbs = {
         let mut buffer = Vec::new();
@@ -109,7 +112,10 @@ pub fn generate(tbs_cert: &TbsCert, private_key: Option<&PrivateKey>) -> anyhow:
 /// # Errors
 /// Returns an error if the `issuer_signature_value` is invalid or the signature cannot be
 /// verified.
-pub fn verify(c509: &[u8], public_key: &PublicKey) -> anyhow::Result<()> {
+pub fn verify(
+    c509: &[u8],
+    public_key: &PublicKey,
+) -> anyhow::Result<()> {
     let mut d = minicbor::Decoder::new(c509);
     let c509 = C509::decode(&mut d, &mut ())?;
     let mut encoded_tbs = Vec::new();

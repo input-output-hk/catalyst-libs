@@ -52,7 +52,10 @@ impl PartialOrd for MapEntry {
     /// 2. If lengths equal, compare byte wise lexicographically
     ///
     /// Returns Some(ordering) since comparison is always defined for these types
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(
+        &self,
+        other: &Self,
+    ) -> Option<Ordering> {
         Some(self.cmp(other))
     }
 }
@@ -61,7 +64,10 @@ impl Ord for MapEntry {
     /// Compare map entries according to RFC 8949 Section 4.2.3 rules:
     /// 1. Compare by length of encoded key
     /// 2. If lengths equal, compare byte wise lexicographically
-    fn cmp(&self, other: &Self) -> Ordering {
+    fn cmp(
+        &self,
+        other: &Self,
+    ) -> Ordering {
         self.key_bytes
             .len()
             .cmp(&other.key_bytes.len())
@@ -112,7 +118,8 @@ const CBOR_MAP_LENGTH_UINT8: u8 = CBOR_MAJOR_TYPE_MAP | 24; // For uint8 length 
 /// - Map key or value decoding fails (`DecoderError`)
 impl minicbor::Decode<'_, DecodeCtx> for Map {
     fn decode(
-        d: &mut minicbor::Decoder<'_>, ctx: &mut DecodeCtx,
+        d: &mut minicbor::Decoder<'_>,
+        ctx: &mut DecodeCtx,
     ) -> Result<Self, minicbor::decode::Error> {
         // Capture position before reading the map header
         let header_start_pos = d.position();
@@ -153,7 +160,9 @@ impl minicbor::Decode<'_, DecodeCtx> for Map {
 /// "The length of arrays, maps, and strings MUST be encoded using the smallest possible
 /// CBOR additional information value."
 fn check_map_minimal_length(
-    decoder: &minicbor::Decoder, header_start_pos: usize, value: u64,
+    decoder: &minicbor::Decoder,
+    header_start_pos: usize,
+    value: u64,
 ) -> Result<(), minicbor::decode::Error> {
     // For zero length, 0xA0 is always the minimal encoding
     if value == 0 {
@@ -181,7 +190,9 @@ fn check_map_minimal_length(
 
 /// Decodes all key-value pairs in the map
 fn decode_map_entries(
-    d: &mut minicbor::Decoder, length: u64, ctx: &mut DecodeCtx,
+    d: &mut minicbor::Decoder,
+    length: u64,
+    ctx: &mut DecodeCtx,
 ) -> Result<Vec<MapEntry>, minicbor::decode::Error> {
     let capacity = usize::try_from(length).map_err(|_| {
         minicbor::decode::Error::message("Map length too large for current platform")
@@ -260,7 +271,10 @@ fn validate_map_ordering(entries: &[MapEntry]) -> Result<(), minicbor::decode::E
 /// Checks if two adjacent map entries are in the correct order:
 /// - Keys must be in ascending order (current < next)
 /// - Duplicate keys are not allowed (current != next)
-fn check_pair_ordering(current: &MapEntry, next: &MapEntry) -> Result<(), minicbor::decode::Error> {
+fn check_pair_ordering(
+    current: &MapEntry,
+    next: &MapEntry,
+) -> Result<(), minicbor::decode::Error> {
     match current.cmp(next) {
         Ordering::Less => Ok(()), // Valid: keys are in ascending order
         Ordering::Equal => Err(minicbor::decode::Error::message("Duplicate map key found")),

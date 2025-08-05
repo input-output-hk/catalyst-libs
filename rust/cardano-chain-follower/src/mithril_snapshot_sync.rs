@@ -49,7 +49,8 @@ const DOWNLOAD_ERROR_RETRY_DURATION: Duration = Duration::from_secs(2 * 60); // 
 /// If there is only a single entry then the latest and chronologically next will be
 /// identical.
 async fn get_latest_snapshots(
-    client: &Client, network: Network,
+    client: &Client,
+    network: Network,
 ) -> Option<(SnapshotListItem, SnapshotListItem)> {
     // Get current latest snapshot from the aggregator
     let snapshots = match client.cardano_database().list().await {
@@ -73,7 +74,9 @@ async fn get_latest_snapshots(
 
 /// Given a particular snapshot ID, find the Actual Snapshot for it.
 async fn get_snapshot_by_id(
-    client: &Client, network: Network, snapshot_id: &SnapshotId,
+    client: &Client,
+    network: Network,
+    snapshot_id: &SnapshotId,
 ) -> Option<SnapshotListItem> {
     let snapshots = match client.cardano_database().list().await {
         Ok(s) => s,
@@ -120,7 +123,8 @@ fn create_client(cfg: &MithrilSnapshotConfig) -> Option<(Client, Arc<MithrilTurb
 
 /// Calculate how long we should wait before we check for another Mithril snapshot.
 fn calculate_sleep_duration(
-    latest_snapshot: &SnapshotListItem, previous_snapshot: &SnapshotListItem,
+    latest_snapshot: &SnapshotListItem,
+    previous_snapshot: &SnapshotListItem,
 ) -> Duration {
     // All times are relative to UTC.
     let now = Utc::now();
@@ -162,7 +166,9 @@ fn calculate_sleep_duration(
 /// Returns None if there are any issues doing this, otherwise the Snapshot.
 /// The only issues should be transient communications errors.
 async fn get_snapshot(
-    client: &Client, snapshot_item: &SnapshotListItem, network: Network,
+    client: &Client,
+    snapshot_item: &SnapshotListItem,
+    network: Network,
 ) -> Option<Snapshot> {
     let latest_digest = snapshot_item.digest.as_ref();
     let snapshot = match client.cardano_database().get(latest_digest).await {
@@ -190,7 +196,9 @@ async fn get_snapshot(
 
 /// Download and Verify the Snapshots certificate
 async fn download_and_verify_snapshot_certificate(
-    client: &Client, snapshot: &Snapshot, network: Network,
+    client: &Client,
+    snapshot: &Snapshot,
+    network: Network,
 ) -> Option<MithrilCertificate> {
     let certificate = match client
         .certificate()
@@ -250,7 +258,10 @@ pub(crate) const MITHRIL_IMMUTABLE_SUB_DIRECTORY: &str = "immutable";
 /// it in a tuple.
 #[allow(clippy::indexing_slicing)]
 //#[logcall(ok = "debug", err = "error")]
-pub(crate) async fn get_mithril_tip(chain: Network, path: &Path) -> Result<MultiEraBlock> {
+pub(crate) async fn get_mithril_tip(
+    chain: Network,
+    path: &Path,
+) -> Result<MultiEraBlock> {
     let mut path = path.to_path_buf();
     path.push(MITHRIL_IMMUTABLE_SUB_DIRECTORY);
 
@@ -279,7 +290,9 @@ pub(crate) async fn get_mithril_tip(chain: Network, path: &Path) -> Result<Multi
 
 /// Get the Snapshot Data itself from the Aggregator, and a validate Certificate.
 async fn get_mithril_snapshot_and_certificate(
-    chain: Network, client: &Client, item: &SnapshotListItem,
+    chain: Network,
+    client: &Client,
+    item: &SnapshotListItem,
 ) -> Option<(Snapshot, MithrilCertificate)> {
     debug!("Mithril Snapshot background updater for: {chain} : Download snapshot from aggregator.");
 
@@ -300,7 +313,9 @@ async fn get_mithril_snapshot_and_certificate(
 
 /// Validate that a Mithril Snapshot downloaded matches its certificate.
 async fn validate_mithril_snapshot(
-    chain: Network, certificate: &MithrilCertificate, path: &Path,
+    chain: Network,
+    certificate: &MithrilCertificate,
+    path: &Path,
 ) -> bool {
     let cert = certificate.clone();
     let mithril_path = path.to_path_buf();
@@ -343,10 +358,15 @@ async fn validate_mithril_snapshot(
 /// 1. The actual latest mithril snapshot; AND
 /// 2. It must
 async fn get_latest_validated_mithril_snapshot(
-    chain: Network, client: &Client, cfg: &MithrilSnapshotConfig,
+    chain: Network,
+    client: &Client,
+    cfg: &MithrilSnapshotConfig,
 ) -> Option<SnapshotId> {
     /// Purge a bad mithril snapshot from disk.
-    async fn purge_bad_mithril_snapshot(chain: Network, latest_mithril: &SnapshotId) {
+    async fn purge_bad_mithril_snapshot(
+        chain: Network,
+        latest_mithril: &SnapshotId,
+    ) {
         debug!("Purging Bad Mithril Snapshot: {latest_mithril}");
         if let Err(error) = remove_dir_all(&latest_mithril).await {
             // This should NOT happen because we already checked the Mithril path is fully writable.
@@ -403,7 +423,8 @@ async fn get_latest_validated_mithril_snapshot(
 
 /// Get the Mithril client and recover our existing mithril snapshot data, if any.
 async fn recover_existing_snapshot(
-    cfg: &MithrilSnapshotConfig, tx: &Sender<MithrilUpdateMessage>,
+    cfg: &MithrilSnapshotConfig,
+    tx: &Sender<MithrilUpdateMessage>,
 ) -> Option<SnapshotId> {
     // This is a Mithril Validation, so record it.
     mithril_validation_state(cfg.chain, stats::MithrilValidationState::Start);
@@ -483,7 +504,9 @@ enum SnapshotStatus {
 
 /// Check if we have a new snapshot to download, and if so, return its details.
 async fn check_snapshot_to_download(
-    chain: Network, client: &Client, current_snapshot: Option<&SnapshotId>,
+    chain: Network,
+    client: &Client,
+    current_snapshot: Option<&SnapshotId>,
 ) -> SnapshotStatus {
     debug!("Mithril Snapshot background updater for: {chain} : Getting Latest Snapshot.");
 
@@ -525,7 +548,9 @@ async fn check_snapshot_to_download(
 /// Start Mithril Validation in the background, and return a handle so we can check when
 /// it finishes.
 fn background_validate_mithril_snapshot(
-    chain: Network, certificate: MithrilCertificate, tmp_path: PathBuf,
+    chain: Network,
+    certificate: MithrilCertificate,
+    tmp_path: PathBuf,
 ) -> tokio::task::JoinHandle<bool> {
     tokio::spawn(async move {
         stats::start_thread(chain, stats::thread::name::VALIDATE_MITHRIL_SNAPSHOT, true);
@@ -570,7 +595,10 @@ fn chunk_filename_to_chunk_number(chunk: &Path) -> Option<u64> {
 }
 
 /// Remove any chunks from the chunk list which exceed the `max_chunk`.
-fn trim_chunk_list(chunk_list: &Arc<DashSet<PathBuf>>, max_chunks: u64) {
+fn trim_chunk_list(
+    chunk_list: &Arc<DashSet<PathBuf>>,
+    max_chunks: u64,
+) {
     chunk_list.retain(|entry| {
         if let Some(chunk_index) = chunk_filename_to_chunk_number(entry) {
             if chunk_index > max_chunks {
@@ -589,8 +617,11 @@ fn trim_chunk_list(chunk_list: &Arc<DashSet<PathBuf>>, max_chunks: u64) {
 
 /// Downloads and validates a snapshot from the aggregator.
 async fn download_and_validate_snapshot(
-    client: &Client, downloader: Arc<MithrilTurboDownloader>, cfg: &MithrilSnapshotConfig,
-    snapshot: &Snapshot, certificate: MithrilCertificate,
+    client: &Client,
+    downloader: Arc<MithrilTurboDownloader>,
+    cfg: &MithrilSnapshotConfig,
+    snapshot: &Snapshot,
+    certificate: MithrilCertificate,
 ) -> bool {
     debug!(
         "Mithril Snapshot background updater for: {} : Download and unpack the Mithril snapshot.",
@@ -656,7 +687,8 @@ async fn cleanup(cfg: &MithrilSnapshotConfig) {
 
 /// Sleep until its likely there has been another mithril snapshot update.
 async fn sleep_until_next_probable_update(
-    cfg: &MithrilSnapshotConfig, next_sleep: &Duration,
+    cfg: &MithrilSnapshotConfig,
+    next_sleep: &Duration,
 ) -> Duration {
     debug!(
         "Mithril Snapshot background updater for: {} : Sleeping for {}.",
@@ -694,7 +726,8 @@ macro_rules! next_iteration {
 /// This does not return, it is a background task.
 #[allow(clippy::too_many_lines)]
 pub(crate) async fn background_mithril_update(
-    cfg: MithrilSnapshotConfig, tx: Sender<MithrilUpdateMessage>,
+    cfg: MithrilSnapshotConfig,
+    tx: Sender<MithrilUpdateMessage>,
 ) {
     debug!(
         "Mithril Snapshot background updater for: {} from {} to {} : Starting",
