@@ -130,20 +130,24 @@ fn convert_payment_key(
             return None;
         },
     };
-    validate_payment_output(address, &witness, context, report);
 
-    match Address::from_bytes(address) {
-        Ok(Address::Shelley(a)) => Some(a),
-        Ok(a) => {
-            report.other(
-                &format!("Unsupported address type ({a:?}) in payment key index ({index})"),
-                context,
-            );
-            None
-        },
+    let address = match Address::from_bytes(address) {
+        Ok(a) => a,
         Err(e) => {
             report.other(
                 &format!("Invalid address in payment key index ({index}): {e:?}"),
+                context,
+            );
+            return None;
+        },
+    };
+    validate_payment_output(&address, &witness, context, report);
+
+    match address {
+        Address::Shelley(a) => Some(a),
+        a => {
+            report.other(
+                &format!("Unsupported address type ({a:?}) in payment key index ({index})"),
                 context,
             );
             None
@@ -153,12 +157,13 @@ fn convert_payment_key(
 
 /// Helper function for validating payment output key.
 fn validate_payment_output(
-    output_address: &[u8],
+    address: &Address,
     witness: &TxnWitness,
     context: &str,
     report: &ProblemReport,
 ) {
-    let Some(key) = extract_key_hash(output_address) else {
+    let bytes = address.to_vec();
+    let Some(key) = extract_key_hash(&bytes) else {
         report.other("Failed to extract payment key hash from address", context);
         return;
     };
@@ -167,10 +172,9 @@ fn validate_payment_output(
     // for TxWitness -> &[txn.clone()], so we can assume that the witness contains only
     // the witness within this transaction.
     if !witness.check_witness_in_tx(&key, 0.into()) {
-        // TODO: FIXME: Fix payment key format.
         report.other(
             &format!(
-                "Payment Key FIXME (0x{key}) is not present in the transaction witness set, and can not be verified as owned and spendable."
+                "Payment Key {address} (0x{key}) is not present in the transaction witness set, and can not be verified as owned and spendable."
             ),
             context,
         );
