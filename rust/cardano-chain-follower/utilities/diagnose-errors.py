@@ -118,9 +118,7 @@ def hex_dump(data: bytes, max_per_line: int = 65535) -> str:
     return "\n".join(lines)
 
 
-def dump_transaction(
-    net: str, txn: dict[str, Any], errors: dict[str, dict[str, Any]]
-) -> None:
+def dump_transaction(net: str, txn: dict[str, Any], errors: dict[str, dict[str, Any]]) -> None:
     """Nicely dump a transaction to the screen."""
     # rich.print_json(json.dumps(txn))  # noqa: ERA001
     data = txn["fields"]
@@ -145,9 +143,7 @@ def dump_transaction(
             problem_report_formatted += f"  * {entry['context']}\n"
             problem_report_formatted += f"    * {entry['kind']['description']}\n"
     except Exception as exc:  # noqa: BLE001
-        problem_report_formatted = (
-            f"Failed to parse {exc}\n{txn_error['problem_report']}"
-        )
+        problem_report_formatted = f"Failed to parse {exc}\n{txn_error['problem_report']}"
 
     link_subdomain = "" if net == "mainnet" else f"{net}."
 
