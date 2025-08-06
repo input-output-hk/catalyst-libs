@@ -36,6 +36,9 @@ pre-push: sync-cfg code-format code-lint
     earthly +check
     earthly +build
 
+build-follow_chains: code-format code-lint
+    cargo build --release --package cardano-chain-follower --example follow_chains --features mimalloc
+
 # Run long running developer test for mithril downloading.
 run-mithril-download-example-preprod: code-format code-lint
     cargo build -r --package cardano-chain-follower --example follow_chains --features mimalloc
@@ -68,3 +71,16 @@ debug-heap-mithril-download-example: code-format code-lint
     cargo build --package cardano-chain-follower --example follow_chains
     RUST_LOG="error,follow_chains=debug,cardano_chain_follower=debug,mithril-client=debug" \
     heaptrack ./target/debug/examples/follow_chains --preprod
+
+# Dump a set of transactions to aid with development and debugging.
+# Example: `dump-txn-preprod 91972303 7558ca3658d6c5`
+dump-txn-preprod START_SLOT TXN_HASH:
+    echo Starting at {{START_SLOT}} Look for Transaction Hash {{TXN_HASH}}
+    # RUST_LOG="error,follow_chains=debug,cardano_chain_follower=debug,mithril-client=debug" \#
+    ./target/release/examples/follow_chains --inhibit-stats --preprod --mithril-sync-workers 64 --mithril-sync-chunk-size 16 --mithril-sync-queue-ahead=6 --start-at-slot {{START_SLOT}} --dump-transaction {{TXN_HASH}}
+
+# Dump a set of transactions to aid with development and debugging.
+dump-txn-mainnet START_SLOT TXN_HASH:
+    echo Starting at {{START_SLOT}} Look for Transaction Hash {{TXN_HASH}}
+    # RUST_LOG="error,follow_chains=debug,cardano_chain_follower=debug,mithril-client=debug" \#
+    ./target/release/examples/follow_chains --inhibit-stats --mainnet --mithril-sync-workers 64 --mithril-sync-chunk-size 16 --mithril-sync-queue-ahead=6 --start-at-slot {{START_SLOT}} --dump-transaction {{TXN_HASH}}
