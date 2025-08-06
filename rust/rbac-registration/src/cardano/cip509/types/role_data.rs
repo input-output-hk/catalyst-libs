@@ -135,7 +135,7 @@ fn convert_payment_key(
         Ok(a) => a,
         Err(e) => {
             report.other(
-                &format!("Invalid address in payment key index ({index}): {e:?}"),
+                &format!("Invalid address in payment key index ({index}): {e}"),
                 context,
             );
             return None;
@@ -145,9 +145,16 @@ fn convert_payment_key(
 
     match address {
         Address::Shelley(a) => Some(a),
-        a => {
+        Address::Byron(_) => {
             report.other(
-                &format!("Unsupported address type ({a:?}) in payment key index ({index})"),
+                &format!("Unsupported Byron address type in payment key index ({index})"),
+                context,
+            );
+            None
+        },
+        Address::Stake(_) => {
+            report.other(
+                &format!("Unsupported Stake address type in payment key index ({index})"),
                 context,
             );
             None

@@ -46,6 +46,7 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
+    #[must_use]
     pub fn new(cip509: Cip509) -> Option<Self> {
         let inner = RegistrationChainInner::new(cip509)?;
 
@@ -62,6 +63,7 @@ impl RegistrationChain {
     /// # Errors
     ///
     /// Returns an error if data is invalid
+    #[must_use]
     pub fn update(
         &self,
         cip509: Cip509,
@@ -300,6 +302,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
+    #[must_use]
     fn new(cip509: Cip509) -> Option<Self> {
         let context = "Registration Chain new";
         // Should be chain root, return immediately if not
@@ -405,6 +408,7 @@ impl RegistrationChainInner {
     /// # Errors
     ///
     /// Returns an error if data is invalid
+    #[must_use]
     fn update(
         &self,
         cip509: Cip509,
