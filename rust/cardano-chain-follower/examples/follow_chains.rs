@@ -160,7 +160,9 @@ async fn start_sync_for(
 /// Get the raw data for a transaction.
 #[allow(clippy::type_complexity)]
 fn get_raw_transaction_data(
-    block: &MultiEraBlock, txn_idx: TxnIndex, tx: &MultiEraTx,
+    block: &MultiEraBlock,
+    txn_idx: TxnIndex,
+    tx: &MultiEraTx,
 ) -> Option<(String, Vec<u8>, Vec<u8>, Vec<u8>)> {
     let block_type;
     let mut transaction_body: Vec<u8> = vec![];
@@ -223,7 +225,10 @@ fn get_raw_transaction_data(
 }
 
 /// Does this hash match any in the list.
-fn check_txn_hashes(txn_id: &str, hashes: &Vec<&String>) -> bool {
+fn check_txn_hashes(
+    txn_id: &str,
+    hashes: &Vec<&String>,
+) -> bool {
     for hash in hashes {
         if txn_id.starts_with(*hash) {
             return true;
@@ -631,7 +636,10 @@ fn log_bad_cip509_info(
 }
 
 /// Get cip509 data for the transaction from a block.
-fn get_cip509(block: &MultiEraBlock, txn_id: TransactionId) -> Option<Cip509> {
+fn get_cip509(
+    block: &MultiEraBlock,
+    txn_id: TransactionId,
+) -> Option<Cip509> {
     Cip509::from_block(block, &[])
         .into_iter()
         .find(|cip509| cip509.txn_hash() == txn_id)
@@ -639,7 +647,11 @@ fn get_cip509(block: &MultiEraBlock, txn_id: TransactionId) -> Option<Cip509> {
 
 /// Log a transactions details in full.
 fn log_transaction(
-    network: Network, block: &MultiEraBlock, txn_idx: TxnIndex, tx: &MultiEraTx, this_hash: &str,
+    network: Network,
+    block: &MultiEraBlock,
+    txn_idx: TxnIndex,
+    tx: &MultiEraTx,
+    this_hash: &str,
 ) {
     let decoded_block = block.decode();
 
